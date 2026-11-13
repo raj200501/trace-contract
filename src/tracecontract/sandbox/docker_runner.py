@@ -355,3 +355,30 @@ def verify_candidate(
         )
     finally:
         shutil.rmtree(ws, ignore_errors=True)
+
+
+def resolve_pins(specs: list[str], cache_dir: Path) -> list[str]:
+    """Resolve requirement specifiers to a pinned, transitively closed wheel list.
+
+    Uses ``pip download`` (wheels only, so no build code runs on the host) and reads
+    the resulting wheel filenames.
+    """
+    import re as _re
+
+    key = hashlib.sha256("\n".join(sorted(specs)).encode()).hexdigest()[:16]
+    d = cache_dir / f"resolve-{key}"
+    if not (d / ".complete").exists():
+        d.mkdir(parents=True, exist_ok=True)
+        subprocess.run(
+            ["python3", "-m", "pip", "download", "-q", "--only-binary=:all:", "--platform", "manylinux2014_x86_64",
+             "--platform", "manylinux_2_17_x86_64", "--platform", "any", "--python-version", "3.12",
+             "--implementation", "cp", "-d", str(d), *specs],
+            check=True, capture_output=True, text=True, timeout=900,
+        )
+        (d / ".complete").write_text("ok\n")
+    pins = set()
+    for w in d.glob("*.whl"):
+        m = _re.match(r"^([A-Za-z0-9_.]+?)-(\d[^-]*)-", w.name)
+        if m:
+            pins.add(f"{m.group(1).replace('_', '-').lower()}=={m.group(2)}")
+    return sorted(pins)

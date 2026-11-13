@@ -547,9 +547,11 @@ class TaskManifest(_Model):
     provenance: str  # path (relative to task dir) of the ProvenanceRecord JSON
     snapshot_source: SnapshotSource
     snapshot: str | None = None  # path of the Snapshot JSON once built
+    snapshot_overlays: dict[str, str] = Field(default_factory=dict)  # generated build artefacts (approximations)
     env_requirements: list[str]  # fully pinned, transitively closed requirement list
     candidate_pythonpath: str = "/work"
     repo_test_args: list[str] = Field(default_factory=list)
+    scripted_turns: list[str] = Field(default_factory=list)  # controlled sessions: registered user turns
     contracts: dict[str, str] = Field(default_factory=dict)  # variant -> path
     verifiers: list[str] = Field(default_factory=list)  # paths of VerifierSpec JSON files
     candidates: list[str] = Field(default_factory=list)  # paths of Candidate JSON files

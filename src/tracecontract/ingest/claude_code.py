@@ -64,9 +64,16 @@ def _tool_result_text(content: Any) -> str:
     return "" if content is None else str(content)
 
 
-def classify_user_text(text: str, *, is_meta: bool = False) -> EventKind:
-    """Classify text found in a ``user`` entry (proposal-level heuristic)."""
+def classify_user_text(text: str, *, is_meta: bool = False, scripted_turns: tuple[str, ...] = ()) -> EventKind:
+    """Classify text found in a ``user`` entry (proposal-level heuristic).
+
+    ``scripted_turns`` (controlled sessions only): user-role text containing one of
+    these registered turns is a scripted user prompt even if the delivery channel
+    wrapped it in harness framing.
+    """
     stripped = text.lstrip()
+    if scripted_turns and any(t.strip() and t.strip() in text for t in scripted_turns):
+        return EventKind.user_prompt
     if is_meta:
         return EventKind.system_injected
     if _INTERRUPT_RE.match(stripped):
@@ -86,6 +93,7 @@ def parse_claude_code_jsonl(
     user_author: Author | None = None,
     include_sidechains: bool = False,
     relpath: str | None = None,
+    scripted_turns: tuple[str, ...] | list[str] = (),
 ) -> Session:
     """Parse a Claude Code JSONL transcript into a :class:`Session`.
 
@@ -158,7 +166,7 @@ def parse_claude_code_jsonl(
             if isinstance(block, str) or block is None:
                 text = block or ""
                 if etype == "user":
-                    kind = classify_user_text(text, is_meta=bool(entry.get("isMeta")))
+                    kind = classify_user_text(text, is_meta=bool(entry.get("isMeta")), scripted_turns=tuple(scripted_turns))
                     author = user_author if kind in (EventKind.user_prompt, EventKind.user_interrupt) else Author.harness
                     add(kind=kind, author=author, text=text, **common)
                 else:
@@ -170,7 +178,7 @@ def parse_claude_code_jsonl(
             if btype == "text":
                 text = str(block.get("text", ""))
                 if etype == "user":
-                    kind = classify_user_text(text, is_meta=bool(entry.get("isMeta")))
+                    kind = classify_user_text(text, is_meta=bool(entry.get("isMeta")), scripted_turns=tuple(scripted_turns))
                     author = user_author if kind in (EventKind.user_prompt, EventKind.user_interrupt) else Author.harness
                     add(kind=kind, author=author, text=text, **common)
                 else:
@@ -221,3 +229,45 @@ def parse_claude_code_jsonl(
         events=fixed,
         metadata=metadata,
     )
+
+
+_KEEP_MESSAGE_KEYS = ("role", "content", "model", "usage", "stop_reason")
+
+
+def sanitize_transcript(src: str | Path, dst: str | Path, *, session_id: str) -> dict:
+    """Write a minimised copy of a Claude Code (sub)agent transcript.
+
+    Keeps only conversation content (user/assistant messages, tool calls and
+    results), timestamps, entry ids, the model name and token usage. Drops harness
+    internals (request ids, classifier context, attachments, working-directory and
+    environment metadata, internal session/agent ids), and re-labels all entries with
+    ``session_id`` as a main-chain session. Returns hashes of input and output.
+    """
+    src, dst = Path(src), Path(dst)
+    raw = src.read_bytes()
+    out_lines = []
+    dropped: dict[str, int] = {}
+    for line in raw.decode("utf-8", errors="replace").splitlines():
+        if not line.strip():
+            continue
+        try:
+            e = json.loads(line)
+        except json.JSONDecodeError:
+            dropped["bad_json"] = dropped.get("bad_json", 0) + 1
+            continue
+        if e.get("type") not in ("user", "assistant") or not isinstance(e.get("message"), dict):
+            dropped[str(e.get("type"))] = dropped.get(str(e.get("type")), 0) + 1
+            continue
+        msg = {k: e["message"][k] for k in _KEEP_MESSAGE_KEYS if k in e["message"]}
+        if isinstance(msg.get("usage"), dict):
+            msg["usage"] = {k: v for k, v in msg["usage"].items() if isinstance(v, (int, float))}
+        new = {"type": e["type"], "sessionId": session_id, "uuid": e.get("uuid"), "parentUuid": e.get("parentUuid"),
+               "timestamp": e.get("timestamp"), "isSidechain": False, "message": msg}
+        if e.get("isMeta"):
+            new["isMeta"] = True
+        out_lines.append(json.dumps(new, ensure_ascii=False, sort_keys=True))
+    data = ("\n".join(out_lines) + "\n").encode("utf-8")
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    dst.write_bytes(data)
+    return {"source_sha256": sha256_bytes(raw), "sanitized_sha256": sha256_bytes(data), "entries": len(out_lines),
+            "dropped": dropped}

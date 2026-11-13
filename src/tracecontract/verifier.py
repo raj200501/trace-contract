@@ -167,3 +167,24 @@ def freeze(spec: VerifierSpec, task_dir: Path) -> VerifierSpec:
 def check_frozen(spec: VerifierSpec, task_dir: Path) -> None:
     if spec.frozen and hash_test_dir(task_dir / spec.test_dir) != spec.content_sha256:
         raise ValueError(f"{spec.verifier_id}: frozen verifier was modified; bump the version and rerun")
+
+
+def requirement_map_from_tests(test_dir: Path) -> dict[str, list[str]]:
+    """Read ``CHECK_REQUIREMENTS = {"test_name": ["R1", ...]}`` from each test file.
+
+    Keys may be bare test names or ``Class::test`` names; they are qualified with the
+    file path to form check ids.
+    """
+    out: dict[str, list[str]] = {}
+    for f in sorted(test_dir.rglob("test_*.py")):
+        rel = f.relative_to(test_dir).as_posix()
+        tree = ast.parse(f.read_text(encoding="utf-8"))
+        for node in tree.body:
+            if isinstance(node, ast.Assign) and any(isinstance(t, ast.Name) and t.id == "CHECK_REQUIREMENTS" for t in node.targets):
+                try:
+                    val = ast.literal_eval(node.value)
+                except ValueError:
+                    continue
+                for k, v in dict(val).items():
+                    out[f"{rel}::{k}"] = [str(x) for x in v]
+    return out

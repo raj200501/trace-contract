@@ -143,7 +143,14 @@ def run_repo_tests(test_args: list[str], timeout: float) -> dict:
     sys.path.insert(0, HARNESS_DIR)
     import tc_sandbox  # noqa: E402
 
-    junit = os.path.join(tc_sandbox.SANDBOX_HOME, "junit.xml")
+    # Root-owned, write+search-only directory: the sandbox user can create the report
+    # but cannot list the directory; root reads it back only if it is a regular file.
+    import secrets as _secrets
+
+    junit_dir = f"/tmp/tc-junit-{_secrets.token_hex(8)}"
+    os.mkdir(junit_dir)
+    os.chmod(junit_dir, 0o733)
+    junit = os.path.join(junit_dir, "junit.xml")
     argv = [tc_sandbox.PYTHON, "-m", "pytest", "-q", "-p", "no:cacheprovider", f"--junitxml={junit}", *test_args]
     t0 = time.time()
     res = tc_sandbox.run_cmd(argv, timeout=timeout)
