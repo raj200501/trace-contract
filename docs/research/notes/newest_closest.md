@@ -412,7 +412,7 @@ All verified on the primary page unless marked otherwise. This adds to `sfdata.m
 
 | Org | Artifact | What is stated | Corrections? | Verifier validation |
 |---|---|---|---|---|
-| Meta | REAP/Harvest (2604.01527, ASE 2026 Industry Showcase); AfterVibe (2607.09900, "TechInternal" sessions from "an internal AI coding assistant") | Production developer-agent sessions → rolling F2P-tested benchmark; AfterVibe extracts graders from multi-turn sessions | REAP: single-turn only, by design. AfterVibe: multi-turn sessions | REAP: classifier accuracy vs 2 annotators. AfterVibe negative controls: pre-change (parent commit) code passes 0.0% of VCs and 58.0% of flex tests (Table 4; re-verified) |
+| Meta | REAP/Harvest (2604.01527, ASE 2026 Industry Showcase); AfterVibe (2607.09900, affiliation "Meta, USA" in HTML; "TechInternal" sessions from "an internal AI coding assistant") | Production developer-agent sessions → rolling F2P-tested benchmark; AfterVibe extracts graders from multi-turn sessions | REAP: single-turn only, by design. AfterVibe: multi-turn sessions | REAP: classifier accuracy vs 2 annotators. AfterVibe negative controls: pre-change (parent commit) code passes 0.0% of VCs and 58.0% of flex tests (Table 4; re-verified) |
 | ByteDance (with ShanghaiTech, Shanghai AI Lab) | SessionFarmer/CropEnterprise (2611.02440); TraceDance (2609.33295) | Enterprise sessions → executable tasks (56 tasks; developer audit); 252,557 deployment sessions → behavior benchmarks | SessionFarmer: yes (full episode) | LLM-labeled FP/FN; developer audit of statements |
 | Alibaba Qwen | Terminal-Universe (2609.04148); Verification Horizon (2606.26300; see sibling notes) | Public trajectories → 37.3k environments for SFT | Partially (Intent Recovery) | None for verifiers |
 | Tencent (Hunyuan) | UserSWE (2610.29822); FeatureArc (2610.37434) | 20,859 internal sessions calibrate the user model; FeatureArc "extends internal evaluations" | Simulated | Judge plus cross-family reviewer; F2P/P2P |
@@ -432,10 +432,11 @@ Secondary-only (not primary, not used as evidence):
 ## 6. Works citing SWE-chat or Trace2Eval (Semantic Scholar snapshot, 2026-11-13)
 
 - **SWE-chat (2604.20779): 68 citing records.**
-  - Closest to us: SessionFarmer 2611.02440; Requirements After the First Edit 2609.03028; TiGanEval 2610.17757; ARE-bench 2611.14364 (via SWE-Together); PersonaCodeBench 2611.05739; SWE-Together 2606.29957; RealSWE 2608.27831; TraceDance 2609.33295; FeatureArc 2610.37434; SWE-DIVE 2610.30047; SWE-Journey 2610.11559; SWE-TaskFlow 2610.09633; LiveAsset 2611.11560; How Coding Agents Fail Their Users 2605.29442; DECODE 2607.25130; LLMs Get Lost in Evolving User Intent 2607.20734; "Don't Guess, Just Ask" 2610.13022; Dialogue SWE-Bench 2606.13995.
+  - Closest to us: SessionFarmer 2611.02440; Requirements After the First Edit 2609.03028; TiGanEval 2610.17757; PersonaCodeBench 2611.05739; SWE-Together 2606.29957; RealSWE 2608.27831; TraceDance 2609.33295; FeatureArc 2610.37434; SWE-DIVE 2610.30047; SWE-Journey 2610.11559; SWE-TaskFlow 2610.09633; LiveAsset 2611.11560; How Coding Agents Fail Their Users 2605.29442; DECODE 2607.25130; LLMs Get Lost in Evolving User Intent 2607.20734; "Don't Guess, Just Ask" 2610.13022; Dialogue SWE-Bench 2606.13995.
   - Also listed without arXiv IDs: "Do Personalized Skills Help Coding Agents? An Empirical Study of Developer Interaction Histories" and "GHAW-H: A Dataset of GitHub Agentic Workflow Histories" (not opened).
 - **Trace2Eval (2611.06506): 0 citing records in S2** (published 4 Nov 2026). No citing work was discoverable by arXiv search either.
 - **SessionFarmer (2611.02440): 0 citing records.**
+- ARE-bench 2611.14364 is **not** in the SWE-chat citing list. S2 lists it as citing SWE-Together 2606.29957 and RealClawBench 2606.03889.
 - Citing SWE-Together or SWE-INTERACT, the newest relevant: Switch-SWE 2611.02017; RealCLI 2610.22507; UserSWE 2610.29822; SWE-Clar 2610.31854; StateHarness 2610.17616; Terminal-Universe 2609.04148; "Eliciting Specifications" 2610.22382; SWE-Touch 2608.02499; SpecPath 2608.09799.
 
 ---

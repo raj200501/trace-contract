@@ -266,3 +266,24 @@ prompt template plus that context note.
 * CS-04: C2 and C4 audits pass with zero revisions (C2 ≡ C1, C4 ≡ C3); all six
   verifiers frozen.
 * CS-01: C4 audit passes with zero revisions (C4 ≡ C3); C2 pending regenerated attacks.
+
+### D25. Contribution narrowed after the novelty search (scope decision)
+Evidence (research notes `newest_closest.md`, `swechat.md`, `corrections.md`,
+`verifier_fidelity.md`): SessionFarmer/CropChat (arXiv 2611.02440, v1 2026-11-02)
+already reconstructs correction-aware executable tasks from SWE-chat with
+event-cited requirements, compares first-message vs full-episode statements by
+coverage, refines tests against mutants and reports FP/FN against LLM-assigned
+patch labels; SWE-Together, PersonaCodeBench, AfterVibe and FeatureLoop cover
+other parts; VerifierBench scores generated verifiers on held-out pools of valid
+and invalid variants. Task reconstruction, correction-aware statements, mutant
+refinement and held-out verifier scoring are therefore **not** claimed as new.
+Remaining claim (to be stated in the paper and brief): a pre-specified,
+verifier-level counterfactual measurement of correction-attributable false
+acceptance and false rejection: verifiers produced by one frozen procedure from
+initial-only vs correction-aware contracts, with and without a predefined audit,
+plus repository tests and a full-session LLM baseline, all scored on one frozen,
+held-out candidate pool whose anchor negatives are the agent's own pre-correction
+states, with independent valid alternatives and near misses, against independent
+human labels (and the discrepancy between model-proposed and human labels
+reported). Until human labels and natural sessions exist, the repository supports
+only an infrastructure-and-design contribution plus a controlled automated pilot.
