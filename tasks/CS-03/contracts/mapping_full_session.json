@@ -1,0 +1,33 @@
+{
+  "mapper": "model:claude-code-subagent:mapper:v1",
+  "mapper_kind": "model",
+  "map": {
+    "R1": [
+      "R-acronym"
+    ],
+    "R2": [],
+    "R5": [
+      "R-all-caps-input"
+    ],
+    "R6": [
+      "R-humanize-unchanged"
+    ],
+    "R7": [
+      "R-underscore-unchanged"
+    ]
+  },
+  "contradicts": {
+    "R1": [],
+    "R2": [],
+    "R5": [],
+    "R6": [],
+    "R7": []
+  },
+  "notes": {
+    "R1": "A test of R1 asserts exactly R-acronym's two example outputs ('NASA Rocket Launch', 'Read The HTTP Spec') on input that also contains lowercase letters and leaves no-lowercase input to R5, so it checks R-acronym and does not contradict R-all-caps-input.",
+    "R2": "Extra titleize-preservation invariant limited to inputs in which every uppercase letter is immediately followed by a lowercase letter, a domain with no all-caps word and no fully uppercase input, so its tests check none of the reference requirements and conflict with none.",
+    "R5": "A test of R5 asserts titleize('HELLO WORLD') == 'Hello World' and base-identical output for inputs with no lowercase letters, which is R-all-caps-input; its sentence limiting acronym-keeping to inputs with lowercase letters restates R-acronym's scope, but its tests use only no-lowercase inputs and so do not exercise R-acronym.",
+    "R6": "A test of R6 asserts humanize('employee_salary') == 'Employee salary' and runs a differential test of humanize against the base implementation, which is R-humanize-unchanged.",
+    "R7": "A test of R7 checks that underscore('NASARocket') and other inputs give the base implementation's output, which is R-underscore-unchanged; its parenthetical base value 'nasa_rocket' matches what upstream inflection's underscore returns and the requirement is tied to the base output either way, so there is no contradiction."
+  }
+}
