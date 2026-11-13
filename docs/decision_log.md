@@ -376,3 +376,32 @@ a new run, `pilot-v0.2-h2`.
 * audit:v1 records produced under 0.1.0 remain as recorded. They chose verifier
   revisions before freezing, and the frozen verifiers are unchanged.
 * Remaining audits (CS-02 C4) run under 0.2.0.
+
+### D30. Second resource-limit finding: address-space cap plus glibc arenas (open; fix before any further run)
+Re-running the matrix under harness 0.2.0 (run `pilot-v0.2-h2`) showed the B1 run on
+CS-04-eval-nm-1 stalling again. That run had passed in about 20 s under 0.1.0.
+
+**Observed state of the stalled pytest process**
+* single-threaded, sleeping in `futex_do_wait`;
+* VmSize 1.4 GB, against the sandbox's `RLIMIT_AS` of 1.5 GiB;
+* RSS only 65 MB.
+
+**Likely mechanism (not yet proven by a dedicated probe)**
+1. glibc creates a 64 MiB malloc arena for each thread that meets contention, up to
+   8 × online CPUs, and never unmaps it.
+2. Over a long multi-threaded test session, these reservations fill the address-space
+   cap.
+3. A later thread fails to start, and a test waits forever for it.
+
+Arena creation depends on thread timing, so the failure is nondeterministic and
+unrelated to the candidate. This is consistent with the about-21-thread capacity
+measured in D29.
+
+**Planned fix (harness 0.3.0)**
+* Set `MALLOC_ARENA_MAX=2` in the sandbox environment, which bounds arena
+  reservations.
+* Add a Docker probe that churns threads and then starts many threads.
+* Bump the version, then re-run every condition in a fresh run.
+
+`pilot-v0.2-h2` was stopped after 4 pairs. It is kept as a superseded partial run.
+Work paused at this point at the owner's request.
