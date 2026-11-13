@@ -17,7 +17,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from .sandbox.docker_runner import Limits, build_env_image, verify_candidate
-from .schemas import Candidate, Split, TaskManifest, VerificationResult, VerifierSpec
+from .schemas import Candidate, CandidateOrigin, Split, TaskManifest, VerificationResult, VerifierSpec
 from .store import append_jsonl, load, read_jsonl, write_json
 from .verifier import check_frozen
 
@@ -40,7 +40,8 @@ def load_task(task_dir: Path) -> tuple[TaskManifest, list[VerifierSpec], list[Ca
 
 def run_matrix(task_dirs: list[Path], *, run_id: str, out_root: Path, cache_dir: Path, snapshot_root: Path,
                split: Split = Split.eval, conditions: list[str] | None = None, repeats: int = 1,
-               limits: Limits | None = None, require_frozen: bool = True, repo_root: Path | None = None) -> Path:
+               limits: Limits | None = None, require_frozen: bool = True, repo_root: Path | None = None,
+               include_reference: bool = True) -> Path:
     out = out_root / run_id
     out.mkdir(parents=True, exist_ok=True)
     res_path = out / "results.jsonl"
@@ -76,7 +77,9 @@ def run_matrix(task_dirs: list[Path], *, run_id: str, out_root: Path, cache_dir:
                 raise ValueError(f"{s.verifier_id} is not frozen; freeze verifiers before final evaluation")
             check_frozen(s, td)
             entry["verifiers"][s.verifier_id] = {"condition": s.condition.value, "content_sha256": s.content_sha256, "version": s.version}
-        eval_cands = [c for c in cands if c.split == split]
+        # Held-out candidates of the requested split, plus the reference solution as a
+        # sanity check (protocol section 5: graded by every verifier, excluded from FA/FR).
+        eval_cands = [c for c in cands if c.split == split or (include_reference and c.origin == CandidateOrigin.reference)]
         for c in eval_cands:
             entry["candidates"][c.candidate_id] = {"origin": c.origin.value, "patch_sha256": c.patch_sha256}
         manifest["tasks"].append(entry)
