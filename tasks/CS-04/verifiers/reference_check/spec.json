@@ -1,0 +1,142 @@
+{
+  "schema_version": "0.1.0",
+  "verifier_id": "reference_check",
+  "task_id": "CS-04",
+  "condition": "reference_check",
+  "contract_id": "CS-04-reference",
+  "isolation": "process_separated",
+  "test_dir": "verifiers/reference_check/tests",
+  "checks": [
+    {
+      "check_id": "test_consecutive_groups_step.py::test_step_two_contract_example",
+      "requirement_ids": [
+        "R-step"
+      ]
+    },
+    {
+      "check_id": "test_consecutive_groups_step.py::test_positive_steps_group_runs_of_exactly_that_difference",
+      "requirement_ids": [
+        "R-step"
+      ]
+    },
+    {
+      "check_id": "test_consecutive_groups_step.py::test_positive_steps_match_oracle_on_generated_inputs",
+      "requirement_ids": [
+        "R-step"
+      ]
+    },
+    {
+      "check_id": "test_consecutive_groups_step.py::test_positive_step_with_positional_ordering",
+      "requirement_ids": [
+        "R-step"
+      ]
+    },
+    {
+      "check_id": "test_consecutive_groups_step.py::test_negative_step_contract_example",
+      "requirement_ids": [
+        "R-negative-step"
+      ]
+    },
+    {
+      "check_id": "test_consecutive_groups_step.py::test_negative_steps_group_descending_runs_only",
+      "requirement_ids": [
+        "R-negative-step"
+      ]
+    },
+    {
+      "check_id": "test_consecutive_groups_step.py::test_negative_steps_match_oracle_on_generated_inputs",
+      "requirement_ids": [
+        "R-negative-step"
+      ]
+    },
+    {
+      "check_id": "test_consecutive_groups_step.py::test_negative_step_with_positional_ordering",
+      "requirement_ids": [
+        "R-negative-step"
+      ]
+    },
+    {
+      "check_id": "test_consecutive_groups_step.py::test_zero_step_raises_value_error",
+      "requirement_ids": [
+        "R-zero-step"
+      ]
+    },
+    {
+      "check_id": "test_consecutive_groups_step.py::test_zero_step_with_positional_ordering_raises_value_error",
+      "requirement_ids": [
+        "R-zero-step"
+      ]
+    },
+    {
+      "check_id": "test_consecutive_groups_step.py::test_positional_ordering_contract_example",
+      "requirement_ids": [
+        "R-positional-ordering",
+        "R-default-unchanged"
+      ]
+    },
+    {
+      "check_id": "test_consecutive_groups_step.py::test_positional_ordering_matches_base",
+      "requirement_ids": [
+        "R-positional-ordering",
+        "R-default-unchanged"
+      ]
+    },
+    {
+      "check_id": "test_consecutive_groups_step.py::test_groups_are_iterators_sharing_their_source",
+      "requirement_ids": [
+        "R-lazy"
+      ]
+    },
+    {
+      "check_id": "test_consecutive_groups_step.py::test_groups_are_lazy_on_infinite_sources",
+      "requirement_ids": [
+        "R-lazy"
+      ]
+    },
+    {
+      "check_id": "test_consecutive_groups_step.py::test_positional_ordering_groups_are_lazy_and_shared",
+      "requirement_ids": [
+        "R-lazy",
+        "R-positional-ordering"
+      ]
+    },
+    {
+      "check_id": "test_consecutive_groups_step.py::test_step_groups_are_lazy_and_shared",
+      "requirement_ids": [
+        "R-lazy",
+        "R-step"
+      ]
+    },
+    {
+      "check_id": "test_consecutive_groups_step.py::test_negative_step_groups_are_lazy_and_shared",
+      "requirement_ids": [
+        "R-lazy",
+        "R-negative-step"
+      ]
+    },
+    {
+      "check_id": "test_consecutive_groups_step.py::test_default_matches_base_examples",
+      "requirement_ids": [
+        "R-default-unchanged"
+      ]
+    },
+    {
+      "check_id": "test_consecutive_groups_step.py::test_default_matches_base_on_generated_inputs",
+      "requirement_ids": [
+        "R-default-unchanged"
+      ]
+    }
+  ],
+  "content_sha256": "2a5da126aa570a64ae0955ae065eaaac89d1fba09d244437feadcd564382fc1d",
+  "generation": {
+    "generator": "model:claude-code-subagent:refcheck:v1",
+    "run_id": "unrecorded",
+    "prompt_sha256": "",
+    "created_at": "",
+    "budget": {},
+    "notes": ""
+  },
+  "audit": null,
+  "frozen": false,
+  "version": 1
+}

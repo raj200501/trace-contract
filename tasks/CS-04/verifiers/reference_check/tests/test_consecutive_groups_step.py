@@ -10,12 +10,17 @@ computed here, in the trusted grader process, by two small independent oracles:
   group exactly when its position (``ordering(item)``, or the item itself) equals the
   previous item's position plus *step* (R-step, R-negative-step).
 
+Laziness (R-lazy) is checked separately for default calls, positional-ordering calls,
+positive steps and negative steps, so that a missing feature does not show up as a
+laziness failure of the default path.
+
 Deliberately not checked, because the contract leaves them open: error messages;
 whether *step* is keyword-only (it is always passed by keyword here); whether
 ``step=0`` fails at call time or during iteration (either is accepted, as is any
 ``ValueError`` subclass); non-integer steps; *ordering* passed by keyword or as
 ``None``; the type of the object returned by the call itself (it is wrapped in
-``iter``); and how far ahead the source is read.
+``iter``); whether a group that is no longer available is empty or raises; and how
+far ahead the source is read.
 """
 
 import itertools
@@ -38,9 +43,11 @@ CHECK_REQUIREMENTS = {
     "test_zero_step_with_positional_ordering_raises_value_error": ["R-zero-step"],
     "test_positional_ordering_contract_example": ["R-positional-ordering", "R-default-unchanged"],
     "test_positional_ordering_matches_base": ["R-positional-ordering", "R-default-unchanged"],
-    "test_groups_are_iterators_not_lists": ["R-lazy"],
+    "test_groups_are_iterators_sharing_their_source": ["R-lazy"],
     "test_groups_are_lazy_on_infinite_sources": ["R-lazy"],
-    "test_groups_share_their_source": ["R-lazy"],
+    "test_positional_ordering_groups_are_lazy_and_shared": ["R-lazy", "R-positional-ordering"],
+    "test_step_groups_are_lazy_and_shared": ["R-lazy", "R-step"],
+    "test_negative_step_groups_are_lazy_and_shared": ["R-lazy", "R-negative-step"],
     "test_default_matches_base_examples": ["R-default-unchanged"],
     "test_default_matches_base_on_generated_inputs": ["R-default-unchanged"],
 }
@@ -49,6 +56,8 @@ CHECK_REQUIREMENTS = {
 
 _PRELUDE = '''
 import json
+from itertools import chain, count, islice
+
 import more_itertools as mi
 
 
@@ -73,6 +82,50 @@ def _zero_step_outcome(make):
     except Exception as exc:
         return {"raised": type(exc).__name__, "is_value_error": isinstance(exc, ValueError)}
     return {"raised": None, "is_value_error": False}
+
+
+def _describe(groups):
+    """Iterator-protocol facts and contents of every yielded group."""
+    records = []
+    for g in groups:
+        record = {
+            "is_list": isinstance(g, list),
+            "iter_returns_itself": iter(g) is g,
+            "has_next": callable(getattr(g, "__next__", None)),
+        }
+        items = []
+        while True:
+            try:
+                items.append(next(g))
+            except StopIteration:
+                break
+        record["items"] = items
+        records.append(record)
+    return records
+
+
+def _interleaved(make):
+    """Read one item of the first group, move on to the second group, then revisit the first."""
+    groups = iter(make())
+    first = next(groups)
+    head = next(first)
+    second = next(groups)
+    try:
+        rest_of_first = list(first)
+    except Exception as exc:
+        rest_of_first = "raised " + type(exc).__name__
+    return {"head": head, "rest_of_first": rest_of_first, "second": list(second),
+            "remaining": [list(g) for g in groups]}
+
+
+def _first_group_head(groups, n):
+    """The first n items of the first group (the group may be infinite)."""
+    return list(islice(next(iter(groups)), n))
+
+
+def _leading_groups(groups, n):
+    """The first n groups, copied (the source may be infinite)."""
+    return [list(g) for g in islice(groups, n)]
 '''
 
 
@@ -137,6 +190,25 @@ def _letter_strings(seed, n_cases):
 
 def _mismatches(cases, got, expected):
     return [{"case": c, "got": g, "expected": e} for c, g, e in zip(cases, got, expected) if g != e]
+
+
+def _iterator_records(groups):
+    """What _describe reports for groups that are proper iterators with these contents."""
+    return [{"is_list": False, "iter_returns_itself": True, "has_next": True, "items": g} for g in groups]
+
+
+def _shared_source_view(got):
+    """Normalise an _interleaved record: the unread rest of the first group must be unavailable
+    (empty, as in the base, or an error); everything else must be intact."""
+    if not isinstance(got, dict):
+        return got
+    rest = got.get("rest_of_first")
+    return {
+        "head": got.get("head"),
+        "rest_of_first_unavailable": rest == [] or (isinstance(rest, str) and rest.startswith("raised ")),
+        "second": got.get("second"),
+        "remaining": got.get("remaining"),
+    }
 
 
 # --------------------------------------------------------------------------- R-step
@@ -351,134 +423,128 @@ result = {
 
 
 # --------------------------------------------------------------------------- R-lazy
+# Groups must be iterators (not lists) drawing lazily from the shared source: an infinite
+# group can be read from, and once the next group is requested the unread rest of the
+# previous group is gone. An implementation that materialises groups or the source
+# never returns from the infinite-source calls (the sandbox call then times out).
 
 
-def test_groups_are_iterators_not_lists():
+def test_groups_are_iterators_sharing_their_source():
     body = """
-def _describe(groups):
-    records = []
-    for g in groups:
-        record = {
-            "is_list": isinstance(g, list),
-            "iter_returns_itself": iter(g) is g,
-            "has_next": callable(getattr(g, "__next__", None)),
-        }
-        items = []
-        while True:
-            try:
-                items.append(next(g))
-            except StopIteration:
-                break
-        record["items"] = items
-        records.append(record)
-    return records
-
-
 result = {
-    "default": _attempt(lambda: _describe(mi.consecutive_groups([1, 2, 3, 10, 11, 20]))),
-    "positional_ordering": _attempt(lambda: _describe(mi.consecutive_groups("abcxyq", ord))),
-    "step": _attempt(lambda: _describe(mi.consecutive_groups([2, 4, 6, 10, 12, 20], step=2))),
-    "negative_step": _attempt(lambda: _describe(mi.consecutive_groups([9, 8, 7, 3, 2, 0], step=-1))),
+    "list_source": _attempt(lambda: _describe(mi.consecutive_groups([1, 2, 3, 10, 11, 20]))),
+    "tuple_source": _attempt(lambda: _describe(mi.consecutive_groups((4, 5, 7)))),
+    "generator_source": _attempt(lambda: _describe(mi.consecutive_groups(x for x in [0, 1, 5, 6, 7]))),
+    "interleaved": _attempt(lambda: _interleaved(lambda: mi.consecutive_groups(iter([1, 2, 3, 10, 11, 20])))),
 }
 """
     r = run_python(_snippet(body))
     assert r.ok, r
-
-    def iterator_records(groups):
-        return [{"is_list": False, "iter_returns_itself": True, "has_next": True, "items": g} for g in groups]
-
-    assert r.value == {
-        "default": iterator_records([[1, 2, 3], [10, 11], [20]]),
-        "positional_ordering": iterator_records([["a", "b", "c"], ["x", "y"], ["q"]]),
-        "step": iterator_records([[2, 4, 6], [10, 12], [20]]),
-        "negative_step": iterator_records([[9, 8, 7], [3, 2], [0]]),
+    assert isinstance(r.value, dict), r
+    assert {k: v for k, v in r.value.items() if k != "interleaved"} == {
+        "list_source": _iterator_records([[1, 2, 3], [10, 11], [20]]),
+        "tuple_source": _iterator_records([[4, 5], [7]]),
+        "generator_source": _iterator_records([[0, 1], [5, 6, 7]]),
+    }
+    assert _shared_source_view(r.value.get("interleaved")) == {
+        "head": 1, "rest_of_first_unavailable": True, "second": [10, 11], "remaining": [[20]],
     }
 
 
 def test_groups_are_lazy_on_infinite_sources():
-    # An infinite first group can only be read from if groups are produced lazily;
-    # an implementation that materialises groups (or the source) never returns here.
     body = """
-from itertools import chain, count, islice
-
-
-def _first_group_head(groups, n):
-    return list(islice(next(iter(groups)), n))
-
-
-def _leading_groups(groups, n):
-    return [list(g) for g in islice(groups, n)]
-
-
 result = {
-    "default": _attempt(lambda: _first_group_head(mi.consecutive_groups(count()), 5)),
-    "positional_ordering": _attempt(lambda: _first_group_head(mi.consecutive_groups(map(chr, count(97)), ord), 5)),
-    "step": _attempt(lambda: _first_group_head(mi.consecutive_groups(count(0, 2), step=2), 5)),
-    "negative_step": _attempt(lambda: _first_group_head(mi.consecutive_groups(count(10, -1), step=-1), 5)),
-    "default_outer": _attempt(lambda: _leading_groups(mi.consecutive_groups(chain([1, 2, 3], count(10, 5))), 4)),
-    "step_outer": _attempt(lambda: _leading_groups(mi.consecutive_groups(chain([3, 6, 9], count(20, 2)), step=3), 3)),
-    "negative_step_outer": _attempt(
-        lambda: _leading_groups(mi.consecutive_groups(chain([5, 4], count(0, 3)), step=-1), 3)
-    ),
-}
-"""
-    r = run_python(_snippet(body), timeout=20.0)
-    assert r.ok, r
-    assert r.value == {
-        "default": [0, 1, 2, 3, 4],
-        "positional_ordering": ["a", "b", "c", "d", "e"],
-        "step": [0, 2, 4, 6, 8],
-        "negative_step": [10, 9, 8, 7, 6],
-        "default_outer": [[1, 2, 3], [10], [15], [20]],
-        "step_outer": [[3, 6, 9], [20], [22]],
-        "negative_step_outer": [[5, 4], [0], [3]],
-    }
-
-
-def test_groups_share_their_source():
-    # Groups share the source: once the next group is requested, the unread rest of the
-    # previous group is no longer available (empty, as in the base; an error is also
-    # accepted), and the following groups are unaffected.
-    body = """
-def _interleaved(make):
-    groups = iter(make())
-    first = next(groups)
-    head = next(first)
-    second = next(groups)
-    try:
-        rest_of_first = list(first)
-    except Exception as exc:
-        rest_of_first = "raised " + type(exc).__name__
-    return {"head": head, "rest_of_first": rest_of_first, "second": list(second),
-            "remaining": [list(g) for g in groups]}
-
-
-result = {
-    "default": _attempt(lambda: _interleaved(lambda: mi.consecutive_groups(iter([1, 2, 3, 10, 11, 20])))),
-    "positional_ordering": _attempt(lambda: _interleaved(lambda: mi.consecutive_groups(iter("abcxyq"), ord))),
-    "step": _attempt(lambda: _interleaved(lambda: mi.consecutive_groups(iter([2, 4, 6, 10, 12, 20]), step=2))),
-    "negative_step": _attempt(
-        lambda: _interleaved(lambda: mi.consecutive_groups(iter([9, 8, 7, 3, 2, 0]), step=-1))
-    ),
+    "first_group": _attempt(lambda: _first_group_head(mi.consecutive_groups(count()), 5)),
+    "later_groups": _attempt(lambda: _leading_groups(mi.consecutive_groups(chain([1, 2, 3], count(10, 5))), 4)),
 }
 """
     r = run_python(_snippet(body))
     assert r.ok, r
-    expected = {
-        "default": (1, [10, 11], [[20]]),
-        "positional_ordering": ("a", ["x", "y"], [["q"]]),
-        "step": (2, [10, 12], [[20]]),
-        "negative_step": (9, [3, 2], [[0]]),
+    assert r.value == {"first_group": [0, 1, 2, 3, 4], "later_groups": [[1, 2, 3], [10], [15], [20]]}
+
+
+def test_positional_ordering_groups_are_lazy_and_shared():
+    finite = """
+result = {
+    "groups": _attempt(lambda: _describe(mi.consecutive_groups("abcxyq", ord))),
+    "interleaved": _attempt(lambda: _interleaved(lambda: mi.consecutive_groups(iter("abcxyq"), ord))),
+}
+"""
+    infinite = """
+result = {
+    "first_group": _attempt(lambda: _first_group_head(mi.consecutive_groups(map(chr, count(97)), ord), 5)),
+    "later_groups": _attempt(
+        lambda: _leading_groups(mi.consecutive_groups(chain("abc", map(chr, count(110, 2))), ord), 4)
+    ),
+}
+"""
+    r = run_python(_snippet(finite))
+    assert r.ok, r
+    assert isinstance(r.value, dict), r
+    assert r.value.get("groups") == _iterator_records([["a", "b", "c"], ["x", "y"], ["q"]])
+    assert _shared_source_view(r.value.get("interleaved")) == {
+        "head": "a", "rest_of_first_unavailable": True, "second": ["x", "y"], "remaining": [["q"]],
     }
-    assert isinstance(r.value, dict) and sorted(r.value) == sorted(expected), r
-    for name, (head, second, remaining) in expected.items():
-        got = r.value[name]
-        assert isinstance(got, dict), (name, got)
-        rest = got["rest_of_first"]
-        unavailable = rest == [] or (isinstance(rest, str) and rest.startswith("raised "))
-        assert (name, got["head"], unavailable, got["second"], got["remaining"]) == (
-            name, head, True, second, remaining
-        ), got
+    r = run_python(_snippet(infinite))
+    assert r.ok, r
+    assert r.value == {
+        "first_group": ["a", "b", "c", "d", "e"],
+        "later_groups": [["a", "b", "c"], ["n"], ["p"], ["r"]],
+    }
+
+
+def test_step_groups_are_lazy_and_shared():
+    finite = """
+result = {
+    "groups": _attempt(lambda: _describe(mi.consecutive_groups([2, 4, 6, 10, 12, 20], step=2))),
+    "interleaved": _attempt(lambda: _interleaved(lambda: mi.consecutive_groups(iter([2, 4, 6, 10, 12, 20]), step=2))),
+}
+"""
+    infinite = """
+result = {
+    "first_group": _attempt(lambda: _first_group_head(mi.consecutive_groups(count(0, 2), step=2), 5)),
+    "later_groups": _attempt(
+        lambda: _leading_groups(mi.consecutive_groups(chain([3, 6, 9], count(20, 2)), step=3), 3)
+    ),
+}
+"""
+    r = run_python(_snippet(finite))
+    assert r.ok, r
+    assert isinstance(r.value, dict), r
+    assert r.value.get("groups") == _iterator_records([[2, 4, 6], [10, 12], [20]])
+    assert _shared_source_view(r.value.get("interleaved")) == {
+        "head": 2, "rest_of_first_unavailable": True, "second": [10, 12], "remaining": [[20]],
+    }
+    r = run_python(_snippet(infinite))
+    assert r.ok, r
+    assert r.value == {"first_group": [0, 2, 4, 6, 8], "later_groups": [[3, 6, 9], [20], [22]]}
+
+
+def test_negative_step_groups_are_lazy_and_shared():
+    finite = """
+result = {
+    "groups": _attempt(lambda: _describe(mi.consecutive_groups([9, 8, 7, 3, 2, 0], step=-1))),
+    "interleaved": _attempt(lambda: _interleaved(lambda: mi.consecutive_groups(iter([9, 8, 7, 3, 2, 0]), step=-1))),
+}
+"""
+    infinite = """
+result = {
+    "first_group": _attempt(lambda: _first_group_head(mi.consecutive_groups(count(10, -1), step=-1), 5)),
+    "later_groups": _attempt(
+        lambda: _leading_groups(mi.consecutive_groups(chain([5, 4], count(0, 3)), step=-1), 3)
+    ),
+}
+"""
+    r = run_python(_snippet(finite))
+    assert r.ok, r
+    assert isinstance(r.value, dict), r
+    assert r.value.get("groups") == _iterator_records([[9, 8, 7], [3, 2], [0]])
+    assert _shared_source_view(r.value.get("interleaved")) == {
+        "head": 9, "rest_of_first_unavailable": True, "second": [3, 2], "remaining": [[0]],
+    }
+    r = run_python(_snippet(infinite))
+    assert r.ok, r
+    assert r.value == {"first_group": [10, 9, 8, 7, 6], "later_groups": [[5, 4], [0], [3]]}
 
 
 # --------------------------------------------------------------------------- R-default-unchanged
