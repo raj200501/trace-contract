@@ -1,0 +1,198 @@
+{
+  "schema_version": "0.1.0",
+  "contract_id": "CS-04-reference",
+  "task_id": "CS-04",
+  "session_id": "CS-04-session",
+  "variant": "reference",
+  "requirements": [
+    {
+      "req_id": "R-step",
+      "statement": "consecutive_groups accepts a step argument; with step=2, [2, 4, 6, 10, 12] is grouped into [2, 4, 6] and [10, 12].",
+      "kind": "change",
+      "status": "explicit",
+      "introduced_at": "CS-04-session/L000001.00",
+      "evidence": [
+        {
+          "event_id": "CS-04-session/L000001.00",
+          "start": 130,
+          "end": 210,
+          "quote": "consecutive_groups([2, 4, 6, 10, 12], step=2) should give [2, 4, 6] and [10, 12]"
+        }
+      ],
+      "rationale": "",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "[list(g) for g in consecutive_groups(..., step=k)]",
+      "scored": true,
+      "subjective": false,
+      "proposer": "study-design:pre-registered",
+      "reviews": [
+        {
+          "reviewer": "builder",
+          "reviewer_kind": "model",
+          "decision": "accept",
+          "timestamp": "2026-11-13T02:12:58+00:00",
+          "note": "Drafted from the pre-registered scenario; awaiting human review."
+        }
+      ]
+    },
+    {
+      "req_id": "R-negative-step",
+      "statement": "Negative steps group descending runs: step=-1 on [9, 8, 7, 3, 2] gives [9, 8, 7] and [3, 2].",
+      "kind": "change",
+      "status": "explicit",
+      "introduced_at": "CS-04-session/L000107.00",
+      "evidence": [
+        {
+          "event_id": "CS-04-session/L000107.00",
+          "start": 91,
+          "end": 207,
+          "quote": "descending runs with a negative step should work (consecutive_groups([9, 8, 7, 3, 2], step=-1) -> [9, 8, 7], [3, 2])"
+        }
+      ],
+      "rationale": "",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "groups for negative steps",
+      "scored": true,
+      "subjective": false,
+      "proposer": "study-design:pre-registered",
+      "reviews": [
+        {
+          "reviewer": "builder",
+          "reviewer_kind": "model",
+          "decision": "accept",
+          "timestamp": "2026-11-13T02:12:58+00:00",
+          "note": "Drafted from the pre-registered scenario; awaiting human review."
+        }
+      ]
+    },
+    {
+      "req_id": "R-zero-step",
+      "statement": "step=0 raises ValueError.",
+      "kind": "change",
+      "status": "explicit",
+      "introduced_at": "CS-04-session/L000107.00",
+      "evidence": [
+        {
+          "event_id": "CS-04-session/L000107.00",
+          "start": 213,
+          "end": 245,
+          "quote": "step=0 should raise a ValueError"
+        }
+      ],
+      "rationale": "",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "exception type when step=0 (when iterating or calling)",
+      "scored": true,
+      "subjective": false,
+      "proposer": "study-design:pre-registered",
+      "reviews": [
+        {
+          "reviewer": "builder",
+          "reviewer_kind": "model",
+          "decision": "accept",
+          "timestamp": "2026-11-13T02:12:58+00:00",
+          "note": "Drafted from the pre-registered scenario; awaiting human review."
+        }
+      ]
+    },
+    {
+      "req_id": "R-positional-ordering",
+      "statement": "consecutive_groups(iterable, ordering) with ordering passed positionally as the second argument works exactly as before.",
+      "kind": "invariant",
+      "status": "explicit",
+      "introduced_at": "CS-04-session/L000107.00",
+      "evidence": [
+        {
+          "event_id": "CS-04-session/L000107.00",
+          "start": 287,
+          "end": 420,
+          "quote": "existing code calls consecutive_groups(iterable, ordering) with ordering as the second positional argument - that has to keep working"
+        }
+      ],
+      "rationale": "",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "consecutive_groups('abcdfgilmnop', ord) groups",
+      "scored": true,
+      "subjective": false,
+      "proposer": "study-design:pre-registered",
+      "reviews": [
+        {
+          "reviewer": "builder",
+          "reviewer_kind": "model",
+          "decision": "accept",
+          "timestamp": "2026-11-13T02:12:58+00:00",
+          "note": "Drafted from the pre-registered scenario; awaiting human review."
+        }
+      ]
+    },
+    {
+      "req_id": "R-lazy",
+      "statement": "Each yielded group is a lazy iterator (not a list) sharing its source, as before.",
+      "kind": "invariant",
+      "status": "explicit",
+      "introduced_at": "CS-04-session/L000107.00",
+      "evidence": [
+        {
+          "event_id": "CS-04-session/L000107.00",
+          "start": 426,
+          "end": 479,
+          "quote": "the groups should still be lazy iterators like before"
+        }
+      ],
+      "rationale": "",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "type/iterator protocol of yielded groups",
+      "scored": true,
+      "subjective": false,
+      "proposer": "study-design:pre-registered",
+      "reviews": [
+        {
+          "reviewer": "builder",
+          "reviewer_kind": "model",
+          "decision": "accept",
+          "timestamp": "2026-11-13T02:12:58+00:00",
+          "note": "Drafted from the pre-registered scenario; awaiting human review."
+        }
+      ]
+    },
+    {
+      "req_id": "R-default-unchanged",
+      "statement": "Without step, results are identical to the base behaviour.",
+      "kind": "invariant",
+      "status": "inferred",
+      "introduced_at": "CS-04-session/L000107.00",
+      "evidence": [],
+      "rationale": "U2 requires existing calls to keep working; behaviour without step is therefore expected to be unchanged (step defaults to 1).",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "default-argument groups equal base-commit groups",
+      "scored": true,
+      "subjective": false,
+      "proposer": "study-design:pre-registered",
+      "reviews": [
+        {
+          "reviewer": "builder",
+          "reviewer_kind": "model",
+          "decision": "accept",
+          "timestamp": "2026-11-13T02:12:58+00:00",
+          "note": "Drafted from the pre-registered scenario; awaiting human review."
+        }
+      ]
+    }
+  ],
+  "instruction": "",
+  "created_by": "study-design",
+  "created_at": "2026-11-13T02:12:58+00:00",
+  "notes": ""
+}

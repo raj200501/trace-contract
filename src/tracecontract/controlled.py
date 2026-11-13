@@ -180,3 +180,37 @@ def prepare_workspace(scenario: dict, *, env_specs: list[str], cache_dir: Path, 
     }
     (root / "workspace_record.json").write_text(json.dumps(record, indent=2) + "\n")
     return record
+
+
+def audit_generator_transcript(path: Path, *, forbidden: tuple[str, ...], allowed: tuple[str, ...] = ()) -> list[dict]:
+    """Scan a generation agent's transcript for reads of forbidden locations.
+
+    ``forbidden`` / ``allowed`` are substrings matched against file paths, search
+    patterns and shell commands in tool calls. A hit inside an ``allowed`` substring
+    is ignored (e.g. the reference-check writer may touch its own verifier dir).
+    Writes performed through the CLI (``add-candidate``) are not reads and are
+    ignored when the command starts with the CLI.
+    """
+    from .ingest.claude_code import parse_claude_code_jsonl
+    from .schemas import Population
+
+    s = parse_claude_code_jsonl(path, population=Population.controlled, source="audit", include_sidechains=True)
+    hits = []
+    for ev in s.events:
+        if ev.kind != EventKind.tool_call:
+            continue
+        ti = ev.tool_input or {}
+        fields = [str(ti.get(k)) for k in ("file_path", "path", "pattern", "notebook_path") if ti.get(k)]
+        cmd = ti.get("command") if isinstance(ti.get("command"), str) else ""
+        if cmd:
+            fields.append(cmd)
+        for f in fields:
+            g = f
+            for a in allowed:
+                g = g.replace(a, "")
+            for bad in forbidden:
+                if bad in g:
+                    if f is cmd and cmd.strip().startswith((".venv/bin/tracecontract add-candidate", "/home/user/trace-contract/.venv/bin/tracecontract add-candidate")):
+                        continue
+                    hits.append({"event_id": ev.event_id, "tool": ev.tool_name, "match": bad, "text": f[:300]})
+    return hits

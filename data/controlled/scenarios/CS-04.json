@@ -1,0 +1,66 @@
+{
+  "scenario_id": "CS-04",
+  "population": "controlled",
+  "pattern": [
+    "added_edge_cases",
+    "added_invariant"
+  ],
+  "repo_url": "https://github.com/more-itertools/more-itertools",
+  "commit": "ceafee8ce96f4bc1eb74c528bc247c91d648a0bb",
+  "code_license": "MIT",
+  "workspace": "/home/user/cs_workspaces/CS-04/more-itertools",
+  "turns": {
+    "U1": "Could you add a `step` option to more_itertools.consecutive_groups? I want to find runs where items go up by a fixed amount, e.g. consecutive_groups([2, 4, 6, 10, 12], step=2) should give [2, 4, 6] and [10, 12].\n\nThe repo is checked out (as a git working copy) at /home/user/cs_workspaces/CS-04/more-itertools. Code from the repo can't be run directly on this machine; use the two wrapper scripts, which run it in an isolated container: /home/user/cs_workspaces/CS-04/run_tests.sh [pytest args] (e.g. run_tests.sh -q tests) and /home/user/cs_workspaces/CS-04/run_python.sh -c '...'. Please keep all your work inside /home/user/cs_workspaces/CS-04.",
+    "U2": "Nice. A couple of cases I need too: descending runs with a negative step should work (consecutive_groups([9, 8, 7, 3, 2], step=-1) -> [9, 8, 7], [3, 2]), and step=0 should raise a ValueError rather than doing something weird. Also, existing code calls consecutive_groups(iterable, ordering) with ordering as the second positional argument - that has to keep working, and the groups should still be lazy iterators like before.",
+    "clarification_reply": "Please go ahead with your best judgment."
+  },
+  "intended_requirements": [
+    {
+      "id": "R-step",
+      "turn": "U1",
+      "kind": "change",
+      "final_status": "explicit",
+      "statement": "consecutive_groups accepts `step`; with step=2, [2, 4, 6, 10, 12] groups into [2, 4, 6] and [10, 12]."
+    },
+    {
+      "id": "R-negative-step",
+      "turn": "U2",
+      "kind": "change",
+      "final_status": "explicit",
+      "statement": "Negative steps group descending runs: step=-1 on [9, 8, 7, 3, 2] gives [9, 8, 7] and [3, 2]."
+    },
+    {
+      "id": "R-zero-step",
+      "turn": "U2",
+      "kind": "change",
+      "final_status": "explicit",
+      "statement": "step=0 raises ValueError."
+    },
+    {
+      "id": "R-positional-ordering",
+      "turn": "U2",
+      "kind": "invariant",
+      "final_status": "explicit",
+      "statement": "consecutive_groups(iterable, ordering) with ordering passed positionally as the second argument works exactly as before."
+    },
+    {
+      "id": "R-lazy",
+      "turn": "U2",
+      "kind": "invariant",
+      "final_status": "explicit",
+      "statement": "Each yielded group is a lazy iterator (not a list) sharing its source, as before."
+    },
+    {
+      "id": "R-default-unchanged",
+      "turn": "U2",
+      "kind": "invariant",
+      "final_status": "inferred",
+      "statement": "Without `step`, results are identical to the base behaviour (step defaults to 1)."
+    }
+  ],
+  "unscored_or_ambiguous": [
+    "Combination of step with a custom ordering (e.g. letters with ord and step=2) is not specified.",
+    "Non-integer steps (floats) are not specified."
+  ],
+  "registered_at": "2026-11-13T01:51:38Z"
+}

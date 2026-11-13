@@ -1,0 +1,87 @@
+[
+  {
+    "req_id": "R-step",
+    "turn": "U1",
+    "kind": "change",
+    "status": "explicit",
+    "scored": true,
+    "statement": "consecutive_groups accepts a step argument; with step=2, [2, 4, 6, 10, 12] is grouped into [2, 4, 6] and [10, 12].",
+    "evidence": [
+      {
+        "turn": "U1",
+        "quote": "consecutive_groups([2, 4, 6, 10, 12], step=2) should give [2, 4, 6] and [10, 12]"
+      }
+    ],
+    "observable": "[list(g) for g in consecutive_groups(..., step=k)]"
+  },
+  {
+    "req_id": "R-negative-step",
+    "turn": "U2",
+    "kind": "change",
+    "status": "explicit",
+    "scored": true,
+    "statement": "Negative steps group descending runs: step=-1 on [9, 8, 7, 3, 2] gives [9, 8, 7] and [3, 2].",
+    "evidence": [
+      {
+        "turn": "U2",
+        "quote": "descending runs with a negative step should work (consecutive_groups([9, 8, 7, 3, 2], step=-1) -> [9, 8, 7], [3, 2])"
+      }
+    ],
+    "observable": "groups for negative steps"
+  },
+  {
+    "req_id": "R-zero-step",
+    "turn": "U2",
+    "kind": "change",
+    "status": "explicit",
+    "scored": true,
+    "statement": "step=0 raises ValueError.",
+    "evidence": [
+      {
+        "turn": "U2",
+        "quote": "step=0 should raise a ValueError"
+      }
+    ],
+    "observable": "exception type when step=0 (when iterating or calling)"
+  },
+  {
+    "req_id": "R-positional-ordering",
+    "turn": "U2",
+    "kind": "invariant",
+    "status": "explicit",
+    "scored": true,
+    "statement": "consecutive_groups(iterable, ordering) with ordering passed positionally as the second argument works exactly as before.",
+    "evidence": [
+      {
+        "turn": "U2",
+        "quote": "existing code calls consecutive_groups(iterable, ordering) with ordering as the second positional argument - that has to keep working"
+      }
+    ],
+    "observable": "consecutive_groups('abcdfgilmnop', ord) groups"
+  },
+  {
+    "req_id": "R-lazy",
+    "turn": "U2",
+    "kind": "invariant",
+    "status": "explicit",
+    "scored": true,
+    "statement": "Each yielded group is a lazy iterator (not a list) sharing its source, as before.",
+    "evidence": [
+      {
+        "turn": "U2",
+        "quote": "the groups should still be lazy iterators like before"
+      }
+    ],
+    "observable": "type/iterator protocol of yielded groups"
+  },
+  {
+    "req_id": "R-default-unchanged",
+    "turn": "U2",
+    "kind": "invariant",
+    "status": "inferred",
+    "scored": true,
+    "rationale": "U2 requires existing calls to keep working; behaviour without step is therefore expected to be unchanged (step defaults to 1).",
+    "statement": "Without step, results are identical to the base behaviour.",
+    "observable": "default-argument groups equal base-commit groups"
+  }
+]
