@@ -329,3 +329,50 @@ analysis is unaffected; the infrastructure breakdown is. The aggregator is not
 changed during the run (so every task in the run uses one code revision); the
 mapping of repo-test timeouts to `timeout` is scheduled for the next harness
 version, and the affected results are identified from their diagnostics.
+
+### D29. Harness 0.2.0: per-container sandbox UID; repo-test timeouts recorded as `timeout`
+**Finding (2026-11-13).** Diagnosing D28 showed that the B1 stall on CS-04-eval-alt-1
+was not caused by the candidate. Re-running that pair with the real grader gave two
+failures, `TestSynchronized::test_concurrent_calls` and
+`TestConcurrentTee::test_concurrent_consumers`, both `RuntimeError: can't start new
+thread`. A second re-run aborted with a pytest INTERNALERROR (MemoryError). Outside
+the grader, the same reference-state suite passes 777/777 in 37 s.
+
+**Cause.** Every grading container ran candidate code as the same fixed UID (1001).
+The sandbox sets `RLIMIT_NPROC` = 64, and the kernel counts that limit per UID across
+the whole host, not per container. Any other process of UID 1001 therefore consumes
+the grader's thread and process budget, including concurrent grading runs and the
+interactive sandbox wrappers. Isolated probe: a container started 30/30 threads alone
+but 2/30 while another container held 60 threads as UID 1001. Outcomes could thus
+depend on unrelated concurrent load. A candidate could also starve concurrently
+graded candidates, which is an availability gap in the isolation boundary.
+
+**Fix (harness `tc-harness/0.2.0`).**
+* Each grading container gets its own sandbox UID from 20000–59999.
+  * The UID is held through an exclusive lock file while the container runs.
+  * It is never a UID that a visible process already uses.
+  * It has no passwd entry, so the sandbox environment sets `HOME`, `USER` and `LOGNAME`.
+* In repository-test mode, a pytest run that exceeds its time limit is now recorded as
+  `timeout` (the D28 limitation).
+* Two regression tests were added to `tests/test_sandbox_isolation.py`:
+  * the graded candidate starts at least 10 threads while another container holds 60
+    threads as UID 1001;
+  * concurrent UID allocations are distinct and skip UIDs in use.
+
+  All 53 tests pass.
+
+**Known limit (unchanged).** `RLIMIT_AS` = 1.5 GiB counts reserved address space.
+glibc reserves a malloc arena per thread, so candidate code can start about 21
+threads under the grader (measured). None of the pilot tasks needs more. It is
+documented rather than changed, because it was not a cause of any observed error.
+
+**Consequence (protocol §8).** This is a harness bug found after the pilot evaluation
+started. The harness version is bumped and every condition of every task is re-run in
+a new run, `pilot-v0.2-h2`.
+* Run `pilot-v0.2` (harness 0.1.0; CS-03 and CS-04 complete) is kept unchanged as a
+  superseded run. Its pair-by-pair agreement with the re-run is reported as a harness
+  reliability measurement.
+* Label proposals (D19) use the grader, so they are re-run under 0.2.0.
+* audit:v1 records produced under 0.1.0 remain as recorded. They chose verifier
+  revisions before freezing, and the frozen verifiers are unchanged.
+* Remaining audits (CS-02 C4) run under 0.2.0.

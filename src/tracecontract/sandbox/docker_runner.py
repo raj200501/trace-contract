@@ -9,13 +9,17 @@ The host process is the trusted party. For every (verifier, candidate) pair it:
 3. runs the grader container with ``--network none``, all capabilities dropped
    except those needed to switch to the sandbox user and kill its processes,
    ``no-new-privileges``, a read-only root filesystem, tmpfs scratch space, and
-   CPU / memory / PID limits - no privileged mode and no Docker socket;
+   CPU / memory / PID limits - no privileged mode and no Docker socket. Candidate
+   code runs as a sandbox UID allocated for this container alone (per-user kernel
+   limits such as RLIMIT_NPROC are shared by every process of a UID on the host,
+   so a fixed UID would couple concurrent runs; decision log D29);
 4. recomputes the outcome from ``results.json`` (checking the per-run nonce) in
    :func:`aggregate`. The container exit code is never trusted on its own.
 """
 
 from __future__ import annotations
 
+import fcntl
 import hashlib
 import json
 import os
@@ -24,10 +28,11 @@ import shutil
 import subprocess
 import tempfile
 import time
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterator
 
 from ..patches import DEFAULT_PROTECTED, PatchApplyError, apply_patch, filter_patch
 from ..schemas import (
@@ -40,7 +45,7 @@ from ..schemas import (
 )
 
 HARNESS_SRC = Path(__file__).parent / "harness"
-HARNESS_VERSION = "tc-harness/0.1.0"
+HARNESS_VERSION = "tc-harness/0.2.0"
 BASE_IMAGE = "python:3.12-slim@sha256:5e2bdb1b0d542d5039cffb8181c65930093949194a65c365dfb1b0fe13a4fa5b"
 DEFAULT_TEST_REQUIREMENTS = (
     "pytest==8.3.5", "hypothesis==6.131.0", "attrs==26.1.0", "iniconfig==2.3.1",
@@ -50,6 +55,56 @@ DEFAULT_TEST_REQUIREMENTS = (
 
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
+
+
+SANDBOX_UID_RANGE = (20000, 60000)
+_UID_LOCK_DIR = Path(tempfile.gettempdir()) / "tc-sandbox-uids"
+
+
+def _uid_in_use(uid: int) -> bool:
+    """True if any process visible to this host process runs with this real UID."""
+    for d in os.listdir("/proc"):
+        if not d.isdigit():
+            continue
+        try:
+            with open(f"/proc/{d}/status", encoding="ascii", errors="replace") as fh:
+                for line in fh:
+                    if line.startswith("Uid:"):
+                        if int(line.split()[1]) == uid:
+                            return True
+                        break
+        except OSError:
+            continue
+    return False
+
+
+@contextmanager
+def sandbox_uid() -> Iterator[int]:
+    """Allocate a sandbox UID used by exactly one grading container on this host.
+
+    The UID is held through an exclusive lock file for the lifetime of the
+    container and is never one that a visible process already uses. It has no
+    passwd entry; the sandbox environment sets HOME, USER and LOGNAME.
+    """
+    _UID_LOCK_DIR.mkdir(mode=0o700, exist_ok=True)
+    rng = secrets.SystemRandom()
+    for _ in range(1000):
+        uid = rng.randrange(*SANDBOX_UID_RANGE)
+        fd = os.open(_UID_LOCK_DIR / f"{uid}.lock", os.O_CREAT | os.O_RDWR, 0o600)
+        try:
+            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            os.close(fd)
+            continue
+        try:
+            if _uid_in_use(uid):
+                continue
+            yield uid
+            return
+        finally:
+            fcntl.flock(fd, fcntl.LOCK_UN)
+            os.close(fd)
+    raise RuntimeError("could not allocate a free sandbox uid")
 
 
 @dataclass
@@ -187,55 +242,64 @@ def run_grader(
         if overlay_dir is not None:
             shutil.copytree(overlay_dir, grader / "overlay", symlinks=False)
         runner_mode = "process_separated" if mode == Isolation.process_separated else "repo_tests"
-        cmd = [
-            "docker", "run", "--rm", "--init", "--name", name,
-            "--network", "none",
-            "--cpus", str(limits.cpus), "--memory", limits.memory, "--memory-swap", limits.memory,
-            "--pids-limit", str(limits.pids),
-            "--cap-drop", "ALL", "--cap-add", "SETUID", "--cap-add", "SETGID", "--cap-add", "KILL", "--cap-add", "CHOWN",
-            "--security-opt", "no-new-privileges",
-            "--read-only",
-            "--tmpfs", f"/tmp:rw,exec,nosuid,nodev,size={limits.tmp_size},mode=1777",
-            "--tmpfs", f"/work:rw,exec,nosuid,nodev,size={limits.work_size},mode=0755",
-            "-v", f"{grader}:/grader:ro",
-            "-v", f"{workspace}:/mnt/candidate:ro",
-            "-v", f"{results}:/results:rw",
-            "-e", f"TC_RUN_NONCE={nonce}",
-            "-e", "TC_SANDBOX_UID=1001", "-e", "TC_SANDBOX_GID=1001",
-            "-e", f"TC_CANDIDATE_PYTHONPATH={candidate_pythonpath}",
-            "-e", "PYTHONDONTWRITEBYTECODE=1",
-            "-w", "/grader",
-            image,
-            "python3", "-I", "/grader/harness/tc_runner.py", "--mode", runner_mode,
-        ]
-        if runner_mode == "repo_tests":
-            cmd += ["--", *(repo_test_args or [])]
-        t0 = time.time()
-        timed_out = False
-        docker_error = None
-        try:
-            proc = subprocess.run(cmd, capture_output=True, text=True, timeout=limits.wall_s)
-            exit_code, out, err = proc.returncode, proc.stdout, proc.stderr
-            if exit_code in (125, 126, 127):
-                docker_error = f"docker run failed ({exit_code}): {err[-1500:]}"
-        except subprocess.TimeoutExpired as exc:
-            timed_out = True
-            exit_code = None
-            out = (exc.stdout or b"").decode("utf-8", "replace") if isinstance(exc.stdout, bytes) else (exc.stdout or "")
-            err = (exc.stderr or b"").decode("utf-8", "replace") if isinstance(exc.stderr, bytes) else (exc.stderr or "")
-            subprocess.run(["docker", "kill", name], capture_output=True)
-        wall = time.time() - t0
-        res_path = results / "results.json"
-        data = None
-        if res_path.is_file() and not res_path.is_symlink():
-            try:
-                data = json.loads(res_path.read_text(encoding="utf-8"))
-            except json.JSONDecodeError:
-                data = {"status": "unparseable"}
-        return RawRun(exit_code, timed_out, data, out[-20000:], err[-20000:], wall, docker_error), nonce
+        with sandbox_uid() as uid:
+            return _run_container(image, name, grader, results, workspace, nonce, uid, runner_mode,
+                                  repo_test_args, candidate_pythonpath, limits)
     finally:
         shutil.rmtree(grader, ignore_errors=True)
         shutil.rmtree(results, ignore_errors=True)
+
+
+def _run_container(image: str, name: str, grader: Path, results: Path, workspace: Path, nonce: str, uid: int,
+                   runner_mode: str, repo_test_args: list[str] | None, candidate_pythonpath: str,
+                   limits: Limits) -> tuple[RawRun, str]:
+    """One ``docker run`` of the grader with the given sandbox UID (see :func:`sandbox_uid`)."""
+    cmd = [
+        "docker", "run", "--rm", "--init", "--name", name,
+        "--network", "none",
+        "--cpus", str(limits.cpus), "--memory", limits.memory, "--memory-swap", limits.memory,
+        "--pids-limit", str(limits.pids),
+        "--cap-drop", "ALL", "--cap-add", "SETUID", "--cap-add", "SETGID", "--cap-add", "KILL", "--cap-add", "CHOWN",
+        "--security-opt", "no-new-privileges",
+        "--read-only",
+        "--tmpfs", f"/tmp:rw,exec,nosuid,nodev,size={limits.tmp_size},mode=1777",
+        "--tmpfs", f"/work:rw,exec,nosuid,nodev,size={limits.work_size},mode=0755",
+        "-v", f"{grader}:/grader:ro",
+        "-v", f"{workspace}:/mnt/candidate:ro",
+        "-v", f"{results}:/results:rw",
+        "-e", f"TC_RUN_NONCE={nonce}",
+        "-e", f"TC_SANDBOX_UID={uid}", "-e", f"TC_SANDBOX_GID={uid}",
+        "-e", f"TC_CANDIDATE_PYTHONPATH={candidate_pythonpath}",
+        "-e", "PYTHONDONTWRITEBYTECODE=1",
+        "-w", "/grader",
+        image,
+        "python3", "-I", "/grader/harness/tc_runner.py", "--mode", runner_mode,
+    ]
+    if runner_mode == "repo_tests":
+        cmd += ["--", *(repo_test_args or [])]
+    t0 = time.time()
+    timed_out = False
+    docker_error = None
+    try:
+        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=limits.wall_s)
+        exit_code, out, err = proc.returncode, proc.stdout, proc.stderr
+        if exit_code in (125, 126, 127):
+            docker_error = f"docker run failed ({exit_code}): {err[-1500:]}"
+    except subprocess.TimeoutExpired as exc:
+        timed_out = True
+        exit_code = None
+        out = (exc.stdout or b"").decode("utf-8", "replace") if isinstance(exc.stdout, bytes) else (exc.stdout or "")
+        err = (exc.stderr or b"").decode("utf-8", "replace") if isinstance(exc.stderr, bytes) else (exc.stderr or "")
+        subprocess.run(["docker", "kill", name], capture_output=True)
+    wall = time.time() - t0
+    res_path = results / "results.json"
+    data = None
+    if res_path.is_file() and not res_path.is_symlink():
+        try:
+            data = json.loads(res_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            data = {"status": "unparseable"}
+    return RawRun(exit_code, timed_out, data, out[-20000:], err[-20000:], wall, docker_error), nonce
 
 
 # ---------------------------------------------------------------------------
@@ -262,6 +326,8 @@ def aggregate(raw: RawRun, spec: VerifierSpec, nonce: str) -> tuple[Outcome, lis
     for t in r.get("tamper_events", []):
         diags.append(f"tamper_detected: {t.get('kind')}")
     in_process = spec.isolation == Isolation.in_process
+    if in_process and r.get("timed_out"):
+        return Outcome.timeout, [], diags + [f"repository tests exceeded the time limit ({r.get('elapsed_s', 0):.0f} s)"]
     if r.get("collect_errors") and not in_process:
         return Outcome.verifier_error, [], diags + [f"collection error: {c['nodeid']}" for c in r["collect_errors"]]
     reported = {t["nodeid"]: t for t in r.get("tests", [])}

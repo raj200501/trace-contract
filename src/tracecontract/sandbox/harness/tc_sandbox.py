@@ -111,6 +111,8 @@ def _sandbox_env(extra: dict[str, str] | None = None) -> dict[str, str]:
     env = {
         "PATH": "/usr/local/bin:/usr/bin:/bin",
         "HOME": SANDBOX_HOME,
+        "USER": "sandbox",  # the per-run sandbox UID has no passwd entry
+        "LOGNAME": "sandbox",
         "PYTHONPATH": CANDIDATE_PYTHONPATH,
         "PYTHONDONTWRITEBYTECODE": "1",
         "PYTHONHASHSEED": "0",

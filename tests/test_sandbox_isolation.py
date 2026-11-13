@@ -85,8 +85,11 @@ PROBE_TESTS = textwrap.dedent('''
         assert v != "CONNECTED", v
 
     def test_runs_as_unprivileged_user():
+        import tc_sandbox
         v = _attempt("import os\\nresult=[os.getuid(), os.geteuid(), os.getgroups()]")
-        assert v == [1001, 1001, []], v
+        uid = tc_sandbox.SANDBOX_UID
+        assert 20000 <= uid < 60000, uid  # per-container UID, never root or a shared fixed UID
+        assert v == [uid, uid, []], v
 
     def test_cannot_read_grader_environment():
         v = _attempt("try:\\n    result=open('/proc/1/environ','rb').read()[:10].hex()\\nexcept Exception as e:\\n    result=type(e).__name__")
@@ -107,7 +110,7 @@ PROBE_TESTS = textwrap.dedent('''
                  "    st=open(f'/proc/{p}/status').read()\\n"
                  "    uid=int(st.split('Uid:')[1].split()[0])\\n"
                  "    state=st.split('State:')[1].split()[0]\\n"
-                 "    return uid==1001 and state!='Z'\\n"
+                 "    return uid==os.getuid() and state!='Z'\\n"
                  "result=sum(1 for p in os.listdir('/proc') if p.isdigit() and live(p))")
         v = _attempt(count)
         assert v == 1, v  # only this probe process; the earlier daemon and fork-bomb children were killed
@@ -212,3 +215,82 @@ def test_probe_suite_inside_container(image, tmp_path):
     res = verify_candidate(image=image, base_dir=base, spec=spec, task_dir=tdir, candidate=cand, run_id="iso")
     failed = {c.check_id: c.message[-600:] for c in res.checks if c.status != "passed"}
     assert res.outcome == Outcome.passed, failed
+
+
+THREAD_PROBE = textwrap.dedent('''
+    from tc_sandbox import run_python
+
+    SNIPPET = (
+        "import threading\\n"
+        "ev = threading.Event()\\n"
+        "n = 0\\n"
+        "try:\\n"
+        "    for _ in range(40):\\n"
+        "        threading.Thread(target=ev.wait, daemon=True).start()\\n"
+        "        n += 1\\n"
+        "except RuntimeError:\\n"
+        "    pass\\n"
+        "ev.set()\\n"
+        "result = n"
+    )
+
+    def test_threads_start():
+        r = run_python(SNIPPET, timeout=20)
+        assert r.ok, r
+        print("THREADS_STARTED", r.value)
+        # 10 threads: far more than the 4 that remained under a UID shared with a
+        # container holding 60 threads (RLIMIT_NPROC 64) before harness 0.2.0.
+        assert r.value >= 10, r.value
+''')
+
+
+def test_limits_not_shared_with_other_containers(image, tmp_path):
+    """Regression (D29): per-UID kernel limits must not couple concurrent containers.
+
+    Another container holds 60 threads as UID 1001 (the fixed UID used before
+    harness 0.2.0, and the UID of the interactive sandbox wrappers). The graded
+    candidate must still be able to start at least 10 threads.
+    """
+    holder = "tc-holder-" + tmp_path.name[-8:]
+    subprocess.run(["docker", "run", "-d", "--rm", "--network", "none", "--name", holder, "--user", "1001:1001", image,
+                    "python3", "-c", "import threading,time\nts=[threading.Thread(target=time.sleep,args=(60,)) for _ in range(60)]\n"
+                    "[t.start() for t in ts]\n[t.join() for t in ts]"], check=True, capture_output=True)
+    try:
+        base = tmp_path / "base"
+        base.mkdir()
+        (base / "calc.py").write_text("def add(a, b):\n    return a + b\n")
+        tdir = tmp_path / "task"
+        (tdir / "tests").mkdir(parents=True)
+        (tdir / "tests" / "test_threads.py").write_text(THREAD_PROBE)
+        spec = VerifierSpec(verifier_id="threads", task_id="t", condition=VerifierCondition.reference_check,
+                            isolation=Isolation.process_separated, test_dir="tests",
+                            checks=[CheckSpec(check_id=c) for c in discover_checks(tdir / "tests")], content_sha256="x")
+        cand = Candidate(candidate_id="noop", task_id="t", origin=CandidateOrigin.noop, split=Split.eval, patch="",
+                         patch_sha256=sha256_text(""), produced_by="fixture")
+        res = verify_candidate(image=image, base_dir=base, spec=spec, task_dir=tdir, candidate=cand, run_id="iso")
+        assert res.outcome == Outcome.passed, [c.message[-400:] for c in res.checks]
+    finally:
+        subprocess.run(["docker", "kill", holder], capture_output=True)
+
+
+def test_sandbox_uids_are_distinct_and_unused(image, monkeypatch):
+    """Two live allocations never share a UID, and a UID with a running process is skipped."""
+    from tracecontract.sandbox import docker_runner as dr
+
+    holder_uid = 23456
+    holder = f"tc-uidholder-{holder_uid}"
+    subprocess.run(["docker", "run", "-d", "--rm", "--network", "none", "--name", holder, "--user", f"{holder_uid}:{holder_uid}",
+                    image, "sleep", "60"], check=True, capture_output=True)
+    try:
+        picks = iter([holder_uid, 30001, 30001, 30002])
+
+        class FakeRandom:
+            def randrange(self, a, b):
+                return next(picks)
+
+        monkeypatch.setattr(dr.secrets, "SystemRandom", lambda: FakeRandom())
+        with dr.sandbox_uid() as u1:
+            with dr.sandbox_uid() as u2:
+                assert (u1, u2) == (30001, 30002)
+    finally:
+        subprocess.run(["docker", "kill", holder], capture_output=True)
