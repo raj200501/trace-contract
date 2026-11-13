@@ -1,0 +1,110 @@
+{
+  "schema_version": "0.1.0",
+  "verifier_id": "initial_audited",
+  "task_id": "CS-04",
+  "condition": "initial_audited",
+  "contract_id": "CS-04-initial_only",
+  "isolation": "process_separated",
+  "test_dir": "verifiers/initial_audited/tests",
+  "checks": [
+    {
+      "check_id": "test_consecutive_groups_step.py::test_step_keyword_is_accepted",
+      "requirement_ids": [
+        "R1"
+      ]
+    },
+    {
+      "check_id": "test_consecutive_groups_step.py::test_user_example_step_two",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ]
+    },
+    {
+      "check_id": "test_consecutive_groups_step.py::test_step_splits_where_difference_is_not_step",
+      "requirement_ids": [
+        "R2"
+      ]
+    },
+    {
+      "check_id": "test_consecutive_groups_step.py::test_step_groups_only_increases_of_exactly_step",
+      "requirement_ids": [
+        "R2"
+      ]
+    },
+    {
+      "check_id": "test_consecutive_groups_step.py::test_step_various_step_sizes",
+      "requirement_ids": [
+        "R2"
+      ]
+    },
+    {
+      "check_id": "test_consecutive_groups_step.py::test_step_empty_and_single_item_inputs",
+      "requirement_ids": [
+        "R2"
+      ]
+    },
+    {
+      "check_id": "test_consecutive_groups_step.py::test_step_accepts_any_iterable",
+      "requirement_ids": [
+        "R2"
+      ]
+    },
+    {
+      "check_id": "test_consecutive_groups_step.py::test_step_randomized_inputs_match_definition",
+      "requirement_ids": [
+        "R2"
+      ]
+    },
+    {
+      "check_id": "test_consecutive_groups_step.py::test_existing_consecutive_groups_tests_still_pass",
+      "requirement_ids": [
+        "R3"
+      ]
+    },
+    {
+      "check_id": "test_consecutive_groups_step.py::test_default_matches_base_outputs",
+      "requirement_ids": [
+        "R3"
+      ]
+    },
+    {
+      "check_id": "test_consecutive_groups_step.py::test_default_equals_explicit_step_one",
+      "requirement_ids": [
+        "R3"
+      ]
+    },
+    {
+      "check_id": "test_consecutive_groups_step.py::test_ordering_argument_still_supported",
+      "requirement_ids": [
+        "R3"
+      ]
+    }
+  ],
+  "content_sha256": "200e5e425c85b32f6affe4071dd83f2915dee71dc1469443157e54052721c8d1",
+  "generation": {
+    "generator": "model:claude-code-subagent:testgen:v1+audit:v1",
+    "run_id": "unrecorded",
+    "prompt_sha256": "",
+    "created_at": "",
+    "budget": {},
+    "notes": ""
+  },
+  "audit": {
+    "procedure": "audit:v1",
+    "iterations": 0,
+    "passed": true,
+    "findings": [],
+    "dev_candidate_ids": [
+      "CS-04-reference",
+      "CS-04-noop-dev",
+      "CS-04-dev-attack-initial_only-a1",
+      "CS-04-dev-attack-initial_only-a2",
+      "CS-04-dev-attack-initial_only-a3",
+      "CS-04-dev-attack-initial_only-a4",
+      "CS-04-dev-alt-initial_only"
+    ]
+  },
+  "frozen": true,
+  "version": 1
+}

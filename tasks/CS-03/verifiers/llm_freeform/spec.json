@@ -1,0 +1,103 @@
+{
+  "schema_version": "0.1.0",
+  "verifier_id": "llm_freeform",
+  "task_id": "CS-03",
+  "condition": "llm_freeform",
+  "contract_id": null,
+  "isolation": "process_separated",
+  "test_dir": "verifiers/llm_freeform/tests",
+  "checks": [
+    {
+      "check_id": "test_humanize_underscore_unchanged.py::test_humanize_unchanged_examples",
+      "requirement_ids": [
+        "B6"
+      ]
+    },
+    {
+      "check_id": "test_humanize_underscore_unchanged.py::test_underscore_unchanged_examples",
+      "requirement_ids": [
+        "B7"
+      ]
+    },
+    {
+      "check_id": "test_humanize_underscore_unchanged.py::test_humanize_and_underscore_match_original_on_many_inputs",
+      "requirement_ids": [
+        "B6",
+        "B7"
+      ]
+    },
+    {
+      "check_id": "test_titleize_acronyms.py::test_titleize_keeps_acronyms_in_reported_examples",
+      "requirement_ids": [
+        "B1"
+      ]
+    },
+    {
+      "check_id": "test_titleize_acronyms.py::test_titleize_keeps_acronyms_at_any_position",
+      "requirement_ids": [
+        "B1"
+      ]
+    },
+    {
+      "check_id": "test_titleize_acronyms.py::test_titleize_keeps_acronyms_next_to_punctuation",
+      "requirement_ids": [
+        "B1"
+      ]
+    },
+    {
+      "check_id": "test_titleize_acronyms.py::test_titleize_keeps_acronyms_joined_by_underscores_or_hyphens",
+      "requirement_ids": [
+        "B2"
+      ]
+    },
+    {
+      "check_id": "test_titleize_acronyms.py::test_titleize_other_words_still_titleized_next_to_acronyms",
+      "requirement_ids": [
+        "B1",
+        "B4"
+      ]
+    },
+    {
+      "check_id": "test_titleize_acronyms.py::test_titleize_all_uppercase_input_titleized_as_before",
+      "requirement_ids": [
+        "B3"
+      ]
+    },
+    {
+      "check_id": "test_titleize_acronyms.py::test_titleize_all_uppercase_input_matches_original_on_many_inputs",
+      "requirement_ids": [
+        "B3"
+      ]
+    },
+    {
+      "check_id": "test_titleize_acronyms.py::test_titleize_existing_examples_unchanged",
+      "requirement_ids": [
+        "B5"
+      ]
+    },
+    {
+      "check_id": "test_titleize_acronyms.py::test_titleize_still_drops_trailing_id",
+      "requirement_ids": [
+        "B5"
+      ]
+    },
+    {
+      "check_id": "test_titleize_acronyms.py::test_titleize_input_without_capital_words_matches_original",
+      "requirement_ids": [
+        "B5"
+      ]
+    }
+  ],
+  "content_sha256": "9dd525bd888fe357f9c01df53c0cf6859b1bdf98a9fe709399d8264490307b2c",
+  "generation": {
+    "generator": "model:claude-code-subagent:testgen:v1",
+    "run_id": "unrecorded",
+    "prompt_sha256": "",
+    "created_at": "",
+    "budget": {},
+    "notes": ""
+  },
+  "audit": null,
+  "frozen": false,
+  "version": 1
+}

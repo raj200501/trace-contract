@@ -1,0 +1,301 @@
+{
+  "schema_version": "0.1.0",
+  "contract_id": "CS-02-initial_only",
+  "task_id": "CS-02",
+  "session_id": "CS-02-session",
+  "variant": "initial_only",
+  "requirements": [
+    {
+      "req_id": "R1",
+      "statement": "JSONStorage.write no longer rewrites the database file in place (seek to 0, write, truncate): it writes the complete new serialized contents to a temporary file and then swaps that file into place over the database path with an atomic rename/replace (e.g. os.replace). After a successful write the database file contains exactly the new serialized data (also when the new contents are shorter than the old ones).",
+      "kind": "change",
+      "status": "explicit",
+      "introduced_at": "CS-02-session/L000001.00",
+      "evidence": [
+        {
+          "event_id": "CS-02-session/L000001.00",
+          "start": 235,
+          "end": 346,
+          "quote": "Can you make JSONStorage writes atomic - write the new contents to a temporary file and then swap it into place"
+        },
+        {
+          "event_id": "CS-02-session/L000001.00",
+          "start": 0,
+          "end": 85,
+          "quote": "TinyDB's JSONStorage rewrites the database file in place (seek to 0, write, truncate)"
+        }
+      ],
+      "rationale": "",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "With db = TinyDB(path) (default JSONStorage): record os.stat(path).st_ino, call db.insert({'a': 1}); the inode at path has changed (the file was replaced, not rewritten in place) and json.load(open(path))['_default'] == {'1': {'a': 1}}. A spy wrapping os.replace/os.rename sees a call whose destination is the database path and whose source is a different (temporary) file. After inserting many documents and then removing most of them, json.load of the file succeeds and equals the current data (no leftover bytes from the longer old contents).",
+      "scored": true,
+      "subjective": false,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    },
+    {
+      "req_id": "R2",
+      "statement": "The database file on disk is always either the complete old version or the complete new version, never half-written: if the process dies or the write fails part-way (e.g. the disk fills up, an OSError such as ENOSPC/EFBIG while the new contents are being written, or any other error before the swap completes), the file at the database path is byte-for-byte the previous version and still loads with its previous data.",
+      "kind": "invariant",
+      "status": "explicit",
+      "introduced_at": "CS-02-session/L000001.00",
+      "evidence": [
+        {
+          "event_id": "CS-02-session/L000001.00",
+          "start": 349,
+          "end": 416,
+          "quote": "so the file on disk is always either the old version or the new one"
+        },
+        {
+          "event_id": "CS-02-session/L000001.00",
+          "start": 90,
+          "end": 191,
+          "quote": "if the process dies or the disk fills up in the middle of a write, the JSON file is left half-written"
+        }
+      ],
+      "rationale": "",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "Populate a DB and save the file bytes, then make the next write fail part-way and check that the file is byte-identical to the saved bytes and TinyDB(path).all() returns the old documents: (a) in a subprocess, ignore SIGXFSZ and set resource.RLIMIT_FSIZE slightly above the current file size, then insert a document large enough to exceed it (simulated full disk; an in-place rewrite leaves a truncated, unparsable file); (b) patch os.replace and os.rename to raise OSError so the swap fails; (c) insert a non-JSON-serializable value. (d) SIGKILL a subprocess in the middle of a large write (e.g. from a hook called during the write): afterwards the file parses and equals either the full old or the full new data.",
+      "scored": true,
+      "subjective": false,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    },
+    {
+      "req_id": "R3",
+      "statement": "After a write has been swapped into place, the same JSONStorage/TinyDB instance keeps working on the new file: subsequent reads through that instance return the newly written data (not the stale contents of the replaced file), and successive writes build on each other without losing earlier updates. A TinyDB opened afterwards on the same path also sees the latest data.",
+      "kind": "invariant",
+      "status": "inferred",
+      "introduced_at": "CS-02-session/L000001.00",
+      "evidence": [
+        {
+          "event_id": "CS-02-session/L000001.00",
+          "start": 157,
+          "end": 233,
+          "quote": "the JSON file is left half-written and the whole database becomes unreadable"
+        },
+        {
+          "event_id": "CS-02-session/L000001.00",
+          "start": 349,
+          "end": 416,
+          "quote": "so the file on disk is always either the old version or the new one"
+        }
+      ],
+      "rationale": "Swapping a new file into place means the database path refers to a different file after every write, while the current implementation works through an open file handle (seek to 0, write, truncate). If reads kept going through a handle to the replaced file they would return stale data and later writes would drop earlier ones, i.e. the database would be broken. The user only asks to change how writes are performed and wants the database to stay readable.",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "db = TinyDB(path); insert 20 documents one at a time, then update and remove some; after each operation db.all(), len(db) and db.get(...) reflect every operation so far (e.g. len(db) == 20 after 20 single inserts). storage = JSONStorage(path); storage.write(d1); storage.read() == d1; storage.write(d2); storage.read() == d2. Closing and reopening TinyDB(path) returns the same final documents.",
+      "scored": true,
+      "subjective": false,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    },
+    {
+      "req_id": "R4",
+      "statement": "Apart from how the file is written, existing JSONStorage/TinyDB behaviour is preserved: every option the base JSONStorage supports keeps working as before (e.g. create_dirs, encoding, access_mode, extra json.dumps keyword arguments such as indent/sort_keys), the text written to the file is the same as the base implementation produces (same json.dumps arguments and encoding), a storage opened read-only (where the base supports access_mode='r') still refuses writes with an IOError/OSError without modifying the database file, relative database paths such as TinyDB('db.json') work, and the repository's existing test suite still passes.",
+      "kind": "invariant",
+      "status": "inferred",
+      "introduced_at": "CS-02-session/L000001.00",
+      "evidence": [
+        {
+          "event_id": "CS-02-session/L000001.00",
+          "start": 235,
+          "end": 273,
+          "quote": "Can you make JSONStorage writes atomic"
+        },
+        {
+          "event_id": "CS-02-session/L000001.00",
+          "start": 666,
+          "end": 721,
+          "quote": "run_tests.sh [pytest args] (e.g. run_tests.sh -q tests)"
+        }
+      ],
+      "rationale": "The user asks only to make JSONStorage writes atomic and points to the repository's test suite (run_tests.sh -q tests); nothing indicates that any other observable behaviour of the storage should change.",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "Run the repository's existing tests (run_tests.sh -q tests): everything that passed on the base commit still passes. Parity checks against the base implementation: TinyDB(path, sort_keys=True, indent=4, separators=(',', ': ')) yields the same file text after the same inserts; JSONStorage(path, encoding='cp936') writes non-ASCII data that reads back equal with encoding='cp936'; with access_mode='r' (if supported by the base) db.insert(...) raises IOError/OSError and the file bytes and directory listing are unchanged; create_dirs=True still creates missing parent directories; in a temporary working directory TinyDB('db.json') supports insert and all().",
+      "scored": true,
+      "subjective": false,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    },
+    {
+      "req_id": "R5",
+      "statement": "The temporary file is created on the same filesystem as the database file (e.g. in the database file's directory), so the swap is a single atomic rename that works regardless of where the system temp directory is; the write must not degrade into a non-atomic copy over the database file.",
+      "kind": "constraint",
+      "status": "inferred",
+      "introduced_at": "CS-02-session/L000001.00",
+      "evidence": [
+        {
+          "event_id": "CS-02-session/L000001.00",
+          "start": 276,
+          "end": 346,
+          "quote": "write the new contents to a temporary file and then swap it into place"
+        },
+        {
+          "event_id": "CS-02-session/L000001.00",
+          "start": 349,
+          "end": 416,
+          "quote": "so the file on disk is always either the old version or the new one"
+        }
+      ],
+      "rationale": "A rename/replace is only atomic within one filesystem; a temporary file in the system temp directory would make the swap fail with a cross-device error or fall back to copying over the database file in place, breaking the guarantee that the file is always either the old or the new version.",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "Spy on os.replace/os.rename during db.insert: the source file is on the same device as the database (os.stat(src).st_dev == os.stat(db_dir).st_dev; normally os.path.dirname(src) == db_dir). With tempfile.tempdir/TMPDIR pointing to a directory on a different filesystem than the database (e.g. database under /dev/shm and temp dir under /tmp, or vice versa), inserts still succeed, the database file's inode changes on every write and the data reads back correctly.",
+      "scored": true,
+      "subjective": false,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    },
+    {
+      "req_id": "R6",
+      "statement": "Writes do not leave temporary files behind: after a successful write the temporary file has become the database file, and when a write fails with an exception (e.g. disk full while writing the temporary file, or an error during the swap) the partially written temporary file is removed, so the database's directory contains the same files as before the write.",
+      "kind": "invariant",
+      "status": "inferred",
+      "introduced_at": "CS-02-session/L000001.00",
+      "evidence": [
+        {
+          "event_id": "CS-02-session/L000001.00",
+          "start": 276,
+          "end": 318,
+          "quote": "write the new contents to a temporary file"
+        },
+        {
+          "event_id": "CS-02-session/L000001.00",
+          "start": 90,
+          "end": 155,
+          "quote": "if the process dies or the disk fills up in the middle of a write"
+        }
+      ],
+      "rationale": "The user names a full disk as a failure mode; leaving partially written temporary files behind after failed writes would keep consuming space and accumulate junk files next to the database. Not stated explicitly.",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "Compare os.listdir(db_dir) before and after: (a) a series of successful inserts/updates/removes; (b) a write made to fail in-process (RLIMIT_FSIZE exceeded while writing the temporary file with SIGXFSZ ignored, or os.replace/os.rename patched to raise OSError); (c) inserting a non-JSON-serializable value. In every case the listing is unchanged (only the database file).",
+      "scored": true,
+      "subjective": false,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    },
+    {
+      "req_id": "R7",
+      "statement": "A write that cannot be completed is reported to the caller: if writing or swapping the temporary file fails, JSONStorage.write (and therefore the TinyDB operation that triggered it, e.g. insert/update) raises an exception instead of returning normally as if the data had been saved.",
+      "kind": "invariant",
+      "status": "inferred",
+      "introduced_at": "CS-02-session/L000001.00",
+      "evidence": [
+        {
+          "event_id": "CS-02-session/L000001.00",
+          "start": 113,
+          "end": 155,
+          "quote": "the disk fills up in the middle of a write"
+        }
+      ],
+      "rationale": "Silently swallowing a failed write would make the caller believe data was saved when it was not (silent data loss), which defeats the user's data-safety goal; the user describes failures such as a full disk that must be handled safely, not hidden.",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "In the fault-injection scenarios of R2 (RLIMIT_FSIZE exceeded while writing the temporary file, os.replace/os.rename patched to raise OSError, non-serializable value), db.insert(...) raises an exception (OSError/IOError or the original error) instead of returning a document id.",
+      "scored": true,
+      "subjective": false,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    },
+    {
+      "req_id": "R8",
+      "statement": "The new contents are completely written, flushed and fsync'ed (os.fsync or os.fdatasync) to the temporary file before it is swapped into place, so the swap never installs a file whose data has not reached the disk, and errors that only surface on flush/fsync (e.g. a full disk) abort the write before the database file is replaced.",
+      "kind": "invariant",
+      "status": "inferred",
+      "introduced_at": "CS-02-session/L000001.00",
+      "evidence": [
+        {
+          "event_id": "CS-02-session/L000001.00",
+          "start": 349,
+          "end": 416,
+          "quote": "so the file on disk is always either the old version or the new one"
+        },
+        {
+          "event_id": "CS-02-session/L000001.00",
+          "start": 90,
+          "end": 155,
+          "quote": "if the process dies or the disk fills up in the middle of a write"
+        }
+      ],
+      "rationale": "The user wants the file on disk to always be the old or the new version and explicitly considers a full disk; renaming a temporary file whose data has not been flushed and synced can leave an empty or partial database file after a crash and can let write errors surface only after the old file was already replaced.",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "Spy on os.fsync/os.fdatasync and os.replace/os.rename during db.insert: before the replace call there is a sync call on a descriptor whose inode (os.fstat(fd).st_ino) equals the inode the database path has after the write. With os.fsync and os.fdatasync patched to raise OSError(errno.EIO), db.insert raises and the database file is byte-identical to before.",
+      "scored": true,
+      "subjective": false,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    },
+    {
+      "req_id": "R9",
+      "statement": "Repository code is never run directly on the host machine; tests and Python snippets are run only through the provided wrappers /home/user/cs_workspaces/CS-02/run_tests.sh [pytest args] and /home/user/cs_workspaces/CS-02/run_python.sh -c '...', which execute the code in an isolated container.",
+      "kind": "constraint",
+      "status": "explicit",
+      "introduced_at": "CS-02-session/L000001.00",
+      "evidence": [
+        {
+          "event_id": "CS-02-session/L000001.00",
+          "start": 509,
+          "end": 633,
+          "quote": "Code from the repo can't be run directly on this machine; use the two wrapper scripts, which run it in an isolated container"
+        }
+      ],
+      "rationale": "",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "Process constraint: not checkable by a black-box test of the final code; only from the session trace (every execution of repository code goes through run_tests.sh or run_python.sh).",
+      "scored": false,
+      "subjective": false,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    },
+    {
+      "req_id": "R10",
+      "statement": "All work stays inside /home/user/cs_workspaces/CS-02: the change is made in the git working copy of TinyDB at /home/user/cs_workspaces/CS-02/tinydb, and no files outside /home/user/cs_workspaces/CS-02 are created or modified.",
+      "kind": "constraint",
+      "status": "explicit",
+      "introduced_at": "CS-02-session/L000001.00",
+      "evidence": [
+        {
+          "event_id": "CS-02-session/L000001.00",
+          "start": 781,
+          "end": 845,
+          "quote": "Please keep all your work inside /home/user/cs_workspaces/CS-02."
+        },
+        {
+          "event_id": "CS-02-session/L000001.00",
+          "start": 419,
+          "end": 508,
+          "quote": "The repo is checked out (as a git working copy) at /home/user/cs_workspaces/CS-02/tinydb."
+        }
+      ],
+      "rationale": "",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "The solution is evaluated as the diff of the working copy at /home/user/cs_workspaces/CS-02/tinydb against its base commit; whether anything outside /home/user/cs_workspaces/CS-02 was touched can only be checked from the session trace, not by a black-box test.",
+      "scored": false,
+      "subjective": false,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    }
+  ],
+  "instruction": "Make the following changes:\n- JSONStorage.write no longer rewrites the database file in place (seek to 0, write, truncate): it writes the complete new serialized contents to a temporary file and then swaps that file into place over the database path with an atomic rename/replace (e.g. os.replace). After a successful write the database file contains exactly the new serialized data (also when the new contents are shorter than the old ones).\n\nThe following existing behaviour must be preserved:\n- The database file on disk is always either the complete old version or the complete new version, never half-written: if the process dies or the write fails part-way (e.g. the disk fills up, an OSError such as ENOSPC/EFBIG while the new contents are being written, or any other error before the swap completes), the file at the database path is byte-for-byte the previous version and still loads with its previous data.\n- After a write has been swapped into place, the same JSONStorage/TinyDB instance keeps working on the new file: subsequent reads through that instance return the newly written data (not the stale contents of the replaced file), and successive writes build on each other without losing earlier updates. A TinyDB opened afterwards on the same path also sees the latest data.\n- Apart from how the file is written, existing JSONStorage/TinyDB behaviour is preserved: every option the base JSONStorage supports keeps working as before (e.g. create_dirs, encoding, access_mode, extra json.dumps keyword arguments such as indent/sort_keys), the text written to the file is the same as the base implementation produces (same json.dumps arguments and encoding), a storage opened read-only (where the base supports access_mode='r') still refuses writes with an IOError/OSError without modifying the database file, relative database paths such as TinyDB('db.json') work, and the repository's existing test suite still passes.\n- Writes do not leave temporary files behind: after a successful write the temporary file has become the database file, and when a write fails with an exception (e.g. disk full while writing the temporary file, or an error during the swap) the partially written temporary file is removed, so the database's directory contains the same files as before the write.\n- A write that cannot be completed is reported to the caller: if writing or swapping the temporary file fails, JSONStorage.write (and therefore the TinyDB operation that triggered it, e.g. insert/update) raises an exception instead of returning normally as if the data had been saved.\n- The new contents are completely written, flushed and fsync'ed (os.fsync or os.fdatasync) to the temporary file before it is swapped into place, so the swap never installs a file whose data has not reached the disk, and errors that only surface on flush/fsync (e.g. a full disk) abort the write before the database file is replaced.\n\nConstraints:\n- The temporary file is created on the same filesystem as the database file (e.g. in the database file's directory), so the swap is a single atomic rename that works regardless of where the system temp directory is; the write must not degrade into a non-atomic copy over the database file.\n- Repository code is never run directly on the host machine; tests and Python snippets are run only through the provided wrappers /home/user/cs_workspaces/CS-02/run_tests.sh [pytest args] and /home/user/cs_workspaces/CS-02/run_python.sh -c '...', which execute the code in an isolated container.\n- All work stays inside /home/user/cs_workspaces/CS-02: the change is made in the git working copy of TinyDB at /home/user/cs_workspaces/CS-02/tinydb, and no files outside /home/user/cs_workspaces/CS-02 are created or modified.\n",
+  "created_by": "model:claude-code-subagent:contract:v1",
+  "created_at": "2026-11-13T02:38:56+00:00",
+  "notes": ""
+}

@@ -33,16 +33,25 @@
     "Thanks! A few things I should have said up front: our app keeps a single TinyDB instance open for its whole lifetime and reads right after writing, so reads through the same instance (and the same storage object) must always see what was just written. Please also keep honoring the `encoding` argument and the extra json kwargs (like indent=4 or sort_keys=True) exactly as before, so the bytes written are the same as today. And don't leave temporary files lying around next to the database file - not after a normal write, and not when a write fails halfway (in that case the original file must stay exactly as it was)."
   ],
   "contracts": {
-    "reference": "contracts/reference.json"
+    "reference": "contracts/reference.json",
+    "full_session": "contracts/full_session.json",
+    "initial_only": "contracts/initial_only.json"
   },
   "verifiers": [
-    "verifiers/repo_tests/spec.json"
+    "verifiers/repo_tests/spec.json",
+    "verifiers/initial_plain/spec.json",
+    "verifiers/full_plain/spec.json",
+    "verifiers/llm_freeform/spec.json"
   ],
   "candidates": [
     "candidates/CS-02-reference.json",
     "candidates/CS-02-pre-correction.json",
     "candidates/CS-02-noop-dev.json",
-    "candidates/CS-02-noop-eval.json"
+    "candidates/CS-02-noop-eval.json",
+    "candidates/CS-02-dev-attack-initial_only-a1.json",
+    "candidates/CS-02-dev-attack-initial_only-a2.json",
+    "candidates/CS-02-dev-attack-initial_only-a3.json",
+    "candidates/CS-02-dev-attack-initial_only-a4.json"
   ],
   "notes": ""
 }

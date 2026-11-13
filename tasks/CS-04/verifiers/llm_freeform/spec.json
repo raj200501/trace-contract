@@ -1,0 +1,109 @@
+{
+  "schema_version": "0.1.0",
+  "verifier_id": "llm_freeform",
+  "task_id": "CS-04",
+  "condition": "llm_freeform",
+  "contract_id": null,
+  "isolation": "process_separated",
+  "test_dir": "verifiers/llm_freeform/tests",
+  "checks": [
+    {
+      "check_id": "test_consecutive_groups_step.py::test_user_example_step_two",
+      "requirement_ids": [
+        "B1"
+      ]
+    },
+    {
+      "check_id": "test_consecutive_groups_step.py::test_positive_step_requires_exact_difference",
+      "requirement_ids": [
+        "B1"
+      ]
+    },
+    {
+      "check_id": "test_consecutive_groups_step.py::test_random_steps_match_pairwise_definition",
+      "requirement_ids": [
+        "B1",
+        "B2"
+      ]
+    },
+    {
+      "check_id": "test_consecutive_groups_step.py::test_negative_step_groups_descending_runs",
+      "requirement_ids": [
+        "B2"
+      ]
+    },
+    {
+      "check_id": "test_consecutive_groups_step.py::test_zero_step_raises_value_error",
+      "requirement_ids": [
+        "B3"
+      ]
+    },
+    {
+      "check_id": "test_consecutive_groups_step.py::test_default_grouping_unchanged",
+      "requirement_ids": [
+        "B4"
+      ]
+    },
+    {
+      "check_id": "test_consecutive_groups_step.py::test_explicit_step_one_matches_default_grouping",
+      "requirement_ids": [
+        "B4"
+      ]
+    },
+    {
+      "check_id": "test_consecutive_groups_step.py::test_ordering_as_second_positional_argument",
+      "requirement_ids": [
+        "B5"
+      ]
+    },
+    {
+      "check_id": "test_consecutive_groups_step.py::test_step_combined_with_ordering",
+      "requirement_ids": [
+        "B6"
+      ]
+    },
+    {
+      "check_id": "test_consecutive_groups_step.py::test_random_step_with_ordering_matches_pairwise_definition",
+      "requirement_ids": [
+        "B6",
+        "B2"
+      ]
+    },
+    {
+      "check_id": "test_consecutive_groups_step.py::test_groups_are_iterators",
+      "requirement_ids": [
+        "B7"
+      ]
+    },
+    {
+      "check_id": "test_consecutive_groups_step.py::test_lazy_on_unbounded_run",
+      "requirement_ids": [
+        "B7"
+      ]
+    },
+    {
+      "check_id": "test_consecutive_groups_step.py::test_lazy_on_unbounded_sequence_of_runs",
+      "requirement_ids": [
+        "B7"
+      ]
+    },
+    {
+      "check_id": "test_consecutive_groups_step.py::test_next_group_without_consuming_current_group",
+      "requirement_ids": [
+        "B8"
+      ]
+    }
+  ],
+  "content_sha256": "45b77c731e8ecca692309f8c4f7377a3a3271cbeb1a36d9c527207edd8cb9c63",
+  "generation": {
+    "generator": "model:claude-code-subagent:testgen:v1",
+    "run_id": "unrecorded",
+    "prompt_sha256": "",
+    "created_at": "",
+    "budget": {},
+    "notes": ""
+  },
+  "audit": null,
+  "frozen": true,
+  "version": 1
+}

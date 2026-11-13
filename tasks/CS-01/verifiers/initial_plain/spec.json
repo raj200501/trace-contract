@@ -1,0 +1,115 @@
+{
+  "schema_version": "0.1.0",
+  "verifier_id": "initial_plain",
+  "task_id": "CS-01",
+  "condition": "initial_plain",
+  "contract_id": "CS-01-initial_only",
+  "isolation": "process_separated",
+  "test_dir": "verifiers/initial_plain/tests",
+  "checks": [
+    {
+      "check_id": "test_naturalsize_trailing_zero.py::test_r1_decimal_whole_number_has_no_trailing_zero",
+      "requirement_ids": [
+        "R1"
+      ]
+    },
+    {
+      "check_id": "test_naturalsize_trailing_zero.py::test_r2_binary_whole_number_has_no_trailing_zero",
+      "requirement_ids": [
+        "R2"
+      ]
+    },
+    {
+      "check_id": "test_naturalsize_trailing_zero.py::test_r3_contract_examples_keep_their_decimal",
+      "requirement_ids": [
+        "R3"
+      ]
+    },
+    {
+      "check_id": "test_naturalsize_trailing_zero.py::test_r3_other_nonzero_decimals_unchanged",
+      "requirement_ids": [
+        "R3"
+      ]
+    },
+    {
+      "check_id": "test_naturalsize_trailing_zero.py::test_r4_contract_examples",
+      "requirement_ids": [
+        "R4"
+      ]
+    },
+    {
+      "check_id": "test_naturalsize_trailing_zero.py::test_r4_every_decimal_unit",
+      "requirement_ids": [
+        "R4"
+      ]
+    },
+    {
+      "check_id": "test_naturalsize_trailing_zero.py::test_r4_every_binary_unit",
+      "requirement_ids": [
+        "R4"
+      ]
+    },
+    {
+      "check_id": "test_naturalsize_trailing_zero.py::test_r4_integer_part_zeros_are_kept",
+      "requirement_ids": [
+        "R4"
+      ]
+    },
+    {
+      "check_id": "test_naturalsize_trailing_zero.py::test_r5_contract_examples",
+      "requirement_ids": [
+        "R5"
+      ]
+    },
+    {
+      "check_id": "test_naturalsize_trailing_zero.py::test_r5_values_that_round_to_whole_numbers",
+      "requirement_ids": [
+        "R5"
+      ]
+    },
+    {
+      "check_id": "test_naturalsize_trailing_zero.py::test_sweep_decimal_mode_matches_rule",
+      "requirement_ids": [
+        "R3",
+        "R4",
+        "R5"
+      ]
+    },
+    {
+      "check_id": "test_naturalsize_trailing_zero.py::test_sweep_binary_mode_matches_rule",
+      "requirement_ids": [
+        "R3",
+        "R4",
+        "R5"
+      ]
+    },
+    {
+      "check_id": "test_naturalsize_trailing_zero.py::test_negative_sizes",
+      "requirement_ids": [
+        "R3",
+        "R4",
+        "R5"
+      ]
+    },
+    {
+      "check_id": "test_naturalsize_trailing_zero.py::test_float_and_string_inputs",
+      "requirement_ids": [
+        "R3",
+        "R4",
+        "R5"
+      ]
+    }
+  ],
+  "content_sha256": "d61532ca2e51ff1f1285c0745d0139e5db42a136413b0bb038efa726c5f13dde",
+  "generation": {
+    "generator": "model:claude-code-subagent:testgen:v1",
+    "run_id": "unrecorded",
+    "prompt_sha256": "",
+    "created_at": "",
+    "budget": {},
+    "notes": ""
+  },
+  "audit": null,
+  "frozen": false,
+  "version": 1
+}

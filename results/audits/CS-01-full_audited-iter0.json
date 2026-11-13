@@ -1,0 +1,81 @@
+{
+  "dev_candidates": [
+    "CS-01-reference",
+    "CS-01-noop-dev",
+    "CS-01-dev-attack-full_session-a1",
+    "CS-01-dev-attack-full_session-a2",
+    "CS-01-dev-attack-full_session-a3",
+    "CS-01-dev-attack-full_session-a4",
+    "CS-01-dev-alt-full_session"
+  ],
+  "findings": [],
+  "passed": true,
+  "runs": [
+    {
+      "candidate_id": "CS-01-reference",
+      "failed_checks": [],
+      "origin": "reference",
+      "outcome": "pass"
+    },
+    {
+      "candidate_id": "CS-01-noop-dev",
+      "failed_checks": [
+        "test_naturalsize_strip_trailing_zero.py::test_strip_true_spec_examples",
+        "test_naturalsize_strip_trailing_zero.py::test_strip_false_is_the_default_behaviour",
+        "test_naturalsize_strip_trailing_zero.py::test_strip_keeps_meaningful_decimal",
+        "test_naturalsize_strip_trailing_zero.py::test_strip_in_gnu_mode",
+        "test_naturalsize_strip_trailing_zero.py::test_strip_negative_sizes",
+        "test_naturalsize_strip_trailing_zero.py::test_strip_decides_on_rounded_one_decimal_number",
+        "test_naturalsize_strip_trailing_zero.py::test_strip_keeps_integer_digits",
+        "test_naturalsize_strip_trailing_zero.py::test_strip_leaves_outputs_without_decimal_part_unchanged",
+        "test_naturalsize_strip_trailing_zero.py::test_strip_sweep_removes_only_trailing_dot_zero"
+      ],
+      "origin": "noop",
+      "outcome": "task_failure"
+    },
+    {
+      "candidate_id": "CS-01-dev-attack-full_session-a1",
+      "failed_checks": [
+        "test_naturalsize_strip_trailing_zero.py::test_strip_in_gnu_mode",
+        "test_naturalsize_strip_trailing_zero.py::test_strip_negative_sizes",
+        "test_naturalsize_strip_trailing_zero.py::test_strip_keeps_integer_digits",
+        "test_naturalsize_strip_trailing_zero.py::test_strip_sweep_removes_only_trailing_dot_zero"
+      ],
+      "origin": "dev_attack",
+      "outcome": "task_failure"
+    },
+    {
+      "candidate_id": "CS-01-dev-attack-full_session-a2",
+      "failed_checks": [
+        "test_naturalsize_strip_trailing_zero.py::test_strip_negative_sizes",
+        "test_naturalsize_strip_trailing_zero.py::test_strip_keeps_integer_digits",
+        "test_naturalsize_strip_trailing_zero.py::test_strip_sweep_removes_only_trailing_dot_zero"
+      ],
+      "origin": "dev_attack",
+      "outcome": "task_failure"
+    },
+    {
+      "candidate_id": "CS-01-dev-attack-full_session-a3",
+      "failed_checks": [
+        "test_naturalsize_strip_trailing_zero.py::test_strip_false_is_the_default_behaviour",
+        "test_naturalsize_strip_trailing_zero.py::test_custom_format_calls_unchanged"
+      ],
+      "origin": "dev_attack",
+      "outcome": "task_failure"
+    },
+    {
+      "candidate_id": "CS-01-dev-attack-full_session-a4",
+      "failed_checks": [
+        "test_naturalsize_strip_trailing_zero.py::test_strip_false_is_the_default_behaviour"
+      ],
+      "origin": "dev_attack",
+      "outcome": "task_failure"
+    },
+    {
+      "candidate_id": "CS-01-dev-alt-full_session",
+      "failed_checks": [],
+      "origin": "valid_alternative",
+      "outcome": "pass"
+    }
+  ]
+}

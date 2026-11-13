@@ -1,0 +1,81 @@
+{
+  "dev_candidates": [
+    "CS-04-reference",
+    "CS-04-noop-dev",
+    "CS-04-dev-attack-full_session-a1",
+    "CS-04-dev-attack-full_session-a2",
+    "CS-04-dev-attack-full_session-a3",
+    "CS-04-dev-attack-full_session-a4",
+    "CS-04-dev-alt-full_session"
+  ],
+  "findings": [],
+  "passed": true,
+  "runs": [
+    {
+      "candidate_id": "CS-04-reference",
+      "failed_checks": [],
+      "origin": "reference",
+      "outcome": "pass"
+    },
+    {
+      "candidate_id": "CS-04-noop-dev",
+      "failed_checks": [
+        "test_consecutive_groups_step.py::test_step_two_user_examples",
+        "test_consecutive_groups_step.py::test_positive_step_groups_are_maximal_runs",
+        "test_consecutive_groups_step.py::test_negative_step_user_examples",
+        "test_consecutive_groups_step.py::test_negative_step_only_groups_descending_runs",
+        "test_consecutive_groups_step.py::test_zero_step_raises_value_error",
+        "test_consecutive_groups_step.py::test_explicit_step_one_matches_default",
+        "test_consecutive_groups_step.py::test_step_with_ordering",
+        "test_consecutive_groups_step.py::test_randomized_runs_match_definition",
+        "test_consecutive_groups_step.py::test_groups_are_lazy_iterators_with_step",
+        "test_consecutive_groups_step.py::test_skipped_groups_still_yield_correct_runs"
+      ],
+      "origin": "noop",
+      "outcome": "task_failure"
+    },
+    {
+      "candidate_id": "CS-04-dev-attack-full_session-a1",
+      "failed_checks": [
+        "test_consecutive_groups_step.py::test_step_with_ordering",
+        "test_consecutive_groups_step.py::test_randomized_runs_match_definition"
+      ],
+      "origin": "dev_attack",
+      "outcome": "task_failure"
+    },
+    {
+      "candidate_id": "CS-04-dev-attack-full_session-a2",
+      "failed_checks": [
+        "test_consecutive_groups_step.py::test_groups_are_lazy_iterators_with_step"
+      ],
+      "origin": "dev_attack",
+      "outcome": "task_failure"
+    },
+    {
+      "candidate_id": "CS-04-dev-attack-full_session-a3",
+      "failed_checks": [
+        "test_consecutive_groups_step.py::test_zero_step_raises_value_error"
+      ],
+      "origin": "dev_attack",
+      "outcome": "task_failure"
+    },
+    {
+      "candidate_id": "CS-04-dev-attack-full_session-a4",
+      "failed_checks": [
+        "test_consecutive_groups_step.py::test_negative_step_user_examples",
+        "test_consecutive_groups_step.py::test_negative_step_only_groups_descending_runs",
+        "test_consecutive_groups_step.py::test_step_with_ordering",
+        "test_consecutive_groups_step.py::test_randomized_runs_match_definition",
+        "test_consecutive_groups_step.py::test_skipped_groups_still_yield_correct_runs"
+      ],
+      "origin": "dev_attack",
+      "outcome": "task_failure"
+    },
+    {
+      "candidate_id": "CS-04-dev-alt-full_session",
+      "failed_checks": [],
+      "origin": "valid_alternative",
+      "outcome": "pass"
+    }
+  ]
+}

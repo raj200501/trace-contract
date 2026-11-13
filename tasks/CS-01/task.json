@@ -46,13 +46,24 @@
     "full_session": "contracts/full_session.json"
   },
   "verifiers": [
-    "verifiers/repo_tests/spec.json"
+    "verifiers/repo_tests/spec.json",
+    "verifiers/initial_plain/spec.json",
+    "verifiers/full_plain/spec.json",
+    "verifiers/llm_freeform/spec.json",
+    "verifiers/full_audited/spec.json",
+    "verifiers/initial_audited/spec.json"
   ],
   "candidates": [
     "candidates/CS-01-reference.json",
     "candidates/CS-01-pre-correction.json",
     "candidates/CS-01-noop-dev.json",
-    "candidates/CS-01-noop-eval.json"
+    "candidates/CS-01-noop-eval.json",
+    "candidates/CS-01-dev-attack-full_session-a1.json",
+    "candidates/CS-01-dev-attack-full_session-a2.json",
+    "candidates/CS-01-dev-attack-full_session-a3.json",
+    "candidates/CS-01-dev-attack-full_session-a4.json",
+    "candidates/CS-01-dev-alt-initial_only.json",
+    "candidates/CS-01-dev-alt-full_session.json"
   ],
   "notes": ""
 }

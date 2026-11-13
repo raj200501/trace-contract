@@ -1,0 +1,385 @@
+{
+  "schema_version": "0.1.0",
+  "contract_id": "CS-02-full_session",
+  "task_id": "CS-02",
+  "session_id": "CS-02-session",
+  "variant": "full_session",
+  "requirements": [
+    {
+      "req_id": "R1",
+      "statement": "JSONStorage writes must be atomic: at every point in time, including when the writing process dies or the disk fills up in the middle of a write, the database file on disk is a complete, readable JSON file holding either the full old data or the full new data. It must never be left half-written or corrupted. For example, an interrupted write of a smaller new state over a larger old state must not leave the new prefix followed by leftover old bytes.",
+      "kind": "change",
+      "status": "explicit",
+      "introduced_at": "CS-02-session/L000001.00",
+      "evidence": [
+        {
+          "event_id": "CS-02-session/L000001.00",
+          "start": 235,
+          "end": 273,
+          "quote": "Can you make JSONStorage writes atomic"
+        },
+        {
+          "event_id": "CS-02-session/L000001.00",
+          "start": 349,
+          "end": 416,
+          "quote": "so the file on disk is always either the old version or the new one"
+        },
+        {
+          "event_id": "CS-02-session/L000001.00",
+          "start": 90,
+          "end": 155,
+          "quote": "if the process dies or the disk fills up in the middle of a write"
+        },
+        {
+          "event_id": "CS-02-session/L000001.00",
+          "start": 157,
+          "end": 233,
+          "quote": "the JSON file is left half-written and the whole database becomes unreadable"
+        }
+      ],
+      "rationale": "",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "(a) Disk full: write a large old state with JSONStorage, then make a low-level operation used by the next write (os.fsync, os.write or the file write, os.replace/os.rename) raise OSError(errno.ENOSPC) while writing a smaller new state such as {'_default': {}}. Afterwards json.load(db file) succeeds and equals the old state, and TinyDB(path).all() works. (b) Process death: in a subprocess, write an old state, then make a function used during the next write call os._exit() (or SIGKILL the writer at random moments during repeated large writes). After the child dies, the db file parses as JSON and equals exactly one of the written states (old or new).",
+      "scored": true,
+      "subjective": false,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    },
+    {
+      "req_id": "R2",
+      "statement": "The atomic write must work by writing the complete new contents to a separate temporary file and then swapping that file into place over the database path (e.g. os.replace or os.rename). It must not rewrite the existing database file in place with seek(0)/write/truncate.",
+      "kind": "constraint",
+      "status": "explicit",
+      "introduced_at": "CS-02-session/L000001.00",
+      "evidence": [
+        {
+          "event_id": "CS-02-session/L000001.00",
+          "start": 276,
+          "end": 346,
+          "quote": "write the new contents to a temporary file and then swap it into place"
+        },
+        {
+          "event_id": "CS-02-session/L000001.00",
+          "start": 21,
+          "end": 85,
+          "quote": "rewrites the database file in place (seek to 0, write, truncate)"
+        }
+      ],
+      "rationale": "",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "On POSIX, os.stat(db_path).st_ino differs before and after a successful JSONStorage.write, because the file was replaced rather than rewritten in place. Wrapping os.replace/os.rename shows a call whose destination is the database path and whose source is a different (temporary) file holding the new JSON. If that rename step is made to fail, the database file still holds the old contents.",
+      "scored": true,
+      "subjective": false,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    },
+    {
+      "req_id": "R3",
+      "statement": "Reads through the same TinyDB instance and the same JSONStorage object must always return what was just written, for the whole lifetime of a single long-lived instance. After storage.write(X), storage.read() == X immediately, for every write in a sequence (write A, read -> A; write B, read -> B). Through TinyDB, after db.insert({'a': 1}) on an instance kept open, db.all() and db.storage.read() immediately include the new document.",
+      "kind": "invariant",
+      "status": "explicit",
+      "introduced_at": "CS-02-session/L000160.00",
+      "evidence": [
+        {
+          "event_id": "CS-02-session/L000160.00",
+          "start": 105,
+          "end": 201,
+          "quote": "our app keeps a single TinyDB instance open for its whole lifetime and reads right after writing"
+        },
+        {
+          "event_id": "CS-02-session/L000160.00",
+          "start": 206,
+          "end": 305,
+          "quote": "reads through the same instance (and the same storage object) must always see what was just written"
+        }
+      ],
+      "rationale": "",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "Open one JSONStorage(path) and one TinyDB(path). Perform many consecutive write/read cycles with different data, keeping the same objects open. Every read() right after a write returns exactly that write's data, never stale data from the replaced file. TinyDB insert/update/remove results are immediately visible through the same db and db.storage.",
+      "scored": true,
+      "subjective": false,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    },
+    {
+      "req_id": "R4",
+      "statement": "The encoding argument of JSONStorage must keep being honored exactly as before. For any encoding (default/None, 'utf-8', 'utf-8-sig', 'utf-16', 'latin-1', ...), the bytes written to the database file must be identical to those the original in-place implementation writes for the same data and kwargs, on the first and on later writes. For an explicit codec that is json.dumps(data, **kwargs).encode(encoding), with a single BOM at the start for codecs like 'utf-16'/'utf-8-sig'. The data must also read back correctly with that encoding.",
+      "kind": "invariant",
+      "status": "explicit",
+      "introduced_at": "CS-02-session/L000160.00",
+      "evidence": [
+        {
+          "event_id": "CS-02-session/L000160.00",
+          "start": 307,
+          "end": 382,
+          "quote": "Please also keep honoring the `encoding` argument and the extra json kwargs"
+        },
+        {
+          "event_id": "CS-02-session/L000160.00",
+          "start": 436,
+          "end": 478,
+          "quote": "so the bytes written are the same as today"
+        }
+      ],
+      "rationale": "",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "For several encodings, write data containing non-ASCII text twice through JSONStorage(path, encoding=enc, ensure_ascii=False), the second state shorter than the first. After each write, the db file bytes equal the bytes the original implementation produces for the same sequence (equivalently json.dumps(data, ensure_ascii=False).encode(enc)). storage.read() and a fresh JSONStorage(path, encoding=enc).read() return the data.",
+      "scored": true,
+      "subjective": false,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    },
+    {
+      "req_id": "R5",
+      "statement": "Extra keyword arguments given to JSONStorage (e.g. through TinyDB(path, indent=4, sort_keys=True)) must keep being forwarded to json.dumps exactly as before. The database file bytes must be identical to what the original implementation writes for the same data and kwargs (e.g. indent=4, sort_keys=True, separators, ensure_ascii=False).",
+      "kind": "invariant",
+      "status": "explicit",
+      "introduced_at": "CS-02-session/L000160.00",
+      "evidence": [
+        {
+          "event_id": "CS-02-session/L000160.00",
+          "start": 361,
+          "end": 434,
+          "quote": "the extra json kwargs (like indent=4 or sort_keys=True) exactly as before"
+        },
+        {
+          "event_id": "CS-02-session/L000160.00",
+          "start": 436,
+          "end": 478,
+          "quote": "so the bytes written are the same as today"
+        }
+      ],
+      "rationale": "",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "JSONStorage(path, indent=4, sort_keys=True).write(data), or TinyDB(path, indent=4, sort_keys=True) inserts, produce a file whose bytes equal json.dumps(data, indent=4, sort_keys=True) encoded with the storage encoding, the same as the original implementation. Repeat for other kwarg combinations and for consecutive writes where the new data is shorter than the old.",
+      "scored": true,
+      "subjective": false,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    },
+    {
+      "req_id": "R6",
+      "statement": "After a normal (successful) write, no temporary files are left next to the database file. The directory containing the database holds exactly the same set of files as before the write (e.g. only 'db.json').",
+      "kind": "constraint",
+      "status": "explicit",
+      "introduced_at": "CS-02-session/L000160.00",
+      "evidence": [
+        {
+          "event_id": "CS-02-session/L000160.00",
+          "start": 490,
+          "end": 550,
+          "quote": "leave temporary files lying around next to the database file"
+        },
+        {
+          "event_id": "CS-02-session/L000160.00",
+          "start": 553,
+          "end": 577,
+          "quote": "not after a normal write"
+        }
+      ],
+      "rationale": "",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "In an empty temp directory, open JSONStorage/TinyDB at dir/db.json and perform several writes/inserts, then close. After each write and after close, os.listdir(dir) == ['db.json'].",
+      "scored": true,
+      "subjective": false,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    },
+    {
+      "req_id": "R7",
+      "statement": "When a write fails halfway, no temporary file is left next to the database file. A halfway failure is an exception during the write, e.g. OSError(ENOSPC) while writing, flushing or fsyncing the new data, a failure of the rename/replace step, or a value json cannot serialize. After the failed write, the database directory contains exactly the files it contained before.",
+      "kind": "constraint",
+      "status": "explicit",
+      "introduced_at": "CS-02-session/L000160.00",
+      "evidence": [
+        {
+          "event_id": "CS-02-session/L000160.00",
+          "start": 490,
+          "end": 550,
+          "quote": "leave temporary files lying around next to the database file"
+        },
+        {
+          "event_id": "CS-02-session/L000160.00",
+          "start": 579,
+          "end": 613,
+          "quote": "and not when a write fails halfway"
+        }
+      ],
+      "rationale": "",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "Monkeypatch os.fsync, os.replace/os.rename or the file write to raise OSError(errno.ENOSPC), or pass non-JSON-serializable data. Call storage.write(new) and catch the error. Then os.listdir(dir) == ['db.json'].",
+      "scored": true,
+      "subjective": false,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    },
+    {
+      "req_id": "R8",
+      "statement": "When a write fails halfway, the original database file must stay exactly as it was. Its contents must be byte-for-byte identical (not truncated, partially overwritten or replaced), so the database still loads with its previous data.",
+      "kind": "invariant",
+      "status": "explicit",
+      "introduced_at": "CS-02-session/L000160.00",
+      "evidence": [
+        {
+          "event_id": "CS-02-session/L000160.00",
+          "start": 579,
+          "end": 613,
+          "quote": "and not when a write fails halfway"
+        },
+        {
+          "event_id": "CS-02-session/L000160.00",
+          "start": 615,
+          "end": 673,
+          "quote": "in that case the original file must stay exactly as it was"
+        }
+      ],
+      "rationale": "",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "Write old data and record the file bytes and os.stat (st_ino, st_size). Make the next write fail midway (os.fsync, os.replace/os.rename or the write raising OSError(ENOSPC), or non-serializable data). Afterwards the file bytes equal the recorded bytes, with the same inode and size, and TinyDB(path).all() returns the old documents.",
+      "scored": true,
+      "subjective": false,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    },
+    {
+      "req_id": "R9",
+      "statement": "After a failed write, the same long-lived JSONStorage/TinyDB instance must remain usable. storage.read() returns the original (pre-failure) data, and a later successful write is persisted and immediately visible to reads through the same instance.",
+      "kind": "invariant",
+      "status": "inferred",
+      "introduced_at": "CS-02-session/L000160.00",
+      "evidence": [
+        {
+          "event_id": "CS-02-session/L000160.00",
+          "start": 105,
+          "end": 171,
+          "quote": "our app keeps a single TinyDB instance open for its whole lifetime"
+        },
+        {
+          "event_id": "CS-02-session/L000160.00",
+          "start": 615,
+          "end": 673,
+          "quote": "in that case the original file must stay exactly as it was"
+        }
+      ],
+      "rationale": "The user's app keeps one TinyDB instance open for its whole lifetime and requires reads through it to always reflect the database. The user also requires a failed write to leave the original file untouched. So a failed write must not leave the storage object broken, e.g. with a closed or stale file handle.",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "s = JSONStorage(path); s.write(A). Make os.fsync (or os.replace) raise OSError once and call s.write(B), which fails; restore the function. Then s.read() == A. Then s.write(C) succeeds, s.read() == C and the file holds C.",
+      "scored": true,
+      "subjective": false,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    },
+    {
+      "req_id": "R10",
+      "statement": "Repeated writes on a single long-lived JSONStorage must not leak open file handles. The process's number of open file descriptors stays bounded instead of growing with the number of writes, so the instance keeps working over thousands of write/read cycles.",
+      "kind": "invariant",
+      "status": "inferred",
+      "introduced_at": "CS-02-session/L000160.00",
+      "evidence": [
+        {
+          "event_id": "CS-02-session/L000160.00",
+          "start": 105,
+          "end": 171,
+          "quote": "our app keeps a single TinyDB instance open for its whole lifetime"
+        },
+        {
+          "event_id": "CS-02-session/L000160.00",
+          "start": 268,
+          "end": 305,
+          "quote": "must always see what was just written"
+        }
+      ],
+      "rationale": "The user's app keeps one TinyDB instance open for its whole lifetime and reads after every write. An implementation that reopens the database file after each swap without closing the previous handle would eventually run out of file descriptors and break reads and writes. That would violate the requirement that reads always see what was just written.",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "On Linux, count the entries of /proc/self/fd before and after 500 write+read cycles on one JSONStorage. The count grows by at most a small constant (e.g. 2 or fewer). Also, 2000 or more cycles complete without OSError(EMFILE), and each read returns the last written data.",
+      "scored": true,
+      "subjective": false,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    },
+    {
+      "req_id": "R11",
+      "statement": "Unresolved: the session does not settle whether a temporary file left behind when the writing process is killed mid-write must be removed later, e.g. the next time the database is opened. The killed process cannot clean up after itself. The user forbids leftover temporary files after a normal write and when a write fails halfway, but never says whether a killed process counts as a write that fails halfway.",
+      "kind": "constraint",
+      "status": "unresolved",
+      "introduced_at": "CS-02-session/L000160.00",
+      "evidence": [
+        {
+          "event_id": "CS-02-session/L000160.00",
+          "start": 579,
+          "end": 613,
+          "quote": "and not when a write fails halfway"
+        },
+        {
+          "event_id": "CS-02-session/L000001.00",
+          "start": 90,
+          "end": 155,
+          "quote": "if the process dies or the disk fills up in the middle of a write"
+        }
+      ],
+      "rationale": "The first message names process death as a failure mode, and the follow-up forbids leftover temp files only for normal writes and writes that fail halfway. Whether a write interrupted by process death is covered is never clarified.",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "Kill a subprocess (os._exit) in the middle of JSONStorage.write, then reopen the database with JSONStorage(path) or TinyDB(path) and check whether the directory contains only db.json. Not scored, because the requirement is ambiguous.",
+      "scored": false,
+      "subjective": false,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    },
+    {
+      "req_id": "R12",
+      "statement": "Process constraint: all work must stay inside /home/user/cs_workspaces/CS-02 (the tinydb working copy), and repository code is run only through the provided wrapper scripts run_tests.sh and run_python.sh (isolated container).",
+      "kind": "constraint",
+      "status": "explicit",
+      "introduced_at": "CS-02-session/L000001.00",
+      "evidence": [
+        {
+          "event_id": "CS-02-session/L000001.00",
+          "start": 781,
+          "end": 844,
+          "quote": "Please keep all your work inside /home/user/cs_workspaces/CS-02"
+        },
+        {
+          "event_id": "CS-02-session/L000001.00",
+          "start": 567,
+          "end": 633,
+          "quote": "use the two wrapper scripts, which run it in an isolated container"
+        }
+      ],
+      "rationale": "",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "A black-box test of the resulting code cannot check this. It is a constraint on the agent's process: no files outside /home/user/cs_workspaces/CS-02 are modified.",
+      "scored": false,
+      "subjective": true,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    }
+  ],
+  "instruction": "Make the following changes:\n- JSONStorage writes must be atomic: at every point in time, including when the writing process dies or the disk fills up in the middle of a write, the database file on disk is a complete, readable JSON file holding either the full old data or the full new data. It must never be left half-written or corrupted. For example, an interrupted write of a smaller new state over a larger old state must not leave the new prefix followed by leftover old bytes.\n\nThe following existing behaviour must be preserved:\n- Reads through the same TinyDB instance and the same JSONStorage object must always return what was just written, for the whole lifetime of a single long-lived instance. After storage.write(X), storage.read() == X immediately, for every write in a sequence (write A, read -> A; write B, read -> B). Through TinyDB, after db.insert({'a': 1}) on an instance kept open, db.all() and db.storage.read() immediately include the new document.\n- The encoding argument of JSONStorage must keep being honored exactly as before. For any encoding (default/None, 'utf-8', 'utf-8-sig', 'utf-16', 'latin-1', ...), the bytes written to the database file must be identical to those the original in-place implementation writes for the same data and kwargs, on the first and on later writes. For an explicit codec that is json.dumps(data, **kwargs).encode(encoding), with a single BOM at the start for codecs like 'utf-16'/'utf-8-sig'. The data must also read back correctly with that encoding.\n- Extra keyword arguments given to JSONStorage (e.g. through TinyDB(path, indent=4, sort_keys=True)) must keep being forwarded to json.dumps exactly as before. The database file bytes must be identical to what the original implementation writes for the same data and kwargs (e.g. indent=4, sort_keys=True, separators, ensure_ascii=False).\n- When a write fails halfway, the original database file must stay exactly as it was. Its contents must be byte-for-byte identical (not truncated, partially overwritten or replaced), so the database still loads with its previous data.\n- After a failed write, the same long-lived JSONStorage/TinyDB instance must remain usable. storage.read() returns the original (pre-failure) data, and a later successful write is persisted and immediately visible to reads through the same instance.\n- Repeated writes on a single long-lived JSONStorage must not leak open file handles. The process's number of open file descriptors stays bounded instead of growing with the number of writes, so the instance keeps working over thousands of write/read cycles.\n\nConstraints:\n- The atomic write must work by writing the complete new contents to a separate temporary file and then swapping that file into place over the database path (e.g. os.replace or os.rename). It must not rewrite the existing database file in place with seek(0)/write/truncate.\n- After a normal (successful) write, no temporary files are left next to the database file. The directory containing the database holds exactly the same set of files as before the write (e.g. only 'db.json').\n- When a write fails halfway, no temporary file is left next to the database file. A halfway failure is an exception during the write, e.g. OSError(ENOSPC) while writing, flushing or fsyncing the new data, a failure of the rename/replace step, or a value json cannot serialize. After the failed write, the database directory contains exactly the files it contained before.\n- Process constraint: all work must stay inside /home/user/cs_workspaces/CS-02 (the tinydb working copy), and repository code is run only through the provided wrapper scripts run_tests.sh and run_python.sh (isolated container).\n",
+  "created_by": "model:claude-code-subagent:contract:v1",
+  "created_at": "2026-11-13T02:36:04+00:00",
+  "notes": ""
+}

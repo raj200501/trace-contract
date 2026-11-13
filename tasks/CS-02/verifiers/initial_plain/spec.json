@@ -1,0 +1,121 @@
+{
+  "schema_version": "0.1.0",
+  "verifier_id": "initial_plain",
+  "task_id": "CS-02",
+  "condition": "initial_plain",
+  "contract_id": "CS-02-initial_only",
+  "isolation": "process_separated",
+  "test_dir": "verifiers/initial_plain/tests",
+  "checks": [
+    {
+      "check_id": "test_atomic_writes.py::test_write_swaps_new_file_into_place",
+      "requirement_ids": [
+        "R1",
+        "R5"
+      ]
+    },
+    {
+      "check_id": "test_atomic_writes.py::test_shrinking_contents_and_no_leftover_files",
+      "requirement_ids": [
+        "R1",
+        "R6"
+      ]
+    },
+    {
+      "check_id": "test_atomic_writes.py::test_disk_full_while_writing_keeps_old_file",
+      "requirement_ids": [
+        "R2",
+        "R6",
+        "R7"
+      ]
+    },
+    {
+      "check_id": "test_atomic_writes.py::test_failed_swap_keeps_old_file",
+      "requirement_ids": [
+        "R2",
+        "R6",
+        "R7"
+      ]
+    },
+    {
+      "check_id": "test_atomic_writes.py::test_unserializable_document_keeps_old_file",
+      "requirement_ids": [
+        "R2",
+        "R4",
+        "R6",
+        "R7"
+      ]
+    },
+    {
+      "check_id": "test_atomic_writes.py::test_killed_during_write_leaves_complete_file",
+      "requirement_ids": [
+        "R2"
+      ]
+    },
+    {
+      "check_id": "test_atomic_writes.py::test_instance_reads_its_own_successive_writes",
+      "requirement_ids": [
+        "R3"
+      ]
+    },
+    {
+      "check_id": "test_atomic_writes.py::test_serialized_text_matches_base_format",
+      "requirement_ids": [
+        "R4"
+      ]
+    },
+    {
+      "check_id": "test_atomic_writes.py::test_read_only_storage_refuses_writes",
+      "requirement_ids": [
+        "R4"
+      ]
+    },
+    {
+      "check_id": "test_atomic_writes.py::test_create_dirs_relative_and_pathlib_paths",
+      "requirement_ids": [
+        "R4",
+        "R1"
+      ]
+    },
+    {
+      "check_id": "test_atomic_writes.py::test_system_temp_dir_on_other_filesystem",
+      "requirement_ids": [
+        "R5",
+        "R1"
+      ]
+    },
+    {
+      "check_id": "test_atomic_writes.py::test_new_contents_synced_before_swap",
+      "requirement_ids": [
+        "R8"
+      ]
+    },
+    {
+      "check_id": "test_atomic_writes.py::test_sync_failure_aborts_write",
+      "requirement_ids": [
+        "R8",
+        "R2",
+        "R6",
+        "R7"
+      ]
+    },
+    {
+      "check_id": "test_existing_suite.py::test_existing_test_suite_still_passes",
+      "requirement_ids": [
+        "R4"
+      ]
+    }
+  ],
+  "content_sha256": "0692c34269f91151b97caafb58894e2a9d7d0c56d6a539c07da3b6df6f91a2b3",
+  "generation": {
+    "generator": "model:claude-code-subagent:testgen:v1",
+    "run_id": "unrecorded",
+    "prompt_sha256": "",
+    "created_at": "",
+    "budget": {},
+    "notes": ""
+  },
+  "audit": null,
+  "frozen": false,
+  "version": 1
+}

@@ -122,6 +122,9 @@ def cmd_audit(a) -> None:
         dev = [c for c in dev if c.candidate_id.startswith(m.task_id + "-noop") or c.origin.value == "reference"
                or a.audit_set in c.produced_by]
     rep = run_audit(spec, contract, dev, _grader(tdir, m), task_dir=tdir)
+    if a.record is not None:
+        rec = rep.to_record(iterations=a.record, dev_ids=[c.candidate_id for c in dev])
+        dump(spec.model_copy(update={"audit": rec}), _spec_path(tdir, a.verifier_id))
     _out({"passed": rep.passed, "findings": [f.__dict__ for f in rep.findings], "runs": rep.runs,
           "dev_candidates": [c.candidate_id for c in dev]})
 
@@ -382,6 +385,7 @@ def main(argv: list[str] | None = None) -> None:
     p = sub.add_parser("audit", help="run audit:v1 on a verifier with development candidates only")
     p.add_argument("task"); p.add_argument("verifier_id"); p.add_argument("--contract")
     p.add_argument("--only", nargs="*"); p.add_argument("--audit-set", help="only dev candidates whose produced_by contains this tag")
+    p.add_argument("--record", type=int, help="store the audit result in the spec with this number of revision iterations")
     p.set_defaults(fn=cmd_audit)
     p = sub.add_parser("add-candidate", help="register a candidate from a state directory or a patch file")
     p.add_argument("task"); p.add_argument("candidate_id"); p.add_argument("--origin", required=True)

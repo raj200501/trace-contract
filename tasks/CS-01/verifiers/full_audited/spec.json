@@ -1,0 +1,123 @@
+{
+  "schema_version": "0.1.0",
+  "verifier_id": "full_audited",
+  "task_id": "CS-01",
+  "condition": "full_audited",
+  "contract_id": "CS-01-full_session",
+  "isolation": "process_separated",
+  "test_dir": "verifiers/full_audited/tests",
+  "checks": [
+    {
+      "check_id": "test_naturalsize_strip_trailing_zero.py::test_strip_true_spec_examples",
+      "requirement_ids": [
+        "R5"
+      ]
+    },
+    {
+      "check_id": "test_naturalsize_strip_trailing_zero.py::test_strip_false_is_the_default_behaviour",
+      "requirement_ids": [
+        "R5"
+      ]
+    },
+    {
+      "check_id": "test_naturalsize_strip_trailing_zero.py::test_default_output_matches_base_examples",
+      "requirement_ids": [
+        "R4"
+      ]
+    },
+    {
+      "check_id": "test_naturalsize_strip_trailing_zero.py::test_default_output_matches_jinja2_filesizeformat",
+      "requirement_ids": [
+        "R4"
+      ]
+    },
+    {
+      "check_id": "test_naturalsize_strip_trailing_zero.py::test_default_output_matches_base_sweep",
+      "requirement_ids": [
+        "R4"
+      ]
+    },
+    {
+      "check_id": "test_naturalsize_strip_trailing_zero.py::test_default_output_keeps_translated_units",
+      "requirement_ids": [
+        "R4"
+      ]
+    },
+    {
+      "check_id": "test_naturalsize_strip_trailing_zero.py::test_custom_format_calls_unchanged",
+      "requirement_ids": [
+        "R6"
+      ]
+    },
+    {
+      "check_id": "test_naturalsize_strip_trailing_zero.py::test_strip_keeps_meaningful_decimal",
+      "requirement_ids": [
+        "R2"
+      ]
+    },
+    {
+      "check_id": "test_naturalsize_strip_trailing_zero.py::test_strip_in_gnu_mode",
+      "requirement_ids": [
+        "R8"
+      ]
+    },
+    {
+      "check_id": "test_naturalsize_strip_trailing_zero.py::test_strip_negative_sizes",
+      "requirement_ids": [
+        "R8"
+      ]
+    },
+    {
+      "check_id": "test_naturalsize_strip_trailing_zero.py::test_strip_decides_on_rounded_one_decimal_number",
+      "requirement_ids": [
+        "R9"
+      ]
+    },
+    {
+      "check_id": "test_naturalsize_strip_trailing_zero.py::test_strip_keeps_integer_digits",
+      "requirement_ids": [
+        "R9"
+      ]
+    },
+    {
+      "check_id": "test_naturalsize_strip_trailing_zero.py::test_strip_leaves_outputs_without_decimal_part_unchanged",
+      "requirement_ids": [
+        "R9"
+      ]
+    },
+    {
+      "check_id": "test_naturalsize_strip_trailing_zero.py::test_strip_sweep_removes_only_trailing_dot_zero",
+      "requirement_ids": [
+        "R9",
+        "R8",
+        "R2"
+      ]
+    }
+  ],
+  "content_sha256": "490bcf4e6191152e9c33097eb8a0f54452c0dc129136980a685169807ccf05c1",
+  "generation": {
+    "generator": "model:claude-code-subagent:testgen:v1+audit:v1",
+    "run_id": "unrecorded",
+    "prompt_sha256": "",
+    "created_at": "",
+    "budget": {},
+    "notes": ""
+  },
+  "audit": {
+    "procedure": "audit:v1",
+    "iterations": 0,
+    "passed": true,
+    "findings": [],
+    "dev_candidate_ids": [
+      "CS-01-reference",
+      "CS-01-noop-dev",
+      "CS-01-dev-attack-full_session-a1",
+      "CS-01-dev-attack-full_session-a2",
+      "CS-01-dev-attack-full_session-a3",
+      "CS-01-dev-attack-full_session-a4",
+      "CS-01-dev-alt-full_session"
+    ]
+  },
+  "frozen": false,
+  "version": 1
+}

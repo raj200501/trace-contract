@@ -1,0 +1,109 @@
+{
+  "schema_version": "0.1.0",
+  "verifier_id": "llm_freeform",
+  "task_id": "CS-02",
+  "condition": "llm_freeform",
+  "contract_id": null,
+  "isolation": "process_separated",
+  "test_dir": "verifiers/llm_freeform/tests",
+  "checks": [
+    {
+      "check_id": "test_atomic_json_storage.py::test_disk_full_write_keeps_old_file_and_leaves_no_temp_files",
+      "requirement_ids": [
+        "B1",
+        "B6"
+      ]
+    },
+    {
+      "check_id": "test_atomic_json_storage.py::test_tinydb_instance_keeps_working_after_disk_full_write",
+      "requirement_ids": [
+        "B1",
+        "B3",
+        "B6"
+      ]
+    },
+    {
+      "check_id": "test_atomic_json_storage.py::test_killed_writer_never_leaves_partial_database_file",
+      "requirement_ids": [
+        "B2"
+      ]
+    },
+    {
+      "check_id": "test_atomic_json_storage.py::test_storage_reads_back_every_write",
+      "requirement_ids": [
+        "B3"
+      ]
+    },
+    {
+      "check_id": "test_atomic_json_storage.py::test_tinydb_instance_sees_its_own_writes",
+      "requirement_ids": [
+        "B3"
+      ]
+    },
+    {
+      "check_id": "test_atomic_json_storage.py::test_written_bytes_honor_encoding_and_json_kwargs",
+      "requirement_ids": [
+        "B4",
+        "B3"
+      ]
+    },
+    {
+      "check_id": "test_atomic_json_storage.py::test_tinydb_json_kwargs_and_encoding_file_bytes",
+      "requirement_ids": [
+        "B4"
+      ]
+    },
+    {
+      "check_id": "test_atomic_json_storage.py::test_no_leftover_files_after_successful_writes",
+      "requirement_ids": [
+        "B5"
+      ]
+    },
+    {
+      "check_id": "test_atomic_json_storage.py::test_unserializable_data_leaves_file_and_directory_unchanged",
+      "requirement_ids": [
+        "B1",
+        "B6"
+      ]
+    },
+    {
+      "check_id": "test_atomic_json_storage.py::test_unencodable_data_leaves_file_and_directory_unchanged",
+      "requirement_ids": [
+        "B1",
+        "B6"
+      ]
+    },
+    {
+      "check_id": "test_atomic_json_storage.py::test_read_only_mode_still_rejects_writes",
+      "requirement_ids": [
+        "B7"
+      ]
+    },
+    {
+      "check_id": "test_atomic_json_storage.py::test_long_lived_storage_does_not_leak_file_descriptors",
+      "requirement_ids": [
+        "B8",
+        "B3"
+      ]
+    },
+    {
+      "check_id": "test_atomic_json_storage.py::test_relative_paths_and_create_dirs_keep_working",
+      "requirement_ids": [
+        "B9",
+        "B5"
+      ]
+    }
+  ],
+  "content_sha256": "ab50e0f5b60e25ee58aaf098650d1b958e3d356d79869a4ec6f77ba241e542e9",
+  "generation": {
+    "generator": "model:claude-code-subagent:testgen:v1",
+    "run_id": "unrecorded",
+    "prompt_sha256": "",
+    "created_at": "",
+    "budget": {},
+    "notes": ""
+  },
+  "audit": null,
+  "frozen": false,
+  "version": 1
+}

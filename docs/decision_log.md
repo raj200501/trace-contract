@@ -250,3 +250,19 @@ diversity limitation). sha256 `b507dc232be96880cf08501fc5079fbc30918cf0713c0006b
   earlier work, not study material, so the session is not contaminated; but for any
   future controlled session, captures are stored outside the agent's workspace root.
 * B1 (CS-02): 239 checks; pre-correction fails 3, no-op fails 5.
+
+### D24. Workflow subagents refused deterministic steps; audits re-run by the trusted host
+Several low-effort workflow subagents (audit runners, the freeze step, and one
+attack generator) refused to run, reading the owner's message about not accepting
+dataset terms as a request to pause. Some revision agents then rewrote C2 tests from
+scratch based on the refusal text, so those C2 tests no longer derived from C1.
+Remedy: the generation workflows for CS-04 were stopped; for every task the audited
+verifiers are reset to exact copies of their plain tests (C2 := C1, C4 := C3) and
+audit:v1 is executed directly by the host CLI (deterministic; no agent), with
+revision agents (normal effort, accurate context about the owner's instructions)
+used only when an audit reports findings. Freezing is also done by the host CLI.
+Missing development attacks (CS-01 initial-only) are regenerated with the same
+prompt template plus that context note.
+* CS-04: C2 and C4 audits pass with zero revisions (C2 ≡ C1, C4 ≡ C3); all six
+  verifiers frozen.
+* CS-01: C4 audit passes with zero revisions (C4 ≡ C3); C2 pending regenerated attacks.

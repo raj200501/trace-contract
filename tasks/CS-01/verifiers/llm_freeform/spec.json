@@ -1,0 +1,114 @@
+{
+  "schema_version": "0.1.0",
+  "verifier_id": "llm_freeform",
+  "task_id": "CS-01",
+  "condition": "llm_freeform",
+  "contract_id": null,
+  "isolation": "process_separated",
+  "test_dir": "verifiers/llm_freeform/tests",
+  "checks": [
+    {
+      "check_id": "test_naturalsize_strip_trailing_zero.py::test_default_examples_unchanged",
+      "requirement_ids": [
+        "B1"
+      ]
+    },
+    {
+      "check_id": "test_naturalsize_strip_trailing_zero.py::test_custom_format_calls_unchanged",
+      "requirement_ids": [
+        "B2"
+      ]
+    },
+    {
+      "check_id": "test_naturalsize_strip_trailing_zero.py::test_default_output_matches_base_everywhere",
+      "requirement_ids": [
+        "B1",
+        "B2"
+      ]
+    },
+    {
+      "check_id": "test_naturalsize_strip_trailing_zero.py::test_explicit_false_matches_base",
+      "requirement_ids": [
+        "B3"
+      ]
+    },
+    {
+      "check_id": "test_naturalsize_strip_trailing_zero.py::test_strip_user_examples",
+      "requirement_ids": [
+        "B4",
+        "B5"
+      ]
+    },
+    {
+      "check_id": "test_naturalsize_strip_trailing_zero.py::test_strip_drops_trailing_point_zero",
+      "requirement_ids": [
+        "B4"
+      ]
+    },
+    {
+      "check_id": "test_naturalsize_strip_trailing_zero.py::test_strip_keeps_meaningful_decimal",
+      "requirement_ids": [
+        "B5"
+      ]
+    },
+    {
+      "check_id": "test_naturalsize_strip_trailing_zero.py::test_strip_keeps_integer_digits_and_byte_counts",
+      "requirement_ids": [
+        "B6"
+      ]
+    },
+    {
+      "check_id": "test_naturalsize_strip_trailing_zero.py::test_strip_negative_sizes",
+      "requirement_ids": [
+        "B7"
+      ]
+    },
+    {
+      "check_id": "test_naturalsize_strip_trailing_zero.py::test_strip_uses_rounded_display_value",
+      "requirement_ids": [
+        "B8"
+      ]
+    },
+    {
+      "check_id": "test_naturalsize_strip_trailing_zero.py::test_strip_gnu_mode",
+      "requirement_ids": [
+        "B9"
+      ]
+    },
+    {
+      "check_id": "test_naturalsize_strip_trailing_zero.py::test_strip_custom_format_without_trailing_zero_unchanged",
+      "requirement_ids": [
+        "B10"
+      ]
+    },
+    {
+      "check_id": "test_naturalsize_strip_trailing_zero.py::test_strip_str_and_float_values",
+      "requirement_ids": [
+        "B11"
+      ]
+    },
+    {
+      "check_id": "test_naturalsize_strip_trailing_zero.py::test_strip_matches_base_minus_point_zero",
+      "requirement_ids": [
+        "B4",
+        "B5",
+        "B6",
+        "B7",
+        "B8",
+        "B11"
+      ]
+    }
+  ],
+  "content_sha256": "3911f5e5059502cf52863f348f4985e6703ea464b59fdfc4a6f028feeb1fa982",
+  "generation": {
+    "generator": "model:claude-code-subagent:testgen:v1",
+    "run_id": "unrecorded",
+    "prompt_sha256": "",
+    "created_at": "",
+    "budget": {},
+    "notes": ""
+  },
+  "audit": null,
+  "frozen": false,
+  "version": 1
+}
