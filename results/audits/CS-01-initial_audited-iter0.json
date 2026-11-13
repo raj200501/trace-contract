@@ -1,0 +1,119 @@
+{
+  "dev_candidates": [
+    "CS-01-reference",
+    "CS-01-noop-dev",
+    "CS-01-dev-alt-initial_only",
+    "CS-01-dev-attack-initial_only-a1",
+    "CS-01-dev-attack-initial_only-a2",
+    "CS-01-dev-attack-initial_only-a3",
+    "CS-01-dev-attack-initial_only-a4"
+  ],
+  "findings": [
+    {
+      "candidate_id": "CS-01-reference",
+      "code": "reference_not_passing",
+      "message": "CS-01-reference: task_failure; failed=['test_naturalsize_trailing_zero.py::test_r1_decimal_whole_number_has_no_trailing_zero', 'test_naturalsize_trailing_zero.py::test_r2_binary_whole_number_has_no_trailing_zero', 'test_naturalsize_trailing_zero.py::test_r4_contract_examples', 'test_naturalsize_trailing_zero.py::test_r4_every_decimal_unit', 'test_naturalsize_trailing_zero.py::test_r4_every_binary_unit']",
+      "requirement_id": null
+    }
+  ],
+  "passed": false,
+  "runs": [
+    {
+      "candidate_id": "CS-01-reference",
+      "failed_checks": [
+        "test_naturalsize_trailing_zero.py::test_r1_decimal_whole_number_has_no_trailing_zero",
+        "test_naturalsize_trailing_zero.py::test_r2_binary_whole_number_has_no_trailing_zero",
+        "test_naturalsize_trailing_zero.py::test_r4_contract_examples",
+        "test_naturalsize_trailing_zero.py::test_r4_every_decimal_unit",
+        "test_naturalsize_trailing_zero.py::test_r4_every_binary_unit",
+        "test_naturalsize_trailing_zero.py::test_r4_integer_part_zeros_are_kept",
+        "test_naturalsize_trailing_zero.py::test_r5_contract_examples",
+        "test_naturalsize_trailing_zero.py::test_r5_values_that_round_to_whole_numbers",
+        "test_naturalsize_trailing_zero.py::test_sweep_decimal_mode_matches_rule",
+        "test_naturalsize_trailing_zero.py::test_sweep_binary_mode_matches_rule",
+        "test_naturalsize_trailing_zero.py::test_negative_sizes",
+        "test_naturalsize_trailing_zero.py::test_float_and_string_inputs"
+      ],
+      "origin": "reference",
+      "outcome": "task_failure"
+    },
+    {
+      "candidate_id": "CS-01-noop-dev",
+      "failed_checks": [
+        "test_naturalsize_trailing_zero.py::test_r1_decimal_whole_number_has_no_trailing_zero",
+        "test_naturalsize_trailing_zero.py::test_r2_binary_whole_number_has_no_trailing_zero",
+        "test_naturalsize_trailing_zero.py::test_r4_contract_examples",
+        "test_naturalsize_trailing_zero.py::test_r4_every_decimal_unit",
+        "test_naturalsize_trailing_zero.py::test_r4_every_binary_unit",
+        "test_naturalsize_trailing_zero.py::test_r4_integer_part_zeros_are_kept",
+        "test_naturalsize_trailing_zero.py::test_r5_contract_examples",
+        "test_naturalsize_trailing_zero.py::test_r5_values_that_round_to_whole_numbers",
+        "test_naturalsize_trailing_zero.py::test_sweep_decimal_mode_matches_rule",
+        "test_naturalsize_trailing_zero.py::test_sweep_binary_mode_matches_rule",
+        "test_naturalsize_trailing_zero.py::test_negative_sizes",
+        "test_naturalsize_trailing_zero.py::test_float_and_string_inputs"
+      ],
+      "origin": "noop",
+      "outcome": "task_failure"
+    },
+    {
+      "candidate_id": "CS-01-dev-alt-initial_only",
+      "failed_checks": [],
+      "origin": "valid_alternative",
+      "outcome": "pass"
+    },
+    {
+      "candidate_id": "CS-01-dev-attack-initial_only-a1",
+      "failed_checks": [
+        "test_naturalsize_trailing_zero.py::test_r5_contract_examples",
+        "test_naturalsize_trailing_zero.py::test_r5_values_that_round_to_whole_numbers",
+        "test_naturalsize_trailing_zero.py::test_sweep_decimal_mode_matches_rule",
+        "test_naturalsize_trailing_zero.py::test_sweep_binary_mode_matches_rule",
+        "test_naturalsize_trailing_zero.py::test_negative_sizes",
+        "test_naturalsize_trailing_zero.py::test_float_and_string_inputs"
+      ],
+      "origin": "dev_attack",
+      "outcome": "task_failure"
+    },
+    {
+      "candidate_id": "CS-01-dev-attack-initial_only-a2",
+      "failed_checks": [
+        "test_naturalsize_trailing_zero.py::test_r4_contract_examples",
+        "test_naturalsize_trailing_zero.py::test_r4_every_decimal_unit",
+        "test_naturalsize_trailing_zero.py::test_r4_every_binary_unit",
+        "test_naturalsize_trailing_zero.py::test_r4_integer_part_zeros_are_kept",
+        "test_naturalsize_trailing_zero.py::test_r5_values_that_round_to_whole_numbers",
+        "test_naturalsize_trailing_zero.py::test_sweep_decimal_mode_matches_rule",
+        "test_naturalsize_trailing_zero.py::test_sweep_binary_mode_matches_rule",
+        "test_naturalsize_trailing_zero.py::test_negative_sizes"
+      ],
+      "origin": "dev_attack",
+      "outcome": "task_failure"
+    },
+    {
+      "candidate_id": "CS-01-dev-attack-initial_only-a3",
+      "failed_checks": [
+        "test_naturalsize_trailing_zero.py::test_sweep_decimal_mode_matches_rule",
+        "test_naturalsize_trailing_zero.py::test_sweep_binary_mode_matches_rule",
+        "test_naturalsize_trailing_zero.py::test_negative_sizes"
+      ],
+      "origin": "dev_attack",
+      "outcome": "task_failure"
+    },
+    {
+      "candidate_id": "CS-01-dev-attack-initial_only-a4",
+      "failed_checks": [
+        "test_naturalsize_trailing_zero.py::test_r2_binary_whole_number_has_no_trailing_zero",
+        "test_naturalsize_trailing_zero.py::test_r4_contract_examples",
+        "test_naturalsize_trailing_zero.py::test_r4_every_binary_unit",
+        "test_naturalsize_trailing_zero.py::test_r4_integer_part_zeros_are_kept",
+        "test_naturalsize_trailing_zero.py::test_r5_values_that_round_to_whole_numbers",
+        "test_naturalsize_trailing_zero.py::test_sweep_binary_mode_matches_rule",
+        "test_naturalsize_trailing_zero.py::test_negative_sizes",
+        "test_naturalsize_trailing_zero.py::test_float_and_string_inputs"
+      ],
+      "origin": "dev_attack",
+      "outcome": "task_failure"
+    }
+  ]
+}
