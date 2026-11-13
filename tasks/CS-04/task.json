@@ -58,7 +58,8 @@
     "candidates/CS-04-dev-attack-full_session-a2.json",
     "candidates/CS-04-dev-attack-full_session-a3.json",
     "candidates/CS-04-dev-attack-full_session-a4.json",
-    "candidates/CS-04-dev-alt-full_session.json"
+    "candidates/CS-04-dev-alt-full_session.json",
+    "candidates/CS-04-eval-alt-1.json"
   ],
   "notes": ""
 }

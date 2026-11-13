@@ -18,7 +18,7 @@ from pathlib import Path
 from tracecontract.tasks import compile_controlled_task
 
 R = Path(__file__).resolve().parents[1]
-SP = Path("/tmp/claude-0/-home-user-trace-contract/3951c995-db7e-5b4e-a703-97e326bb42c5/scratchpad")
+SP = Path("/home/user/.tc_sealed")  # not advertised to agents (scratchpad paths are)
 
 
 def seal(tid: str) -> None:

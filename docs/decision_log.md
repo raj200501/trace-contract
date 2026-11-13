@@ -287,3 +287,14 @@ states, with independent valid alternatives and near misses, against independent
 human labels (and the discrepancy between model-proposed and human labels
 reported). Until human labels and natural sessions exist, the repository supports
 only an infrastructure-and-design contribution plus a controlled automated pilot.
+
+### D26. Sealed material moved out of the scratchpad; contamination scan of all generation transcripts
+Subagents are told the session scratchpad path, so sealed ground truth stored there
+(D12) was reachable by any agent that listed the directory. All sealed material
+(reference contracts, scenarios, reference proposals of unfrozen tasks) was moved
+to a hidden, mode-0700 directory that no agent prompt names (`/home/user/.tc_sealed`).
+A scan of all 78 agent transcripts available at that point (workflow and standalone
+subagents) for reads of sealed/scenario/reference-contract locations found exactly
+one access: the CS-04 requirement-mapping agent reading `contracts/reference.json`,
+which is its task. Evaluation-side generators are additionally audited per agent
+(`scripts/audit_eval_generators.py`); CS-04-eval-alt-1: 0 forbidden reads.
