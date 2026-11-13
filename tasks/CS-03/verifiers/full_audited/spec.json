@@ -26,6 +26,18 @@
       ]
     },
     {
+      "check_id": "test_titleize_acronyms.py::test_titleize_keeps_all_caps_words_with_digits_or_apostrophes",
+      "requirement_ids": [
+        "R1"
+      ]
+    },
+    {
+      "check_id": "test_titleize_acronyms.py::test_titleize_keeps_generated_all_caps_words_in_mixed_case_input",
+      "requirement_ids": [
+        "R1"
+      ]
+    },
+    {
       "check_id": "test_titleize_acronyms.py::test_titleize_keeps_all_caps_words_once_input_has_lowercase",
       "requirement_ids": [
         "R1",
@@ -81,7 +93,7 @@
       ]
     }
   ],
-  "content_sha256": "21f7af73e24351e8c26f09fa5f17427d90baf849ed2cf900d5052934dcd8522e",
+  "content_sha256": "a84b4ba35be9feccfa20e1b1ff917855ca70a8e3fab32a34cbf1f3b6585a226e",
   "generation": {
     "generator": "model:claude-code-subagent:testgen:v1+audit:v1",
     "run_id": "unrecorded",

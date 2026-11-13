@@ -122,6 +122,7 @@ def test_two_letter_and_uncommon_acronyms_are_kept():
         "OK then": "OK Then",
         "the QZX protocol": "The QZX Protocol",
         "notes on the WXYZQV format": "Notes On The WXYZQV Format",
+        "a request from INTERPOL": "A Request From INTERPOL",
     }
     r = run_python(_titleize_snippet(cases))
     assert r.ok, _failure(r)

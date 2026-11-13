@@ -27,6 +27,12 @@
       ]
     },
     {
+      "check_id": "test_preserved_behaviour.py::test_trailing_id_suffix_dropped_as_before",
+      "requirement_ids": [
+        "R4"
+      ]
+    },
+    {
       "check_id": "test_preserved_behaviour.py::test_other_functions_match_base_including_all_caps_inputs",
       "requirement_ids": [
         "R5"
@@ -94,7 +100,7 @@
       ]
     }
   ],
-  "content_sha256": "8931e33066a1999166b43ae5631d87eabacf2f021dc1425ebc961a68c7425d6f",
+  "content_sha256": "e57368e3106c2151dabecc17ecbcf92070cae0dccc00dcdb69c6343edc075d40",
   "generation": {
     "generator": "model:claude-code-subagent:testgen:v1+audit:v1",
     "run_id": "unrecorded",
