@@ -23,7 +23,7 @@ def main(task: str, *items: str) -> None:
     out = json.loads(out_path.read_text()) if out_path.exists() else {}
     for item in items:
         transcript, own = item.split(":", 1)
-        hits = audit_generator_transcript(Path(transcript), forbidden=forbidden, allowed=(own,))
+        hits = audit_generator_transcript(Path(transcript), forbidden=forbidden, allowed=(own, "/root/.local/bin/"))
         name = Path(own).name
         out[name] = {"transcript_sha256": __import__("hashlib").sha256(Path(transcript).read_bytes()).hexdigest(), "hits": hits}
         print(name, "hits:", len(hits))

@@ -109,7 +109,21 @@
     "budget": {},
     "notes": ""
   },
-  "audit": null,
-  "frozen": false,
+  "audit": {
+    "procedure": "audit:v1",
+    "iterations": 1,
+    "passed": true,
+    "findings": [],
+    "dev_candidate_ids": [
+      "CS-03-reference",
+      "CS-03-noop-dev",
+      "CS-03-dev-attack-initial_only-a1",
+      "CS-03-dev-attack-initial_only-a2",
+      "CS-03-dev-attack-initial_only-a3",
+      "CS-03-dev-attack-initial_only-a4",
+      "CS-03-dev-alt-initial_only"
+    ]
+  },
+  "frozen": true,
   "version": 1
 }

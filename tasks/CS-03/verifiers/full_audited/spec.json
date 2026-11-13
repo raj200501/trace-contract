@@ -93,7 +93,7 @@
       ]
     }
   ],
-  "content_sha256": "a84b4ba35be9feccfa20e1b1ff917855ca70a8e3fab32a34cbf1f3b6585a226e",
+  "content_sha256": "0dff1fb9382ce7f34a11715b0dfe662b9b3a3b15b50547837ea093c046a4f0d2",
   "generation": {
     "generator": "model:claude-code-subagent:testgen:v1+audit:v1",
     "run_id": "unrecorded",

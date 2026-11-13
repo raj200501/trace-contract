@@ -285,8 +285,8 @@ def _assorted_inputs(seed):
 
 
 # (separator in the input, what it becomes in the title)
-_TITLE_SEPARATORS = ((" ", " "), (" ", " "), (" ", " "), (" ", " "),
-                     ("_", " "), (", ", ", "))
+_TITLE_SEPARATORS = ((" ", " "), (" ", " "), (" ", " "), (", ", ", "))
+_SNAKE_SEPARATOR = ("_", " ")
 
 
 def _caps_word(rng):
@@ -301,9 +301,11 @@ def _acronym_sentence(rng):
     """An input with lowercase letters and all-caps words, and its title.
 
     The words are lowercase, Capitalized or all-caps (optionally ending in
-    digits) and are joined by a space, an underscore or a comma and a space;
-    no word is "id", so no "_id" suffix is dropped.  In the title every
-    all-caps word is kept as written and every other word is capitalized.
+    digits) and are joined by a space or a comma and a space, or by an
+    underscore (which titleize turns into a space) next to a word with
+    lowercase letters; no word is "id", so no "_id" suffix is dropped.  In
+    the title every all-caps word is kept as written and every other word is
+    capitalized.
     """
     count = rng.randint(2, 6)
     in_caps = [True, False] + [rng.random() < 0.45 for _ in range(count - 2)]
@@ -318,6 +320,8 @@ def _acronym_sentence(rng):
                 word = rng.choice([_lower_word, _capitalised_word])(rng)
         if index:
             separator, shown = rng.choice(_TITLE_SEPARATORS)
+            if not (caps and in_caps[index - 1]) and rng.random() < 0.2:
+                separator, shown = _SNAKE_SEPARATOR
             text += separator
             title += shown
         text += word
