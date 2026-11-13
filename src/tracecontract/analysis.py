@@ -196,3 +196,35 @@ def to_markdown(a: dict) -> str:
             lines.append(f"| {cid} | {d['origin']} | {d['label']} | {d['nt'] or '-'} | " + " | ".join(d.get(c, "-") for c in conds) + " |")
         lines.append("")
     return "\n".join(lines) + "\n"
+
+
+def contract_coverage(task_dir: Path) -> dict:
+    """Requirement coverage / unsupported rate of recovered contracts vs the reference.
+
+    Needs ``contracts/mapping_<variant>.json``: ``{"mapper": ..., "mapper_kind":
+    "human"|"model", "map": {recovered_req_id: [reference_req_ids]}}``. Model
+    mappings are proposals and are reported as such.
+    """
+    m = load(task_dir / "task.json", TaskManifest)
+    ref = load(task_dir / m.contracts["reference"], TaskContract)
+    ref_scored = {r.req_id for r in ref.active() if r.scored}
+    out: dict = {"task_id": m.task_id, "reference_scored": sorted(ref_scored), "variants": {}}
+    for variant in ("initial_only", "full_session"):
+        mp = task_dir / "contracts" / f"mapping_{variant}.json"
+        if variant not in m.contracts or not mp.exists():
+            continue
+        c = load(task_dir / m.contracts[variant], TaskContract)
+        mapping = json.loads(mp.read_text())
+        rec = {r.req_id for r in c.active() if r.scored}
+        covered = {x for rid in rec for x in mapping["map"].get(rid, [])} & ref_scored
+        unsupported = sorted(rid for rid in rec if not set(mapping["map"].get(rid, [])) & ref_scored)
+        superseded_scored = sorted(r.req_id for r in c.requirements if r.status.value == "superseded" and r.scored)
+        out["variants"][variant] = {
+            "mapper_kind": mapping.get("mapper_kind"), "mapper": mapping.get("mapper"),
+            "coverage": len(covered) / len(ref_scored) if ref_scored else None,
+            "covered": sorted(covered), "missing": sorted(ref_scored - covered),
+            "n_recovered_scored": len(rec), "unsupported": unsupported,
+            "unsupported_rate": (len(unsupported) / len(rec)) if rec else None,
+            "superseded_requirements": superseded_scored,
+        }
+    return out

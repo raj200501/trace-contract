@@ -321,7 +321,9 @@ def cmd_export_gen_workspace(a) -> None:
     shutil.copytree(SNAPSHOTS / m.task_id, out / "base", symlinks=False)
     if a.contract:
         c = load(tdir / m.contracts[a.contract], TaskContract)
-        reqs = [{"req_id": r.req_id, "kind": r.kind.value, "statement": r.statement, "observable": r.observable}
+        order = {p.event_id: i + 1 for i, p in enumerate(session_for_task(tdir, REPO).user_prompts())}
+        reqs = [{"req_id": r.req_id, "kind": r.kind.value, "statement": r.statement, "observable": r.observable,
+                 "introduced_in_user_turn": order.get(r.introduced_at)}
                 for r in c.active() if r.scored]
         (out / "contract.json").write_text(json.dumps({"variant": c.variant.value, "requirements": reqs}, indent=2) + "\n")
         (out / "instruction.md").write_text(render_instruction(c))

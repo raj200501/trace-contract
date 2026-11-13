@@ -169,3 +169,57 @@ CS-01: 737 checks; reference passes, pre-correction state fails 49, no-op fails 
 sha256 `a7cd8be82373fe22a619ac4e6759172499fd340160e3cc89403db78ba175d379`. No evaluation run had been executed at that time (only the
 B1 construction run on the CS-01 reference, the no-op and the pre-correction
 candidate used as smoke checks of the repo-tests mode). Not a formal preregistration.
+
+### D16. Exported contracts carry the introducing user turn
+`export-gen-workspace` includes `introduced_in_user_turn` for each scored
+requirement (part of the structured contract: time introduced). The change was
+made before any generator of CS-01 or CS-04 had exported a contract, so all
+conditions of all tasks use the same format. Initial-only contracts contain only
+turn-1 requirements by construction; B2 receives no contract.
+
+### D17. Contract-proposal tooling fix (`id` alias) and CS-01 generation restart
+The `contract:v1` prompt asks for "an id (R1, R2, ...)" without naming the JSON
+key. The CS-01 full-session proposer wrote `id` instead of `req_id`; the tooling
+defaulted every id to `?`, and `make-contract` crashed on duplicate ids (three
+attempts by the agent). Fix: `requirements_from_proposals` accepts `id` /
+`requirement_id` as aliases and rejects missing or duplicate ids as explicit
+proposal rejections. The prompt was **not** changed, so all tasks use the same
+prompt text. The CS-01 full-session contract was then built from the proposer's
+own recorded `proposals.json` (unchanged) with the fixed tooling: 9 requirements,
+0 rejected. The CS-01 generation workflow, which had started its test generators
+against the missing contract, was stopped and resumed from its run id (contract
+steps cached, generation steps re-run live). CS-04's proposer ran after the fix.
+
+### D18. B1 on the natural pre-correction candidates
+* CS-03: the pre-correction state passes all 466 B1 checks; the agent had already
+  kept all-uppercase input unchanged in its first turn, so the correction mostly
+  restated behaviour the agent had chosen. Whether this candidate is valid is
+  decided by the labels, not by its origin.
+* CS-04: the pre-correction state fails 1 of 616 B1 checks (the agent's own
+  step=0 test written after the correction).
+
+### D19. Automated-pilot label proposal rule (pre-specified before any evaluation run)
+Evaluation-candidate labels for the automated pilot are proposed by
+`scripts/propose_labels.py` from three sources: (1) an independent
+`reference_check` verifier written from the reference contract by a separate agent
+and validated only on the reference solution and the no-op; (2) the regression
+norm, i.e. base-commit repository tests that pass on the reference but fail on the
+candidate; (3) the construction intent recorded by the candidate's generator.
+Agreement yields `valid`/`invalid`; any disagreement or missing decision yields
+`ambiguous` (excluded from FA/FR, queued for human review). Natural candidates have
+no construction label and are labelled from (1)+(2). Labels are appended with
+`labeler_kind = model` and never override human labels. The reference-check
+verifier is not one of the evaluated conditions. Known circularity: the
+regression norm uses base tests that also appear in B1, which can favour B1 on
+regression-only negatives; negatives are therefore reported by type.
+
+### D20. Harbor export validated on a synthetic fixture
+`harbor_export.export_task` was validated with Harbor 0.25.0 on a synthetic fixture
+task (population `fixture`; not research evidence): `harbor lint` rc=0; `harbor
+trial start -a oracle` with `CANDIDATE=reference` → reward {reward: 1.0, R1: 1.0};
+with a wrong candidate → 0.0; `-a nop` → 0.0. In every run the candidate's edit to
+a protected test file was discarded before grading (`tc_detail.json`). The runs used
+the `local-validation` network variant (public network) because this host cannot
+run Harbor's `no-network` mode; the fixture candidates were trusted code. (A first
+no-op attempt failed with an environment error because the trial name produced an
+invalid Docker tag; Harbor recorded it as an exception, not as a reward.)

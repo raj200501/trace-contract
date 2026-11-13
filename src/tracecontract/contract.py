@@ -139,9 +139,22 @@ def requirements_from_proposals(session: Session, proposals: Iterable[dict[str, 
     rejected: list[dict[str, Any]] = []
     warnings: list[str] = []
     ids = {e.event_id for e in session.events}
+    seen: set[str] = set()
     for p in proposals:
         p = dict(p)
-        rid = str(p.get("req_id", "?"))
+        if "req_id" not in p:
+            for alias in ("id", "requirement_id"):
+                if alias in p:
+                    p["req_id"] = p.pop(alias)
+                    break
+        if not p.get("req_id"):
+            rejected.append({"proposal": p, "reason": "missing req_id"})
+            continue
+        rid = str(p["req_id"])
+        if rid in seen:
+            rejected.append({"proposal": p, "reason": f"duplicate req_id {rid}"})
+            continue
+        seen.add(rid)
         if p.get("introduced_at") not in ids:
             rejected.append({"proposal": p, "reason": "introduced_at is not an event of this session"})
             continue

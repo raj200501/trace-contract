@@ -1,0 +1,10 @@
+\section{Limitations}
+\label{sec:limitations}
+\begin{itemize}
+\item \textbf{Controlled population.} Current tasks come from scripted corrections designed by the study, delivered to the agent through a subagent messaging channel that adds harness framing. Natural correction frequency and content are not represented.
+\item \textbf{Single model family.} Agent sessions, contracts, tests, attacks, alternatives and near misses are all produced by models of one family, which can correlate errors across conditions and with proposed labels.
+\item \textbf{Labels.} Until human review, labels are construction intent cross-checked by independent model-written reference checks; they are proposals, not validated ground truth.
+\item \textbf{Small number of task families.} Intervals over a handful of families are not evidence of an effect.
+\item \textbf{Residual verifier exploits.} Process separation protects the grader and results, but code inside a child process controls that child's reported values; tests therefore assert on concrete values. Repository tests (B1) import candidate code.
+\item \textbf{Contamination.} Public tasks can enter future training data; we cannot guarantee that future models have not seen them.
+\end{itemize}

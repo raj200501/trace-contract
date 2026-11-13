@@ -1,0 +1,12 @@
+\section{Introduction}
+\label{sec:intro}
+Converting recorded agent sessions into executable tasks is attractive: the tasks come from real usage rather than curated issue trackers, and their verifiers can supply rewards for training. Recent systems reconstruct tasks and environments from interaction traces \cite{trace2eval}, curate executable tasks from real developer--agent sessions \cite{swetogether}, and release large collections of such sessions \cite{swechat}. A session, however, is not a specification. Users routinely push back on what the agent did; in SWE-chat, prompts classified as corrections are a substantial share of user turns \cite{swechat}. A reconstruction that keeps only the initial request, or that summarises the session without tracking which requirement was introduced, superseded, or left unresolved, can produce a verifier that rewards the wrong behaviour.
+
+This paper asks: \emph{when coding tasks are reconstructed from agent sessions, how often do omitted user corrections cause a verifier to reward an unacceptable solution, and which reconstruction and validation methods reduce that error without rejecting valid alternatives?} The comparison of initial-request-only and correction-aware reconstruction measures information lost during dataset construction, not the capability of an agent that was never told a requirement.
+
+\paragraph{Contributions.} \todo{finalise after the adversarial novelty review and results}
+\begin{enumerate}
+\item A measurement design for verifier reward fidelity in trace-derived coding tasks: the same held-out candidates, including the agent's naturally observed pre-correction state, are scored by every verifier condition and compared with independent labels.
+\item An evidence-linked requirement contract (explicit, inferred, superseded and unresolved requirements with exact quotes into the session) and a predefined verifier audit, evaluated as a $2\times2$ design against repository tests and a full-session LLM baseline.
+\item A process-separated grading sandbox whose isolation boundary is tested with adversarial probes, and a small set of controlled tasks with full provenance. \unfilled{natural-session tasks pending data access}
+\end{enumerate}

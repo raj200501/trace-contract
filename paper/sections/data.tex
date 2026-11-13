@@ -1,0 +1,8 @@
+\section{Tasks and data}
+\label{sec:data}
+\paragraph{Populations.} We keep three populations separate: \emph{natural} sessions with real users, \emph{controlled} sessions (real agent runs whose user turns are written by the study before the run) and synthetic \emph{fixtures} used only for software tests. \unfilled{Natural sessions from SWE-chat \cite{swechat} are pending acceptance of the dataset's access terms; the current draft contains controlled tasks only.}
+
+\paragraph{Controlled sessions (protocol CS-v1).} Each scenario fixes, before the run, an initial request $U_1$, a correction $U_2$, a neutral reply for clarification questions, and the study's intended final requirements, and is hashed and timestamped. A Claude Code agent works in a fresh git working copy of a pinned commit of a permissively licensed Python repository; repository code runs only in an offline Docker sandbox. The workspace is captured after $U_1$ (before the correction) and after $U_2$. The transcript is audited for file access outside the workspace and minimised before publication. Table~\ref{tab:tasks} lists the tasks.
+\IfFileExists{generated/tasks_table.tex}{\input{generated/tasks_table.tex}}{\unfilled{task table generated from tasks/*/task.json}}
+
+\paragraph{Initial state.} The base snapshot is the exact tree of the pinned commit (\texttt{git archive}, no history); generated build artefacts (e.g.\ a hatch-vcs version file) are added and recorded as approximations. A leakage check verifies that no changed file of the reference solution already has its post-image in the snapshot.

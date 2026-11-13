@@ -1,0 +1,40 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{xcolor}
+\usepackage[hidelinks]{hyperref}
+\usepackage[style=numeric,sorting=none,maxbibnames=6]{biblatex}
+\addbibresource{references.bib}
+
+\newcommand{\todo}[1]{\textcolor{red}{[TODO: #1]}}
+\newcommand{\unfilled}[1]{\textcolor{orange}{[UNFILLED: #1]}}
+
+\title{From Corrections to Contracts: Measuring Reward Fidelity\\in Trace-Derived Coding Tasks\\[4pt]\large Working draft --- not peer reviewed; results incomplete}
+\author{\todo{authors and affiliations to be decided by the human authors}}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\input{sections/abstract}
+\input{sections/introduction}
+\input{sections/related}
+\input{sections/data}
+\input{sections/method}
+\input{sections/protocol}
+\input{sections/results}
+\input{sections/analysis}
+\input{sections/limitations}
+\input{sections/ethics}
+\input{sections/reproducibility}
+
+\printbibliography
+
+\appendix
+\input{sections/appendix}
+
+\end{document}

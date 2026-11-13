@@ -1,0 +1,11 @@
+\section{Related work}
+\label{sec:related}
+\todo{Written from docs/research\_brief.md after adversarial verification; every claim below must match the verified notes in docs/research/notes/.}
+
+\paragraph{Trace-derived evaluation.} Trace2Eval reconstructs evaluation instances (a distilled request, a recovered workspace and a containerised environment) from consented online coding-agent sessions and scores artifacts with a calibrated rubric judge \cite{trace2eval}. SWE-Together curates repository-level tasks from recorded sessions, including SWE-chat, with a replaying user simulator, deterministic gates and a rubric judge, and argues that execution-only scoring can miss requirements introduced later in the interaction \cite{swetogether}. Neither reports verifier false-acceptance or false-rejection rates against independently labeled candidate patches (\S\ref{sec:intro}).
+
+\paragraph{Real developer--agent sessions.} SWE-chat collects real coding-agent sessions from public repositories, with LLM-annotated prompt pushback and links to commits \cite{swechat}.
+
+\paragraph{Executable environment synthesis and verifier adequacy.} \todo{SWE-smith, R2E-Gym, SWE-Hub, ScaleSWE; SWE-bench Verified, PatchDiff, UTBoost, Terminal-Bench task review; Harbor} 
+
+\paragraph{Corrections and interactive coding.} \todo{Getting Better at Working With You; interactive/multi-turn coding benchmarks}
