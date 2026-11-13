@@ -1,0 +1,44 @@
+{
+  "mapper": "model:claude-code-subagent:mapper:v1",
+  "mapper_kind": "model",
+  "map": {
+    "R1": [
+      "R-default-trim"
+    ],
+    "R2": [
+      "R-default-trim"
+    ],
+    "R3": [
+      "R-keep-meaningful",
+      "R-default-unchanged"
+    ],
+    "R4": [
+      "R-default-trim"
+    ],
+    "R5": [
+      "R-default-trim"
+    ]
+  },
+  "contradicts": {
+    "R1": [
+      "R-default-unchanged"
+    ],
+    "R2": [
+      "R-default-unchanged"
+    ],
+    "R3": [],
+    "R4": [
+      "R-default-unchanged"
+    ],
+    "R5": [
+      "R-default-unchanged"
+    ]
+  },
+  "notes": {
+    "R1": "A test of R1 asserts the default call naturalsize(3000000) == '3 MB', which is the superseded R-default-trim behaviour and is rejected by the active R-default-unchanged, which requires '3.0 MB' for that same call.",
+    "R2": "A test of R2 asserts the default call naturalsize(1024, binary=True) == '1 KiB', which is the superseded R-default-trim behaviour and contradicts R-default-unchanged, which requires '1.0 KiB' for that call.",
+    "R3": "A test of R3 asserts naturalsize(3000, binary=True) == '2.9 KiB', which is the default-call half of R-keep-meaningful (it has no strip_trailing_zero=True case), and asserts that default outputs with a non-zero decimal ('2.9 KiB', '1.5 KiB', '2.5 MB') equal the base output, which checks R-default-unchanged only for that subset of inputs.",
+    "R4": "R4 extends default-call trimming to every unit (e.g. naturalsize(1000) == '1 kB', naturalsize(10000000) == '10 MB'), which is the general rule of the superseded R-default-trim, and every example contradicts R-default-unchanged, which keeps the base outputs '1.0 kB' and '10.0 MB'.",
+    "R5": "R5 requires default-call trimming of rounded values (naturalsize(1040000) == '1 MB', naturalsize(2999999) == '3 MB') and that no default-format result ends in '.0', which is the superseded R-default-trim rule, and it contradicts R-default-unchanged, whose base outputs are '1.0 MB' and '3.0 MB'."
+  }
+}

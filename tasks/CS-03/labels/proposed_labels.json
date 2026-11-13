@@ -1,0 +1,171 @@
+{
+  "candidates": {
+    "CS-03-eval-alt-1": {
+      "construction": {
+        "adjudicated": false,
+        "labeler": "altimpl:v1",
+        "labeler_kind": "construction",
+        "note": "",
+        "timestamp": "2026-11-13T04:12:13+00:00",
+        "value": "valid",
+        "violated_requirements": []
+      },
+      "origin": "valid_alternative",
+      "proposed": "valid",
+      "refcheck_failed": [],
+      "refcheck_outcome": "pass",
+      "regression_failed": [],
+      "regression_outcome": "pass",
+      "violated": [],
+      "why": "construction valid, confirmed by reference checks and regression norm"
+    },
+    "CS-03-eval-alt-2": {
+      "construction": {
+        "adjudicated": false,
+        "labeler": "altimpl:v1",
+        "labeler_kind": "construction",
+        "note": "",
+        "timestamp": "2026-11-13T04:06:17+00:00",
+        "value": "valid",
+        "violated_requirements": []
+      },
+      "origin": "valid_alternative",
+      "proposed": "valid",
+      "refcheck_failed": [],
+      "refcheck_outcome": "pass",
+      "regression_failed": [],
+      "regression_outcome": "pass",
+      "violated": [],
+      "why": "construction valid, confirmed by reference checks and regression norm"
+    },
+    "CS-03-eval-nm-1": {
+      "construction": {
+        "adjudicated": false,
+        "labeler": "nearmiss:v1",
+        "labeler_kind": "construction",
+        "note": "",
+        "timestamp": "2026-11-13T04:09:57+00:00",
+        "value": "invalid",
+        "violated_requirements": [
+          "R-acronym"
+        ]
+      },
+      "origin": "constructed_near_miss",
+      "proposed": "ambiguous",
+      "refcheck_failed": [],
+      "refcheck_outcome": "pass",
+      "regression_failed": [],
+      "regression_outcome": "pass",
+      "violated": [],
+      "why": "construction invalid but reference checks and regression norm pass"
+    },
+    "CS-03-eval-nm-2": {
+      "construction": {
+        "adjudicated": false,
+        "labeler": "nearmiss:v1",
+        "labeler_kind": "construction",
+        "note": "",
+        "timestamp": "2026-11-13T04:10:08+00:00",
+        "value": "invalid",
+        "violated_requirements": [
+          "R-all-caps-input"
+        ]
+      },
+      "origin": "constructed_near_miss",
+      "proposed": "ambiguous",
+      "refcheck_failed": [],
+      "refcheck_outcome": "pass",
+      "regression_failed": [],
+      "regression_outcome": "pass",
+      "violated": [],
+      "why": "construction invalid but reference checks and regression norm pass"
+    },
+    "CS-03-eval-nm-3": {
+      "construction": {
+        "adjudicated": false,
+        "labeler": "nearmiss:v1",
+        "labeler_kind": "construction",
+        "note": "",
+        "timestamp": "2026-11-13T04:10:08+00:00",
+        "value": "invalid",
+        "violated_requirements": [
+          "R-humanize-unchanged"
+        ]
+      },
+      "origin": "constructed_near_miss",
+      "proposed": "invalid",
+      "refcheck_failed": [
+        "test_humanize_unchanged.py::test_humanize_inputs_with_capitals_unchanged",
+        "test_humanize_unchanged.py::test_humanize_generated_inputs_match_base"
+      ],
+      "refcheck_outcome": "task_failure",
+      "regression_failed": [],
+      "regression_outcome": "pass",
+      "violated": [
+        "R-humanize-unchanged"
+      ],
+      "why": "construction invalid, confirmed on targeted requirement"
+    },
+    "CS-03-eval-nm-4": {
+      "construction": {
+        "adjudicated": false,
+        "labeler": "nearmiss:v1",
+        "labeler_kind": "construction",
+        "note": "",
+        "timestamp": "2026-11-13T04:10:08+00:00",
+        "value": "invalid",
+        "violated_requirements": [
+          "R-underscore-unchanged"
+        ]
+      },
+      "origin": "constructed_near_miss",
+      "proposed": "ambiguous",
+      "refcheck_failed": [],
+      "refcheck_outcome": "pass",
+      "regression_failed": [],
+      "regression_outcome": "pass",
+      "violated": [],
+      "why": "construction invalid but reference checks and regression norm pass"
+    },
+    "CS-03-eval-nm-5": {
+      "construction": {
+        "adjudicated": false,
+        "labeler": "nearmiss:v1",
+        "labeler_kind": "construction",
+        "note": "",
+        "timestamp": "2026-11-13T04:10:09+00:00",
+        "value": "invalid",
+        "violated_requirements": [
+          "R-all-caps-input"
+        ]
+      },
+      "origin": "constructed_near_miss",
+      "proposed": "invalid",
+      "refcheck_failed": [
+        "test_titleize_all_caps.py::test_titleize_all_caps_with_separators_matches_base",
+        "test_titleize_all_caps.py::test_titleize_all_caps_generated_inputs_match_base"
+      ],
+      "refcheck_outcome": "task_failure",
+      "regression_failed": [],
+      "regression_outcome": "pass",
+      "violated": [
+        "R-all-caps-input"
+      ],
+      "why": "construction invalid, confirmed on targeted requirement"
+    },
+    "CS-03-pre-correction": {
+      "construction": null,
+      "origin": "observed_pre_correction",
+      "proposed": "valid",
+      "refcheck_failed": [],
+      "refcheck_outcome": "pass",
+      "regression_failed": [],
+      "regression_outcome": "pass",
+      "violated": [],
+      "why": "natural candidate passes reference checks and regression norm"
+    }
+  },
+  "created_at": "2026-11-13T04:14:13+00:00",
+  "labeler": "builder:refcheck+regression+construction:v1",
+  "task_id": "CS-03"
+}

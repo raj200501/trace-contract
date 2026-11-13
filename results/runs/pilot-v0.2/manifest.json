@@ -1,5 +1,5 @@
 {
-  "code_revision": "f8e3e65c13413a864102cc37d768c8d743dca83f",
+  "code_revision": "9c2525a39b95b89e7b9d47eff1f78215c5a81aca+dirty",
   "conditions": [
     "initial_plain",
     "initial_audited",
@@ -14,6 +14,13 @@
       "code_revision": "f8e3e65c13413a864102cc37d768c8d743dca83f",
       "tasks": [
         "CS-04"
+      ]
+    },
+    {
+      "at": "2026-11-13T04:18:48+00:00",
+      "code_revision": "9c2525a39b95b89e7b9d47eff1f78215c5a81aca+dirty",
+      "tasks": [
+        "CS-03"
       ]
     }
   ],
@@ -102,6 +109,82 @@
         "repo_tests": {
           "condition": "repo_tests",
           "content_sha256": "41002085ee793a6cd77c9df354a3a0abc1b513fa48da58b8b0d8d82b0f3c38fa",
+          "version": 1
+        }
+      }
+    },
+    {
+      "candidates": {
+        "CS-03-eval-alt-1": {
+          "origin": "valid_alternative",
+          "patch_sha256": "2c0f4ea5440635c1512e2d37c83d37a8ea2548f564e9965261a462d4ca540136"
+        },
+        "CS-03-eval-alt-2": {
+          "origin": "valid_alternative",
+          "patch_sha256": "d5572b424c9b861ff6ed24206a2487560ae824a94219c912694be5a6dc081b6c"
+        },
+        "CS-03-eval-nm-1": {
+          "origin": "constructed_near_miss",
+          "patch_sha256": "0b2190da40956dc285e73ad5d1f1a04fcf5a40394dedcc9cabcd73fcb421f490"
+        },
+        "CS-03-eval-nm-2": {
+          "origin": "constructed_near_miss",
+          "patch_sha256": "44eb24a5d1b27a84f24fa26f522a9acc0cebcd0f6c50036f82dafe875ba58f3c"
+        },
+        "CS-03-eval-nm-3": {
+          "origin": "constructed_near_miss",
+          "patch_sha256": "3971b88d1beb222ee6a27121b61228267246f3132e11be32458873ca068f50b5"
+        },
+        "CS-03-eval-nm-4": {
+          "origin": "constructed_near_miss",
+          "patch_sha256": "deb6030d3ec3809d42148366b9c8d0996b37c6f018488928626b97bba7952060"
+        },
+        "CS-03-eval-nm-5": {
+          "origin": "constructed_near_miss",
+          "patch_sha256": "348926b200896a515df34fe14b8058e70d1462f2086a975b825c722558aec722"
+        },
+        "CS-03-noop-eval": {
+          "origin": "noop",
+          "patch_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "CS-03-pre-correction": {
+          "origin": "observed_pre_correction",
+          "patch_sha256": "77b76ab362c0dd432caf1ba87bc500edf741fbb8a6e738ac6d84baf668f752a4"
+        }
+      },
+      "family_id": "CS-03",
+      "image": "tc-env:801a26fad4c5e101",
+      "image_id": "sha256:035acd7634f10312c8ef4d6e206cfe978165ebd11bcf5ab9d17e097d794edc21",
+      "task_id": "CS-03",
+      "verifiers": {
+        "full_audited": {
+          "condition": "full_audited",
+          "content_sha256": "0dff1fb9382ce7f34a11715b0dfe662b9b3a3b15b50547837ea093c046a4f0d2",
+          "version": 1
+        },
+        "full_plain": {
+          "condition": "full_plain",
+          "content_sha256": "21f7af73e24351e8c26f09fa5f17427d90baf849ed2cf900d5052934dcd8522e",
+          "version": 1
+        },
+        "initial_audited": {
+          "condition": "initial_audited",
+          "content_sha256": "e57368e3106c2151dabecc17ecbcf92070cae0dccc00dcdb69c6343edc075d40",
+          "version": 1
+        },
+        "initial_plain": {
+          "condition": "initial_plain",
+          "content_sha256": "8931e33066a1999166b43ae5631d87eabacf2f021dc1425ebc961a68c7425d6f",
+          "version": 1
+        },
+        "llm_freeform": {
+          "condition": "llm_freeform",
+          "content_sha256": "9dd525bd888fe357f9c01df53c0cf6859b1bdf98a9fe709399d8264490307b2c",
+          "version": 1
+        },
+        "repo_tests": {
+          "condition": "repo_tests",
+          "content_sha256": "f7bca4feac5cca75cccdd7835c75f7df83b948a3f880c7ccef1237a7d266962f",
           "version": 1
         }
       }

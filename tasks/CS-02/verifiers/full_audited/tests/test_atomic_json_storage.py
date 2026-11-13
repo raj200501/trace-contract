@@ -1,6 +1,6 @@
 """
-Hidden behavioural tests for CS-02 (condition full_plain): atomic writes of
-tinydb's ``JSONStorage``.
+Hidden behavioural tests for CS-02 (contract variant full_session): atomic
+writes of tinydb's ``JSONStorage``.
 
 All candidate code runs in the sandbox through ``tc_sandbox.run_python``.  Each
 snippet is wrapped into a ``_main()`` function so it does not depend on how the
@@ -16,7 +16,13 @@ Failures are injected without relying on how a candidate writes its files:
   process in the middle of writing the data.
 * ``os.fsync``/``os.fdatasync`` and ``os.replace``/``os.rename`` are wrapped
   *before* tinydb is imported (so ``from os import replace`` is wrapped too)
-  and only fail (or kill the process) while armed.
+  and only fail while armed.
+* Process death: a child process wraps the functions a write can use to
+  change files (``open``, ``os.open``/``write``/``fsync``/``replace``/
+  ``rename``/``remove``/...) before importing tinydb.  A counting run records
+  the calls one write makes; then, for every such call, one child dies with
+  ``os._exit`` right before it and one right after it, so every moment
+  between two steps of the write is tried as a point of death.
 """
 
 import json
@@ -266,31 +272,64 @@ return {name: run_scenario(name) for name in PARAMS['scenarios']}
 
 
 CRASH_CHILD = r'''
+import builtins
+import io
 import json
 import os
 import resource
 import signal
 import sys
 
-mode, path, limit = sys.argv[1], sys.argv[2], int(sys.argv[3])
+mode, path, limit, kill_at, when = sys.argv[1:6]
+limit, kill_at = int(limit), int(kill_at)
 states = json.loads(sys.stdin.read())
 armed = []
+calls = []
+
+# The functions a write can use to create, fill, flush, move or remove files.
+OS_FUNCTIONS = (
+    'open', 'close', 'write', 'pwrite', 'writev', 'sendfile',
+    'copy_file_range', 'truncate', 'ftruncate', 'fsync', 'fdatasync',
+    'replace', 'rename', 'renames', 'remove', 'unlink', 'link', 'symlink',
+    'chmod', 'fchmod', 'utime', 'mkdir', 'rmdir',
+)
 
 
-def die_when_armed(real):
+def dying(real, name):
+    # While armed, the calls are numbered and the process dies right before
+    # or right after the `kill_at`-th one (kill_at == 0: it only counts).
     def wrapper(*args, **kwargs):
-        if armed:
+        if not armed:
+            return real(*args, **kwargs)
+        calls.append(name)
+        number = len(calls)
+        if number == kill_at and when == 'before':
             os._exit(23)
-        return real(*args, **kwargs)
+        try:
+            return real(*args, **kwargs)
+        finally:
+            if number == kill_at and when == 'after':
+                os._exit(23)
     return wrapper
 
 
-hooked = {'fsync': ('fsync', 'fdatasync'), 'rename': ('replace', 'rename')}
-for name in hooked.get(mode, ()):
+# Wrapped before tinydb is imported, so that names bound with
+# "from os import ..." are wrapped as well.
+for name in OS_FUNCTIONS:
     if hasattr(os, name):
-        setattr(os, name, die_when_armed(getattr(os, name)))
+        setattr(os, name, dying(getattr(os, name), 'os.' + name))
+builtins.open = dying(builtins.open, 'open')
+io.open = dying(io.open, 'io.open')
 
 from tinydb.storages import JSONStorage
+
+
+def finish(code):
+    del armed[:]
+    sys.stdout.write('\nCALLS:' + json.dumps(calls) + '\n')
+    sys.stdout.flush()
+    os._exit(code)
+
 
 storage = JSONStorage(path)
 storage.write(states['old'])
@@ -310,45 +349,76 @@ else:
 try:
     storage.write(states['new'])
 except BaseException:
-    os._exit(3)
-os._exit(0)
+    finish(3)
+finish(0)
 '''
 
 
 PIECE_CRASH = r'''
 from tinydb import TinyDB
 
-CASES = [
-    ('fsync', OLD_BIG, NEW_EMPTY, 0),
-    ('rename', OLD_BIG, NEW_EMPTY, 0),
-    ('fsize', OLD_BIG, NEW_MID, 1024),
-    ('fsize', OLD_SMALL, NEW_BIG, 4096),
-]
-outcomes = []
-for mode, old, new, limit in CASES:
+
+def crash(mode, old, new, limit=0, kill_at=0, when='-'):
+    # Run the child, then look at what its death left on disk.
     directory = new_dir('crash')
     path = os.path.join(directory, 'db.json')
     proc = subprocess.run(
-        [sys.executable, '-c', PARAMS['child'], mode, path, str(limit)],
+        [sys.executable, '-c', PARAMS['child'], mode, path, str(limit),
+         str(kill_at), when],
         input=json.dumps({'old': old, 'new': new}).encode('utf-8'),
         stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=60,
     )
     state = classify(path, old, new)
     head = head_of(path)
+    listing = sorted(os.listdir(directory))
     docs = tinydb_docs(TinyDB, path)
-    outcomes.append({
+    shutil.rmtree(directory, ignore_errors=True)
+    calls = None
+    for line in proc.stdout.decode('utf-8', 'replace').splitlines():
+        if line.startswith('CALLS:'):
+            calls = json.loads(line[len('CALLS:'):])
+    return {
         'mode': mode,
         'limit': limit,
+        'kill_at': kill_at,
+        'when': when,
         'returncode': proc.returncode,
-        'stderr': proc.stderr.decode('utf-8', 'replace')[-600:],
+        'stderr': proc.stderr.decode('utf-8', 'replace')[-300:],
         'state': state,
+        'listing': listing,
         'file_head': head,
         'tinydb_loads_old': docs == docs_of(old),
         'tinydb_loads_new': docs == docs_of(new),
         'tinydb_result': short(docs),
-    })
-    shutil.rmtree(directory, ignore_errors=True)
-return outcomes
+    }, calls
+
+
+outcomes = []
+counted = {}
+# Kill the writer right before and right after each call the write makes to
+# change files (in a counting run first), so that every moment between two
+# such steps is a point of death.
+for label, old, new in (('shrinking', OLD_BIG, NEW_EMPTY),
+                        ('growing', OLD_SMALL, NEW_BIG)):
+    outcome, calls = crash('step', old, new)
+    outcome['label'] = label + ', no kill'
+    outcomes.append(outcome)
+    counted[label] = calls
+    points = list(range(1, len(calls or ()) + 1))
+    if len(points) > 60:
+        points = points[:30] + points[-30:]
+    for kill_at in points:
+        for when in ('before', 'after'):
+            outcome, _ = crash('step', old, new, kill_at=kill_at, when=when)
+            outcome['label'] = '%s, killed %s call %d (%s)' % (
+                label, when, kill_at, calls[kill_at - 1])
+            outcomes.append(outcome)
+# Kill the writer while it writes the new data (the file size limit is hit).
+for old, new, limit in ((OLD_BIG, NEW_MID, 1024), (OLD_SMALL, NEW_BIG, 4096)):
+    outcome, _ = crash('fsize', old, new, limit=limit)
+    outcome['label'] = 'killed writing beyond %d bytes' % limit
+    outcomes.append(outcome)
+return {'outcomes': outcomes, 'counted': counted}
 '''
 
 
@@ -1032,14 +1102,22 @@ def _value(r):
 # ---------------------------------------------------------------------------
 
 def test_process_killed_mid_write_leaves_complete_old_or_new_json():
-    r = run_python(_snippet(PIECE_CRASH, child=CRASH_CHILD), timeout=120.0)
-    outcomes = _value(r)
-    assert [o['mode'] for o in outcomes] == ['fsync', 'rename', 'fsize',
-                                            'fsize']
+    r = run_python(_snippet(PIECE_CRASH, child=CRASH_CHILD), timeout=240.0)
+    value = _value(r)
+    outcomes = value['outcomes']
+    # The counting runs completed and reported the calls the write made.
+    for label in ('shrinking', 'growing'):
+        assert value['counted'][label] is not None, (label, outcomes)
+    killed = [o for o in outcomes if o['mode'] == 'step' and o['kill_at']]
+    assert len(killed) == 2 * sum(
+        min(len(value['counted'][label]), 60)
+        for label in ('shrinking', 'growing')), value['counted']
+    assert [o['limit'] for o in outcomes if o['mode'] == 'fsize'] == [1024,
+                                                                     4096]
     for outcome in outcomes:
-        # After the writer died, the database file is a complete JSON
-        # document holding exactly the old or the new state (never a
-        # half-written mix)...
+        # Wherever the writer died, the database file is a complete JSON
+        # document holding exactly the old or the new state (never missing,
+        # empty or a half-written mix)...
         assert outcome['state'] in ('old', 'new'), outcome
         # ...and TinyDB loads one of them.
         assert outcome['tinydb_loads_old'] or outcome['tinydb_loads_new'], (

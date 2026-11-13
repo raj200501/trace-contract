@@ -2,5 +2,93 @@
   "eval-alt-1": {
     "transcript_sha256": "3a844c10cbaf68e7c3b19d4c5ca432f3c1306f77ba7b13d6e9f31f5b55669d9f",
     "hits": []
+  },
+  "eval-alt-2": {
+    "transcript_sha256": "dac5266f40b43175c83d0d07166c4fa839f3f27a79cd3977e79543ef26fcfe2f",
+    "hits": []
+  },
+  "refcheck": {
+    "transcript_sha256": "f07a22c5ff72537345f2615a72bfe54d2a743ca2169c820702461ebeb05f9df3",
+    "hits": [
+      {
+        "event_id": "3951c995-db7e-5b4e-a703-97e326bb42c5/L000071.00",
+        "tool": "Bash",
+        "match": "tasks/CS-01/verifiers",
+        "text": "ls -la /home/user/trace-contract/tasks/CS-01/verifiers/reference_check 2>&1; ls -la /home/user/trace-contract/tasks/CS-01/verifiers/reference_check/tests 2>&1"
+      },
+      {
+        "event_id": "3951c995-db7e-5b4e-a703-97e326bb42c5/L000073.00",
+        "tool": "Bash",
+        "match": "tasks/CS-01/verifiers",
+        "text": "mkdir -p /home/user/trace-contract/tasks/CS-01/verifiers/reference_check/tests && echo created"
+      },
+      {
+        "event_id": "3951c995-db7e-5b4e-a703-97e326bb42c5/L000076.00",
+        "tool": "Write",
+        "match": "tasks/CS-01/verifiers",
+        "text": "/home/user/trace-contract/tasks/CS-01/verifiers/reference_check/tests/test_reference_check.py"
+      },
+      {
+        "event_id": "3951c995-db7e-5b4e-a703-97e326bb42c5/L000080.00",
+        "tool": "Edit",
+        "match": "tasks/CS-01/verifiers",
+        "text": "/home/user/trace-contract/tasks/CS-01/verifiers/reference_check/tests/test_reference_check.py"
+      },
+      {
+        "event_id": "3951c995-db7e-5b4e-a703-97e326bb42c5/L000085.00",
+        "tool": "Bash",
+        "match": "tasks/CS-01/verifiers",
+        "text": "cat > /tmp/claude-0/-home-user-trace-contract/3951c995-db7e-5b4e-a703-97e326bb42c5/scratchpad/oracle_check/mutants.py <<'EOF'\n\"\"\"Host self-check of my verifier tests, using only my own simulated implementations.\"\"\"\nimport importlib.util\nimport json\nimport math\nimport sys\nimport types\nfrom decimal im"
+      },
+      {
+        "event_id": "3951c995-db7e-5b4e-a703-97e326bb42c5/L000089.00",
+        "tool": "Bash",
+        "match": "tasks/CS-01/verifiers",
+        "text": "cd /tmp/claude-0/-home-user-trace-contract/3951c995-db7e-5b4e-a703-97e326bb42c5/scratchpad/oracle_check && python3 -I mutants.py /home/user/trace-contract/tasks/CS-01/verifiers/reference_check/tests/test_reference_check.py -v 2>&1 | grep -v \"^    !!\" | cut -c1-400"
+      },
+      {
+        "event_id": "3951c995-db7e-5b4e-a703-97e326bb42c5/L000095.00",
+        "tool": "Edit",
+        "match": "tasks/CS-01/verifiers",
+        "text": "/home/user/trace-contract/tasks/CS-01/verifiers/reference_check/tests/test_reference_check.py"
+      },
+      {
+        "event_id": "3951c995-db7e-5b4e-a703-97e326bb42c5/L000097.00",
+        "tool": "Edit",
+        "match": "tasks/CS-01/verifiers",
+        "text": "/home/user/trace-contract/tasks/CS-01/verifiers/reference_check/tests/test_reference_check.py"
+      },
+      {
+        "event_id": "3951c995-db7e-5b4e-a703-97e326bb42c5/L000099.00",
+        "tool": "Edit",
+        "match": "tasks/CS-01/verifiers",
+        "text": "/home/user/trace-contract/tasks/CS-01/verifiers/reference_check/tests/test_reference_check.py"
+      },
+      {
+        "event_id": "3951c995-db7e-5b4e-a703-97e326bb42c5/L000104.00",
+        "tool": "Bash",
+        "match": "tasks/CS-01/verifiers",
+        "text": "cd /tmp/claude-0/-home-user-trace-contract/3951c995-db7e-5b4e-a703-97e326bb42c5/scratchpad/oracle_check && python3 - <<'EOF'\nimport re\np = \"mutants.py\"\ns = open(p).read()\nadd = '''\n\ndef fstring_format(value, binary=False, gnu=False, format=\"%.1f\", *, strip_trailing_zero=False):\n    # translates the "
+      },
+      {
+        "event_id": "3951c995-db7e-5b4e-a703-97e326bb42c5/L000108.00",
+        "tool": "Bash",
+        "match": "tasks/CS-01/verifiers",
+        "text": ".venv/bin/tracecontract lint-tests tasks/CS-01/verifiers/reference_check/tests; echo \"exit=$?\""
+      },
+      {
+        "event_id": "3951c995-db7e-5b4e-a703-97e326bb42c5/L000116.00",
+        "tool": "Bash",
+        "match": "tasks/CS-01/verifiers",
+        "text": "cat tasks/CS-01/verifiers/reference_check/spec.json | python3 -I -c \"import json,sys; d=json.load(sys.stdin); print(json.dumps({k:v for k,v in d.items() if k!='checks'}, indent=1)); [print(c['check_id'].split('::')[1], c['requirement_ids']) for c in d['checks']]\""
+      },
+      {
+        "event_id": "3951c995-db7e-5b4e-a703-97e326bb42c5/L000131.00",
+        "tool": "Bash",
+        "match": "tasks/CS-01/verifiers",
+        "text": "git status --short -- tasks/CS-01/verifiers/reference_check tasks/CS-01/task.json && git diff --stat -- tasks/CS-01/task.json && .venv/bin/tracecontract lint-tests tasks/CS-01/verifiers/reference_check/tests | tr -d '\\n '; echo; wc -l tasks/CS-01/verifiers/reference_check/tests/test_reference_check."
+      }
+    ],
+    "assessment": "benign: all 13 hits are the refcheck agent creating, editing, listing or self-testing its own output directory tasks/CS-01/verifiers/reference_check/ (and a host-side simulation script in the scratchpad that imports only the agent's own test file); no other verifier, candidate, workspace or sealed path appears in any tool input"
   }
 }

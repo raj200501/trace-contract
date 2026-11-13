@@ -1,0 +1,57 @@
+{
+ "mapper": "model:claude-code-subagent:mapper:v1",
+ "mapper_kind": "model",
+ "map": {
+  "R2": [
+   "R-keep-meaningful",
+   "R-default-unchanged"
+  ],
+  "R4": [
+   "R-keep-meaningful",
+   "R-default-unchanged"
+  ],
+  "R5": [
+   "R-keep-meaningful",
+   "R-opt-in",
+   "R-default-unchanged"
+  ],
+  "R6": [
+   "R-custom-format-unchanged"
+  ],
+  "R8": [
+   "R-keep-meaningful",
+   "R-opt-in",
+   "R-default-unchanged"
+  ],
+  "R9": [
+   "R-opt-in"
+  ]
+ },
+ "contradicts": {
+  "R2": [],
+  "R4": [],
+  "R5": [],
+  "R6": [],
+  "R8": [],
+  "R9": []
+ },
+ "notes": {
+  "R2": "A test of R2 makes both R-keep-meaningful checks (naturalsize(3000, binary=True) == '2.9 KiB' with and without strip_trailing_zero=True), and its default-call check also tests R-default-unchanged for that one input; it is not mapped to R-opt-in because it only needs the keyword to exist and checks no trimming.",
+  "R4": "R4 restates R-default-unchanged (default output identical to the base for every input and mode, e.g. '3.0 MB' and '1.0 KiB'), and its example naturalsize(3000, binary=True) == '2.9 KiB' is also the default-call check of R-keep-meaningful; its jinja2 check is limited to values where the base already matched, so nothing conflicts.",
+  "R5": "R5 restates R-opt-in (keyword strip_trailing_zero, default False, giving '3 MB' and '1 KiB' when True) and also asserts R-keep-meaningful's naturalsize(3000, binary=True, strip_trailing_zero=True) == '2.9 KiB' and R-default-unchanged's naturalsize(3000000) == '3.0 MB'.",
+  "R6": "R6 restates R-custom-format-unchanged with the same examples ('2.930K' with the format passed positionally, '3.00 MB' with it passed by keyword); custom-format calls fall outside R-default-unchanged, which covers the default output only.",
+  "R8": "R8 applies R-opt-in's rule that strip_trailing_zero=True drops a trailing '.0' to GNU and negative sizes ('1K', '-3 MB', '-4 KiB'), checks that a meaningful decimal survives trimming ('2.9K', '-2.9 KiB', the R-keep-meaningful rule) and that the default naturalsize(1024, gnu=True) stays '1.0K' (R-default-unchanged), and none of these conflict with the reference.",
+  "R9": "Most R9 assertions apply R-opt-in's trimming to the rendered number (3000001 -> '3 MB', 10**7 -> '10 MB', 10**8 -> '100 MB', 3*10**34 -> '30000 QB', 100 -> '100 Bytes'), but naturalsize(999999, strip_trailing_zero=True) == '1 MB' rejects a reference-satisfying solution, because the base renders 999999 as '1000.0 kB' and dropping the '.0' gives '1000 kB'."
+ },
+ "corrections": [
+  {
+   "by": "builder",
+   "field": "contradicts.R9",
+   "old": [
+    "R-opt-in"
+   ],
+   "new": [],
+   "reason": "The mapper (read-only, no execution) assumed base naturalsize(999999) renders '1000.0 kB'. Checked in the sandbox on the base snapshot: naturalsize(999999) == '1.0 MB' (and 3000001 -> '3.0 MB'), so R9's assertion naturalsize(999999, strip_trailing_zero=True) == '1 MB' is consistent with the reference contract; the independent reference checks assert the same value and pass on the reference."
+  }
+ ]
+}

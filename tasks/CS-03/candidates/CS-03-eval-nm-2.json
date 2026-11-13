@@ -19,6 +19,15 @@
       "adjudicated": false,
       "timestamp": "2026-11-13T04:10:08+00:00",
       "note": ""
+    },
+    {
+      "value": "ambiguous",
+      "violated_requirements": [],
+      "labeler": "builder:refcheck+regression+construction:v1",
+      "labeler_kind": "model",
+      "adjudicated": false,
+      "timestamp": "2026-11-13T04:14:29+00:00",
+      "note": "construction invalid but reference checks and regression norm pass | {\"refcheck_outcome\": \"pass\", \"refcheck_failed\": [], \"regression_outcome\": \"pass\", \"regression_failed\": [], \"construction\": {\"value\": \"invalid\", \"violated_requirements\": [\"R-all-caps-input\"], \"labeler\": \"nearmiss:v1\", \"labeler_kind\": \"construction\", \"adjudicated\": false, \"timestamp\": \"2026-11-13T04:10:08+00:00\", \"note\": \"\"}}"
     }
   ]
 }

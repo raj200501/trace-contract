@@ -19,6 +19,17 @@
       "adjudicated": false,
       "timestamp": "2026-11-13T04:10:09+00:00",
       "note": ""
+    },
+    {
+      "value": "invalid",
+      "violated_requirements": [
+        "R-all-caps-input"
+      ],
+      "labeler": "builder:refcheck+regression+construction:v1",
+      "labeler_kind": "model",
+      "adjudicated": false,
+      "timestamp": "2026-11-13T04:14:41+00:00",
+      "note": "construction invalid, confirmed on targeted requirement | {\"refcheck_outcome\": \"task_failure\", \"refcheck_failed\": [\"test_titleize_all_caps.py::test_titleize_all_caps_with_separators_matches_base\", \"test_titleize_all_caps.py::test_titleize_all_caps_generated_inputs_match_base\"], \"regression_outcome\": \"pass\", \"regression_failed\": [], \"construction\": {\"value\": \"invalid\", \"violated_requirements\": [\"R-all-caps-input\"], \"labeler\": \"nearmiss:v1\", \"labeler_kind\": \"construction\", \"adjudicated\": false, \"timestamp\": \"2026-11-13T04:10:09+00:00\", \"note\": \"\"}}"
     }
   ]
 }

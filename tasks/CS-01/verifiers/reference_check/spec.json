@@ -1,0 +1,127 @@
+{
+  "schema_version": "0.1.0",
+  "verifier_id": "reference_check",
+  "task_id": "CS-01",
+  "condition": "reference_check",
+  "contract_id": "CS-01-reference",
+  "isolation": "process_separated",
+  "test_dir": "verifiers/reference_check/tests",
+  "checks": [
+    {
+      "check_id": "test_reference_check.py::test_opt_in_contract_examples",
+      "requirement_ids": [
+        "R-opt-in"
+      ]
+    },
+    {
+      "check_id": "test_reference_check.py::test_opt_in_explicit_false_is_the_default",
+      "requirement_ids": [
+        "R-opt-in"
+      ]
+    },
+    {
+      "check_id": "test_reference_check.py::test_opt_in_drops_point_zero_for_every_suffix",
+      "requirement_ids": [
+        "R-opt-in"
+      ]
+    },
+    {
+      "check_id": "test_reference_check.py::test_opt_in_drops_point_zero_after_rounding_and_for_negative_and_string_input",
+      "requirement_ids": [
+        "R-opt-in"
+      ]
+    },
+    {
+      "check_id": "test_reference_check.py::test_opt_in_keeps_integer_zeros",
+      "requirement_ids": [
+        "R-opt-in",
+        "R-keep-meaningful"
+      ]
+    },
+    {
+      "check_id": "test_reference_check.py::test_opt_in_leaves_byte_counts_unchanged",
+      "requirement_ids": [
+        "R-opt-in",
+        "R-keep-meaningful"
+      ]
+    },
+    {
+      "check_id": "test_reference_check.py::test_opt_in_random_point_zero_outputs",
+      "requirement_ids": [
+        "R-opt-in"
+      ]
+    },
+    {
+      "check_id": "test_reference_check.py::test_keep_meaningful_contract_example",
+      "requirement_ids": [
+        "R-keep-meaningful"
+      ]
+    },
+    {
+      "check_id": "test_reference_check.py::test_keep_meaningful_nonzero_decimals_table",
+      "requirement_ids": [
+        "R-keep-meaningful"
+      ]
+    },
+    {
+      "check_id": "test_reference_check.py::test_keep_meaningful_random_nonzero_decimals",
+      "requirement_ids": [
+        "R-keep-meaningful"
+      ]
+    },
+    {
+      "check_id": "test_reference_check.py::test_default_contract_examples",
+      "requirement_ids": [
+        "R-default-unchanged"
+      ]
+    },
+    {
+      "check_id": "test_reference_check.py::test_default_base_suite_and_docstring_outputs",
+      "requirement_ids": [
+        "R-default-unchanged"
+      ]
+    },
+    {
+      "check_id": "test_reference_check.py::test_default_random_inputs_all_modes",
+      "requirement_ids": [
+        "R-default-unchanged"
+      ]
+    },
+    {
+      "check_id": "test_reference_check.py::test_custom_format_contract_examples",
+      "requirement_ids": [
+        "R-custom-format-unchanged"
+      ]
+    },
+    {
+      "check_id": "test_reference_check.py::test_custom_format_positional_table",
+      "requirement_ids": [
+        "R-custom-format-unchanged"
+      ]
+    },
+    {
+      "check_id": "test_reference_check.py::test_custom_format_keyword_table",
+      "requirement_ids": [
+        "R-custom-format-unchanged"
+      ]
+    },
+    {
+      "check_id": "test_reference_check.py::test_custom_format_random_inputs",
+      "requirement_ids": [
+        "R-custom-format-unchanged"
+      ]
+    }
+  ],
+  "content_sha256": "f63d2cec38514fa332789e7bdc5f2918f519db06bfe094b4be731e2ed32d7fb6",
+  "generation": {
+    "generator": "model:claude-code-subagent:refcheck:v1",
+    "run_id": "unrecorded",
+    "prompt_sha256": "",
+    "created_at": "",
+    "budget": {},
+    "notes": ""
+  },
+  "audit": null,
+  "frozen": true,
+  "version": 1
+}

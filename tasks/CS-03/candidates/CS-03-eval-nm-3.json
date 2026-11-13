@@ -19,6 +19,17 @@
       "adjudicated": false,
       "timestamp": "2026-11-13T04:10:08+00:00",
       "note": ""
+    },
+    {
+      "value": "invalid",
+      "violated_requirements": [
+        "R-humanize-unchanged"
+      ],
+      "labeler": "builder:refcheck+regression+construction:v1",
+      "labeler_kind": "model",
+      "adjudicated": false,
+      "timestamp": "2026-11-13T04:14:33+00:00",
+      "note": "construction invalid, confirmed on targeted requirement | {\"refcheck_outcome\": \"task_failure\", \"refcheck_failed\": [\"test_humanize_unchanged.py::test_humanize_inputs_with_capitals_unchanged\", \"test_humanize_unchanged.py::test_humanize_generated_inputs_match_base\"], \"regression_outcome\": \"pass\", \"regression_failed\": [], \"construction\": {\"value\": \"invalid\", \"violated_requirements\": [\"R-humanize-unchanged\"], \"labeler\": \"nearmiss:v1\", \"labeler_kind\": \"construction\", \"adjudicated\": false, \"timestamp\": \"2026-11-13T04:10:08+00:00\", \"note\": \"\"}}"
     }
   ]
 }
