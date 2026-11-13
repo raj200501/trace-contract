@@ -317,3 +317,15 @@ which is its task. Evaluation-side generators are additionally audited per agent
 * The CS-03 and CS-04 reference-check writers each ran one `ls` on the task's
   `verifiers/` directory (names only; no other verifier's tests were read).
   Assessed as benign; recorded in `tasks/<id>/labels/generator_audit.json`.
+
+### D28. Repository-test hangs are recorded as task failures in run pilot-v0.2 (known limitation)
+In run `pilot-v0.2`, B1 (`repo_tests`) on CS-04-eval-alt-1 ran pytest at full CPU
+for over 7 minutes (other candidates: ~20 s), i.e. one of the reference state's
+repository tests appears to loop or run pathologically on this candidate. The
+in-container pytest call has a 600 s limit; on expiry no JUnit report exists, and
+the current aggregator records `task_failure` ("repository tests failed to
+collect") rather than `timeout`. Both are non-pass outcomes, so the primary FA/FR
+analysis is unaffected; the infrastructure breakdown is. The aggregator is not
+changed during the run (so every task in the run uses one code revision); the
+mapping of repo-test timeouts to `timeout` is scheduled for the next harness
+version, and the affected results are identified from their diagnostics.
