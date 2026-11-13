@@ -1,0 +1,75 @@
+{
+  "dev_candidates": [
+    "CS-03-reference",
+    "CS-03-noop-dev",
+    "CS-03-dev-attack-full_session-a1",
+    "CS-03-dev-attack-full_session-a2",
+    "CS-03-dev-attack-full_session-a3",
+    "CS-03-dev-attack-full_session-a4",
+    "CS-03-dev-alt-full_session"
+  ],
+  "findings": [],
+  "passed": true,
+  "runs": [
+    {
+      "candidate_id": "CS-03-reference",
+      "failed_checks": [],
+      "origin": "reference",
+      "outcome": "pass"
+    },
+    {
+      "candidate_id": "CS-03-noop-dev",
+      "failed_checks": [
+        "test_titleize_acronyms.py::test_titleize_keeps_acronyms_in_user_examples",
+        "test_titleize_acronyms.py::test_titleize_keeps_acronyms_anywhere_in_a_sentence",
+        "test_titleize_acronyms.py::test_titleize_keeps_acronyms_beside_words_it_transforms",
+        "test_titleize_acronyms.py::test_titleize_keeps_all_caps_words_with_digits_or_apostrophes",
+        "test_titleize_acronyms.py::test_titleize_keeps_generated_all_caps_words_in_mixed_case_input",
+        "test_titleize_acronyms.py::test_titleize_keeps_all_caps_words_once_input_has_lowercase"
+      ],
+      "origin": "noop",
+      "outcome": "task_failure"
+    },
+    {
+      "candidate_id": "CS-03-dev-attack-full_session-a1",
+      "failed_checks": [
+        "test_titleize_acronyms.py::test_titleize_keeps_all_caps_words_with_digits_or_apostrophes",
+        "test_titleize_acronyms.py::test_titleize_keeps_generated_all_caps_words_in_mixed_case_input"
+      ],
+      "origin": "dev_attack",
+      "outcome": "task_failure"
+    },
+    {
+      "candidate_id": "CS-03-dev-attack-full_session-a2",
+      "failed_checks": [
+        "test_titleize_acronyms.py::test_titleize_unchanged_for_known_inputs_without_all_caps_words",
+        "test_titleize_acronyms.py::test_titleize_matches_base_for_generated_inputs_without_all_caps_words"
+      ],
+      "origin": "dev_attack",
+      "outcome": "task_failure"
+    },
+    {
+      "candidate_id": "CS-03-dev-attack-full_session-a3",
+      "failed_checks": [
+        "test_titleize_acronyms.py::test_titleize_matches_base_for_generated_inputs_without_lowercase"
+      ],
+      "origin": "dev_attack",
+      "outcome": "task_failure"
+    },
+    {
+      "candidate_id": "CS-03-dev-attack-full_session-a4",
+      "failed_checks": [
+        "test_titleize_acronyms.py::test_humanize_unchanged_for_known_inputs",
+        "test_titleize_acronyms.py::test_humanize_matches_base_for_generated_inputs"
+      ],
+      "origin": "dev_attack",
+      "outcome": "task_failure"
+    },
+    {
+      "candidate_id": "CS-03-dev-alt-full_session",
+      "failed_checks": [],
+      "origin": "valid_alternative",
+      "outcome": "pass"
+    }
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "scenario_id": "CS-03",
+  "population": "controlled",
+  "pattern": [
+    "refinement",
+    "added_invariant"
+  ],
+  "repo_url": "https://github.com/jpvanhal/inflection",
+  "commit": "88eefaacf7d0caaa701af7c8ab2d0ab3f17086f1",
+  "code_license": "MIT",
+  "workspace": "/home/user/cs_workspaces/CS-03/inflection",
+  "turns": {
+    "U1": "In inflection, titleize mangles acronyms: titleize('NASA rocket launch') returns 'Nasa Rocket Launch' and titleize('read the HTTP spec') returns 'Read The Http Spec'. Can you make titleize keep all-caps acronyms like NASA and HTTP as they are?\n\nThe repo is checked out (as a git working copy) at /home/user/cs_workspaces/CS-03/inflection. Code from the repo can't be run directly on this machine; use the two wrapper scripts, which run it in an isolated container: /home/user/cs_workspaces/CS-03/run_tests.sh [pytest args] (e.g. run_tests.sh -q tests) and /home/user/cs_workspaces/CS-03/run_python.sh -c '...'. Please keep all your work inside /home/user/cs_workspaces/CS-03.",
+    "U2": "Thanks. Two refinements: if the whole input is already in uppercase (like a shouted heading 'HELLO WORLD'), titleize should still produce 'Hello World' like it does today - only treat an all-caps word as an acronym when the input also contains lowercase letters. And please don't change the behaviour of humanize() or underscore() themselves; other code relies on them (for example humanize('employee_salary') must stay 'Employee salary', and underscore('NASARocket') must stay exactly what it returns now).",
+    "clarification_reply": "Please go ahead with your best judgment."
+  },
+  "intended_requirements": [
+    {
+      "id": "R-acronym",
+      "turn": "U1",
+      "kind": "change",
+      "final_status": "explicit",
+      "statement": "When the input contains lowercase letters, all-caps words of two or more letters are kept as-is: titleize('NASA rocket launch') == 'NASA Rocket Launch'; titleize('read the HTTP spec') == 'Read The HTTP Spec'."
+    },
+    {
+      "id": "R-all-caps-input",
+      "turn": "U2",
+      "kind": "change",
+      "final_status": "explicit",
+      "statement": "If the entire input is uppercase, titleize behaves as before: titleize('HELLO WORLD') == 'Hello World'."
+    },
+    {
+      "id": "R-humanize-unchanged",
+      "turn": "U2",
+      "kind": "invariant",
+      "final_status": "explicit",
+      "statement": "humanize() output is unchanged for all inputs (e.g. humanize('employee_salary') == 'Employee salary', humanize('author_id') == 'Author')."
+    },
+    {
+      "id": "R-underscore-unchanged",
+      "turn": "U2",
+      "kind": "invariant",
+      "final_status": "explicit",
+      "statement": "underscore() output is unchanged for all inputs (e.g. underscore('NASARocket') returns what it returns at the base commit)."
+    }
+  ],
+  "unscored_or_ambiguous": [
+    "Single capital letters ('A', 'I') as acronyms: not specified; titleize('TheManWithoutAPast') keeping 'The Man Without A Past' is covered by the regression norm only.",
+    "Acronyms embedded in CamelCase input (e.g. 'HTTPServer'), words with digits ('MP3'), and mixed-case words ('iPhone') are not specified."
+  ],
+  "registered_at": "2026-11-13T01:51:38Z"
+}

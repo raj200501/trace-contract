@@ -1,0 +1,74 @@
+[
+  {
+    "req_id": "R-acronym",
+    "turn": "U1",
+    "kind": "change",
+    "status": "explicit",
+    "scored": true,
+    "statement": "In input that also contains lowercase letters, titleize keeps all-caps words of two or more letters unchanged: titleize('NASA rocket launch') == 'NASA Rocket Launch'; titleize('read the HTTP spec') == 'Read The HTTP Spec'.",
+    "evidence": [
+      {
+        "turn": "U1",
+        "quote": "Can you make titleize keep all-caps acronyms like NASA and HTTP as they are?"
+      },
+      {
+        "turn": "U1",
+        "quote": "titleize('NASA rocket launch') returns 'Nasa Rocket Launch' and titleize('read the HTTP spec') returns 'Read The Http Spec'"
+      }
+    ],
+    "observable": "titleize outputs for mixed-case inputs with acronyms"
+  },
+  {
+    "req_id": "R-all-caps-input",
+    "turn": "U2",
+    "kind": "change",
+    "status": "explicit",
+    "scored": true,
+    "statement": "If the entire input is uppercase, titleize behaves as at the base commit: titleize('HELLO WORLD') == 'Hello World'.",
+    "evidence": [
+      {
+        "turn": "U2",
+        "quote": "if the whole input is already in uppercase (like a shouted heading 'HELLO WORLD'), titleize should still produce 'Hello World' like it does today"
+      },
+      {
+        "turn": "U2",
+        "quote": "only treat an all-caps word as an acronym when the input also contains lowercase letters"
+      }
+    ],
+    "observable": "titleize outputs for fully uppercase inputs"
+  },
+  {
+    "req_id": "R-humanize-unchanged",
+    "turn": "U2",
+    "kind": "invariant",
+    "status": "explicit",
+    "scored": true,
+    "statement": "humanize() output is unchanged for all inputs, e.g. humanize('employee_salary') == 'Employee salary' and humanize('author_id') == 'Author'.",
+    "evidence": [
+      {
+        "turn": "U2",
+        "quote": "please don't change the behaviour of humanize() or underscore() themselves"
+      },
+      {
+        "turn": "U2",
+        "quote": "humanize('employee_salary') must stay 'Employee salary'"
+      }
+    ],
+    "observable": "humanize outputs equal base-commit outputs"
+  },
+  {
+    "req_id": "R-underscore-unchanged",
+    "turn": "U2",
+    "kind": "invariant",
+    "status": "explicit",
+    "scored": true,
+    "statement": "underscore() output is unchanged for all inputs, e.g. underscore('NASARocket') returns exactly what it returns at the base commit.",
+    "evidence": [
+      {
+        "turn": "U2",
+        "quote": "underscore('NASARocket') must stay exactly what it returns now"
+      }
+    ],
+    "observable": "underscore outputs equal base-commit outputs"
+  }
+]

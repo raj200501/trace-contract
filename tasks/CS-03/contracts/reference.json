@@ -1,0 +1,159 @@
+{
+  "schema_version": "0.1.0",
+  "contract_id": "CS-03-reference",
+  "task_id": "CS-03",
+  "session_id": "CS-03-session",
+  "variant": "reference",
+  "requirements": [
+    {
+      "req_id": "R-acronym",
+      "statement": "In input that also contains lowercase letters, titleize keeps all-caps words of two or more letters unchanged: titleize('NASA rocket launch') == 'NASA Rocket Launch'; titleize('read the HTTP spec') == 'Read The HTTP Spec'.",
+      "kind": "change",
+      "status": "explicit",
+      "introduced_at": "CS-03-session/L000001.00",
+      "evidence": [
+        {
+          "event_id": "CS-03-session/L000001.00",
+          "start": 167,
+          "end": 243,
+          "quote": "Can you make titleize keep all-caps acronyms like NASA and HTTP as they are?"
+        },
+        {
+          "event_id": "CS-03-session/L000001.00",
+          "start": 42,
+          "end": 165,
+          "quote": "titleize('NASA rocket launch') returns 'Nasa Rocket Launch' and titleize('read the HTTP spec') returns 'Read The Http Spec'"
+        }
+      ],
+      "rationale": "",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "titleize outputs for mixed-case inputs with acronyms",
+      "scored": true,
+      "subjective": false,
+      "proposer": "study-design:pre-registered",
+      "reviews": [
+        {
+          "reviewer": "builder",
+          "reviewer_kind": "model",
+          "decision": "accept",
+          "timestamp": "2026-11-13T02:20:55+00:00",
+          "note": "Drafted from the pre-registered scenario; awaiting human review."
+        }
+      ]
+    },
+    {
+      "req_id": "R-all-caps-input",
+      "statement": "If the entire input is uppercase, titleize behaves as at the base commit: titleize('HELLO WORLD') == 'Hello World'.",
+      "kind": "change",
+      "status": "explicit",
+      "introduced_at": "CS-03-session/L000056.00",
+      "evidence": [
+        {
+          "event_id": "CS-03-session/L000056.00",
+          "start": 80,
+          "end": 225,
+          "quote": "if the whole input is already in uppercase (like a shouted heading 'HELLO WORLD'), titleize should still produce 'Hello World' like it does today"
+        },
+        {
+          "event_id": "CS-03-session/L000056.00",
+          "start": 228,
+          "end": 316,
+          "quote": "only treat an all-caps word as an acronym when the input also contains lowercase letters"
+        }
+      ],
+      "rationale": "",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "titleize outputs for fully uppercase inputs",
+      "scored": true,
+      "subjective": false,
+      "proposer": "study-design:pre-registered",
+      "reviews": [
+        {
+          "reviewer": "builder",
+          "reviewer_kind": "model",
+          "decision": "accept",
+          "timestamp": "2026-11-13T02:20:55+00:00",
+          "note": "Drafted from the pre-registered scenario; awaiting human review."
+        }
+      ]
+    },
+    {
+      "req_id": "R-humanize-unchanged",
+      "statement": "humanize() output is unchanged for all inputs, e.g. humanize('employee_salary') == 'Employee salary' and humanize('author_id') == 'Author'.",
+      "kind": "invariant",
+      "status": "explicit",
+      "introduced_at": "CS-03-session/L000056.00",
+      "evidence": [
+        {
+          "event_id": "CS-03-session/L000056.00",
+          "start": 322,
+          "end": 396,
+          "quote": "please don't change the behaviour of humanize() or underscore() themselves"
+        },
+        {
+          "event_id": "CS-03-session/L000056.00",
+          "start": 437,
+          "end": 492,
+          "quote": "humanize('employee_salary') must stay 'Employee salary'"
+        }
+      ],
+      "rationale": "",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "humanize outputs equal base-commit outputs",
+      "scored": true,
+      "subjective": false,
+      "proposer": "study-design:pre-registered",
+      "reviews": [
+        {
+          "reviewer": "builder",
+          "reviewer_kind": "model",
+          "decision": "accept",
+          "timestamp": "2026-11-13T02:20:55+00:00",
+          "note": "Drafted from the pre-registered scenario; awaiting human review."
+        }
+      ]
+    },
+    {
+      "req_id": "R-underscore-unchanged",
+      "statement": "underscore() output is unchanged for all inputs, e.g. underscore('NASARocket') returns exactly what it returns at the base commit.",
+      "kind": "invariant",
+      "status": "explicit",
+      "introduced_at": "CS-03-session/L000056.00",
+      "evidence": [
+        {
+          "event_id": "CS-03-session/L000056.00",
+          "start": 498,
+          "end": 560,
+          "quote": "underscore('NASARocket') must stay exactly what it returns now"
+        }
+      ],
+      "rationale": "",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "underscore outputs equal base-commit outputs",
+      "scored": true,
+      "subjective": false,
+      "proposer": "study-design:pre-registered",
+      "reviews": [
+        {
+          "reviewer": "builder",
+          "reviewer_kind": "model",
+          "decision": "accept",
+          "timestamp": "2026-11-13T02:20:55+00:00",
+          "note": "Drafted from the pre-registered scenario; awaiting human review."
+        }
+      ]
+    }
+  ],
+  "instruction": "",
+  "created_by": "study-design",
+  "created_at": "2026-11-13T02:20:55+00:00",
+  "notes": ""
+}
