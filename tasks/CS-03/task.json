@@ -41,7 +41,9 @@
     "verifiers/repo_tests/spec.json",
     "verifiers/full_plain/spec.json",
     "verifiers/initial_plain/spec.json",
-    "verifiers/llm_freeform/spec.json"
+    "verifiers/llm_freeform/spec.json",
+    "verifiers/initial_audited/spec.json",
+    "verifiers/full_audited/spec.json"
   ],
   "candidates": [
     "candidates/CS-03-reference.json",
@@ -56,7 +58,8 @@
     "candidates/CS-03-dev-attack-full_session-a2.json",
     "candidates/CS-03-dev-attack-full_session-a3.json",
     "candidates/CS-03-dev-attack-full_session-a4.json",
-    "candidates/CS-03-dev-alt-initial_only.json"
+    "candidates/CS-03-dev-alt-initial_only.json",
+    "candidates/CS-03-dev-alt-full_session.json"
   ],
   "notes": ""
 }

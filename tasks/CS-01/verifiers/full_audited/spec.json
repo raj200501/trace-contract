@@ -118,6 +118,6 @@
       "CS-01-dev-alt-full_session"
     ]
   },
-  "frozen": false,
+  "frozen": true,
   "version": 1
 }

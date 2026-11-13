@@ -1875,6 +1875,6 @@
   "content_sha256": "f7bca4feac5cca75cccdd7835c75f7df83b948a3f880c7ccef1237a7d266962f",
   "generation": null,
   "audit": null,
-  "frozen": false,
+  "frozen": true,
   "version": 1
 }

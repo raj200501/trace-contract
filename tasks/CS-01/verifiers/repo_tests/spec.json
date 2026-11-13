@@ -2959,6 +2959,6 @@
   "content_sha256": "af477e8e205e8abc16cee5b9f558bb3bd70dc6f90fdb5d7360d2e338e7106c39",
   "generation": null,
   "audit": null,
-  "frozen": false,
+  "frozen": true,
   "version": 1
 }

@@ -1,0 +1,109 @@
+{
+  "schema_version": "0.1.0",
+  "verifier_id": "initial_audited",
+  "task_id": "CS-03",
+  "condition": "initial_audited",
+  "contract_id": "CS-03-initial_only",
+  "isolation": "process_separated",
+  "test_dir": "verifiers/initial_audited/tests",
+  "checks": [
+    {
+      "check_id": "test_preserved_behaviour.py::test_plain_words_capitalized_without_small_word_exceptions",
+      "requirement_ids": [
+        "R4"
+      ]
+    },
+    {
+      "check_id": "test_preserved_behaviour.py::test_original_titleize_examples_unchanged",
+      "requirement_ids": [
+        "R4",
+        "R5"
+      ]
+    },
+    {
+      "check_id": "test_preserved_behaviour.py::test_titleize_matches_base_on_inputs_without_acronyms",
+      "requirement_ids": [
+        "R4"
+      ]
+    },
+    {
+      "check_id": "test_preserved_behaviour.py::test_other_functions_match_base_including_all_caps_inputs",
+      "requirement_ids": [
+        "R5"
+      ]
+    },
+    {
+      "check_id": "test_preserved_behaviour.py::test_original_suite_expectations_for_other_functions_hold",
+      "requirement_ids": [
+        "R5"
+      ]
+    },
+    {
+      "check_id": "test_titleize_acronyms.py::test_nasa_rocket_launch_keeps_nasa",
+      "requirement_ids": [
+        "R1"
+      ]
+    },
+    {
+      "check_id": "test_titleize_acronyms.py::test_read_the_http_spec_keeps_http",
+      "requirement_ids": [
+        "R2"
+      ]
+    },
+    {
+      "check_id": "test_titleize_acronyms.py::test_acronym_as_first_word_is_kept",
+      "requirement_ids": [
+        "R3"
+      ]
+    },
+    {
+      "check_id": "test_titleize_acronyms.py::test_acronym_as_middle_word_is_kept",
+      "requirement_ids": [
+        "R3"
+      ]
+    },
+    {
+      "check_id": "test_titleize_acronyms.py::test_acronym_as_last_word_is_kept",
+      "requirement_ids": [
+        "R3"
+      ]
+    },
+    {
+      "check_id": "test_titleize_acronyms.py::test_several_acronyms_in_one_string_are_kept",
+      "requirement_ids": [
+        "R3"
+      ]
+    },
+    {
+      "check_id": "test_titleize_acronyms.py::test_two_letter_and_uncommon_acronyms_are_kept",
+      "requirement_ids": [
+        "R3"
+      ]
+    },
+    {
+      "check_id": "test_titleize_acronyms.py::test_acronyms_kept_alongside_capitalized_words",
+      "requirement_ids": [
+        "R3"
+      ]
+    },
+    {
+      "check_id": "test_titleize_acronyms.py::test_other_words_in_acronym_strings_titleized_as_before",
+      "requirement_ids": [
+        "R3",
+        "R4"
+      ]
+    }
+  ],
+  "content_sha256": "8931e33066a1999166b43ae5631d87eabacf2f021dc1425ebc961a68c7425d6f",
+  "generation": {
+    "generator": "model:claude-code-subagent:testgen:v1+audit:v1",
+    "run_id": "unrecorded",
+    "prompt_sha256": "",
+    "created_at": "",
+    "budget": {},
+    "notes": ""
+  },
+  "audit": null,
+  "frozen": false,
+  "version": 1
+}

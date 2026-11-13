@@ -1,0 +1,96 @@
+{
+  "schema_version": "0.1.0",
+  "verifier_id": "full_audited",
+  "task_id": "CS-03",
+  "condition": "full_audited",
+  "contract_id": "CS-03-full_session",
+  "isolation": "process_separated",
+  "test_dir": "verifiers/full_audited/tests",
+  "checks": [
+    {
+      "check_id": "test_titleize_acronyms.py::test_titleize_keeps_acronyms_in_user_examples",
+      "requirement_ids": [
+        "R1"
+      ]
+    },
+    {
+      "check_id": "test_titleize_acronyms.py::test_titleize_keeps_acronyms_anywhere_in_a_sentence",
+      "requirement_ids": [
+        "R1"
+      ]
+    },
+    {
+      "check_id": "test_titleize_acronyms.py::test_titleize_keeps_acronyms_beside_words_it_transforms",
+      "requirement_ids": [
+        "R1"
+      ]
+    },
+    {
+      "check_id": "test_titleize_acronyms.py::test_titleize_keeps_all_caps_words_once_input_has_lowercase",
+      "requirement_ids": [
+        "R1",
+        "R5"
+      ]
+    },
+    {
+      "check_id": "test_titleize_acronyms.py::test_titleize_unchanged_for_known_inputs_without_all_caps_words",
+      "requirement_ids": [
+        "R2"
+      ]
+    },
+    {
+      "check_id": "test_titleize_acronyms.py::test_titleize_matches_base_for_generated_inputs_without_all_caps_words",
+      "requirement_ids": [
+        "R2"
+      ]
+    },
+    {
+      "check_id": "test_titleize_acronyms.py::test_titleize_unchanged_for_known_shouted_inputs",
+      "requirement_ids": [
+        "R5"
+      ]
+    },
+    {
+      "check_id": "test_titleize_acronyms.py::test_titleize_matches_base_for_generated_inputs_without_lowercase",
+      "requirement_ids": [
+        "R5"
+      ]
+    },
+    {
+      "check_id": "test_titleize_acronyms.py::test_humanize_unchanged_for_known_inputs",
+      "requirement_ids": [
+        "R6"
+      ]
+    },
+    {
+      "check_id": "test_titleize_acronyms.py::test_humanize_matches_base_for_generated_inputs",
+      "requirement_ids": [
+        "R6"
+      ]
+    },
+    {
+      "check_id": "test_titleize_acronyms.py::test_underscore_unchanged_for_known_inputs",
+      "requirement_ids": [
+        "R7"
+      ]
+    },
+    {
+      "check_id": "test_titleize_acronyms.py::test_underscore_matches_base_for_generated_inputs",
+      "requirement_ids": [
+        "R7"
+      ]
+    }
+  ],
+  "content_sha256": "21f7af73e24351e8c26f09fa5f17427d90baf849ed2cf900d5052934dcd8522e",
+  "generation": {
+    "generator": "model:claude-code-subagent:testgen:v1+audit:v1",
+    "run_id": "unrecorded",
+    "prompt_sha256": "",
+    "created_at": "",
+    "budget": {},
+    "notes": ""
+  },
+  "audit": null,
+  "frozen": false,
+  "version": 1
+}

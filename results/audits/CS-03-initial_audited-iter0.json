@@ -1,0 +1,80 @@
+{
+  "dev_candidates": [
+    "CS-03-reference",
+    "CS-03-noop-dev",
+    "CS-03-dev-attack-initial_only-a1",
+    "CS-03-dev-attack-initial_only-a2",
+    "CS-03-dev-attack-initial_only-a3",
+    "CS-03-dev-attack-initial_only-a4",
+    "CS-03-dev-alt-initial_only"
+  ],
+  "findings": [
+    {
+      "candidate_id": "CS-03-dev-attack-initial_only-a4",
+      "code": "false_acceptance_dev",
+      "message": "CS-03-dev-attack-initial_only-a4 (dev_attack) passed",
+      "requirement_id": null
+    }
+  ],
+  "passed": false,
+  "runs": [
+    {
+      "candidate_id": "CS-03-reference",
+      "failed_checks": [],
+      "origin": "reference",
+      "outcome": "pass"
+    },
+    {
+      "candidate_id": "CS-03-noop-dev",
+      "failed_checks": [
+        "test_titleize_acronyms.py::test_nasa_rocket_launch_keeps_nasa",
+        "test_titleize_acronyms.py::test_read_the_http_spec_keeps_http",
+        "test_titleize_acronyms.py::test_acronym_as_first_word_is_kept",
+        "test_titleize_acronyms.py::test_acronym_as_middle_word_is_kept",
+        "test_titleize_acronyms.py::test_acronym_as_last_word_is_kept",
+        "test_titleize_acronyms.py::test_several_acronyms_in_one_string_are_kept",
+        "test_titleize_acronyms.py::test_two_letter_and_uncommon_acronyms_are_kept",
+        "test_titleize_acronyms.py::test_acronyms_kept_alongside_capitalized_words",
+        "test_titleize_acronyms.py::test_other_words_in_acronym_strings_titleized_as_before"
+      ],
+      "origin": "noop",
+      "outcome": "task_failure"
+    },
+    {
+      "candidate_id": "CS-03-dev-attack-initial_only-a1",
+      "failed_checks": [
+        "test_titleize_acronyms.py::test_two_letter_and_uncommon_acronyms_are_kept"
+      ],
+      "origin": "dev_attack",
+      "outcome": "task_failure"
+    },
+    {
+      "candidate_id": "CS-03-dev-attack-initial_only-a2",
+      "failed_checks": [
+        "test_preserved_behaviour.py::test_titleize_matches_base_on_inputs_without_acronyms"
+      ],
+      "origin": "dev_attack",
+      "outcome": "task_failure"
+    },
+    {
+      "candidate_id": "CS-03-dev-attack-initial_only-a3",
+      "failed_checks": [
+        "test_preserved_behaviour.py::test_other_functions_match_base_including_all_caps_inputs"
+      ],
+      "origin": "dev_attack",
+      "outcome": "task_failure"
+    },
+    {
+      "candidate_id": "CS-03-dev-attack-initial_only-a4",
+      "failed_checks": [],
+      "origin": "dev_attack",
+      "outcome": "pass"
+    },
+    {
+      "candidate_id": "CS-03-dev-alt-initial_only",
+      "failed_checks": [],
+      "origin": "valid_alternative",
+      "outcome": "pass"
+    }
+  ]
+}
