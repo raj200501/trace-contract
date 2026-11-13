@@ -1,0 +1,36 @@
+{
+  "schema_version": "0.1.0",
+  "snapshot_id": "CS-02@edff96aeb261",
+  "task_id": "CS-02",
+  "repo_url": "https://github.com/msiemens/tinydb",
+  "base_commit": "edff96aeb2616402e9489d46e90a592c05565621",
+  "fidelity": "exact",
+  "approximations": [],
+  "file_manifest_sha256": "8f30c35e16795f234c71e7b6945a6355ca0b4d139feda3b36642ea01e3b8d64b",
+  "n_files": 65,
+  "environment": {
+    "image": "tc-env:801a26fad4c5e101",
+    "image_id": "sha256:035acd7634f10312c8ef4d6e206cfe978165ebd11bcf5ab9d17e097d794edc21",
+    "pins": [
+      "attrs==26.1.0",
+      "hypothesis==6.131.0",
+      "iniconfig==2.3.1",
+      "packaging==26.3",
+      "pluggy==1.7.0",
+      "pygments==2.21.0",
+      "pytest==9.2.0",
+      "sortedcontainers==2.4.0"
+    ]
+  },
+  "leakage_check": {
+    "checked_paths": [
+      "docs/changelog.rst",
+      "docs/usage.rst",
+      "tests/test_storages.py",
+      "tinydb/storages.py"
+    ],
+    "leaked_paths": [],
+    "passed": true,
+    "method": "post-image-equality"
+  }
+}

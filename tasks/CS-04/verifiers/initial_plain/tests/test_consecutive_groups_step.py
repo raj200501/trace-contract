@@ -427,8 +427,6 @@ def test_default_matches_base_outputs():
             'range': groups(range(3, 9)),
             'tuple': groups((1, 2, 4)),
             'iterator': groups(iter([-10, -8, -7, -6, 1, 2, 4, 5, -1, 7])),
-            'ordering_none_positional': groups([3, 1, 2, 5], None),
-            'ordering_none_keyword': groups([3, 1, 2, 5], ordering=None),
         }
         """
     )
@@ -448,8 +446,6 @@ def test_default_matches_base_outputs():
         "range": [[3, 4, 5, 6, 7, 8]],
         "tuple": [[1, 2], [4]],
         "iterator": [[-10], [-8, -7, -6], [1, 2], [4, 5], [-1], [7]],
-        "ordering_none_positional": [[3], [1, 2], [5]],
-        "ordering_none_keyword": [[3], [1, 2], [5]],
     }
 
 
@@ -505,6 +501,8 @@ def test_ordering_argument_still_supported():
                 list(g) for g in cg([5, 4, 3, 7, 6], lambda x: -x)
             ],
             'iterator_positional': [list(g) for g in cg(iter('xyzab'), ord)],
+            'none_positional': [list(g) for g in cg([3, 1, 2, 5], None)],
+            'none_keyword': [list(g) for g in cg([3, 1, 2, 5], ordering=None)],
         }
         """
     )
@@ -521,4 +519,6 @@ def test_ordering_argument_still_supported():
         "len_keyword": [["a", "bb", "ccc"], ["e", "ff"]],
         "negate_positional": [[5, 4, 3], [7, 6]],
         "iterator_positional": [["x", "y", "z"], ["a", "b"]],
+        "none_positional": [[3], [1, 2], [5]],
+        "none_keyword": [[3], [1, 2], [5]],
     }

@@ -234,3 +234,19 @@ are unaffected; provenance records carry the new transcript hashes and
 this change saw the unredacted e-mails in tool results; this does not affect any
 requirement. Absolute session-local paths in research notes were replaced with
 `<scratchpad>` / `<session-dir>`.
+
+### D22. Protocol v0.2 (before any evaluation run)
+Amended at 2026-11-13T02:29:52Z after the verifier-fidelity literature review (Youden's J,
+task-level accepted negatives, origin stratification, label rule D19, generator
+diversity limitation). sha256 `b507dc232be96880cf08501fc5079fbc30918cf0713c0006b7bf44e52f7360ba`. No evaluation run had been executed.
+
+### D23. CS-02 capture-race check; state captures visible to the agent (protocol note)
+* For CS-02 the `after_U1` capture and the U2 delivery were issued in the same
+  tool batch. The transcript shows U2 delivered at 02:18:44.086Z, the capture
+  completed within the same second, and the agent's first tool call after U2 at
+  02:24:23Z (first edit 02:24:32Z), so the captured state precedes any U2 change.
+* The CS-02 agent noticed the `states/` capture folder inside its workspace root
+  (`/home/user/cs_workspaces/CS-02/states`). It contains only the agent's own
+  earlier work, not study material, so the session is not contaminated; but for any
+  future controlled session, captures are stored outside the agent's workspace root.
+* B1 (CS-02): 239 checks; pre-correction fails 3, no-op fails 5.

@@ -3,7 +3,7 @@
 Cluster owner: research subagent (workflow step "verifier_fidelity").
 Access date for every source below: **2026-11-13 (UTC)**. Publication or version dates are recorded separately for each source.
 Downloads (untrusted data, not committed): `<scratchpad>/dl/verifier_fidelity/` (papers, web pages, harden-v0 clone, OpenAI annotation CSVs).
-Quote check: every short quote below that is marked "(verified)" was string-matched (whitespace and quote-mark normalized) against the downloaded text with `<scratchpad>/vf_scripts/check_quotes.py` (56 of 57 planned quotes matched; the one miss was an HTML-entity issue in an arXiv abstract page, and that abstract was read through a parser instead).
+Quote check: every short quote below that is marked "(verified)" was string-matched (whitespace and quote-mark normalized) against the downloaded text with `<scratchpad>/vf_scripts/check_quotes.py` (first pass: 56 of 57 quotes matched, and the one miss was an HTML-entity issue in an arXiv abstract page that was then read through a parser; second pass: 13 of 13 matched; several further TB phrases were checked with grep).
 This step made no git commits and ran no git commands inside `/home/user/trace-contract`.
 
 Conventions used in these notes:
@@ -113,7 +113,7 @@ Wiring in TB3 (`scripts/fortify/`):
 
 Loop semantics (from harden-v0 code at the pinned commit):
 - Roles: hacker (tries to reach reward >= `hack_threshold` without solving), fixer (edits only `tests/` and `environment/` in a git repo at `/logs/artifacts/`; only committed changes are extracted; cannot edit instruction or solution, per paper D.6), solver or oracle (precheck and post-fix validation).
-- **With `--oracle` (as TB3 sets it), the solver is the task's reference solution `solve.sh` run by Harbor's oracle agent.** `harden/config.py` (verified): "# Agent-solver-only knobs (ignored when cfg.oracle=True, i.e. deterministic pre-check)". So `--solver-model`, `--solver-privileged`, and `--solver-precheck-retries 4` are ignored, and `harden/loop.py` sets (verified) `precheck_retries = 1 if config.oracle else config.solver_precheck_retries`. Inference: in TB3 `/fortify`, the only guard against over-restrictive patches (FR) is "the reference solution still passes". The harden-v0 paper reports this configuration missed real over-restriction on KernelBench (section 1.10 below).
+- **With `--oracle` (as TB3 sets it), the solver is the task's reference solution `solve.sh` run by Harbor's oracle agent.** `harden/config.py` (verified): "# Agent-solver-only knobs (ignored when cfg.oracle=True, i.e. deterministic pre-check)". So `--solver-model`, `--solver-privileged`, and `--solver-precheck-retries 4` are ignored, and `harden/loop.py` sets (verified) `precheck_retries = 1 if config.oracle else config.solver_precheck_retries`. Inference: in TB3 `/fortify`, the only guard against over-restrictive patches (FR) is "the reference solution still passes". The harden-v0 paper reports that this configuration (reference-only validation) missed real over-restriction on KernelBench (see B1 below).
 - Precheck: if the solver or oracle fails on the unmodified task → status `solver_failed_precheck`, exit.
 - Per iteration (max `max_iterations` = 10 by default; TB3 does not override it): the hacker gets up to `hacker_retries` = 3 attempts (later attempts see summaries of failed ones with `--hacker-feedback`). From iteration index 3 the hacker is "privileged" (read-only verifier source at `/eval_env/`). If all attempts fail → status `robust`. With `--hacker-privileged-enable-iteration` set, robust cannot be declared until a privileged hacker has run (`_can_mark_robust`).
 - If a hack succeeds, the fixer patches, or marks the hack legitimate via a `.legitimate` sentinel. `legitimate_threshold` = 3 consecutive legitimate marks → `robust`.
@@ -152,7 +152,7 @@ For each source: citation; URL; publication or version dates; what error is meas
 - My computations from the released CSVs (not stated in a retrieved primary text):
   - 1,699 instances × 3 annotations; **93 unique annotator IDs**.
   - Ensembled `underspecified` >= 2: 650/1,699 = **38.3%**. Ensembled `false_negative` >= 2: 1,039/1,699 = **61.15%**. `other_major_issues` >= 1: 135 (7.9%).
-  - `filter_out` True: 1,160 (**68.3%**), kept 539. The rule `filter_out == (US>=2 or FN>=2 or other>=1)` reproduces the released column with 0 mismatches. The 500-instance release is a subset of the 539; how the 500 were chosen is not visible in the CSV.
+  - `filter_out` True: 1,160 (**68.3%**), kept 539. The rule `filter_out == (US>=2 or FN>=2 or other>=1)` reproduces the released column with 0 mismatches. Cross-check against the 500 instance IDs pulled from the HF datasets-server API: all 500 are among the 539 unflagged instances, and 39 unflagged instances are not in the release. How those 39 were excluded is not visible in the CSV.
   - Inter-annotator agreement on the binary label (>= 2) over instances with three labels: Fleiss' kappa **0.411** for `false_negative` (n = 1,694) and **0.241** for `underspecified` (n = 1,695). Mean per-annotation flag rates are 39.4% (FN) and 18.7% (US). Max-severity ensembling raises these to 61.2% and 38.3%.
   - Keyword hits in FN notes (rough and non-rigorous): "error message" in 134 of 1,039 flagged notes; "not mentioned" in 129. These suggest tests that check unstated messages or names.
 - Error measured: **FR** (potential: annotators judge whether FAIL_TO_PASS tests would reject valid solutions; no alternative solutions are executed) plus underspecification. FA (weak tests) is not labelled.
@@ -244,7 +244,7 @@ For each source: citation; URL; publication or version dates; what error is meas
 #### A13. "Terminal-Bench: Benchmarking Agents on Hard, Realistic Tasks in Command Line Interfaces" (TB2.0 paper)
 - Mike A. Merrill, Alexander G. Shaw, Nicholas Carlini, Boxuan Li, et al. (85 authors). arXiv 2601.11868 v1 2026-01-17; ICLR 2026 (proceedings page found by search, not opened). Full text partly read (HTML).
 - Verification process (§2.3, App. B): oracle must pass. Quote (verified): "Similarly, other checks verified the absence of common failure modes (e.g., a no-op “dummy” agent should fail the task)." An adversarial exploit agent (OpenHands with a "CHEAT" prompt, App. B.4), and (verified) "The trajectories are then manually inspected and verified by an author, regardless of whether the agent passes the task or not." Three reviewers, about 3 reviewer-hours per task; 229 tasks crowd-sourced, 89 selected.
-- Quote (verified, Limitations): "...both ensuring that cheating is difficult and also verifying that all properties tested have been adequately specified in the task description."
+- Quote (verified, §7 Conclusion): "...both ensuring that cheating is difficult and also verifying that all properties tested have been adequately specified in the task description."
 - Their self-assessment against ABC (App. B.5, item I.d.2; verified): "Test case quality is not assessed via objective, automated metrics."
 
 #### A14. "The Verification Horizon: No Silver Bullet for Coding Agent Rewards" (Qwen team)
@@ -322,7 +322,7 @@ For each source: citation; URL; publication or version dates; what error is meas
 - Inference: labels are also used to select the high-quality subset, so the verifier selection is not independent of the evaluation labels.
 
 #### D2. HardTests / HARDTESTGEN
-- Zhongmou He, Yee Man Choi, Kexun Zhang, Jiabao Ji, Junting Zhou, Dejia Xu, Ivan Bercovich, Aidan Zhang, Yixiao Zeng, Lei Li. arXiv 2505.24098, v1 2025-05-30 (titled "HardTests: Synthesizing High-Quality Test Cases for LLM Coding" in search results), v2 2026-11-08 retitled "HARDTESTGEN: A High-Quality RL Verifier Generation Pipeline for LLM Algorithmic Coding"; jref ICLR 2026. Full text partly read (v2 HTML).
+- Zhongmou He, Yee Man Choi, Kexun Zhang, Jiabao Ji, Junting Zhou, Dejia Xu, Ivan Bercovich, Aidan Zhang, Yixiao Zeng, Lei Li. arXiv 2505.24098, v1 2025-05-30 (v1 title not checked in this session; the dataset is called HARDTESTS), v2 2026-11-08 titled "HARDTESTGEN: A High-Quality RL Verifier Generation Pipeline for LLM Algorithmic Coding"; jref ICLR 2026. Full text partly read (v2 HTML).
 - Precision = share of accepted programs that are actually correct (1 − FA among accepted); recall = share of correct programs accepted (1 − FR). Quote (verified): "Intuitively, a higher precision implies “harder tests” because fewer incorrect programs pass, while a higher recall implies “more correct tests” because fewer correct programs fail the tests." Ground truth: official verdicts (AtCoder official tests; Codeforces OJ submissions; MatrixStudio human submissions with verdicts). 1,253-problem evaluation set; 26.6k problems. Abstract: +11.22 pp precision vs existing tests; consensus filtering over up to 8 human oracle programs (>90% agreement).
 
 #### D3. EvalPlus ("Is Your Code Generated by ChatGPT Really Correct?")
@@ -389,7 +389,7 @@ For each source: citation; URL; publication or version dates; what error is meas
 ## 6. Open questions
 
 - Primary text of OpenAI's Feb 2026 SWE-bench Verified audit (138 problems? 59.4%? flawed in which direction?) and the July 2026 SWE-bench Pro follow-up: not retrieved.
-- How the 500 SWE-bench Verified instances were sampled from the 539 unflagged ones (blog not retrieved).
+- Why 39 of the 539 unflagged SWE-bench Verified instances were left out of the 500-instance release (blog not retrieved).
 - Whether `/fortify` is actually active in TB3 (the workflow file is outside `.github/workflows/` in this snapshot) and whether `--oracle` is intentional, since it disables the LLM solver that the paper recommends for FR protection.
 - Whether SWE-ABS-style LLM equivalence judgments (98% on gold-mutants) transfer to intent-level alternatives in trace-derived tasks.
 - How to build valid alternatives at scale without bias toward the reference (human-written vs LLM-generated plus human-verified).

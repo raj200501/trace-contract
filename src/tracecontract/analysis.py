@@ -110,6 +110,12 @@ def analyze(run_dir: Path, tasks_root: Path, *, allow_proposed: bool = False, n_
             "excluded_unlabeled_or_ambiguous": s.excluded_unlabeled,
             "sensitivity_excluding_infra": {"fa": sx.fa.value, "fa_den": sx.fa.den, "fr": sx.fr.value, "fr_den": sx.fr.den},
         }
+        fa_v, fr_v = s.fa.value, s.fr.value
+        out["conditions"][c]["youden_j"] = None if fa_v is None or fr_v is None else (1 - fr_v) - fa_v
+        tasks_c = sorted({r.task_id for r in primary if r.condition == c})
+        any_neg = [any(r.outcome == "pass" for r in primary if r.condition == c and r.task_id == t and r.label == "invalid")
+                   for t in tasks_c if any(r.label == "invalid" for r in primary if r.condition == c and r.task_id == t)]
+        out["conditions"][c]["tasks_with_any_accepted_negative"] = {"num": sum(any_neg), "den": len(any_neg)}
         out["outcome_counts"][c] = dict(Counter(r.outcome for r in rows if r.condition == c))
         for nt in ("correction_violating", "initial_violating", "unspecified"):
             sub = [r for r in primary if r.condition == c and r.negative_type == nt]
@@ -161,12 +167,14 @@ def to_markdown(a: dict) -> str:
     lines += ["## False acceptance / false rejection by condition", "",
               "Rates with (numerator/denominator) and 95% cluster-bootstrap interval over task families where computable. "
               "Reference solution and no-op are excluded (see sanity table).", "",
-              "| Condition | False acceptance | False rejection | Infra outcomes | Excluded (unlabeled/ambiguous) |",
-              "| --- | --- | --- | --- | --- |"]
+              "| Condition | False acceptance | False rejection | Youden's J | Tasks with an accepted negative | Infra outcomes | Excluded (unlabeled/ambiguous) |",
+              "| --- | --- | --- | --- | --- | --- | --- |"]
     for c, d in a["conditions"].items():
         fa, fr = d["false_acceptance"], d["false_rejection"]
-        lines.append(f"| {c} | {_fmt(fa['rate'], fa['num'], fa['den'], fa['ci95'])} | {_fmt(fr['rate'], fr['num'], fr['den'], fr['ci95'])} | "
-                     f"{d['infrastructure']['num']}/{d['infrastructure']['den']} | {d['excluded_unlabeled_or_ambiguous']} |")
+        j = "n/a" if d.get("youden_j") is None else f"{d['youden_j']:+.2f}"
+        tn = d.get("tasks_with_any_accepted_negative", {"num": 0, "den": 0})
+        lines.append(f"| {c} | {_fmt(fa['rate'], fa['num'], fa['den'], fa['ci95'])} | {_fmt(fr['rate'], fr['num'], fr['den'], fr['ci95'])} | {j} | "
+                     f"{tn['num']}/{tn['den']} | {d['infrastructure']['num']}/{d['infrastructure']['den']} | {d['excluded_unlabeled_or_ambiguous']} |")
     lines += ["", "## Accepted negatives by type", "", "| Condition | correction-violating | initial-violating | unspecified |", "| --- | --- | --- | --- |"]
     for c in a["conditions"]:
         bt = a["by_negative_type"].get(c, {})

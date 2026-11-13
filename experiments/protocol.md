@@ -1,6 +1,6 @@
 # Experimental protocol
 
-Version: **v0.1 (pilot, exploratory)** — written before the first evaluation run.
+Version: **v0.2 (pilot, exploratory)** — v0.1 written before the first evaluation run; v0.2 amendments (§10) also made before any evaluation run.
 Timestamp and SHA-256 of this file are recorded in `docs/decision_log.md`. This is a
 locally timestamped protocol, **not** a formal preregistration. Any later change is
 made in a new version with a decision-log entry; results are always reported
@@ -135,3 +135,17 @@ pilot's variability (the 60–100 figure in the project brief is a planning
 placeholder, not a requirement), annotation procedure with a second reviewer on an
 overlap subset and agreement statistics, the final candidate-generation recipe, and
 the analysis plan above with any revisions.
+
+## 10. Amendments in v0.2 (made before any evaluation run)
+
+* Additional descriptive metrics per condition: Youden's J = (1 − FR) − FA, and the
+  number of task families with at least one accepted negative.
+* Negatives are additionally stratified by origin (naturally observed
+  pre-correction state vs constructed near miss); tampering probes are never mixed
+  into semantic false acceptance.
+* Automated-pilot labels follow the pre-specified proposal rule in decision log D19
+  (reference checks + regression norm + construction intent; disagreement →
+  ambiguous).
+* Generator diversity: all held-out negatives and alternatives come from the same
+  model family as the verifiers (no stronger or different generator was available
+  within the zero-spend budget); reported as a limitation.

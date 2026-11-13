@@ -37,7 +37,9 @@
     "full_session": "contracts/full_session.json"
   },
   "verifiers": [
-    "verifiers/repo_tests/spec.json"
+    "verifiers/repo_tests/spec.json",
+    "verifiers/full_plain/spec.json",
+    "verifiers/initial_plain/spec.json"
   ],
   "candidates": [
     "candidates/CS-04-reference.json",

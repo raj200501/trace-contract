@@ -1,0 +1,48 @@
+{
+  "schema_version": "0.1.0",
+  "task_id": "CS-02",
+  "family_id": "CS-02",
+  "population": "controlled",
+  "status": "pending_review",
+  "provenance": "provenance.json",
+  "snapshot_source": {
+    "repo_url": "https://github.com/msiemens/tinydb",
+    "commit": "edff96aeb2616402e9489d46e90a592c05565621",
+    "subdir": ""
+  },
+  "snapshot": "snapshot.json",
+  "snapshot_overlays": {},
+  "env_requirements": [
+    "attrs==26.1.0",
+    "hypothesis==6.131.0",
+    "iniconfig==2.3.1",
+    "packaging==26.3",
+    "pluggy==1.7.0",
+    "pygments==2.21.0",
+    "pytest==9.2.0",
+    "sortedcontainers==2.4.0"
+  ],
+  "candidate_pythonpath": "/work",
+  "repo_test_args": [
+    "-o",
+    "addopts=",
+    "tests"
+  ],
+  "scripted_turns": [
+    "TinyDB's JSONStorage rewrites the database file in place (seek to 0, write, truncate), so if the process dies or the disk fills up in the middle of a write, the JSON file is left half-written and the whole database becomes unreadable. Can you make JSONStorage writes atomic - write the new contents to a temporary file and then swap it into place - so the file on disk is always either the old version or the new one?\n\nThe repo is checked out (as a git working copy) at /home/user/cs_workspaces/CS-02/tinydb. Code from the repo can't be run directly on this machine; use the two wrapper scripts, which run it in an isolated container: /home/user/cs_workspaces/CS-02/run_tests.sh [pytest args] (e.g. run_tests.sh -q tests) and /home/user/cs_workspaces/CS-02/run_python.sh -c '...'. Please keep all your work inside /home/user/cs_workspaces/CS-02.",
+    "Thanks! A few things I should have said up front: our app keeps a single TinyDB instance open for its whole lifetime and reads right after writing, so reads through the same instance (and the same storage object) must always see what was just written. Please also keep honoring the `encoding` argument and the extra json kwargs (like indent=4 or sort_keys=True) exactly as before, so the bytes written are the same as today. And don't leave temporary files lying around next to the database file - not after a normal write, and not when a write fails halfway (in that case the original file must stay exactly as it was)."
+  ],
+  "contracts": {
+    "reference": "contracts/reference.json"
+  },
+  "verifiers": [
+    "verifiers/repo_tests/spec.json"
+  ],
+  "candidates": [
+    "candidates/CS-02-reference.json",
+    "candidates/CS-02-pre-correction.json",
+    "candidates/CS-02-noop-dev.json",
+    "candidates/CS-02-noop-eval.json"
+  ],
+  "notes": ""
+}

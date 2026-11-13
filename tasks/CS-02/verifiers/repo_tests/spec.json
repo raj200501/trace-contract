@@ -1,0 +1,972 @@
+{
+  "schema_version": "0.1.0",
+  "verifier_id": "repo_tests",
+  "task_id": "CS-02",
+  "condition": "repo_tests",
+  "contract_id": null,
+  "isolation": "in_process",
+  "test_dir": "verifiers/repo_tests/overlay",
+  "checks": [
+    {
+      "check_id": "tests.test_middlewares::test_caching",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_middlewares::test_caching_flush",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_middlewares::test_caching_flush_manually",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_middlewares::test_caching_json_write",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_middlewares::test_caching_read",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_middlewares::test_caching_rejects_use_after_close",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_middlewares::test_caching_write",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_middlewares::test_caching_write_many",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_middlewares::test_nested",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_operations::test_add_int[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_operations::test_add_int[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_operations::test_add_str[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_operations::test_add_str[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_operations::test_decrement[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_operations::test_decrement[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_operations::test_delete[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_operations::test_delete[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_operations::test_increment[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_operations::test_increment[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_operations::test_set[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_operations::test_set[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_operations::test_subtract[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_operations::test_subtract[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_queries::test_all",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_queries::test_and",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_queries::test_any",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_queries::test_callable_in_path_with_chain",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_queries::test_callable_in_path_with_map",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_queries::test_custom",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_queries::test_custom_with_params",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_queries::test_custom_with_unhashable_params",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_queries::test_empty_query_error",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_queries::test_eq",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_queries::test_equality",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_queries::test_fragment",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_queries::test_fragment_with_path",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_queries::test_ge",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_queries::test_get_item",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_queries::test_gt",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_queries::test_has",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_queries::test_has_key",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_queries::test_hash",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_queries::test_le",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_queries::test_lt",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_queries::test_ne",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_queries::test_no_path",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_queries::test_noop",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_queries::test_not",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_queries::test_one_of",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_queries::test_or",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_queries::test_orm_usage",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_queries::test_path_and",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_queries::test_path_exists",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_queries::test_regex",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_queries::test_regex_flags_affect_hash_and_query_cache",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_queries::test_repr",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_queries::test_subclass",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_storages::test_create_dirs",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_storages::test_custom",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_storages::test_custom_with_exception",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_storages::test_encoding",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_storages::test_in_memory",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_storages::test_in_memory_close",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_storages::test_json",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_storages::test_json_crash_during_write_keeps_old_data",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_storages::test_json_failed_write_keeps_old_data[fsync]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_storages::test_json_failed_write_keeps_old_data[replace]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_storages::test_json_invalid_directory",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_storages::test_json_invalid_mode_warning",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_storages::test_json_kwargs",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_storages::test_json_read",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_storages::test_json_read_after_failed_reopen",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_storages::test_json_read_after_write[cp936-kwargs2]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_storages::test_json_read_after_write[utf-16-kwargs1]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_storages::test_json_read_after_write[utf-8-kwargs0]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_storages::test_json_readwrite",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_storages::test_json_relative_path_after_chdir",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_storages::test_json_removes_temp_files_of_interrupted_writes",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_storages::test_json_storages_sharing_a_file",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_storages::test_json_write_keeps_permissions",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_storages::test_json_write_through_symlink",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_storages::test_read_once",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tables::test_caching[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tables::test_caching[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tables::test_lru_cache[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tables::test_lru_cache[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tables::test_multiple_tables[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tables::test_multiple_tables[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tables::test_next_id[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tables::test_next_id[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tables::test_one_table[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tables::test_one_table[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tables::test_persist_empty_does_not_wipe_existing_data",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tables::test_persist_table[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tables::test_persist_table[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tables::test_query_cache[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tables::test_query_cache[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tables::test_query_cache_size[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tables::test_query_cache_size[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tables::test_query_cache_with_mutable_callable[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tables::test_query_cache_with_mutable_callable[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tables::test_table_is_iterable[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tables::test_table_is_iterable[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tables::test_table_name[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tables::test_table_name[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tables::test_table_repr[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tables::test_table_repr[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tables::test_tables_list[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tables::test_tables_list[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tables::test_truncate_table[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tables::test_truncate_table[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tables::test_zero_cache_size[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tables::test_zero_cache_size[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_access_storage",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_all[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_all[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_contains[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_contains[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_contains_ids[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_contains_ids[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_contains_invalid[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_contains_invalid[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_count[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_count[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_custom_mapping_type_with_json",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_delete",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_doc_id_missing_consistency[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_doc_id_missing_consistency[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_doc_ids_json",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_drop_table",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_drop_tables[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_drop_tables[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_empty_db_len",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_empty_write",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_gc",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_get[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_get[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_get_idempotent[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_get_idempotent[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_get_ids[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_get_ids[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_get_invalid[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_get_invalid[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_get_multiple_ids[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_get_multiple_ids[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_insert[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_insert[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_insert_ids[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_insert_ids[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_insert_invalid_dict",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_insert_invalid_type_raises_error[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_insert_invalid_type_raises_error[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_insert_multiple[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_insert_multiple[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_insert_multiple_mixed_document_and_dict[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_insert_multiple_mixed_document_and_dict[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_insert_multiple_with_doc_ids[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_insert_multiple_with_doc_ids[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_insert_multiple_with_ids[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_insert_multiple_with_ids[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_insert_multiple_with_single_dict[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_insert_multiple_with_single_dict[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_insert_on_existing_db",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_insert_string",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_insert_valid_mapping_type[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_insert_valid_mapping_type[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_insert_with_doc_id[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_insert_with_doc_id[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_insert_with_duplicate_doc_id[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_insert_with_duplicate_doc_id[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_lambda_query",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_lastid_after_open",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_move_document_between_tables[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_move_document_between_tables[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_multiple_dbs",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_query_cache",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_query_cache_documents_are_shared_with_cache",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_remove[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_remove[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_remove_all_fails[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_remove_all_fails[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_remove_ids[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_remove_ids[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_remove_ids_missing[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_remove_ids_missing[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_remove_ids_mixed[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_remove_ids_mixed[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_remove_multiple[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_remove_multiple[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_remove_returns_ids[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_remove_returns_ids[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_repr",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_search[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_search[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_search_no_results_cache[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_search_no_results_cache[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_search_path[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_search_path[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_storage_access",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_storage_closed_once",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_tinydb_is_iterable[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_tinydb_is_iterable[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_unique_ids",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_update[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_update[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_update_all[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_update_all[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_update_custom_transform_callable[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_update_custom_transform_callable[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_update_ids[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_update_ids[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_update_ids_missing[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_update_ids_missing[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_update_ids_mixed[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_update_ids_mixed[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_update_multiple[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_update_multiple[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_update_multiple_operation[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_update_multiple_operation[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_update_returns_ids[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_update_returns_ids[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_update_transform[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_update_transform[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_upsert[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_upsert[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_upsert_by_id[json]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_tinydb::test_upsert_by_id[memory]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_utils::test_freeze",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_utils::test_lru_cache",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_utils::test_lru_cache_clear",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_utils::test_lru_cache_delete",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_utils::test_lru_cache_falsy_values_bug",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_utils::test_lru_cache_get",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_utils::test_lru_cache_iteration_works",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_utils::test_lru_cache_none_value",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_utils::test_lru_cache_set_multiple",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_utils::test_lru_cache_set_update",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_utils::test_lru_cache_unlimited",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_utils::test_lru_cache_unlimited_explicit",
+      "requirement_ids": []
+    }
+  ],
+  "content_sha256": "4f2bb625af70507913737dd3f06007482b548d720870d9f2cf812f0c366a9b24",
+  "generation": null,
+  "audit": null,
+  "frozen": false,
+  "version": 1
+}
