@@ -55,7 +55,8 @@
     "candidates/CS-03-dev-attack-full_session-a1.json",
     "candidates/CS-03-dev-attack-full_session-a2.json",
     "candidates/CS-03-dev-attack-full_session-a3.json",
-    "candidates/CS-03-dev-attack-full_session-a4.json"
+    "candidates/CS-03-dev-attack-full_session-a4.json",
+    "candidates/CS-03-dev-alt-initial_only.json"
   ],
   "notes": ""
 }
