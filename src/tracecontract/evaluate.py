@@ -45,15 +45,21 @@ def run_matrix(task_dirs: list[Path], *, run_id: str, out_root: Path, cache_dir:
     out.mkdir(parents=True, exist_ok=True)
     res_path = out / "results.jsonl"
     done = {(r.verifier_id, r.candidate_id) for r in read_jsonl(res_path, VerificationResult)}
+    import json as _json
+
+    prior = _json.loads((out / "manifest.json").read_text()) if (out / "manifest.json").exists() else None
     manifest = {
         "run_id": run_id,
-        "started_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "started_at": prior["started_at"] if prior else datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "code_revision": code_revision(repo_root or Path.cwd()),
         "split": split.value,
         "repeats": repeats,
         "conditions": conditions,
         "limits": (limits or Limits()).__dict__,
-        "tasks": [],
+        "tasks": [t for t in (prior or {}).get("tasks", []) if t["task_id"] not in {d.name for d in task_dirs}],
+        "invocations": (prior or {}).get("invocations", []) + [{"at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+                                                               "tasks": [d.name for d in task_dirs],
+                                                               "code_revision": code_revision(repo_root or Path.cwd())}],
     }
     for td in task_dirs:
         m, specs, cands = load_task(td)
