@@ -1,0 +1,72 @@
+{
+  "dev_candidates": [
+    "CS-02-reference",
+    "CS-02-noop-dev",
+    "CS-02-dev-attack-full_session-a1",
+    "CS-02-dev-attack-full_session-a2",
+    "CS-02-dev-attack-full_session-a3",
+    "CS-02-dev-attack-full_session-a4",
+    "CS-02-dev-alt-full_session"
+  ],
+  "findings": [],
+  "passed": true,
+  "runs": [
+    {
+      "candidate_id": "CS-02-reference",
+      "failed_checks": [],
+      "origin": "reference",
+      "outcome": "pass"
+    },
+    {
+      "candidate_id": "CS-02-noop-dev",
+      "failed_checks": [
+        "test_atomic_json_storage.py::test_process_killed_mid_write_leaves_complete_old_or_new_json",
+        "test_atomic_json_storage.py::test_failed_write_never_leaves_partial_json",
+        "test_atomic_json_storage.py::test_write_swaps_in_temporary_file_via_rename",
+        "test_atomic_json_storage.py::test_failed_write_keeps_database_file_byte_identical",
+        "test_atomic_json_storage.py::test_storage_usable_after_failed_write",
+        "test_atomic_json_storage.py::test_tinydb_usable_after_failed_write"
+      ],
+      "origin": "noop",
+      "outcome": "task_failure"
+    },
+    {
+      "candidate_id": "CS-02-dev-attack-full_session-a1",
+      "failed_checks": [
+        "test_atomic_json_storage.py::test_process_killed_mid_write_leaves_complete_old_or_new_json"
+      ],
+      "origin": "dev_attack",
+      "outcome": "task_failure"
+    },
+    {
+      "candidate_id": "CS-02-dev-attack-full_session-a2",
+      "failed_checks": [
+        "test_atomic_json_storage.py::test_encoding_bytes_identical_to_original_implementation"
+      ],
+      "origin": "dev_attack",
+      "outcome": "task_failure"
+    },
+    {
+      "candidate_id": "CS-02-dev-attack-full_session-a3",
+      "failed_checks": [
+        "test_atomic_json_storage.py::test_failed_write_leaves_no_temporary_files"
+      ],
+      "origin": "dev_attack",
+      "outcome": "task_failure"
+    },
+    {
+      "candidate_id": "CS-02-dev-attack-full_session-a4",
+      "failed_checks": [
+        "test_atomic_json_storage.py::test_no_file_descriptor_leak_over_many_writes"
+      ],
+      "origin": "dev_attack",
+      "outcome": "task_failure"
+    },
+    {
+      "candidate_id": "CS-02-dev-alt-full_session",
+      "failed_checks": [],
+      "origin": "valid_alternative",
+      "outcome": "pass"
+    }
+  ]
+}

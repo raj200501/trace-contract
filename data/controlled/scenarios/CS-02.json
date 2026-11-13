@@ -1,0 +1,67 @@
+{
+  "scenario_id": "CS-02",
+  "population": "controlled",
+  "pattern": [
+    "added_invariant",
+    "hidden_constraint"
+  ],
+  "repo_url": "https://github.com/msiemens/tinydb",
+  "commit": "edff96aeb2616402e9489d46e90a592c05565621",
+  "code_license": "MIT",
+  "workspace": "/home/user/cs_workspaces/CS-02/tinydb",
+  "turns": {
+    "U1": "TinyDB's JSONStorage rewrites the database file in place (seek to 0, write, truncate), so if the process dies or the disk fills up in the middle of a write, the JSON file is left half-written and the whole database becomes unreadable. Can you make JSONStorage writes atomic - write the new contents to a temporary file and then swap it into place - so the file on disk is always either the old version or the new one?\n\nThe repo is checked out (as a git working copy) at /home/user/cs_workspaces/CS-02/tinydb. Code from the repo can't be run directly on this machine; use the two wrapper scripts, which run it in an isolated container: /home/user/cs_workspaces/CS-02/run_tests.sh [pytest args] (e.g. run_tests.sh -q tests) and /home/user/cs_workspaces/CS-02/run_python.sh -c '...'. Please keep all your work inside /home/user/cs_workspaces/CS-02.",
+    "U2": "Thanks! A few things I should have said up front: our app keeps a single TinyDB instance open for its whole lifetime and reads right after writing, so reads through the same instance (and the same storage object) must always see what was just written. Please also keep honoring the `encoding` argument and the extra json kwargs (like indent=4 or sort_keys=True) exactly as before, so the bytes written are the same as today. And don't leave temporary files lying around next to the database file - not after a normal write, and not when a write fails halfway (in that case the original file must stay exactly as it was).",
+    "clarification_reply": "Please go ahead with your best judgment."
+  },
+  "intended_requirements": [
+    {
+      "id": "R-atomic",
+      "turn": "U1",
+      "kind": "change",
+      "final_status": "explicit",
+      "statement": "If a write fails partway (e.g. an I/O error while writing such as exceeding a file-size limit), the database file still holds exactly its previous contents; it is never left partially written."
+    },
+    {
+      "id": "R-new-content",
+      "turn": "U1",
+      "kind": "invariant",
+      "final_status": "inferred",
+      "statement": "After a successful write the file contains exactly the newly serialised data (atomic swap still results in the new version)."
+    },
+    {
+      "id": "R-read-after-write",
+      "turn": "U2",
+      "kind": "invariant",
+      "final_status": "explicit",
+      "statement": "Reads through the same TinyDB instance / JSONStorage object after one or more writes return the data just written; a new TinyDB opened on the same path also sees it."
+    },
+    {
+      "id": "R-bytes-unchanged",
+      "turn": "U2",
+      "kind": "invariant",
+      "final_status": "explicit",
+      "statement": "For a given `encoding` and json kwargs (e.g. indent=4, sort_keys=True, ensure_ascii=False), the bytes written are exactly json.dumps(data, **kwargs) encoded with that encoding, as before."
+    },
+    {
+      "id": "R-no-temp-files",
+      "turn": "U2",
+      "kind": "constraint",
+      "final_status": "explicit",
+      "statement": "No temporary files remain in the database directory after successful writes or after a failed write."
+    },
+    {
+      "id": "R-original-intact",
+      "turn": "U2",
+      "kind": "invariant",
+      "final_status": "explicit",
+      "statement": "When a write fails halfway, the original file stays byte-for-byte as it was."
+    }
+  ],
+  "unscored_or_ambiguous": [
+    "Durability (fsync of file and directory) is not observable in tests and is not scored.",
+    "Preservation of file permissions/ownership is not mentioned; not scored.",
+    "Behaviour with access_mode='r' is not mentioned in the session (covered only by the regression norm / repository tests)."
+  ],
+  "registered_at": "2026-11-13T01:51:38Z"
+}

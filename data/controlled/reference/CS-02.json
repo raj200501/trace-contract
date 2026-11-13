@@ -1,0 +1,92 @@
+[
+  {
+    "req_id": "R-atomic",
+    "turn": "U1",
+    "kind": "change",
+    "status": "explicit",
+    "scored": true,
+    "statement": "If a write fails partway (e.g. an OS-level write error such as exceeding the file-size limit), the database file keeps exactly its previous contents and remains valid JSON; it is never left partially written.",
+    "evidence": [
+      {
+        "turn": "U1",
+        "quote": "so the file on disk is always either the old version or the new one"
+      }
+    ],
+    "observable": "inject a write failure (e.g. RLIMIT_FSIZE) during an insert; the file still parses and equals the old contents"
+  },
+  {
+    "req_id": "R-new-content",
+    "turn": "U1",
+    "kind": "invariant",
+    "status": "explicit",
+    "scored": true,
+    "statement": "After a successful write the database file contains exactly the newly written data.",
+    "evidence": [
+      {
+        "turn": "U1",
+        "quote": "either the old version or the new one"
+      }
+    ],
+    "observable": "file contents after insert/update"
+  },
+  {
+    "req_id": "R-read-after-write",
+    "turn": "U2",
+    "kind": "invariant",
+    "status": "explicit",
+    "scored": true,
+    "statement": "Reads through the same TinyDB instance / JSONStorage object after one or more writes return the data just written; a new TinyDB opened on the same path also sees it.",
+    "evidence": [
+      {
+        "turn": "U2",
+        "quote": "reads through the same instance (and the same storage object) must always see what was just written"
+      }
+    ],
+    "observable": "insert then all()/search() on the same instance, repeated; storage.read() after storage.write()"
+  },
+  {
+    "req_id": "R-bytes-unchanged",
+    "turn": "U2",
+    "kind": "invariant",
+    "status": "explicit",
+    "scored": true,
+    "statement": "For a given encoding and json kwargs (e.g. indent=4, sort_keys=True, ensure_ascii=False), the bytes written are exactly json.dumps(data, **kwargs) encoded with that encoding, as at the base commit.",
+    "evidence": [
+      {
+        "turn": "U2",
+        "quote": "keep honoring the `encoding` argument and the extra json kwargs (like indent=4 or sort_keys=True) exactly as before, so the bytes written are the same as today"
+      }
+    ],
+    "observable": "file bytes after writes with various kwargs/encodings"
+  },
+  {
+    "req_id": "R-no-temp-files",
+    "turn": "U2",
+    "kind": "constraint",
+    "status": "explicit",
+    "scored": true,
+    "statement": "No temporary files remain in the database directory after successful writes or after a failed write.",
+    "evidence": [
+      {
+        "turn": "U2",
+        "quote": "don't leave temporary files lying around next to the database file - not after a normal write, and not when a write fails halfway"
+      }
+    ],
+    "observable": "directory listing after writes and after an injected failure"
+  },
+  {
+    "req_id": "R-original-intact",
+    "turn": "U2",
+    "kind": "invariant",
+    "status": "explicit",
+    "scored": true,
+    "statement": "When a write fails halfway, the original file stays byte-for-byte as it was.",
+    "evidence": [
+      {
+        "turn": "U2",
+        "quote": "in that case the original file must stay exactly as it was"
+      }
+    ],
+    "observable": "file bytes before/after an injected failure"
+  }
+]

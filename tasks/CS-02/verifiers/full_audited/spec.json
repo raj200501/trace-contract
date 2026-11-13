@@ -95,7 +95,21 @@
     "budget": {},
     "notes": ""
   },
-  "audit": null,
-  "frozen": false,
+  "audit": {
+    "procedure": "audit:v1",
+    "iterations": 1,
+    "passed": true,
+    "findings": [],
+    "dev_candidate_ids": [
+      "CS-02-reference",
+      "CS-02-noop-dev",
+      "CS-02-dev-attack-full_session-a1",
+      "CS-02-dev-attack-full_session-a2",
+      "CS-02-dev-attack-full_session-a3",
+      "CS-02-dev-attack-full_session-a4",
+      "CS-02-dev-alt-full_session"
+    ]
+  },
+  "frozen": true,
   "version": 1
 }
