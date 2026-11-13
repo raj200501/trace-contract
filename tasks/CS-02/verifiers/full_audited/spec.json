@@ -1,0 +1,101 @@
+{
+  "schema_version": "0.1.0",
+  "verifier_id": "full_audited",
+  "task_id": "CS-02",
+  "condition": "full_audited",
+  "contract_id": "CS-02-full_session",
+  "isolation": "process_separated",
+  "test_dir": "verifiers/full_audited/tests",
+  "checks": [
+    {
+      "check_id": "test_atomic_json_storage.py::test_process_killed_mid_write_leaves_complete_old_or_new_json",
+      "requirement_ids": [
+        "R1"
+      ]
+    },
+    {
+      "check_id": "test_atomic_json_storage.py::test_failed_write_never_leaves_partial_json",
+      "requirement_ids": [
+        "R1"
+      ]
+    },
+    {
+      "check_id": "test_atomic_json_storage.py::test_write_swaps_in_temporary_file_via_rename",
+      "requirement_ids": [
+        "R2"
+      ]
+    },
+    {
+      "check_id": "test_atomic_json_storage.py::test_read_after_write_on_long_lived_storage",
+      "requirement_ids": [
+        "R3"
+      ]
+    },
+    {
+      "check_id": "test_atomic_json_storage.py::test_tinydb_changes_immediately_visible_on_same_instance",
+      "requirement_ids": [
+        "R3"
+      ]
+    },
+    {
+      "check_id": "test_atomic_json_storage.py::test_encoding_bytes_identical_to_original_implementation",
+      "requirement_ids": [
+        "R4"
+      ]
+    },
+    {
+      "check_id": "test_atomic_json_storage.py::test_json_kwargs_forwarded_exactly",
+      "requirement_ids": [
+        "R5"
+      ]
+    },
+    {
+      "check_id": "test_atomic_json_storage.py::test_successful_writes_leave_no_temporary_files",
+      "requirement_ids": [
+        "R6"
+      ]
+    },
+    {
+      "check_id": "test_atomic_json_storage.py::test_failed_write_leaves_no_temporary_files",
+      "requirement_ids": [
+        "R7"
+      ]
+    },
+    {
+      "check_id": "test_atomic_json_storage.py::test_failed_write_keeps_database_file_byte_identical",
+      "requirement_ids": [
+        "R8"
+      ]
+    },
+    {
+      "check_id": "test_atomic_json_storage.py::test_storage_usable_after_failed_write",
+      "requirement_ids": [
+        "R9"
+      ]
+    },
+    {
+      "check_id": "test_atomic_json_storage.py::test_tinydb_usable_after_failed_write",
+      "requirement_ids": [
+        "R9"
+      ]
+    },
+    {
+      "check_id": "test_atomic_json_storage.py::test_no_file_descriptor_leak_over_many_writes",
+      "requirement_ids": [
+        "R10"
+      ]
+    }
+  ],
+  "content_sha256": "306e08df3c1e297d8eeeca45999d194f97960fe276c9db1e6b65558b0ff1b633",
+  "generation": {
+    "generator": "model:claude-code-subagent:testgen:v1+audit:v1",
+    "run_id": "unrecorded",
+    "prompt_sha256": "",
+    "created_at": "",
+    "budget": {},
+    "notes": ""
+  },
+  "audit": null,
+  "frozen": false,
+  "version": 1
+}

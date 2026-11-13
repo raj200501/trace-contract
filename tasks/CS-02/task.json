@@ -41,7 +41,9 @@
     "verifiers/repo_tests/spec.json",
     "verifiers/initial_plain/spec.json",
     "verifiers/full_plain/spec.json",
-    "verifiers/llm_freeform/spec.json"
+    "verifiers/llm_freeform/spec.json",
+    "verifiers/initial_audited/spec.json",
+    "verifiers/full_audited/spec.json"
   ],
   "candidates": [
     "candidates/CS-02-reference.json",

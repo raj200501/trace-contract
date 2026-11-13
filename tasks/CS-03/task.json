@@ -61,7 +61,12 @@
     "candidates/CS-03-dev-attack-full_session-a4.json",
     "candidates/CS-03-dev-alt-initial_only.json",
     "candidates/CS-03-dev-alt-full_session.json",
-    "candidates/CS-03-eval-alt-2.json"
+    "candidates/CS-03-eval-alt-2.json",
+    "candidates/CS-03-eval-nm-1.json",
+    "candidates/CS-03-eval-nm-2.json",
+    "candidates/CS-03-eval-nm-3.json",
+    "candidates/CS-03-eval-nm-4.json",
+    "candidates/CS-03-eval-nm-5.json"
   ],
   "notes": ""
 }

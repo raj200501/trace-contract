@@ -8,5 +8,9 @@
         "text": "ls tasks/CS-03/ && ls tasks/CS-03/verifiers/ 2>/dev/null; ls -la tasks/CS-03/verifiers/reference_check 2>/dev/null; .venv/bin/tracecontract --help 2>&1 | head -60"
       }
     ]
+  },
+  "eval-alt-2": {
+    "transcript_sha256": "2947de0f68eb6334b25690e222219362badc6f2ed64cf070b1a179c4be696874",
+    "hits": []
   }
 }

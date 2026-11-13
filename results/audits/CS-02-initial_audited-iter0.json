@@ -1,0 +1,76 @@
+{
+  "dev_candidates": [
+    "CS-02-reference",
+    "CS-02-noop-dev",
+    "CS-02-dev-attack-initial_only-a1",
+    "CS-02-dev-attack-initial_only-a2",
+    "CS-02-dev-attack-initial_only-a3",
+    "CS-02-dev-attack-initial_only-a4",
+    "CS-02-dev-alt-initial_only"
+  ],
+  "findings": [],
+  "passed": true,
+  "runs": [
+    {
+      "candidate_id": "CS-02-reference",
+      "failed_checks": [],
+      "origin": "reference",
+      "outcome": "pass"
+    },
+    {
+      "candidate_id": "CS-02-noop-dev",
+      "failed_checks": [
+        "test_atomic_writes.py::test_write_swaps_new_file_into_place",
+        "test_atomic_writes.py::test_disk_full_while_writing_keeps_old_file",
+        "test_atomic_writes.py::test_failed_swap_keeps_old_file",
+        "test_atomic_writes.py::test_killed_during_write_leaves_complete_file",
+        "test_atomic_writes.py::test_create_dirs_relative_and_pathlib_paths",
+        "test_atomic_writes.py::test_system_temp_dir_on_other_filesystem",
+        "test_atomic_writes.py::test_new_contents_synced_before_swap",
+        "test_atomic_writes.py::test_sync_failure_aborts_write"
+      ],
+      "origin": "noop",
+      "outcome": "task_failure"
+    },
+    {
+      "candidate_id": "CS-02-dev-attack-initial_only-a1",
+      "failed_checks": [
+        "test_atomic_writes.py::test_disk_full_while_writing_keeps_old_file",
+        "test_atomic_writes.py::test_failed_swap_keeps_old_file",
+        "test_atomic_writes.py::test_sync_failure_aborts_write"
+      ],
+      "origin": "dev_attack",
+      "outcome": "task_failure"
+    },
+    {
+      "candidate_id": "CS-02-dev-attack-initial_only-a2",
+      "failed_checks": [
+        "test_atomic_writes.py::test_new_contents_synced_before_swap"
+      ],
+      "origin": "dev_attack",
+      "outcome": "task_failure"
+    },
+    {
+      "candidate_id": "CS-02-dev-attack-initial_only-a3",
+      "failed_checks": [
+        "test_atomic_writes.py::test_system_temp_dir_on_other_filesystem"
+      ],
+      "origin": "dev_attack",
+      "outcome": "task_failure"
+    },
+    {
+      "candidate_id": "CS-02-dev-attack-initial_only-a4",
+      "failed_checks": [
+        "test_atomic_writes.py::test_serialized_text_matches_base_format"
+      ],
+      "origin": "dev_attack",
+      "outcome": "task_failure"
+    },
+    {
+      "candidate_id": "CS-02-dev-alt-initial_only",
+      "failed_checks": [],
+      "origin": "valid_alternative",
+      "outcome": "pass"
+    }
+  ]
+}
