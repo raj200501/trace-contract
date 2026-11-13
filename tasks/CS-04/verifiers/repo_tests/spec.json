@@ -1,0 +1,2480 @@
+{
+  "schema_version": "0.1.0",
+  "verifier_id": "repo_tests",
+  "task_id": "CS-04",
+  "condition": "repo_tests",
+  "contract_id": null,
+  "isolation": "in_process",
+  "test_dir": "verifiers/repo_tests/overlay",
+  "checks": [
+    {
+      "check_id": "",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.AdjacentTests::test_call_once",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.AdjacentTests::test_consecutive_true",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.AdjacentTests::test_distance",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.AdjacentTests::test_empty_iterable",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.AdjacentTests::test_grouping",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.AdjacentTests::test_large_distance",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.AdjacentTests::test_length_one",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.AdjacentTests::test_negative_distance",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.AdjacentTests::test_typical",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.AdjacentTests::test_zero_distance",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.AllUniqueTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.AllUniqueTests::test_infinite",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.AllUniqueTests::test_key",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.AllUniqueTests::test_non_hashable",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.AllUniqueTests::test_partially_hashable",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.AlwaysReversibleTests::test_nonseq_reversed",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.AlwaysReversibleTests::test_regular_reversed",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ArgMinArgMaxTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ArgMinArgMaxTests::test_key",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.BucketTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.BucketTests::test_falsey_validator_is_honoured",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.BucketTests::test_getitem_miss_does_not_add_key",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.BucketTests::test_in",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.BucketTests::test_in_does_not_add_key",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.BucketTests::test_in_does_not_add_key_with_validator",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.BucketTests::test_keys_are_only_those_seen",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.BucketTests::test_list",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.BucketTests::test_list_validator",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.BucketTests::test_validator",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.CallbackIterTests::test_abort",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.CallbackIterTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.CallbackIterTests::test_callback_kwd",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.CallbackIterTests::test_exception",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.CallbackIterTests::test_no_result",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.CallbackIterTests::test_no_result_while_running",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.CallbackIterTests::test_partial_consumption",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ChunkedEvenTests::test_0",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ChunkedEvenTests::test_1",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ChunkedEvenTests::test_4",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ChunkedEvenTests::test_5",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ChunkedEvenTests::test_6",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ChunkedEvenTests::test_7",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ChunkedEvenTests::test_evenness",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ChunkedEvenTests::test_infinite",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ChunkedEvenTests::test_negative_chunk_size",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ChunkedEvenTests::test_zero_chunk_size",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ChunkedTests::test_even",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ChunkedTests::test_negative",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ChunkedTests::test_none",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ChunkedTests::test_odd",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ChunkedTests::test_strict_being_true",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ChunkedTests::test_strict_being_true_with_size_none",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ChunkedTests::test_strict_false",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.CircularShiftsTests::test_duplicates",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.CircularShiftsTests::test_empty",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.CircularShiftsTests::test_simple_circular_shifts",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.CircularShiftsTests::test_steps_negative",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.CircularShiftsTests::test_steps_positive",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.CircularShiftsTests::test_steps_zero",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ClassifyUniqueTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ClassifyUniqueTests::test_key_hashable",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ClassifyUniqueTests::test_key_non_hashable",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ClassifyUniqueTests::test_key_partially_hashable",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ClassifyUniqueTests::test_non_hashable",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ClassifyUniqueTests::test_partially_hashable",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ClassifyUniqueTests::test_vs_duplicates_everseen",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ClassifyUniqueTests::test_vs_duplicates_everseen_key",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ClassifyUniqueTests::test_vs_duplicates_justseen",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ClassifyUniqueTests::test_vs_duplicates_justseen_key",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ClassifyUniqueTests::test_vs_unique_everseen",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ClassifyUniqueTests::test_vs_unique_everseen_key",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ClassifyUniqueTests::test_vs_unique_justseen",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ClassifyUniqueTests::test_vs_unique_justseen_key",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.CombinationIndexTests::test_invalid_large",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.CombinationIndexTests::test_invalid_match",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.CombinationIndexTests::test_invalid_order",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.CombinationIndexTests::test_long",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.CombinationIndexTests::test_multiplicity",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.CombinationIndexTests::test_null",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.CombinationIndexTests::test_r_equal_to_n",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.CombinationIndexTests::test_r_less_than_n",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.CombinationWithReplacementIndexTests::test_invalid_large",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.CombinationWithReplacementIndexTests::test_invalid_match",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.CombinationWithReplacementIndexTests::test_invalid_none_values",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.CombinationWithReplacementIndexTests::test_invalid_order",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.CombinationWithReplacementIndexTests::test_long",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.CombinationWithReplacementIndexTests::test_multiplicity",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.CombinationWithReplacementIndexTests::test_none_values",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.CombinationWithReplacementIndexTests::test_null",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.CombinationWithReplacementIndexTests::test_r_equal_to_n",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.CombinationWithReplacementIndexTests::test_r_less_than_n",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ConsecutiveGroupsTest::test_custom_ordering",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ConsecutiveGroupsTest::test_exotic_ordering",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ConsecutiveGroupsTest::test_fractional_step",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ConsecutiveGroupsTest::test_lazy",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ConsecutiveGroupsTest::test_negative_step",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ConsecutiveGroupsTest::test_numbers",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ConsecutiveGroupsTest::test_step",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ConsecutiveGroupsTest::test_step_with_ordering",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ConsecutiveGroupsTest::test_zero_step",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ConstrainedBatchesTests::test_bad_max",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ConstrainedBatchesTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ConstrainedBatchesTests::test_get_len",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ConstrainedBatchesTests::test_max_count",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ConstrainedBatchesTests::test_max_count_one",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ConstrainedBatchesTests::test_nonpositive_max_count",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ConstrainedBatchesTests::test_strict",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ConsumerTests::test_consumer",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.CountCycleTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.CountCycleTests::test_empty",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.CountCycleTests::test_negative",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.CountableTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.CountableTests::test_empty",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.DerangementsTests::test_r",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.DerangementsTests::test_repeated_values",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.DerangementsTests::test_unique_values",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.DerangementsTests::test_unsortable_unhashable",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.DifferenceTest::test_custom",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.DifferenceTest::test_empty",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.DifferenceTest::test_initial",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.DifferenceTest::test_normal",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.DifferenceTest::test_one",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.DifferenceTest::test_roundtrip",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.DiscreteFourierTransformTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.DiscreteFourierTransformTests::test_roundtrip",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.DistinctCombinationsTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.DistinctCombinationsTests::test_empty",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.DistinctCombinationsTests::test_negative",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.DistinctPermutationsTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.DistinctPermutationsTests::test_r",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.DistinctPermutationsTests::test_sortable_input_produces_sorted_output",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.DistinctPermutationsTests::test_unhashable",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.DistinctPermutationsTests::test_unsortable",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.DistinctPermutationsTests::test_unsortable_r",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.DistinctPermutationsTests::test_unsorted_equivalent",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.DistributeTest::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.DistributeTest::test_invalid_n",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.DistributeTest::test_large_n",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.DivideTest::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.DivideTest::test_invalid_n",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.DivideTest::test_large_n",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.DoubleStarMapTests::test_adding",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.DoubleStarMapTests::test_construction",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.DoubleStarMapTests::test_empty",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.DoubleStarMapTests::test_identity",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.DoubleStarMapTests::test_mismatch_function_different",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.DoubleStarMapTests::test_mismatch_function_larger",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.DoubleStarMapTests::test_mismatch_function_smaller",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.DoubleStarMapTests::test_no_mapping",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.DuplicatesEverSeenTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.DuplicatesEverSeenTests::test_key_hashable",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.DuplicatesEverSeenTests::test_key_non_hashable",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.DuplicatesEverSeenTests::test_key_partially_hashable",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.DuplicatesEverSeenTests::test_non_hashable",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.DuplicatesEverSeenTests::test_partially_hashable",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.DuplicatesJustSeenTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.DuplicatesJustSeenTests::test_key_hashable",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.DuplicatesJustSeenTests::test_key_non_hashable",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.DuplicatesJustSeenTests::test_key_partially_hashable",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.DuplicatesJustSeenTests::test_nested",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.DuplicatesJustSeenTests::test_non_hashable",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.DuplicatesJustSeenTests::test_partially_hashable",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ExactlyNTests::test_empty",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ExactlyNTests::test_false",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ExactlyNTests::test_true",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ExtractTests::test_all_orderings",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ExtractTests::test_basics",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ExtractTests::test_early_free",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ExtractTests::test_lazy_consumption",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ExtractTests::test_monotonic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ExtractTests::test_negative_one_bug",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ExtractTests::test_none_value_bug",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.FilterExceptTests::test_false",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.FilterExceptTests::test_multiple",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.FilterExceptTests::test_no_exceptions_pass",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.FilterExceptTests::test_no_exceptions_raise",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.FilterExceptTests::test_raise",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.FilterMapTests::test_filter",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.FilterMapTests::test_filter_map",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.FilterMapTests::test_map",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.FilterMapTests::test_no_iterables",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.FirstTests::test_default",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.FirstTests::test_empty",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.FirstTests::test_many",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.FirstTests::test_one",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.GrayProductTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.GrayProductTests::test_errors",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.GrayProductTests::test_repeat",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.GrayProductTests::test_repeat_with_iterators",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.GrayProductTests::test_vs_product",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.GroupByTransformTests::test_default_funcs",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.GroupByTransformTests::test_no_valuefunc",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.GroupByTransformTests::test_reducefunc",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.GroupByTransformTests::test_valuefunc",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.IchunkedTests::test_even",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.IchunkedTests::test_laziness",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.IchunkedTests::test_memory_in_order",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.IchunkedTests::test_negative",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.IchunkedTests::test_odd",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.IchunkedTests::test_out_of_order",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.IchunkedTests::test_zero",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.IchunkedTests::test_zero_nonempty",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.IequalsTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.IequalsTests::test_empty_iterables",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.IequalsTests::test_fillvalue_not_fakeable",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.IequalsTests::test_more_than_two_iterable",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.IequalsTests::test_no_iterables",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.IequalsTests::test_none_is_not_a_sentinel",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.IequalsTests::test_not_equal_lengths",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.IequalsTests::test_not_identical_but_equal",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.IequalsTests::test_one_iterable",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.IequalsTests::test_order_matters",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.IlenTests::test_ilen",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.InterleaveEvenlyTests::test_argument_mismatch_raises",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.InterleaveEvenlyTests::test_degenerate_empty",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.InterleaveEvenlyTests::test_degenerate_one",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.InterleaveEvenlyTests::test_equal_lengths",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.InterleaveEvenlyTests::test_manual_lengths",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.InterleaveEvenlyTests::test_many_iters",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.InterleaveEvenlyTests::test_no_iterables",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.InterleaveEvenlyTests::test_no_length_raises",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.InterleaveEvenlyTests::test_not_proportional",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.InterleaveEvenlyTests::test_proportional",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.InterleaveEvenlyTests::test_three_iters",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.InterleaveLongestTests::test_even",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.InterleaveLongestTests::test_mixed_types",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.InterleaveLongestTests::test_short",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.InterleaveRandomlyTests::test_all_empty",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.InterleaveRandomlyTests::test_bad_type",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.InterleaveRandomlyTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.InterleaveRandomlyTests::test_no_args",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.InterleaveRandomlyTests::test_some_empty",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.InterleaveTests::test_even",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.InterleaveTests::test_mixed_types",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.InterleaveTests::test_short",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.IntersperseTest::test_even",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.IntersperseTest::test_n",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.IntersperseTest::test_n_zero",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.IntersperseTest::test_nested",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.IntersperseTest::test_not_iterable",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.IntersperseTest::test_odd",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.IsSortedTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.IsliceExtendedTests::test_all",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.IsliceExtendedTests::test_elements_lifecycle",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.IsliceExtendedTests::test_invalid_slice",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.IsliceExtendedTests::test_slicing",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.IsliceExtendedTests::test_slicing_extensive",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.IsliceExtendedTests::test_zero_step",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.IterSuppressTests::test_early_suppression",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.IterSuppressTests::test_no_error",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.IterSuppressTests::test_raises_error",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.IterSuppressTests::test_suppression",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.IterateTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.IterateTests::test_func_controls_iteration_stop",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.JoinMappingTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.JoinMappingTests::test_empty",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.LastTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.LastTests::test_default",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.LastTests::test_empty",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.LastTests::test_reversed_is_none",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.LocateTests::test_custom_pred",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.LocateTests::test_default_pred",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.LocateTests::test_no_matches",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.LocateTests::test_window_size",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.LocateTests::test_window_size_large",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.LocateTests::test_window_size_zero",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.LongestCommonPrefixTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.LongestCommonPrefixTests::test_contains_infinite_iterables",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.LongestCommonPrefixTests::test_empty_iterables_only",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.LongestCommonPrefixTests::test_includes_empty_iterables",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.LongestCommonPrefixTests::test_infinite_iterables",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.LongestCommonPrefixTests::test_iterators",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.LongestCommonPrefixTests::test_no_iterables",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.LongestCommonPrefixTests::test_non_hashable",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.LongestCommonPrefixTests::test_prefix_contains_elements_of_the_first_iterable",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.MakeDecoratorTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.MakeDecoratorTests::test_result_index",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.MakeDecoratorTests::test_wrap_class",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.MapExceptTests::test_multiple",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.MapExceptTests::test_no_exceptions_pass",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.MapExceptTests::test_no_exceptions_raise",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.MapExceptTests::test_raise",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.MapIfTests::test_empty",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.MapIfTests::test_with_func_else",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.MapIfTests::test_without_func_else",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.MapReduceTests::test_default",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.MapReduceTests::test_reducefunc",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.MapReduceTests::test_ret",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.MapReduceTests::test_valuefunc",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.MarkEndsTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.MinMaxTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.MinMaxTests::test_default",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.MinMaxTests::test_iterables",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.MinMaxTests::test_key",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.MinMaxTests::test_key_matches_builtins",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.MinMaxTests::test_unpacked",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.NthCombinationWithReplacementTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.NthCombinationWithReplacementTests::test_invalid_index",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.NthCombinationWithReplacementTests::test_invalid_r",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.NthCombinationWithReplacementTests::test_long",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.NthOrLastTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.NthOrLastTests::test_default_value",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.NthOrLastTests::test_empty_iterable_no_default",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.NthProductTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.NthProductTests::test_invalid_index",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.NthProductTests::test_long",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.NthProductTests::test_negative",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.NthProductTests::test_repeat",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.NumericRangeTests::test_arg_count",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.NumericRangeTests::test_bad_key",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.NumericRangeTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.NumericRangeTests::test_bool",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.NumericRangeTests::test_contains",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.NumericRangeTests::test_contains_items_with_inexact_step",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.NumericRangeTests::test_contains_non_items_with_inexact_step",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.NumericRangeTests::test_count",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.NumericRangeTests::test_empty_reversed",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.NumericRangeTests::test_eq",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.NumericRangeTests::test_eq_above_maxsize",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.NumericRangeTests::test_get_item_by_index",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.NumericRangeTests::test_get_item_by_slice",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.NumericRangeTests::test_hash_above_maxsize",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.NumericRangeTests::test_index",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.NumericRangeTests::test_iter_twice",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.NumericRangeTests::test_len",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.NumericRangeTests::test_len_matches_iteration",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.NumericRangeTests::test_parent_classes",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.NumericRangeTests::test_pickle",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.NumericRangeTests::test_repr",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.NumericRangeTests::test_reversed",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.NumericRangeTests::test_reversed_datetime_limits",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.NumericRangeTests::test_reversed_preserves_float_values",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.NumericRangeTests::test_zero_step",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.OneTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.OneTests::test_falsy_custom_exception",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.OneTests::test_too_long",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.OneTests::test_too_long_default_message",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.OneTests::test_too_long_does_not_evaluate_repr",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.OneTests::test_too_short_new",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.OnlyTests::test_custom_exception",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.OnlyTests::test_custom_value",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.OnlyTests::test_default_exception_message",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.OnlyTests::test_defaults",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.OnlyTests::test_falsy_custom_exception",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.OnlyTests::test_too_long_does_not_evaluate_repr",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.OuterProductTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.PaddedTest::test_invalid_n",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.PaddedTest::test_next_multiple",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.PaddedTest::test_no_n",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.PaddedTest::test_valid_n",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.PartialProductTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.PartialProductTests::test_empty_iterable",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.PartialProductTests::test_no_iterables",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.PartialProductTests::test_one_iterable",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.PartialProductTests::test_repeat",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.PartialProductTests::test_repeat_with_iterators",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.PartialProductTests::test_two_iterables",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.PartialProductTests::test_uneven_length_iterables",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.PartitionsTest::test_duplicates",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.PartitionsTest::test_empty",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.PartitionsTest::test_order",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.PartitionsTest::test_types",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.PeekableTests::test_class_getitem",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.PeekableTests::test_empty",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.PeekableTests::test_indexing",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.PeekableTests::test_multi_prepend",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.PeekableTests::test_multi_prepend_peek",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.PeekableTests::test_passthrough",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.PeekableTests::test_peek_default",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.PeekableTests::test_prepend",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.PeekableTests::test_prepend_after_stop",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.PeekableTests::test_prepend_indexing",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.PeekableTests::test_prepend_iterable",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.PeekableTests::test_prepend_many",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.PeekableTests::test_prepend_reversed",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.PeekableTests::test_prepend_slicing",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.PeekableTests::test_prepend_truthiness",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.PeekableTests::test_simple_peeking",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.PeekableTests::test_slicing",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.PeekableTests::test_slicing_error",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.PeekableTests::test_slicing_negative_step_omitted_stop",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.PeekableTests::test_slicing_negative_step_omitted_stop_read_bound",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.PeekableTests::test_slicing_reset",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.PeekableTests::test_truthiness",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.PermutationIndexTests::test_invalid_large",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.PermutationIndexTests::test_invalid_match",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.PermutationIndexTests::test_long",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.PermutationIndexTests::test_multiplicity",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.PermutationIndexTests::test_null",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.PermutationIndexTests::test_r_equal_to_n",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.PermutationIndexTests::test_r_less_than_n",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.PowersetOfSetsTests::test_baseset",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.PowersetOfSetsTests::test_hash_count",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.PowersetOfSetsTests::test_simple",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ProductIndexTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ProductIndexTests::test_invalid_empty",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ProductIndexTests::test_invalid_large",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ProductIndexTests::test_invalid_match",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ProductIndexTests::test_invalid_small",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ProductIndexTests::test_iterator_input",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ProductIndexTests::test_long",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ProductIndexTests::test_multiplicity",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ProductIndexTests::test_repeat",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.RepeatEachTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.RepeatEachTests::test_default",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.RepeatEachTests::test_empty",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.RepeatEachTests::test_infinite_input",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.RepeatEachTests::test_negative_repeat",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.RepeatEachTests::test_no_repeat",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.RepeatLastTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.RepeatLastTests::test_default_value",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.RepeatLastTests::test_empty_iterable",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ReplaceTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ReplaceTests::test_count",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ReplaceTests::test_iterable_substitutes",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ReplaceTests::test_window_size",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ReplaceTests::test_window_size_count",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ReplaceTests::test_window_size_end",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ReplaceTests::test_window_size_large",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ReplaceTests::test_window_size_zero",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.RlocateTests::test_custom_pred",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.RlocateTests::test_default_pred",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.RlocateTests::test_efficient_reversal",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.RlocateTests::test_no_matches",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.RlocateTests::test_window_size",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.RlocateTests::test_window_size_large",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.RlocateTests::test_window_size_zero",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.RunLengthTest::test_decode",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.RunLengthTest::test_encode",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SampleTests::test_counts",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SampleTests::test_counts_all",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SampleTests::test_error_cases",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SampleTests::test_invariance_under_permutations_unweighted",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SampleTests::test_invariance_under_permutations_weighted",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SampleTests::test_length",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SampleTests::test_negative",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SampleTests::test_sampling_entire_iterable",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SampleTests::test_scale_invariance_of_weights",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SampleTests::test_specific_sample",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SampleTests::test_strict",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SampleTests::test_unit_case",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SeekableTest::test_elements",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SeekableTest::test_exhaustion_reset",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SeekableTest::test_forward",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SeekableTest::test_getitem",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SeekableTest::test_getitem_maxlen",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SeekableTest::test_maxlen",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SeekableTest::test_maxlen_zero",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SeekableTest::test_maxlen_zero_bool_does_not_drop_items",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SeekableTest::test_maxlen_zero_peek_does_not_drop_items",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SeekableTest::test_partial_reset",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SeekableTest::test_passthrough",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SeekableTest::test_past_end",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SeekableTest::test_peek_default",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SeekableTest::test_relative_seek",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SeekableTest::test_repeated_zero_cache_peek_has_bounded_memory",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SeekableTest::test_simple_peeking",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SeekableTest::test_truthiness",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SequenceViewTests::test_abc_methods",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SequenceViewTests::test_indexing",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SequenceViewTests::test_init",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SequenceViewTests::test_slicing",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SequenceViewTests::test_update",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SetPartitionsTests::test_duplicates",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SetPartitionsTests::test_each_correct",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SetPartitionsTests::test_found_all",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SetPartitionsTests::test_max_size",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SetPartitionsTests::test_min_max",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SetPartitionsTests::test_min_size",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SetPartitionsTests::test_no_group",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SetPartitionsTests::test_repeated",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SetPartitionsTests::test_stirling_numbers",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SetPartitionsTests::test_to_many_groups",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SideEffectTests::test_before_after",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SideEffectTests::test_before_fails",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SideEffectTests::test_chunked",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SideEffectTests::test_individual",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SizedIteratorTests::test_sized_iterator",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SlicedTests::test_even",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SlicedTests::test_negative",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SlicedTests::test_not_sliceable",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SlicedTests::test_numpy_like_array",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SlicedTests::test_odd",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SlicedTests::test_odd_and_strict",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SortTogetherTest::test_invalid_key_list",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SortTogetherTest::test_key_function",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SortTogetherTest::test_key_list",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SortTogetherTest::test_reverse",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SortTogetherTest::test_strict",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SortTogetherTest::test_uneven_iterables",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SplitAfterTest::test_empty_collection",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SplitAfterTest::test_ends_with_sep",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SplitAfterTest::test_max_split",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SplitAfterTest::test_no_sep",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SplitAfterTest::test_starts_with_sep",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SplitAtTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SplitAtTests::test_combination",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SplitAtTests::test_keep_separator",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SplitAtTests::test_maxsplit",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SplitBeforeTest::test_empty_collection",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SplitBeforeTest::test_ends_with_sep",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SplitBeforeTest::test_max_split",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SplitBeforeTest::test_no_sep",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SplitBeforeTest::test_starts_with_sep",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SplitIntoTests::test_bool_in_sizes",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SplitIntoTests::test_both_empty",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SplitIntoTests::test_generator_iterable_integrity",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SplitIntoTests::test_generator_sizes_integrity",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SplitIntoTests::test_invalid_in_sizes",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SplitIntoTests::test_invalid_in_sizes_after_none",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SplitIntoTests::test_iterable_empty",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SplitIntoTests::test_iterable_empty_using_none",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SplitIntoTests::test_iterable_just_right",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SplitIntoTests::test_iterable_too_large",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SplitIntoTests::test_iterable_too_small",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SplitIntoTests::test_iterable_too_small_extra",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SplitIntoTests::test_sizes_empty",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SplitIntoTests::test_using_none_mid_sizes",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SplitIntoTests::test_using_none_with_leftover",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SplitIntoTests::test_using_none_without_leftover",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SplitWhenTests::test_after_emulation_ends_with_sep",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SplitWhenTests::test_after_emulation_no_sep",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SplitWhenTests::test_after_emulation_starts_with_sep",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SplitWhenTests::test_before_emulation_ends_with_sep",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SplitWhenTests::test_before_emulation_no_sep",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SplitWhenTests::test_before_emulation_starts_with_sep",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SplitWhenTests::test_empty_iterable",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SplitWhenTests::test_max_split",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SplitWhenTests::test_one_element",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SplitWhenTests::test_one_element_is_first_item",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SplitWhenTests::test_one_element_is_second_item",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SpyTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SpyTests::test_immutable",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SpyTests::test_too_many",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SpyTests::test_unpacking",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SpyTests::test_zero",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.StaggerTest::test_default",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.StaggerTest::test_longest",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.StaggerTest::test_offsets",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.StrictlyNTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.StrictlyNTests::test_too_long_custom",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.StrictlyNTests::test_too_long_default",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.StrictlyNTests::test_too_short_custom",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.StrictlyNTests::test_too_short_default",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.StripFunctionTests::test_hashable",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.StripFunctionTests::test_math",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.StripFunctionTests::test_not_hashable",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SubstringsIndexesTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SubstringsIndexesTests::test_empty",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SubstringsIndexesTests::test_order",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SubstringsIndexesTests::test_reverse",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SubstringsIndexesTests::test_strings",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SubstringsTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SubstringsTests::test_empty",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SubstringsTests::test_order",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.SubstringsTests::test_strings",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.TakewhileInclusiveTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.TakewhileInclusiveTests::test_collatz_sequence",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.TakewhileInclusiveTests::test_empty_iterator",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.TestAlwaysIterable::test_base_type",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.TestAlwaysIterable::test_generator",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.TestAlwaysIterable::test_iterables",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.TestAlwaysIterable::test_none",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.TestAlwaysIterable::test_single",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.TestAlwaysIterable::test_strings",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.TestCollapse::test_collapse",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.TestCollapse::test_collapse_flatten",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.TestCollapse::test_collapse_to_bytes",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.TestCollapse::test_collapse_to_level",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.TestCollapse::test_collapse_to_list",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.TestCollapse::test_collapse_to_string",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.TestSerialize::test_concurrent_calls",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.TestSerialize::test_serialize_generator_methods",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.TestSerialize::test_serialize_generator_methods_locking",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.TestSerialize::test_serialize_methods_attribute_error",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.TimeLimitedTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.TimeLimitedTests::test_complete",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.TimeLimitedTests::test_invalid_limit",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.TimeLimitedTests::test_zero_limit",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.UniqueInWindowTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.UniqueInWindowTests::test_invalid_n",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.UniqueInWindowTests::test_key",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.UniqueToEachTests::test_all_unique",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.UniqueToEachTests::test_duplicates",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.UniqueToEachTests::test_mixed",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.UnzipTests::test_empty_iterable",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.UnzipTests::test_improperly_zipped",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.UnzipTests::test_increasingly_zipped",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.UnzipTests::test_length_one_iterable",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.UnzipTests::test_normal_case",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ValueChainTests::test_complex",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ValueChainTests::test_empty",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ValueChainTests::test_empty_lists",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ValueChainTests::test_more",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ValueChainTests::test_simple",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ValueChainTests::test_type_error_from_iter",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ValueChainTests::test_type_error_while_iterating",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.WindowedCompleteTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.WindowedCompleteTests::test_every_partition",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.WindowedCompleteTests::test_wrong_length",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.WindowedCompleteTests::test_zero_length",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.WindowedTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.WindowedTests::test_empty_seq",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.WindowedTests::test_fillvalue",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.WindowedTests::test_fillvalue_step",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.WindowedTests::test_invalid_n",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.WindowedTests::test_invalid_step",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.WindowedTests::test_step",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.WithIterTests::test_with_iter",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ZipBroadcastTests::test_scalar_types",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ZipBroadcastTests::test_single_use_iterable",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ZipBroadcastTests::test_zip",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ZipOffsetTest::test_longest",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ZipOffsetTest::test_mismatch",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.ZipOffsetTest::test_shortest",
+      "requirement_ids": []
+    }
+  ],
+  "content_sha256": "41002085ee793a6cd77c9df354a3a0abc1b513fa48da58b8b0d8d82b0f3c38fa",
+  "generation": null,
+  "audit": null,
+  "frozen": false,
+  "version": 1
+}

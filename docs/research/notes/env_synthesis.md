@@ -7,7 +7,7 @@ No commits were made in this research step. No git commands were run inside `/ho
 Conventions:
 - "States:" or a quotation means the source says it (section given). "Code:" means I read it in the cloned source (path given). "Inference:" or "My check:" means my own reasoning or a probe I ran, not a claim by the source.
 - Quotes are verbatim and at most 2 sentences.
-- Downloads (papers as HTML, one shallow clone of SWE-bench, one wheel) are in `/tmp/claude-0/-home-user-trace-contract/3951c995-db7e-5b4e-a703-97e326bb42c5/scratchpad/dl/env_synthesis/` (about 15 MB in total). HTML was converted to text with a stdlib-only script run with `python3 -I` from a separate scripts folder.
+- Downloads (papers as HTML, one shallow clone of SWE-bench, one wheel) are in `<scratchpad>/dl/env_synthesis/` (about 21 MB in total). HTML was converted to text with a stdlib-only script run with `python3 -I` from a separate scripts folder.
 
 ---
 
@@ -136,7 +136,7 @@ Search engines were used only to find arXiv IDs. Every fact below comes from the
 - `validate_docker_and_hf.py:validate_docker` asserts reward 0 before the GT patch and 1 after it. This is gold-only.
 
 **Verifier types (code `agenthub/runtime/docker.py`).**
-- (a) `_calculate_reward_r2e`: parses pytest's "short test summary info" (`execution_log_parser.parse_log_pytest`, which drops the file path and keeps `::`-joined names) and requires **exact equality** with `expected_output_json`. That covers the same number of tests and the same status per test, including tests expected to FAIL.
+- (a) `_calculate_reward_r2e`: parses pytest's "short test summary info" (`execution_log_parser.parse_log_pytest`, which drops the file path and joins the remaining `::` parts with `.`, so same-named tests in different files can collide; inference) and requires **exact equality** with `expected_output_json`. That covers the same number of tests and the same status per test, including tests expected to FAIL.
 - (b) `_calculate_reward_swesmith`: F2P/P2P lists, with a fallback of **substring matching** of test names ("This implementation is a hack rn").
 - (c) `_calculate_reward_swebench`: uses the SWE-bench grading functions.
 - Inference: (a) can falsely reject a valid patch that also fixes an expected-FAILED test, such as an XFAIL. (b) can falsely accept when an F2P name is a substring of another passing test's name. Neither was measured.
@@ -509,7 +509,7 @@ Search engines were used only to find arXiv IDs. Every fact below comes from the
 ### 2.18 Other notable systems (abstract-level only; full text not read)
 
 - **Skywork-SWE** (arXiv 2506.19290, 2025-06-24): 10,169 Python instances from 2,531 repos, each with a runtime image. More than 8,000 runtime-validated trajectories. 38.0% pass@1 on Verified, 47.0% with test-time scaling (abstract).
-- **SWE-bench-Live** (arXiv 2505.23419, v2 2025-06-01): 1,319 tasks from 93 repos (issues since 2024), each with a Docker image, built by an automated curation pipeline (named "RepoLaunch" in the paper; the abstract shows it as `\method`). Live-updatable (abstract).
+- **SWE-bench-Live** (arXiv 2505.23419, v2 2025-06-01): 1,319 tasks from 93 repos (issues since 2024), each with a Docker image, built by an automated curation pipeline. The arXiv abstract renders the pipeline's name as the unexpanded macro `\method`, and I did not verify its name in the full text. Live-updatable (abstract).
 - **BugPilot** (arXiv 2510.19898, v2 2025-10-28): SWE agents implement features that "unintentionally break tests". FrogBoss-32B reaches 54.6% and FrogMini-14B 45.3% pass@1 on Verified (abstract). ScaleSWE uses its bug taxonomy.
 - **SWE-Synth** (arXiv 2504.14757, v2 2025-12-20): LLM agents simulate debugging to produce bug–fix pairs, tests and repair trajectories. +2.3% on Lite vs real data (abstract).
 - **SWE-Mirror** (arXiv 2509.08724, 2025-09-10): "mirrors" real issues into repos that already have Gym environments. 60,671 tasks across 40 repos in 4 languages (abstract).

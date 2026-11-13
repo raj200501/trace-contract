@@ -340,7 +340,7 @@ Table 1, Total (% of max), R1 → R2 (Δ pp):
      - Present = Interact + 1.6 and Richness = Interact + 2.8.
    - The **unweighted** mean of each group's dimensions reproduces the Table 1 group score within 0.05 in every row.
    - The **weighted** means that A.3.2 says are used ("Group summaries use the same weighted calculation...") deviate systematically. For example, UX comes out 0.42–0.51 lower than Table 1.
-   - The paper does not explain this pattern. Treat the per-dimension breakdowns of model results as unreliable. The scripts I used are in the scratchpad: `/tmp/claude-0/-home-user-trace-contract/3951c995-db7e-5b4e-a703-97e326bb42c5/scratchpad/scripts/check_tables.py` and `.../scripts/cmp_t1.py`.
+   - The paper does not explain this pattern. Treat the per-dimension breakdowns of model results as unreliable. The scripts I used are in the scratchpad: `<scratchpad>/scripts/check_tables.py` and `.../scripts/cmp_t1.py`.
 2. **The feedback evaluation is circular.**
    - The same judge (GLM-5.3-Flash) and rubric produce the R1 diagnoses, the GLM-5.2-written feedback derived from those diagnoses, and the R2 scores.
    - No human scored R2 artifacts. The +10.05 pp is therefore evidence that models can satisfy the judge's stated criticisms. It is not independent evidence of user-wanted improvement.

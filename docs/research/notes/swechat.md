@@ -3,7 +3,7 @@
 - Access date for every source below: **2026-11-13 (UTC)**. Publication/version dates are recorded separately in the sources table.
 - Conventions: **VERIFIED** = stated by the source (quotes were checked by exact string match, whitespace-normalized, against the downloaded copy; script `scratchpad/verify_quotes.py`, 67/68 candidate quotes matched, the one miss was re-quoted from the exact source lines). **INFERENCE** = my reading, estimate or judgment; the source does not state it.
 - Local copies (untrusted data, not part of the repo) live under
-  `/tmp/claude-0/-home-user-trace-contract/3951c995-db7e-5b4e-a703-97e326bb42c5/scratchpad/dl/` (`swechat/`, `swechat_card/`, `swechat_tex/`, `swechat_repo/`, `entire_cli_src/`, `entire_docs/`, `entire_example/`, `swetogether_repo/`, `odcby/`).
+  `<scratchpad>/dl/` (`swechat/`, `swechat_card/`, `swechat_tex/`, `swechat_repo/`, `entire_cli_src/`, `entire_docs/`, `entire_example/`, `swetogether_repo/`, `odcby/`).
 - Gate respected: no SWE-chat data file was downloaded. The only SWE-chat request that touched a data file was a 4-byte range GET of `repositories.parquet`, which returned **HTTP 401** (gate confirmation). No mirror or derived copy was used to obtain gated content (see section 4 for what was and was not read).
 - Process note: this step only created this notes file. No git command was run inside `/home/user/trace-contract`.
 

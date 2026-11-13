@@ -1,0 +1,39 @@
+{
+  "schema_version": "0.1.0",
+  "snapshot_id": "CS-01@a95004512dde",
+  "task_id": "CS-01",
+  "repo_url": "https://github.com/python-humanize/humanize",
+  "base_commit": "a95004512dde4e8f0269946bb4af754382347441",
+  "fidelity": "approximate",
+  "approximations": [
+    "generated build artefact added: src/humanize/_version.py"
+  ],
+  "file_manifest_sha256": "0e87b6c1b51f5c87ce008d9a1145a9a38543fc92299a356f587a72ed8a229179",
+  "n_files": 89,
+  "environment": {
+    "image": "tc-env:0b1591bd588d585e",
+    "image_id": "sha256:d6a5a665cc60790d839560fb6792d81401f1274d0c2be3ba0cab0479054945aa",
+    "pins": [
+      "attrs==26.1.0",
+      "freezegun==1.5.5",
+      "hypothesis==6.131.0",
+      "iniconfig==2.3.1",
+      "packaging==26.3",
+      "pluggy==1.7.0",
+      "pygments==2.21.0",
+      "pytest==9.2.0",
+      "python-dateutil==4.0.0",
+      "sortedcontainers==2.4.0",
+      "tzdata==2026.6"
+    ]
+  },
+  "leakage_check": {
+    "checked_paths": [
+      "src/humanize/filesize.py",
+      "tests/test_filesize.py"
+    ],
+    "leaked_paths": [],
+    "passed": true,
+    "method": "post-image-equality"
+  }
+}

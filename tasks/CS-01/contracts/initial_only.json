@@ -1,0 +1,271 @@
+{
+  "schema_version": "0.1.0",
+  "contract_id": "CS-01-initial_only",
+  "task_id": "CS-01",
+  "session_id": "CS-01-session",
+  "variant": "initial_only",
+  "requirements": [
+    {
+      "req_id": "R1",
+      "statement": "In the default (decimal) mode naturalsize no longer prints a trailing \".0\" for a whole-number value: naturalsize(3000000) returns \"3 MB\" instead of \"3.0 MB\".",
+      "kind": "change",
+      "status": "explicit",
+      "introduced_at": "CS-01-session/L000001.00",
+      "evidence": [
+        {
+          "event_id": "CS-01-session/L000001.00",
+          "start": 66,
+          "end": 102,
+          "quote": "so 3,000,000 bytes shows as \"3.0 MB\""
+        },
+        {
+          "event_id": "CS-01-session/L000001.00",
+          "start": 155,
+          "end": 211,
+          "quote": "I'd like it to drop a trailing \".0\" so those read \"3 MB\""
+        }
+      ],
+      "rationale": "",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "naturalsize(3000000) == \"3 MB\" (exact string).",
+      "scored": true,
+      "subjective": false,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    },
+    {
+      "req_id": "R2",
+      "statement": "In binary mode naturalsize no longer prints a trailing \".0\" for a whole-number value: naturalsize(1024, binary=True) returns \"1 KiB\" instead of \"1.0 KiB\".",
+      "kind": "change",
+      "status": "explicit",
+      "introduced_at": "CS-01-session/L000001.00",
+      "evidence": [
+        {
+          "event_id": "CS-01-session/L000001.00",
+          "start": 107,
+          "end": 153,
+          "quote": "1024 bytes with binary=True shows as \"1.0 KiB\""
+        },
+        {
+          "event_id": "CS-01-session/L000001.00",
+          "start": 170,
+          "end": 223,
+          "quote": "drop a trailing \".0\" so those read \"3 MB\" and \"1 KiB\""
+        }
+      ],
+      "rationale": "",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "naturalsize(1024, binary=True) == \"1 KiB\" (exact string).",
+      "scored": true,
+      "subjective": false,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    },
+    {
+      "req_id": "R3",
+      "statement": "When the one-decimal number has a non-zero decimal digit, naturalsize output is unchanged and keeps its single decimal place: \"2.9 KiB\" (e.g. naturalsize(3000, binary=True)) stays exactly \"2.9 KiB\" - it is neither rounded to a whole number nor given extra digits.",
+      "kind": "invariant",
+      "status": "explicit",
+      "introduced_at": "CS-01-session/L000001.00",
+      "evidence": [
+        {
+          "event_id": "CS-01-session/L000001.00",
+          "start": 225,
+          "end": 304,
+          "quote": "but keep the decimal when it's meaningful (e.g. \"2.9 KiB\" should stay as it is)"
+        }
+      ],
+      "rationale": "",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "naturalsize(3000, binary=True) == \"2.9 KiB\"; likewise naturalsize(1536, binary=True) == \"1.5 KiB\" and naturalsize(2500000) == \"2.5 MB\".",
+      "scored": true,
+      "subjective": false,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    },
+    {
+      "req_id": "R4",
+      "statement": "The trailing-\".0\" removal is general rather than limited to the two quoted inputs: any naturalsize result (default format) whose number would print as N.0 is printed as N, for every unit in both decimal and binary modes, without touching zeros of the integer part.",
+      "kind": "change",
+      "status": "explicit",
+      "introduced_at": "CS-01-session/L000001.00",
+      "evidence": [
+        {
+          "event_id": "CS-01-session/L000001.00",
+          "start": 19,
+          "end": 64,
+          "quote": "`naturalsize` always prints one decimal place"
+        },
+        {
+          "event_id": "CS-01-session/L000001.00",
+          "start": 155,
+          "end": 190,
+          "quote": "I'd like it to drop a trailing \".0\""
+        }
+      ],
+      "rationale": "",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "naturalsize(1000) == \"1 kB\", naturalsize(10000000) == \"10 MB\", naturalsize(10**9) == \"1 GB\", naturalsize(2048, binary=True) == \"2 KiB\", naturalsize(102400, binary=True) == \"100 KiB\", naturalsize(1048576, binary=True) == \"1 MiB\".",
+      "scored": true,
+      "subjective": false,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    },
+    {
+      "req_id": "R5",
+      "statement": "The decision is based on the printed (rounded) one-decimal value, not on the raw value being an exact integer: a size that rounds to a whole number at one decimal place also loses the \".0\", e.g. naturalsize(1040000) returns \"1 MB\" (currently \"1.0 MB\") and naturalsize(2999999) returns \"3 MB\" (currently \"3.0 MB\").",
+      "kind": "change",
+      "status": "inferred",
+      "introduced_at": "CS-01-session/L000001.00",
+      "evidence": [
+        {
+          "event_id": "CS-01-session/L000001.00",
+          "start": 155,
+          "end": 190,
+          "quote": "I'd like it to drop a trailing \".0\""
+        },
+        {
+          "event_id": "CS-01-session/L000001.00",
+          "start": 229,
+          "end": 266,
+          "quote": "keep the decimal when it's meaningful"
+        }
+      ],
+      "rationale": "The user describes the change in terms of the printed string (drop a trailing \".0\" from output that always shows one decimal place) and asks to keep the decimal only when it is meaningful; a \".0\" produced by rounding carries no information at one-decimal precision, and the user never distinguishes exact from rounded values.",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "naturalsize(1040000) == \"1 MB\" and naturalsize(2999999) == \"3 MB\"; no default-format naturalsize result ends its number with \".0\".",
+      "scored": true,
+      "subjective": false,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    },
+    {
+      "req_id": "R6",
+      "statement": "Unresolved: the session does not say whether the trailing-\".0\" removal also applies to GNU-style output (gnu=True), i.e. whether naturalsize(1024, gnu=True) should stay \"1.0K\" or become \"1K\".",
+      "kind": "change",
+      "status": "unresolved",
+      "introduced_at": "CS-01-session/L000001.00",
+      "evidence": [
+        {
+          "event_id": "CS-01-session/L000001.00",
+          "start": 19,
+          "end": 64,
+          "quote": "`naturalsize` always prints one decimal place"
+        },
+        {
+          "event_id": "CS-01-session/L000001.00",
+          "start": 155,
+          "end": 190,
+          "quote": "I'd like it to drop a trailing \".0\""
+        }
+      ],
+      "rationale": "Both examples are non-GNU (\"3.0 MB\", \"1.0 KiB\"); the general wording could cover gnu=True, but GNU-style output conventionally keeps \"1.0K\", and the user never mentions this mode.",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "naturalsize(1024, gnu=True) returns either \"1.0K\" or \"1K\"; not scored until clarified.",
+      "scored": false,
+      "subjective": true,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    },
+    {
+      "req_id": "R7",
+      "statement": "Unresolved: the session does not say whether the removal applies when the caller passes an explicit format argument, e.g. whether naturalsize(1024, binary=True, format=\"%.2f\") stays \"1.00 KiB\" and whether an explicitly passed format=\"%.1f\" is stripped like the default.",
+      "kind": "change",
+      "status": "unresolved",
+      "introduced_at": "CS-01-session/L000001.00",
+      "evidence": [
+        {
+          "event_id": "CS-01-session/L000001.00",
+          "start": 19,
+          "end": 64,
+          "quote": "`naturalsize` always prints one decimal place"
+        }
+      ],
+      "rationale": "The user only describes the default one-decimal output; a caller-chosen precision may be intended to be kept as given, and the user never mentions the format parameter.",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "naturalsize(1024, binary=True, format=\"%.2f\") returns \"1.00 KiB\" or \"1 KiB\"; not scored until clarified.",
+      "scored": false,
+      "subjective": true,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    },
+    {
+      "req_id": "R8",
+      "statement": "Process constraint: repository code must not be run directly on the host; tests and Python snippets are run only through /home/user/cs_workspaces/CS-01/run_tests.sh and /home/user/cs_workspaces/CS-01/run_python.sh, which use an isolated container.",
+      "kind": "constraint",
+      "status": "explicit",
+      "introduced_at": "CS-01-session/L000001.00",
+      "evidence": [
+        {
+          "event_id": "CS-01-session/L000001.00",
+          "start": 423,
+          "end": 508,
+          "quote": "Code from the repo can't be run directly on this machine; use the two wrapper scripts"
+        },
+        {
+          "event_id": "CS-01-session/L000001.00",
+          "start": 510,
+          "end": 547,
+          "quote": "which run it in an isolated container"
+        }
+      ],
+      "rationale": "",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "Not visible in the final code; could only be audited from the session's tool calls.",
+      "scored": false,
+      "subjective": true,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    },
+    {
+      "req_id": "R9",
+      "statement": "Process constraint: all work stays inside /home/user/cs_workspaces/CS-01, with the code change made in the humanize git working copy at /home/user/cs_workspaces/CS-01/humanize.",
+      "kind": "constraint",
+      "status": "explicit",
+      "introduced_at": "CS-01-session/L000001.00",
+      "evidence": [
+        {
+          "event_id": "CS-01-session/L000001.00",
+          "start": 712,
+          "end": 776,
+          "quote": "Please keep all your work inside /home/user/cs_workspaces/CS-01."
+        },
+        {
+          "event_id": "CS-01-session/L000001.00",
+          "start": 331,
+          "end": 422,
+          "quote": "The repo is checked out (as a git working copy) at /home/user/cs_workspaces/CS-01/humanize."
+        }
+      ],
+      "rationale": "",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "The fix appears in the git diff of the humanize working copy and nothing outside /home/user/cs_workspaces/CS-01 is modified; an audit rather than a black-box test.",
+      "scored": false,
+      "subjective": true,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    }
+  ],
+  "instruction": "Make the following changes:\n- In the default (decimal) mode naturalsize no longer prints a trailing \".0\" for a whole-number value: naturalsize(3000000) returns \"3 MB\" instead of \"3.0 MB\".\n- In binary mode naturalsize no longer prints a trailing \".0\" for a whole-number value: naturalsize(1024, binary=True) returns \"1 KiB\" instead of \"1.0 KiB\".\n- The trailing-\".0\" removal is general rather than limited to the two quoted inputs: any naturalsize result (default format) whose number would print as N.0 is printed as N, for every unit in both decimal and binary modes, without touching zeros of the integer part.\n- The decision is based on the printed (rounded) one-decimal value, not on the raw value being an exact integer: a size that rounds to a whole number at one decimal place also loses the \".0\", e.g. naturalsize(1040000) returns \"1 MB\" (currently \"1.0 MB\") and naturalsize(2999999) returns \"3 MB\" (currently \"3.0 MB\").\n\nThe following existing behaviour must be preserved:\n- When the one-decimal number has a non-zero decimal digit, naturalsize output is unchanged and keeps its single decimal place: \"2.9 KiB\" (e.g. naturalsize(3000, binary=True)) stays exactly \"2.9 KiB\" - it is neither rounded to a whole number nor given extra digits.\n\nConstraints:\n- Process constraint: repository code must not be run directly on the host; tests and Python snippets are run only through /home/user/cs_workspaces/CS-01/run_tests.sh and /home/user/cs_workspaces/CS-01/run_python.sh, which use an isolated container.\n- Process constraint: all work stays inside /home/user/cs_workspaces/CS-01, with the code change made in the humanize git working copy at /home/user/cs_workspaces/CS-01/humanize.\n",
+  "created_by": "model:claude-code-subagent:contract:v1",
+  "created_at": "2026-11-13T02:09:21+00:00",
+  "notes": ""
+}

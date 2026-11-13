@@ -1,0 +1,273 @@
+{
+  "schema_version": "0.1.0",
+  "contract_id": "CS-01-full_session",
+  "task_id": "CS-01",
+  "session_id": "CS-01-session",
+  "variant": "full_session",
+  "requirements": [
+    {
+      "req_id": "R1",
+      "statement": "By default (no extra arguments), naturalsize drops a trailing \".0\" from the formatted number: naturalsize(3000000) returns \"3 MB\" instead of \"3.0 MB\", and naturalsize(1024, binary=True) returns \"1 KiB\" instead of \"1.0 KiB\".",
+      "kind": "change",
+      "status": "superseded",
+      "introduced_at": "CS-01-session/L000001.00",
+      "evidence": [
+        {
+          "event_id": "CS-01-session/L000001.00",
+          "start": 155,
+          "end": 223,
+          "quote": "I'd like it to drop a trailing \".0\" so those read \"3 MB\" and \"1 KiB\""
+        },
+        {
+          "event_id": "CS-01-session/L000001.00",
+          "start": 66,
+          "end": 153,
+          "quote": "so 3,000,000 bytes shows as \"3.0 MB\" and 1024 bytes with binary=True shows as \"1.0 KiB\""
+        }
+      ],
+      "rationale": "",
+      "supersedes": [],
+      "superseded_by": "R5",
+      "conflicts_with": [],
+      "observable": "naturalsize(3000000) == '3 MB' and naturalsize(1024, binary=True) == '1 KiB' when called without strip_trailing_zero. Superseded by R5 (and contradicted by R4): in the final contract this output is produced only with strip_trailing_zero=True.",
+      "scored": true,
+      "subjective": false,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    },
+    {
+      "req_id": "R2",
+      "statement": "The trailing-\".0\" trimming must keep a meaningful (non-zero) decimal: 3000 bytes with binary=True still renders as \"2.9 KiB\" both by default and with trimming enabled, i.e. naturalsize(3000, binary=True) == \"2.9 KiB\" and naturalsize(3000, binary=True, strip_trailing_zero=True) == \"2.9 KiB\".",
+      "kind": "invariant",
+      "status": "explicit",
+      "introduced_at": "CS-01-session/L000001.00",
+      "evidence": [
+        {
+          "event_id": "CS-01-session/L000001.00",
+          "start": 225,
+          "end": 304,
+          "quote": "but keep the decimal when it's meaningful (e.g. \"2.9 KiB\" should stay as it is)"
+        }
+      ],
+      "rationale": "",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "assert naturalsize(3000, binary=True) == '2.9 KiB' and naturalsize(3000, binary=True, strip_trailing_zero=True) == '2.9 KiB'; similarly naturalsize(2900000, strip_trailing_zero=True) == '2.9 MB'.",
+      "scored": true,
+      "subjective": false,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    },
+    {
+      "req_id": "R3",
+      "statement": "All work stays inside /home/user/cs_workspaces/CS-01, with the change made in the git working copy /home/user/cs_workspaces/CS-01/humanize, and repository code is never run directly on the host: tests and Python snippets run only through the wrappers /home/user/cs_workspaces/CS-01/run_tests.sh and /home/user/cs_workspaces/CS-01/run_python.sh, which use an isolated container.",
+      "kind": "constraint",
+      "status": "explicit",
+      "introduced_at": "CS-01-session/L000001.00",
+      "evidence": [
+        {
+          "event_id": "CS-01-session/L000001.00",
+          "start": 712,
+          "end": 776,
+          "quote": "Please keep all your work inside /home/user/cs_workspaces/CS-01."
+        },
+        {
+          "event_id": "CS-01-session/L000001.00",
+          "start": 423,
+          "end": 508,
+          "quote": "Code from the repo can't be run directly on this machine; use the two wrapper scripts"
+        }
+      ],
+      "rationale": "",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "Not observable through a black-box test of naturalsize; audit the session trace / filesystem for files written outside /home/user/cs_workspaces/CS-01 and for repository code executed outside the two wrappers.",
+      "scored": false,
+      "subjective": false,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    },
+    {
+      "req_id": "R4",
+      "statement": "The default output of naturalsize (strip_trailing_zero not passed, default format) stays exactly what the base version produced, for every input and mode, e.g. naturalsize(3000000) == \"3.0 MB\", naturalsize(1024, binary=True) == \"1.0 KiB\", naturalsize(3000, binary=True) == \"2.9 KiB\"; in particular non-GNU output stays compatible with jinja2's filesizeformat filter (one decimal place, e.g. \"3.0 kB\" for 3000) wherever the base version matched it.",
+      "kind": "invariant",
+      "status": "explicit",
+      "introduced_at": "CS-01-session/L000125.00",
+      "evidence": [
+        {
+          "event_id": "CS-01-session/L000125.00",
+          "start": 94,
+          "end": 204,
+          "quote": "changing the default output is going to break a bunch of our templates and snapshot tests that expect \"3.0 MB\""
+        },
+        {
+          "event_id": "CS-01-session/L000125.00",
+          "start": 283,
+          "end": 338,
+          "quote": "Please keep the default output exactly as it was before"
+        },
+        {
+          "event_id": "CS-01-session/L000125.00",
+          "start": 210,
+          "end": 281,
+          "quote": "naturalsize is supposed to stay compatible with jinja2's filesizeformat"
+        }
+      ],
+      "rationale": "",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "Differential test against the base implementation: for many values (positive, negative, string inputs, boundaries such as 999999 and 1024**2 - 1) in decimal, binary and GNU modes, naturalsize(...) without strip_trailing_zero returns the identical string, and the original tests/test_filesize.py and tests/test_i18n.py expectations pass unmodified; where jinja2 is available, naturalsize(v) and naturalsize(v, binary=True) equal do_filesizeformat(v) and do_filesizeformat(v, binary=True) for values such as 1, 300, 1024, 3000, 2900000 and 3000000.",
+      "scored": true,
+      "subjective": false,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    },
+    {
+      "req_id": "R5",
+      "statement": "naturalsize gains a new keyword argument named strip_trailing_zero, default False, that makes the trailing-\".0\" trimming opt-in: naturalsize(3000000, strip_trailing_zero=True) == \"3 MB\", naturalsize(1024, binary=True, strip_trailing_zero=True) == \"1 KiB\", naturalsize(3000, binary=True, strip_trailing_zero=True) == \"2.9 KiB\"; omitting it or passing strip_trailing_zero=False gives the unchanged default output (naturalsize(3000000, strip_trailing_zero=False) == \"3.0 MB\").",
+      "kind": "change",
+      "status": "explicit",
+      "introduced_at": "CS-01-session/L000125.00",
+      "evidence": [
+        {
+          "event_id": "CS-01-session/L000125.00",
+          "start": 344,
+          "end": 451,
+          "quote": "make the trailing-\".0\" trimming opt-in through a new keyword argument `strip_trailing_zero` (default False)"
+        }
+      ],
+      "rationale": "",
+      "supersedes": [
+        "R1"
+      ],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "assert naturalsize(3000000, strip_trailing_zero=True) == '3 MB'; naturalsize(1024, binary=True, strip_trailing_zero=True) == '1 KiB'; naturalsize(3000, binary=True, strip_trailing_zero=True) == '2.9 KiB'; naturalsize(3000000, strip_trailing_zero=False) == naturalsize(3000000) == '3.0 MB'.",
+      "scored": true,
+      "subjective": false,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    },
+    {
+      "req_id": "R6",
+      "statement": "Calls that pass a custom format string, positionally or by keyword (and without strip_trailing_zero), return exactly what they returned before; the positional parameter order (value, binary, gnu, format) is unchanged, so naturalsize(3000, False, True, \"%.3f\") still returns \"2.930K\" and naturalsize(3000000, format=\"%.2f\") still returns \"3.00 MB\".",
+      "kind": "invariant",
+      "status": "explicit",
+      "introduced_at": "CS-01-session/L000125.00",
+      "evidence": [
+        {
+          "event_id": "CS-01-session/L000125.00",
+          "start": 453,
+          "end": 573,
+          "quote": "Existing calls that pass a custom `format` string, including positional ones like naturalsize(3000, False, True, \"%.3f\")"
+        },
+        {
+          "event_id": "CS-01-session/L000125.00",
+          "start": 575,
+          "end": 628,
+          "quote": "must keep producing exactly what they produced before"
+        }
+      ],
+      "rationale": "",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "Differential test against the base implementation for calls with a custom format given as the 4th positional argument and as format=..., e.g. naturalsize(3000, False, True, '%.3f') == '2.930K' and naturalsize(3000000, format='%.2f') == '3.00 MB'.",
+      "scored": true,
+      "subjective": false,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    },
+    {
+      "req_id": "R7",
+      "statement": "How strip_trailing_zero=True combines with a custom format is not specified: e.g. whether naturalsize(3000000, format=\"%.2f\", strip_trailing_zero=True) should return \"3 MB\" or \"3.00 MB\", and whether naturalsize(3000, False, True, \"%.3f\", strip_trailing_zero=True) should return \"2.93K\" or \"2.930K\".",
+      "kind": "change",
+      "status": "unresolved",
+      "introduced_at": "CS-01-session/L000125.00",
+      "evidence": [
+        {
+          "event_id": "CS-01-session/L000125.00",
+          "start": 473,
+          "end": 529,
+          "quote": "pass a custom `format` string, including positional ones"
+        },
+        {
+          "event_id": "CS-01-session/L000125.00",
+          "start": 367,
+          "end": 435,
+          "quote": "trimming opt-in through a new keyword argument `strip_trailing_zero`"
+        }
+      ],
+      "rationale": "The user only described dropping a trailing \".0\" from the default one-decimal output and required custom-format calls to stay unchanged when the flag is not passed; nothing in the session says what the flag should do with formats that render more (or no) decimal places.",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "None until clarified; outputs of strip_trailing_zero=True combined with a non-default format should not be scored.",
+      "scored": false,
+      "subjective": false,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    },
+    {
+      "req_id": "R8",
+      "statement": "The trailing-\".0\" trimming (strip_trailing_zero=True) works the same way in every mode and for negative sizes: naturalsize(1024, gnu=True, strip_trailing_zero=True) == \"1K\" and naturalsize(3000, gnu=True, strip_trailing_zero=True) == \"2.9K\" (while naturalsize(1024, gnu=True) stays \"1.0K\"), naturalsize(-3000000, strip_trailing_zero=True) == \"-3 MB\", naturalsize(-4096, binary=True, strip_trailing_zero=True) == \"-4 KiB\", naturalsize(-3000, binary=True, strip_trailing_zero=True) == \"-2.9 KiB\".",
+      "kind": "change",
+      "status": "inferred",
+      "introduced_at": "CS-01-session/L000001.00",
+      "evidence": [
+        {
+          "event_id": "CS-01-session/L000001.00",
+          "start": 0,
+          "end": 64,
+          "quote": "Hey - in humanize, `naturalsize` always prints one decimal place"
+        }
+      ],
+      "rationale": "The user described naturalsize in general as always printing one decimal place and asked to drop a trailing \".0\" without limiting this to particular modes or signs; GNU output (\"1.0K\") and negative sizes (\"-4.0 KiB\") have the same one-decimal form, but the user's examples only covered positive decimal and binary sizes.",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "assert naturalsize(1024, gnu=True, strip_trailing_zero=True) == '1K'; naturalsize(3000, gnu=True, strip_trailing_zero=True) == '2.9K'; naturalsize(1024, gnu=True) == '1.0K'; naturalsize(-3000000, strip_trailing_zero=True) == '-3 MB'; naturalsize(-4096, binary=True, strip_trailing_zero=True) == '-4 KiB'; naturalsize(-3000, binary=True, strip_trailing_zero=True) == '-2.9 KiB'.",
+      "scored": true,
+      "subjective": false,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    },
+    {
+      "req_id": "R9",
+      "statement": "With strip_trailing_zero=True the decision is made on the rendered one-decimal number and only a \".0\" after the decimal point is removed: values that round to X.0 lose it (naturalsize(3000001, strip_trailing_zero=True) == \"3 MB\", naturalsize(999999, strip_trailing_zero=True) == \"1 MB\"), integer digits are kept (naturalsize(10**7, strip_trailing_zero=True) == \"10 MB\", not \"1 MB\"; naturalsize(10**8, strip_trailing_zero=True) == \"100 MB\"; naturalsize(3 * 10**34, strip_trailing_zero=True) == \"30000 QB\"), and outputs without a decimal part are unchanged (naturalsize(100, strip_trailing_zero=True) == \"100 Bytes\", naturalsize(1, strip_trailing_zero=True) == \"1 Byte\").",
+      "kind": "constraint",
+      "status": "inferred",
+      "introduced_at": "CS-01-session/L000001.00",
+      "evidence": [
+        {
+          "event_id": "CS-01-session/L000001.00",
+          "start": 170,
+          "end": 211,
+          "quote": "drop a trailing \".0\" so those read \"3 MB\""
+        },
+        {
+          "event_id": "CS-01-session/L000001.00",
+          "start": 229,
+          "end": 266,
+          "quote": "keep the decimal when it's meaningful"
+        }
+      ],
+      "rationale": "The user's request is about the printed trailing \".0\" (\"3.0 MB\" should read \"3 MB\") while keeping a meaningful decimal; a value that prints as X.0 has no meaningful decimal whatever its exact byte count, removing any other zero would change the value, and byte counts have no decimal part to drop.",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "assert naturalsize(3000001, strip_trailing_zero=True) == '3 MB'; naturalsize(999999, strip_trailing_zero=True) == '1 MB'; naturalsize(10**7, strip_trailing_zero=True) == '10 MB'; naturalsize(10**8, strip_trailing_zero=True) == '100 MB'; naturalsize(3 * 10**34, strip_trailing_zero=True) == '30000 QB'; naturalsize(100, strip_trailing_zero=True) == '100 Bytes'; naturalsize(1, strip_trailing_zero=True) == '1 Byte'.",
+      "scored": true,
+      "subjective": false,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    }
+  ],
+  "instruction": "Make the following changes:\n- naturalsize gains a new keyword argument named strip_trailing_zero, default False, that makes the trailing-\".0\" trimming opt-in: naturalsize(3000000, strip_trailing_zero=True) == \"3 MB\", naturalsize(1024, binary=True, strip_trailing_zero=True) == \"1 KiB\", naturalsize(3000, binary=True, strip_trailing_zero=True) == \"2.9 KiB\"; omitting it or passing strip_trailing_zero=False gives the unchanged default output (naturalsize(3000000, strip_trailing_zero=False) == \"3.0 MB\").\n- The trailing-\".0\" trimming (strip_trailing_zero=True) works the same way in every mode and for negative sizes: naturalsize(1024, gnu=True, strip_trailing_zero=True) == \"1K\" and naturalsize(3000, gnu=True, strip_trailing_zero=True) == \"2.9K\" (while naturalsize(1024, gnu=True) stays \"1.0K\"), naturalsize(-3000000, strip_trailing_zero=True) == \"-3 MB\", naturalsize(-4096, binary=True, strip_trailing_zero=True) == \"-4 KiB\", naturalsize(-3000, binary=True, strip_trailing_zero=True) == \"-2.9 KiB\".\n\nThe following existing behaviour must be preserved:\n- The trailing-\".0\" trimming must keep a meaningful (non-zero) decimal: 3000 bytes with binary=True still renders as \"2.9 KiB\" both by default and with trimming enabled, i.e. naturalsize(3000, binary=True) == \"2.9 KiB\" and naturalsize(3000, binary=True, strip_trailing_zero=True) == \"2.9 KiB\".\n- The default output of naturalsize (strip_trailing_zero not passed, default format) stays exactly what the base version produced, for every input and mode, e.g. naturalsize(3000000) == \"3.0 MB\", naturalsize(1024, binary=True) == \"1.0 KiB\", naturalsize(3000, binary=True) == \"2.9 KiB\"; in particular non-GNU output stays compatible with jinja2's filesizeformat filter (one decimal place, e.g. \"3.0 kB\" for 3000) wherever the base version matched it.\n- Calls that pass a custom format string, positionally or by keyword (and without strip_trailing_zero), return exactly what they returned before; the positional parameter order (value, binary, gnu, format) is unchanged, so naturalsize(3000, False, True, \"%.3f\") still returns \"2.930K\" and naturalsize(3000000, format=\"%.2f\") still returns \"3.00 MB\".\n\nConstraints:\n- All work stays inside /home/user/cs_workspaces/CS-01, with the change made in the git working copy /home/user/cs_workspaces/CS-01/humanize, and repository code is never run directly on the host: tests and Python snippets run only through the wrappers /home/user/cs_workspaces/CS-01/run_tests.sh and /home/user/cs_workspaces/CS-01/run_python.sh, which use an isolated container.\n- With strip_trailing_zero=True the decision is made on the rendered one-decimal number and only a \".0\" after the decimal point is removed: values that round to X.0 lose it (naturalsize(3000001, strip_trailing_zero=True) == \"3 MB\", naturalsize(999999, strip_trailing_zero=True) == \"1 MB\"), integer digits are kept (naturalsize(10**7, strip_trailing_zero=True) == \"10 MB\", not \"1 MB\"; naturalsize(10**8, strip_trailing_zero=True) == \"100 MB\"; naturalsize(3 * 10**34, strip_trailing_zero=True) == \"30000 QB\"), and outputs without a decimal part are unchanged (naturalsize(100, strip_trailing_zero=True) == \"100 Bytes\", naturalsize(1, strip_trailing_zero=True) == \"1 Byte\").\n",
+  "created_by": "model:claude-code-subagent:contract:v1",
+  "created_at": "2026-11-13T02:20:02+00:00",
+  "notes": ""
+}

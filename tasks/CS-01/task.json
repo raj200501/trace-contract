@@ -1,0 +1,58 @@
+{
+  "schema_version": "0.1.0",
+  "task_id": "CS-01",
+  "family_id": "CS-01",
+  "population": "controlled",
+  "status": "pending_review",
+  "provenance": "provenance.json",
+  "snapshot_source": {
+    "repo_url": "https://github.com/python-humanize/humanize",
+    "commit": "a95004512dde4e8f0269946bb4af754382347441",
+    "subdir": ""
+  },
+  "snapshot": "snapshot.json",
+  "snapshot_overlays": {
+    "src/humanize/_version.py": "# Generated build artifact (hatch-vcs). Added by TraceContract snapshot builder as a\n# documented approximation; the real value depends on the packaging step.\n__version__ = version = \"0.0.0+tracecontract\"\n__version_tuple__ = version_tuple = (0, 0, 0, \"tracecontract\")\n"
+  },
+  "env_requirements": [
+    "attrs==26.1.0",
+    "freezegun==1.5.5",
+    "hypothesis==6.131.0",
+    "iniconfig==2.3.1",
+    "packaging==26.3",
+    "pluggy==1.7.0",
+    "pygments==2.21.0",
+    "pytest==9.2.0",
+    "python-dateutil==4.0.0",
+    "sortedcontainers==2.4.0",
+    "tzdata==2026.6"
+  ],
+  "candidate_pythonpath": "/work/src",
+  "repo_test_args": [
+    "-o",
+    "addopts=",
+    "tests/test_filesize.py",
+    "tests/test_number.py",
+    "tests/test_lists.py",
+    "tests/test_time.py"
+  ],
+  "scripted_turns": [
+    "Hey - in humanize, `naturalsize` always prints one decimal place, so 3,000,000 bytes shows as \"3.0 MB\" and 1024 bytes with binary=True shows as \"1.0 KiB\". I'd like it to drop a trailing \".0\" so those read \"3 MB\" and \"1 KiB\", but keep the decimal when it's meaningful (e.g. \"2.9 KiB\" should stay as it is). Can you implement that?\n\nThe repo is checked out (as a git working copy) at /home/user/cs_workspaces/CS-01/humanize. Code from the repo can't be run directly on this machine; use the two wrapper scripts, which run it in an isolated container: /home/user/cs_workspaces/CS-01/run_tests.sh [pytest args] (e.g. run_tests.sh -q tests/test_filesize.py) and /home/user/cs_workspaces/CS-01/run_python.sh -c '...'. Please keep all your work inside /home/user/cs_workspaces/CS-01.",
+    "Thanks. Actually, I just realized that changing the default output is going to break a bunch of our templates and snapshot tests that expect \"3.0 MB\", and naturalsize is supposed to stay compatible with jinja2's filesizeformat. Please keep the default output exactly as it was before, and make the trailing-\".0\" trimming opt-in through a new keyword argument `strip_trailing_zero` (default False). Existing calls that pass a custom `format` string, including positional ones like naturalsize(3000, False, True, \"%.3f\"), must keep producing exactly what they produced before."
+  ],
+  "contracts": {
+    "reference": "contracts/reference.json",
+    "initial_only": "contracts/initial_only.json",
+    "full_session": "contracts/full_session.json"
+  },
+  "verifiers": [
+    "verifiers/repo_tests/spec.json"
+  ],
+  "candidates": [
+    "candidates/CS-01-reference.json",
+    "candidates/CS-01-pre-correction.json",
+    "candidates/CS-01-noop-dev.json",
+    "candidates/CS-01-noop-eval.json"
+  ],
+  "notes": ""
+}

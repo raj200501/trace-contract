@@ -1,0 +1,241 @@
+{
+  "schema_version": "0.1.0",
+  "contract_id": "CS-03-initial_only",
+  "task_id": "CS-03",
+  "session_id": "CS-03-session",
+  "variant": "initial_only",
+  "requirements": [
+    {
+      "req_id": "R1",
+      "statement": "titleize keeps the all-caps acronym NASA unchanged: titleize('NASA rocket launch') must return 'NASA Rocket Launch' (it currently returns 'Nasa Rocket Launch').",
+      "kind": "change",
+      "status": "explicit",
+      "introduced_at": "CS-03-session/L000001.00",
+      "evidence": [
+        {
+          "event_id": "CS-03-session/L000001.00",
+          "start": 42,
+          "end": 101,
+          "quote": "titleize('NASA rocket launch') returns 'Nasa Rocket Launch'"
+        },
+        {
+          "event_id": "CS-03-session/L000001.00",
+          "start": 167,
+          "end": 243,
+          "quote": "Can you make titleize keep all-caps acronyms like NASA and HTTP as they are?"
+        }
+      ],
+      "rationale": "",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "inflection.titleize('NASA rocket launch') == 'NASA Rocket Launch'",
+      "scored": true,
+      "subjective": false,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    },
+    {
+      "req_id": "R2",
+      "statement": "titleize keeps the all-caps acronym HTTP unchanged: titleize('read the HTTP spec') must return 'Read The HTTP Spec' (it currently returns 'Read The Http Spec').",
+      "kind": "change",
+      "status": "explicit",
+      "introduced_at": "CS-03-session/L000001.00",
+      "evidence": [
+        {
+          "event_id": "CS-03-session/L000001.00",
+          "start": 106,
+          "end": 165,
+          "quote": "titleize('read the HTTP spec') returns 'Read The Http Spec'"
+        },
+        {
+          "event_id": "CS-03-session/L000001.00",
+          "start": 167,
+          "end": 243,
+          "quote": "Can you make titleize keep all-caps acronyms like NASA and HTTP as they are?"
+        }
+      ],
+      "rationale": "",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "inflection.titleize('read the HTTP spec') == 'Read The HTTP Spec'",
+      "scored": true,
+      "subjective": false,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    },
+    {
+      "req_id": "R3",
+      "statement": "More generally, titleize outputs every all-caps acronym exactly as written, not only NASA and HTTP: in an input that also contains non-uppercase words, any standalone word of two or more letters written entirely in uppercase is kept as is wherever it appears (first, middle or last word, one or several per string), instead of being converted to first-letter-only capitalization such as 'Nasa' or 'Http'.",
+      "kind": "change",
+      "status": "explicit",
+      "introduced_at": "CS-03-session/L000001.00",
+      "evidence": [
+        {
+          "event_id": "CS-03-session/L000001.00",
+          "start": 167,
+          "end": 243,
+          "quote": "Can you make titleize keep all-caps acronyms like NASA and HTTP as they are?"
+        },
+        {
+          "event_id": "CS-03-session/L000001.00",
+          "start": 0,
+          "end": 41,
+          "quote": "In inflection, titleize mangles acronyms:"
+        }
+      ],
+      "rationale": "",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "titleize('launch by NASA') == 'Launch By NASA'; titleize('the FBI and the CIA') == 'The FBI And The CIA'; titleize('HTTP and FTP specs') == 'HTTP And FTP Specs'.",
+      "scored": true,
+      "subjective": false,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    },
+    {
+      "req_id": "R4",
+      "statement": "Apart from acronym handling, titleize behaves as before: words that are not all-caps acronyms are still capitalized (first letter uppercase, rest lowercase) with no small-word exceptions (e.g. 'rocket launch' -> 'Rocket Launch', 'the' -> 'The'), and an input that contains no all-caps acronym gives exactly the same output as the original implementation.",
+      "kind": "invariant",
+      "status": "inferred",
+      "introduced_at": "CS-03-session/L000001.00",
+      "evidence": [
+        {
+          "event_id": "CS-03-session/L000001.00",
+          "start": 42,
+          "end": 101,
+          "quote": "titleize('NASA rocket launch') returns 'Nasa Rocket Launch'"
+        },
+        {
+          "event_id": "CS-03-session/L000001.00",
+          "start": 106,
+          "end": 165,
+          "quote": "titleize('read the HTTP spec') returns 'Read The Http Spec'"
+        }
+      ],
+      "rationale": "The user quotes the current outputs 'Nasa Rocket Launch' and 'Read The Http Spec' and objects only to the acronyms ('mangles acronyms'); the capitalization of the other words ('Rocket Launch', 'Read The', 'Spec') is shown without complaint, so it is expected to stay the same.",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "titleize('rocket launch') == 'Rocket Launch'; titleize('read the spec') == 'Read The Spec'; a differential test against the base implementation on inputs with no two consecutive uppercase letters (e.g. 'action web service', 'ActiveRecord', 'active_record', 'x-men: the last stand') gives identical results.",
+      "scored": true,
+      "subjective": false,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    },
+    {
+      "req_id": "R5",
+      "statement": "The change is confined to titleize: the other public inflection functions (e.g. humanize, underscore, camelize) return exactly the same results as before for all inputs, including inputs with all-caps words, and the repository's existing test suite still passes (apart from any test that asserts the old acronym-mangling titleize output).",
+      "kind": "invariant",
+      "status": "inferred",
+      "introduced_at": "CS-03-session/L000001.00",
+      "evidence": [
+        {
+          "event_id": "CS-03-session/L000001.00",
+          "start": 167,
+          "end": 243,
+          "quote": "Can you make titleize keep all-caps acronyms like NASA and HTTP as they are?"
+        },
+        {
+          "event_id": "CS-03-session/L000001.00",
+          "start": 465,
+          "end": 551,
+          "quote": "/home/user/cs_workspaces/CS-03/run_tests.sh [pytest args] (e.g. run_tests.sh -q tests)"
+        }
+      ],
+      "rationale": "The user asks only for titleize to be changed and points to the repository's existing tests (run_tests.sh -q tests); nothing in the request suggests other functions or other tested behavior should change.",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "Run the repository's existing tests on the solution: they pass. Differential tests against the base code for other public functions (humanize, underscore, camelize, ...), including inputs such as 'NASA rocket launch' and 'HTTPServer', give identical outputs.",
+      "scored": true,
+      "subjective": false,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    },
+    {
+      "req_id": "R6",
+      "statement": "Unresolved: the behavior for input written entirely in uppercase (e.g. titleize('NASA ROCKET LAUNCH')) is not specified. Every word is all-caps, so it is unclear whether all words are kept unchanged as acronyms or the input is titleized normally (e.g. 'Nasa Rocket Launch').",
+      "kind": "change",
+      "status": "unresolved",
+      "introduced_at": "CS-03-session/L000001.00",
+      "evidence": [
+        {
+          "event_id": "CS-03-session/L000001.00",
+          "start": 167,
+          "end": 243,
+          "quote": "Can you make titleize keep all-caps acronyms like NASA and HTTP as they are?"
+        }
+      ],
+      "rationale": "The user's examples are mixed-case sentences in which only the acronyms are uppercase; the request to keep all-caps acronyms as they are does not say how to tell acronyms from ordinary words when the whole input is uppercase.",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "Not determined by the session; a test would have to assume one of the two behaviors.",
+      "scored": false,
+      "subjective": true,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    },
+    {
+      "req_id": "R7",
+      "statement": "Unresolved: the session does not define what counts as an all-caps acronym for less clear-cut tokens, so titleize's output is unspecified for all-caps tokens containing digits (e.g. 'MP3'), acronyms with an attached possessive or suffix (e.g. NASA's), and acronyms embedded in camelCase, underscored or hyphenated input (e.g. 'HTTPServer', 'NASA_rocket_launch', 'NASA-launch').",
+      "kind": "change",
+      "status": "unresolved",
+      "introduced_at": "CS-03-session/L000001.00",
+      "evidence": [
+        {
+          "event_id": "CS-03-session/L000001.00",
+          "start": 167,
+          "end": 243,
+          "quote": "Can you make titleize keep all-caps acronyms like NASA and HTTP as they are?"
+        }
+      ],
+      "rationale": "The only examples given are plain space-separated words made entirely of capital letters (NASA, HTTP); none of these token forms is mentioned.",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "Not determined by the session; any test of these cases would rely on an assumed definition of 'acronym'.",
+      "scored": false,
+      "subjective": true,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    },
+    {
+      "req_id": "R8",
+      "statement": "Make the change in the repository's git working copy at /home/user/cs_workspaces/CS-03/inflection and keep all work inside /home/user/cs_workspaces/CS-03 (no files outside it are created or modified).",
+      "kind": "constraint",
+      "status": "explicit",
+      "introduced_at": "CS-03-session/L000001.00",
+      "evidence": [
+        {
+          "event_id": "CS-03-session/L000001.00",
+          "start": 245,
+          "end": 337,
+          "quote": "The repo is checked out (as a git working copy) at /home/user/cs_workspaces/CS-03/inflection"
+        },
+        {
+          "event_id": "CS-03-session/L000001.00",
+          "start": 611,
+          "end": 675,
+          "quote": "Please keep all your work inside /home/user/cs_workspaces/CS-03."
+        }
+      ],
+      "rationale": "",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "Not checkable by a black-box test of titleize; only by inspecting that all changes made for the solution lie under /home/user/cs_workspaces/CS-03 (in the inflection working copy).",
+      "scored": false,
+      "subjective": true,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    }
+  ],
+  "instruction": "Make the following changes:\n- titleize keeps the all-caps acronym NASA unchanged: titleize('NASA rocket launch') must return 'NASA Rocket Launch' (it currently returns 'Nasa Rocket Launch').\n- titleize keeps the all-caps acronym HTTP unchanged: titleize('read the HTTP spec') must return 'Read The HTTP Spec' (it currently returns 'Read The Http Spec').\n- More generally, titleize outputs every all-caps acronym exactly as written, not only NASA and HTTP: in an input that also contains non-uppercase words, any standalone word of two or more letters written entirely in uppercase is kept as is wherever it appears (first, middle or last word, one or several per string), instead of being converted to first-letter-only capitalization such as 'Nasa' or 'Http'.\n\nThe following existing behaviour must be preserved:\n- Apart from acronym handling, titleize behaves as before: words that are not all-caps acronyms are still capitalized (first letter uppercase, rest lowercase) with no small-word exceptions (e.g. 'rocket launch' -> 'Rocket Launch', 'the' -> 'The'), and an input that contains no all-caps acronym gives exactly the same output as the original implementation.\n- The change is confined to titleize: the other public inflection functions (e.g. humanize, underscore, camelize) return exactly the same results as before for all inputs, including inputs with all-caps words, and the repository's existing test suite still passes (apart from any test that asserts the old acronym-mangling titleize output).\n\nConstraints:\n- Make the change in the repository's git working copy at /home/user/cs_workspaces/CS-03/inflection and keep all work inside /home/user/cs_workspaces/CS-03 (no files outside it are created or modified).\n",
+  "created_by": "model:claude-code-subagent:contract:v1",
+  "created_at": "2026-11-13T02:27:18+00:00",
+  "notes": ""
+}

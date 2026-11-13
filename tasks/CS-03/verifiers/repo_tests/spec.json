@@ -1,0 +1,1880 @@
+{
+  "schema_version": "0.1.0",
+  "verifier_id": "repo_tests",
+  "task_id": "CS-03",
+  "condition": "repo_tests",
+  "contract_id": null,
+  "isolation": "in_process",
+  "test_dir": "verifiers/repo_tests/overlay",
+  "checks": [
+    {
+      "check_id": "test_inflection::test_camelize[ApplicationController-application_controller]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_camelize[Area51Controller-area51_controller]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_camelize[Product-product]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_camelize[SpecialGuest-special_guest]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_camelize_with_lower_downcases_the_first_letter",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_camelize_with_underscores",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_dasherize[person_street_address-person-street-address]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_dasherize[street-street]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_dasherize[street_address-street-address]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_humanize[employee_id-Employee]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_humanize[employee_salary-Employee salary]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_humanize[underground-Underground]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[-1--1st]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[-10--10th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[-100--100th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[-1000--1000th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[-1001--1001st]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[-101--101st]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[-102--102nd]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[-103--103rd]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[-104--104th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[-11--11th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[-110--110th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[-111--111th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[-112--112th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[-113--113th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[-12--12th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[-13--13th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[-14--14th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[-2--2nd]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[-20--20th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[-21--21st]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[-22--22nd]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[-23--23rd]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[-24--24th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[-3--3rd]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[-4--4th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[-5--5th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[-6--6th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[-7--7th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[-8--8th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[-9--9th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[0-0th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[1-1st]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[10-10th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[100-100th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[1000-1000th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[1001-1001st]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[101-101st]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[102-102nd]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[103-103rd]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[104-104th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[11-11th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[110-110th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[111-111th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[112-112th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[113-113th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[12-12th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[13-13th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[14-14th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[2-2nd]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[20-20th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[21-21st]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[22-22nd]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[23-23rd]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[24-24th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[3-3rd]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[4-4th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[5-5th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[6-6th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[7-7th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[8-8th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinal[9-9th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[-1--1st]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[-10--10th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[-100--100th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[-1000--1000th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[-1001--1001st]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[-101--101st]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[-102--102nd]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[-103--103rd]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[-104--104th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[-11--11th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[-110--110th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[-111--111th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[-112--112th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[-113--113th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[-12--12th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[-13--13th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[-14--14th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[-2--2nd]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[-20--20th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[-21--21st]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[-22--22nd]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[-23--23rd]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[-24--24th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[-3--3rd]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[-4--4th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[-5--5th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[-6--6th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[-7--7th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[-8--8th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[-9--9th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[0-0th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[1-1st]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[10-10th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[100-100th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[1000-1000th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[1001-1001st]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[101-101st]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[102-102nd]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[103-103rd]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[104-104th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[11-11th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[110-110th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[111-111th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[112-112th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[113-113th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[12-12th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[13-13th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[14-14th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[2-2nd]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[20-20th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[21-21st]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[22-22nd]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[23-23rd]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[24-24th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[3-3rd]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[4-4th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[5-5th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[6-6th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[7-7th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[8-8th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_ordinalize[9-9th]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_parameterize[!@#Leading bad characters-leading-bad-characters]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_parameterize[Allow_Under_Scores-allow_under_scores]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_parameterize[Donald E. Knuth-donald-e-knuth]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_parameterize[Random text with *(bad)* characters-random-text-with-bad-characters]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_parameterize[Squeeze   separators-squeeze-separators]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_parameterize[Test with + sign-test-with-sign]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_parameterize[Test with malformed utf8 \\xa9-test-with-malformed-utf8]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_parameterize[Trailing bad characters!@#-trailing-bad-characters]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_parameterize_and_normalize[A\\xdflar-alar]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_parameterize_and_normalize[Gar\\xe7ons-garcons]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_parameterize_and_normalize[Japanese: \\u65e5\\u672c\\u8a9e-japanese]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_parameterize_and_normalize[Malm\\xf6-malmo]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_parameterize_and_normalize[Ops\\xd9-opsu]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_parameterize_and_normalize[\\xc6r\\xf8sk\\xf8bing-rskbing]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_parameterize_with_custom_separator[!@#Leading bad characters-leading_bad_characters]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_parameterize_with_custom_separator[Donald E. Knuth-donald_e_knuth]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_parameterize_with_custom_separator[Random text with *(bad)* characters-random_text_with_bad_characters]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_parameterize_with_custom_separator[Retain_underscore-retain_underscore]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_parameterize_with_custom_separator[Squeeze   separators-squeeze_separators]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_parameterize_with_custom_separator[Test with + sign-test_with_sign]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_parameterize_with_custom_separator[Test with malformed utf8 \\xa9-test_with_malformed_utf8]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_parameterize_with_custom_separator[Trailing bad characters!@#-trailing_bad_characters]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_parameterize_with_custom_separator[With-some-dashes-with-some-dashes]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_parameterize_with_multi_character_separator[!@#Leading bad characters-leading-bad-characters]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_parameterize_with_multi_character_separator[Allow_Under_Scores-allow_under_scores]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_parameterize_with_multi_character_separator[Donald E. Knuth-donald-e-knuth]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_parameterize_with_multi_character_separator[Random text with *(bad)* characters-random-text-with-bad-characters]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_parameterize_with_multi_character_separator[Squeeze   separators-squeeze-separators]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_parameterize_with_multi_character_separator[Test with + sign-test-with-sign]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_parameterize_with_multi_character_separator[Test with malformed utf8 \\xa9-test-with-malformed-utf8]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_parameterize_with_multi_character_separator[Trailing bad characters!@#-trailing-bad-characters]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_parameterize_with_no_separator[!@#Leading bad characters-leadingbadcharacters]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_parameterize_with_no_separator[Donald E. Knuth-donaldeknuth]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_parameterize_with_no_separator[Random text with *(bad)* characters-randomtextwithbadcharacters]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_parameterize_with_no_separator[Squeeze   separators-squeezeseparators]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_parameterize_with_no_separator[Test with + sign-testwithsign]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_parameterize_with_no_separator[Test with malformed utf8 \\xa9-testwithmalformedutf8]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_parameterize_with_no_separator[Trailing bad characters!@#-trailingbadcharacters]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_parameterize_with_no_separator[With-some-dashes-with-some-dashes]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_empty_string",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[ability-abilities]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[address-addresses]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[agency-agencies]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[alias-aliases]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[analysis-analyses]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[archive-archives]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[axis-axes]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[basis-bases]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[box-boxes]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[buffalo-buffaloes]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[bus-buses]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[case-cases]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[category-categories]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[child-children]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[comment-comments]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[cow-kine]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[crisis-crises]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[database-databases]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[datum-data]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[day-days]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[diagnosis-diagnoses]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[diagnosis_a-diagnosis_as]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[dwarf-dwarves]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[edge-edges]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[elf-elves]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[equipment-equipment]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[experience-experiences]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[fish-fish]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[fix-fixes]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[foobar-foobars]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[funky jeans-funky jeans]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[half-halves]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[horse-horses]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[house-houses]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[human-humans]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[index-indices]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[information-information]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[jeans-jeans]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[louse-lice]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[man-men]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[matrix-matrices]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[matrix_fu-matrix_fus]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[medium-media]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[mouse-mice]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[move-moves]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[movie-movies]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[news-news]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[newsletter-newsletters]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[node_child-node_children]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[octopus-octopi]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[old_news-old_news]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[ox-oxen]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[passerby-passersby]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[person-people]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[perspective-perspectives]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[photo-photos]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[portfolio-portfolios]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[potato-potatoes]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[prize-prizes]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[process-processes]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[query-queries]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[quiz-quizzes]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[rice-rice]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[safe-saves]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[salesperson-salespeople]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[search-searches]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[series-series]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[shoe-shoes]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[species-species]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[spokesman-spokesmen]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[stack-stacks]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[stadium-stadia]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[status-statuses]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[status_code-status_codes]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[switch-switches]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[testis-testes]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[tomato-tomatoes]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[vertex-vertices]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[virus-viri]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[wife-wives]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[wish-wishes]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plural[woman-women]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_plurals",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[ability-abilities]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[address-addresses]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[agency-agencies]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[alias-aliases]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[analysis-analyses]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[archive-archives]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[axis-axes]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[basis-bases]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[box-boxes]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[buffalo-buffaloes]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[bus-buses]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[case-cases]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[category-categories]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[child-children]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[comment-comments]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[cow-kine]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[crisis-crises]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[database-databases]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[datum-data]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[day-days]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[diagnosis-diagnoses]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[diagnosis_a-diagnosis_as]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[dwarf-dwarves]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[edge-edges]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[elf-elves]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[equipment-equipment]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[experience-experiences]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[fish-fish]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[fix-fixes]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[foobar-foobars]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[funky jeans-funky jeans]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[half-halves]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[horse-horses]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[house-houses]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[human-humans]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[index-indices]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[information-information]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[jeans-jeans]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[louse-lice]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[man-men]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[matrix-matrices]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[matrix_fu-matrix_fus]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[medium-media]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[mouse-mice]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[move-moves]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[movie-movies]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[news-news]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[newsletter-newsletters]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[node_child-node_children]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[octopus-octopi]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[old_news-old_news]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[ox-oxen]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[passerby-passersby]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[person-people]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[perspective-perspectives]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[photo-photos]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[portfolio-portfolios]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[potato-potatoes]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[prize-prizes]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[process-processes]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[query-queries]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[quiz-quizzes]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[rice-rice]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[safe-saves]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[salesperson-salespeople]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[search-searches]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[series-series]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[shoe-shoes]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[species-species]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[spokesman-spokesmen]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[stack-stacks]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[stadium-stadia]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[status-statuses]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[status_code-status_codes]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[switch-switches]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[testis-testes]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[tomato-tomatoes]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[vertex-vertices]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[virus-viri]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[wife-wives]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[wish-wishes]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_pluralize_singular[woman-women]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[ability-abilities]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[address-addresses]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[agency-agencies]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[alias-aliases]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[analysis-analyses]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[archive-archives]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[axis-axes]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[basis-bases]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[box-boxes]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[buffalo-buffaloes]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[bus-buses]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[case-cases]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[category-categories]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[child-children]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[comment-comments]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[cow-kine]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[crisis-crises]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[database-databases]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[datum-data]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[day-days]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[diagnosis-diagnoses]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[diagnosis_a-diagnosis_as]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[dwarf-dwarves]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[edge-edges]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[elf-elves]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[equipment-equipment]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[experience-experiences]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[fish-fish]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[fix-fixes]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[foobar-foobars]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[funky jeans-funky jeans]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[half-halves]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[horse-horses]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[house-houses]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[human-humans]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[index-indices]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[information-information]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[jeans-jeans]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[louse-lice]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[man-men]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[matrix-matrices]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[matrix_fu-matrix_fus]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[medium-media]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[mouse-mice]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[move-moves]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[movie-movies]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[news-news]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[newsletter-newsletters]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[node_child-node_children]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[octopus-octopi]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[old_news-old_news]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[ox-oxen]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[passerby-passersby]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[person-people]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[perspective-perspectives]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[photo-photos]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[portfolio-portfolios]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[potato-potatoes]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[prize-prizes]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[process-processes]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[query-queries]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[quiz-quizzes]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[rice-rice]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[safe-saves]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[salesperson-salespeople]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[search-searches]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[series-series]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[shoe-shoes]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[species-species]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[spokesman-spokesmen]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[stack-stacks]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[stadium-stadia]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[status-statuses]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[status_code-status_codes]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[switch-switches]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[testis-testes]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[tomato-tomatoes]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[vertex-vertices]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[virus-viri]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[wife-wives]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[wish-wishes]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_singularize_plural[woman-women]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_tableize[ChildToy-child_toys]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_tableize[Country-countries]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_tableize[_RecipeIngredient-_recipe_ingredients]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_tableize[person-people]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_titleize[Action Web Service-Action Web Service]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_titleize[Action web service-Action Web Service]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_titleize[Actionwebservice-Actionwebservice]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_titleize[ActiveRecord-Active Record]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_titleize[Ana \\xcdndia-Ana \\xcdndia]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_titleize[DON'T panic-DON'T Panic]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_titleize[David'S code-David's Code]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_titleize[David's code-David's Code]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_titleize[HELLO WORLD-Hello World]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_titleize[HTML5 spec-HTML5 Spec]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_titleize[HTMLTidy-HTML Tidy]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_titleize[NASA rocket launch-NASA Rocket Launch]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_titleize[NASA's rocket-NASA's Rocket]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_titleize[NASA_rocket_launch-NASA Rocket Launch]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_titleize[SCREAMING_SNAKE_CASE-Screaming Snake Case]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_titleize[action web service-Action Web Service]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_titleize[actionwebservice-Actionwebservice]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_titleize[active_record-Active Record]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_titleize[ana \\xedndia-Ana \\xcdndia]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_titleize[david's Code-David's Code]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_titleize[david's code-David's Code]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_titleize[read the HTTP spec-Read The HTTP Spec]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_uncountability[equipment]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_uncountability[fish]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_uncountability[information]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_uncountability[jeans]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_uncountability[money]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_uncountability[rice]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_uncountability[series]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_uncountability[sheep]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_uncountability[species]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_uncountable_word_is_not_greedy",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_underscore[ApplicationController-application_controller]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_underscore[Area51Controller-area51_controller]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_underscore[FreeBSD-free_bsd]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_underscore[HTML-html]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_underscore[HTMLTidy-html_tidy]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_underscore[HTMLTidyGenerator-html_tidy_generator]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_underscore[NASARocket-nasa_rocket]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_underscore[Product-product]",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "test_inflection::test_underscore[SpecialGuest-special_guest]",
+      "requirement_ids": []
+    }
+  ],
+  "content_sha256": "f7bca4feac5cca75cccdd7835c75f7df83b948a3f880c7ccef1237a7d266962f",
+  "generation": null,
+  "audit": null,
+  "frozen": false,
+  "version": 1
+}

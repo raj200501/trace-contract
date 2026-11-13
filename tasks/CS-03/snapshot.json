@@ -1,0 +1,34 @@
+{
+  "schema_version": "0.1.0",
+  "snapshot_id": "CS-03@88eefaacf7d0",
+  "task_id": "CS-03",
+  "repo_url": "https://github.com/jpvanhal/inflection",
+  "base_commit": "88eefaacf7d0caaa701af7c8ab2d0ab3f17086f1",
+  "fidelity": "exact",
+  "approximations": [],
+  "file_manifest_sha256": "7e61aca7b70ce1b5b5ba314144454dd0cbbfc26619e0ac5ca17e2ae03e29d80e",
+  "n_files": 17,
+  "environment": {
+    "image": "tc-env:801a26fad4c5e101",
+    "image_id": "sha256:035acd7634f10312c8ef4d6e206cfe978165ebd11bcf5ab9d17e097d794edc21",
+    "pins": [
+      "attrs==26.1.0",
+      "hypothesis==6.131.0",
+      "iniconfig==2.3.1",
+      "packaging==26.3",
+      "pluggy==1.7.0",
+      "pygments==2.21.0",
+      "pytest==9.2.0",
+      "sortedcontainers==2.4.0"
+    ]
+  },
+  "leakage_check": {
+    "checked_paths": [
+      "inflection/__init__.py",
+      "test_inflection.py"
+    ],
+    "leaked_paths": [],
+    "passed": true,
+    "method": "post-image-equality"
+  }
+}

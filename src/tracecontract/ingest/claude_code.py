@@ -232,6 +232,20 @@ def parse_claude_code_jsonl(
 
 
 _KEEP_MESSAGE_KEYS = ("role", "content", "model", "usage", "stop_reason")
+_EMAIL_RE = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}")
+
+
+def _redact(obj, counter: dict):
+    """Recursively replace e-mail addresses in strings (personal data minimisation)."""
+    if isinstance(obj, str):
+        new, n = _EMAIL_RE.subn("[EMAIL REDACTED]", obj)
+        counter["emails"] = counter.get("emails", 0) + n
+        return new
+    if isinstance(obj, list):
+        return [_redact(x, counter) for x in obj]
+    if isinstance(obj, dict):
+        return {k: _redact(v, counter) for k, v in obj.items()}
+    return obj
 
 
 def sanitize_transcript(src: str | Path, dst: str | Path, *, session_id: str) -> dict:
@@ -247,6 +261,7 @@ def sanitize_transcript(src: str | Path, dst: str | Path, *, session_id: str) ->
     raw = src.read_bytes()
     out_lines = []
     dropped: dict[str, int] = {}
+    redactions: dict[str, int] = {}
     for line in raw.decode("utf-8", errors="replace").splitlines():
         if not line.strip():
             continue
@@ -259,6 +274,7 @@ def sanitize_transcript(src: str | Path, dst: str | Path, *, session_id: str) ->
             dropped[str(e.get("type"))] = dropped.get(str(e.get("type")), 0) + 1
             continue
         msg = {k: e["message"][k] for k in _KEEP_MESSAGE_KEYS if k in e["message"]}
+        msg = _redact(msg, redactions)
         if isinstance(msg.get("usage"), dict):
             msg["usage"] = {k: v for k, v in msg["usage"].items() if isinstance(v, (int, float))}
         new = {"type": e["type"], "sessionId": session_id, "uuid": e.get("uuid"), "parentUuid": e.get("parentUuid"),
@@ -270,4 +286,4 @@ def sanitize_transcript(src: str | Path, dst: str | Path, *, session_id: str) ->
     dst.parent.mkdir(parents=True, exist_ok=True)
     dst.write_bytes(data)
     return {"source_sha256": sha256_bytes(raw), "sanitized_sha256": sha256_bytes(data), "entries": len(out_lines),
-            "dropped": dropped}
+            "dropped": dropped, "redactions": redactions}

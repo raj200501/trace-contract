@@ -1,0 +1,211 @@
+{
+  "schema_version": "0.1.0",
+  "contract_id": "CS-03-full_session",
+  "task_id": "CS-03",
+  "session_id": "CS-03-session",
+  "variant": "full_session",
+  "requirements": [
+    {
+      "req_id": "R1",
+      "statement": "titleize must keep all-caps acronyms such as NASA and HTTP exactly as written instead of title-casing them, while still capitalizing the other words: titleize('NASA rocket launch') must return 'NASA Rocket Launch' (today: 'Nasa Rocket Launch') and titleize('read the HTTP spec') must return 'Read The HTTP Spec' (today: 'Read The Http Spec').",
+      "kind": "change",
+      "status": "explicit",
+      "introduced_at": "CS-03-session/L000001.00",
+      "evidence": [
+        {
+          "event_id": "CS-03-session/L000001.00",
+          "start": 167,
+          "end": 243,
+          "quote": "Can you make titleize keep all-caps acronyms like NASA and HTTP as they are?"
+        },
+        {
+          "event_id": "CS-03-session/L000001.00",
+          "start": 42,
+          "end": 101,
+          "quote": "titleize('NASA rocket launch') returns 'Nasa Rocket Launch'"
+        },
+        {
+          "event_id": "CS-03-session/L000001.00",
+          "start": 106,
+          "end": 165,
+          "quote": "titleize('read the HTTP spec') returns 'Read The Http Spec'"
+        }
+      ],
+      "rationale": "",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "Assert titleize('NASA rocket launch') == 'NASA Rocket Launch' and titleize('read the HTTP spec') == 'Read The HTTP Spec'. Use inputs that also contain lowercase letters, like the user's examples; input with no lowercase letters is governed by R5.",
+      "scored": true,
+      "subjective": false,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    },
+    {
+      "req_id": "R2",
+      "statement": "Apart from the handling of all-caps words, titleize must behave as it does today: for inputs in which every uppercase letter is immediately followed by a lowercase letter (so no word is written in capitals; this includes inputs with no uppercase letters at all), the output must be identical to the current implementation's, e.g. titleize('man from the boondocks') == 'Man From The Boondocks', titleize('x-men: the last stand') == 'X Men: The Last Stand', titleize('ActiveRecord') == 'Active Record'.",
+      "kind": "invariant",
+      "status": "inferred",
+      "introduced_at": "CS-03-session/L000001.00",
+      "evidence": [
+        {
+          "event_id": "CS-03-session/L000001.00",
+          "start": 0,
+          "end": 101,
+          "quote": "In inflection, titleize mangles acronyms: titleize('NASA rocket launch') returns 'Nasa Rocket Launch'"
+        }
+      ],
+      "rationale": "The user describes the defect only as acronyms being mangled, and in both examples the desired output differs from today's only in the acronym, so the rest of titleize's behaviour (word splitting, underscore/hyphen handling, capitalization of non-acronym words) is implicitly expected to stay as it is.",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "Differential test against the base implementation: for hand-picked and generated inputs in which every uppercase letter is immediately followed by a lowercase letter (e.g. 'man from the boondocks', 'x-men: the last stand', 'raiders_of_the_lost_ark', 'ActiveRecord'), titleize returns the same string as the base version.",
+      "scored": true,
+      "subjective": false,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    },
+    {
+      "req_id": "R3",
+      "statement": "Unresolved: the user did not say whether all-caps runs that are not standalone words, i.e. acronyms embedded in CamelCase identifiers such as 'HTMLTidy', 'IOError' or 'FreeBSD', must also be kept as written by titleize (e.g. 'HTML Tidy' instead of today's 'Html Tidy', 'IO Error' instead of today's 'Io Error').",
+      "kind": "change",
+      "status": "unresolved",
+      "introduced_at": "CS-03-session/L000001.00",
+      "evidence": [
+        {
+          "event_id": "CS-03-session/L000001.00",
+          "start": 167,
+          "end": 243,
+          "quote": "Can you make titleize keep all-caps acronyms like NASA and HTTP as they are?"
+        }
+      ],
+      "rationale": "The request names standalone words (NASA, HTTP) in space-separated text; titleize also splits CamelCase input, and no user message settles whether capital runs inside such identifiers count as acronyms to keep.",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "Would be checked with titleize('HTMLTidy') ('HTML Tidy' vs 'Html Tidy') or titleize('IOError') ('IO Error' vs 'Io Error'); the expected output is not determined by the user, so it is not scored.",
+      "scored": false,
+      "subjective": false,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    },
+    {
+      "req_id": "R4",
+      "statement": "All work (files created or modified) must stay inside /home/user/cs_workspaces/CS-03.",
+      "kind": "constraint",
+      "status": "explicit",
+      "introduced_at": "CS-03-session/L000001.00",
+      "evidence": [
+        {
+          "event_id": "CS-03-session/L000001.00",
+          "start": 611,
+          "end": 674,
+          "quote": "Please keep all your work inside /home/user/cs_workspaces/CS-03"
+        }
+      ],
+      "rationale": "",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "Not checkable by a black-box test of the code; it would require inspecting whether the agent created or changed files outside /home/user/cs_workspaces/CS-03.",
+      "scored": false,
+      "subjective": true,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    },
+    {
+      "req_id": "R5",
+      "statement": "If the whole input is already uppercase, i.e. contains no lowercase letters (like the shouted heading 'HELLO WORLD'), titleize must produce the same result as it does today: titleize('HELLO WORLD') == 'Hello World'. An all-caps word is treated as an acronym (kept as written, per R1) only when the input also contains lowercase letters; this narrows R1 without replacing it.",
+      "kind": "invariant",
+      "status": "explicit",
+      "introduced_at": "CS-03-session/L000056.00",
+      "evidence": [
+        {
+          "event_id": "CS-03-session/L000056.00",
+          "start": 80,
+          "end": 225,
+          "quote": "if the whole input is already in uppercase (like a shouted heading 'HELLO WORLD'), titleize should still produce 'Hello World' like it does today"
+        },
+        {
+          "event_id": "CS-03-session/L000056.00",
+          "start": 228,
+          "end": 316,
+          "quote": "only treat an all-caps word as an acronym when the input also contains lowercase letters"
+        }
+      ],
+      "rationale": "",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "Assert titleize('HELLO WORLD') == 'Hello World'; differential test against the base implementation for inputs with no lowercase letters (e.g. 'HELLO WORLD', 'NASA ROCKET LAUNCH', which today gives 'Nasa Rocket Launch'): outputs must be identical.",
+      "scored": true,
+      "subjective": false,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    },
+    {
+      "req_id": "R6",
+      "statement": "The behaviour of humanize() itself must not change: for every input it returns the same result as the current implementation, e.g. humanize('employee_salary') must still return 'Employee salary'.",
+      "kind": "invariant",
+      "status": "explicit",
+      "introduced_at": "CS-03-session/L000056.00",
+      "evidence": [
+        {
+          "event_id": "CS-03-session/L000056.00",
+          "start": 322,
+          "end": 423,
+          "quote": "please don't change the behaviour of humanize() or underscore() themselves; other code relies on them"
+        },
+        {
+          "event_id": "CS-03-session/L000056.00",
+          "start": 425,
+          "end": 492,
+          "quote": "for example humanize('employee_salary') must stay 'Employee salary'"
+        }
+      ],
+      "rationale": "",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "Assert humanize('employee_salary') == 'Employee salary'; differential test of humanize against the base implementation on varied inputs (snake_case, '_id' suffixes, mixed case, acronyms) shows identical output.",
+      "scored": true,
+      "subjective": false,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    },
+    {
+      "req_id": "R7",
+      "statement": "The behaviour of underscore() itself must not change: for every input it returns the same result as the current implementation, e.g. underscore('NASARocket') must return exactly what it returns today ('nasa_rocket' in the base version).",
+      "kind": "invariant",
+      "status": "explicit",
+      "introduced_at": "CS-03-session/L000056.00",
+      "evidence": [
+        {
+          "event_id": "CS-03-session/L000056.00",
+          "start": 322,
+          "end": 396,
+          "quote": "please don't change the behaviour of humanize() or underscore() themselves"
+        },
+        {
+          "event_id": "CS-03-session/L000056.00",
+          "start": 498,
+          "end": 560,
+          "quote": "underscore('NASARocket') must stay exactly what it returns now"
+        }
+      ],
+      "rationale": "",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "Assert underscore('NASARocket') equals the base implementation's result ('nasa_rocket'); differential test of underscore against the base implementation on varied inputs (CamelCase, acronym runs, hyphens, digits) shows identical output.",
+      "scored": true,
+      "subjective": false,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    }
+  ],
+  "instruction": "Make the following changes:\n- titleize must keep all-caps acronyms such as NASA and HTTP exactly as written instead of title-casing them, while still capitalizing the other words: titleize('NASA rocket launch') must return 'NASA Rocket Launch' (today: 'Nasa Rocket Launch') and titleize('read the HTTP spec') must return 'Read The HTTP Spec' (today: 'Read The Http Spec').\n\nThe following existing behaviour must be preserved:\n- Apart from the handling of all-caps words, titleize must behave as it does today: for inputs in which every uppercase letter is immediately followed by a lowercase letter (so no word is written in capitals; this includes inputs with no uppercase letters at all), the output must be identical to the current implementation's, e.g. titleize('man from the boondocks') == 'Man From The Boondocks', titleize('x-men: the last stand') == 'X Men: The Last Stand', titleize('ActiveRecord') == 'Active Record'.\n- If the whole input is already uppercase, i.e. contains no lowercase letters (like the shouted heading 'HELLO WORLD'), titleize must produce the same result as it does today: titleize('HELLO WORLD') == 'Hello World'. An all-caps word is treated as an acronym (kept as written, per R1) only when the input also contains lowercase letters; this narrows R1 without replacing it.\n- The behaviour of humanize() itself must not change: for every input it returns the same result as the current implementation, e.g. humanize('employee_salary') must still return 'Employee salary'.\n- The behaviour of underscore() itself must not change: for every input it returns the same result as the current implementation, e.g. underscore('NASARocket') must return exactly what it returns today ('nasa_rocket' in the base version).\n\nConstraints:\n- All work (files created or modified) must stay inside /home/user/cs_workspaces/CS-03.\n",
+  "created_by": "model:claude-code-subagent:contract:v1",
+  "created_at": "2026-11-13T02:27:50+00:00",
+  "notes": ""
+}

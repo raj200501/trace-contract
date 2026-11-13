@@ -223,3 +223,14 @@ the `local-validation` network variant (public network) because this host cannot
 run Harbor's `no-network` mode; the fixture candidates were trusted code. (A first
 no-op attempt failed with an environment error because the trial name produced an
 invalid Docker tag; Harbor recorded it as an exception, not as a reward.)
+
+### D21. E-mail redaction in published transcripts; local paths removed from notes
+Sanitised controlled transcripts contained the public e-mail addresses of upstream
+project authors (tool results showing repository metadata). Sanitisation now
+redacts e-mail addresses in all message content (`[EMAIL REDACTED]`; CS-01: 2,
+CS-03: 1, CS-04: 1). Line structure is unchanged, so event ids and evidence spans
+are unaffected; provenance records carry the new transcript hashes and
+`redaction_status = redacted_by_us`. Generation agents that rendered sessions before
+this change saw the unredacted e-mails in tool results; this does not affect any
+requirement. Absolute session-local paths in research notes were replaced with
+`<scratchpad>` / `<session-dir>`.

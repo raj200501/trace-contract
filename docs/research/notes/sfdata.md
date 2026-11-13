@@ -3,7 +3,7 @@
 - Access date for every source below: **2026-11-13 (UTC)**. Publication/version dates are recorded separately.
 - Scope: **public statements only**. Nothing here describes or guesses at any private implementation. Non-research content (business metrics, team background beyond research outputs, employment terms, application instructions) is intentionally not recorded.
 - Retrieval: all pages were static HTML or JSON and were fetched with `curl` (no JS rendering needed). Local copies (untrusted data, not part of the repo) are in
-  `/tmp/claude-0/-home-user-trace-contract/3951c995-db7e-5b4e-a703-97e326bb42c5/scratchpad/dl/sfdata/`.
+  `<scratchpad>/dl/sfdata/`.
 - Convention: **VERIFIED** = quoted verbatim from the source (checked by string match against the downloaded copy). **INFERENCE** = my reading or judgment; SF Data does not state it.
 
 ---

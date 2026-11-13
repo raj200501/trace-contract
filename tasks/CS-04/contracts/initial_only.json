@@ -1,0 +1,139 @@
+{
+  "schema_version": "0.1.0",
+  "contract_id": "CS-04-initial_only",
+  "task_id": "CS-04",
+  "session_id": "CS-04-session",
+  "variant": "initial_only",
+  "requirements": [
+    {
+      "req_id": "R1",
+      "statement": "more_itertools.consecutive_groups accepts a new `step` option that can be passed as a keyword argument, e.g. consecutive_groups([2, 4, 6, 10, 12], step=2) is a valid call (no TypeError).",
+      "kind": "change",
+      "status": "explicit",
+      "introduced_at": "CS-04-session/L000001.00",
+      "evidence": [
+        {
+          "event_id": "CS-04-session/L000001.00",
+          "start": 0,
+          "end": 67,
+          "quote": "Could you add a `step` option to more_itertools.consecutive_groups?"
+        }
+      ],
+      "rationale": "",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "Calling more_itertools.consecutive_groups([2, 4, 6, 10, 12], step=2) and consuming the result (including each group) raises no TypeError, i.e. the keyword argument `step` is accepted.",
+      "scored": true,
+      "subjective": false,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    },
+    {
+      "req_id": "R2",
+      "statement": "With step=k, consecutive_groups splits the input, in order, into maximal runs of adjacent items in which each item is exactly k greater than the previous item (items 'go up by a fixed amount'); a new group starts wherever that does not hold. Example from the user: consecutive_groups([2, 4, 6, 10, 12], step=2) yields exactly two groups, [2, 4, 6] and [10, 12].",
+      "kind": "change",
+      "status": "explicit",
+      "introduced_at": "CS-04-session/L000001.00",
+      "evidence": [
+        {
+          "event_id": "CS-04-session/L000001.00",
+          "start": 68,
+          "end": 123,
+          "quote": "I want to find runs where items go up by a fixed amount"
+        },
+        {
+          "event_id": "CS-04-session/L000001.00",
+          "start": 130,
+          "end": 210,
+          "quote": "consecutive_groups([2, 4, 6, 10, 12], step=2) should give [2, 4, 6] and [10, 12]"
+        }
+      ],
+      "rationale": "",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "assert [list(g) for g in more_itertools.consecutive_groups([2, 4, 6, 10, 12], step=2)] == [[2, 4, 6], [10, 12]]. More generally, for integer inputs and a positive integer step: within each returned group adjacent items differ by exactly step, the last item of a group and the first item of the next group do not differ by step, and concatenating the groups reproduces the input in order.",
+      "scored": true,
+      "subjective": false,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    },
+    {
+      "req_id": "R3",
+      "statement": "`step` is optional: calls to consecutive_groups that do not pass `step` keep the existing behavior (grouping runs of items that increase by 1), so existing callers and the existing consecutive_groups tests are unaffected; omitting step behaves like step=1.",
+      "kind": "invariant",
+      "status": "inferred",
+      "introduced_at": "CS-04-session/L000001.00",
+      "evidence": [
+        {
+          "event_id": "CS-04-session/L000001.00",
+          "start": 10,
+          "end": 66,
+          "quote": "add a `step` option to more_itertools.consecutive_groups"
+        }
+      ],
+      "rationale": "The user asks to add a `step` option to an existing function; an option is optional, which implies existing calls that do not pass it must keep working exactly as before.",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "The repository's existing consecutive_groups tests pass. For sample inputs x, [list(g) for g in consecutive_groups(x)] equals the output of the base (pre-change) implementation and equals [list(g) for g in consecutive_groups(x, step=1)].",
+      "scored": true,
+      "subjective": false,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    },
+    {
+      "req_id": "R4",
+      "statement": "All work (code changes and any files created) stays inside /home/user/cs_workspaces/CS-04, where the repository is checked out at /home/user/cs_workspaces/CS-04/more-itertools.",
+      "kind": "constraint",
+      "status": "explicit",
+      "introduced_at": "CS-04-session/L000001.00",
+      "evidence": [
+        {
+          "event_id": "CS-04-session/L000001.00",
+          "start": 583,
+          "end": 646,
+          "quote": "Please keep all your work inside /home/user/cs_workspaces/CS-04"
+        }
+      ],
+      "rationale": "",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "Not checkable by a black-box test of the code; check that no files outside /home/user/cs_workspaces/CS-04 were created or modified.",
+      "scored": false,
+      "subjective": true,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    },
+    {
+      "req_id": "R5",
+      "statement": "The user only describes runs where items go up by a fixed amount; the expected behavior for a zero step, a negative step (descending runs) or a non-integer step is not specified.",
+      "kind": "change",
+      "status": "unresolved",
+      "introduced_at": "CS-04-session/L000001.00",
+      "evidence": [
+        {
+          "event_id": "CS-04-session/L000001.00",
+          "start": 68,
+          "end": 123,
+          "quote": "I want to find runs where items go up by a fixed amount"
+        }
+      ],
+      "rationale": "",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "No expected output is defined; tests should not assert specific results for step <= 0 or non-integer step values.",
+      "scored": false,
+      "subjective": true,
+      "proposer": "model:claude-code-subagent:contract:v1",
+      "reviews": []
+    }
+  ],
+  "instruction": "Make the following changes:\n- more_itertools.consecutive_groups accepts a new `step` option that can be passed as a keyword argument, e.g. consecutive_groups([2, 4, 6, 10, 12], step=2) is a valid call (no TypeError).\n- With step=k, consecutive_groups splits the input, in order, into maximal runs of adjacent items in which each item is exactly k greater than the previous item (items 'go up by a fixed amount'); a new group starts wherever that does not hold. Example from the user: consecutive_groups([2, 4, 6, 10, 12], step=2) yields exactly two groups, [2, 4, 6] and [10, 12].\n\nThe following existing behaviour must be preserved:\n- `step` is optional: calls to consecutive_groups that do not pass `step` keep the existing behavior (grouping runs of items that increase by 1), so existing callers and the existing consecutive_groups tests are unaffected; omitting step behaves like step=1.\n\nConstraints:\n- All work (code changes and any files created) stays inside /home/user/cs_workspaces/CS-04, where the repository is checked out at /home/user/cs_workspaces/CS-04/more-itertools.\n",
+  "created_by": "model:claude-code-subagent:contract:v1",
+  "created_at": "2026-11-13T02:19:03+00:00",
+  "notes": ""
+}

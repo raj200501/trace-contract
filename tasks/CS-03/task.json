@@ -1,0 +1,50 @@
+{
+  "schema_version": "0.1.0",
+  "task_id": "CS-03",
+  "family_id": "CS-03",
+  "population": "controlled",
+  "status": "pending_review",
+  "provenance": "provenance.json",
+  "snapshot_source": {
+    "repo_url": "https://github.com/jpvanhal/inflection",
+    "commit": "88eefaacf7d0caaa701af7c8ab2d0ab3f17086f1",
+    "subdir": ""
+  },
+  "snapshot": "snapshot.json",
+  "snapshot_overlays": {},
+  "env_requirements": [
+    "attrs==26.1.0",
+    "hypothesis==6.131.0",
+    "iniconfig==2.3.1",
+    "packaging==26.3",
+    "pluggy==1.7.0",
+    "pygments==2.21.0",
+    "pytest==9.2.0",
+    "sortedcontainers==2.4.0"
+  ],
+  "candidate_pythonpath": "/work",
+  "repo_test_args": [
+    "-o",
+    "addopts=",
+    "test_inflection.py"
+  ],
+  "scripted_turns": [
+    "In inflection, titleize mangles acronyms: titleize('NASA rocket launch') returns 'Nasa Rocket Launch' and titleize('read the HTTP spec') returns 'Read The Http Spec'. Can you make titleize keep all-caps acronyms like NASA and HTTP as they are?\n\nThe repo is checked out (as a git working copy) at /home/user/cs_workspaces/CS-03/inflection. Code from the repo can't be run directly on this machine; use the two wrapper scripts, which run it in an isolated container: /home/user/cs_workspaces/CS-03/run_tests.sh [pytest args] (e.g. run_tests.sh -q tests) and /home/user/cs_workspaces/CS-03/run_python.sh -c '...'. Please keep all your work inside /home/user/cs_workspaces/CS-03.",
+    "Thanks. Two refinements: if the whole input is already in uppercase (like a shouted heading 'HELLO WORLD'), titleize should still produce 'Hello World' like it does today - only treat an all-caps word as an acronym when the input also contains lowercase letters. And please don't change the behaviour of humanize() or underscore() themselves; other code relies on them (for example humanize('employee_salary') must stay 'Employee salary', and underscore('NASARocket') must stay exactly what it returns now)."
+  ],
+  "contracts": {
+    "reference": "contracts/reference.json",
+    "initial_only": "contracts/initial_only.json",
+    "full_session": "contracts/full_session.json"
+  },
+  "verifiers": [
+    "verifiers/repo_tests/spec.json"
+  ],
+  "candidates": [
+    "candidates/CS-03-reference.json",
+    "candidates/CS-03-pre-correction.json",
+    "candidates/CS-03-noop-dev.json",
+    "candidates/CS-03-noop-eval.json"
+  ],
+  "notes": ""
+}

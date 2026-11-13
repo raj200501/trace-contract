@@ -1,0 +1,49 @@
+{
+  "schema_version": "0.1.0",
+  "task_id": "CS-04",
+  "family_id": "CS-04",
+  "population": "controlled",
+  "status": "pending_review",
+  "provenance": "provenance.json",
+  "snapshot_source": {
+    "repo_url": "https://github.com/more-itertools/more-itertools",
+    "commit": "ceafee8ce96f4bc1eb74c528bc247c91d648a0bb",
+    "subdir": ""
+  },
+  "snapshot": "snapshot.json",
+  "snapshot_overlays": {},
+  "env_requirements": [
+    "attrs==26.1.0",
+    "hypothesis==6.131.0",
+    "iniconfig==2.3.1",
+    "packaging==26.3",
+    "pluggy==1.7.0",
+    "pygments==2.21.0",
+    "pytest==9.2.0",
+    "sortedcontainers==2.4.0"
+  ],
+  "candidate_pythonpath": "/work",
+  "repo_test_args": [
+    "tests/test_more.py",
+    "tests/test_recipes.py"
+  ],
+  "scripted_turns": [
+    "Could you add a `step` option to more_itertools.consecutive_groups? I want to find runs where items go up by a fixed amount, e.g. consecutive_groups([2, 4, 6, 10, 12], step=2) should give [2, 4, 6] and [10, 12].\n\nThe repo is checked out (as a git working copy) at /home/user/cs_workspaces/CS-04/more-itertools. Code from the repo can't be run directly on this machine; use the two wrapper scripts, which run it in an isolated container: /home/user/cs_workspaces/CS-04/run_tests.sh [pytest args] (e.g. run_tests.sh -q tests) and /home/user/cs_workspaces/CS-04/run_python.sh -c '...'. Please keep all your work inside /home/user/cs_workspaces/CS-04.",
+    "Nice. A couple of cases I need too: descending runs with a negative step should work (consecutive_groups([9, 8, 7, 3, 2], step=-1) -> [9, 8, 7], [3, 2]), and step=0 should raise a ValueError rather than doing something weird. Also, existing code calls consecutive_groups(iterable, ordering) with ordering as the second positional argument - that has to keep working, and the groups should still be lazy iterators like before."
+  ],
+  "contracts": {
+    "reference": "contracts/reference.json",
+    "initial_only": "contracts/initial_only.json",
+    "full_session": "contracts/full_session.json"
+  },
+  "verifiers": [
+    "verifiers/repo_tests/spec.json"
+  ],
+  "candidates": [
+    "candidates/CS-04-reference.json",
+    "candidates/CS-04-pre-correction.json",
+    "candidates/CS-04-noop-dev.json",
+    "candidates/CS-04-noop-eval.json"
+  ],
+  "notes": ""
+}
