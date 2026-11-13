@@ -64,7 +64,10 @@
     "candidates/CS-01-dev-attack-full_session-a4.json",
     "candidates/CS-01-dev-alt-initial_only.json",
     "candidates/CS-01-dev-alt-full_session.json",
-    "candidates/CS-01-dev-attack-initial_only-a1.json"
+    "candidates/CS-01-dev-attack-initial_only-a1.json",
+    "candidates/CS-01-dev-attack-initial_only-a2.json",
+    "candidates/CS-01-dev-attack-initial_only-a3.json",
+    "candidates/CS-01-dev-attack-initial_only-a4.json"
   ],
   "notes": ""
 }
