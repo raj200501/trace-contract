@@ -1,0 +1,102 @@
+{
+  "schema": "tracecontract.third_party_downloads/v0",
+  "records": [
+    {
+      "kind": "git_shallow_clone",
+      "source": "https://github.com/harbor-framework/harbor",
+      "commit": "3bf4cb308b886d41c0151a21e7c3b6ec8cb68f07",
+      "commit_date": "2026-11-12T15:32:38-08:00",
+      "local_path": "/home/user/harbor-framework/harbor",
+      "license_file": [
+        "LICENSE"
+      ],
+      "license_first_line": "Apache License",
+      "purpose": "read-only reference for related-work research and integration",
+      "accessed": "2026-11-13",
+      "in_repo": false
+    },
+    {
+      "kind": "git_shallow_clone",
+      "source": "https://github.com/harbor-framework/terminal-bench",
+      "commit": "01c0d6d4e16902f787201598b5c27cc69d7010d1",
+      "commit_date": "2026-11-12T16:45:09-08:00",
+      "local_path": "/home/user/harbor-framework/terminal-bench",
+      "license_file": [
+        "LICENSE"
+      ],
+      "license_first_line": "Apache License",
+      "purpose": "read-only reference for related-work research and integration",
+      "accessed": "2026-11-13",
+      "in_repo": false
+    },
+    {
+      "kind": "git_shallow_clone",
+      "source": "https://github.com/SWE-bench/SWE-smith",
+      "commit": "9b74ac08118a85c39c356802f7961893af73e07f",
+      "commit_date": "2026-03-22T12:39:59+13:00",
+      "local_path": "/home/user/SWE-bench/SWE-smith",
+      "license_file": [
+        "LICENSE"
+      ],
+      "license_first_line": "MIT License",
+      "purpose": "read-only reference for related-work research and integration",
+      "accessed": "2026-11-13",
+      "in_repo": false
+    },
+    {
+      "kind": "git_shallow_clone",
+      "source": "https://github.com/R2E-Gym/R2E-Gym",
+      "commit": "0d94c4eb9431cd195c55a7ea3abd54006c9a1735",
+      "commit_date": "2025-07-13T04:46:03+00:00",
+      "local_path": "/home/user/R2E-Gym/R2E-Gym",
+      "license_file": [
+        "LICENSE"
+      ],
+      "license_first_line": "Apache License",
+      "purpose": "read-only reference for related-work research and integration",
+      "accessed": "2026-11-13",
+      "in_repo": false
+    },
+    {
+      "kind": "git_shallow_clone",
+      "source": "https://github.com/ScalingIntelligence/TRACE",
+      "commit": "d2db23085409555b3f13ea426f42d62cf0bbc43d",
+      "commit_date": "2026-07-12T08:02:37-07:00",
+      "local_path": "/home/user/ScalingIntelligence/TRACE",
+      "license_file": [
+        "LICENSE"
+      ],
+      "license_first_line": "MIT License",
+      "purpose": "read-only reference for related-work research and integration",
+      "accessed": "2026-11-13",
+      "in_repo": false
+    },
+    {
+      "kind": "pypi_package",
+      "source": "https://pypi.org/project/harbor/0.25.0/",
+      "version": "0.25.0",
+      "local_path": "scratchpad/harbor-venv (not committed)",
+      "purpose": "pinned task-execution harness under evaluation for integration",
+      "accessed": "2026-11-13",
+      "in_repo": false
+    },
+    {
+      "kind": "dataset_card",
+      "source": "https://huggingface.co/datasets/SALT-NLP/SWE-chat/resolve/main/README.md",
+      "revision": "202b071f18e03c79df5a7287565ce2ebc5ee7756",
+      "license": "odc-by (dataset); gated auto-approval with username+email sharing",
+      "local_path": "scratchpad/dl/swechat_card/README.md (not committed)",
+      "purpose": "public dataset card only; no gated files downloaded",
+      "accessed": "2026-11-13",
+      "in_repo": false
+    },
+    {
+      "kind": "docker_image",
+      "source": "docker.io/library/python:3.12-slim",
+      "digest": "sha256:5e2bdb1b0d542d5039cffb8181c65930093949194a65c365dfb1b0fe13a4fa5b",
+      "purpose": "sandbox base image probe",
+      "accessed": "2026-11-13",
+      "in_repo": false
+    }
+  ]
+}

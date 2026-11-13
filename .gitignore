@@ -1,0 +1,29 @@
+# Environments and caches
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+build/
+dist/
+
+# Raw or sensitive inputs never committed (see docs/data_card.md)
+data/raw/
+data/gated/
+*.parquet
+
+# Large or regenerable artifacts
+results/runs/*/logs/
+snapshots/
+paper/build/
+paper/*.aux
+paper/*.log
+paper/*.bbl
+paper/*.bcf
+paper/*.blg
+paper/*.fdb_latexmk
+paper/*.fls
+paper/*.out
+paper/*.run.xml
+paper/*.synctex.gz
+paper/*.toc
