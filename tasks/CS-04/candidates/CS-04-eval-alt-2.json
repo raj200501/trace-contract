@@ -17,6 +17,15 @@
       "adjudicated": false,
       "timestamp": "2026-11-13T03:41:57+00:00",
       "note": ""
+    },
+    {
+      "value": "valid",
+      "violated_requirements": [],
+      "labeler": "builder:refcheck+regression+construction:v1",
+      "labeler_kind": "model",
+      "adjudicated": false,
+      "timestamp": "2026-11-13T03:57:46+00:00",
+      "note": "construction valid, confirmed by reference checks and regression norm | {\"refcheck_outcome\": \"pass\", \"refcheck_failed\": [], \"regression_outcome\": \"pass\", \"regression_failed\": [], \"construction\": {\"value\": \"valid\", \"violated_requirements\": [], \"labeler\": \"altimpl:v1\", \"labeler_kind\": \"construction\", \"adjudicated\": false, \"timestamp\": \"2026-11-13T03:41:57+00:00\", \"note\": \"\"}}"
     }
   ]
 }

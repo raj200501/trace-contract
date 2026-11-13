@@ -100,7 +100,7 @@
       ]
     }
   ],
-  "content_sha256": "d61532ca2e51ff1f1285c0745d0139e5db42a136413b0bb038efa726c5f13dde",
+  "content_sha256": "b92ec8804226c4d465fdb035aa966e3b8c2ff481d2c1c4e29463896ccdefe895",
   "generation": {
     "generator": "model:claude-code-subagent:testgen:v1+audit:v1",
     "run_id": "unrecorded",
@@ -109,7 +109,23 @@
     "budget": {},
     "notes": ""
   },
-  "audit": null,
-  "frozen": false,
+  "audit": {
+    "procedure": "audit:v1",
+    "iterations": 1,
+    "passed": false,
+    "findings": [
+      "reference_not_passing: CS-01-reference: task_failure; failed=['test_naturalsize_trailing_zero.py::test_r1_decimal_whole_number_has_no_trailing_zero', 'test_naturalsize_trailing_zero.py::test_r2_binary_whole_number_has_no_trailing_zero', 'test_naturalsize_trailing_zero.py::test_r4_contract_examples', 'test_naturalsize_trailing_zero.py::test_r4_every_decimal_unit', 'test_naturalsize_trailing_zero.py::test_r4_every_binary_unit']"
+    ],
+    "dev_candidate_ids": [
+      "CS-01-reference",
+      "CS-01-noop-dev",
+      "CS-01-dev-alt-initial_only",
+      "CS-01-dev-attack-initial_only-a1",
+      "CS-01-dev-attack-initial_only-a2",
+      "CS-01-dev-attack-initial_only-a3",
+      "CS-01-dev-attack-initial_only-a4"
+    ]
+  },
+  "frozen": true,
   "version": 1
 }

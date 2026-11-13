@@ -1,0 +1,203 @@
+{
+  "candidates": {
+    "CS-04-eval-alt-1": {
+      "construction": {
+        "adjudicated": false,
+        "labeler": "altimpl:v1",
+        "labeler_kind": "construction",
+        "note": "",
+        "timestamp": "2026-11-13T03:38:14+00:00",
+        "value": "valid",
+        "violated_requirements": []
+      },
+      "origin": "valid_alternative",
+      "proposed": "valid",
+      "refcheck_failed": [],
+      "refcheck_outcome": "pass",
+      "regression_failed": [],
+      "regression_outcome": "pass",
+      "violated": [],
+      "why": "construction valid, confirmed by reference checks and regression norm"
+    },
+    "CS-04-eval-alt-2": {
+      "construction": {
+        "adjudicated": false,
+        "labeler": "altimpl:v1",
+        "labeler_kind": "construction",
+        "note": "",
+        "timestamp": "2026-11-13T03:41:57+00:00",
+        "value": "valid",
+        "violated_requirements": []
+      },
+      "origin": "valid_alternative",
+      "proposed": "valid",
+      "refcheck_failed": [],
+      "refcheck_outcome": "pass",
+      "regression_failed": [],
+      "regression_outcome": "pass",
+      "violated": [],
+      "why": "construction valid, confirmed by reference checks and regression norm"
+    },
+    "CS-04-eval-nm-1": {
+      "construction": {
+        "adjudicated": false,
+        "labeler": "nearmiss:v1",
+        "labeler_kind": "construction",
+        "note": "",
+        "timestamp": "2026-11-13T03:55:29+00:00",
+        "value": "invalid",
+        "violated_requirements": [
+          "R-negative-step"
+        ]
+      },
+      "origin": "constructed_near_miss",
+      "proposed": "invalid",
+      "refcheck_failed": [
+        "test_consecutive_groups_step.py::test_negative_step_with_positional_ordering"
+      ],
+      "refcheck_outcome": "task_failure",
+      "regression_failed": [],
+      "regression_outcome": "pass",
+      "violated": [
+        "R-negative-step"
+      ],
+      "why": "construction invalid, confirmed on targeted requirement"
+    },
+    "CS-04-eval-nm-2": {
+      "construction": {
+        "adjudicated": false,
+        "labeler": "nearmiss:v1",
+        "labeler_kind": "construction",
+        "note": "",
+        "timestamp": "2026-11-13T03:55:30+00:00",
+        "value": "invalid",
+        "violated_requirements": [
+          "R-zero-step"
+        ]
+      },
+      "origin": "constructed_near_miss",
+      "proposed": "invalid",
+      "refcheck_failed": [
+        "test_consecutive_groups_step.py::test_zero_step_raises_value_error",
+        "test_consecutive_groups_step.py::test_zero_step_with_positional_ordering_raises_value_error"
+      ],
+      "refcheck_outcome": "task_failure",
+      "regression_failed": [],
+      "regression_outcome": "pass",
+      "violated": [
+        "R-zero-step"
+      ],
+      "why": "construction invalid, confirmed on targeted requirement"
+    },
+    "CS-04-eval-nm-3": {
+      "construction": {
+        "adjudicated": false,
+        "labeler": "nearmiss:v1",
+        "labeler_kind": "construction",
+        "note": "",
+        "timestamp": "2026-11-13T03:55:30+00:00",
+        "value": "invalid",
+        "violated_requirements": [
+          "R-positional-ordering"
+        ]
+      },
+      "origin": "constructed_near_miss",
+      "proposed": "invalid",
+      "refcheck_failed": [
+        "test_consecutive_groups_step.py::test_positive_step_with_positional_ordering",
+        "test_consecutive_groups_step.py::test_negative_step_with_positional_ordering",
+        "test_consecutive_groups_step.py::test_zero_step_with_positional_ordering_raises_value_error",
+        "test_consecutive_groups_step.py::test_positional_ordering_contract_example",
+        "test_consecutive_groups_step.py::test_positional_ordering_matches_base",
+        "test_consecutive_groups_step.py::test_positional_ordering_groups_are_lazy_and_shared"
+      ],
+      "refcheck_outcome": "task_failure",
+      "regression_failed": [
+        "tests.test_more.ConsecutiveGroupsTest::test_custom_ordering",
+        "tests.test_more.ConsecutiveGroupsTest::test_exotic_ordering"
+      ],
+      "regression_outcome": "task_failure",
+      "violated": [
+        "R-default-unchanged",
+        "R-lazy",
+        "R-negative-step",
+        "R-positional-ordering",
+        "R-step",
+        "R-zero-step"
+      ],
+      "why": "construction invalid, confirmed on targeted requirement"
+    },
+    "CS-04-eval-nm-4": {
+      "construction": {
+        "adjudicated": false,
+        "labeler": "nearmiss:v1",
+        "labeler_kind": "construction",
+        "note": "",
+        "timestamp": "2026-11-13T03:55:30+00:00",
+        "value": "invalid",
+        "violated_requirements": [
+          "R-lazy"
+        ]
+      },
+      "origin": "constructed_near_miss",
+      "proposed": "invalid",
+      "refcheck_failed": [
+        "test_consecutive_groups_step.py::test_groups_are_iterators_sharing_their_source",
+        "test_consecutive_groups_step.py::test_groups_are_lazy_on_infinite_sources",
+        "test_consecutive_groups_step.py::test_positional_ordering_groups_are_lazy_and_shared",
+        "test_consecutive_groups_step.py::test_step_groups_are_lazy_and_shared",
+        "test_consecutive_groups_step.py::test_negative_step_groups_are_lazy_and_shared"
+      ],
+      "refcheck_outcome": "task_failure",
+      "regression_failed": [],
+      "regression_outcome": "pass",
+      "violated": [
+        "R-lazy",
+        "R-negative-step",
+        "R-positional-ordering",
+        "R-step"
+      ],
+      "why": "construction invalid, confirmed on targeted requirement"
+    },
+    "CS-04-eval-nm-5": {
+      "construction": {
+        "adjudicated": false,
+        "labeler": "nearmiss:v1",
+        "labeler_kind": "construction",
+        "note": "",
+        "timestamp": "2026-11-13T03:55:31+00:00",
+        "value": "invalid",
+        "violated_requirements": [
+          "R-default-unchanged"
+        ]
+      },
+      "origin": "constructed_near_miss",
+      "proposed": "ambiguous",
+      "refcheck_failed": [],
+      "refcheck_outcome": "pass",
+      "regression_failed": [],
+      "regression_outcome": "pass",
+      "violated": [],
+      "why": "construction invalid but reference checks and regression norm pass"
+    },
+    "CS-04-pre-correction": {
+      "construction": null,
+      "origin": "observed_pre_correction",
+      "proposed": "invalid",
+      "refcheck_failed": [
+        "test_consecutive_groups_step.py::test_zero_step_raises_value_error",
+        "test_consecutive_groups_step.py::test_zero_step_with_positional_ordering_raises_value_error"
+      ],
+      "refcheck_outcome": "task_failure",
+      "regression_failed": [],
+      "regression_outcome": "pass",
+      "violated": [
+        "R-zero-step"
+      ],
+      "why": "natural candidate fails reference checks and/or regression norm"
+    }
+  },
+  "created_at": "2026-11-13T03:56:58+00:00",
+  "labeler": "builder:refcheck+regression+construction:v1",
+  "task_id": "CS-04"
+}

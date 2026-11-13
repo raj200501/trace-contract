@@ -17,5 +17,9 @@
       }
     ],
     "assessment": "benign: one `ls tasks/CS-04/verifiers/` listing directory names only; no verifier test file of another condition was read"
+  },
+  "eval-nm": {
+    "transcript_sha256": "a365177ab30cd898d78c7d8e0564b04256efe9606188d57454a314573c6a7eba",
+    "hits": []
   }
 }

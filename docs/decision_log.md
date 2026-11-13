@@ -298,3 +298,22 @@ subagents) for reads of sealed/scenario/reference-contract locations found exact
 one access: the CS-04 requirement-mapping agent reading `contracts/reference.json`,
 which is its task. Evaluation-side generators are additionally audited per agent
 (`scripts/audit_eval_generators.py`); CS-04-eval-alt-1: 0 forbidden reads.
+
+### D27. Audit outcomes that cannot be repaired faithfully; reference-check writers listing directories
+* CS-01 C2 (`initial_audited`): audit:v1 reports `reference_not_passing` (the final
+  solution keeps the default output, which the initial-only contract requires to
+  change). The revision agent kept the tests faithful to the initial-only contract
+  (adding only near-tie checks for an initial requirement) and reported that no
+  contract-faithful suite can make the reference pass. Recorded as audit
+  `passed = false` after 1 revision and frozen ("at most 3 revisions"; further
+  rounds cannot change the outcome). Interpretation: the predefined audit
+  *detects* the contract-reference inconsistency caused by the lost correction but
+  does not *repair* the verifier when the reviser stays faithful to the contract.
+  The reviser suggested using a contract-conforming development alternative as the
+  positive control for initial-only contracts; audit:v1 is not changed mid-study,
+  and the suggestion is recorded for a future protocol version.
+* CS-03 audits: C2 and C4 each passed after one revision that closed a real gap
+  (an attack slipping past). CS-04: both audits passed with zero revisions.
+* The CS-03 and CS-04 reference-check writers each ran one `ls` on the task's
+  `verifiers/` directory (names only; no other verifier's tests were read).
+  Assessed as benign; recorded in `tasks/<id>/labels/generator_audit.json`.

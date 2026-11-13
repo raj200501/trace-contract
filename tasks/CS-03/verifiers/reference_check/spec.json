@@ -1,0 +1,113 @@
+{
+  "schema_version": "0.1.0",
+  "verifier_id": "reference_check",
+  "task_id": "CS-03",
+  "condition": "reference_check",
+  "contract_id": "CS-03-reference",
+  "isolation": "process_separated",
+  "test_dir": "verifiers/reference_check/tests",
+  "checks": [
+    {
+      "check_id": "test_humanize_unchanged.py::test_humanize_contract_examples",
+      "requirement_ids": [
+        "R-humanize-unchanged"
+      ]
+    },
+    {
+      "check_id": "test_humanize_unchanged.py::test_humanize_inputs_with_capitals_unchanged",
+      "requirement_ids": [
+        "R-humanize-unchanged"
+      ]
+    },
+    {
+      "check_id": "test_humanize_unchanged.py::test_humanize_generated_inputs_match_base",
+      "requirement_ids": [
+        "R-humanize-unchanged"
+      ]
+    },
+    {
+      "check_id": "test_titleize_acronyms.py::test_titleize_contract_acronym_examples",
+      "requirement_ids": [
+        "R-acronym"
+      ]
+    },
+    {
+      "check_id": "test_titleize_acronyms.py::test_titleize_keeps_acronym_at_start_middle_and_end",
+      "requirement_ids": [
+        "R-acronym"
+      ]
+    },
+    {
+      "check_id": "test_titleize_acronyms.py::test_titleize_keeps_several_and_adjacent_acronyms",
+      "requirement_ids": [
+        "R-acronym"
+      ]
+    },
+    {
+      "check_id": "test_titleize_acronyms.py::test_titleize_keeps_two_letter_and_non_dictionary_all_caps_words",
+      "requirement_ids": [
+        "R-acronym"
+      ]
+    },
+    {
+      "check_id": "test_titleize_acronyms.py::test_titleize_acronym_rule_on_generated_inputs",
+      "requirement_ids": [
+        "R-acronym"
+      ]
+    },
+    {
+      "check_id": "test_titleize_all_caps.py::test_titleize_all_caps_contract_example",
+      "requirement_ids": [
+        "R-all-caps-input"
+      ]
+    },
+    {
+      "check_id": "test_titleize_all_caps.py::test_titleize_all_caps_input_does_not_keep_capitals",
+      "requirement_ids": [
+        "R-all-caps-input"
+      ]
+    },
+    {
+      "check_id": "test_titleize_all_caps.py::test_titleize_all_caps_with_separators_matches_base",
+      "requirement_ids": [
+        "R-all-caps-input"
+      ]
+    },
+    {
+      "check_id": "test_titleize_all_caps.py::test_titleize_all_caps_generated_inputs_match_base",
+      "requirement_ids": [
+        "R-all-caps-input"
+      ]
+    },
+    {
+      "check_id": "test_underscore_unchanged.py::test_underscore_contract_example",
+      "requirement_ids": [
+        "R-underscore-unchanged"
+      ]
+    },
+    {
+      "check_id": "test_underscore_unchanged.py::test_underscore_camel_and_acronym_inputs_unchanged",
+      "requirement_ids": [
+        "R-underscore-unchanged"
+      ]
+    },
+    {
+      "check_id": "test_underscore_unchanged.py::test_underscore_generated_inputs_match_base",
+      "requirement_ids": [
+        "R-underscore-unchanged"
+      ]
+    }
+  ],
+  "content_sha256": "9b5a3263189c4b00e70ce4e80e9c4e81bb9c74bb52f6d6a925cd8475099106cf",
+  "generation": {
+    "generator": "model:claude-code-subagent:refcheck:v1",
+    "run_id": "unrecorded",
+    "prompt_sha256": "",
+    "created_at": "",
+    "budget": {},
+    "notes": ""
+  },
+  "audit": null,
+  "frozen": true,
+  "version": 1
+}

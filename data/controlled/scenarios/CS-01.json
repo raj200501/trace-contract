@@ -1,0 +1,67 @@
+{
+  "scenario_id": "CS-01",
+  "population": "controlled",
+  "pattern": [
+    "superseded_requirement",
+    "added_invariant"
+  ],
+  "repo_url": "https://github.com/python-humanize/humanize",
+  "commit": "a95004512dde4e8f0269946bb4af754382347441",
+  "code_license": "MIT",
+  "workspace": "/home/user/cs_workspaces/CS-01/humanize",
+  "turns": {
+    "U1": "Hey - in humanize, `naturalsize` always prints one decimal place, so 3,000,000 bytes shows as \"3.0 MB\" and 1024 bytes with binary=True shows as \"1.0 KiB\". I'd like it to drop a trailing \".0\" so those read \"3 MB\" and \"1 KiB\", but keep the decimal when it's meaningful (e.g. \"2.9 KiB\" should stay as it is). Can you implement that?\n\nThe repo is checked out (as a git working copy) at /home/user/cs_workspaces/CS-01/humanize. Code from the repo can't be run directly on this machine; use the two wrapper scripts, which run it in an isolated container: /home/user/cs_workspaces/CS-01/run_tests.sh [pytest args] (e.g. run_tests.sh -q tests/test_filesize.py) and /home/user/cs_workspaces/CS-01/run_python.sh -c '...'. Please keep all your work inside /home/user/cs_workspaces/CS-01.",
+    "U2": "Thanks. Actually, I just realized that changing the default output is going to break a bunch of our templates and snapshot tests that expect \"3.0 MB\", and naturalsize is supposed to stay compatible with jinja2's filesizeformat. Please keep the default output exactly as it was before, and make the trailing-\".0\" trimming opt-in through a new keyword argument `strip_trailing_zero` (default False). Existing calls that pass a custom `format` string, including positional ones like naturalsize(3000, False, True, \"%.3f\"), must keep producing exactly what they produced before.",
+    "clarification_reply": "Please go ahead with your best judgment."
+  },
+  "intended_requirements": [
+    {
+      "id": "R-default-trim",
+      "turn": "U1",
+      "kind": "change",
+      "final_status": "superseded",
+      "superseded_by": [
+        "R-opt-in",
+        "R-default-unchanged"
+      ],
+      "statement": "naturalsize drops a trailing '.0' by default (3000000 -> '3 MB'; 1024 binary -> '1 KiB')."
+    },
+    {
+      "id": "R-keep-meaningful",
+      "turn": "U1",
+      "kind": "change",
+      "final_status": "explicit",
+      "statement": "When trimming is applied, a meaningful decimal is kept (3000 bytes, binary -> '2.9 KiB')."
+    },
+    {
+      "id": "R-opt-in",
+      "turn": "U2",
+      "kind": "change",
+      "final_status": "explicit",
+      "statement": "naturalsize accepts keyword argument strip_trailing_zero (default False); with strip_trailing_zero=True a trailing '.0' is dropped: naturalsize(3000000, strip_trailing_zero=True) == '3 MB'; naturalsize(1024, binary=True, strip_trailing_zero=True) == '1 KiB'."
+    },
+    {
+      "id": "R-default-unchanged",
+      "turn": "U2",
+      "kind": "invariant",
+      "final_status": "explicit",
+      "statement": "Without the new argument, naturalsize output is exactly unchanged for all inputs (e.g. '3.0 MB', '1.0 KiB', '2.9K' in gnu mode, '300 Bytes', '1 Byte')."
+    },
+    {
+      "id": "R-custom-format-unchanged",
+      "turn": "U2",
+      "kind": "invariant",
+      "final_status": "explicit",
+      "statement": "Existing calls passing a custom format, including positionally as the 4th argument (naturalsize(3000, False, True, '%.3f') == '2.930K'), produce exactly the previous output."
+    }
+  ],
+  "unscored_or_ambiguous": [
+    "Behaviour of strip_trailing_zero=True combined with a custom format (e.g. '%.2f' giving '3.00 MB') is not specified.",
+    "Behaviour of strip_trailing_zero=True in gnu mode ('1.0K' -> '1K'?) is not specified by U2; U1 implies trimming generally. Not scored.",
+    "Whether strip_trailing_zero must be keyword-only is not specified; positional placement after `format` is acceptable, placement before `format` violates R-custom-format-unchanged."
+  ],
+  "registered_at": "2026-11-13T01:43:43Z",
+  "tooling": "sandboxed run_tests.sh / run_python.sh (docker, --network none, read-only mount)",
+  "supersedes_registration_sha256": "ac516594161a52977171f8c6a98a75eb4b131d825385dfc9b43d24e60ce05837",
+  "registration_note": "U1 tooling sentence changed before the session started: host execution of repo code is blocked, so the agent gets sandbox wrapper scripts instead of a virtualenv."
+}

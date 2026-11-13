@@ -1,4 +1,4 @@
-"""Hidden behavioural tests for CS-01, condition initial_plain.
+"""Hidden behavioural tests for CS-01, initial-only contract (initial_audited).
 
 Requirements checked (initial contract): with the default format,
 ``naturalsize`` no longer prints a trailing ".0" for a whole-number value in
@@ -195,6 +195,13 @@ def test_r3_other_nonzero_decimals_unchanged():
         ((int(1.5 * 1024**10), True), "1.5 QiB"),
         ((40 * 1000**10, True), "31.6 QiB"),
         ((2304, True), "2.2 KiB"),  # exact half: "%.1f" rounds half to even
+        # Near-ties: the printed digit follows the float value, so it is
+        # non-zero here and must stay (no rounding to a whole number).
+        ((1050, False), "1.1 kB"),
+        ((9950, False), "9.9 kB"),
+        ((10050, False), "10.1 kB"),
+        ((19950, False), "19.9 kB"),
+        ((1075.2, True), "1.1 KiB"),
     ]
     r = run_python(_calls_snippet(c for c, _ in cases))
     assert r.ok, (r.error_type, r.error)

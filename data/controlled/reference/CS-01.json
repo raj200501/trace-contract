@@ -1,0 +1,87 @@
+[
+  {
+    "req_id": "R-default-trim",
+    "turn": "U1",
+    "kind": "change",
+    "status": "explicit",
+    "scored": true,
+    "statement": "naturalsize drops a trailing '.0' by default (3000000 -> '3 MB'; 1024 with binary=True -> '1 KiB').",
+    "evidence": [
+      {
+        "turn": "U1",
+        "quote": "I'd like it to drop a trailing \".0\" so those read \"3 MB\" and \"1 KiB\""
+      }
+    ],
+    "observable": "naturalsize(3000000) and naturalsize(1024, binary=True) without new arguments"
+  },
+  {
+    "req_id": "R-keep-meaningful",
+    "turn": "U1",
+    "kind": "invariant",
+    "status": "explicit",
+    "scored": true,
+    "statement": "Trailing-zero trimming never removes a meaningful decimal: naturalsize(3000, binary=True) == '2.9 KiB' and naturalsize(3000, binary=True, strip_trailing_zero=True) == '2.9 KiB'.",
+    "evidence": [
+      {
+        "turn": "U1",
+        "quote": "keep the decimal when it's meaningful (e.g. \"2.9 KiB\" should stay as it is)"
+      }
+    ],
+    "observable": "naturalsize(3000, binary=True) with and without strip_trailing_zero=True"
+  },
+  {
+    "req_id": "R-opt-in",
+    "turn": "U2",
+    "kind": "change",
+    "status": "explicit",
+    "scored": true,
+    "supersedes": [
+      "R-default-trim"
+    ],
+    "statement": "naturalsize accepts a keyword argument strip_trailing_zero (default False); with strip_trailing_zero=True a trailing '.0' is dropped: naturalsize(3000000, strip_trailing_zero=True) == '3 MB' and naturalsize(1024, binary=True, strip_trailing_zero=True) == '1 KiB'.",
+    "evidence": [
+      {
+        "turn": "U2",
+        "quote": "make the trailing-\".0\" trimming opt-in through a new keyword argument `strip_trailing_zero` (default False)"
+      },
+      {
+        "turn": "U1",
+        "quote": "so those read \"3 MB\" and \"1 KiB\""
+      }
+    ],
+    "observable": "naturalsize(..., strip_trailing_zero=True) outputs"
+  },
+  {
+    "req_id": "R-default-unchanged",
+    "turn": "U2",
+    "kind": "invariant",
+    "status": "explicit",
+    "scored": true,
+    "supersedes": [
+      "R-default-trim"
+    ],
+    "statement": "Without strip_trailing_zero, naturalsize output is exactly unchanged for all inputs, e.g. naturalsize(3000000) == '3.0 MB', naturalsize(1024, binary=True) == '1.0 KiB', naturalsize(3000, gnu=True) == '2.9K', naturalsize(300) == '300 Bytes', naturalsize(1) == '1 Byte'.",
+    "evidence": [
+      {
+        "turn": "U2",
+        "quote": "Please keep the default output exactly as it was before"
+      }
+    ],
+    "observable": "default-argument outputs equal base-commit outputs"
+  },
+  {
+    "req_id": "R-custom-format-unchanged",
+    "turn": "U2",
+    "kind": "invariant",
+    "status": "explicit",
+    "scored": true,
+    "statement": "Calls passing a custom format (as keyword or as the 4th positional argument) produce exactly the previous output, e.g. naturalsize(3000, False, True, '%.3f') == '2.930K' and naturalsize(3000000, format='%.2f') == '3.00 MB'.",
+    "evidence": [
+      {
+        "turn": "U2",
+        "quote": "Existing calls that pass a custom `format` string, including positional ones like naturalsize(3000, False, True, \"%.3f\"), must keep producing exactly what they produced before."
+      }
+    ],
+    "observable": "custom-format outputs equal base-commit outputs"
+  }
+]

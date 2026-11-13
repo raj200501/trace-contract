@@ -1,0 +1,183 @@
+{
+  "schema_version": "0.1.0",
+  "contract_id": "CS-01-reference",
+  "task_id": "CS-01",
+  "session_id": "CS-01-session",
+  "variant": "reference",
+  "requirements": [
+    {
+      "req_id": "R-default-trim",
+      "statement": "naturalsize drops a trailing '.0' by default (3000000 -> '3 MB'; 1024 with binary=True -> '1 KiB').",
+      "kind": "change",
+      "status": "superseded",
+      "introduced_at": "CS-01-session/L000001.00",
+      "evidence": [
+        {
+          "event_id": "CS-01-session/L000001.00",
+          "start": 155,
+          "end": 223,
+          "quote": "I'd like it to drop a trailing \".0\" so those read \"3 MB\" and \"1 KiB\""
+        }
+      ],
+      "rationale": "",
+      "supersedes": [],
+      "superseded_by": "R-default-unchanged",
+      "conflicts_with": [],
+      "observable": "naturalsize(3000000) and naturalsize(1024, binary=True) without new arguments",
+      "scored": true,
+      "subjective": false,
+      "proposer": "study-design:pre-registered",
+      "reviews": [
+        {
+          "reviewer": "builder",
+          "reviewer_kind": "model",
+          "decision": "accept",
+          "timestamp": "2026-11-13T02:00:13+00:00",
+          "note": "Drafted from the pre-registered scenario; awaiting human review."
+        }
+      ]
+    },
+    {
+      "req_id": "R-keep-meaningful",
+      "statement": "Trailing-zero trimming never removes a meaningful decimal: naturalsize(3000, binary=True) == '2.9 KiB' and naturalsize(3000, binary=True, strip_trailing_zero=True) == '2.9 KiB'.",
+      "kind": "invariant",
+      "status": "explicit",
+      "introduced_at": "CS-01-session/L000001.00",
+      "evidence": [
+        {
+          "event_id": "CS-01-session/L000001.00",
+          "start": 229,
+          "end": 304,
+          "quote": "keep the decimal when it's meaningful (e.g. \"2.9 KiB\" should stay as it is)"
+        }
+      ],
+      "rationale": "",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "naturalsize(3000, binary=True) with and without strip_trailing_zero=True",
+      "scored": true,
+      "subjective": false,
+      "proposer": "study-design:pre-registered",
+      "reviews": [
+        {
+          "reviewer": "builder",
+          "reviewer_kind": "model",
+          "decision": "accept",
+          "timestamp": "2026-11-13T02:00:13+00:00",
+          "note": "Drafted from the pre-registered scenario; awaiting human review."
+        }
+      ]
+    },
+    {
+      "req_id": "R-opt-in",
+      "statement": "naturalsize accepts a keyword argument strip_trailing_zero (default False); with strip_trailing_zero=True a trailing '.0' is dropped: naturalsize(3000000, strip_trailing_zero=True) == '3 MB' and naturalsize(1024, binary=True, strip_trailing_zero=True) == '1 KiB'.",
+      "kind": "change",
+      "status": "explicit",
+      "introduced_at": "CS-01-session/L000125.00",
+      "evidence": [
+        {
+          "event_id": "CS-01-session/L000125.00",
+          "start": 344,
+          "end": 451,
+          "quote": "make the trailing-\".0\" trimming opt-in through a new keyword argument `strip_trailing_zero` (default False)"
+        },
+        {
+          "event_id": "CS-01-session/L000001.00",
+          "start": 191,
+          "end": 223,
+          "quote": "so those read \"3 MB\" and \"1 KiB\""
+        }
+      ],
+      "rationale": "",
+      "supersedes": [
+        "R-default-trim"
+      ],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "naturalsize(..., strip_trailing_zero=True) outputs",
+      "scored": true,
+      "subjective": false,
+      "proposer": "study-design:pre-registered",
+      "reviews": [
+        {
+          "reviewer": "builder",
+          "reviewer_kind": "model",
+          "decision": "accept",
+          "timestamp": "2026-11-13T02:00:13+00:00",
+          "note": "Drafted from the pre-registered scenario; awaiting human review."
+        }
+      ]
+    },
+    {
+      "req_id": "R-default-unchanged",
+      "statement": "Without strip_trailing_zero, naturalsize output is exactly unchanged for all inputs, e.g. naturalsize(3000000) == '3.0 MB', naturalsize(1024, binary=True) == '1.0 KiB', naturalsize(3000, gnu=True) == '2.9K', naturalsize(300) == '300 Bytes', naturalsize(1) == '1 Byte'.",
+      "kind": "invariant",
+      "status": "explicit",
+      "introduced_at": "CS-01-session/L000125.00",
+      "evidence": [
+        {
+          "event_id": "CS-01-session/L000125.00",
+          "start": 283,
+          "end": 338,
+          "quote": "Please keep the default output exactly as it was before"
+        }
+      ],
+      "rationale": "",
+      "supersedes": [
+        "R-default-trim"
+      ],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "default-argument outputs equal base-commit outputs",
+      "scored": true,
+      "subjective": false,
+      "proposer": "study-design:pre-registered",
+      "reviews": [
+        {
+          "reviewer": "builder",
+          "reviewer_kind": "model",
+          "decision": "accept",
+          "timestamp": "2026-11-13T02:00:13+00:00",
+          "note": "Drafted from the pre-registered scenario; awaiting human review."
+        }
+      ]
+    },
+    {
+      "req_id": "R-custom-format-unchanged",
+      "statement": "Calls passing a custom format (as keyword or as the 4th positional argument) produce exactly the previous output, e.g. naturalsize(3000, False, True, '%.3f') == '2.930K' and naturalsize(3000000, format='%.2f') == '3.00 MB'.",
+      "kind": "invariant",
+      "status": "explicit",
+      "introduced_at": "CS-01-session/L000125.00",
+      "evidence": [
+        {
+          "event_id": "CS-01-session/L000125.00",
+          "start": 453,
+          "end": 629,
+          "quote": "Existing calls that pass a custom `format` string, including positional ones like naturalsize(3000, False, True, \"%.3f\"), must keep producing exactly what they produced before."
+        }
+      ],
+      "rationale": "",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "custom-format outputs equal base-commit outputs",
+      "scored": true,
+      "subjective": false,
+      "proposer": "study-design:pre-registered",
+      "reviews": [
+        {
+          "reviewer": "builder",
+          "reviewer_kind": "model",
+          "decision": "accept",
+          "timestamp": "2026-11-13T02:00:13+00:00",
+          "note": "Drafted from the pre-registered scenario; awaiting human review."
+        }
+      ]
+    }
+  ],
+  "instruction": "",
+  "created_by": "study-design",
+  "created_at": "2026-11-13T02:00:13+00:00",
+  "notes": ""
+}

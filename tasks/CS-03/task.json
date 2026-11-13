@@ -43,7 +43,8 @@
     "verifiers/initial_plain/spec.json",
     "verifiers/llm_freeform/spec.json",
     "verifiers/initial_audited/spec.json",
-    "verifiers/full_audited/spec.json"
+    "verifiers/full_audited/spec.json",
+    "verifiers/reference_check/spec.json"
   ],
   "candidates": [
     "candidates/CS-03-reference.json",

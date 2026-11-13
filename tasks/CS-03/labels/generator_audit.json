@@ -1,0 +1,12 @@
+{
+  "refcheck": {
+    "hits": [
+      {
+        "event_id": "3951c995-db7e-5b4e-a703-97e326bb42c5/L000032.00",
+        "tool": "Bash",
+        "match": "tasks/CS-03/verifiers",
+        "text": "ls tasks/CS-03/ && ls tasks/CS-03/verifiers/ 2>/dev/null; ls -la tasks/CS-03/verifiers/reference_check 2>/dev/null; .venv/bin/tracecontract --help 2>&1 | head -60"
+      }
+    ]
+  }
+}
