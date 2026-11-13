@@ -1,4 +1,4 @@
-"""Hidden behavioural tests for CS-03 (condition initial_plain): the change.
+"""Hidden behavioural tests for CS-03 (condition initial_audited): the change.
 
 titleize() must output every standalone all-caps word of two or more letters
 (an acronym such as NASA, HTTP, FBI, AI) exactly as written, wherever it

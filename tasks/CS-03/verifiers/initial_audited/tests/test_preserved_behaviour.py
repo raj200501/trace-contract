@@ -490,6 +490,16 @@ _ALL_CAPS_PROBES = [
     "status_code", "matrix_fu", "old_news",
 ]
 
+# Inputs of the docstring examples (the original suite runs with
+# --doctest-modules) of the functions other than titleize.
+_ORIGINAL_DOCTEST_INPUTS = [
+    "device_type", "IOError", "io_error", "puni_puni", "employee_salary",
+    "author_id", "Donald E. Knuth", "post", "posts", "octopus", "octopi",
+    "sheep", "word", "CamelOctopus", "CamelOctopi", "RawScaledScorer",
+    "egg_and_ham", "fancyCategory", "\xe4l\xe4m\xf6l\xf6",
+    "\xc6r\xf8sk\xf8bing", "DeviceType",
+]
+
 _MIXED_TOKENS = [
     "NASA", "HTTP", "FBI", "ID", "Id", "id", "XML", "A", "I", "x", "rocket",
     "launch", "spec", "the", "and", "Server", "server", "Record", "active",
@@ -579,7 +589,8 @@ def _run(base_source, texts, numbers):
 
 
 def test_other_functions_match_base_including_all_caps_inputs():
-    texts = list(_ALL_CAPS_PROBES) + _random_texts_with_acronyms(250, seed=303)
+    texts = (list(_ALL_CAPS_PROBES) + list(_ORIGINAL_DOCTEST_INPUTS)
+             + _random_texts_with_acronyms(250, seed=303))
     numbers = list(range(-1100, 1101))
     snippet = (_OTHER_FUNCTIONS_DIFF_SNIPPET + "result = _run("
                + ascii(BASE_INFLECTION_SOURCE) + ", " + ascii(texts) + ", "
