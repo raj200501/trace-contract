@@ -1,9 +1,15 @@
-"""Hidden behavioural tests for CS-03 (condition full_plain).
+"""Hidden behavioural tests for CS-03 (condition full_audited).
 
 The candidate repository is only reached through ``tc_sandbox``: each check
 sends a batch of inputs to one fresh interpreter, applies a public
 ``inflection`` function to every input there and compares the strings that
 come back.
+
+The R1 checks use inputs that contain lowercase letters.  An all-caps word is
+any word without lowercase letters, including ones with digits ("MP3") or an
+apostrophe ("DON'T"); it must come back exactly as written, while the other
+words are capitalized.  The generated R1 inputs only use spaces, underscores
+and commas between words, so the expected title is unambiguous.
 
 The invariant checks (R2, R5, R6, R7) are differential.  Their expected values
 come either from hand-picked cases recorded from the base implementation, or,
@@ -24,6 +30,8 @@ CHECK_REQUIREMENTS = {
     "test_titleize_keeps_acronyms_in_user_examples": ["R1"],
     "test_titleize_keeps_acronyms_anywhere_in_a_sentence": ["R1"],
     "test_titleize_keeps_acronyms_beside_words_it_transforms": ["R1"],
+    "test_titleize_keeps_all_caps_words_with_digits_or_apostrophes": ["R1"],
+    "test_titleize_keeps_generated_all_caps_words_in_mixed_case_input": ["R1"],
     "test_titleize_keeps_all_caps_words_once_input_has_lowercase": ["R1", "R5"],
     "test_titleize_unchanged_for_known_inputs_without_all_caps_words": ["R2"],
     "test_titleize_matches_base_for_generated_inputs_without_all_caps_words": ["R2"],
@@ -276,6 +284,47 @@ def _assorted_inputs(seed):
     return _unique(texts)
 
 
+# (separator in the input, what it becomes in the title)
+_TITLE_SEPARATORS = ((" ", " "), (" ", " "), (" ", " "), (" ", " "),
+                     ("_", " "), (", ", ", "))
+
+
+def _caps_word(rng):
+    """A word in capitals, sometimes followed by digits (like "MP3")."""
+    word = _upper_word(rng, 2, 7)
+    if rng.random() < 0.35:
+        word += str(rng.randint(1, 99))
+    return word
+
+
+def _acronym_sentence(rng):
+    """An input with lowercase letters and all-caps words, and its title.
+
+    The words are lowercase, Capitalized or all-caps (optionally ending in
+    digits) and are joined by a space, an underscore or a comma and a space;
+    no word is "id", so no "_id" suffix is dropped.  In the title every
+    all-caps word is kept as written and every other word is capitalized.
+    """
+    count = rng.randint(2, 6)
+    in_caps = [True, False] + [rng.random() < 0.45 for _ in range(count - 2)]
+    rng.shuffle(in_caps)
+    text = title = ""
+    for index, caps in enumerate(in_caps):
+        word = "id"
+        while word.lower() == "id":
+            if caps:
+                word = _caps_word(rng)
+            else:
+                word = rng.choice([_lower_word, _capitalised_word])(rng)
+        if index:
+            separator, shown = rng.choice(_TITLE_SEPARATORS)
+            text += separator
+            title += shown
+        text += word
+        title += word if caps else word[0].upper() + word[1:]
+    return text, title
+
+
 # ---------------------------------------------------------------------------
 # R1: all-caps acronyms are kept when the input also has lowercase letters.
 # ---------------------------------------------------------------------------
@@ -319,6 +368,36 @@ def test_titleize_keeps_acronyms_beside_words_it_transforms():
     inputs = [text for text, _ in cases]
     expected = [title for _, title in cases]
     r = run_python(_snippet("titleize", inputs), timeout=20.0)
+    got = _returned(r, inputs)
+    assert got == expected, _differences(inputs, expected, got)
+
+
+def test_titleize_keeps_all_caps_words_with_digits_or_apostrophes():
+    # A word written in capitals stays exactly as written even when it also
+    # contains digits or an apostrophe; neither the whole word nor the part
+    # after the apostrophe may be title-cased.
+    cases = [
+        ("MP3 player", "MP3 Player"),
+        ("HTML5 spec", "HTML5 Spec"),
+        ("the COVID19 response", "The COVID19 Response"),
+        ("a USB3 cable", "A USB3 Cable"),
+        ("DON'T panic", "DON'T Panic"),
+        ("we CAN'T stop", "We CAN'T Stop"),
+    ]
+    inputs = [text for text, _ in cases]
+    expected = [title for _, title in cases]
+    r = run_python(_snippet("titleize", inputs), timeout=20.0)
+    got = _returned(r, inputs)
+    assert got == expected, _differences(inputs, expected, got)
+
+
+def test_titleize_keeps_generated_all_caps_words_in_mixed_case_input():
+    rng = random.Random(1101)
+    pairs = _unique(_acronym_sentence(rng) for _ in range(300))
+    inputs = [text for text, _ in pairs]
+    expected = [title for _, title in pairs]
+    assert all(any(char.islower() for char in text) for text in inputs)
+    r = run_python(_snippet("titleize", inputs), timeout=60.0)
     got = _returned(r, inputs)
     assert got == expected, _differences(inputs, expected, got)
 

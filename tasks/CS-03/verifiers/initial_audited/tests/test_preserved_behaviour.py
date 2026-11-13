@@ -1,4 +1,4 @@
-"""Hidden behavioural tests for CS-03 (condition initial_plain): invariants.
+"""Hidden behavioural tests for CS-03 (condition initial_audited): invariants.
 
 Apart from keeping all-caps acronyms in titleize(), nothing may change:
 titleize() must give the base output for inputs without an all-caps word, and
@@ -20,6 +20,7 @@ CHECK_REQUIREMENTS = {
     "test_plain_words_capitalized_without_small_word_exceptions": ["R4"],
     "test_original_titleize_examples_unchanged": ["R4", "R5"],
     "test_titleize_matches_base_on_inputs_without_acronyms": ["R4"],
+    "test_trailing_id_suffix_dropped_as_before": ["R4"],
     "test_other_functions_match_base_including_all_caps_inputs": ["R5"],
     "test_original_suite_expectations_for_other_functions_hold": ["R5"],
 }
@@ -320,9 +321,19 @@ _NO_ACRONYM_SAMPLES = [
     "well-known facts", "rock & roll", "question? answer!",
     "slash/separated words", "dot.separated.words", "(parenthesised) words",
     "1st place", "top 10 tips", "plan B", "I am here", "A B C",
+    "3d model", "mp3player", "4x4 truck", "covid19 cases",
     # non-ASCII letters
     "caf\xe9 au lait", "S\xe3o Paulo", "\xfcber cool", "na\xefve approach",
     "stra\xdfe",
+    # a trailing "_id" is dropped whatever its case and however it is joined
+    "authorId", "AuthorId", "author-id", "author_Id", "Author_Id",
+    "author-Id", "Author-Id", "EmployeeId", "postAuthorId", "the parentId",
+    "the parent-Id", "area51Id", "user_id_number", "userIdNumber",
+    "authorIds", "author Id", "valid_id", "_id", "id", "Id", "idea", "squid",
+    # empty input, blanks and irregular whitespace
+    "", " ", "  leading spaces", "trailing spaces  ", "double  space",
+    "tab\tseparated", "  padded  words  ", "123", "42 is the answer", "___",
+    "---",
 ]
 
 _PLAIN_WORDS = [
@@ -330,7 +341,8 @@ _PLAIN_WORDS = [
     "read", "the", "spec", "a", "of", "and", "man", "from", "boondocks",
     "last", "stand", "raiders", "lost", "ark", "code", "david's", "o'neil",
     "employee", "salary", "device", "type", "user", "name", "table", "x",
-    "men", "lord", "rings", "war", "peace", "nasa", "http", "fbi",
+    "men", "lord", "rings", "war", "peace", "nasa", "http", "fbi", "id",
+    "author",
 ]
 _NON_ASCII_WORDS = [
     "\xedndia", "caf\xe9", "\xfcber", "na\xefve", "stra\xdfe", "\xe9lan",
@@ -424,6 +436,38 @@ def test_titleize_matches_base_on_inputs_without_acronyms():
     assert r.value["mismatch_count"] == 0, (
         "titleize differs from the base implementation "
         "([input, base, candidate]): %r" % (r.value["mismatches"],))
+
+
+def test_trailing_id_suffix_dropped_as_before():
+    # The original titleize drops a trailing "_id" (humanize) after
+    # underscore() has split camelCase and turned hyphens into underscores and
+    # lowercased everything, so a final "Id" / "_Id" / "-id" word is dropped
+    # whatever its case.  "id" anywhere else is an ordinary word.  None of
+    # these inputs has two consecutive capitals; the expected values are the
+    # base outputs.
+    cases = {
+        "author_id": "Author",
+        "authorId": "Author",
+        "AuthorId": "Author",
+        "author-id": "Author",
+        "author_Id": "Author",
+        "Author-Id": "Author",
+        "EmployeeId": "Employee",
+        "postAuthorId": "Post Author",
+        "the parentId": "The Parent",
+        "the parent-Id": "The Parent",
+        "area51Id": "Area51",
+        "valid_id": "Valid",
+        "user_id_number": "User Id Number",
+        "userIdNumber": "User Id Number",
+        "author Id": "Author Id",
+        "authorIds": "Author Ids",
+        "idea": "Idea",
+        "squid": "Squid",
+    }
+    r = run_python(_TITLEIZE_SNIPPET + "result = _run(" + ascii(list(cases)) + ")\n")
+    assert r.ok, _failure(r)
+    assert dict(zip(cases, r.value)) == cases
 
 
 # --------------------------------------------------------------------------

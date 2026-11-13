@@ -1,0 +1,45 @@
+{
+  "mapper": "model:claude-code-subagent:mapper:v1",
+  "mapper_kind": "model",
+  "map": {
+    "R1": [
+      "R-step"
+    ],
+    "R2": [
+      "R-negative-step"
+    ],
+    "R3": [
+      "R-zero-step"
+    ],
+    "R4": [
+      "R-positional-ordering",
+      "R-default-unchanged"
+    ],
+    "R5": [
+      "R-lazy"
+    ],
+    "R6": [
+      "R-default-unchanged",
+      "R-positional-ordering"
+    ],
+    "R7": []
+  },
+  "contradicts": {
+    "R1": [],
+    "R2": [],
+    "R3": [],
+    "R4": [],
+    "R5": [],
+    "R6": [],
+    "R7": []
+  },
+  "notes": {
+    "R1": "Asserts R-step's example and a second step=2 case; its rule is worded for any step, but its test only uses step=2, so it checks neither negative steps nor step=0.",
+    "R2": "Asserts R-negative-step's example (step=-1 on [9, 8, 7, 3, 2]) and a step=-2 case; step is only the vehicle here, so it is not counted as a check of R-step's positive-step grouping.",
+    "R3": "Same behaviour as R-zero-step, and its test accepts the ValueError at call time or on iteration, as the reference observable allows, so it does not contradict it.",
+    "R4": "Asserts that consecutive_groups(iterable, ordering) with ordering positional and no step gives the base results (R-positional-ordering); those are calls without step that must match the base, so it also partly checks R-default-unchanged.",
+    "R5": "Checks that groups are lazy iterators sharing the source, for step=2 and for the default step (R-lazy); the group values it asserts only serve those laziness checks, so it is not counted for R-step or R-default-unchanged.",
+    "R6": "Asserts that calls without step (and with step=1) give the base grouping (R-default-unchanged), and its observable runs the existing consecutive_groups tests, which pass ordering positionally, so it also partly checks R-positional-ordering.",
+    "R7": "Extra: the reference never says how step combines with an ordering function, and R7's test only needs step to be accepted and ordering to be positional, without checking R-step's plain-integer grouping or R-positional-ordering's calls without step."
+  }
+}
