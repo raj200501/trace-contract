@@ -44,17 +44,21 @@ TraceContract measures both directly.
   * Superseded requirements are never scored.
   * Inferred requirements need human review before a task is accepted
     (`src/tracecontract/contract.py`).
-* **Process-separated grading (harness `tc-harness/0.3.0`).**
+* **Process-separated grading (harness `tc-harness/0.3.1`)** for C1–C4 and B2.
   * Hidden tests run in a trusted grader.
   * Candidate code runs only as an unprivileged UID allocated to that container. It
     cannot read the tests or write the results.
   * Per-call results are authenticated, and the host recomputes outcomes, so a
     missing or stale result never becomes a reward.
   * Adversarial Docker probes cover the boundary (`tests/test_sandbox_isolation.py`).
-    They include regression probes for the two resource-isolation defects found
-    during the pilot (decision log D29–D31).
-* **Controlled-session protocol (CS-v1):** pre-registered scenarios, state capture
-  between turns, transcript sanitisation and contamination audits.
+    They include regression probes for the defects found during the pilot: two in
+    resource isolation (decision log D29–D31) and one module-shadowing forgery (D36).
+  * **Exception:** the repository-test baseline B1 runs pytest with candidate code in
+    the reporting process. An adversarial candidate can forge its report (see
+    Limitations).
+* **Controlled-session protocol (CS-v1):** scenarios hashed and logged locally before
+  each run (not a formal preregistration), state capture between turns, transcript
+  sanitisation and contamination audits.
 * **Labels, checks and review.**
   * Label proposals come from a pre-specified rule (D19): independent reference
     checks, plus the regression norm, plus construction intent. Disagreement gives
@@ -75,14 +79,14 @@ last element does not exist yet.
 
 ## Pilot results (automated labels, four controlled task families)
 
-Run `results/runs/pilot-v0.3`:
+Run `results/runs/pilot-v0.3.1`:
 * 4 tasks × 6 conditions × 10 candidates = 240 graded pairs;
-* harness 0.3.0, one code revision;
+* harness 0.3.1, one code revision;
 * no infrastructure outcomes.
 
 Of the 32 held-out candidates, 17 are labeled invalid, 10 valid and 5 ambiguous
-(excluded). The report is `results/runs/pilot-v0.3/report.html`; the analysis is
-`results/runs/pilot-v0.3/analysis.md`.
+(excluded). The report is `results/runs/pilot-v0.3.1/report.html`; the analysis is
+`results/runs/pilot-v0.3.1/analysis.md`.
 
 | Condition | False acceptance | False rejection |
 | --- | --- | --- |
@@ -97,7 +101,8 @@ How to read this:
 
 * **Initial-only verifiers reward what the correction ruled out.**
   * Every invalid candidate they accept violates a correction-introduced
-    requirement.
+    requirement. That is largely by construction: 16 of the 17 invalid candidates
+    violate one.
   * They accept both pre-correction states that are labeled invalid.
   * In `humanize`, where the correction retracted the initial request, they reject
     both valid alternatives and the reference solution.
@@ -106,15 +111,31 @@ How to read this:
     request alone.
   * In `inflection` and `tinydb` the agent's own pre-correction state already
     satisfied the correction.
-* **The audit changed one outcome out of 64.** It cannot repair a verifier whose
-  contract is wrong.
+* **The audit changed one outcome.** Four of the eight audited verifiers needed no
+  revision and are identical to their plain counterparts. On the 32 held-out
+  outcomes of the other four, the audit changed one. It cannot repair a verifier
+  whose contract is wrong.
 * **Repository tests fail in both directions.** They miss the correction's
-  invariants and over-specify the reference implementation.
-* **Selection effect.** The ambiguous near misses are the hard cases. When they are
-  labeled by construction intent (exploratory, not pre-specified), the
-  correction-aware verifiers accept 3 of 22 invalid candidates.
-* **Uncertainty.** Intervals over four families are wide. Eight candidates are
-  queued for human review, five of them because the rule marked them ambiguous.
+  invariants and over-specify the reference implementation. B1 includes 6–12 tests
+  per task that the session agent added, and all four of its false rejections come
+  from those tests. Restricted to the base commit's own tests (exploratory), B1
+  accepts 13/17 and rejects 0/10.
+* **Selection effect.** The ambiguous near misses are the hard cases. The exploratory
+  views give these false-acceptance counts for the correction-aware verifiers:
+  * 3 of 22 invalid candidates when constructed candidates are labeled by
+    construction intent;
+  * 6 of 25 under the independent construction checks' labels.
+* **Duplicates.** Two `more-itertools` held-out candidates have the same graded patch
+  as a development attack (decision log D37). Without them (exploratory), C1
+  accepts 4/15.
+* **Uncertainty.**
+  * Cluster-bootstrap intervals over four families are wide. They are degenerate
+    (zero width) wherever every family has the same rate, as for C3 and C4.
+  * Exact binomial intervals are printed next to them; for 0/17 the upper bound is
+    0.20.
+  * Eight candidates are queued for human review, five of them because the rule
+    marked them ambiguous.
+
   **These are descriptive pilot numbers, not evidence of an effect.**
 
 ## Demonstration (CS-01, controlled)
@@ -128,14 +149,22 @@ How to read this:
 
 The agent's state after step 2 is a natural negative: it satisfies the initial
 request but violates the correction.
-* In run `pilot-v0.3`, both initial-only verifiers (C1, C2) accept it, and reject
+* In run `pilot-v0.3.1`, both initial-only verifiers (C1, C2) accept it, and reject
   both valid alternatives and the reference solution.
 * All correction-aware conditions reject it and accept the alternatives.
 
 ## Reproduce
 
-Requirements: Linux, Python ≥ 3.12, Docker (daemon running) and `git`. Grading
-needs no network; building images needs PyPI access from the host.
+Requirements:
+* Linux, Python ≥ 3.12, [uv](https://docs.astral.sh/uv/), `git`, and Docker with the
+  daemon running;
+* network access from the host to build images: Docker Hub for the digest-pinned
+  `python` base image, and PyPI for the wheelhouses. Grading itself needs no network;
+* for the paper: a TeX distribution with `latexmk` and `biber`;
+* for the Harbor check only: a Harbor 0.25.0 CLI in a separate environment.
+
+The `dev` extra installs `pip` into the venv; image builds call
+`<venv python> -m pip download`.
 
 ```bash
 uv venv --python 3.13 .venv && uv pip install --python .venv/bin/python -e ".[dev,data]"
@@ -150,7 +179,7 @@ uv venv --python 3.13 .venv && uv pip install --python .venv/bin/python -e ".[de
 ```
 
 ```bash
-.venv/bin/tracecontract snapshot tasks/CS-01     # rebuild a base snapshot from its pinned commit
+for t in CS-01 CS-02 CS-03 CS-04; do .venv/bin/tracecontract snapshot tasks/$t; done   # rebuild every base snapshot from its pinned commit
 ```
 
 ```bash
@@ -178,11 +207,23 @@ uv venv --python 3.13 .venv && uv pip install --python .venv/bin/python -e ".[de
 ```
 
 ```bash
-.venv/bin/python scripts/compare_runs.py results/runs/pilot-v0.3 results/runs/my-run
+.venv/bin/python scripts/compare_runs.py results/runs/pilot-v0.3.1 results/runs/my-run
 ```
 
 ```bash
-.venv/bin/python paper/make_tables.py results/runs/pilot-v0.3 --compare results/runs/pilot-v0.2 results/runs/pilot-v0.2-h2
+.venv/bin/python paper/make_tables.py results/runs/pilot-v0.3.1 --compare results/runs/pilot-v0.3 results/runs/pilot-v0.2 results/runs/pilot-v0.2-h2
+```
+
+To give an annotator one candidate's final file state without running any code:
+
+```bash
+.venv/bin/tracecontract materialize tasks/CS-01 CS-01-pre-correction --out /tmp/review-CS-01-pre
+```
+
+To re-check the Harbor export on the synthetic fixture task:
+
+```bash
+HARBOR=/path/to/harbor scripts/harbor_validate.sh
 ```
 
 ```bash
@@ -190,10 +231,11 @@ cd paper && latexmk -pdf main.tex
 ```
 
 Model-generated artifacts (sessions, contracts, tests, candidates, label proposals,
-checks and mappings) are recorded in the repository. Regenerating them is not
-bit-reproducible. Everything downstream of them is: grading, analysis, tables,
-report and paper numbers. `paper/evidence_ledger.md` lists the source of every
-number in the generated tables.
+checks and mappings) are recorded in the repository. The prompts that produced them
+are in `experiments/prompts/`, with owner messages and session paths redacted.
+Regenerating the artifacts is not bit-reproducible. Everything downstream of them
+is: grading, analysis, tables, report and paper numbers. `paper/evidence_ledger.md`
+records where each number in the generated tables comes from.
 
 ## Limitations
 
@@ -205,7 +247,13 @@ number in the generated tables.
 * Four task families, so all rates are descriptive.
 * Repository-test baseline (B1): it imports candidate code into its reporting
   process, so an adversarial candidate can forge its report. A characterisation
-  probe in the test suite shows this.
+  probe in the test suite shows this. B1 also includes tests that the session agent
+  wrote.
+* The held-out discipline is imperfect, and each departure is disclosed in decision
+  log D37:
+  * near-miss generators could run B1's tests;
+  * two held-out candidates duplicate a development attack;
+  * some reference checks were written while the pool was being generated.
 * Natural data (SWE-chat) is blocked on dataset access terms.
 
 ## Layout
@@ -215,10 +263,11 @@ src/tracecontract/   schemas, ingest, contract, snapshot, patches, sandbox/, ver
                      evaluate, metrics, analysis, report, harbor_export, controlled, tasks, cli
 tasks/<id>/          task manifests, provenance, contracts (+ mappings), candidates, verifiers, labels
 data/                manifests, sanitised controlled transcripts, scenarios, reference proposals
-experiments/         protocol.md (v0.3)
+experiments/         protocol.md (v0.4), prompts/ (workflow scripts and agent prompts)
 results/runs/<id>/   manifest, raw results, analysis, comparisons, report
 scripts/             label proposals, construction checks, review queues, preflight, run comparison
-docs/                research brief, decision log, data card, annotation guide, status docs
+docs/                research brief, decision log, data card, annotation guide, internal review, status docs
+THIRD_PARTY_LICENSES/ licence notices of the redistributed upstream code
 paper/               LaTeX draft, verified bibliography, table generator, evidence ledger
 ```
 

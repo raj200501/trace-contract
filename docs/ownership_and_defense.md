@@ -10,11 +10,28 @@ decisions that are still open or that must be reviewed.
 | Component | Use | Licence |
 | --- | --- | --- |
 | Harbor 0.25.0 (PyPI `harbor`) | Task-package format and local oracle/no-op validation of exported tasks | Apache-2.0 |
-| pytest 9.2.0, hypothesis 6.131.0 and their dependencies | Test runner inside grading containers | MIT/MPL-2.0 (see wheel metadata) |
+| attrs 26.1.0 (wheel) | Grading-image dependency: default, CS-01, CS-02 to CS-04 | MIT (License-Expression) |
+| freezegun 1.5.5 (wheel) | Grading-image dependency: CS-01 | "Apache-2.0" (License field) |
+| hypothesis 6.131.0 (wheel) | Grading-image dependency: default, CS-01, CS-02 to CS-04 | MPL-2.0 (License-Expression) |
+| iniconfig 2.3.1 (wheel) | Grading-image dependency: default, CS-01, CS-02 to CS-04 | MIT (License-Expression) |
+| packaging 26.3 (wheel) | Grading-image dependency: default, CS-01, CS-02 to CS-04 | Apache-2.0 OR BSD-2-Clause (License-Expression) |
+| pluggy 1.7.0 (wheel) | Grading-image dependency: default, CS-01, CS-02 to CS-04 | "MIT" (License field; classifier: OSI Approved :: MIT License) |
+| Pygments 2.21.0 (wheel) | Grading-image dependency: CS-01, CS-02 to CS-04 | BSD-2-Clause (License-Expression) |
+| pytest 8.3.5 (wheel) | Test runner in the default grading image | "MIT" (License field; classifier: OSI Approved :: MIT License) |
+| pytest 9.2.0 (wheel) | Test runner in the CS-01 to CS-04 grading images | MIT (License-Expression) |
+| python-dateutil 4.0.0 (wheel) | Grading-image dependency: CS-01 | BSD-3-Clause (License-Expression) |
+| sortedcontainers 2.4.0 (wheel) | Grading-image dependency: default, CS-01, CS-02 to CS-04 | "Apache 2.0" (License field; classifier: OSI Approved :: Apache Software License) |
+| tzdata 2026.6 (wheel) | Grading-image dependency: CS-01 | "Apache-2.0" (License field) |
 | pydantic 2 | Typed schemas | MIT |
 | `python:3.12-slim` image (pinned digest) | Base image for sandboxes | PSF/Debian licences |
-| Source repositories of the controlled tasks (humanize, tinydb, inflection, more-itertools) | Base snapshots and candidate patches | MIT (each repository's licence) |
+| Source repositories of the controlled tasks (humanize, tinydb, inflection, more-itertools) | Base snapshots, upstream test files (overlays) and candidate patches | MIT (each repository's licence; notices in `THIRD_PARTY_LICENSES/`) |
 | Ideas: oracle/no-op checks, cheat trials and hacker/fixer loops (Terminal-Bench task review); FAIL_TO_PASS/PASS_TO_PASS selection (SWE-bench family); separate verifier and artifact transfer (Harbor) | Design of audit:v1 and baseline B1 | cited in the research brief |
+
+Wheel rows: licence as declared in each wheel's METADATA (`License-Expression`, else
+the `License` field and licence classifiers), read on 2026-11-18 from the wheelhouses
+`~/.cache/tracecontract/images/wheelhouse-<key>` of the three grading images: default
+(`DEFAULT_TEST_REQUIREMENTS` in `docker_runner.py`, key `137c25ab71f8dfe8`), CS-01
+(`0b1591bd588d585e`) and CS-02 to CS-04 (`801a26fad4c5e101`).
 
 ## AI-assisted work (substantial)
 

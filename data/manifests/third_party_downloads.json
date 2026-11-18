@@ -1,101 +1,1340 @@
 {
-  "schema": "tracecontract.third_party_downloads/v0",
+  "schema": "tracecontract.third_party_downloads/v1",
+  "updated": "2026-11-18",
+  "note": "One record per third-party download documented in the research notes, the review files, the brief or the task manifests, rebuilt on 2026-11-18 (privacy and rights review, finding P6). Nothing listed here is in the repository unless in_repo is true. Sizes: du -sb on 2026-11-18 (sum over all listed paths), or 'unknown (deleted)'. <scratchpad> is the study's session scratchpad, a temporary directory outside the repository whose absolute path is not recorded. Deleting any copy is an owner decision; nothing was deleted.",
+  "license_refs": {
+    "NOASSERTION": "SPDX: no licence assertion is made (mixed per-item licences or no licence stated; see license_note)",
+    "LicenseRef-all-rights-reserved": "the source carries a copyright notice and states no open licence",
+    "LicenseRef-arXiv-nonexclusive-distrib-1.0": "arXiv.org perpetual, non-exclusive licence to distribute",
+    "LicenseRef-Debian-package-licences": "the licences of the Debian packages in the image"
+  },
+  "third_party_session_data": [
+    "third-party-sessions-lumintime"
+  ],
   "records": [
     {
+      "id": "clone-harbor",
       "kind": "git_shallow_clone",
       "source": "https://github.com/harbor-framework/harbor",
-      "commit": "3bf4cb308b886d41c0151a21e7c3b6ec8cb68f07",
+      "version": "3bf4cb308b886d41c0151a21e7c3b6ec8cb68f07",
       "commit_date": "2026-11-12T15:32:38-08:00",
+      "license": "Apache-2.0",
+      "size_bytes": 142303735,
       "local_path": "/home/user/harbor-framework/harbor",
-      "license_file": [
-        "LICENSE"
+      "documented_in": [
+        "docs/research/notes/harbor.md (MAIN)",
+        "docs/research/notes/verifier_fidelity.md"
       ],
-      "license_first_line": "Apache License",
-      "purpose": "read-only reference for related-work research and integration",
-      "accessed": "2026-11-13",
+      "purpose": "read-only reference for related-work research and Harbor integration",
+      "third_party_personal_data": "none beyond author, maintainer or contributor names that the source itself publishes",
+      "retention": "Read-only reference copy outside the repository, kept for re-checks. Deleting it is an owner decision.",
       "in_repo": false
     },
     {
+      "id": "clone-terminal-bench",
       "kind": "git_shallow_clone",
       "source": "https://github.com/harbor-framework/terminal-bench",
-      "commit": "01c0d6d4e16902f787201598b5c27cc69d7010d1",
+      "version": "01c0d6d4e16902f787201598b5c27cc69d7010d1",
       "commit_date": "2026-11-12T16:45:09-08:00",
+      "license": "Apache-2.0",
+      "size_bytes": 1014350008,
       "local_path": "/home/user/harbor-framework/terminal-bench",
-      "license_file": [
-        "LICENSE"
+      "documented_in": [
+        "docs/research/notes/verifier_fidelity.md"
       ],
-      "license_first_line": "Apache License",
-      "purpose": "read-only reference for related-work research and integration",
-      "accessed": "2026-11-13",
+      "purpose": "read-only reference for task-review practice (CI checks, cheat trials, hacker/fixer loop)",
+      "contents_note": "includes leaderboard submission summaries (JSON metadata of third-party runs); no agent trajectories were found in the clone",
+      "third_party_personal_data": "none beyond author, maintainer or contributor names that the source itself publishes",
+      "retention": "Read-only reference copy outside the repository, kept for re-checks. Deleting it is an owner decision.",
       "in_repo": false
     },
     {
+      "id": "clone-swe-smith",
       "kind": "git_shallow_clone",
       "source": "https://github.com/SWE-bench/SWE-smith",
-      "commit": "9b74ac08118a85c39c356802f7961893af73e07f",
+      "version": "9b74ac08118a85c39c356802f7961893af73e07f",
       "commit_date": "2026-03-22T12:39:59+13:00",
+      "license": "MIT",
+      "size_bytes": 31496124,
       "local_path": "/home/user/SWE-bench/SWE-smith",
-      "license_file": [
-        "LICENSE"
+      "documented_in": [
+        "docs/research/notes/env_synthesis.md"
       ],
-      "license_first_line": "MIT License",
-      "purpose": "read-only reference for related-work research and integration",
-      "accessed": "2026-11-13",
+      "purpose": "read-only reference for environment synthesis",
+      "third_party_personal_data": "none beyond author, maintainer or contributor names that the source itself publishes",
+      "retention": "Read-only reference copy outside the repository, kept for re-checks. Deleting it is an owner decision.",
       "in_repo": false
     },
     {
+      "id": "clone-r2e-gym",
       "kind": "git_shallow_clone",
       "source": "https://github.com/R2E-Gym/R2E-Gym",
-      "commit": "0d94c4eb9431cd195c55a7ea3abd54006c9a1735",
+      "version": "0d94c4eb9431cd195c55a7ea3abd54006c9a1735",
       "commit_date": "2025-07-13T04:46:03+00:00",
+      "license": "Apache-2.0",
+      "size_bytes": 20641894,
       "local_path": "/home/user/R2E-Gym/R2E-Gym",
-      "license_file": [
-        "LICENSE"
+      "documented_in": [
+        "docs/research/notes/env_synthesis.md"
       ],
-      "license_first_line": "Apache License",
-      "purpose": "read-only reference for related-work research and integration",
-      "accessed": "2026-11-13",
+      "purpose": "read-only reference for environment synthesis",
+      "third_party_personal_data": "none beyond author, maintainer or contributor names that the source itself publishes",
+      "retention": "Read-only reference copy outside the repository, kept for re-checks. Deleting it is an owner decision.",
       "in_repo": false
     },
     {
+      "id": "clone-trace",
       "kind": "git_shallow_clone",
       "source": "https://github.com/ScalingIntelligence/TRACE",
-      "commit": "d2db23085409555b3f13ea426f42d62cf0bbc43d",
+      "version": "d2db23085409555b3f13ea426f42d62cf0bbc43d",
       "commit_date": "2026-07-12T08:02:37-07:00",
+      "license": "MIT",
+      "size_bytes": 854032,
       "local_path": "/home/user/ScalingIntelligence/TRACE",
-      "license_file": [
-        "LICENSE"
+      "documented_in": [
+        "docs/research/notes/training_and_datasets.md"
       ],
-      "license_first_line": "MIT License",
-      "purpose": "read-only reference for related-work research and integration",
-      "accessed": "2026-11-13",
+      "purpose": "read-only reference (TRACE disambiguation, failure-driven training)",
+      "third_party_personal_data": "none beyond author, maintainer or contributor names that the source itself publishes",
+      "retention": "Read-only reference copy outside the repository, kept for re-checks. Deleting it is an owner decision.",
       "in_repo": false
     },
     {
-      "kind": "pypi_package",
+      "id": "clone-humanize",
+      "kind": "git_clone",
+      "source": "https://github.com/python-humanize/humanize",
+      "version": "a95004512dde4e8f0269946bb4af754382347441",
+      "commit_date": "2026-11-12T12:21:16+00:00",
+      "license": "MIT",
+      "license_note": "licence text at the pinned commit: THIRD_PARTY_LICENSES/humanize.txt",
+      "size_bytes": 577687,
+      "local_path": "/home/user/ext/humanize",
+      "documented_in": [
+        "tasks/CS-01/task.json (snapshot_source)",
+        "docs/data_card.md"
+      ],
+      "purpose": "source repository of controlled task CS-01 (base snapshot, upstream tests, candidate patches)",
+      "third_party_personal_data": "upstream author and maintainer names in package metadata and the copyright notice; these names also appear in the controlled transcripts (docs/data_card.md)",
+      "retention": "Read-only reference copy outside the repository, kept for re-checks. Deleting it is an owner decision.",
+      "in_repo": true,
+      "in_repo_detail": "partly: upstream test files and patch context under tasks/CS-01/; see THIRD_PARTY_LICENSES/README.md"
+    },
+    {
+      "id": "clone-tinydb",
+      "kind": "git_clone",
+      "source": "https://github.com/msiemens/tinydb",
+      "version": "edff96aeb2616402e9489d46e90a592c05565621",
+      "commit_date": "2026-10-15T22:35:00+02:00",
+      "license": "MIT",
+      "license_note": "licence text at the pinned commit: THIRD_PARTY_LICENSES/tinydb.txt",
+      "size_bytes": 816309,
+      "local_path": "/home/user/ext/tinydb",
+      "documented_in": [
+        "tasks/CS-02/task.json (snapshot_source)",
+        "docs/data_card.md"
+      ],
+      "purpose": "source repository of controlled task CS-02 (base snapshot, upstream tests, candidate patches)",
+      "third_party_personal_data": "upstream author and maintainer names in package metadata and the copyright notice; these names also appear in the controlled transcripts (docs/data_card.md)",
+      "retention": "Read-only reference copy outside the repository, kept for re-checks. Deleting it is an owner decision.",
+      "in_repo": true,
+      "in_repo_detail": "partly: upstream test files and patch context under tasks/CS-02/; see THIRD_PARTY_LICENSES/README.md"
+    },
+    {
+      "id": "clone-inflection",
+      "kind": "git_clone",
+      "source": "https://github.com/jpvanhal/inflection",
+      "version": "88eefaacf7d0caaa701af7c8ab2d0ab3f17086f1",
+      "commit_date": "2023-03-31T21:03:52+03:00",
+      "license": "MIT",
+      "license_note": "licence text at the pinned commit: THIRD_PARTY_LICENSES/inflection.txt",
+      "size_bytes": 88877,
+      "local_path": "/home/user/ext/inflection",
+      "documented_in": [
+        "tasks/CS-03/task.json (snapshot_source)",
+        "docs/data_card.md"
+      ],
+      "purpose": "source repository of controlled task CS-03 (base snapshot, upstream tests, candidate patches)",
+      "third_party_personal_data": "upstream author and maintainer names in package metadata and the copyright notice; these names also appear in the controlled transcripts (docs/data_card.md)",
+      "retention": "Read-only reference copy outside the repository, kept for re-checks. Deleting it is an owner decision.",
+      "in_repo": true,
+      "in_repo_detail": "partly: upstream test files and patch context under tasks/CS-03/; see THIRD_PARTY_LICENSES/README.md"
+    },
+    {
+      "id": "clone-more-itertools",
+      "kind": "git_clone",
+      "source": "https://github.com/more-itertools/more-itertools",
+      "version": "ceafee8ce96f4bc1eb74c528bc247c91d648a0bb",
+      "commit_date": "2026-11-10T09:12:15-06:00",
+      "license": "MIT",
+      "license_note": "licence text at the pinned commit: THIRD_PARTY_LICENSES/more-itertools.txt",
+      "size_bytes": 884421,
+      "local_path": "/home/user/ext/more-itertools",
+      "documented_in": [
+        "tasks/CS-04/task.json (snapshot_source)",
+        "docs/data_card.md"
+      ],
+      "purpose": "source repository of controlled task CS-04 (base snapshot, upstream tests, candidate patches)",
+      "third_party_personal_data": "upstream author and maintainer names in package metadata and the copyright notice; these names also appear in the controlled transcripts (docs/data_card.md)",
+      "retention": "Read-only reference copy outside the repository, kept for re-checks. Deleting it is an owner decision.",
+      "in_repo": true,
+      "in_repo_detail": "partly: upstream test files and patch context under tasks/CS-04/; see THIRD_PARTY_LICENSES/README.md"
+    },
+    {
+      "id": "clone-python-slugify",
+      "kind": "git_clone",
+      "source": "https://github.com/un33k/python-slugify",
+      "version": "35aca63fc2672cba2c739ff6dff685a4f26a4f9a",
+      "commit_date": "2026-10-16T11:32:46-04:00",
+      "license": "MIT",
+      "size_bytes": 4314018,
+      "local_path": "/home/user/ext/python-slugify",
+      "documented_in": [
+        "docs/research/notes/harbor.md (toy task slugify-contract)"
+      ],
+      "purpose": "library for a Harbor probe toy task; no code from it is in the repository",
+      "third_party_personal_data": "none beyond author, maintainer or contributor names that the source itself publishes",
+      "retention": "Read-only reference copy outside the repository, kept for re-checks. Deleting it is an owner decision.",
+      "in_repo": false
+    },
+    {
+      "id": "snapshot-git-cache",
+      "kind": "git_bare_mirrors",
+      "source": [
+        "https://github.com/python-humanize/humanize",
+        "https://github.com/msiemens/tinydb",
+        "https://github.com/jpvanhal/inflection",
+        "https://github.com/more-itertools/more-itertools"
+      ],
+      "version": "the four pinned commits in tasks/*/task.json",
+      "license": "MIT",
+      "size_bytes": 1210908,
+      "local_path": [
+        "/root/.cache/tracecontract/git",
+        "/home/user/.cache/tracecontract/git"
+      ],
+      "documented_in": [
+        "src/tracecontract/cli.py (cache directory)",
+        "docs/data_card.md (base snapshots)"
+      ],
+      "purpose": "git cache used by `tracecontract snapshot` to rebuild base snapshots",
+      "contents_note": "the same four mirrors exist under both cache roots",
+      "third_party_personal_data": "none beyond author, maintainer or contributor names that the source itself publishes",
+      "retention": "Regenerable tool cache; can be deleted at any time.",
+      "in_repo": false
+    },
+    {
+      "id": "pypi-harbor-venv",
+      "kind": "pypi_packages",
       "source": "https://pypi.org/project/harbor/0.25.0/",
       "version": "0.25.0",
-      "local_path": "scratchpad/harbor-venv (not committed)",
-      "purpose": "pinned task-execution harness under evaluation for integration",
-      "accessed": "2026-11-13",
+      "license": "Apache-2.0",
+      "license_note": "harbor's declared licence expression; its installed dependencies keep their own licences",
+      "size_bytes": 291845181,
+      "local_path": "<scratchpad>/harbor-venv",
+      "documented_in": [
+        "docs/research/notes/harbor.md (INST)"
+      ],
+      "purpose": "pinned task-execution harness under evaluation for integration (virtual environment with dependencies)",
+      "third_party_personal_data": "none beyond author, maintainer or contributor names that the source itself publishes",
+      "retention": "Temporary copy in the study's session scratchpad, outside the repository; not committed. It disappears when the scratchpad is cleared. Deleting it earlier is an owner decision.",
       "in_repo": false
     },
     {
-      "kind": "dataset_card",
-      "source": "https://huggingface.co/datasets/SALT-NLP/SWE-chat/resolve/main/README.md",
-      "revision": "202b071f18e03c79df5a7287565ce2ebc5ee7756",
-      "license": "odc-by (dataset); gated auto-approval with username+email sharing",
-      "local_path": "scratchpad/dl/swechat_card/README.md (not committed)",
-      "purpose": "public dataset card only; no gated files downloaded",
-      "accessed": "2026-11-13",
+      "id": "pypi-swebench-wheel",
+      "kind": "pypi_wheel",
+      "source": "https://pypi.org/project/swebench/4.1.0/",
+      "version": "4.1.0",
+      "license": "MIT",
+      "license_note": "wheel METADATA: License 'MIT License'",
+      "size_bytes": 157231,
+      "local_path": "<scratchpad>/dl/env_synthesis/wheels",
+      "documented_in": [
+        "docs/research/notes/env_synthesis.md (S22)"
+      ],
+      "purpose": "inspected for a dependency pin of SWE-smith",
+      "third_party_personal_data": "none beyond author, maintainer or contributor names that the source itself publishes",
+      "retention": "Temporary copy in the study's session scratchpad, outside the repository; not committed. It disappears when the scratchpad is cleared. Deleting it earlier is an owner decision.",
       "in_repo": false
     },
     {
+      "id": "wheelhouse-137c25ab71f8dfe8",
+      "kind": "pypi_wheels",
+      "source": "https://pypi.org/ (pip download --only-binary)",
+      "version": "pinned versions listed in contents_note",
+      "license": "MIT AND MPL-2.0 AND Apache-2.0 AND (Apache-2.0 OR BSD-2-Clause)",
+      "license_note": "licence per wheel as declared in its METADATA (License-Expression, else the License field); see contents_note and docs/ownership_and_defense.md",
+      "size_bytes": 1101186,
+      "local_path": "/root/.cache/tracecontract/images/wheelhouse-137c25ab71f8dfe8",
+      "documented_in": [
+        "src/tracecontract/sandbox/docker_runner.py (ensure_wheelhouse)",
+        "docs/ownership_and_defense.md"
+      ],
+      "purpose": "offline wheelhouse for grading images: default test requirements in src/tracecontract/sandbox/docker_runner.py (pytest 8.3.5); image tc-env:137c25ab71f8dfe8",
+      "contents_note": "attrs 26.1.0 (MIT); hypothesis 6.131.0 (MPL-2.0); iniconfig 2.3.1 (MIT); packaging 26.3 (Apache-2.0 OR BSD-2-Clause); pluggy 1.7.0 (MIT); pytest 8.3.5 (MIT); sortedcontainers 2.4.0 (Apache-2.0)",
+      "third_party_personal_data": "none beyond author, maintainer or contributor names that the source itself publishes",
+      "retention": "Regenerable tool cache; can be deleted (images keep their installed copies).",
+      "in_repo": false
+    },
+    {
+      "id": "wheelhouse-137c25ab71f8dfe8-nested",
+      "kind": "pypi_wheels",
+      "source": "https://pypi.org/ (pip download --only-binary)",
+      "version": "pinned versions listed in contents_note",
+      "license": "MIT AND MPL-2.0 AND Apache-2.0 AND (Apache-2.0 OR BSD-2-Clause)",
+      "license_note": "licence per wheel as declared in its METADATA (License-Expression, else the License field); see contents_note and docs/ownership_and_defense.md",
+      "size_bytes": 1101186,
+      "local_path": "/root/.cache/tracecontract/images/images/wheelhouse-137c25ab71f8dfe8",
+      "documented_in": [
+        "src/tracecontract/sandbox/docker_runner.py (ensure_wheelhouse)",
+        "docs/ownership_and_defense.md"
+      ],
+      "purpose": "offline wheelhouse for grading images: byte-identical duplicate of the wheelhouse above (nested cache directory)",
+      "contents_note": "same seven wheels as above",
+      "third_party_personal_data": "none beyond author, maintainer or contributor names that the source itself publishes",
+      "retention": "Regenerable tool cache; can be deleted (images keep their installed copies).",
+      "in_repo": false
+    },
+    {
+      "id": "wheelhouse-0b1591bd588d585e",
+      "kind": "pypi_wheels",
+      "source": "https://pypi.org/ (pip download --only-binary)",
+      "version": "pinned versions listed in contents_note",
+      "license": "MIT AND MPL-2.0 AND Apache-2.0 AND (Apache-2.0 OR BSD-2-Clause) AND BSD-2-Clause AND BSD-3-Clause",
+      "license_note": "licence per wheel as declared in its METADATA (License-Expression, else the License field); see contents_note and docs/ownership_and_defense.md",
+      "size_bytes": 2879876,
+      "local_path": "/home/user/.cache/tracecontract/images/wheelhouse-0b1591bd588d585e",
+      "documented_in": [
+        "src/tracecontract/sandbox/docker_runner.py (ensure_wheelhouse)",
+        "docs/ownership_and_defense.md"
+      ],
+      "purpose": "offline wheelhouse for grading images: env_requirements of tasks/CS-01/task.json; image tc-env:0b1591bd588d585e",
+      "contents_note": "attrs 26.1.0 (MIT); freezegun 1.5.5 (Apache-2.0); hypothesis 6.131.0 (MPL-2.0); iniconfig 2.3.1 (MIT); packaging 26.3 (Apache-2.0 OR BSD-2-Clause); pluggy 1.7.0 (MIT); Pygments 2.21.0 (BSD-2-Clause); pytest 9.2.0 (MIT); python-dateutil 4.0.0 (BSD-3-Clause); sortedcontainers 2.4.0 (Apache-2.0); tzdata 2026.6 (Apache-2.0)",
+      "third_party_personal_data": "none beyond author, maintainer or contributor names that the source itself publishes",
+      "retention": "Regenerable tool cache; can be deleted (images keep their installed copies).",
+      "in_repo": false
+    },
+    {
+      "id": "wheelhouse-801a26fad4c5e101",
+      "kind": "pypi_wheels",
+      "source": "https://pypi.org/ (pip download --only-binary)",
+      "version": "pinned versions listed in contents_note",
+      "license": "MIT AND MPL-2.0 AND Apache-2.0 AND (Apache-2.0 OR BSD-2-Clause) AND BSD-2-Clause",
+      "license_note": "licence per wheel as declared in its METADATA (License-Expression, else the License field); see contents_note and docs/ownership_and_defense.md",
+      "size_bytes": 2419492,
+      "local_path": "/home/user/.cache/tracecontract/images/wheelhouse-801a26fad4c5e101",
+      "documented_in": [
+        "src/tracecontract/sandbox/docker_runner.py (ensure_wheelhouse)",
+        "docs/ownership_and_defense.md"
+      ],
+      "purpose": "offline wheelhouse for grading images: env_requirements of tasks/CS-02, CS-03 and CS-04; image tc-env:801a26fad4c5e101",
+      "contents_note": "attrs 26.1.0 (MIT); hypothesis 6.131.0 (MPL-2.0); iniconfig 2.3.1 (MIT); packaging 26.3 (Apache-2.0 OR BSD-2-Clause); pluggy 1.7.0 (MIT); Pygments 2.21.0 (BSD-2-Clause); pytest 9.2.0 (MIT); sortedcontainers 2.4.0 (Apache-2.0)",
+      "third_party_personal_data": "none beyond author, maintainer or contributor names that the source itself publishes",
+      "retention": "Regenerable tool cache; can be deleted (images keep their installed copies).",
+      "in_repo": false
+    },
+    {
+      "id": "resolve-e457340c7003c96b",
+      "kind": "pypi_wheels",
+      "source": "https://pypi.org/ (pip download --only-binary)",
+      "version": "pinned versions listed in contents_note",
+      "license": "MIT AND MPL-2.0 AND Apache-2.0 AND (Apache-2.0 OR BSD-2-Clause) AND BSD-2-Clause",
+      "license_note": "licence per wheel as declared in its METADATA (License-Expression, else the License field); see contents_note and docs/ownership_and_defense.md",
+      "size_bytes": 2419359,
+      "local_path": "/home/user/.cache/tracecontract/resolve/resolve-e457340c7003c96b",
+      "documented_in": [
+        "src/tracecontract/sandbox/docker_runner.py (ensure_wheelhouse)",
+        "docs/ownership_and_defense.md"
+      ],
+      "purpose": "offline wheelhouse for grading images: pip download used to resolve the CS-02 to CS-04 pins",
+      "contents_note": "same eight wheels as wheelhouse-801a26fad4c5e101",
+      "third_party_personal_data": "none beyond author, maintainer or contributor names that the source itself publishes",
+      "retention": "Regenerable tool cache; can be deleted (images keep their installed copies).",
+      "in_repo": false
+    },
+    {
+      "id": "docker-python-3.12-slim",
       "kind": "docker_image",
       "source": "docker.io/library/python:3.12-slim",
-      "digest": "sha256:5e2bdb1b0d542d5039cffb8181c65930093949194a65c365dfb1b0fe13a4fa5b",
-      "purpose": "sandbox base image probe",
-      "accessed": "2026-11-13",
+      "version": "sha256:5e2bdb1b0d542d5039cffb8181c65930093949194a65c365dfb1b0fe13a4fa5b",
+      "license": "PSF-2.0 AND LicenseRef-Debian-package-licences",
+      "license_note": "CPython under PSF-2.0; the Debian base layer under the licences of its packages (see /usr/share/doc/*/copyright in the image)",
+      "size_bytes": 177317732,
+      "local_path": "Docker image store of this host",
+      "documented_in": [
+        "docs/research/notes/harbor.md",
+        "src/tracecontract/sandbox/docker_runner.py (BASE_IMAGE)"
+      ],
+      "purpose": "sandbox base image (pinned digest); the study's tc-env:* and tc-probe images are built from it",
+      "third_party_personal_data": "none beyond author, maintainer or contributor names that the source itself publishes",
+      "retention": "Docker image store of this host; deleting it is an owner decision.",
+      "in_repo": false,
+      "size_note": "docker image inspect .Size on 2026-11-18 (du -sb does not apply to one image in the shared image store)"
+    },
+    {
+      "id": "web-sfdata",
+      "kind": "web_pages",
+      "source": [
+        "https://www.sfdata.com/",
+        "https://www.sfdata.com/blog/production-traces/",
+        "https://www.sfdata.com/sitemap.xml",
+        "https://www.sfdata.com/robots.txt",
+        "https://www.sfdata.com/opengraph-image.png"
+      ],
+      "version": "as served on 2026-11-13 (essay sha256 9c4e7748...; homepage sha256 8278cb39...)",
+      "license": "LicenseRef-all-rights-reserved",
+      "license_note": "pages carry a 2026 copyright notice and state no open licence",
+      "size_bytes": 105981,
+      "local_path": [
+        "<scratchpad>/dl/sfdata",
+        "<scratchpad>/dl/quotes_essay.txt"
+      ],
+      "documented_in": [
+        "docs/research/notes/sfdata.md §1",
+        "docs/research_brief.md §1"
+      ],
+      "purpose": "public industry problem statement (essay); quotes checked by string match",
+      "contents_note": "the folder also holds three files (one page, its HTTP headers and one API listing) from company pages other than the essay; the notes no longer use them (references removed in the 2026-11-18 privacy and rights revision). quotes_essay.txt holds sentences extracted from the essay for string matching",
+      "third_party_personal_data": "essay byline names; no other personal data recorded",
+      "retention": "Temporary copy in the study's session scratchpad, outside the repository; not committed. It disappears when the scratchpad is cleared. Deleting it earlier is an owner decision. Not for redistribution (copyrighted text).",
+      "in_repo": false
+    },
+    {
+      "id": "paper-swechat",
+      "kind": "paper_html",
+      "source": [
+        "https://arxiv.org/abs/2604.20779",
+        "https://arxiv.org/html/2604.20779v1",
+        "https://arxiv.org/html/2604.20779v2"
+      ],
+      "version": "v1 2026-04-22; v2 2026-10-01",
+      "license": "CC-BY-4.0",
+      "size_bytes": 1756409,
+      "local_path": [
+        "<scratchpad>/dl/swechat/abs.html",
+        "<scratchpad>/dl/swechat/v1.html",
+        "<scratchpad>/dl/swechat/v1.txt",
+        "<scratchpad>/dl/swechat/v2.html",
+        "<scratchpad>/dl/swechat/v2.txt"
+      ],
+      "documented_in": [
+        "docs/research/notes/swechat.md §1 (P1-P3)"
+      ],
+      "purpose": "primary data-source paper",
+      "third_party_personal_data": "none beyond author, maintainer or contributor names that the source itself publishes",
+      "retention": "Temporary copy in the study's session scratchpad, outside the repository; not committed. It disappears when the scratchpad is cleared. Deleting it earlier is an owner decision.",
+      "in_repo": false
+    },
+    {
+      "id": "paper-swechat-tex",
+      "kind": "paper_source",
+      "source": "https://arxiv.org/e-print/2604.20779v2",
+      "version": "v2 e-print (tarball last modified 2026-10-02)",
+      "license": "CC-BY-4.0",
+      "size_bytes": 4879918,
+      "local_path": "<scratchpad>/dl/swechat_tex",
+      "documented_in": [
+        "docs/research/notes/swechat.md §1 (P4)"
+      ],
+      "purpose": "figure values read with pdftotext",
+      "third_party_personal_data": "none beyond author, maintainer or contributor names that the source itself publishes",
+      "retention": "Temporary copy in the study's session scratchpad, outside the repository; not committed. It disappears when the scratchpad is cleared. Deleting it earlier is an owner decision.",
+      "in_repo": false
+    },
+    {
+      "id": "paper-swechat-figures",
+      "kind": "paper_figures",
+      "source": "https://arxiv.org/html/2604.20779v2 (figure SVGs)",
+      "version": "v2",
+      "license": "CC-BY-4.0",
+      "size_bytes": 1479176,
+      "local_path": [
+        "<scratchpad>/dl/swechat/figs",
+        "<scratchpad>/dl/swechat/figs_png"
+      ],
+      "documented_in": [
+        "docs/research/notes/swechat.md (limitations: figure values)"
+      ],
+      "purpose": "figure values",
+      "third_party_personal_data": "none beyond author, maintainer or contributor names that the source itself publishes",
+      "retention": "Temporary copy in the study's session scratchpad, outside the repository; not committed. It disappears when the scratchpad is cleared. Deleting it earlier is an owner decision.",
+      "in_repo": false
+    },
+    {
+      "id": "dataset-card-swechat",
+      "kind": "dataset_card",
+      "source": "https://huggingface.co/datasets/SALT-NLP/SWE-chat/resolve/main/README.md",
+      "version": "revision 202b071f18e03c79df5a7287565ce2ebc5ee7756",
+      "license": "ODC-BY-1.0",
+      "license_note": "dataset licence (database); the dataset is gated with automatic approval that shares the requester's username and e-mail",
+      "size_bytes": 43392,
+      "local_path": "<scratchpad>/dl/swechat_card/README.md",
+      "documented_in": [
+        "docs/research/notes/swechat.md §1 (P5)",
+        "docs/data_card.md"
+      ],
+      "purpose": "public dataset card only; no gated file was downloaded",
+      "third_party_personal_data": "dataset authors' contact address as published on the card",
+      "retention": "Temporary copy in the study's session scratchpad, outside the repository; not committed. It disappears when the scratchpad is cleared. Deleting it earlier is an owner decision.",
+      "in_repo": false
+    },
+    {
+      "id": "dataset-meta-swechat",
+      "kind": "dataset_metadata",
+      "source": [
+        "https://huggingface.co/api/datasets/SALT-NLP/SWE-chat",
+        "https://huggingface.co/datasets/SALT-NLP/SWE-chat"
+      ],
+      "version": "revision 202b071f18e03c79df5a7287565ce2ebc5ee7756",
+      "license": "ODC-BY-1.0",
+      "license_note": "metadata of an ODC-BY dataset",
+      "size_bytes": 1808639,
+      "local_path": "<scratchpad>/dl/swechat/hfmeta",
+      "documented_in": [
+        "docs/research/notes/swechat.md §1 (P6, P7)"
+      ],
+      "purpose": "file tree, sizes, commits and gate text; no data file (a 4-byte range request for a data file returned HTTP 401)",
+      "third_party_personal_data": "none beyond author, maintainer or contributor names that the source itself publishes",
+      "retention": "Temporary copy in the study's session scratchpad, outside the repository; not committed. It disappears when the scratchpad is cleared. Deleting it earlier is an owner decision.",
+      "in_repo": false
+    },
+    {
+      "id": "web-swechat-site",
+      "kind": "web_pages",
+      "source": "https://www.swe-chat.com/",
+      "version": "as served on 2026-11-13",
+      "license": "NOASSERTION",
+      "license_note": "no licence stated on the page",
+      "size_bytes": 40030,
+      "local_path": "<scratchpad>/dl/swechat/site",
+      "documented_in": [
+        "docs/research/notes/swechat.md §1 (P9)"
+      ],
+      "purpose": "snapshot date of the dataset",
+      "third_party_personal_data": "none beyond author, maintainer or contributor names that the source itself publishes",
+      "retention": "Temporary copy in the study's session scratchpad, outside the repository; not committed. It disappears when the scratchpad is cleared. Deleting it earlier is an owner decision.",
+      "in_repo": false
+    },
+    {
+      "id": "clone-swechat-repo",
+      "kind": "git_shallow_clone",
+      "source": "https://github.com/SALT-NLP/SWE-chat",
+      "version": "8465db2a234dffd02be2e118bf3437771963b095",
+      "commit_date": "2026-10-01T18:19:42-07:00",
+      "license": "MIT",
+      "size_bytes": 565247,
+      "local_path": "<scratchpad>/dl/swechat_repo/repo",
+      "documented_in": [
+        "docs/research/notes/swechat.md §1 (P8)"
+      ],
+      "purpose": "analysis code and notebook outputs of the SWE-chat paper (no dataset content)",
+      "third_party_personal_data": "none beyond author, maintainer or contributor names that the source itself publishes",
+      "retention": "Temporary copy in the study's session scratchpad, outside the repository; not committed. It disappears when the scratchpad is cleared. Deleting it earlier is an owner decision.",
+      "in_repo": false
+    },
+    {
+      "id": "dataset-cards-swechat-derived",
+      "kind": "dataset_cards",
+      "source": "https://huggingface.co/api/datasets/<id> and dataset cards of SWE-chat derivatives and mirrors (H1-H14)",
+      "version": "as served on 2026-11-13",
+      "license": "NOASSERTION",
+      "license_note": "per dataset, as recorded in swechat.md §4",
+      "size_bytes": 4571684,
+      "local_path": "<scratchpad>/dl/swechat/derived",
+      "documented_in": [
+        "docs/research/notes/swechat.md §4"
+      ],
+      "purpose": "check derived copies of SWE-chat (cards and API metadata only; no data files; Semantic Scholar search JSON)",
+      "third_party_personal_data": "Hugging Face user names of dataset owners, as published",
+      "retention": "Temporary copy in the study's session scratchpad, outside the repository; not committed. It disappears when the scratchpad is cleared. Deleting it earlier is an owner decision.",
+      "in_repo": false
+    },
+    {
+      "id": "papers-swechat-related",
+      "kind": "paper_html",
+      "source": "arXiv abstract and HTML pages of SWE-Together, SecureForge, SWE-INTERACT, RealClawBench and Dialogue SWE-Bench",
+      "version": "versions in swechat.md §1 (R1, R4-R7)",
+      "license": "NOASSERTION",
+      "license_note": "per-paper arXiv licences, see swechat.md §1",
+      "size_bytes": 2163189,
+      "local_path": "<scratchpad>/dl/swechat/related",
+      "documented_in": [
+        "docs/research/notes/swechat.md §1"
+      ],
+      "purpose": "related work",
+      "third_party_personal_data": "none beyond author, maintainer or contributor names that the source itself publishes",
+      "retention": "Temporary copy in the study's session scratchpad, outside the repository; not committed. It disappears when the scratchpad is cleared. Deleting it earlier is an owner decision.",
+      "in_repo": false
+    },
+    {
+      "id": "clone-entire-cli",
+      "kind": "git_shallow_clone",
+      "source": "https://github.com/entireio/cli",
+      "version": "ce16562b9b5a4d7bdb2d61e172f92934b788337d",
+      "commit_date": "2026-11-12T20:31:27+01:00",
+      "license": "MIT",
+      "size_bytes": 42657973,
+      "local_path": [
+        "<scratchpad>/dl/entire_cli_src/cli",
+        "<scratchpad>/dl/swechat/entire_cli_lsremote.txt"
+      ],
+      "documented_in": [
+        "docs/research/notes/swechat.md §1 (E1), §6"
+      ],
+      "purpose": "checkpoint and transcript format of the tool that produced SWE-chat",
+      "contents_note": "plus a git ls-remote listing of the repository's refs",
+      "third_party_personal_data": "none beyond author, maintainer or contributor names that the source itself publishes",
+      "retention": "Temporary copy in the study's session scratchpad, outside the repository; not committed. It disappears when the scratchpad is cleared. Deleting it earlier is an owner decision.",
+      "in_repo": false
+    },
+    {
+      "id": "web-entire-docs",
+      "kind": "web_pages",
+      "source": [
+        "https://docs.entire.io/guides/checkpoints/checkpoint-storage.md",
+        "https://docs.entire.io/cli/checkpoints.md",
+        "https://entire.io/blog/introducing-ref-based-checkpoint-storage.md"
+      ],
+      "version": "as served on 2026-11-13",
+      "license": "NOASSERTION",
+      "license_note": "no licence stated for the documentation pages",
+      "size_bytes": 68673,
+      "local_path": "<scratchpad>/dl/entire_docs",
+      "documented_in": [
+        "docs/research/notes/swechat.md §1 (E2-E4)"
+      ],
+      "purpose": "checkpoint storage documentation",
+      "third_party_personal_data": "none beyond author, maintainer or contributor names that the source itself publishes",
+      "retention": "Temporary copy in the study's session scratchpad, outside the repository; not committed. It disappears when the scratchpad is cleared. Deleting it earlier is an owner decision.",
+      "in_repo": false
+    },
+    {
+      "id": "third-party-sessions-lumintime",
+      "kind": "git_partial_fetch",
+      "source": "https://github.com/nuttycc/LuminTime (branch entire/checkpoints/v1 only)",
+      "version": "1d5f9af0001622a6cff6fef4dc2ba6b5b14ac36e (committer date 2026-02-16)",
+      "commit_date": "2026-02-16T18:07:03+08:00",
+      "license": "MIT",
+      "license_note": "licence of the repository (\"Copyright (c) 2026-present nuttycc\"); the checkpoint branch carries no separate licence",
+      "size_bytes": 2095796,
+      "local_path": "<scratchpad>/dl/entire_example",
+      "documented_in": [
+        "docs/research/notes/swechat.md §1 (E5), §6.5"
+      ],
+      "purpose": "bounded inspection of the Entire checkpoint format (structure only)",
+      "contents_note": "THIRD-PARTY AGENT-SESSION DATA: the fetch stored all 122 objects of the branch tip in the local .git, including 16 Claude Code session transcripts (full.jsonl, 130,776 to 2,284,609 bytes each), 16 prompt.txt and 16 context.md files of one third-party developer's sessions. They were inspected for field names only; no transcript text was copied into the notes or the repository. Also holds lsremote.txt (ref listing).",
+      "third_party_personal_data": "yes: a third party's agent-session transcripts and prompts (may contain personal data)",
+      "retention": "Still on disk outside the repository on 2026-11-18. No further use is planned. Deletion is an owner decision; nothing was deleted.",
+      "in_repo": false
+    },
+    {
+      "id": "clone-swe-together",
+      "kind": "git_blobless_sparse_clone",
+      "source": "https://github.com/Togetherbench/SWE-Together",
+      "version": "e9ce8cfcbe2804a959799726f416e63686ea1824",
+      "commit_date": "2026-10-14T02:01:32-04:00",
+      "license": "Apache-2.0",
+      "size_bytes": 595688,
+      "local_path": "<scratchpad>/dl/swetogether_repo/repo",
+      "documented_in": [
+        "docs/research/notes/swechat.md §1 (R3), §5.1"
+      ],
+      "purpose": "task-package format of SWE-Together",
+      "contents_note": "one task's metadata files (task.toml, README, canonical_goals.json, oracle_intents.json, reference_patch.json, tests) were checked out for structure and then deleted from the working tree; their blobs remain in .git. The goal and intent files are session-derived text published by the dataset authors",
+      "third_party_personal_data": "session-derived task text of one published task (Apache-2.0); no raw session transcript",
+      "retention": "Temporary copy in the study's session scratchpad, outside the repository; not committed. It disappears when the scratchpad is cleared. Deleting it earlier is an owner decision.",
+      "in_repo": false
+    },
+    {
+      "id": "web-odc-by",
+      "kind": "web_pages",
+      "source": [
+        "https://opendatacommons.org/licenses/by/1-0/",
+        "https://opendatacommons.org/licenses/by/summary/"
+      ],
+      "version": "ODC-By v1.0",
+      "license": "NOASSERTION",
+      "license_note": "licence text pages; their own licence was not recorded",
+      "size_bytes": 95098,
+      "local_path": "<scratchpad>/dl/odcby",
+      "documented_in": [
+        "docs/research/notes/swechat.md §1 (P10)"
+      ],
+      "purpose": "terms of the SWE-chat dataset licence",
+      "third_party_personal_data": "none beyond author, maintainer or contributor names that the source itself publishes",
+      "retention": "Temporary copy in the study's session scratchpad, outside the repository; not committed. It disappears when the scratchpad is cleared. Deleting it earlier is an owner decision.",
+      "in_repo": false
+    },
+    {
+      "id": "browser-profile-swechat",
+      "kind": "browser_profile",
+      "source": "headless Chrome run (component data downloaded by the browser itself)",
+      "version": "n/a",
+      "license": "NOASSERTION",
+      "license_note": "browser components (Safe Browsing lists, certificate revocation data, extension cache); not research material",
+      "size_bytes": 43121932,
+      "local_path": "<scratchpad>/dl/swechat/chrome_profile",
+      "documented_in": [
+        "docs/research/notes/swechat.md (limitations: SVG rendering failed)"
+      ],
+      "purpose": "attempted SVG figure rendering (failed); not used as a source",
+      "third_party_personal_data": "none expected",
+      "retention": "Temporary copy in the study's session scratchpad, outside the repository; not committed. It disappears when the scratchpad is cleared. Deleting it earlier is an owner decision.",
+      "in_repo": false
+    },
+    {
+      "id": "paper-trace2eval",
+      "kind": "paper_html_pdf",
+      "source": [
+        "https://arxiv.org/abs/2611.06506",
+        "https://arxiv.org/html/2611.06506",
+        "https://arxiv.org/pdf/2611.06506"
+      ],
+      "version": "v1 2026-11-04",
+      "license": "LicenseRef-arXiv-nonexclusive-distrib-1.0",
+      "size_bytes": 8893763,
+      "local_path": [
+        "<scratchpad>/dl/trace2eval/abs.html",
+        "<scratchpad>/dl/trace2eval/full.html",
+        "<scratchpad>/dl/trace2eval/full.txt",
+        "<scratchpad>/dl/trace2eval/paper.pdf",
+        "<scratchpad>/dl/trace2eval/paper.txt"
+      ],
+      "documented_in": [
+        "docs/research/notes/trace2eval.md §1 (1-3)"
+      ],
+      "purpose": "closest related work (full text)",
+      "third_party_personal_data": "none beyond author, maintainer or contributor names that the source itself publishes",
+      "retention": "Temporary copy in the study's session scratchpad, outside the repository; not committed. It disappears when the scratchpad is cleared. Deleting it earlier is an owner decision.",
+      "in_repo": false
+    },
+    {
+      "id": "files-trace2eval-anon-repo",
+      "kind": "repository_files",
+      "source": "https://anonymous.4open.science/api/repo/TRACE2EVAL-ICLR/file/<path>",
+      "version": "not stated (no commit shown)",
+      "license": "NOASSERTION",
+      "license_note": "no licence stated",
+      "size_bytes": 34191,
+      "local_path": "<scratchpad>/dl/trace2eval/anon",
+      "documented_in": [
+        "docs/research/notes/trace2eval.md §1 (4-7)"
+      ],
+      "purpose": "rubric anchors, taxonomy README and the only released case prompts",
+      "contents_note": "includes prompts/login_service r1 and r2: two task prompts the authors derived and translated from one consented, desensitized user session",
+      "third_party_personal_data": "session-derived prompt text published by the authors (desensitized); no raw session",
+      "retention": "Temporary copy in the study's session scratchpad, outside the repository; not committed. It disappears when the scratchpad is cleared. Deleting it earlier is an owner decision.",
+      "in_repo": false
+    },
+    {
+      "id": "papers-trace2eval-cited",
+      "kind": "paper_abs",
+      "source": "arXiv abstract pages of works cited by Trace2Eval (Asuka-Bench, TerminalWorld, BenchJack, WatchPoint)",
+      "version": "versions in trace2eval.md §1 (8-11)",
+      "license": "NOASSERTION",
+      "license_note": "per-paper arXiv licences",
+      "size_bytes": 169797,
+      "local_path": "<scratchpad>/dl/trace2eval/cited",
+      "documented_in": [
+        "docs/research/notes/trace2eval.md §1"
+      ],
+      "purpose": "related work",
+      "third_party_personal_data": "none beyond author, maintainer or contributor names that the source itself publishes",
+      "retention": "Temporary copy in the study's session scratchpad, outside the repository; not committed. It disappears when the scratchpad is cleared. Deleting it earlier is an owner decision.",
+      "in_repo": false
+    },
+    {
+      "id": "web-spike-trace2eval",
+      "kind": "web_page",
+      "source": "https://raw.githubusercontent.com/shimpeiws/spike-trace2eval/main/README.md",
+      "version": "main on 2026-11-13 (commit not recorded)",
+      "license": "NOASSERTION",
+      "license_note": "no licence recorded",
+      "size_bytes": 3338,
+      "local_path": "<scratchpad>/dl/trace2eval/spike",
+      "documented_in": [
+        "docs/research/notes/trace2eval.md §1 (12)"
+      ],
+      "purpose": "third-party proof of concept (README only)",
+      "third_party_personal_data": "none beyond author, maintainer or contributor names that the source itself publishes",
+      "retention": "Temporary copy in the study's session scratchpad, outside the repository; not committed. It disappears when the scratchpad is cleared. Deleting it earlier is an owner decision.",
+      "in_repo": false
+    },
+    {
+      "id": "web-harbor-docs",
+      "kind": "web_pages",
+      "source": "Harbor documentation pages (docs site, markdown and llms.txt)",
+      "version": "as served on 2026-11-13",
+      "license": "NOASSERTION",
+      "license_note": "no licence stated on the pages (the Harbor code is Apache-2.0)",
+      "size_bytes": 158755,
+      "local_path": "<scratchpad>/dl/harbor",
+      "documented_in": [
+        "docs/research/notes/harbor.md §1"
+      ],
+      "purpose": "Harbor task, job and verifier semantics",
+      "third_party_personal_data": "none beyond author, maintainer or contributor names that the source itself publishes",
+      "retention": "Temporary copy in the study's session scratchpad, outside the repository; not committed. It disappears when the scratchpad is cleared. Deleting it earlier is an owner decision.",
+      "in_repo": false
+    },
+    {
+      "id": "papers-verifier-fidelity",
+      "kind": "paper_html",
+      "source": "arXiv abstract and HTML pages listed in verifier_fidelity.md",
+      "version": "versions in the note",
+      "license": "NOASSERTION",
+      "license_note": "per-paper arXiv licences",
+      "size_bytes": 18684744,
+      "local_path": "<scratchpad>/dl/verifier_fidelity/papers",
+      "documented_in": [
+        "docs/research/notes/verifier_fidelity.md"
+      ],
+      "purpose": "related work (verifier audits, reward hacking)",
+      "third_party_personal_data": "none beyond author, maintainer or contributor names that the source itself publishes",
+      "retention": "Temporary copy in the study's session scratchpad, outside the repository; not committed. It disappears when the scratchpad is cleared. Deleting it earlier is an owner decision.",
+      "in_repo": false
+    },
+    {
+      "id": "web-verifier-fidelity",
+      "kind": "web_pages",
+      "source": "Terminal-Bench blog posts, METR and Berkeley RDI posts, OpenAI page attempts, the princeton-nlp/SWE-bench_Verified card",
+      "version": "as served on 2026-11-13",
+      "license": "NOASSERTION",
+      "license_note": "no open licence recorded for the blog pages",
+      "size_bytes": 515111,
+      "local_path": "<scratchpad>/dl/verifier_fidelity/web",
+      "documented_in": [
+        "docs/research/notes/verifier_fidelity.md"
+      ],
+      "purpose": "related work",
+      "third_party_personal_data": "none beyond author, maintainer or contributor names that the source itself publishes",
+      "retention": "Temporary copy in the study's session scratchpad, outside the repository; not committed. It disappears when the scratchpad is cleared. Deleting it earlier is an owner decision.",
+      "in_repo": false
+    },
+    {
+      "id": "clone-harden-v0",
+      "kind": "git_shallow_clone",
+      "source": "https://github.com/few-sh/harden-v0",
+      "version": "342b8474e0c0cf96e4a8313fd2e26c7a11d51193",
+      "commit_date": "2026-07-03T15:59:29-07:00",
+      "license": "Apache-2.0",
+      "size_bytes": 1947238,
+      "local_path": "<scratchpad>/dl/verifier_fidelity/harden-v0",
+      "documented_in": [
+        "docs/research/notes/verifier_fidelity.md"
+      ],
+      "purpose": "hacker/fixer hardening implementation (read only)",
+      "third_party_personal_data": "none beyond author, maintainer or contributor names that the source itself publishes",
+      "retention": "Temporary copy in the study's session scratchpad, outside the repository; not committed. It disappears when the scratchpad is cleared. Deleting it earlier is an owner decision.",
+      "in_repo": false
+    },
+    {
+      "id": "data-swebv-annotations",
+      "kind": "dataset_files",
+      "source": "https://cdn.openai.com/introducing-swe-bench-verified/swe-bench-annotation-results.zip",
+      "version": "Last-Modified 2024-08-12; 2,397,074 bytes",
+      "license": "NOASSERTION",
+      "license_note": "no licence stated in the archive; the announcing blog post was not retrievable (HTTP 403)",
+      "size_bytes": 10695157,
+      "local_path": "<scratchpad>/dl/verifier_fidelity/swebv_annot",
+      "documented_in": [
+        "docs/research/notes/verifier_fidelity.md §A1"
+      ],
+      "purpose": "annotation statistics of SWE-bench Verified (zip plus the two extracted CSVs)",
+      "contents_note": "human annotators' labels and free-text notes on public GitHub issues, keyed by pseudonymous annotator ids",
+      "third_party_personal_data": "pseudonymous annotator ids and their notes, as published",
+      "retention": "Temporary copy in the study's session scratchpad, outside the repository; not committed. It disappears when the scratchpad is cleared. Deleting it earlier is an owner decision.",
+      "in_repo": false
+    },
+    {
+      "id": "data-swebv-rows",
+      "kind": "dataset_rows",
+      "source": "https://datasets-server.huggingface.co/rows?dataset=princeton-nlp/SWE-bench_Verified (5 pages of 100 rows)",
+      "version": "dataset sha c104f84 (lastModified 2025-02-18)",
+      "license": "NOASSERTION",
+      "license_note": "the HF card states no licence",
+      "size_bytes": 8125013,
+      "local_path": "<scratchpad>/dl/verifier_fidelity/hf_rows",
+      "documented_in": [
+        "docs/research/notes/verifier_fidelity.md §A1 (cross-check of 500 instance ids)"
+      ],
+      "purpose": "instance-id cross-check against the annotation CSVs",
+      "contents_note": "all 500 rows, including problem statements and hints taken from public GitHub issue threads",
+      "third_party_personal_data": "public GitHub issue text and comments as published in the dataset",
+      "retention": "Temporary copy in the study's session scratchpad, outside the repository; not committed. It disappears when the scratchpad is cleared. Deleting it earlier is an owner decision.",
+      "in_repo": false
+    },
+    {
+      "id": "papers-env-synthesis",
+      "kind": "paper_html",
+      "source": "arXiv abstract and HTML pages listed in env_synthesis.md §1",
+      "version": "versions in the note",
+      "license": "NOASSERTION",
+      "license_note": "per-paper arXiv licences, see env_synthesis.md §1",
+      "size_bytes": 11637580,
+      "local_path": [
+        "<scratchpad>/dl/env_synthesis/abs_2412.21139.html",
+        "<scratchpad>/dl/env_synthesis/abs_2412.21139.txt",
+        "<scratchpad>/dl/env_synthesis/abs_2504.02605.html",
+        "<scratchpad>/dl/env_synthesis/abs_2504.02605.txt",
+        "<scratchpad>/dl/env_synthesis/abs_2504.14757.html",
+        "<scratchpad>/dl/env_synthesis/abs_2504.14757.txt",
+        "<scratchpad>/dl/env_synthesis/abs_2505.16975.html",
+        "<scratchpad>/dl/env_synthesis/abs_2505.16975.txt",
+        "<scratchpad>/dl/env_synthesis/abs_2505.20411.html",
+        "<scratchpad>/dl/env_synthesis/abs_2505.20411.txt",
+        "<scratchpad>/dl/env_synthesis/abs_2505.23419.html",
+        "<scratchpad>/dl/env_synthesis/abs_2505.23419.txt",
+        "<scratchpad>/dl/env_synthesis/abs_2506.07636.html",
+        "<scratchpad>/dl/env_synthesis/abs_2506.07636.txt",
+        "<scratchpad>/dl/env_synthesis/abs_2506.09003.html",
+        "<scratchpad>/dl/env_synthesis/abs_2506.09003.txt",
+        "<scratchpad>/dl/env_synthesis/abs_2506.10954.html",
+        "<scratchpad>/dl/env_synthesis/abs_2506.10954.txt",
+        "<scratchpad>/dl/env_synthesis/abs_2506.19290.html",
+        "<scratchpad>/dl/env_synthesis/abs_2506.19290.txt",
+        "<scratchpad>/dl/env_synthesis/abs_2508.01550.html",
+        "<scratchpad>/dl/env_synthesis/abs_2508.01550.txt",
+        "<scratchpad>/dl/env_synthesis/abs_2509.08724.html",
+        "<scratchpad>/dl/env_synthesis/abs_2509.08724.txt",
+        "<scratchpad>/dl/env_synthesis/abs_2510.19898.html",
+        "<scratchpad>/dl/env_synthesis/abs_2510.19898.txt",
+        "<scratchpad>/dl/env_synthesis/abs_2512.17419.html",
+        "<scratchpad>/dl/env_synthesis/abs_2512.17419.txt",
+        "<scratchpad>/dl/env_synthesis/abs_2601.01426.html",
+        "<scratchpad>/dl/env_synthesis/abs_2601.01426.txt",
+        "<scratchpad>/dl/env_synthesis/abs_2602.02361.html",
+        "<scratchpad>/dl/env_synthesis/abs_2602.02361.txt",
+        "<scratchpad>/dl/env_synthesis/abs_2602.09892.html",
+        "<scratchpad>/dl/env_synthesis/abs_2602.09892.txt",
+        "<scratchpad>/dl/env_synthesis/abs_2602.23866.html",
+        "<scratchpad>/dl/env_synthesis/abs_2602.23866.txt",
+        "<scratchpad>/dl/env_synthesis/abs_2603.00575.html",
+        "<scratchpad>/dl/env_synthesis/abs_2603.00575.txt",
+        "<scratchpad>/dl/env_synthesis/abs_2604.05336.html",
+        "<scratchpad>/dl/env_synthesis/abs_2604.05336.txt",
+        "<scratchpad>/dl/env_synthesis/abs_2606.26300.html",
+        "<scratchpad>/dl/env_synthesis/abs_2606.26300.txt",
+        "<scratchpad>/dl/env_synthesis/full_2412.21139.html",
+        "<scratchpad>/dl/env_synthesis/full_2412.21139.txt",
+        "<scratchpad>/dl/env_synthesis/full_2504.02605.html",
+        "<scratchpad>/dl/env_synthesis/full_2504.02605.txt",
+        "<scratchpad>/dl/env_synthesis/full_2505.16975.html",
+        "<scratchpad>/dl/env_synthesis/full_2505.16975.txt",
+        "<scratchpad>/dl/env_synthesis/full_2505.20411.html",
+        "<scratchpad>/dl/env_synthesis/full_2505.20411.txt",
+        "<scratchpad>/dl/env_synthesis/full_2506.07636.html",
+        "<scratchpad>/dl/env_synthesis/full_2506.07636.txt",
+        "<scratchpad>/dl/env_synthesis/full_2506.09003.html",
+        "<scratchpad>/dl/env_synthesis/full_2506.09003.txt",
+        "<scratchpad>/dl/env_synthesis/full_2506.10954.html",
+        "<scratchpad>/dl/env_synthesis/full_2506.10954.txt",
+        "<scratchpad>/dl/env_synthesis/full_2508.01550.html",
+        "<scratchpad>/dl/env_synthesis/full_2508.01550.txt",
+        "<scratchpad>/dl/env_synthesis/full_2512.17419.html",
+        "<scratchpad>/dl/env_synthesis/full_2512.17419.txt",
+        "<scratchpad>/dl/env_synthesis/full_2602.02361.html",
+        "<scratchpad>/dl/env_synthesis/full_2602.02361.txt",
+        "<scratchpad>/dl/env_synthesis/full_2602.09892.html",
+        "<scratchpad>/dl/env_synthesis/full_2602.09892.txt",
+        "<scratchpad>/dl/env_synthesis/full_2602.23866.html",
+        "<scratchpad>/dl/env_synthesis/full_2602.23866.txt",
+        "<scratchpad>/dl/env_synthesis/full_2603.00575.html",
+        "<scratchpad>/dl/env_synthesis/full_2603.00575.txt",
+        "<scratchpad>/dl/env_synthesis/full_2606.26300.html",
+        "<scratchpad>/dl/env_synthesis/full_2606.26300.txt",
+        "<scratchpad>/dl/env_synthesis/r2egym.html",
+        "<scratchpad>/dl/env_synthesis/r2egym.txt",
+        "<scratchpad>/dl/env_synthesis/r2egym_abs.html",
+        "<scratchpad>/dl/env_synthesis/r2egym_abs.txt",
+        "<scratchpad>/dl/env_synthesis/swesmith.html",
+        "<scratchpad>/dl/env_synthesis/swesmith.txt",
+        "<scratchpad>/dl/env_synthesis/swesmith_abs.html",
+        "<scratchpad>/dl/env_synthesis/swesmith_abs.txt"
+      ],
+      "documented_in": [
+        "docs/research/notes/env_synthesis.md"
+      ],
+      "purpose": "related work (task and environment synthesis)",
+      "third_party_personal_data": "none beyond author, maintainer or contributor names that the source itself publishes",
+      "retention": "Temporary copy in the study's session scratchpad, outside the repository; not committed. It disappears when the scratchpad is cleared. Deleting it earlier is an owner decision.",
+      "in_repo": false
+    },
+    {
+      "id": "clone-swe-bench",
+      "kind": "git_shallow_clone",
+      "source": "https://github.com/SWE-bench/SWE-bench",
+      "version": "02e7a74ffd0b707aab73d203fe87bdc7c76afc8e",
+      "commit_date": "2026-09-02T01:50:34+00:00",
+      "license": "MIT",
+      "size_bytes": 6062330,
+      "local_path": "<scratchpad>/dl/env_synthesis/repos/swebench_clone",
+      "documented_in": [
+        "docs/research/notes/env_synthesis.md §1 (S22)"
+      ],
+      "purpose": "harness modules imported by SWE-smith",
+      "third_party_personal_data": "none beyond author, maintainer or contributor names that the source itself publishes",
+      "retention": "Temporary copy in the study's session scratchpad, outside the repository; not committed. It disappears when the scratchpad is cleared. Deleting it earlier is an owner decision.",
+      "in_repo": false
+    },
+    {
+      "id": "papers-corrections",
+      "kind": "paper_html",
+      "source": "arXiv abstract and HTML pages listed in corrections.md §1 (including TellOnce v1 and v2)",
+      "version": "versions in the note",
+      "license": "NOASSERTION",
+      "license_note": "per-paper arXiv licences",
+      "size_bytes": 20926004,
+      "local_path": [
+        "<scratchpad>/dl/corrections/abs",
+        "<scratchpad>/dl/corrections/full",
+        "<scratchpad>/dl/corrections/2606.13174.abs.html",
+        "<scratchpad>/dl/corrections/2606.13174v1.abs.html",
+        "<scratchpad>/dl/corrections/2606.13174v1.html",
+        "<scratchpad>/dl/corrections/2606.13174v1.txt",
+        "<scratchpad>/dl/corrections/2606.13174v2.html",
+        "<scratchpad>/dl/corrections/2606.13174v2.txt"
+      ],
+      "documented_in": [
+        "docs/research/notes/corrections.md §1"
+      ],
+      "purpose": "related work (user corrections)",
+      "third_party_personal_data": "none beyond author, maintainer or contributor names that the source itself publishes",
+      "retention": "Temporary copy in the study's session scratchpad, outside the repository; not committed. It disappears when the scratchpad is cleared. Deleting it earlier is an owner decision.",
+      "in_repo": false
+    },
+    {
+      "id": "clone-tellonce-exp",
+      "kind": "git_shallow_clone",
+      "source": "https://github.com/YujunZhou/TellOnce_exp",
+      "version": "abc78f724b721da87dd1a33800b5659473fdcf14",
+      "commit_date": "2026-10-23T23:51:20-06:00",
+      "license": "MIT",
+      "size_bytes": 3113735,
+      "local_path": "<scratchpad>/dl/corrections/repos/TellOnce_exp",
+      "documented_in": [
+        "docs/research/notes/corrections.md §1 (C3)"
+      ],
+      "purpose": "experiment harness of TellOnce (code and configs; no user data found)",
+      "third_party_personal_data": "none beyond author, maintainer or contributor names that the source itself publishes",
+      "retention": "Temporary copy in the study's session scratchpad, outside the repository; not committed. It disappears when the scratchpad is cleared. Deleting it earlier is an owner decision.",
+      "in_repo": false
+    },
+    {
+      "id": "clone-tellonce",
+      "kind": "git_shallow_clone",
+      "source": "https://github.com/YujunZhou/tellonce",
+      "version": "b918869840999cfadd2ca825d97a39113ea540a7",
+      "commit_date": "2026-10-24T00:21:39-06:00",
+      "license": "MIT",
+      "size_bytes": 3380517,
+      "local_path": "<scratchpad>/dl/corrections/repos/tellonce",
+      "documented_in": [
+        "docs/research/notes/corrections.md §1 (C4)"
+      ],
+      "purpose": "deployable TellOnce skill (release 1.8.3; release notes read)",
+      "third_party_personal_data": "none beyond author, maintainer or contributor names that the source itself publishes",
+      "retention": "Temporary copy in the study's session scratchpad, outside the repository; not committed. It disappears when the scratchpad is cleared. Deleting it earlier is an owner decision.",
+      "in_repo": false
+    },
+    {
+      "id": "files-corrections-readmes-licences",
+      "kind": "repository_files",
+      "source": "raw.githubusercontent.com README files (YujunZhou/TRACE_exp, TellOnce_exp, tellonce) and LICENSE files of nine benchmark repositories",
+      "version": "main branches on 2026-11-13",
+      "license": "NOASSERTION",
+      "license_note": "each file under its repository's licence (MIT, Apache-2.0, or none found)",
+      "size_bytes": 65033,
+      "local_path": [
+        "<scratchpad>/dl/corrections/raw",
+        "<scratchpad>/dl/corrections/licenses"
+      ],
+      "documented_in": [
+        "docs/research/notes/corrections.md §1 (C5) and licence rows"
+      ],
+      "purpose": "licence and README checks",
+      "third_party_personal_data": "none beyond author, maintainer or contributor names that the source itself publishes",
+      "retention": "Temporary copy in the study's session scratchpad, outside the repository; not committed. It disappears when the scratchpad is cleared. Deleting it earlier is an owner decision.",
+      "in_repo": false
+    },
+    {
+      "id": "web-corrections-other",
+      "kind": "web_pages",
+      "source": [
+        "Anthropic research page on measuring agent autonomy",
+        "https://huggingface.co/api/datasets/princeton-nlp/SWE-bench (API JSON and card)"
+      ],
+      "version": "as served on 2026-11-13",
+      "license": "NOASSERTION",
+      "license_note": "no open licence recorded",
+      "size_bytes": 335712,
+      "local_path": [
+        "<scratchpad>/dl/corrections/anthropic_measuring_autonomy.html",
+        "<scratchpad>/dl/corrections/anthropic_measuring_autonomy.txt",
+        "<scratchpad>/dl/corrections/swebench_api.json",
+        "<scratchpad>/dl/corrections/swebench_card.md"
+      ],
+      "documented_in": [
+        "docs/research/notes/corrections.md"
+      ],
+      "purpose": "related work and dataset metadata",
+      "third_party_personal_data": "none beyond author, maintainer or contributor names that the source itself publishes",
+      "retention": "Temporary copy in the study's session scratchpad, outside the repository; not committed. It disappears when the scratchpad is cleared. Deleting it earlier is an owner decision.",
+      "in_repo": false
+    },
+    {
+      "id": "papers-training",
+      "kind": "paper_html",
+      "source": "arXiv abstract and HTML pages listed in training_and_datasets.md",
+      "version": "versions in the note",
+      "license": "NOASSERTION",
+      "license_note": "per-paper arXiv licences",
+      "size_bytes": 3451423,
+      "local_path": [
+        "<scratchpad>/dl/training_datasets/arxiv",
+        "<scratchpad>/dl/training_datasets/trace"
+      ],
+      "documented_in": [
+        "docs/research/notes/training_and_datasets.md"
+      ],
+      "purpose": "related work, incl. the TRACE paper and HF model and dataset API JSON of its LoRA release",
+      "third_party_personal_data": "none beyond author, maintainer or contributor names that the source itself publishes",
+      "retention": "Temporary copy in the study's session scratchpad, outside the repository; not committed. It disappears when the scratchpad is cleared. Deleting it earlier is an owner decision.",
+      "in_repo": false
+    },
+    {
+      "id": "dataset-cards-agent-traces",
+      "kind": "dataset_cards",
+      "source": "https://huggingface.co/api/datasets/<id>, dataset cards, datasets-server /info and /statistics of agent-trace datasets",
+      "version": "as served on 2026-11-13",
+      "license": "NOASSERTION",
+      "license_note": "per dataset, as recorded in the note",
+      "size_bytes": 5212971,
+      "local_path": "<scratchpad>/dl/training_datasets/hf",
+      "documented_in": [
+        "docs/research/notes/training_and_datasets.md (header: dataset content none)"
+      ],
+      "purpose": "alternative data sources (cards and metadata only)",
+      "contents_note": "cards and aggregates only; no session or trajectory file was opened. Includes traj2envs-rl provenance files (sources.json, registry.json, images.txt, one task.toml)",
+      "third_party_personal_data": "Hugging Face user names of dataset owners, as published",
+      "retention": "Temporary copy in the study's session scratchpad, outside the repository; not committed. It disappears when the scratchpad is cleared. Deleting it earlier is an owner decision.",
+      "in_repo": false
+    },
+    {
+      "id": "npm-pi-coding-agent",
+      "kind": "npm_package",
+      "source": "https://registry.npmjs.org/@mariozechner/pi-coding-agent (tarball)",
+      "version": "0.73.1",
+      "license": "MIT",
+      "license_note": "package.json license field",
+      "size_bytes": 4598358,
+      "local_path": "<scratchpad>/dl/training_datasets/pi",
+      "documented_in": [
+        "docs/research/notes/training_and_datasets.md (header)"
+      ],
+      "purpose": "session-format documentation (docs/session-format.md, docs/sessions.md extracted), plus the pi-share-hf README",
+      "third_party_personal_data": "none beyond author, maintainer or contributor names that the source itself publishes",
+      "retention": "Temporary copy in the study's session scratchpad, outside the repository; not committed. It disappears when the scratchpad is cleared. Deleting it earlier is an owner decision.",
+      "in_repo": false
+    },
+    {
+      "id": "clone-donate-trace",
+      "kind": "git_shallow_clone",
+      "source": "https://github.com/trace-commons-ai/donate-trace",
+      "version": "5eb9bcd17ceda270cec15f2be03afda4e83db663",
+      "commit_date": "2026-06-16T18:20:10+03:00",
+      "license": "NOASSERTION",
+      "license_note": "no licence file at the repository root",
+      "size_bytes": 89228,
+      "local_path": "<scratchpad>/dl/training_datasets/repos/donate-trace",
+      "documented_in": [
+        "docs/research/notes/training_and_datasets.md (header)"
+      ],
+      "purpose": "Trace Commons donation tool (docs and source read)",
+      "third_party_personal_data": "none beyond author, maintainer or contributor names that the source itself publishes",
+      "retention": "Temporary copy in the study's session scratchpad, outside the repository; not committed. It disappears when the scratchpad is cleared. Deleting it earlier is an owner decision.",
+      "in_repo": false
+    },
+    {
+      "id": "clone-traj2envs",
+      "kind": "git_shallow_clone",
+      "source": "https://github.com/huggingface/traj2envs",
+      "version": "a09204ed6d4b38ae549acce3ba462f5561367556",
+      "commit_date": "2026-11-05T13:09:40+04:00",
+      "license": "Apache-2.0",
+      "size_bytes": 281961,
+      "local_path": "<scratchpad>/dl/training_datasets/repos/traj2envs",
+      "documented_in": [
+        "docs/research/notes/training_and_datasets.md (header)"
+      ],
+      "purpose": "trajectory-to-environment tool (docs and source read)",
+      "third_party_personal_data": "none beyond author, maintainer or contributor names that the source itself publishes",
+      "retention": "Temporary copy in the study's session scratchpad, outside the repository; not committed. It disappears when the scratchpad is cleared. Deleting it earlier is an owner decision.",
+      "in_repo": false
+    },
+    {
+      "id": "metadata-devgpt-dataclaw-misc",
+      "kind": "dataset_metadata",
+      "source": [
+        "https://zenodo.org/api/records/10086809 (DevGPT)",
+        "DataClaw and DevGPT README files",
+        "Crossref API query"
+      ],
+      "version": "as served on 2026-11-13",
+      "license": "NOASSERTION",
+      "license_note": "DevGPT dataset: CC-BY-4.0 (Zenodo record); README files under their repositories' licences",
+      "size_bytes": 75159,
+      "local_path": [
+        "<scratchpad>/dl/training_datasets/devgpt",
+        "<scratchpad>/dl/training_datasets/dataclaw",
+        "<scratchpad>/dl/training_datasets/misc"
+      ],
+      "documented_in": [
+        "docs/research/notes/training_and_datasets.md"
+      ],
+      "purpose": "alternative data sources (metadata only; no conversations downloaded)",
+      "third_party_personal_data": "none beyond author, maintainer or contributor names that the source itself publishes",
+      "retention": "Temporary copy in the study's session scratchpad, outside the repository; not committed. It disappears when the scratchpad is cleared. Deleting it earlier is an owner decision.",
+      "in_repo": false
+    },
+    {
+      "id": "papers-newest-closest",
+      "kind": "paper_html",
+      "source": "arXiv abstract, HTML and listing pages; Semantic Scholar citation JSON; OpenReview and HF probes",
+      "version": "versions in the note",
+      "license": "NOASSERTION",
+      "license_note": "per-paper arXiv licences; API responses under the providers' terms",
+      "size_bytes": 18854741,
+      "local_path": "<scratchpad>/dl/newest_closest",
+      "documented_in": [
+        "docs/research/notes/newest_closest.md §6"
+      ],
+      "purpose": "newest related work",
+      "third_party_personal_data": "none beyond author, maintainer or contributor names that the source itself publishes",
+      "retention": "Temporary copy in the study's session scratchpad, outside the repository; not committed. It disappears when the scratchpad is cleared. Deleting it earlier is an owner decision.",
+      "in_repo": false
+    },
+    {
+      "id": "synthesis-rechecks",
+      "kind": "web_pages",
+      "source": "primary pages re-opened for the research brief (arXiv pages, the SF Data essay and homepage, HF and PyPI JSON, the SWE-chat gate probe)",
+      "version": "as served on 2026-11-13",
+      "license": "NOASSERTION",
+      "license_note": "per source; the SF Data pages are all rights reserved",
+      "size_bytes": 8517493,
+      "local_path": [
+        "<scratchpad>/dl/synthesis",
+        "<scratchpad>/dl/bib"
+      ],
+      "documented_in": [
+        "docs/research_brief.md (Conventions: [re-checked])"
+      ],
+      "purpose": "re-checks of quotes and numbers for the brief",
+      "contents_note": "dl/bib (three arXiv HTML pages: SWE-chat, SWE-Together, Trace2Eval) is not named in any note; it is recorded here because it is on disk",
+      "third_party_personal_data": "none beyond author, maintainer or contributor names that the source itself publishes",
+      "retention": "Temporary copy in the study's session scratchpad, outside the repository; not committed. It disappears when the scratchpad is cleared. Deleting it earlier is an owner decision.",
+      "in_repo": false
+    },
+    {
+      "id": "review-citation-verifier",
+      "kind": "web_pages_and_clones",
+      "source": "arXiv abs pages, GitHub raw files, HF, Zenodo, Crossref and PyPI APIs, blog pages; blobless clones of badlogic/pi-share-hf (21c1d96) and banodoco/dataclaw (f9eae05)",
+      "version": "as served on 2026-11-18",
+      "license": "NOASSERTION",
+      "license_note": "per source (dataclaw MIT; pi-share-hf: no licence file at the root)",
+      "size_bytes": 29123565,
+      "local_path": "/home/user/tc_review_dl/citation_verifier",
+      "documented_in": [
+        "docs/research/verified_bibliography.md (Method)"
+      ],
+      "purpose": "citation check",
+      "third_party_personal_data": "none beyond author, maintainer or contributor names that the source itself publishes",
+      "retention": "Untrusted download kept outside the repository for re-checking the review. Deleting it is an owner decision.",
+      "in_repo": false
+    },
+    {
+      "id": "review-fact-check",
+      "kind": "web_pages",
+      "source": "primary pages listed in review_fact_check.md (Sources)",
+      "version": "as served on 2026-11-18",
+      "license": "NOASSERTION",
+      "license_note": "per source; SF Data copies are all rights reserved",
+      "size_bytes": 17682503,
+      "local_path": "/home/user/tc_review_dl/fact_check",
+      "documented_in": [
+        "docs/research/review_fact_check.md"
+      ],
+      "purpose": "fact check of the brief",
+      "third_party_personal_data": "none beyond author, maintainer or contributor names that the source itself publishes",
+      "retention": "Untrusted download kept outside the repository for re-checking the review. Deleting it is an owner decision.",
+      "in_repo": false
+    },
+    {
+      "id": "review-novelty-close",
+      "kind": "web_pages_and_clone",
+      "source": "full texts of the closest works; huggingface/traj2envs shallow clone (a09204e) and traj2envs-rl provenance files",
+      "version": "as served on 2026-11-13 to 2026-11-18",
+      "license": "NOASSERTION",
+      "license_note": "per source (traj2envs Apache-2.0)",
+      "size_bytes": 8157181,
+      "local_path": "/home/user/tc_review_dl/novelty_close",
+      "documented_in": [
+        "docs/research/review_novelty_close.md"
+      ],
+      "purpose": "close reading of the closest works",
+      "third_party_personal_data": "none beyond author, maintainer or contributor names that the source itself publishes",
+      "retention": "Untrusted download kept outside the repository for re-checking the review. Deleting it is an owner decision.",
+      "in_repo": false
+    },
+    {
+      "id": "review-novelty-search",
+      "kind": "web_pages",
+      "source": "arXiv, Semantic Scholar, OpenReview and Hugging Face search results and records",
+      "version": "as served on 2026-11-18",
+      "license": "NOASSERTION",
+      "license_note": "per source",
+      "size_bytes": 78308437,
+      "local_path": "/home/user/tc_review_dl/novelty_search_b",
+      "documented_in": [
+        "docs/research/review_novelty_search.md"
+      ],
+      "purpose": "fresh novelty search",
+      "contents_note": "hf/ includes metadata of CooperBench/swechat-coop (an ungated re-packaging of SWE-chat) and two small files from it: config.json and one eval.json (an LLM success grade for one SWE-chat-derived session; no conversation text)",
+      "third_party_personal_data": "none found; the CooperBench eval record is per-session metadata derived from SWE-chat",
+      "retention": "Untrusted download kept outside the repository for re-checking the review. Deleting it is an owner decision. The CooperBench files must not be used (ungated redistribution of a gated dataset).",
+      "in_repo": false
+    },
+    {
+      "id": "review-novelty-skeptic",
+      "kind": "web_pages",
+      "source": "arXiv query results and listings, Semantic Scholar JSON",
+      "version": "as served on 2026-11-18",
+      "license": "NOASSERTION",
+      "license_note": "per source",
+      "size_bytes": 16663268,
+      "local_path": "/home/user/tc_review_dl/novelty_skeptic_b",
+      "documented_in": [
+        "not named in a tracked file; on disk (novelty skeptic pass of the 2026-11-18 review)"
+      ],
+      "purpose": "novelty skeptic search",
+      "third_party_personal_data": "none beyond author, maintainer or contributor names that the source itself publishes",
+      "retention": "Untrusted download kept outside the repository for re-checking the review. Deleting it is an owner decision.",
+      "in_repo": false
+    },
+    {
+      "id": "review-reviser",
+      "kind": "web_pages",
+      "source": "arXiv abstract pages and OpenReview API records re-opened in the brief revision",
+      "version": "as served on 2026-11-18",
+      "license": "NOASSERTION",
+      "license_note": "per source",
+      "size_bytes": 658588,
+      "local_path": "/home/user/tc_review_dl/reviser",
+      "documented_in": [
+        "docs/research_brief.md (Review inputs; [re-checked 2026-11-18])"
+      ],
+      "purpose": "brief revision",
+      "third_party_personal_data": "none beyond author, maintainer or contributor names that the source itself publishes",
+      "retention": "Untrusted download kept outside the repository for re-checking the review. Deleting it is an owner decision.",
       "in_repo": false
     }
   ]

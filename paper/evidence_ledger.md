@@ -104,5 +104,6 @@ Every number in `paper/generated/*.tex` with its source. Regenerate with `python
 - [coverage] CS-04 full_session coverage/unsupported/contradicting/coverage2/kappa = 1.0 (6/6), 1/7, 0, 1.0, 1.0 <- `results/runs/pilot-v0.3/analysis.json coverage.CS-04 / mapping_agreement.CS-04`
 - [coverage] CS-04 initial_only coverage/unsupported/contradicting/coverage2/kappa = 0.5 (3/6), 0/3, 0, 0.5, 1.0 <- `results/runs/pilot-v0.3/analysis.json coverage.CS-04 / mapping_agreement.CS-04`
 - [matrix] pilot-v0.3 outcome matrix rows = 32 <- `results/runs/pilot-v0.3/analysis.json per_task`
-- [reliability] pilot-v0.2 vs pilot-v0.3 reward/outcome agreement = 108/108, 108/108 <- `results/runs/pilot-v0.3/compare_pilot-v0.2.json`
-- [reliability] pilot-v0.2-h2 vs pilot-v0.3 reward/outcome agreement = 4/4, 4/4 <- `results/runs/pilot-v0.3/compare_pilot-v0.2-h2.json`
+- [reliability] pilot-v0.2 vs pilot-v0.3: unchanged-verifier pairs, reward agreement, outcome agreement = 99, 99/99, 99/99 <- `results/runs/pilot-v0.3/compare_pilot-v0.2.json`
+- [reliability] pilot-v0.2 vs pilot-v0.3: changed-verifier pairs with the same reward = 8/9 <- `results/runs/pilot-v0.3/compare_pilot-v0.2.json`
+- [reliability] pilot-v0.2-h2 vs pilot-v0.3: unchanged-verifier pairs, reward agreement, outcome agreement = 4, 4/4, 4/4 <- `results/runs/pilot-v0.3/compare_pilot-v0.2-h2.json`

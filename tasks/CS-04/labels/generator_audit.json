@@ -10,7 +10,7 @@
   "refcheck": {
     "hits": [
       {
-        "event_id": "3951c995-db7e-5b4e-a703-97e326bb42c5/L000036.00",
+        "event_id": "<session>/L000036.00",
         "tool": "Bash",
         "match": "tasks/CS-04/verifiers",
         "text": "ls -la && echo ---- && ls tasks/CS-04/ && echo ---- && ls tasks/CS-04/verifiers/ 2>&1"

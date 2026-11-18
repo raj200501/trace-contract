@@ -63,8 +63,14 @@ Proposals by rule D19 (`tasks/*/candidates/*.json`, labeler
 
 ## Licensing and permissions
 
-* Repository code in candidate patches and snapshots is covered by each source
-  repository's licence (all MIT here); attribution is the repository URL and commit.
+* Upstream code redistributed here is covered by each source repository's licence
+  (all MIT). It consists of the upstream test files in
+  `tasks/*/labels/base_tests_overlay/` and `tasks/*/verifiers/repo_tests/overlay/`,
+  the upstream lines in candidate patches, verifier tests that copy upstream tests,
+  and excerpts of upstream files in the controlled transcripts. The MIT copyright and
+  permission notices, copied verbatim from each repository at the pinned commit, are
+  in `THIRD_PARTY_LICENSES/`. Its README lists which paths hold which project's code.
+  Base snapshots are not stored.
 * Controlled transcripts and study-authored files: authored for this study; the
   repository's licence decision is pending (see `STATUS.md`).
 * SWE-chat, if used: dataset licence ODC-BY-1.0 (database); conversation contents
@@ -76,9 +82,18 @@ Proposals by rule D19 (`tasks/*/candidates/*.json`, labeler
 
 ## Personal information
 
-Controlled sessions contain no third-party personal data by construction. Paths
-in transcripts refer to this study's sandbox. The repository owner's identity
-appears only as the git commit author.
+* The controlled transcripts contain the public names of upstream authors and
+  maintainers, as they appear in package metadata the agent read (`pyproject.toml`
+  or `setup.cfg` author and maintainer fields, and one module docstring copyright
+  line): two names for CS-01 and one each for CS-02 to CS-04. E-mail addresses in
+  the transcripts are replaced by `[EMAIL REDACTED]`.
+* Paths in transcripts refer to this study's sandbox workspaces, temporary files
+  and standard system locations, with two exceptions: tool results in CS-01
+  (line 107) and CS-04 (line 43) list host tool locations under `/root/.local/bin`
+  (ruff, black, mypy and stubtest).
+* `THIRD_PARTY_LICENSES/` reproduces the upstream copyright notices verbatim, as
+  the MIT licence requires; the tinydb notice includes its author's e-mail address.
+* The repository owner's identity appears only as the git commit author.
 
 ## Known biases and limitations
 

@@ -1,6 +1,7 @@
 # Manuscript draft
 
-`main.tex` is a working draft. Build with `latexmk -pdf main.tex` (or `make -C paper`).
+`main.tex` is a working draft. Build it from this directory with `latexmk -pdf main.tex`
+(needs `biber`). Regenerate the tables first with `make_tables.py` (see the top-level README).
 
 Rules for this directory:
 

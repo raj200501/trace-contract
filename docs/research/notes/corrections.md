@@ -1,7 +1,7 @@
 # Cluster notes: user corrections and feedback in coding-agent interactions (TraceContract)
 
 Access date for every source in this file: **2026-11-13 (UTC)**. Publication and version dates are recorded separately for each source.
-Scratch downloads (not part of the repo): `/tmp/claude-0/-home-user-trace-contract/3951c995-db7e-5b4e-a703-97e326bb42c5/scratchpad/dl/corrections/`.
+Scratch downloads (not part of the repo): `<scratchpad>/dl/corrections/`, where `<scratchpad>` is the study's session scratchpad (a temporary directory outside the repository). The downloads are listed in `data/manifests/third_party_downloads.json`.
 
 Conventions:
 - **VERIFIED** means I read it in the primary source (section named). Quotes are verbatim and at most 2 sentences.

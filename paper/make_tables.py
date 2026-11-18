@@ -262,15 +262,25 @@ def comparisons(new_run: Path, old_runs: list[Path], led: Ledger) -> None:
         if not p.exists():
             continue
         d = json.loads(p.read_text())
-        n = d["pairs_in_both"]
+        n = d.get("pairs_same_verifier", d["pairs_in_both"])  # comparisons written before D37 did not separate them
         rd, od = len(d["reward_discordant"]), len(d["outcome_discordant"])
-        rows.append(f"\\texttt{{{tex(d['old_run'])}}} & {n} & {n - rd}/{n} & {n - od}/{n} \\\\")
-        led.add("reliability", f"{d['old_run']} vs {d['new_run']} reward/outcome agreement", f"{n - rd}/{n}, {n - od}/{n}", rel(p))
+        ch = d.get("changed_verifier_pairs", [])
+        ch_same = sum((c["old"] == "pass") == (c["new"] == "pass") for c in ch)
+        ch_txt = f"{ch_same}/{len(ch)}" if ch else "--"
+        harness = sorted({json.loads(x).get("harness_version") or "?" for x in (old / "results.jsonl").read_text().splitlines() if x.strip()})
+        h_txt = ", ".join(h.split("/")[-1] for h in harness)
+        rows.append(f"\\texttt{{{tex(d['old_run'])}}} & {tex(h_txt)} & {n} & {n - rd}/{n} & {n - od}/{n} & {ch_txt} \\\\")
+        led.add("reliability", f"{d['old_run']} vs {d['new_run']}: unchanged-verifier pairs, reward agreement, outcome agreement",
+                f"{n}, {n - rd}/{n}, {n - od}/{n}", rel(p))
+        if ch:
+            led.add("reliability", f"{d['old_run']} vs {d['new_run']}: changed-verifier pairs with the same reward", ch_txt, rel(p))
     if rows:
         (GEN / "reliability_table.tex").write_text(table(
-            f"Agreement of superseded runs with the final run \\texttt{{{tex(new_run.name)}}} on pairs graded in both "
-            "(pass vs non-pass; exact outcome). Superseded runs used earlier harness versions (D29--D31).", "tab:reliability", "lrrr",
-            "Superseded run & Pairs & Reward agreement & Outcome agreement", rows, size="\\footnotesize"))
+            f"Agreement of earlier runs with the final run \\texttt{{{tex(new_run.name)}}} on pairs graded in both. Reward agreement "
+            "is pass vs non-pass; outcome agreement is the exact outcome. Both are computed on pairs whose verifier is unchanged "
+            "(same version, test content and number of scored checks). The last column covers pairs whose verifier changed "
+            "between the runs (B1 re-selection, D31).", "tab:reliability", "llrrrr",
+            "Earlier run & Harness & Pairs & Reward agr. & Outcome agr. & Changed verifier", rows, size="\\footnotesize"))
 
 
 def main(argv: list[str]) -> None:

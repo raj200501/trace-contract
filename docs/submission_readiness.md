@@ -16,9 +16,14 @@ requires the repository owner's explicit instruction.
    controlled sessions.
 3. **Too few independent task families** for any inferential claim. The pilot is
    descriptive; a confirmatory study needs a v1.0 protocol frozen after the pilot.
-4. **Novelty positioning** must survive the adversarial review in
-   `docs/research_brief.md` (closest work: SWE-Together, Trace2Eval). The claim is
-   limited to *measuring* reward fidelity, not to task reconstruction.
+4. **Novelty positioning** is narrowed but not yet confirmed by the owner (decision
+   log D34). The verified brief (`docs/research_brief.md`) finds partial precedents
+   for every component, notably SessionFarmer, SWE-Together and Trace2Eval. The
+   claim is limited to their combination: initial-only vs correction-aware verifiers
+   from one frozen procedure, one frozen held-out pool anchored on the session's own
+   pre-correction states, and independent human labels. The third element does not
+   exist yet, so the claim cannot be made in a submission until it does. It is not a
+   claim about task reconstruction.
 5. **Single model family** for all generated artifacts. A second model family for
    at least the verifier generators, or an explicit limitation, is needed.
 6. **Licence of this repository** is undecided (owner decision).
@@ -98,7 +103,7 @@ The bracketed part must describe only what the human authors actually did.
 
 - [ ] Human contract reviews and candidate labels recorded; agreement reported.
 - [ ] Natural-session tasks included, or claims explicitly limited to controlled sessions.
-- [ ] Adversarial internal review completed and its revisions applied.
+- [x] Adversarial internal review completed and its revisions applied (`docs/internal_review.md`); a fresh review is needed after human labels exist.
 - [ ] All numbers regenerated from recorded runs (`paper/make_tables.py`) and present in `paper/evidence_ledger.md`.
 - [ ] Bibliography entries verified against primary pages (dates recorded).
 - [ ] Data rights re-checked (SWE-chat terms, removal requests, repository licences).

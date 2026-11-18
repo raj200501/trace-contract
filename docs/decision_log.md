@@ -624,3 +624,8 @@ Protocol v0.4 written and hashed at 2026-11-18T11:58:51Z, sha256 `70ffee9a56b2f6
 D19 proposals match the 0.3.0 proposals: same value, same violated requirements and same recorded
 reference-check and regression outcomes. In the 36 label files (32 candidate records and 4
 `proposed_labels.json`), only the timestamp line changed.
+
+**Harbor export re-validated under 0.3.1** (2026-11-18). The export bundles the grading harness, so the
+D35 validation (0.3.0) no longer covered it. `scripts/harbor_validate.sh` with Harbor 0.25.0 on the
+synthetic fixture task (population `fixture`, not evidence; exported harness `tc-harness/0.3.1`):
+`harbor lint` rc=0; oracle with `CANDIDATE=reference` 1.0; oracle with the wrong candidate 0.0; `nop` 0.0.
