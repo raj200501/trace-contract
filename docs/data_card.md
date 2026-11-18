@@ -74,7 +74,9 @@ Proposals by rule D19 (`tasks/*/candidates/*.json`, labeler
   `tasks/*/labels/construction_checks.json`. It is advisory and never changes a
   label.
 * Candidates needing human review are listed in `tasks/*/labels/review_queue.json`.
-  The queue file contains no verifier outcome.
+  The queue file contains no verifier outcome. Human labels are to be made from a
+  blinded review packet (`tracecontract review-packet`), not from these files
+  (decision log D43).
 * Two independent model mappings of each recovered contract to the reference
   contract are in `tasks/*/contracts/mapping{,2}_*.json`.
 

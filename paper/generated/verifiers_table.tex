@@ -1,0 +1,8 @@
+\begin{table}[t]\centering\scriptsize
+\caption{Verifiers per task (generated from \texttt{tasks/*/verifiers/*/spec.json}): scored checks. Audited verifiers: audit revisions, whether the audit passed, and ``= plain'' when the audited tests are identical to the plain ones. B1: checks added to the repository's tests by the session agent (not in the base commit). Ref.: reference checks used for labels.}\label{tab:verifiers}
+\begin{tabular}{lccccccc}\toprule Task & C1 & C2 & C3 & C4 & B2 & B1 & Ref. \\\midrule
+CS-01 & 14 & 14 (1 rev., not passed) & 14 & 14 (0 rev.; = plain) & 14 & 737 (11 agent-added) & 17 \\
+CS-02 & 14 & 14 (0 rev.; = plain) & 13 & 13 (1 rev.) & 13 & 239 (12 agent-added) & 28 \\
+CS-03 & 14 & 15 (1 rev.) & 12 & 14 (1 rev.) & 13 & 466 (11 agent-added) & 15 \\
+CS-04 & 12 & 12 (0 rev.; = plain) & 13 & 13 (0 rev.; = plain) & 14 & 777 (6 agent-added) & 19 \\
+\bottomrule\end{tabular}\end{table}

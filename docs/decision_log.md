@@ -701,6 +701,11 @@ reported number is unchanged except the exploratory duplicates view (now three c
 Against `pilot-v0.2` the 99 pairs with an unchanged verifier agree, and 8 of the 9
 changed-verifier pairs; the 4 `pilot-v0.2-h2` pairs all have a changed verifier.
 
+**Harbor export re-validated under 0.3.2** (2026-11-18), from the tracked fixture snapshot:
+`harbor lint` rc=0; oracle with `CANDIDATE=reference` 1.0; oracle with the wrong candidate 0.0;
+`nop` 0.0. The outputs are recorded in `results/harbor_validation/tc-harness-0.3.2/`. The export
+step also ran from a fresh clone. After the run, 70 tests pass (54 offline, 16 Docker).
+
 **Older reports.** The HTML reports of `pilot-v0.3` and `pilot-v0.3.1` predate the output
 changes above: they show no macro rates, exact intervals, degenerate marks, per-metric
 denominators or "covered but contradicted". Protocol v0.4 §12 was met there only by
@@ -796,3 +801,35 @@ to D39 were written on 2026-11-18 but sat under the 2026-11-13 heading.
   generation fields (`run_id` "unrecorded", empty `prompt_sha256` and budget) were
   never filled. The prompts are exported separately (`experiments/prompts/`) and are
   not linked from each spec.
+
+### D43. Blinded review packet for human labels; findings of the audit's completeness critic
+The completeness critic of the final claims audit (D40) found that the annotation guide
+was not blind. It sent reviewers to the review queue and the candidate files, which show
+each candidate's origin, the generator's description, the construction label and the
+rule's proposal. The candidate ids give the origin away as well. Human labels, the
+missing element of the claim (D34), would have been anchored on construction intent.
+
+**Fix.** `tracecontract review-packet` writes a packet per task (`src/tracecontract/review.py`):
+* the rendered session;
+* the reference contract;
+* each held-out candidate's graded diff and file state, under random ids, in shuffled
+  order, with no candidate id, origin, description, proposal, check or verifier outcome.
+
+The key that maps ids to candidates goes to a separate file kept by a coordinator.
+`tracecontract merge-reviews` refuses to merge until every task has two complete
+reviews. It then appends the labels as human labels and lists the disagreements for
+adjudication. The annotation guide (v0.3) has reviewers work only from the packet and
+open the queue and the recorded evidence only after the merge.
+`tests/test_review_packet.py` checks that no id, origin or description leaks into the
+packet. No candidate patch in the pool contains comments that reveal its origin.
+
+**Other critic findings.**
+* **Model identities.** The session agent's model is recorded in every assistant entry
+  of the published transcripts. The other agents' model identifiers are not in the
+  repository. The paper and the data card now say so.
+* **Older run outputs.** The superseded runs are now marked
+  (`results/runs/README.md`, `SUPERSEDED.md` in each folder); the older HTML reports'
+  gaps are recorded in D40. The HTML report embeds the upstream licence notices.
+* **Wording of protocol v0.5 §13** on the mapper instruction: corrected in D41.
+* **Implementation claims** checked against the code, and **related-work numbers**
+  checked against the primary papers: no problem found.

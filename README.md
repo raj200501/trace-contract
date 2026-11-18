@@ -73,6 +73,10 @@ TraceContract measures both directly.
     (`tasks/*/labels/construction_checks.json`) is advisory only.
   * A human-review queue that shows no verifier outcomes is in
     `tasks/*/labels/review_queue.json`.
+  * Human labels are to be made from a blinded review packet (`tracecontract
+    review-packet`): random ids, shuffled, with no origin, proposal or outcome; the
+    key stays with a coordinator, and `tracecontract merge-reviews` needs two complete
+    reviews per task (`docs/annotation_guide.md`, decision log D43).
 * **Harbor export** (pinned 0.25.0, separate verifier, only approved artifacts).
 
 Related work: [docs/research_brief.md](docs/research_brief.md), adversarially

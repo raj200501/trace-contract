@@ -1,10 +1,10 @@
 \begin{table}[t]\centering\footnotesize
-\caption{\textbf{Exploratory, not pre-specified:} rates when constructed candidates are labeled by construction intent (including those the pre-specified rule marked ambiguous).}\label{tab:sensitivity}
+\caption{\textbf{Exploratory, not pre-specified (protocol v0.3):} rates when constructed candidates are labeled by construction intent (including those the pre-specified rule marked ambiguous). $^{*}$: degenerate interval; exact: binomial interval ignoring clustering.}\label{tab:sensitivity}
 \begin{tabular}{lll}\toprule Condition & False acceptance & False rejection \\\midrule
-C1 initial, plain & 0.45 (10/22) [0.18, 0.73] & 0.20 (2/10) [0.00, 0.67] \\
-C2 initial, audited & 0.41 (9/22) [0.18, 0.70] & 0.20 (2/10) [0.00, 0.67] \\
-C3 full, plain & 0.14 (3/22) [0.04, 0.20] & 0.00 (0/10) [0.00, 0.00] \\
-C4 full, audited & 0.14 (3/22) [0.04, 0.20] & 0.00 (0/10) [0.00, 0.00] \\
-B2 full-session LLM & 0.23 (5/22) [0.17, 0.33] & 0.00 (0/10) [0.00, 0.00] \\
-B1 repository tests & 0.36 (8/22) [0.10, 0.67] & 0.40 (4/10) [0.00, 0.82] \\
+C1 initial, plain & 0.45 (10/22) [0.18, 0.73] {\scriptsize exact [0.24, 0.68]} & 0.20 (2/10) [0.00, 0.67] {\scriptsize exact [0.03, 0.56]} \\
+C2 initial, audited & 0.41 (9/22) [0.18, 0.70] {\scriptsize exact [0.21, 0.64]} & 0.20 (2/10) [0.00, 0.67] {\scriptsize exact [0.03, 0.56]} \\
+C3 full, plain & 0.14 (3/22) [0.04, 0.20] {\scriptsize exact [0.03, 0.35]} & 0.00 (0/10) [0.00, 0.00]$^{*}$ {\scriptsize exact [0.00, 0.31]} \\
+C4 full, audited & 0.14 (3/22) [0.04, 0.20] {\scriptsize exact [0.03, 0.35]} & 0.00 (0/10) [0.00, 0.00]$^{*}$ {\scriptsize exact [0.00, 0.31]} \\
+B2 full-session LLM & 0.23 (5/22) [0.17, 0.33] {\scriptsize exact [0.08, 0.45]} & 0.00 (0/10) [0.00, 0.00]$^{*}$ {\scriptsize exact [0.00, 0.31]} \\
+B1 repository tests & 0.36 (8/22) [0.10, 0.67] {\scriptsize exact [0.17, 0.59]} & 0.40 (4/10) [0.00, 0.82] {\scriptsize exact [0.12, 0.74]} \\
 \bottomrule\end{tabular}\end{table}

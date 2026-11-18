@@ -1,4 +1,4 @@
-// Exported by scripts/export_prompts.py from the workflow run record wf_7df3c712-ef2 (started 2026-11-18T09:55:41.405Z); sha256 of the original script: 4cd0676da2b225861fc46f71485e0ab49d6ead0e16a139068d40dfd4df160dbe; sha256 of this export: d57701560f450fd921c1c08f5b2e729c77195eb946f121af9a118eec8fffbd99. Redacted: owner messages and personal information, session paths/ids.
+// Exported by scripts/export_prompts.py from the workflow run record wf_7df3c712-ef2 (started 2026-11-18T08:37:44+00:00, finished 2026-11-18T09:55:41.405Z, status completed); sha256 of the original script: 4cd0676da2b225861fc46f71485e0ab49d6ead0e16a139068d40dfd4df160dbe; sha256 of this export: d57701560f450fd921c1c08f5b2e729c77195eb946f121af9a118eec8fffbd99. Redacted: owner messages and personal information, session paths/ids.
 export const meta = {
   name: 'tracecontract-brief-verification',
   description: 'Adversarially verify the research brief: novelty skeptics, citation verification, fact check, then revise brief and related work',

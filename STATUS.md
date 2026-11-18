@@ -33,7 +33,8 @@ repository owner. Nothing here is peer reviewed, and no human labels exist.
     0 forbidden reads but inspect tool inputs only. Near-miss generators ran B1's
     tests, and three held-out candidates duplicate a development attack (D37, D40,
     D41);
-  * labels: D19 label proposals and independent construction checks;
+  * labels: D19 label proposals and independent construction checks; a blinded
+    review packet for human labels (`tracecontract review-packet`, D43);
   * review queue: `labels/review_queue.json`, with no verifier outcomes;
   * two model requirement mappings.
 * **Protocol** v0.1 → v0.2 → v0.3 → v0.4 → v0.5 (`experiments/protocol.md`). Each
@@ -56,7 +57,7 @@ repository owner. Nothing here is peer reviewed, and no human labels exist.
   * all sections drafted;
   * every table generated from records (`paper/make_tables.py`);
   * an evidence ledger listing every table number with its source file;
-  * compiles to PAGES_PLACEHOLDER pages.
+  * compiles to 25 pages.
 * **Reviews by model agents** (Claude, the same model family; not human review):
   * an internal review with six lenses, whose skeptic agents checked findings until
     that stage was stopped for the final run;
@@ -64,14 +65,15 @@ repository owner. Nothing here is peer reviewed, and no human labels exist.
   * a final audit of every public claim and number (D40).
 
   Findings, verdicts and dispositions are in `docs/internal_review.md`.
-* **Other documents:** annotation guide v0.2, data card, decision log D1–D42,
+* **Other documents:** annotation guide v0.3 (blinded review packet, D43), data card,
+  decision log D1–D43,
   submission-readiness notes (arXiv pages re-checked 2026-11-18), the
   ownership/defense notes, workflow and agent prompts (`experiments/prompts/`), and
   third-party licence notices (`THIRD_PARTY_LICENSES/`).
 
 ## Tested
 
-* **TESTS_PLACEHOLDER**
+* **70 tests pass** (2026-11-18, after the final run): 54 offline and 16 Docker.
 * **Offline tests:**
   * schemas, ingestion and evidence alignment;
   * supersession, contract validation and the acceptance gate;
@@ -95,7 +97,9 @@ repository owner. Nothing here is peer reviewed, and no human labels exist.
   * startup hooks and packages written at runtime never load in later calls.
 * **Characterisation probe:** the in-process repository-test baseline (B1) can be
   forged by an adversarial candidate. This is a documented limitation (D42).
-* **Harbor:** HARBOR_PLACEHOLDER
+* **Harbor:** export validated with oracle and no-op trials on a fixture task under
+  harness 0.3.2 (Harbor 0.25.0; D35, D39, D40). The outputs are recorded in
+  `results/harbor_validation/tc-harness-0.3.2/`.
 
 ## Main pilot findings (automated labels; descriptive only)
 
