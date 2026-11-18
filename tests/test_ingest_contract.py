@@ -191,3 +191,32 @@ def test_correction_heuristic(session):
     eid, cues = flagged[0]
     assert eid == session.user_prompts()[1].event_id
     assert "actually" in cues and "don't" in cues
+
+
+def test_sanitizer_v2_redaction_and_meta(tmp_path):
+    """D38: diff decorator lines are not e-mails; opaque block fields and harness meta are dropped."""
+    import json as _json
+
+    from tracecontract.ingest.claude_code import sanitize_transcript
+
+    src = tmp_path / "raw.jsonl"
+    entries = [
+        {"type": "user", "isMeta": True, "message": {"role": "user", "content": "<system-reminder>harness text</system-reminder>"}},
+        {"type": "user", "isMeta": True, "message": {"role": "user", "content": "The coordinator sent: SCRIPTED TURN TWO"}},
+        {"type": "assistant", "message": {"role": "assistant", "content": [
+            {"type": "thinking", "thinking": "t", "signature": "opaque"},
+            {"type": "tool_use", "id": "x", "name": "Bash", "input": {"command": "git diff"}, "caller": {"k": 1}},
+            {"type": "text", "text": "+@pytest.mark.parametrize(\n-@functools.lru_cache\nwrite to jane.doe@example.com"}]}},
+    ]
+    src.write_text("\n".join(_json.dumps(e) for e in entries) + "\n")
+    info = sanitize_transcript(src, tmp_path / "out.jsonl", session_id="S", keep_meta_containing=("SCRIPTED TURN TWO",))
+    out = [_json.loads(x) for x in (tmp_path / "out.jsonl").read_text().splitlines()]
+    assert len(out) == 3  # lines kept, so event ids stay stable
+    assert out[0]["message"]["content"] == "[harness message removed]"
+    assert "SCRIPTED TURN TWO" in out[1]["message"]["content"]
+    blocks = out[2]["message"]["content"]
+    assert "signature" not in blocks[0] and "caller" not in blocks[1]
+    text = blocks[2]["text"]
+    assert "+@pytest.mark.parametrize(" in text and "-@functools.lru_cache" in text
+    assert "jane.doe@example.com" not in text and "[EMAIL REDACTED]" in text
+    assert info["redactions"] == {"emails": 1} and info["sanitizer"] == "sanitize:v2"

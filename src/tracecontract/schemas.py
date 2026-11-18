@@ -437,6 +437,10 @@ class VerifierSpec(_Model):
     test_dir: str  # directory (relative to the task dir) holding the test files
     checks: list[CheckSpec]
     content_sha256: str  # hash of the test files (see verifier.hash_test_dir)
+    # Hash of the scored check list (ids and requirement maps), recorded at freezing so
+    # that a changed selection (e.g. B1 re-selection, decision log D31) is detectable.
+    checks_sha256: str | None = None
+    frozen_at: str | None = None
     generation: GenerationRecord | None = None
     audit: AuditRecord | None = None
     frozen: bool = False

@@ -1,0 +1,37 @@
+{
+  "schema_version": "0.1.0",
+  "contract_id": "FX-01-reference",
+  "task_id": "FX-01",
+  "session_id": "FX-01-session",
+  "variant": "reference",
+  "requirements": [
+    {
+      "req_id": "R1",
+      "statement": "add(a, b) returns the sum of a and b.",
+      "kind": "change",
+      "status": "explicit",
+      "introduced_at": "FX-01-session/L000001.00",
+      "evidence": [
+        {
+          "event_id": "FX-01-session/L000001.00",
+          "start": 0,
+          "end": 3,
+          "quote": "add"
+        }
+      ],
+      "rationale": "",
+      "supersedes": [],
+      "superseded_by": null,
+      "conflicts_with": [],
+      "observable": "add(2,3)==5",
+      "scored": true,
+      "subjective": false,
+      "proposer": "fixture",
+      "reviews": []
+    }
+  ],
+  "instruction": "",
+  "created_by": "fixture",
+  "created_at": "t",
+  "notes": ""
+}

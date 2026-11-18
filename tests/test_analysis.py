@@ -58,3 +58,30 @@ def test_coverage_ignores_contradicted_mappings():
     assert d["unsupported"] == ["R3"]
     assert d["contradicting"] == ["R2"]
     assert abs(d["coverage"] - 1 / 3) < 1e-9
+
+
+def test_coverage_reports_covered_but_contradicted():
+    reqs = [_req("R1"), _req("R2")]
+    contract = SimpleNamespace(active=lambda: reqs, requirements=reqs)
+    mapping = {"map": {"R1": ["A"], "R2": ["A"]}, "contradicts": {"R2": ["A"]}}
+    d = _coverage_one(contract, mapping, {"A"})
+    assert d["covered"] == ["A"]  # R1 covers A without contradicting it
+    assert d["covered_but_contradicted"] == ["A"]  # ... while R2 contradicts it
+
+
+def test_regression_only_negative_is_unspecified():
+    from tracecontract.analysis import _negative_type
+
+    ref = SimpleNamespace(by_id=lambda rid: (_ for _ in ()).throw(KeyError(rid)))
+    lab = _lab("invalid", LabelerKind.model, PILOT_LABELER, ["REGRESSION"])
+    c = _cand(CandidateOrigin.constructed_near_miss, [lab])
+    assert _negative_type(c, lab, ref, "U1") == "unspecified"
+
+
+def test_clopper_pearson_reference_values():
+    from tracecontract.metrics import clopper_pearson
+
+    lo, hi = clopper_pearson(0, 17)
+    assert lo == 0.0 and abs(hi - 0.1951) < 1e-3
+    lo, hi = clopper_pearson(2, 10)
+    assert abs(lo - 0.0252) < 1e-3 and abs(hi - 0.5561) < 1e-3

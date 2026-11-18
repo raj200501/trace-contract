@@ -6,7 +6,11 @@ Fails (exit 1) unless, for every task given:
   misses) and every held-out candidate has a D19 proposal (or a human label);
 * every constructed held-out candidate's generator transcript was audited, with no
   forbidden read left unassessed;
+* the base snapshot exists and matches its recorded manifest;
 * no other sandbox container is running and the git working tree is clean.
+
+Held-out candidates whose graded patch equals a development candidate's are reported
+as warnings (decision log D37).
 
 Usage: python scripts/preflight_final_run.py tasks/CS-01 tasks/CS-02 ...
 """
@@ -48,6 +52,20 @@ def main(*task_dirs: str) -> int:
         for c in held:
             if c.final_label() is None and not any(lb.labeler == PILOT_LABELER for lb in c.labels):
                 problems.append(f"{m.task_id}: {c.candidate_id} has no D19 proposal")
+        from tracecontract.cli import SNAPSHOTS
+        from tracecontract.tasks import verify_snapshot
+
+        if not (SNAPSHOTS / m.task_id).is_dir():
+            problems.append(f"{m.task_id}: base snapshot not built (run `tracecontract snapshot tasks/{m.task_id}`)")
+        elif not verify_snapshot(td, SNAPSHOTS):
+            problems.append(f"{m.task_id}: base snapshot does not match its recorded manifest")
+        from tracecontract.analysis import _norm_patch
+
+        dev = {_norm_patch(c.patch): c.candidate_id for c in cands if c.split.value == "dev" and c.patch}
+        for c in held:
+            if c.patch and _norm_patch(c.patch) in dev:
+                print(f"WARN: {m.task_id}: held-out {c.candidate_id} has the same graded patch as development candidate "
+                      f"{dev[_norm_patch(c.patch)]}")
         audit_p = td / "labels" / "generator_audit.json"
         audit = json.loads(audit_p.read_text()) if audit_p.exists() else {}
         for ws, rec in audit.items():

@@ -1,0 +1,12 @@
+{
+  "schema_version": "0.1.0",
+  "candidate_id": "FX-01-reference",
+  "task_id": "FX-01",
+  "origin": "reference",
+  "split": "dev",
+  "patch": "diff --git a/calc.py b/calc.py\nindex 643fa8c2d5a406757923ecabf46217bfb21b33c1..4693ad3cf8b0903b98497fb89b8b524fbf1b93f4 100644\n--- a/calc.py\n+++ b/calc.py\n@@ -1,2 +1,2 @@\n def add(a, b):\n-    raise NotImplementedError\n+    return a + b\ndiff --git a/tests/test_calc.py b/tests/test_calc.py\nindex 3ada1ee4e585a4b2664b66ace385ea172f9e769e..ace0d42403eb88a1b535fd297c56b233802e43b7 100644\n--- a/tests/test_calc.py\n+++ b/tests/test_calc.py\n@@ -1,2 +1,2 @@\n def test_placeholder():\n-    assert True\n+    assert 1 == 1\n",
+  "patch_sha256": "f14d1ce72e403655705de332dd728a3ef6556c573098dd43b5414683b04c67f3",
+  "produced_by": "fixture",
+  "description": "",
+  "labels": []
+}

@@ -17,7 +17,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from .sandbox.docker_runner import Limits, build_env_image, verify_candidate
-from .schemas import Candidate, CandidateOrigin, Split, TaskManifest, VerificationResult, VerifierSpec
+from .schemas import Candidate, CandidateOrigin, Snapshot, Split, TaskManifest, VerificationResult, VerifierSpec
 from .store import append_jsonl, load, read_jsonl, write_json
 from .verifier import check_frozen
 
@@ -67,16 +67,22 @@ def run_matrix(task_dirs: list[Path], *, run_id: str, out_root: Path, cache_dir:
         base = snapshot_root / m.task_id
         if not base.is_dir():
             raise FileNotFoundError(f"snapshot for {m.task_id} not built at {base} (run `tracecontract snapshot`)")
+        from .tasks import verify_snapshot
+
+        if not verify_snapshot(td, snapshot_root):
+            raise ValueError(f"snapshot for {m.task_id} at {base} does not match its recorded manifest (run `tracecontract snapshot`)")
+        snap = load(td / (m.snapshot or "snapshot.json"), Snapshot)
         tag, image_id = build_env_image(m.env_requirements, cache_dir)
         entry = {"task_id": m.task_id, "family_id": m.family_id, "image": tag, "image_id": image_id,
-                 "verifiers": {}, "candidates": {}}
+                 "snapshot_manifest_sha256": snap.file_manifest_sha256, "verifiers": {}, "candidates": {}}
         for s in specs:
             if conditions and s.condition.value not in conditions:
                 continue
             if require_frozen and not s.frozen:
                 raise ValueError(f"{s.verifier_id} is not frozen; freeze verifiers before final evaluation")
             check_frozen(s, td)
-            entry["verifiers"][s.verifier_id] = {"condition": s.condition.value, "content_sha256": s.content_sha256, "version": s.version}
+            entry["verifiers"][s.verifier_id] = {"condition": s.condition.value, "content_sha256": s.content_sha256,
+                                                 "checks_sha256": s.checks_sha256, "n_checks": len(s.checks), "version": s.version}
         # Held-out candidates of the requested split, plus the reference solution as a
         # sanity check (protocol section 5: graded by every verifier, excluded from FA/FR).
         eval_cands = [c for c in cands if c.split == split or (include_reference and c.origin == CandidateOrigin.reference)]
@@ -93,6 +99,7 @@ def run_matrix(task_dirs: list[Path], *, run_id: str, out_root: Path, cache_dir:
                 res = verify_candidate(
                     image=tag, base_dir=base, spec=s, task_dir=td, candidate=c, run_id=run_id, repeats=repeats,
                     candidate_pythonpath=m.candidate_pythonpath, repo_test_args=m.repo_test_args, limits=limits,
+                    log_dir=out / "logs",
                 )
                 append_jsonl(res, res_path)
     manifest["finished_at"] = datetime.now(timezone.utc).isoformat(timespec="seconds")

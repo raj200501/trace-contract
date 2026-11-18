@@ -113,6 +113,8 @@
     }
   ],
   "content_sha256": "f63d2cec38514fa332789e7bdc5f2918f519db06bfe094b4be731e2ed32d7fb6",
+  "checks_sha256": "8365f7c199818c5880bacd553aa6b493b2fe7b0a0ffd6a0f7e68d2abcc322455",
+  "frozen_at": null,
   "generation": {
     "generator": "model:claude-code-subagent:refcheck:v1",
     "run_id": "unrecorded",

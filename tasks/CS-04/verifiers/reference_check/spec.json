@@ -128,6 +128,8 @@
     }
   ],
   "content_sha256": "2a5da126aa570a64ae0955ae065eaaac89d1fba09d244437feadcd564382fc1d",
+  "checks_sha256": "c95df8c62fb9c71038c9aaa3d30f5f833e8aa8e9288542f39b4d72f018df2a41",
+  "frozen_at": null,
   "generation": {
     "generator": "model:claude-code-subagent:refcheck:v1",
     "run_id": "unrecorded",

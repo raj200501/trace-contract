@@ -1,4 +1,18 @@
 {
+  "b1_upstream_only": {
+    "fa": 0.7647058823529411,
+    "fa_den": 17,
+    "fa_num": 13,
+    "fr": 0.0,
+    "fr_den": 10,
+    "fr_num": 0,
+    "n_checks": {
+      "CS-01": 726,
+      "CS-02": 227,
+      "CS-03": 455,
+      "CS-04": 771
+    }
+  },
   "by_negative_type": {
     "full_audited": {
       "correction_violating": {
@@ -77,7 +91,8 @@
       },
       "metric": "fa",
       "n_common": 32,
-      "n_families": 4
+      "n_families": 4,
+      "n_metric": 17
     },
     {
       "a": "initial_plain",
@@ -94,7 +109,8 @@
       },
       "metric": "fr",
       "n_common": 32,
-      "n_families": 4
+      "n_families": 4,
+      "n_metric": 10
     },
     {
       "a": "initial_audited",
@@ -111,7 +127,8 @@
       },
       "metric": "fa",
       "n_common": 32,
-      "n_families": 4
+      "n_families": 4,
+      "n_metric": 17
     },
     {
       "a": "initial_audited",
@@ -128,7 +145,8 @@
       },
       "metric": "fr",
       "n_common": 32,
-      "n_families": 4
+      "n_families": 4,
+      "n_metric": 10
     },
     {
       "a": "initial_plain",
@@ -145,7 +163,8 @@
       },
       "metric": "fa",
       "n_common": 32,
-      "n_families": 4
+      "n_families": 4,
+      "n_metric": 17
     },
     {
       "a": "initial_plain",
@@ -162,7 +181,8 @@
       },
       "metric": "fr",
       "n_common": 32,
-      "n_families": 4
+      "n_families": 4,
+      "n_metric": 10
     },
     {
       "a": "full_plain",
@@ -179,7 +199,8 @@
       },
       "metric": "fa",
       "n_common": 32,
-      "n_families": 4
+      "n_families": 4,
+      "n_metric": 17
     },
     {
       "a": "full_plain",
@@ -196,7 +217,8 @@
       },
       "metric": "fr",
       "n_common": 32,
-      "n_families": 4
+      "n_families": 4,
+      "n_metric": 10
     },
     {
       "a": "llm_freeform",
@@ -213,7 +235,8 @@
       },
       "metric": "fa",
       "n_common": 32,
-      "n_families": 4
+      "n_families": 4,
+      "n_metric": 17
     },
     {
       "a": "llm_freeform",
@@ -230,7 +253,8 @@
       },
       "metric": "fr",
       "n_common": 32,
-      "n_families": 4
+      "n_families": 4,
+      "n_metric": 10
     },
     {
       "a": "llm_freeform",
@@ -247,7 +271,8 @@
       },
       "metric": "fa",
       "n_common": 32,
-      "n_families": 4
+      "n_families": 4,
+      "n_metric": 17
     },
     {
       "a": "llm_freeform",
@@ -264,7 +289,8 @@
       },
       "metric": "fr",
       "n_common": 32,
-      "n_families": 4
+      "n_families": 4,
+      "n_metric": 10
     },
     {
       "a": "repo_tests",
@@ -281,7 +307,8 @@
       },
       "metric": "fa",
       "n_common": 32,
-      "n_families": 4
+      "n_families": 4,
+      "n_metric": 17
     },
     {
       "a": "repo_tests",
@@ -298,7 +325,8 @@
       },
       "metric": "fr",
       "n_common": 32,
-      "n_families": 4
+      "n_families": 4,
+      "n_metric": 10
     }
   ],
   "conditions": {
@@ -309,7 +337,12 @@
           0.0,
           0.0
         ],
+        "ci95_degenerate": true,
         "den": 17,
+        "exact95": [
+          0.0,
+          0.1950643229690932
+        ],
         "macro": 0.0,
         "num": 0,
         "rate": 0.0
@@ -319,7 +352,12 @@
           0.0,
           0.0
         ],
+        "ci95_degenerate": true,
         "den": 10,
+        "exact95": [
+          0.0,
+          0.3084971078187607
+        ],
         "macro": 0.0,
         "num": 0,
         "rate": 0.0
@@ -347,7 +385,12 @@
           0.0,
           0.0
         ],
+        "ci95_degenerate": true,
         "den": 17,
+        "exact95": [
+          0.0,
+          0.1950643229690932
+        ],
         "macro": 0.0,
         "num": 0,
         "rate": 0.0
@@ -357,7 +400,12 @@
           0.0,
           0.0
         ],
+        "ci95_degenerate": true,
         "den": 10,
+        "exact95": [
+          0.0,
+          0.3084971078187607
+        ],
         "macro": 0.0,
         "num": 0,
         "rate": 0.0
@@ -385,7 +433,12 @@
           0.0,
           0.631578947368421
         ],
+        "ci95_degenerate": false,
         "den": 17,
+        "exact95": [
+          0.10313551437031993,
+          0.5595827187543372
+        ],
         "macro": 0.24166666666666667,
         "num": 5,
         "rate": 0.29411764705882354
@@ -395,7 +448,12 @@
           0.0,
           0.6666666666666666
         ],
+        "ci95_degenerate": false,
         "den": 10,
+        "exact95": [
+          0.025210726326833355,
+          0.5560954623076415
+        ],
         "macro": 0.25,
         "num": 2,
         "rate": 0.2
@@ -423,7 +481,12 @@
           0.07142857142857142,
           0.7142857142857143
         ],
+        "ci95_degenerate": false,
         "den": 17,
+        "exact95": [
+          0.1420974831102209,
+          0.6167163365565971
+        ],
         "macro": 0.3666666666666667,
         "num": 6,
         "rate": 0.35294117647058826
@@ -433,7 +496,12 @@
           0.0,
           0.6666666666666666
         ],
+        "ci95_degenerate": false,
         "den": 10,
+        "exact95": [
+          0.025210726326833355,
+          0.5560954623076415
+        ],
         "macro": 0.25,
         "num": 2,
         "rate": 0.2
@@ -461,7 +529,12 @@
           0.0,
           0.13636363636363635
         ],
+        "ci95_degenerate": false,
         "den": 17,
+        "exact95": [
+          0.001488174391266639,
+          0.2868893966672207
+        ],
         "macro": 0.041666666666666664,
         "num": 1,
         "rate": 0.058823529411764705
@@ -471,7 +544,12 @@
           0.0,
           0.0
         ],
+        "ci95_degenerate": true,
         "den": 10,
+        "exact95": [
+          0.0,
+          0.3084971078187607
+        ],
         "macro": 0.0,
         "num": 0,
         "rate": 0.0
@@ -499,7 +577,12 @@
           0.1111111111111111,
           0.6363636363636364
         ],
+        "ci95_degenerate": false,
         "den": 17,
+        "exact95": [
+          0.10313551437031993,
+          0.5595827187543372
+        ],
         "macro": 0.3833333333333333,
         "num": 5,
         "rate": 0.29411764705882354
@@ -509,7 +592,12 @@
           0.0,
           0.8181818181818182
         ],
+        "ci95_degenerate": false,
         "den": 10,
+        "exact95": [
+          0.12155225811982712,
+          0.737621923393055
+        ],
         "macro": 0.3333333333333333,
         "num": 4,
         "rate": 0.4
@@ -550,6 +638,7 @@
             "R-keep-meaningful",
             "R-opt-in"
           ],
+          "covered_but_contradicted": [],
           "mapper": "model:claude-code-subagent:mapper:v1",
           "mapper_kind": "model",
           "missing": [],
@@ -571,6 +660,9 @@
           "covered": [
             "R-default-unchanged",
             "R-keep-meaningful"
+          ],
+          "covered_but_contradicted": [
+            "R-default-unchanged"
           ],
           "mapper": "model:claude-code-subagent:mapper:v1",
           "mapper_kind": "model",
@@ -599,6 +691,7 @@
             "R-keep-meaningful",
             "R-opt-in"
           ],
+          "covered_but_contradicted": [],
           "mapper": "model:claude-code-subagent:mapper:v1#2",
           "mapper_kind": "model",
           "missing": [],
@@ -620,6 +713,9 @@
           "covered": [
             "R-default-unchanged",
             "R-keep-meaningful"
+          ],
+          "covered_but_contradicted": [
+            "R-default-unchanged"
           ],
           "mapper": "model:claude-code-subagent:mapper:v1#2",
           "mapper_kind": "model",
@@ -661,6 +757,7 @@
             "R-original-intact",
             "R-read-after-write"
           ],
+          "covered_but_contradicted": [],
           "mapper": "model:claude-code-subagent:mapper:v1",
           "mapper_kind": "model",
           "missing": [],
@@ -680,6 +777,7 @@
             "R-original-intact",
             "R-read-after-write"
           ],
+          "covered_but_contradicted": [],
           "mapper": "model:claude-code-subagent:mapper:v1",
           "mapper_kind": "model",
           "missing": [],
@@ -704,6 +802,7 @@
             "R-original-intact",
             "R-read-after-write"
           ],
+          "covered_but_contradicted": [],
           "mapper": "model:claude-code-subagent:mapper:v1#2",
           "mapper_kind": "model",
           "missing": [],
@@ -723,6 +822,7 @@
             "R-original-intact",
             "R-read-after-write"
           ],
+          "covered_but_contradicted": [],
           "mapper": "model:claude-code-subagent:mapper:v1#2",
           "mapper_kind": "model",
           "missing": [],
@@ -754,6 +854,7 @@
             "R-humanize-unchanged",
             "R-underscore-unchanged"
           ],
+          "covered_but_contradicted": [],
           "mapper": "model:claude-code-subagent:mapper:v1",
           "mapper_kind": "model",
           "missing": [],
@@ -772,6 +873,7 @@
             "R-humanize-unchanged",
             "R-underscore-unchanged"
           ],
+          "covered_but_contradicted": [],
           "mapper": "model:claude-code-subagent:mapper:v1",
           "mapper_kind": "model",
           "missing": [
@@ -795,6 +897,7 @@
             "R-humanize-unchanged",
             "R-underscore-unchanged"
           ],
+          "covered_but_contradicted": [],
           "mapper": "model:claude-code-subagent:mapper:v1#2",
           "mapper_kind": "model",
           "missing": [],
@@ -813,6 +916,7 @@
             "R-humanize-unchanged",
             "R-underscore-unchanged"
           ],
+          "covered_but_contradicted": [],
           "mapper": "model:claude-code-subagent:mapper:v1#2",
           "mapper_kind": "model",
           "missing": [
@@ -849,6 +953,7 @@
             "R-step",
             "R-zero-step"
           ],
+          "covered_but_contradicted": [],
           "mapper": "model:claude-code-subagent:mapper:v1",
           "mapper_kind": "model",
           "missing": [],
@@ -867,6 +972,7 @@
             "R-positional-ordering",
             "R-step"
           ],
+          "covered_but_contradicted": [],
           "mapper": "model:claude-code-subagent:mapper:v1",
           "mapper_kind": "model",
           "missing": [
@@ -892,6 +998,7 @@
             "R-step",
             "R-zero-step"
           ],
+          "covered_but_contradicted": [],
           "mapper": "model:claude-code-subagent:mapper:v1#2",
           "mapper_kind": "model",
           "missing": [],
@@ -910,6 +1017,7 @@
             "R-positional-ordering",
             "R-step"
           ],
+          "covered_but_contradicted": [],
           "mapper": "model:claude-code-subagent:mapper:v1#2",
           "mapper_kind": "model",
           "missing": [
@@ -923,6 +1031,17 @@
           "unsupported_rate": 0.0
         }
       }
+    }
+  },
+  "duplicates": {
+    "CS-04-eval-nm-2": {
+      "same_patch_as_dev": "CS-04-dev-attack-full_session-a3",
+      "same_patch_as_heldout": "CS-04-pre-correction",
+      "task_id": "CS-04"
+    },
+    "CS-04-pre-correction": {
+      "same_patch_as_dev": "CS-04-dev-attack-full_session-a3",
+      "task_id": "CS-04"
     }
   },
   "labels": {
@@ -1458,6 +1577,137 @@
     "harness_versions": {
       "tc-harness/0.3.0": 240
     },
+    "inputs": {
+      "files_sha256": {
+        "CS-01/candidates/CS-01-dev-alt-full_session.json": "1ee40f367e8e5c4767e79d9cdfdda4bc4792c49389fd16ec39e295979a8c87fd",
+        "CS-01/candidates/CS-01-dev-alt-initial_only.json": "e26677ba5d8fae2f433d43d4402fa4ce9c7e482f50be4bb143065ea235a31288",
+        "CS-01/candidates/CS-01-dev-attack-full_session-a1.json": "ff9656a7d5dec0c0e1e6bf6f1a81d4fb4176e40e63487743e3fad2eeb34767e5",
+        "CS-01/candidates/CS-01-dev-attack-full_session-a2.json": "57c46e6bf389024e5f1fe335800edff6ba168d91d253ae09c5df6b21d726ce6f",
+        "CS-01/candidates/CS-01-dev-attack-full_session-a3.json": "87d95d1ab18cc3646de2f67f9560921d962d4b1129455df5f1ce7ce7f09622ea",
+        "CS-01/candidates/CS-01-dev-attack-full_session-a4.json": "c3015c2b7f9b1c4b9e652a8c06f249e44c48bdf90914c51fe6d5a63a3fa1b61d",
+        "CS-01/candidates/CS-01-dev-attack-initial_only-a1.json": "48f3f974c77d65e557687d3d0caec17d6858c042dc5baaafaedd564ad8a02c39",
+        "CS-01/candidates/CS-01-dev-attack-initial_only-a2.json": "0a076bc276f6d8df12a09e45db109fbc2965f4891e619b0395ae775da21ecea2",
+        "CS-01/candidates/CS-01-dev-attack-initial_only-a3.json": "ac9be1d1c092f5d28c192031191d2e75d2533aa8d7354e10d1a144672ae21a77",
+        "CS-01/candidates/CS-01-dev-attack-initial_only-a4.json": "7ef01b7cd80ecd74c528f4ef502a1135fadbecc415784a78659b41becea80477",
+        "CS-01/candidates/CS-01-eval-alt-1.json": "a12a5bc8c9c650dade11e8cb06a3ddf134670276a975877b3ebc113cec28e06a",
+        "CS-01/candidates/CS-01-eval-alt-2.json": "eed3b3dc2713b1d534c6a2873a22e38837910e19ea2f9422559077232588f3a4",
+        "CS-01/candidates/CS-01-eval-nm-1.json": "08bd57364d56ef364a16ee138d18e23f8a673b1aa5de6cf3d3087d6a6ef41e8d",
+        "CS-01/candidates/CS-01-eval-nm-2.json": "e8a399a6140177ad0ef0aba3a9f09ea8dea7bd30e09f610163553818f6462f78",
+        "CS-01/candidates/CS-01-eval-nm-3.json": "37e8785117f176aec51d3d8596266e002a8d81558eceb80068faa2f172f342cd",
+        "CS-01/candidates/CS-01-eval-nm-4.json": "22d6096c84798489a276630a2bb0b83273fa16a8d961409a913f7268c762aa35",
+        "CS-01/candidates/CS-01-eval-nm-5.json": "b3cb938dd650421f8b1323578e1b2f85567ca0f02a71c1e7eae71f5011f9cbf4",
+        "CS-01/candidates/CS-01-noop-dev.json": "84485a583659250dbb965a2d71cc762a8ebf90958a8fde5218b6930342e6b119",
+        "CS-01/candidates/CS-01-noop-eval.json": "feef261176cb71828b037177fbd4dedac0ceb80a99b437a1d032ffdbf4c95d6e",
+        "CS-01/candidates/CS-01-pre-correction.json": "803c3e80096a07e371eb487d8790f0950b69d7ea7ddbd0d9d02fca0b8af44041",
+        "CS-01/candidates/CS-01-reference.json": "03883cb2c6002f2ecd0b4a97e9563d93e43ec93a13d811e144d9cba157e0001c",
+        "CS-01/contracts/full_session.json": "91fa2bb4b5d85f141addf7fb40f59695744e5c94fa413daec9155aecdf18d72d",
+        "CS-01/contracts/initial_only.json": "1fa4f85fef73f083ae292462a3e38f8e0b462300960ee99094173ecb2170d24a",
+        "CS-01/contracts/mapping2_full_session.json": "529d788ac6d02975c75843708b1cab52aca9b32da275f00394aa49f9f77d47d5",
+        "CS-01/contracts/mapping2_initial_only.json": "b6e439d3758ce3fb18173b128857dd478a8f23b74c0d269f10d30af82314eb38",
+        "CS-01/contracts/mapping_full_session.json": "2d27c761a847ce7faf983086910b99cc680104282f9649bd9e104f3c35901794",
+        "CS-01/contracts/mapping_initial_only.json": "aaf7ac7b48e24b9a08aa33235117272f8d0d682052d39d550e0db20cf4f2cb95",
+        "CS-01/contracts/reference.json": "290a6232858796cf05c69f76e0ec1849d0b537844a248591a0acb3291c70a055",
+        "CS-01/labels/construction_checks.json": "c48e1a0e700f9088cedd255a03b919fba7c8f4be3de68dda3c8c2f1683a4c5e8",
+        "CS-01/task.json": "869b340830ef1045cdc6d4009d1cd190f3182715c83ca413650b3fc47eb478d6",
+        "CS-01/verifiers/repo_tests/upstream_check_ids.json": "8b8be3f97a070af008cf6179da27afb81b45477ab5c0c39e18301d9e396fd2c4",
+        "CS-02/candidates/CS-02-dev-alt-full_session.json": "7481bf5b04934ad348bd76ec6cba7489d3069f6fabe52584aedcb5bc4a137a80",
+        "CS-02/candidates/CS-02-dev-alt-initial_only.json": "076200ea1a5fbd83599ea2910fa7c36e85ea151496c2832b17d278f6cbc41924",
+        "CS-02/candidates/CS-02-dev-attack-full_session-a1.json": "dcd1a77448e927ced2c7d0e3c5d7a54a8884f3c727fb08dba657e0a79e79cb8b",
+        "CS-02/candidates/CS-02-dev-attack-full_session-a2.json": "f4380b39b76f58eb71fb3446d1ee411b796c01bd03097787e3bc7e48ed5d9af1",
+        "CS-02/candidates/CS-02-dev-attack-full_session-a3.json": "fce68b64612f0c528f39314fcd5653fde03e6fda46644fcb10f7b2a080927790",
+        "CS-02/candidates/CS-02-dev-attack-full_session-a4.json": "ec39d74a202619871fec21f1c1ebea0d7d70729f017d2cec974bd397c550a22b",
+        "CS-02/candidates/CS-02-dev-attack-initial_only-a1.json": "3265edab8a38db48570a8dd75fda00a3572ee58aaeda5ef903caddbf1b10e623",
+        "CS-02/candidates/CS-02-dev-attack-initial_only-a2.json": "30a71e4ba6b25b1e4099adc0f9a39580874bf45d42fe82d8b2f6e945565afa54",
+        "CS-02/candidates/CS-02-dev-attack-initial_only-a3.json": "d8234139c99da7066d274893c82788943f4dc881851823fed8d742829448b11c",
+        "CS-02/candidates/CS-02-dev-attack-initial_only-a4.json": "2a06fa3fa0ab3a667f14b37fecd8d8468a1cc2b4efe9472ecc406da23c2395b7",
+        "CS-02/candidates/CS-02-eval-alt-1.json": "4ed31d809539f183bd9bea41f08a0ec04c08f21f4835189c6d89c252fcb66904",
+        "CS-02/candidates/CS-02-eval-alt-2.json": "d04ac9c028eeca575f362fb755942ee44955c55123dab91dfc9593a5803bbfc0",
+        "CS-02/candidates/CS-02-eval-nm-1.json": "1d958681d1216acf31268803834c454f8be711e4f17049fcec3e6e2d49ec08d3",
+        "CS-02/candidates/CS-02-eval-nm-2.json": "e06c18356365c87ea35d77bfa78556000934a94eef83a775497cc3b1967911b3",
+        "CS-02/candidates/CS-02-eval-nm-3.json": "4da36973f02c52a62d85a0a15e023aa03029eca2f5857f337e018d9e36f927ba",
+        "CS-02/candidates/CS-02-eval-nm-4.json": "efeb600e9e7b94f7edb882dd6e0629a4eacbee639982136f3e07d3f65fef7591",
+        "CS-02/candidates/CS-02-eval-nm-5.json": "1439aff009c68f4bc72ca8dbd91f238c4e45438f446540ddb2c15ab20e037149",
+        "CS-02/candidates/CS-02-noop-dev.json": "1ee2680d26dca9aeb7601cc22b68ac6ff097e2a7bfe2dd4ff6af5409218ced90",
+        "CS-02/candidates/CS-02-noop-eval.json": "49d3ab2f059c5883c4274c6faf4d474018ee0f42347b9e0b10682ad443c23198",
+        "CS-02/candidates/CS-02-pre-correction.json": "0750297db2e723b96f68324c4b02af9b83ecf1c15d888826fe247011b3d7748b",
+        "CS-02/candidates/CS-02-reference.json": "4e718667731fae70e87a596eb8a67f22b84f9b5c8b4d2921adfb51c0c40c1f5f",
+        "CS-02/contracts/full_session.json": "e7e68a29998bc2bb6d782f7bf5754937229c7f90685fc623b6c11f2bf1d27b59",
+        "CS-02/contracts/initial_only.json": "d04d86b9bf1676a483cbc5529a250ab358c5b2bb26512bd99b1c43565b8f17a6",
+        "CS-02/contracts/mapping2_full_session.json": "59ad49329e2f9a47ba0f93f7a3f69477da6e0b66db6ab6320163c52f91c6b8a7",
+        "CS-02/contracts/mapping2_initial_only.json": "09b05f8d37e9af992c5a2233447727baf1bfd69493854e7d8f9741413c3922c3",
+        "CS-02/contracts/mapping_full_session.json": "2c129451c3e8ca24e497135570224838a6f6875cc6685fd99496f218d9481968",
+        "CS-02/contracts/mapping_initial_only.json": "5f6ebaa4731e4bbb1637dd1aa8bccb0b681b645f5bd2b9cfed84c095a1391333",
+        "CS-02/contracts/reference.json": "9488b35c09cf82d9c75eab7ee7ab46fa80d75973ecb410f60ed1c1353d038cb7",
+        "CS-02/labels/construction_checks.json": "63f9bd77e49c29c799d345f1b917fac17b075b81ac134da7e91695f3574a9278",
+        "CS-02/task.json": "c6b87cc0937f94c0fb8b86a28ca73cb75829107c7c591d45a2d6004699ea350f",
+        "CS-02/verifiers/repo_tests/upstream_check_ids.json": "e2d0082ae22cf4c0943020d6f387c28162859fe41e7d33ce71aac5dba0324a92",
+        "CS-03/candidates/CS-03-dev-alt-full_session.json": "b11c852102d2495061c2a0167820cdae6f02b77388d76c25ef283a3b426fecee",
+        "CS-03/candidates/CS-03-dev-alt-initial_only.json": "626dde2bc54a8bba823b1ce3d9e9054b8fd0b2e69d0001e8988068eb234c1921",
+        "CS-03/candidates/CS-03-dev-attack-full_session-a1.json": "f21959c5f8edf32361c239e85bde1b8a3a3137e1d5d8dbd5cec163a51640efcf",
+        "CS-03/candidates/CS-03-dev-attack-full_session-a2.json": "9041750fd4526396e81b7b36b3363a674c012c321b9b195ab3af2d22b019e9d6",
+        "CS-03/candidates/CS-03-dev-attack-full_session-a3.json": "78e74e19b7bf8d666ade670434daf0b7976f87616c3f6525fd0f445be6b32af1",
+        "CS-03/candidates/CS-03-dev-attack-full_session-a4.json": "b100630ae21a40190e22ea2405bbbbb0a33708a573b6d12a36d399e4e2c9c8cd",
+        "CS-03/candidates/CS-03-dev-attack-initial_only-a1.json": "e0bf0a0d0f1b3b4ae41ce7d263bc91842854c4c1eb737e31b91eb70bdb6b815f",
+        "CS-03/candidates/CS-03-dev-attack-initial_only-a2.json": "41b73c14968bb3d0f70150a4bc2c74d57c6da558c38528709f718d3a65d30215",
+        "CS-03/candidates/CS-03-dev-attack-initial_only-a3.json": "d0bb2088c096d65d1ec6d05256625a4d705ad91d7c216580dd03056e0a60099f",
+        "CS-03/candidates/CS-03-dev-attack-initial_only-a4.json": "7a484c8082fcb9ec2efa3ccdb0e3e71b6d59969c67f4803d3578c0f808a2ab23",
+        "CS-03/candidates/CS-03-eval-alt-1.json": "19a50e189a9b80c1944e75701d50cb6ac33cdc356604fcb51e26318c920f8fa2",
+        "CS-03/candidates/CS-03-eval-alt-2.json": "eaab4859d8c0e68afcb0ee90326a7fb3fc2073707e3299a894134ce0810eea10",
+        "CS-03/candidates/CS-03-eval-nm-1.json": "4ff51fa5218c9c48c564552fee19df1bc67acb303b45c2b80efa9a451defb430",
+        "CS-03/candidates/CS-03-eval-nm-2.json": "02c535bcbb1e43feba52db4bed6b700bc2796a8f9743e106502db09788927d2c",
+        "CS-03/candidates/CS-03-eval-nm-3.json": "e6c554305f67580235959ea23d8a8a0cdfc0c0cfc851005a0dfb212b8b36b480",
+        "CS-03/candidates/CS-03-eval-nm-4.json": "adf94f91906490b4ffd24b988a558fbfc3474514317fe94f2c90e8e9a59afc6b",
+        "CS-03/candidates/CS-03-eval-nm-5.json": "5b1d01fe15255f0d658fd727736563b2454704d0c7221562ce562745d9b0f957",
+        "CS-03/candidates/CS-03-noop-dev.json": "8156749440d7a8ad8a893b3d3eed2802120b1702abbbdc9da37ce466580823f0",
+        "CS-03/candidates/CS-03-noop-eval.json": "8fdbd49574bf3224b68c42a1951d622bed7e60665e1ddb5f3188bc3904a2143e",
+        "CS-03/candidates/CS-03-pre-correction.json": "a1f377efe7d68ad5028361bdab19821fab0b8e41a0648bc341ce642b0e5b87d8",
+        "CS-03/candidates/CS-03-reference.json": "c7bd2d2d303f92242cc0856aefadbe90eabc18e3b37ac36611716b10a7bba6c8",
+        "CS-03/contracts/full_session.json": "c6e5c49e07c22e2e7e5e7926d9467c786827c76b964e48962f2f17a1845ac63b",
+        "CS-03/contracts/initial_only.json": "7f58fbc6280fc42ef398f157915f6338c302f01dbf0765a11dc4d786e735f580",
+        "CS-03/contracts/mapping2_full_session.json": "250575fc45027d1b8527f984f72669c71288f39bb0bfa5857633756958b9d218",
+        "CS-03/contracts/mapping2_initial_only.json": "f6b0bbfa935e6b6dafd85a0db25005d0fc10f41179a65d63ef61b65bd62ce9ab",
+        "CS-03/contracts/mapping_full_session.json": "83d5ad83245c517373940836f4d90d3b70eeef8fb0a2a6a0521f14175e7c098f",
+        "CS-03/contracts/mapping_initial_only.json": "99346ae81d80d7fa404e3d33ee19e9c1c6e7191741eea2c52cb8abeb7baba3f1",
+        "CS-03/contracts/reference.json": "8ef3a440a3a251f3cb8f8f3e47fdfc404d84d7d0d39e15f4e5d12a74d4af25f9",
+        "CS-03/labels/construction_checks.json": "e9f2c29889253eb331ee59d0230d371b97cf723efacc0aba2d355e1c1174e009",
+        "CS-03/task.json": "e9db8f514a051b3b709264cd9e70a4f50a58d23916b6932cc82411de077f7b74",
+        "CS-03/verifiers/repo_tests/upstream_check_ids.json": "44080641665f71fab30fc222ddb7895fd2156aea11e43529cdb81d73b15d1cf3",
+        "CS-04/candidates/CS-04-dev-alt-full_session.json": "8253ee60c755e80325b2546da5d320327b2116ee0e71cd28975ca8bd19a13211",
+        "CS-04/candidates/CS-04-dev-alt-initial_only.json": "5ec5f89ac22d6795c387bc9fdf9c38df46bc760ff6515c0855f0d29c3b325193",
+        "CS-04/candidates/CS-04-dev-attack-full_session-a1.json": "056e26e60026be7553e1c7f445d78fa58cb7f195becfcd3678bd9d0d45daec2f",
+        "CS-04/candidates/CS-04-dev-attack-full_session-a2.json": "80828c1c09acf82ed493690a29e08bac52e644ef2140d7d635d8492145323c6d",
+        "CS-04/candidates/CS-04-dev-attack-full_session-a3.json": "3cfdfe60aa6bab7560096105336914ad4eed6fa654aa8b06a0600a58e7ac6ba3",
+        "CS-04/candidates/CS-04-dev-attack-full_session-a4.json": "242113c68e5afdd63e2b27d9951738f4289b887d4aabf38addca6acffd85af3b",
+        "CS-04/candidates/CS-04-dev-attack-initial_only-a1.json": "700bb07f68cb3fee4db0efc1bce6f2ca45faa0b49e10b8d73b7b33cd11546b7e",
+        "CS-04/candidates/CS-04-dev-attack-initial_only-a2.json": "f04ac6d1714b4d7e94d98152584242c14847fb21c1728000b2a9a445df5e5184",
+        "CS-04/candidates/CS-04-dev-attack-initial_only-a3.json": "b0a6603a0acbf4a4fcb7da0b5a7dfe7afb8b3381445a38d9b5bba2f1896ceef5",
+        "CS-04/candidates/CS-04-dev-attack-initial_only-a4.json": "ea20861ccd7c8816eee5f10ee6a690e519490b78b6a1e45243a1fdc51b9bdb18",
+        "CS-04/candidates/CS-04-eval-alt-1.json": "b1049eb9fa1dbaddbd3384d42147d0fc19b3c501d87eaf5d6752528e9abe1acc",
+        "CS-04/candidates/CS-04-eval-alt-2.json": "99fbefb1842d4df662da2506f82557978410484846f6297e9018ef98f0ea812a",
+        "CS-04/candidates/CS-04-eval-nm-1.json": "96c75589292a6ae853d8ea69170ef17e296d39ccf5824bf303df68ffab137924",
+        "CS-04/candidates/CS-04-eval-nm-2.json": "e373e7f9c71dff02544f2516a9bc91dc838ae98a71de4cde091a43924f9f0d79",
+        "CS-04/candidates/CS-04-eval-nm-3.json": "88417872eb8f6641e8a03209b034811cdba327f567c2d32093f0f151dc3f7662",
+        "CS-04/candidates/CS-04-eval-nm-4.json": "5abd6c10d0bde4014fb69cf95f7687b8ce23ed0aa206091a5bc9fcf89e724f8d",
+        "CS-04/candidates/CS-04-eval-nm-5.json": "d0af7e2c15b165c16af2641e6beddba4fc11c257236e0c5a771af5836db5830f",
+        "CS-04/candidates/CS-04-noop-dev.json": "3f8d0fc69681acccbe7b9eb9ebbba1d450d7e1aab44a9fd724798d73fa4b64ba",
+        "CS-04/candidates/CS-04-noop-eval.json": "2bd071c91f575838bbe4b2a440d5e804bbbce4e3489d64b0c01f4e92c9c73bcc",
+        "CS-04/candidates/CS-04-pre-correction.json": "af39bda15bdca2ee611ec726e428820391ad5cae4a6be3ae58a630b04f66757b",
+        "CS-04/candidates/CS-04-reference.json": "4354dcc2828da4137cbac62da80e98a4047db2a5026a8c8a3810367aa91f14ba",
+        "CS-04/contracts/full_session.json": "7bc7af38dde853ef09b93e11743cb406003a5cea78cd1e7d593b7a5e1c213d26",
+        "CS-04/contracts/initial_only.json": "e2cec31d877d83a07e090c7a9dcae5e935ca7c2236669cfee291a747a6e09d87",
+        "CS-04/contracts/mapping2_full_session.json": "aef0a9a117c36829f931a6484041d75c5896d7bf648023876eaadecd89347c3a",
+        "CS-04/contracts/mapping2_initial_only.json": "521a754b9b47201daa8a6446b6db3a76264fa72a4a3f35982c5d3b66e7d824b8",
+        "CS-04/contracts/mapping_full_session.json": "c6d05338843cc6aa5e89d7b5c93773d0991b6794c1aec2bcc8d281c278baddf0",
+        "CS-04/contracts/mapping_initial_only.json": "d19c651001e3e1b7d483f778cbb07dab881733caceb7ba04399217439d5f5f1a",
+        "CS-04/contracts/reference.json": "0c3e86c15167d67ab5f2c9e4914bca21e7253d8004e737c2450ac95a7c3c1c13",
+        "CS-04/labels/construction_checks.json": "f68c387cbc6488e7d96c3250ebebfd9b486a6639e5306b42ab9492cfe77cf31a",
+        "CS-04/task.json": "01b3b481ca9582a4926e407fce371a692d04939c6596c3ee954a7d8f5e5c13d8",
+        "CS-04/verifiers/repo_tests/upstream_check_ids.json": "5351d497c15289d3a299dca6aed1aa3e5cd9814c2082426a3635aaafe4cc36d9",
+        "manifest.json": "6a7608b94402bc9a97dc3a197d91c80f86772003ce51de0923df7bc436be6ba6",
+        "results.jsonl": "70110b0c7a6bdf0f089ca4b1c8013e93666a995529066d0ece862755e3440eb0"
+      },
+      "git_revision": "6c1af59a6579a2ca3150e39e87fa48cd83dbdd03"
+    },
     "label_policy": "proposed labels allowed (automated pilot)",
     "label_rule": "pilot",
     "n_results": 240,
@@ -1465,6 +1715,68 @@
   },
   "n_families": 4,
   "n_tasks": 4,
+  "near_miss_crosstab": {
+    "full_audited": {
+      "ambiguous": {
+        "accepted": 3,
+        "n": 5
+      },
+      "confirmed_invalid": {
+        "accepted": 0,
+        "n": 15
+      }
+    },
+    "full_plain": {
+      "ambiguous": {
+        "accepted": 3,
+        "n": 5
+      },
+      "confirmed_invalid": {
+        "accepted": 0,
+        "n": 15
+      }
+    },
+    "initial_audited": {
+      "ambiguous": {
+        "accepted": 4,
+        "n": 5
+      },
+      "confirmed_invalid": {
+        "accepted": 3,
+        "n": 15
+      }
+    },
+    "initial_plain": {
+      "ambiguous": {
+        "accepted": 4,
+        "n": 5
+      },
+      "confirmed_invalid": {
+        "accepted": 4,
+        "n": 15
+      }
+    },
+    "llm_freeform": {
+      "ambiguous": {
+        "accepted": 4,
+        "n": 5
+      },
+      "confirmed_invalid": {
+        "accepted": 1,
+        "n": 15
+      }
+    },
+    "repo_tests": {
+      "ambiguous": {
+        "accepted": 3,
+        "n": 5
+      },
+      "confirmed_invalid": {
+        "accepted": 5,
+        "n": 15
+      }
+    }
+  },
   "outcome_counts": {
     "full_audited": {
       "pass": 17,
@@ -2993,6 +3305,56 @@
       }
     }
   },
+  "sensitivity_check_labels": {
+    "full_audited": {
+      "fa": 0.24,
+      "fa_den": 25,
+      "fa_num": 6,
+      "fr": 0.0,
+      "fr_den": 7,
+      "fr_num": 0
+    },
+    "full_plain": {
+      "fa": 0.24,
+      "fa_den": 25,
+      "fa_num": 6,
+      "fr": 0.0,
+      "fr_den": 7,
+      "fr_num": 0
+    },
+    "initial_audited": {
+      "fa": 0.48,
+      "fa_den": 25,
+      "fa_num": 12,
+      "fr": 0.2857142857142857,
+      "fr_den": 7,
+      "fr_num": 2
+    },
+    "initial_plain": {
+      "fa": 0.52,
+      "fa_den": 25,
+      "fa_num": 13,
+      "fr": 0.2857142857142857,
+      "fr_den": 7,
+      "fr_num": 2
+    },
+    "llm_freeform": {
+      "fa": 0.32,
+      "fa_den": 25,
+      "fa_num": 8,
+      "fr": 0.0,
+      "fr_den": 7,
+      "fr_num": 0
+    },
+    "repo_tests": {
+      "fa": 0.4,
+      "fa_den": 25,
+      "fa_num": 10,
+      "fr": 0.42857142857142855,
+      "fr_den": 7,
+      "fr_num": 3
+    }
+  },
   "sensitivity_construction_labels": {
     "full_audited": {
       "fa": 0.13636363636363635,
@@ -3087,6 +3449,56 @@
         0.0,
         0.8181818181818182
       ],
+      "fr_den": 10,
+      "fr_num": 4
+    }
+  },
+  "sensitivity_without_duplicates": {
+    "full_audited": {
+      "fa": 0.0,
+      "fa_den": 15,
+      "fa_num": 0,
+      "fr": 0.0,
+      "fr_den": 10,
+      "fr_num": 0
+    },
+    "full_plain": {
+      "fa": 0.0,
+      "fa_den": 15,
+      "fa_num": 0,
+      "fr": 0.0,
+      "fr_den": 10,
+      "fr_num": 0
+    },
+    "initial_audited": {
+      "fa": 0.2,
+      "fa_den": 15,
+      "fa_num": 3,
+      "fr": 0.2,
+      "fr_den": 10,
+      "fr_num": 2
+    },
+    "initial_plain": {
+      "fa": 0.26666666666666666,
+      "fa_den": 15,
+      "fa_num": 4,
+      "fr": 0.2,
+      "fr_den": 10,
+      "fr_num": 2
+    },
+    "llm_freeform": {
+      "fa": 0.06666666666666667,
+      "fa_den": 15,
+      "fa_num": 1,
+      "fr": 0.0,
+      "fr_den": 10,
+      "fr_num": 0
+    },
+    "repo_tests": {
+      "fa": 0.3333333333333333,
+      "fa_den": 15,
+      "fa_num": 5,
+      "fr": 0.4,
       "fr_den": 10,
       "fr_num": 4
     }

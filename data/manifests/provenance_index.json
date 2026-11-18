@@ -37,7 +37,7 @@
       "trace_sha256": "dc1d9b2f10225ef12d7f5fb4096243fafba9230af3690f9b3143c8fd41c17e7b",
       "snapshot_manifest_sha256": "8f30c35e16795f234c71e7b6945a6355ca0b4d139feda3b36642ea01e3b8d64b",
       "capture_method": "Claude Code general-purpose subagent; scripted user turns (CS-v1); states captured between turns",
-      "redaction_status": "not_needed_controlled",
+      "redaction_status": "redacted_by_us",
       "task_family_id": "CS-02",
       "eligibility": "pending_review",
       "rejection_reasons": [],

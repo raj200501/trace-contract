@@ -15,6 +15,7 @@ data = [
 ]
 dev = [
   "pytest>=8",
+  "pip>=24",  # image builds download pinned wheels with `python -m pip` (sys.executable)
 ]
 
 [project.scripts]

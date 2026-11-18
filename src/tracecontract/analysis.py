@@ -13,15 +13,20 @@ Label policy:
 
 from __future__ import annotations
 
+import hashlib
 import json
+import re
+import subprocess
 from collections import Counter, defaultdict
 from pathlib import Path
+from types import SimpleNamespace
 
 from .metrics import Row, paired_difference, summarize
 from .schemas import Candidate, CandidateOrigin, LabelerKind, TaskContract, TaskManifest, VerificationResult
 from .store import load, read_jsonl, write_json
 
 PILOT_LABELER = "builder:refcheck+regression+construction:v1"  # decision log D19
+_CHECKS: dict[str, dict] = {}  # construction checks by candidate id (filled by build_rows for policy "check")
 CONSTRUCTED = (CandidateOrigin.constructed_near_miss, CandidateOrigin.valid_alternative)
 
 
@@ -34,10 +39,18 @@ def candidate_label(c: Candidate, policy: str):
     * ``construction`` (exploratory, not pre-specified): human label if present, else
       the construction label for constructed candidates and the D19 proposal for the
       others.
+    * ``check`` (exploratory, post hoc): human label if present, else the independent
+      construction check's assessed label (``labels/construction_checks.json``); unsure
+      or unchecked candidates are unlabeled.
     """
     human = c.final_label()
     if human is not None or policy == "human":
         return human
+    if policy == "check" and c.candidate_id in _CHECKS:
+        assessed = _CHECKS[c.candidate_id].get("assessed_label")
+        if assessed in ("valid", "invalid"):
+            return SimpleNamespace(value=assessed, violated_requirements=_CHECKS[c.candidate_id].get("violated_requirements", []))
+        return None
     if policy == "construction" and c.origin in CONSTRUCTED:
         cons = [lb for lb in c.labels if lb.labeler_kind == LabelerKind.construction]
         if cons:
@@ -71,6 +84,8 @@ def _negative_type(c: Candidate, label, ref: TaskContract | None, first_prompt_i
         except KeyError:
             continue
         later.append(r.introduced_at != first_prompt_id)
+    if not later:  # e.g. only REGRESSION: no reference requirement to classify by
+        return "unspecified"
     return "correction_violating" if any(later) else "initial_violating"
 
 
@@ -86,6 +101,12 @@ def build_rows(run_dir: Path, tasks_root: Path, *, allow_proposed: bool, policy:
     refs: dict[str, TaskContract | None] = {}
     first: dict[str, str | None] = {}
     conditions: dict[tuple[str, str], str] = {}
+    if policy == "check":
+        _CHECKS.clear()
+        for t in manifest["tasks"]:
+            cp = tasks_root / t["task_id"] / "labels" / "construction_checks.json"
+            if cp.exists():
+                _CHECKS.update(json.loads(cp.read_text()).get("checks", {}))
     for t in manifest["tasks"]:
         tid = t["task_id"]
         tdir = tasks_root / tid
@@ -130,8 +151,10 @@ def analyze(run_dir: Path, tasks_root: Path, *, allow_proposed: bool = False, n_
         s = summarize(primary, condition=c, n_boot=n_boot)
         sx = summarize(primary, condition=c, exclude_infra=True, n_boot=n_boot)
         out["conditions"][c] = {
-            "false_acceptance": {"rate": s.fa.value, "num": s.fa.num, "den": s.fa.den, "ci95": s.fa_ci, "macro": s.fa_macro},
-            "false_rejection": {"rate": s.fr.value, "num": s.fr.num, "den": s.fr.den, "ci95": s.fr_ci, "macro": s.fr_macro},
+            "false_acceptance": {"rate": s.fa.value, "num": s.fa.num, "den": s.fa.den, "ci95": s.fa_ci, "macro": s.fa_macro,
+                                 "exact95": s.fa_exact, "ci95_degenerate": s.fa_ci_degenerate},
+            "false_rejection": {"rate": s.fr.value, "num": s.fr.num, "den": s.fr.den, "ci95": s.fr_ci, "macro": s.fr_macro,
+                                "exact95": s.fr_exact, "ci95_degenerate": s.fr_ci_degenerate},
             "infrastructure": {"num": s.infra.num, "den": s.infra.den},
             "excluded_unlabeled_or_ambiguous": s.excluded_unlabeled,
             "sensitivity_excluding_infra": {"fa": sx.fa.value, "fa_den": sx.fa.den, "fr": sx.fr.value, "fr_den": sx.fr.den},
@@ -180,11 +203,115 @@ def analyze(run_dir: Path, tasks_root: Path, *, allow_proposed: bool = False, n_
             out["sensitivity_construction_labels"][c] = {
                 "fa": ss.fa.value, "fa_num": ss.fa.num, "fa_den": ss.fa.den, "fa_ci95": ss.fa_ci,
                 "fr": ss.fr.value, "fr_num": ss.fr.num, "fr_den": ss.fr.den, "fr_ci95": ss.fr_ci}
+    if allow_proposed:
+        out.update(_post_hoc(run_dir, tasks_root, rows, primary, conds, n_boot, exclude_origins))
     out["labels"] = label_summary([tasks_root / t for t in tasks])
     out["coverage"] = {t: contract_coverage(tasks_root / t) for t in tasks}
     out["mapping_agreement"] = {t: mapping_agreement(tasks_root / t) for t in tasks}
+    out["meta"]["inputs"] = _input_hashes(run_dir, [tasks_root / t for t in tasks])
     write_json(out, run_dir / "analysis.json")
     (run_dir / "analysis.md").write_text(to_markdown(out), encoding="utf-8")
+    return out
+
+
+def _sha(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _input_hashes(run_dir: Path, task_dirs: list[Path]) -> dict:
+    """Revision and file hashes of every input the analysis read (labels, contracts, mappings, checks)."""
+    try:
+        rev = subprocess.run(["git", "rev-parse", "HEAD"], cwd=run_dir, capture_output=True, text=True).stdout.strip() or None
+    except OSError:
+        rev = None
+    files: dict[str, str] = {"results.jsonl": _sha(run_dir / "results.jsonl"), "manifest.json": _sha(run_dir / "manifest.json")}
+    for td in task_dirs:
+        for pat in ("task.json", "candidates/*.json", "contracts/*.json", "labels/construction_checks.json",
+                    "verifiers/repo_tests/upstream_check_ids.json"):
+            for f in sorted(td.glob(pat)):
+                files[f"{td.name}/{f.relative_to(td)}"] = _sha(f)
+    return {"git_revision": rev, "files_sha256": files}
+
+
+_INDEX = re.compile(r"^index [0-9a-f]+\.\.[0-9a-f]+.*$", re.M)
+
+
+def _norm_patch(patch: str) -> str:
+    """The patch as graded (protected test/config paths removed), without git index lines."""
+    from .patches import filter_patch
+
+    graded, _ = filter_patch(patch)
+    return _INDEX.sub("", graded).strip()
+
+
+def _post_hoc(run_dir: Path, tasks_root: Path, rows: list[Row], primary: list[Row], conds: list[str], n_boot: int,
+              exclude_origins: tuple[str, ...]) -> dict:
+    """Exploratory analyses added after the internal review (protocol v0.4; never primary)."""
+    out: dict = {}
+    # 1. Near-miss acceptance by D19 status (confirmed invalid vs ambiguous).
+    xt: dict = {}
+    for c in conds:
+        nm = [r for r in rows if r.condition == c and r.origin == "constructed_near_miss"]
+        xt[c] = {k: {"accepted": sum(r.outcome == "pass" for r in nm if r.label == lab), "n": sum(r.label == lab for r in nm)}
+                 for k, lab in (("confirmed_invalid", "invalid"), ("ambiguous", "ambiguous"))}
+    out["near_miss_crosstab"] = xt
+    # 2. Rates under the independent construction checks' assessed labels.
+    crows, _ = build_rows(run_dir, tasks_root, allow_proposed=True, policy="check")
+    cprim = [r for r in crows if r.origin not in exclude_origins]
+    out["sensitivity_check_labels"] = {}
+    for c in conds:
+        ss = summarize(cprim, condition=c, n_boot=n_boot)
+        out["sensitivity_check_labels"][c] = {"fa": ss.fa.value, "fa_num": ss.fa.num, "fa_den": ss.fa.den,
+                                              "fr": ss.fr.value, "fr_num": ss.fr.num, "fr_den": ss.fr.den}
+    # 3. Held-out candidates duplicating a development candidate or another held-out candidate.
+    dup: dict = {}
+    for t in sorted({r.task_id for r in rows}):
+        m = load(tasks_root / t / "task.json", TaskManifest)
+        cands = [load(tasks_root / t / p, Candidate) for p in m.candidates]
+        dev = {_norm_patch(c.patch): c.candidate_id for c in cands if c.split.value == "dev" and c.patch}
+        seen: dict[str, str] = {}
+        for c in sorted(cands, key=lambda c: (c.origin != CandidateOrigin.observed_pre_correction, c.candidate_id)):
+            if c.split.value != "eval" or c.origin in (CandidateOrigin.noop, CandidateOrigin.reference) or not c.patch:
+                continue
+            k = _norm_patch(c.patch)
+            hits = {}
+            if k in dev:
+                hits["same_patch_as_dev"] = dev[k]
+            if k in seen:
+                hits["same_patch_as_heldout"] = seen[k]
+            else:
+                seen[k] = c.candidate_id
+            if hits:
+                dup[c.candidate_id] = {"task_id": t, **hits}
+    out["duplicates"] = dup
+    if dup:
+        drows = [r for r in primary if r.candidate_id not in dup]
+        out["sensitivity_without_duplicates"] = {}
+        for c in conds:
+            ss = summarize(drows, condition=c, n_boot=n_boot)
+            out["sensitivity_without_duplicates"][c] = {"fa": ss.fa.value, "fa_num": ss.fa.num, "fa_den": ss.fa.den,
+                                                        "fr": ss.fr.value, "fr_num": ss.fr.num, "fr_den": ss.fr.den}
+    # 4. B1 restricted to checks that exist in the base commit's own tests (not added by the agent).
+    up: dict[str, set] = {}
+    for t in sorted({r.task_id for r in rows}):
+        f = tasks_root / t / "verifiers" / "repo_tests" / "upstream_check_ids.json"
+        if f.exists():
+            up[t] = set(json.loads(f.read_text())["upstream_check_ids"])
+    if up:
+        label_of = {(r.task_id, r.candidate_id): r for r in primary if r.condition == "repo_tests"}
+        b1 = []
+        for res in read_jsonl(run_dir / "results.jsonl", VerificationResult):
+            key = (res.task_id, res.candidate_id)
+            if res.verifier_id != "repo_tests" or key not in label_of or res.task_id not in up:
+                continue
+            ok = all(ch.status == "passed" for ch in res.checks if ch.check_id in up[res.task_id])
+            r0 = label_of[key]
+            b1.append(Row(task_id=r0.task_id, family_id=r0.family_id, candidate_id=r0.candidate_id, condition="repo_tests_upstream",
+                          outcome="pass" if ok else "task_failure", label=r0.label, origin=r0.origin))
+        ss = summarize(b1, condition="repo_tests_upstream", n_boot=n_boot)
+        out["b1_upstream_only"] = {"fa": ss.fa.value, "fa_num": ss.fa.num, "fa_den": ss.fa.den,
+                                   "fr": ss.fr.value, "fr_num": ss.fr.num, "fr_den": ss.fr.den,
+                                   "n_checks": {t: len(v) for t, v in up.items()}}
     return out
 
 
@@ -206,13 +333,19 @@ def to_markdown(a: dict) -> str:
     lines += ["## False acceptance / false rejection by condition", "",
               "Rates with (numerator/denominator) and 95% cluster-bootstrap interval over task families where computable. "
               "Reference solution and no-op are excluded (see sanity table).", "",
-              "| Condition | False acceptance | False rejection | Youden's J | Tasks with an accepted negative | Infra outcomes | Excluded (unlabeled/ambiguous) |",
-              "| --- | --- | --- | --- | --- | --- | --- |"]
+              "Intervals marked * are degenerate (every family has the same rate, so resampling families cannot vary them); "
+              "the exact (Clopper-Pearson) interval ignores clustering and is given only as a reference scale.", "",
+              "| Condition | False acceptance | FA exact 95% | FA macro | False rejection | FR exact 95% | FR macro | Youden's J | Tasks with an accepted negative | Infra outcomes | Excluded (unlabeled/ambiguous) |",
+              "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
     for c, d in a["conditions"].items():
         fa, fr = d["false_acceptance"], d["false_rejection"]
         j = "n/a" if d.get("youden_j") is None else f"{d['youden_j']:+.2f}"
         tn = d.get("tasks_with_any_accepted_negative", {"num": 0, "den": 0})
-        lines.append(f"| {c} | {_fmt(fa['rate'], fa['num'], fa['den'], fa['ci95'])} | {_fmt(fr['rate'], fr['num'], fr['den'], fr['ci95'])} | {j} | "
+        ex = lambda x: "n/a" if not x.get("exact95") else f"[{x['exact95'][0]:.2f}, {x['exact95'][1]:.2f}]"  # noqa: E731
+        mac = lambda x: "n/a" if x.get("macro") is None else f"{x['macro']:.2f}"  # noqa: E731
+        star = lambda x: "*" if x.get("ci95_degenerate") else ""  # noqa: E731
+        lines.append(f"| {c} | {_fmt(fa['rate'], fa['num'], fa['den'], fa['ci95'])}{star(fa)} | {ex(fa)} | {mac(fa)} | "
+                     f"{_fmt(fr['rate'], fr['num'], fr['den'], fr['ci95'])}{star(fr)} | {ex(fr)} | {mac(fr)} | {j} | "
                      f"{tn['num']}/{tn['den']} | {d['infrastructure']['num']}/{d['infrastructure']['den']} | {d['excluded_unlabeled_or_ambiguous']} |")
     lines += ["", "## Accepted negatives by type", "", "| Condition | correction-violating | initial-violating | unspecified |", "| --- | --- | --- | --- |"]
     for c in a["conditions"]:
@@ -225,11 +358,11 @@ def to_markdown(a: dict) -> str:
         noop = s.get("noop", {})
         lines.append(f"| {c} | {ref.get('pass', '-')}/{ref.get('n', '-')} | {noop.get('pass', '-')}/{noop.get('n', '-')} |")
     lines += ["", "## Paired comparisons (same candidates)", "",
-              "| A | B | Metric | A - B | 95% CI | n candidates | families | A acc & B rej | A rej & B acc |", "| --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
+              "| A | B | Metric | A - B | 95% CI | n labeled for metric | families | A acc & B rej | A rej & B acc |", "| --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
     for d in a["comparisons"]:
         diff = "n/a" if d["difference"] is None else f"{d['difference']:+.2f}"
         ci = "n/a" if not d["ci95"] else f"[{d['ci95'][0]:+.2f}, {d['ci95'][1]:+.2f}]"
-        lines.append(f"| {d['a']} | {d['b']} | {d['metric'].upper()} | {diff} | {ci} | {d['n_common']} | {d['n_families']} | "
+        lines.append(f"| {d['a']} | {d['b']} | {d['metric'].upper()} | {diff} | {ci} | {d.get('n_metric', d['n_common'])} | {d['n_families']} | "
                      f"{d['discordant']['a_accepts_b_rejects']} | {d['discordant']['a_rejects_b_accepts']} |")
     if a.get("sensitivity_construction_labels"):
         lines += ["", "## Exploratory sensitivity: construction-intent labels (not pre-specified)", "",
@@ -238,6 +371,27 @@ def to_markdown(a: dict) -> str:
                   "| Condition | False acceptance | False rejection |", "| --- | --- | --- |"]
         for c, d in a["sensitivity_construction_labels"].items():
             lines.append(f"| {c} | {_fmt(d['fa'], d['fa_num'], d['fa_den'], d['fa_ci95'])} | {_fmt(d['fr'], d['fr_num'], d['fr_den'], d['fr_ci95'])} |")
+    if a.get("near_miss_crosstab"):
+        lines += ["", "## Post-hoc analyses after the internal review (exploratory, not pre-specified)", "",
+                  "### Near misses accepted, by label status", "", "| Condition | D19-confirmed invalid | D19 ambiguous |", "| --- | --- | --- |"]
+        for c, d in a["near_miss_crosstab"].items():
+            lines.append(f"| {c} | {d['confirmed_invalid']['accepted']}/{d['confirmed_invalid']['n']} | {d['ambiguous']['accepted']}/{d['ambiguous']['n']} |")
+    if a.get("sensitivity_check_labels"):
+        lines += ["", "### Rates under the independent construction checks' labels", "",
+                  "| Condition | False acceptance | False rejection |", "| --- | --- | --- |"]
+        for c, d in a["sensitivity_check_labels"].items():
+            lines.append(f"| {c} | {_fmt(d['fa'], d['fa_num'], d['fa_den'])} | {_fmt(d['fr'], d['fr_num'], d['fr_den'])} |")
+    if a.get("duplicates"):
+        lines += ["", "### Held-out candidates whose graded patch duplicates another candidate", ""]
+        for cid, d in a["duplicates"].items():
+            lines.append(f"* {cid}: " + ", ".join(f"{k.replace('_', ' ')} {v}" for k, v in d.items() if k != "task_id"))
+        lines += ["", "| Condition | FA without duplicates | FR without duplicates |", "| --- | --- | --- |"]
+        for c, d in a.get("sensitivity_without_duplicates", {}).items():
+            lines.append(f"| {c} | {_fmt(d['fa'], d['fa_num'], d['fa_den'])} | {_fmt(d['fr'], d['fr_num'], d['fr_den'])} |")
+    if a.get("b1_upstream_only"):
+        d = a["b1_upstream_only"]
+        lines += ["", "### B1 restricted to the base commit's own tests (checks added by the session agent removed)", "",
+                  f"False acceptance {_fmt(d['fa'], d['fa_num'], d['fa_den'])}; false rejection {_fmt(d['fr'], d['fr_num'], d['fr_den'])}."]
     if a.get("labels"):
         lines += ["", "## Labels and human-review queue", "", "| Task | valid | invalid | ambiguous | unlabeled | queued for review |",
                   "| --- | --- | --- | --- | --- | --- |"]
@@ -280,12 +434,15 @@ def _coverage_one(c: TaskContract, mapping: dict, ref_scored: set[str]) -> dict:
     covered = {x for rid in rec for x in mapping["map"].get(rid, []) if x not in contra[rid]} & ref_scored
     unsupported = sorted(rid for rid in rec if not set(mapping["map"].get(rid, [])) & ref_scored)
     contradicting = sorted(rid for rid in rec if contra[rid] & ref_scored)
+    # Covered by one recovered requirement but contradicted by another one (reported, not subtracted).
+    contradicted_anywhere = {x for rid in rec for x in contra[rid]}
+    covered_but_contradicted = sorted(covered & contradicted_anywhere)
     return {"mapper_kind": mapping.get("mapper_kind"), "mapper": mapping.get("mapper"),
             "coverage": len(covered) / len(ref_scored) if ref_scored else None,
             "covered": sorted(covered), "missing": sorted(ref_scored - covered),
             "n_recovered_scored": len(rec), "unsupported": unsupported,
             "unsupported_rate": (len(unsupported) / len(rec)) if rec else None,
-            "contradicting": contradicting,
+            "contradicting": contradicting, "covered_but_contradicted": covered_but_contradicted,
             "superseded_requirements": sorted(r.req_id for r in c.requirements if r.status.value == "superseded" and r.scored)}
 
 

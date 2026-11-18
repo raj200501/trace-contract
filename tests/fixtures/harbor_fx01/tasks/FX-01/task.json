@@ -1,0 +1,38 @@
+{
+  "schema_version": "0.1.0",
+  "task_id": "FX-01",
+  "family_id": "FX-01",
+  "population": "fixture",
+  "status": "draft",
+  "provenance": "provenance.json",
+  "snapshot_source": {
+    "repo_url": "https://example.invalid/fixture",
+    "commit": "0000000000000000000000000000000000000000",
+    "subdir": ""
+  },
+  "snapshot": null,
+  "snapshot_overlays": {},
+  "env_requirements": [
+    "pytest==8.3.5",
+    "hypothesis==6.131.0",
+    "attrs==26.1.0",
+    "iniconfig==2.3.1",
+    "packaging==26.3",
+    "pluggy==1.7.0",
+    "sortedcontainers==2.4.0"
+  ],
+  "candidate_pythonpath": "/work",
+  "repo_test_args": [],
+  "scripted_turns": [],
+  "contracts": {
+    "reference": "contracts/reference.json"
+  },
+  "verifiers": [
+    "verifiers/v1/spec.json"
+  ],
+  "candidates": [
+    "candidates/FX-01-reference.json",
+    "candidates/FX-01-wrong.json"
+  ],
+  "notes": ""
+}

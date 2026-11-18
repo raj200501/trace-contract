@@ -1,0 +1,28 @@
+{
+  "schema_version": "0.1.0",
+  "verifier_id": "v1",
+  "task_id": "FX-01",
+  "condition": "full_audited",
+  "contract_id": null,
+  "isolation": "process_separated",
+  "test_dir": "verifiers/v1/tests",
+  "checks": [
+    {
+      "check_id": "test_add.py::test_add",
+      "requirement_ids": [
+        "R1"
+      ]
+    },
+    {
+      "check_id": "test_add.py::test_negative",
+      "requirement_ids": [
+        "R1"
+      ]
+    }
+  ],
+  "content_sha256": "267accc64dc30514cfabaf9eb1068de8febeb0194d6c37e69810df535abc6ebc",
+  "generation": null,
+  "audit": null,
+  "frozen": true,
+  "version": 1
+}

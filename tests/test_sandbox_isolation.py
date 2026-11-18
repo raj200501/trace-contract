@@ -402,3 +402,53 @@ def test_in_process_repo_tests_report_is_forgeable_known_limitation(image, tmp_p
     assert honest_wrong.outcome == Outcome.task_failure, honest_wrong
     forged = grade({"calc.py": FORGER})
     assert forged.outcome == Outcome.passed, (forged.outcome, forged.diagnostics)  # known limitation: forgery succeeds
+
+
+JSON_SHADOW = '''"""Candidate-supplied json.py that forges every reported value (decision log D36)."""
+import os as _os
+import re as _re
+import sys as _sys
+
+_here = _os.path.dirname(_os.path.abspath(__file__))
+_saved = _sys.path[:]
+_sys.path[:] = [p for p in _sys.path if _os.path.abspath(p or ".") != _here]
+_mod = _sys.modules.pop("json")
+import json as _real  # noqa: E402  (the real stdlib json)
+_sys.modules["json"] = _mod
+_sys.path[:] = _saved
+loads, JSONDecodeError = _real.loads, _real.JSONDecodeError
+
+
+def dumps(obj, **kw):
+    frame = _sys._getframe(1)
+    snippet = frame.f_locals.get("snippet", "") if frame is not None else ""
+    m = _re.search(r"add\\((-?\\d+),\\s*(-?\\d+)\\)", snippet)
+    if m and isinstance(obj, dict) and "ok" in obj:
+        obj = {"ok": True, "value": int(m.group(1)) + int(m.group(2))}
+    return _real.dumps(obj, **kw)
+'''
+
+
+def test_stdlib_shadow_cannot_forge_results(image, task, tmp_path):
+    """Regression (D36): a candidate json.py must not replace the wrapper's serialiser."""
+    cand = _candidate(task[0], tmp_path, "json_shadow", {"calc.py": "def add(a, b):\n    return a - b\n",
+                                                          "json.py": JSON_SHADOW})
+    res = _grade(image, task, cand)
+    assert res.outcome == Outcome.task_failure, (res.outcome, [c.message[-300:] for c in res.checks])
+
+
+def test_runtime_startup_hooks_not_loaded(image, tmp_path):
+    """Regression (D36): hooks written to /work, HOME or /tmp at runtime never run in later calls."""
+    base = tmp_path / "base"
+    base.mkdir()
+    (base / "calc.py").write_text("x = 1\n")
+    tdir = tmp_path / "task"
+    (tdir / "tests").mkdir(parents=True)
+    shutil.copyfile(Path(__file__).parent / "fixtures" / "sandbox_probes" / "startup_probe.py", tdir / "tests" / "test_startup.py")
+    spec = VerifierSpec(verifier_id="startup", task_id="t", condition=VerifierCondition.reference_check,
+                        isolation=Isolation.process_separated, test_dir="tests",
+                        checks=[CheckSpec(check_id=c) for c in discover_checks(tdir / "tests")], content_sha256="x")
+    cand = Candidate(candidate_id="noop", task_id="t", origin=CandidateOrigin.noop, split=Split.eval, patch="",
+                     patch_sha256=sha256_text(""), produced_by="fixture")
+    res = verify_candidate(image=image, base_dir=base, spec=spec, task_dir=tdir, candidate=cand, run_id="iso")
+    assert res.outcome == Outcome.passed, [c.message[-500:] for c in res.checks]

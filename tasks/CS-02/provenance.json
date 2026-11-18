@@ -16,11 +16,11 @@
   "trace_sha256": "dc1d9b2f10225ef12d7f5fb4096243fafba9230af3690f9b3143c8fd41c17e7b",
   "snapshot_manifest_sha256": "8f30c35e16795f234c71e7b6945a6355ca0b4d139feda3b36642ea01e3b8d64b",
   "capture_method": "Claude Code general-purpose subagent; scripted user turns (CS-v1); states captured between turns",
-  "redaction_status": "not_needed_controlled",
+  "redaction_status": "redacted_by_us",
   "task_family_id": "CS-02",
   "eligibility": "pending_review",
   "rejection_reasons": [],
   "triage": null,
   "accessed": "2026-11-13T02:30:24+00:00",
-  "notes": "{\"access_findings\": [], \"scenario_sha256\": \"f8a0dfaddb2f5ef0a8b1a447174cb76037f9658dbf65c9c8a8de3c50f8ceeb88\", \"workspace_snapshot_manifest\": \"8f30c35e16795f234c71e7b6945a6355ca0b4d139feda3b36642ea01e3b8d64b\"}"
+  "notes": "{\"access_findings\": [], \"scenario_sha256\": \"f8a0dfaddb2f5ef0a8b1a447174cb76037f9658dbf65c9c8a8de3c50f8ceeb88\", \"workspace_snapshot_manifest\": \"8f30c35e16795f234c71e7b6945a6355ca0b4d139feda3b36642ea01e3b8d64b\", \"transcript_sanitization\": {\"sanitizer\": \"sanitize:v2\", \"source_sha256\": \"f66d9095e0f0242dd1ed6a76abd1a75ea6b7b608214a54a9d57499bdece909f0\", \"sanitized_sha256\": \"e99d0aeae64eab5759bd8f7ec92a12e77fb293b5376f2a0b1d6066c720383ea8\", \"entries\": 242, \"dropped\": {\"attachment\": 24, \"meta_content\": 1}, \"redactions\": {\"emails\": 1}, \"previous\": null, \"note\": \"re-sanitised with sanitize:v2 (decision log D38)\"}}"
 }

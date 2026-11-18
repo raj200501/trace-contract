@@ -17,6 +17,7 @@ families (the independent unit), never individual candidates or mutants.
 
 from __future__ import annotations
 
+import math
 import random
 from collections import defaultdict
 from dataclasses import dataclass, field
@@ -63,6 +64,10 @@ class ConditionSummary:
     per_task: dict[str, dict[str, Rate]] = field(default_factory=dict)
     fa_ci: tuple[float, float] | None = None
     fr_ci: tuple[float, float] | None = None
+    fa_exact: tuple[float, float] | None = None  # Clopper-Pearson, ignores clustering
+    fr_exact: tuple[float, float] | None = None
+    fa_ci_degenerate: bool = False  # every family has zero (or only) events: the bootstrap cannot vary
+    fr_ci_degenerate: bool = False
 
 
 def _rates(rows: Iterable[Row], exclude_infra: bool = False) -> tuple[Rate, Rate, Rate, int]:
@@ -104,7 +109,47 @@ def summarize(rows: list[Row], *, condition: str, exclude_infra: bool = False, n
     s = ConditionSummary(condition, fa, fr, infra, excl, _macro(per_task, "fa"), _macro(per_task, "fr"), per_task)
     s.fa_ci = cluster_bootstrap(rows, "fa", n_boot=n_boot, seed=seed, exclude_infra=exclude_infra)
     s.fr_ci = cluster_bootstrap(rows, "fr", n_boot=n_boot, seed=seed, exclude_infra=exclude_infra)
+    s.fa_exact = clopper_pearson(fa.num, fa.den)
+    s.fr_exact = clopper_pearson(fr.num, fr.den)
+    s.fa_ci_degenerate = _degenerate(per_task, "fa")
+    s.fr_ci_degenerate = _degenerate(per_task, "fr")
     return s
+
+
+def _degenerate(per_task: dict[str, dict[str, Rate]], key: str) -> bool:
+    """True when every family's rate is the same (e.g. all zero): resampling families cannot vary it."""
+    vals = {d[key].value for d in per_task.values() if d[key].value is not None}
+    return len(vals) <= 1
+
+
+def _binom_cdf(k: int, n: int, p: float) -> float:
+    return sum(math.comb(n, i) * p ** i * (1 - p) ** (n - i) for i in range(k + 1))
+
+
+def clopper_pearson(k: int, n: int, alpha: float = 0.05) -> tuple[float, float] | None:
+    """Exact (Clopper-Pearson) binomial interval for k/n, by bisection on the binomial CDF.
+
+    It treats candidates as independent, which they are not (they are clustered in task
+    families), so it is reported only as a reference scale next to the cluster bootstrap.
+    """
+    if n == 0:
+        return None
+
+    def bisect(pred) -> float:
+        # Smallest p in [0, 1] with pred(p) true, for a predicate monotone in p.
+        lo, hi = 0.0, 1.0
+        for _ in range(200):
+            mid = (lo + hi) / 2
+            if pred(mid):
+                hi = mid
+            else:
+                lo = mid
+        return (lo + hi) / 2
+
+    # Lower: smallest p with P(X >= k | p) >= alpha/2. Upper: smallest p with P(X <= k | p) <= alpha/2.
+    lower = 0.0 if k == 0 else bisect(lambda q: 1 - _binom_cdf(k - 1, n, q) >= alpha / 2)
+    upper = 1.0 if k == n else bisect(lambda q: _binom_cdf(k, n, q) <= alpha / 2)
+    return lower, upper
 
 
 def cluster_bootstrap(rows: list[Row], metric: str, *, n_boot: int = 2000, seed: int = 0, alpha: float = 0.05,
@@ -174,5 +219,7 @@ def paired_difference(rows: list[Row], cond_a: str, cond_b: str, metric: str, *,
                 disc["a_accepts_b_rejects"] += 1
             elif ya and not xa:
                 disc["a_rejects_b_accepts"] += 1
-    return {"metric": metric, "a": cond_a, "b": cond_b, "n_common": len(common), "n_families": len(keys),
+    want = "invalid" if metric == "fa" else "valid"
+    n_metric = sum(1 for x in ra if x.label == want)
+    return {"metric": metric, "a": cond_a, "b": cond_b, "n_common": len(common), "n_metric": n_metric, "n_families": len(keys),
             "difference": point, "ci95": ci, "discordant": disc}

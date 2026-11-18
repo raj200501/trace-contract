@@ -309,6 +309,29 @@ def cmd_sandbox_pytest(a) -> None:
     _out(_sandbox_docker(m, Path(a.state_dir), ["python", "-m", "pytest", "-p", "no:cacheprovider", *a.args], a.timeout))
 
 
+def cmd_materialize(a) -> None:
+    """Write a candidate's state (base snapshot + its graded patch) to a directory, e.g. for human review."""
+    import shutil
+
+    from .sandbox.docker_runner import prepare_workspace
+    from .tasks import verify_snapshot
+
+    tdir, m = _task(a.task)
+    if not verify_snapshot(tdir, SNAPSHOTS):
+        raise SystemExit(f"base snapshot missing or modified; run `tracecontract snapshot {a.task}` first")
+    cand = _candidate(tdir, m, a.candidate_id)
+    ws, diags, err = prepare_workspace(SNAPSHOTS / m.task_id, cand.patch)
+    if ws is None:
+        raise SystemExit(f"patch could not be applied: {err} {diags}")
+    out = Path(a.out)
+    if out.exists():
+        raise SystemExit(f"{out} exists; choose a new directory")
+    shutil.copytree(ws, out, symlinks=False)
+    shutil.rmtree(ws, ignore_errors=True)
+    out.chmod(0o755)  # the workspace copy is private; the sandbox user must be able to read it
+    _out({"candidate_id": cand.candidate_id, "state_dir": str(out), "diagnostics": diags})
+
+
 def cmd_export_gen_workspace(a) -> None:
     """Isolated generation workspace: base snapshot copy + selected task material only."""
     import shutil
@@ -418,6 +441,8 @@ def main(argv: list[str] | None = None) -> None:
     p = sub.add_parser("sandbox-pytest", help="run pytest against a candidate state dir in the task image (offline, unprivileged)")
     p.add_argument("task"); p.add_argument("state_dir"); p.add_argument("--timeout", type=float, default=900)
     p.add_argument("args", nargs=argparse.REMAINDER); p.set_defaults(fn=cmd_sandbox_pytest)
+    p = sub.add_parser("materialize", help="write a candidate's graded state (base + patch, protected paths removed) to a new directory")
+    p.add_argument("task"); p.add_argument("candidate_id"); p.add_argument("--out", required=True); p.set_defaults(fn=cmd_materialize)
     p = sub.add_parser("export-gen-workspace", help="isolated workspace for a generation agent")
     p.add_argument("task"); p.add_argument("--out", required=True); p.add_argument("--contract")
     p.add_argument("--with-reference-patch", action="store_true"); p.add_argument("--with-session", action="store_true")

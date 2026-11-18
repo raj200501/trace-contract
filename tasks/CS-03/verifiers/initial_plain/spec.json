@@ -95,6 +95,8 @@
     }
   ],
   "content_sha256": "8931e33066a1999166b43ae5631d87eabacf2f021dc1425ebc961a68c7425d6f",
+  "checks_sha256": "f881f78c849229559900cf5c6041e89b32c4a0c72684a176c6c6be6c40a8033a",
+  "frozen_at": null,
   "generation": {
     "generator": "model:claude-code-subagent:testgen:v1",
     "run_id": "unrecorded",

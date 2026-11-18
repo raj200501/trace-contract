@@ -26,6 +26,7 @@ import os
 import secrets
 import shutil
 import subprocess
+import sys
 import tempfile
 import time
 from contextlib import contextmanager
@@ -45,7 +46,7 @@ from ..schemas import (
 )
 
 HARNESS_SRC = Path(__file__).parent / "harness"
-HARNESS_VERSION = "tc-harness/0.3.0"
+HARNESS_VERSION = "tc-harness/0.3.1"
 BASE_IMAGE = "python:3.12-slim@sha256:5e2bdb1b0d542d5039cffb8181c65930093949194a65c365dfb1b0fe13a4fa5b"
 DEFAULT_TEST_REQUIREMENTS = (
     "pytest==8.3.5", "hypothesis==6.131.0", "attrs==26.1.0", "iniconfig==2.3.1",
@@ -146,7 +147,7 @@ def ensure_wheelhouse(reqs: list[str], cache_dir: Path) -> Path:
         return wh
     wh.mkdir(parents=True, exist_ok=True)
     cmd = [
-        "python3", "-m", "pip", "download", "-q", "--only-binary=:all:", "--no-deps",
+        sys.executable, "-m", "pip", "download", "-q", "--only-binary=:all:", "--no-deps",
         "--platform", "manylinux2014_x86_64", "--platform", "manylinux_2_17_x86_64", "--platform", "any",
         "--python-version", "3.12", "--implementation", "cp", "-d", str(wh), *reqs,
     ]
@@ -376,8 +377,12 @@ def verify_candidate(
     repo_test_args: list[str] | None = None,
     limits: Limits | None = None,
     protected: tuple[str, ...] = DEFAULT_PROTECTED,
+    log_dir: Path | None = None,
 ) -> VerificationResult:
-    """Grade one candidate with one verifier; repeated runs that disagree -> unresolved."""
+    """Grade one candidate with one verifier; repeated runs that disagree -> unresolved.
+
+    With ``log_dir`` the grader output of every run is kept there (one text file per
+    pair, whose sha256 is the result's ``log_sha256``)."""
     started = _now()
     t0 = time.time()
     ws, pdiags, perr = prepare_workspace(base_dir, candidate.patch, protected)
@@ -412,7 +417,11 @@ def verify_candidate(
         else:
             outcome = Outcome.unresolved
             all_diags.append(f"repeated runs disagree: {[o.value for o in outcomes]}")
-        log_sha = hashlib.sha256("\n=====\n".join(logs).encode()).hexdigest()
+        log_text = "\n=====\n".join(logs)
+        log_sha = hashlib.sha256(log_text.encode()).hexdigest()
+        if log_dir is not None:
+            log_dir.mkdir(parents=True, exist_ok=True)
+            (log_dir / f"{spec.verifier_id}__{candidate.candidate_id}.txt").write_text(log_text, encoding="utf-8")
         return VerificationResult(
             run_id=run_id, task_id=spec.task_id, verifier_id=spec.verifier_id, candidate_id=candidate.candidate_id,
             outcome=outcome, reward=1.0 if outcome == Outcome.passed else 0.0, checks=last_checks,
@@ -436,7 +445,7 @@ def resolve_pins(specs: list[str], cache_dir: Path) -> list[str]:
     if not (d / ".complete").exists():
         d.mkdir(parents=True, exist_ok=True)
         subprocess.run(
-            ["python3", "-m", "pip", "download", "-q", "--only-binary=:all:", "--platform", "manylinux2014_x86_64",
+            [sys.executable, "-m", "pip", "download", "-q", "--only-binary=:all:", "--platform", "manylinux2014_x86_64",
              "--platform", "manylinux_2_17_x86_64", "--platform", "any", "--python-version", "3.12",
              "--implementation", "cp", "-d", str(d), *specs],
             check=True, capture_output=True, text=True, timeout=900,

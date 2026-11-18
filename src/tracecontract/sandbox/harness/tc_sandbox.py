@@ -47,8 +47,21 @@ MARKER = "<<TC_RESULT>>"
 # Calls that detected tampering are recorded here and reported by the runner.
 TAMPER_EVENTS: list[dict[str, Any]] = []
 
+# The child is started with ``-s -S -P`` (no user site, no automatic ``site``, no
+# script directory on sys.path). The wrapper removes the candidate's directories from
+# sys.path before it imports anything, enables site-packages, imports the trusted
+# modules it needs, and only then puts the candidate's directories back for the
+# snippet. A candidate file named like a stdlib module (``json.py``), or a
+# ``sitecustomize.py``/``usercustomize.py`` written at runtime, can therefore never
+# replace the code that serialises and signs the result (decision log D36).
 _WRAPPER = r'''
-import os as _tc_os, sys as _tc_sys, json as _tc_json, hmac as _tc_hmac, hashlib as _tc_hashlib
+import sys as _tc_sys
+_tc_cand = %(cand_paths)r
+_tc_sys.path[:] = [p for p in _tc_sys.path if p not in _tc_cand and p not in ("", ".")]
+import site as _tc_site
+_tc_site.main()
+import os as _tc_os, json as _tc_json, hmac as _tc_hmac, hashlib as _tc_hashlib, traceback as _tc_traceback
+_tc_sys.path[0:0] = _tc_cand
 def _tc_main():
     key = _tc_os.read(%(keyfd)d, 64)
     _tc_os.close(%(keyfd)d)
@@ -59,9 +72,8 @@ def _tc_main():
         exec(compile(snippet, "<tc-snippet>", "exec"), ns)
         res = {"ok": True, "value": ns.get("result")}
     except BaseException as e:  # noqa: BLE001 - report every failure as data
-        import traceback
         res = {"ok": False, "error_type": type(e).__name__, "error": str(e)[:4000],
-               "traceback": traceback.format_exc()[-4000:]}
+               "traceback": _tc_traceback.format_exc()[-4000:]}
     try:
         payload = _tc_json.dumps(res, default=repr, sort_keys=True)
     except Exception as e:  # noqa: BLE001
@@ -227,13 +239,15 @@ def run_python(snippet: str, *, timeout: float = 20.0, env: dict[str, str] | Non
     r, w = os.pipe()
     os.write(w, key)
     os.close(w)
-    code = _WRAPPER % {"marker": MARKER, "snippet": snippet, "keyfd": r}
+    cand_paths = [x for x in CANDIDATE_PYTHONPATH.split(os.pathsep) if x]
+    code = _WRAPPER % {"marker": MARKER, "snippet": snippet, "keyfd": r, "cand_paths": cand_paths}
     fd, path = tempfile.mkstemp(prefix="tc_call_", suffix=".py", dir="/tmp")
     with os.fdopen(fd, "w", encoding="utf-8") as fh:
         fh.write(code)
     os.chmod(path, 0o644)
     try:
-        rc, stdout, stderr, timed_out = _spawn([PYTHON, path], timeout=timeout, input_bytes=None, cwd=None, env=env, pass_fds=(r,))
+        rc, stdout, stderr, timed_out = _spawn([PYTHON, "-s", "-S", "-P", path], timeout=timeout, input_bytes=None, cwd=None,
+                                               env=env, pass_fds=(r,))
     finally:
         os.close(r)
         try:

@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import ast
 import hashlib
+import json
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -156,17 +157,33 @@ def build_spec(
     )
 
 
+def checks_sha256(spec: VerifierSpec) -> str:
+    """Hash of the scored check list: sorted check ids with their requirement ids."""
+    items = sorted((c.check_id, sorted(c.requirement_ids)) for c in spec.checks)
+    return hashlib.sha256(json.dumps(items, separators=(",", ":")).encode("utf-8")).hexdigest()
+
+
 def freeze(spec: VerifierSpec, task_dir: Path) -> VerifierSpec:
-    """Mark a verifier frozen; its content hash must match the files on disk."""
+    """Mark a verifier frozen; its content hash must match the files on disk.
+
+    Freezing also records the hash of the scored check list and the time of freezing.
+    """
     actual = hash_test_dir(task_dir / spec.test_dir)
     if actual != spec.content_sha256:
         raise ValueError(f"{spec.verifier_id}: test files changed since the spec was built")
-    return spec.model_copy(update={"frozen": True})
+    from datetime import datetime, timezone
+
+    return spec.model_copy(update={"frozen": True, "checks_sha256": checks_sha256(spec),
+                                   "frozen_at": datetime.now(timezone.utc).isoformat(timespec="seconds")})
 
 
 def check_frozen(spec: VerifierSpec, task_dir: Path) -> None:
-    if spec.frozen and hash_test_dir(task_dir / spec.test_dir) != spec.content_sha256:
+    if not spec.frozen:
+        return
+    if hash_test_dir(task_dir / spec.test_dir) != spec.content_sha256:
         raise ValueError(f"{spec.verifier_id}: frozen verifier was modified; bump the version and rerun")
+    if spec.checks_sha256 is not None and checks_sha256(spec) != spec.checks_sha256:
+        raise ValueError(f"{spec.verifier_id}: scored check list changed after freezing; bump the version and rerun")
 
 
 def requirement_map_from_tests(test_dir: Path) -> dict[str, list[str]]:

@@ -232,30 +232,50 @@ def parse_claude_code_jsonl(
 
 
 _KEEP_MESSAGE_KEYS = ("role", "content", "model", "usage", "stop_reason")
-_EMAIL_RE = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}")
+_EMAIL_RE = re.compile(r"([A-Za-z0-9._%+-]+)@([A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,})")
+_DROP_BLOCK_KEYS = ("signature", "caller")  # opaque API payloads, not conversation content
+SANITIZER_VERSION = "sanitize:v2"
+
+
+def _redact_emails(text: str, counter: dict) -> str:
+    """Replace e-mail addresses. A local part with no letter or digit after leading diff
+    markers ('+', '-') is not an address: '+@pytest.mark.parametrize(' stays intact."""
+    def sub(m: re.Match) -> str:
+        local = m.group(1)
+        prefix = local[: len(local) - len(local.lstrip("+-"))]
+        if not re.search(r"[A-Za-z0-9]", local[len(prefix):]):
+            return m.group(0)
+        counter["emails"] = counter.get("emails", 0) + 1
+        return prefix + "[EMAIL REDACTED]"
+
+    return _EMAIL_RE.sub(sub, text)
 
 
 def _redact(obj, counter: dict):
     """Recursively replace e-mail addresses in strings (personal data minimisation)."""
     if isinstance(obj, str):
-        new, n = _EMAIL_RE.subn("[EMAIL REDACTED]", obj)
-        counter["emails"] = counter.get("emails", 0) + n
-        return new
+        return _redact_emails(obj, counter)
     if isinstance(obj, list):
         return [_redact(x, counter) for x in obj]
     if isinstance(obj, dict):
-        return {k: _redact(v, counter) for k, v in obj.items()}
+        return {k: _redact(v, counter) for k, v in obj.items() if k not in _DROP_BLOCK_KEYS}
     return obj
 
 
-def sanitize_transcript(src: str | Path, dst: str | Path, *, session_id: str) -> dict:
-    """Write a minimised copy of a Claude Code (sub)agent transcript.
+def sanitize_transcript(src: str | Path, dst: str | Path, *, session_id: str,
+                        keep_meta_containing: tuple[str, ...] = ()) -> dict:
+    """Write a minimised copy of a Claude Code (sub)agent transcript (``sanitize:v2``).
 
     Keeps only conversation content (user/assistant messages, tool calls and
     results), timestamps, entry ids, the model name and token usage. Drops harness
     internals (request ids, classifier context, attachments, working-directory and
-    environment metadata, internal session/agent ids), and re-labels all entries with
-    ``session_id`` as a main-chain session. Returns hashes of input and output.
+    environment metadata, internal session/agent ids, opaque ``signature`` and
+    ``caller`` fields of content blocks), redacts e-mail addresses, and re-labels all
+    entries with ``session_id`` as a main-chain session. Harness messages marked
+    ``isMeta`` keep their line (so event ids stay stable) but their content is replaced,
+    unless they contain one of ``keep_meta_containing`` (the scripted user turns, which
+    the harness delivers as meta messages; decision log D10). Returns hashes of input
+    and output.
     """
     src, dst = Path(src), Path(dst)
     raw = src.read_bytes()
@@ -281,9 +301,14 @@ def sanitize_transcript(src: str | Path, dst: str | Path, *, session_id: str) ->
                "timestamp": e.get("timestamp"), "isSidechain": False, "message": msg}
         if e.get("isMeta"):
             new["isMeta"] = True
+            c = msg.get("content")
+            text = c if isinstance(c, str) else " ".join(b.get("text", "") for b in c if isinstance(b, dict)) if isinstance(c, list) else ""
+            if not any(k and k in text for k in keep_meta_containing):
+                msg["content"] = "[harness message removed]"
+                dropped["meta_content"] = dropped.get("meta_content", 0) + 1
         out_lines.append(json.dumps(new, ensure_ascii=False, sort_keys=True))
     data = ("\n".join(out_lines) + "\n").encode("utf-8")
     dst.parent.mkdir(parents=True, exist_ok=True)
     dst.write_bytes(data)
-    return {"source_sha256": sha256_bytes(raw), "sanitized_sha256": sha256_bytes(data), "entries": len(out_lines),
-            "dropped": dropped, "redactions": redactions}
+    return {"sanitizer": SANITIZER_VERSION, "source_sha256": sha256_bytes(raw), "sanitized_sha256": sha256_bytes(data),
+            "entries": len(out_lines), "dropped": dropped, "redactions": redactions}
