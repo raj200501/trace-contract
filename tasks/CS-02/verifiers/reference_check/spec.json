@@ -1,0 +1,203 @@
+{
+  "schema_version": "0.1.0",
+  "verifier_id": "reference_check",
+  "task_id": "CS-02",
+  "condition": "reference_check",
+  "contract_id": "CS-02-reference",
+  "isolation": "process_separated",
+  "test_dir": "verifiers/reference_check/tests",
+  "checks": [
+    {
+      "check_id": "test_failed_writes.py::test_failed_insert_keeps_previous_file",
+      "requirement_ids": [
+        "R-atomic",
+        "R-original-intact"
+      ]
+    },
+    {
+      "check_id": "test_failed_writes.py::test_failed_insert_leaves_no_temp_files",
+      "requirement_ids": [
+        "R-no-temp-files"
+      ]
+    },
+    {
+      "check_id": "test_failed_writes.py::test_failed_remove_below_current_size_keeps_file",
+      "requirement_ids": [
+        "R-atomic",
+        "R-original-intact"
+      ]
+    },
+    {
+      "check_id": "test_failed_writes.py::test_failed_remove_below_current_size_leaves_no_temp_files",
+      "requirement_ids": [
+        "R-no-temp-files"
+      ]
+    },
+    {
+      "check_id": "test_failed_writes.py::test_failed_table_update_keeps_file",
+      "requirement_ids": [
+        "R-atomic",
+        "R-original-intact"
+      ]
+    },
+    {
+      "check_id": "test_failed_writes.py::test_failed_table_update_leaves_no_temp_files",
+      "requirement_ids": [
+        "R-no-temp-files"
+      ]
+    },
+    {
+      "check_id": "test_failed_writes.py::test_failed_storage_write_with_encoding_and_kwargs",
+      "requirement_ids": [
+        "R-atomic",
+        "R-original-intact"
+      ]
+    },
+    {
+      "check_id": "test_failed_writes.py::test_failed_storage_write_with_encoding_leaves_no_temp_files",
+      "requirement_ids": [
+        "R-no-temp-files"
+      ]
+    },
+    {
+      "check_id": "test_failed_writes.py::test_failure_at_various_offsets_keeps_file",
+      "requirement_ids": [
+        "R-atomic",
+        "R-original-intact"
+      ]
+    },
+    {
+      "check_id": "test_failed_writes.py::test_failure_at_various_offsets_leaves_no_temp_files",
+      "requirement_ids": [
+        "R-no-temp-files"
+      ]
+    },
+    {
+      "check_id": "test_failed_writes.py::test_failed_first_write_leaves_file_as_it_was",
+      "requirement_ids": [
+        "R-atomic",
+        "R-original-intact"
+      ]
+    },
+    {
+      "check_id": "test_failed_writes.py::test_failed_first_write_leaves_no_temp_files",
+      "requirement_ids": [
+        "R-no-temp-files"
+      ]
+    },
+    {
+      "check_id": "test_no_leftover_files.py::test_tinydb_operations_leave_only_database_file",
+      "requirement_ids": [
+        "R-no-temp-files"
+      ]
+    },
+    {
+      "check_id": "test_no_leftover_files.py::test_tinydb_operations_file_contents",
+      "requirement_ids": [
+        "R-new-content"
+      ]
+    },
+    {
+      "check_id": "test_no_leftover_files.py::test_storage_writes_leave_only_database_files",
+      "requirement_ids": [
+        "R-no-temp-files"
+      ]
+    },
+    {
+      "check_id": "test_no_leftover_files.py::test_storage_writes_file_contents",
+      "requirement_ids": [
+        "R-new-content"
+      ]
+    },
+    {
+      "check_id": "test_read_after_write.py::test_storage_reads_return_latest_write",
+      "requirement_ids": [
+        "R-read-after-write"
+      ]
+    },
+    {
+      "check_id": "test_read_after_write.py::test_tinydb_reads_after_writes_same_instance",
+      "requirement_ids": [
+        "R-read-after-write"
+      ]
+    },
+    {
+      "check_id": "test_read_after_write.py::test_tinydb_reads_with_utf16_and_kwargs",
+      "requirement_ids": [
+        "R-read-after-write"
+      ]
+    },
+    {
+      "check_id": "test_read_after_write.py::test_multiple_tables_reads",
+      "requirement_ids": [
+        "R-read-after-write"
+      ]
+    },
+    {
+      "check_id": "test_read_after_write.py::test_multiple_tables_file_contents",
+      "requirement_ids": [
+        "R-new-content"
+      ]
+    },
+    {
+      "check_id": "test_written_bytes.py::test_default_storage_bytes_match_json_dumps",
+      "requirement_ids": [
+        "R-bytes-unchanged",
+        "R-new-content"
+      ]
+    },
+    {
+      "check_id": "test_written_bytes.py::test_utf8_indent_sort_keys_non_ascii_bytes",
+      "requirement_ids": [
+        "R-bytes-unchanged",
+        "R-new-content"
+      ]
+    },
+    {
+      "check_id": "test_written_bytes.py::test_utf16_bytes",
+      "requirement_ids": [
+        "R-bytes-unchanged",
+        "R-new-content"
+      ]
+    },
+    {
+      "check_id": "test_written_bytes.py::test_cp936_and_latin1_bytes_with_separators",
+      "requirement_ids": [
+        "R-bytes-unchanged",
+        "R-new-content"
+      ]
+    },
+    {
+      "check_id": "test_written_bytes.py::test_tinydb_operations_bytes_with_kwargs",
+      "requirement_ids": [
+        "R-bytes-unchanged",
+        "R-new-content"
+      ]
+    },
+    {
+      "check_id": "test_written_bytes.py::test_random_documents_bytes",
+      "requirement_ids": [
+        "R-bytes-unchanged",
+        "R-new-content"
+      ]
+    },
+    {
+      "check_id": "test_written_bytes.py::test_random_documents_reads",
+      "requirement_ids": [
+        "R-read-after-write"
+      ]
+    }
+  ],
+  "content_sha256": "62a819e98256b00e9b7cfd54856491fc4f89e7829c0afa35d84a6bee7b04bbad",
+  "generation": {
+    "generator": "model:claude-code-subagent:refcheck:v1",
+    "run_id": "unrecorded",
+    "prompt_sha256": "",
+    "created_at": "",
+    "budget": {},
+    "notes": ""
+  },
+  "audit": null,
+  "frozen": true,
+  "version": 1
+}

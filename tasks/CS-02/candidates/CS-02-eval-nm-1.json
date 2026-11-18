@@ -19,6 +19,17 @@
       "adjudicated": false,
       "timestamp": "2026-11-18T08:58:19+00:00",
       "note": ""
+    },
+    {
+      "value": "invalid",
+      "violated_requirements": [
+        "R-no-temp-files"
+      ],
+      "labeler": "builder:refcheck+regression+construction:v1",
+      "labeler_kind": "model",
+      "adjudicated": false,
+      "timestamp": "2026-11-18T10:21:21+00:00",
+      "note": "construction invalid, confirmed on targeted requirement | {\"refcheck_outcome\": \"task_failure\", \"refcheck_failed\": [\"test_failed_writes.py::test_failed_insert_leaves_no_temp_files\", \"test_failed_writes.py::test_failed_remove_below_current_size_leaves_no_temp_files\", \"test_failed_writes.py::test_failed_table_update_leaves_no_temp_files\", \"test_failed_writes.py::test_failed_storage_write_with_encoding_leaves_no_temp_files\", \"test_failed_writes.py::test_failure_at_various_offsets_leaves_no_temp_files\", \"test_failed_writes.py::test_failed_first_write_leaves_no_temp_files\"], \"regression_outcome\": \"pass\", \"regression_failed\": [], \"construction\": {\"value\": \"invalid\", \"violated_requirements\": [\"R-no-temp-files\"], \"labeler\": \"nearmiss:v1\", \"labeler_kind\": \"construction\", \"adjudicated\": false, \"timestamp\": \"2026-11-18T08:58:19+00:00\", \"note\": \"\"}}"
     }
   ]
 }

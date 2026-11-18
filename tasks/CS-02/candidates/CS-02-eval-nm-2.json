@@ -19,6 +19,18 @@
       "adjudicated": false,
       "timestamp": "2026-11-18T09:00:46+00:00",
       "note": ""
+    },
+    {
+      "value": "invalid",
+      "violated_requirements": [
+        "R-bytes-unchanged",
+        "R-new-content"
+      ],
+      "labeler": "builder:refcheck+regression+construction:v1",
+      "labeler_kind": "model",
+      "adjudicated": false,
+      "timestamp": "2026-11-18T10:21:25+00:00",
+      "note": "construction invalid, confirmed on targeted requirement | {\"refcheck_outcome\": \"task_failure\", \"refcheck_failed\": [\"test_written_bytes.py::test_default_storage_bytes_match_json_dumps\", \"test_written_bytes.py::test_utf8_indent_sort_keys_non_ascii_bytes\", \"test_written_bytes.py::test_utf16_bytes\", \"test_written_bytes.py::test_cp936_and_latin1_bytes_with_separators\", \"test_written_bytes.py::test_tinydb_operations_bytes_with_kwargs\", \"test_written_bytes.py::test_random_documents_bytes\"], \"regression_outcome\": \"task_failure\", \"regression_failed\": [\"tests.test_storages::test_json_kwargs\"], \"construction\": {\"value\": \"invalid\", \"violated_requirements\": [\"R-bytes-unchanged\"], \"labeler\": \"nearmiss:v1\", \"labeler_kind\": \"construction\", \"adjudicated\": false, \"timestamp\": \"2026-11-18T09:00:46+00:00\", \"note\": \"\"}}"
     }
   ]
 }

@@ -8,5 +8,15 @@
   "patch_sha256": "13f070f6e873fbab7bcde2bd7aebc5df6b4a85037729672dc8c5e63e084a778d",
   "produced_by": "session:CS-02-session@after_U1",
   "description": "Agent state after the initial request, before the scripted correction (naturally observed).",
-  "labels": []
+  "labels": [
+    {
+      "value": "valid",
+      "violated_requirements": [],
+      "labeler": "builder:refcheck+regression+construction:v1",
+      "labeler_kind": "model",
+      "adjudicated": false,
+      "timestamp": "2026-11-18T10:21:41+00:00",
+      "note": "natural candidate passes reference checks and regression norm | {\"refcheck_outcome\": \"pass\", \"refcheck_failed\": [], \"regression_outcome\": \"pass\", \"regression_failed\": [], \"construction\": null}"
+    }
+  ]
 }

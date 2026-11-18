@@ -10,5 +10,17 @@
   "eval-nm": {
     "transcript_sha256": "b763611c6d2daf94a1c77f2b2685de65d64171a85b90f43b2e789225926cf79b",
     "hits": []
+  },
+  "refcheck": {
+    "transcripts_sha256": {
+      "gen": "48e36aa339eea6ba2cf5d0e7ca70c699bff113642c811c380b86552161b65f8b",
+      "review1": "2dbc8dfbcff0288d212de178898d4d80940417d921487dc80c7b454a37cfd206",
+      "fix1": "92c08e09e249061201d28e20d428257de0824ad5cc63eada3c46777964a2aa98",
+      "review2": "c6c516f98ca6a3a1ac1068b1053f8fae0d1a240895a2e9e5c946473ba0032bcc",
+      "fix2": "eba00d4629759fcf38c9627323f042397dfdbd8d8e158eb09e55c86d359d8858",
+      "review3": "0434fcbdb91e179784a8b9687169f5cd254afc74ca8f8bf7c2e7a271e539d716"
+    },
+    "hits": [],
+    "assessment": "refcheck writer, three reviewers and two fixers: no tool input names a candidate file, another verifier, a held-out candidate id, an agent workspace or sealed material; the only candidates graded were CS-02-reference and CS-02-noop-dev (checked by pattern scan of every tool input)"
   }
 }
