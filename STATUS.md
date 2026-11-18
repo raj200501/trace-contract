@@ -59,7 +59,7 @@ repository owner. Nothing here is peer reviewed, and no human labels exist.
 
 ## Tested
 
-* **60 tests pass:** 45 offline and 15 Docker.
+* **64 tests pass** (2026-11-18, after the final run): 49 offline and 15 Docker.
 * **Offline tests:**
   * schemas, ingestion and evidence alignment;
   * supersession, contract validation and the acceptance gate;
