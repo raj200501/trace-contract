@@ -1,4 +1,4 @@
-// Exported by scripts/export_prompts.py from the workflow run record wf_43a8768a-5cb (started 2026-11-18T12:02:53.817Z); sha256 of the original script: 5ea6164858fa1ec30d19fd9616b3d2a525a0c80698bcdbc1b96fe8f00e67ce7b. Redacted: owner messages and personal context, session paths/ids.
+// Exported by scripts/export_prompts.py from the workflow run record wf_43a8768a-5cb (started 2026-11-18T12:02:53.817Z); sha256 of the original script: 5ea6164858fa1ec30d19fd9616b3d2a525a0c80698bcdbc1b96fe8f00e67ce7b. Redacted: owner messages and personal information, session paths/ids.
 export const meta = {
   name: 'tracecontract-internal-review',
   description: 'Adversarial internal review of TraceContract by distinct lenses; every finding is checked by independent skeptics',

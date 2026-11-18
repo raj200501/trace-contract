@@ -1,4 +1,4 @@
-// Exported by scripts/export_prompts.py from the workflow run record wf_b37b2197-6c0 (started 2026-11-13T04:07:20.401Z); sha256 of the original script: 37909a6468b3467e5bc46ee10901dd84fc06275e5e2d74ca90d855ca4afba5be. Redacted: owner messages and personal context, session paths/ids.
+// Exported by scripts/export_prompts.py from the workflow run record wf_b37b2197-6c0 (started 2026-11-13T04:07:20.401Z); sha256 of the original script: 37909a6468b3467e5bc46ee10901dd84fc06275e5e2d74ca90d855ca4afba5be. Redacted: owner messages and personal information, session paths/ids.
 export const meta = {
   name: 'tracecontract-generate',
   description: 'For one task: recover contracts, generate verifiers for C1/C3/B2, dev attacks and alternatives, audit loops for C2/C4, freeze',

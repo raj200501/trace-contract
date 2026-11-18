@@ -119,9 +119,11 @@ repository owner. Nothing here is peer reviewed, and no human labels exist.
   * any spending;
   * authorship and AI-use disclosure;
   * whether and when to submit;
-  * whether to rewrite the branch's git history. Earlier commits still contain the
-    research notes that the internal review removed from the working tree
-    (`docs/internal_review.md`, P1 and P7). No history has been rewritten.
+  * whether to rewrite the branch's git history. Earlier commits still contain
+    material that the internal review removed from the working tree
+    (`docs/internal_review.md`, P1 and P7): the earlier research notes, the
+    exported research prompt in `8c13e0c`, and redaction rules in `c830977`. No
+    history has been rewritten. The final run's manifest records commit `c830977`.
 
 ## Not run
 
