@@ -1,6 +1,6 @@
 # Experimental protocol
 
-Version: **v0.2 (pilot, exploratory)** — v0.1 written before the first evaluation run; v0.2 amendments (§10) also made before any evaluation run.
+Version: **v0.3 (pilot, exploratory)**. v0.1 was written before the first evaluation run. The v0.2 amendments (§10) were also made before any evaluation run. The v0.3 amendments (§11) were made after two superseded runs and before the final pilot run.
 Timestamp and SHA-256 of this file are recorded in `docs/decision_log.md`. This is a
 locally timestamped protocol, **not** a formal preregistration. Any later change is
 made in a new version with a decision-log entry; results are always reported
@@ -149,3 +149,49 @@ the analysis plan above with any revisions.
 * Generator diversity: all held-out negatives and alternatives come from the same
   model family as the verifiers (no stronger or different generator was available
   within the zero-spend budget); reported as a limitation.
+
+## 11. Amendments in v0.3 (after the superseded runs, before the final pilot run)
+
+Harness bugs were found during the pilot (decision log D28–D31). The runs
+`pilot-v0.2` (harness 0.1.0) and `pilot-v0.2-h2` (harness 0.2.0) are superseded
+under §8. Their results are kept and are not reported as pilot results. This
+version fixes how the final pilot run is made and what it reports.
+
+* **Harness.** The final pilot run uses `tc-harness/0.3.0` or later, and every
+  condition of every task is re-run. Changes against 0.1.0:
+  * a sandbox UID unique to each container;
+  * bounded malloc arenas;
+  * a per-container `RLIMIT_NPROC` of 256;
+  * repository-test timeouts recorded as `timeout`.
+* **B1 for CS-04** is version 2 (D31): the same overlay, re-selected on the
+  reference under harness 0.3.0.
+* **Sanity grading.** The evaluation run grades the reference solution with every
+  verifier, alongside the held-out candidates and the no-op (as intended in §5).
+  It stays excluded from FA/FR.
+* **Run conditions.** The final run grades one container at a time, with no other
+  sandbox workload running on the host. This limits CPU contention against the
+  time limits inside tests.
+* **Harness reliability (secondary, descriptive).** For pairs graded in both a
+  superseded run and the final run, pass/non-pass agreement is reported, with the
+  discordant pairs listed. It measures sensitivity to the harness changes, not
+  verifier flakiness.
+* **Contract recovery (secondary).**
+  * Coverage counts a reference requirement as covered only when a recovered
+    requirement maps to it without contradicting it.
+  * A second, independent model mapper (same instructions) maps every task, and
+    Cohen's κ between the two mappers is reported. Mapper 1 is primary.
+  * Model mappings are proposals.
+* **Independent construction checks (advisory).** A second agent checks every
+  held-out near miss and alternative, and the observed pre-correction states, in
+  the sandbox. It tests whether each candidate violates (or satisfies) the
+  reference requirements as claimed. Verdicts are recorded as evidence for human
+  review (`tasks/*/labels/construction_checks.json`). They never change a label.
+  Candidates whose check disagrees with their D19 proposal are queued for human
+  review.
+* **Exploratory, not pre-specified.** This analysis was added after superseded
+  results showed many near misses marked ambiguous by D19. It reports FA/FR with
+  constructed candidates labeled by construction intent; natural candidates keep
+  their D19 proposal. It is labeled exploratory wherever it appears, and is never
+  primary.
+* **Unchanged.** Primary metrics, comparisons, label rule D19, the candidate
+  recipe, and the exclusion of the reference and no-op from FA/FR.

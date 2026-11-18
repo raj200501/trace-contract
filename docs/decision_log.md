@@ -439,3 +439,10 @@ checks, frozen. The previous selection is kept as `selection_v1.json`. The rebui
 is mechanical: the same overlay graded on the same reference candidate, with no
 exposure to held-out candidates. Results from `pilot-v0.2` that used B1 v1 remain
 superseded.
+
+### D32. Protocol v0.3 timestamped before the final pilot run
+`experiments/protocol.md` v0.3 written and hashed at 2026-11-18T08:42:06Z,
+sha256 `348e0607c09e14c17360bcfdc113a0bb95aa42d0c1d239c70fcb8087d2e9d068`. At that time no evaluation run under harness 0.3.0 had been made.
+The superseded runs `pilot-v0.2` (complete for CS-03/CS-04) and `pilot-v0.2-h2`
+(4 pairs) existed and had been viewed. The exploratory construction-label analysis
+(§11) was added after viewing them and is labeled exploratory.

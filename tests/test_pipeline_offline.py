@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from tracecontract.analysis import analyze
+from tracecontract.analysis import PILOT_LABELER, analyze
 from tracecontract.controlled import audit_access
 from tracecontract.ingest.claude_code import parse_claude_code_jsonl, sanitize_transcript
 from tracecontract.report import build_report
@@ -90,7 +90,7 @@ def _mk_task(root: Path, tid: str, fam: str) -> None:
     def cand(cid, origin, label, violated=()):
         c = Candidate(candidate_id=cid, task_id=tid, origin=origin, split=Split.eval, patch="", patch_sha256=sha256_text(""),
                       produced_by="fixture",
-                      labels=[Label(value=label, violated_requirements=list(violated), labeler="m", labeler_kind=LabelerKind.model, timestamp="t")])
+                      labels=[Label(value=label, violated_requirements=list(violated), labeler=PILOT_LABELER, labeler_kind=LabelerKind.model, timestamp="t")])
         dump(c, tdir / "candidates" / f"{cid}.json")
         return f"candidates/{cid}.json"
 

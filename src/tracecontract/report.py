@@ -92,6 +92,46 @@ def build_report(run_dir: Path, tasks_root: Path, repo_root: Path, out: Path) ->
                      f"<td>{d['n_common']}</td><td>{d['n_families']}</td><td>{d['discordant']['a_accepts_b_rejects']}</td>"
                      f"<td>{d['discordant']['a_rejects_b_accepts']}</td></tr>")
     parts.append("</table></div>")
+    hv = analysis["meta"].get("harness_versions", {})
+    if hv:
+        parts.append("<p class='muted'>Grading harness: " + ", ".join(f"<code>{_e(k)}</code> ({v} results)" for k, v in hv.items()) + "</p>")
+    sens = analysis.get("sensitivity_construction_labels")
+    if sens:
+        parts.append("<h3>Exploratory sensitivity: construction-intent labels</h3><p class='muted'>Not pre-specified. Constructed "
+                     "candidates labeled by how they were built (including those the pre-specified rule marked ambiguous); natural "
+                     "candidates keep their proposed label.</p><div class='scroll'><table><tr><th>Condition</th><th>False acceptance</th>"
+                     "<th>False rejection</th></tr>")
+        for c, d in sens.items():
+            parts.append(f"<tr><td>{_e(c)}</td><td>{_rate({'rate': d['fa'], 'num': d['fa_num'], 'den': d['fa_den'], 'ci95': d['fa_ci95']})}</td>"
+                         f"<td>{_rate({'rate': d['fr'], 'num': d['fr_num'], 'den': d['fr_den'], 'ci95': d['fr_ci95']})}</td></tr>")
+        parts.append("</table></div>")
+    labels = analysis.get("labels")
+    if labels:
+        parts.append("<h3>Labels and human-review queue</h3><div class='scroll'><table><tr><th>Task</th><th>Valid</th><th>Invalid</th>"
+                     "<th>Ambiguous</th><th>Unlabeled</th><th>Queued for human review</th></tr>")
+        for t, d in labels.items():
+            q = "<br>".join(f"{_e(x['candidate'])} <span class='muted'>({_e(x['reason'])})</span>" for x in d["review_queue"]) or "—"
+            cn = d["counts"]
+            parts.append(f"<tr><td>{_e(t)}</td><td>{cn.get('valid', 0)}</td><td>{cn.get('invalid', 0)}</td><td>{cn.get('ambiguous', 0)}</td>"
+                         f"<td>{cn.get('unlabeled', 0)}</td><td>{q}</td></tr>")
+        parts.append("</table></div>")
+    cov = analysis.get("coverage")
+    if cov:
+        parts.append("<h3>Contract recovery against the reference contract</h3><p class='muted'>Model mappings (proposals). Coverage counts "
+                     "active scored reference requirements that a recovered requirement maps to without contradicting.</p>"
+                     "<div class='scroll'><table><tr><th>Task</th><th>Variant</th><th>Coverage (mapper 1)</th><th>Missing</th><th>Unsupported</th>"
+                     "<th>Contradicting</th><th>Coverage (mapper 2)</th><th>Mapper agreement κ</th></tr>")
+        for t, cv in cov.items():
+            ag = analysis.get("mapping_agreement", {}).get(t, {})
+            for v, d in cv.get("variants", {}).items():
+                d2 = cv.get("variants_mapper2", {}).get(v)
+                k = ag.get(v, {}).get("kappa")
+                n_ref = len(cv.get("reference_scored", []))
+                c2 = f"{d2['coverage']:.2f} ({len(d2['covered'])}/{n_ref})" if d2 and d2.get("coverage") is not None else "—"
+                parts.append(f"<tr><td>{_e(t)}</td><td>{_e(v)}</td><td>{d['coverage']:.2f} ({len(d['covered'])}/{n_ref})</td>"
+                             f"<td>{_e(', '.join(d['missing'])) or '—'}</td><td>{len(d['unsupported'])}/{d['n_recovered_scored']}</td>"
+                             f"<td>{_e(', '.join(d['contradicting'])) or '—'}</td><td>{c2}</td><td>{'—' if k is None else f'{k:.2f}'}</td></tr>")
+        parts.append("</table></div>")
 
     by_task: dict[str, list[VerificationResult]] = {}
     for r in results:
