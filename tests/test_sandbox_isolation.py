@@ -346,3 +346,59 @@ def test_thread_capacity_after_churn(image, tmp_path):
                      patch_sha256=sha256_text(""), produced_by="fixture")
     res = verify_candidate(image=image, base_dir=base, spec=spec, task_dir=tdir, candidate=cand, run_id="iso")
     assert res.outcome == Outcome.passed, [c.message[-400:] for c in res.checks]
+
+
+FORGER = '''import atexit
+import re
+import sys
+
+
+def add(a, b):
+    raise NotImplementedError
+
+
+def _forge():
+    for arg in sys.argv:
+        if arg.startswith("--junitxml="):
+            path = arg.split("=", 1)[1]
+            try:
+                xml = open(path).read()
+                xml = re.sub(r"<failure[^>]*>.*?</failure>", "", xml, flags=re.S)
+                xml = re.sub(r'failures="[0-9]+"', 'failures="0"', xml)
+                open(path, "w").write(xml)
+            except OSError:
+                pass
+
+
+atexit.register(_forge)
+'''
+
+
+def test_in_process_repo_tests_report_is_forgeable_known_limitation(image, tmp_path):
+    """Characterises a documented limitation of the B1 baseline (paper, reproducibility section).
+
+    In repository-test mode pytest imports candidate code into the process that writes
+    the report, so a deliberately adversarial candidate can rewrite that report. The
+    process-separated verifiers are not affected. If this test starts failing, the
+    limitation has been fixed: update the documentation.
+    """
+    base = tmp_path / "base"
+    (base / "tests").mkdir(parents=True)
+    (base / "calc.py").write_text("def add(a, b):\n    raise NotImplementedError\n")
+    (base / "tests" / "__init__.py").write_text("")
+    (base / "tests" / "test_calc.py").write_text("from calc import add\n\n\ndef test_add():\n    assert add(1, 1) == 2\n")
+    tdir = tmp_path / "task"
+    (tdir / "overlay" / "tests").mkdir(parents=True)
+    shutil.copyfile(base / "tests" / "test_calc.py", tdir / "overlay" / "tests" / "test_calc.py")
+    spec = VerifierSpec(verifier_id="b1", task_id="t", condition=VerifierCondition.repo_tests, isolation=Isolation.in_process,
+                        test_dir="overlay", checks=[CheckSpec(check_id="tests.test_calc::test_add")], content_sha256="x")
+
+    def grade(files):
+        cand = _candidate(base, tmp_path, "c" + str(len(files.get("calc.py", ""))), files)
+        return verify_candidate(image=image, base_dir=base, spec=spec, task_dir=tdir, candidate=cand, run_id="iso",
+                                repo_test_args=["tests"])
+
+    honest_wrong = grade({"calc.py": "def add(a, b):\n    return a - b\n"})
+    assert honest_wrong.outcome == Outcome.task_failure, honest_wrong
+    forged = grade({"calc.py": FORGER})
+    assert forged.outcome == Outcome.passed, (forged.outcome, forged.diagnostics)  # known limitation: forgery succeeds
