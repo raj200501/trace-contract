@@ -1,0 +1,36 @@
+{
+  "schema_version": "0.1.0",
+  "candidate_id": "CS-01-eval-nm-2",
+  "task_id": "CS-01",
+  "origin": "constructed_near_miss",
+  "split": "eval",
+  "patch": "diff --git a/src/humanize/filesize.py b/src/humanize/filesize.py\nindex 386752b227ed3524eaab881cc50a351bee83e03c..34363d29dbd20a70b5b58f133d0b6bdcf99b7c8a 100644\n--- a/src/humanize/filesize.py\n+++ b/src/humanize/filesize.py\n@@ -41,6 +41,8 @@ def naturalsize(\n     binary: bool = False,\n     gnu: bool = False,\n     format: str = \"%.1f\",\n+    *,\n+    strip_trailing_zero: bool = False,\n ) -> str:\n     \"\"\"Format a number of bytes like a human-readable filesize (e.g. 10 kB).\n \n@@ -66,6 +68,10 @@ def naturalsize(\n         '30000.0 QB'\n         >>> naturalsize(-4096, True)\n         '-4.0 KiB'\n+        >>> naturalsize(3000000, strip_trailing_zero=True)\n+        '3 MB'\n+        >>> naturalsize(3000, True, strip_trailing_zero=True)\n+        '2.9 KiB'\n \n         ```\n \n@@ -76,6 +82,9 @@ def naturalsize(\n         gnu (bool): If `True`, the binary argument is ignored and GNU-style\n             (`ls -sh` style) prefixes are used (K, M) with the 2**10 definition.\n         format (str): Custom formatter.\n+        strip_trailing_zero (bool): If `True`, zeros at the end of the formatted\n+            decimal part are dropped, and the decimal point too if nothing is left\n+            after it: `3 MB` rather than `3.0 MB`, while `2.9 KiB` is unchanged.\n \n     Returns:\n         str: Human readable representation of a filesize.\n@@ -106,6 +115,11 @@ def naturalsize(\n     # suffix is available, step up one suffix so the result reads \"1.0 MB\".\n     if exp < len(suffix) and abs(float(format % (abs_bytes / (base**exp)))) >= base:\n         exp += 1\n+    number = format % (bytes_ / (base**exp))\n+    # \"3.0\" -> \"3\" and \"3.10\" -> \"3.1\". Only plain fixed-point output is\n+    # touched, so integer digits and output such as \"3.00e+00\" are kept.\n+    if strip_trailing_zero and \".\" in number and number.replace(\".\", \"\", 1).isdigit():\n+        number = number.rstrip(\"0\").rstrip(\".\")\n     space = \"\" if gnu else \" \"\n-    ret: str = format % (bytes_ / (base**exp)) + space + _(suffix[exp - 1])\n+    ret: str = number + space + _(suffix[exp - 1])\n     return ret\ndiff --git a/tests/test_filesize.py b/tests/test_filesize.py\nindex 645751b9fbb3a41d1a32924ca58cd73887fac24a..45b3ed0a3241eb9534dc4f40035dabb0bb0cc473 100644\n--- a/tests/test_filesize.py\n+++ b/tests/test_filesize.py\n@@ -101,3 +101,25 @@ def test_naturalsize(test_args: list[int] | list[int | bool], expected: str) ->\n         test_args[0] = f\"-{test_args[0]}\"\n \n     assert humanize.naturalsize(*test_args) == \"-\" + expected\n+\n+\n+@pytest.mark.parametrize(\n+    \"test_args, expected\",\n+    [\n+        ([3000000], \"3 MB\"),\n+        ([1024, True], \"1 KiB\"),\n+        ([3000, True], \"2.9 KiB\"),\n+        ([1024, False, True], \"1K\"),\n+        ([3000001], \"3 MB\"),  # rounds to \"3.0\" before the zero is stripped\n+        ([10**7], \"10 MB\"),  # only zeros after the decimal point are stripped\n+        ([3000000, False, False, \"%.2f\"], \"3 MB\"),\n+        ([3100000, False, False, \"%.2f\"], \"3.1 MB\"),\n+        ([3141592, False, False, \"%.2f\"], \"3.14 MB\"),\n+        ([10**7, False, False, \"%.0f\"], \"10 MB\"),\n+        ([3000000, False, False, \"%.2e\"], \"3.00e+00 MB\"),  # not fixed-point\n+    ],\n+)\n+def test_naturalsize_strip_trailing_zero(\n+    test_args: list[int] | list[int | bool], expected: str\n+) -> None:\n+    assert humanize.naturalsize(*test_args, strip_trailing_zero=True) == expected\n",
+  "patch_sha256": "96852e77cd7bba2318eaf26e52b3f7c38c274722bccd65378db560ae64450ed9",
+  "produced_by": "nearmiss:v1:reference:eval",
+  "description": "strip_trailing_zero only fires when number.replace('.', '', 1).isdigit(), which is False for a leading minus, so negative sizes keep their trailing zeros: naturalsize(-3000000, strip_trailing_zero=True) returns '-3.0 MB' instead of '-3 MB'",
+  "labels": [
+    {
+      "value": "invalid",
+      "violated_requirements": [
+        "R-opt-in"
+      ],
+      "labeler": "nearmiss:v1",
+      "labeler_kind": "construction",
+      "adjudicated": false,
+      "timestamp": "2026-11-18T09:01:26+00:00",
+      "note": ""
+    },
+    {
+      "value": "invalid",
+      "violated_requirements": [
+        "R-keep-meaningful",
+        "R-opt-in"
+      ],
+      "labeler": "builder:refcheck+regression+construction:v1",
+      "labeler_kind": "model",
+      "adjudicated": false,
+      "timestamp": "2026-11-18T09:18:52+00:00",
+      "note": "construction invalid, confirmed on targeted requirement | {\"refcheck_outcome\": \"task_failure\", \"refcheck_failed\": [\"test_reference_check.py::test_opt_in_drops_point_zero_for_every_suffix\", \"test_reference_check.py::test_opt_in_drops_point_zero_after_rounding_and_for_negative_and_string_input\", \"test_reference_check.py::test_opt_in_keeps_integer_zeros\", \"test_reference_check.py::test_opt_in_random_point_zero_outputs\"], \"regression_outcome\": \"pass\", \"regression_failed\": [], \"construction\": {\"value\": \"invalid\", \"violated_requirements\": [\"R-opt-in\"], \"labeler\": \"nearmiss:v1\", \"labeler_kind\": \"construction\", \"adjudicated\": false, \"timestamp\": \"2026-11-18T09:01:26+00:00\", \"note\": \"\"}}"
+    }
+  ]
+}

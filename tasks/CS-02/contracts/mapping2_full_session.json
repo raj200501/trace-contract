@@ -1,0 +1,66 @@
+{
+  "mapper": "model:claude-code-subagent:mapper:v1#2",
+  "mapper_kind": "model",
+  "map": {
+    "R1": [
+      "R-atomic"
+    ],
+    "R2": [
+      "R-atomic",
+      "R-new-content"
+    ],
+    "R3": [
+      "R-read-after-write"
+    ],
+    "R4": [
+      "R-new-content",
+      "R-read-after-write",
+      "R-bytes-unchanged"
+    ],
+    "R5": [
+      "R-new-content",
+      "R-bytes-unchanged"
+    ],
+    "R6": [
+      "R-no-temp-files"
+    ],
+    "R7": [
+      "R-no-temp-files"
+    ],
+    "R8": [
+      "R-atomic",
+      "R-original-intact"
+    ],
+    "R9": [
+      "R-new-content",
+      "R-read-after-write"
+    ],
+    "R10": [
+      "R-read-after-write"
+    ]
+  },
+  "contradicts": {
+    "R1": [],
+    "R2": [],
+    "R3": [],
+    "R4": [],
+    "R5": [],
+    "R6": [],
+    "R7": [],
+    "R8": [],
+    "R9": [],
+    "R10": []
+  },
+  "notes": {
+    "R1": "It requires that a write hit by an injected ENOSPC leaves a complete JSON file equal to the old state (json.load check), which is R-atomic; it compares parsed data rather than bytes, so R-original-intact is not counted, and its 'old or new' wording and process-death case are weaker than or compatible with the reference, so no contradiction.",
+    "R2": "Mostly an extra mechanism constraint (temporary file plus os.replace, inode must change), but swapping in a temporary file that holds the complete new JSON checks R-new-content in part, and its check that the database still holds the old contents when the rename fails covers R-atomic for a failed swap; demanding a new inode is stricter than, not contrary to, the reference.",
+    "R3": "It requires storage.read() and db.all() on the same long-lived JSONStorage/TinyDB to return exactly what was just written after every write in a sequence, which is R-read-after-write; no conflict.",
+    "R4": "It requires the file bytes after each write (including a shorter second write) to equal the base implementation's for each encoding, and the data to read back through the same and a fresh storage, which tests R-bytes-unchanged, R-new-content and R-read-after-write; it does not contradict R-bytes-unchanged provided the base output really equals json.dumps(data, **kwargs).encode(enc) with a single leading BOM for BOM codecs, as both texts assume, which for utf-16/utf-8-sig and the default encoding can only be confirmed by running the base code.",
+    "R5": "It requires the file bytes after writes with extra json kwargs (including consecutive shrinking writes) to equal json.dumps(data, **kwargs) encoded exactly as the base implementation writes it, which tests R-bytes-unchanged and R-new-content; it uses the same base-relative formula as R-bytes-unchanged, so no contradiction (that the formula matches actual base output is assumed by both, not verified by running code).",
+    "R6": "It requires os.listdir to show only db.json after each successful write and after close, which is the successful-write half of R-no-temp-files; no conflict.",
+    "R7": "It requires the directory to hold exactly its previous files after a write fails halfway (ENOSPC on write/fsync, failed rename, unserializable data), which is the failed-write half of R-no-temp-files; no conflict.",
+    "R8": "It requires that after a mid-write failure the database file is byte-for-byte unchanged and TinyDB(path).all() returns the old documents, which tests R-original-intact and R-atomic; its extra same-inode/size check is stricter than but compatible with R-original-intact, so no contradiction.",
+    "R9": "It requires that a successful write after a failed one is persisted ('the file holds C', R-new-content) and immediately visible through the same instance (R-read-after-write); its post-failure check reads through the instance rather than inspecting the file, so R-atomic/R-original-intact are not counted, and post-failure usability is otherwise extra with no conflict.",
+    "R10": "The bounded file-descriptor count is extra, but its stated purpose and test (2000+ write/read cycles on one JSONStorage, each read returning the last written data) check R-read-after-write over a long sequence; no conflict."
+  }
+}

@@ -12,28 +12,28 @@
       "origin": "observed_pre_correction",
       "proposed": "valid",
       "violated": [],
-      "check_assessed": null
+      "check_assessed": "invalid"
     },
     {
       "candidate": "CS-03-eval-alt-2",
       "origin": "valid_alternative",
       "proposed": "valid",
       "violated": [],
-      "check_assessed": null
+      "check_assessed": "valid"
     },
     {
       "candidate": "CS-03-eval-nm-1",
       "origin": "constructed_near_miss",
       "proposed": "ambiguous",
       "violated": [],
-      "check_assessed": null
+      "check_assessed": "invalid"
     },
     {
       "candidate": "CS-03-eval-nm-2",
       "origin": "constructed_near_miss",
       "proposed": "ambiguous",
       "violated": [],
-      "check_assessed": null
+      "check_assessed": "invalid"
     },
     {
       "candidate": "CS-03-eval-nm-3",
@@ -42,14 +42,14 @@
       "violated": [
         "R-humanize-unchanged"
       ],
-      "check_assessed": null
+      "check_assessed": "invalid"
     },
     {
       "candidate": "CS-03-eval-nm-4",
       "origin": "constructed_near_miss",
       "proposed": "ambiguous",
       "violated": [],
-      "check_assessed": null
+      "check_assessed": "invalid"
     },
     {
       "candidate": "CS-03-eval-nm-5",
@@ -58,23 +58,31 @@
       "violated": [
         "R-all-caps-input"
       ],
-      "check_assessed": null
+      "check_assessed": "invalid"
     },
     {
       "candidate": "CS-03-eval-alt-1",
       "origin": "valid_alternative",
       "proposed": "valid",
       "violated": [],
-      "check_assessed": null
+      "check_assessed": "invalid"
     }
   ],
   "review_queue": [
+    {
+      "candidate": "CS-03-pre-correction",
+      "origin": "observed_pre_correction",
+      "proposed": "valid",
+      "violated": [],
+      "check_assessed": "invalid",
+      "reason": "construction check disagrees with proposal"
+    },
     {
       "candidate": "CS-03-eval-nm-1",
       "origin": "constructed_near_miss",
       "proposed": "ambiguous",
       "violated": [],
-      "check_assessed": null,
+      "check_assessed": "invalid",
       "reason": "ambiguous under D19"
     },
     {
@@ -82,7 +90,7 @@
       "origin": "constructed_near_miss",
       "proposed": "ambiguous",
       "violated": [],
-      "check_assessed": null,
+      "check_assessed": "invalid",
       "reason": "ambiguous under D19"
     },
     {
@@ -90,8 +98,16 @@
       "origin": "constructed_near_miss",
       "proposed": "ambiguous",
       "violated": [],
-      "check_assessed": null,
+      "check_assessed": "invalid",
       "reason": "ambiguous under D19"
+    },
+    {
+      "candidate": "CS-03-eval-alt-1",
+      "origin": "valid_alternative",
+      "proposed": "valid",
+      "violated": [],
+      "check_assessed": "invalid",
+      "reason": "construction check disagrees with proposal"
     }
   ]
 }

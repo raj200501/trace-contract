@@ -1,0 +1,107 @@
+{
+  "note": "Independent construction checks (advisory evidence for human review; never change labels).",
+  "checks": {
+    "CS-03-eval-alt-1": {
+      "assessed_label": "invalid",
+      "violated_requirements": [
+        "R-acronym"
+      ],
+      "regressions": [],
+      "matches_claim": "no",
+      "claim": "valid alternative",
+      "plausible": true,
+      "evidence": "Violation (R-acronym): alt-1 only keeps a word if every letter in it is uppercase. A word that is all caps but contains a caseless letter, such as the modifier apostrophes U+02BB (Hawaiian okina) or U+02BC (Ukrainian apostrophe), is titlecased instead of kept. (1) titleize('Welcome to HAWAI\u02bbI'): candidate 'Welcome To Hawai\u02bbI', reference 'Welcome To HAWAI\u02bbI'. (2) titleize('\u0447\u0438\u0441\u043b\u043e \u041f\u02bc\u042f\u0422\u042c'): candidate '...\u041f\u02bc\u042f\u0442\u044c', reference '...\u041f\u02bc\u042f\u0422\u042c'. (3) titleize('NASA\u02bcS rocket'): candidate 'Nasa\u02bcS Rocket', reference 'NASA\u02bcS Rocket'. A related ASCII divergence that the contract arguably leaves open: titleize(\"the do's and DON'T's\") gives \"The Do's And DON't's\", reference \"The Do's And DON'T's\". ASCII otherwise: both stated examples pass ('NASA Rocket Launch', 'Read The HTTP Spec'). No standalone all-caps ASCII word was lost across 8396 mixed-case ASCII probes. The 98 ASCII differences from the reference are all apostrophe-joined tokens that are not all-caps words, e.g. \"David'SS code\" gives \"David'SS Code\" where the reference gives \"David'ss Code\". R-all-caps-input holds: output equals base on all 6096 all-caps probes, including 'HELLO WORLD' -> 'Hello World'. R-humanize-unchanged and R-underscore-unchanged hold: outputs equal base on about 15.7k probes; the underscore refactor into _separate_words changes no output. Regressions: the base test_inflection.py gives 455 passed on the candidate and 455 passed on the reference.",
+      "checker": "model:claude-code-subagent:check:cs03-altpre",
+      "source": "wf_f01e3c8b-2f6/a408be943f9ff366c"
+    },
+    "CS-03-eval-alt-2": {
+      "assessed_label": "valid",
+      "violated_requirements": [],
+      "regressions": [],
+      "matches_claim": "yes",
+      "claim": "valid alternative",
+      "plausible": true,
+      "evidence": "No scored violation found. R-acronym: both stated examples pass ('NASA rocket launch' -> 'NASA Rocket Launch', 'read the HTTP spec' -> 'Read The HTTP Spec'). Close variants pass: 'NASA_rocket_launch', \"NASA's rocket\", \"DON'T panic\", \"David'S code\" -> \"David's Code\", 'the NASA_ID' -> 'The NASA', 'the user_ID' -> 'The User', the ' and \u2019 apostrophe variants. Unicode cases pass: 'Welcome to HAWAI\u02bbI', the Ukrainian U+02BC word, 'the \u0130STANBUL office', \"AL\u0130'N\u0130N evi\". Across 9573 mixed-case probes, no standalone all-caps word was lost. The only flags were inputs whose trailing standalone ID is dropped by humanize in both candidate and reference, leaving only the camelCase ID (e.g. 'getID-ID' -> 'Get Id', reference 'Get ID'), and circled-letter symbols. Divergences from the reference that I judged unspecified, because the input word is not itself all caps or the word is kept exactly: (a) camelCase acronyms are not kept: 'HTMLTidy' -> 'Html Tidy' (reference 'HTML Tidy'), 'NASARocket launch' -> 'Nasa Rocket Launch' (reference 'NASA Rocket Launch'); (b) digit-joined acronyms stay joined: 'the 2FA code' -> 'The 2FA Code' (reference 'The 2 FA Code'); (c) apostrophe compounds: \"David'SS code\" -> \"David'SS Code\" (reference \"David'ss Code\"). If reviewers count camelCase parts as words, (a) would violate R-acronym. R-all-caps-input: output equals base on all 6096 all-caps probes. humanize and underscore are untouched, and their outputs equal base on about 15.7k probes. Regressions: the base test_inflection.py gives 455 passed, the same as the reference.",
+      "checker": "model:claude-code-subagent:check:cs03-altpre",
+      "source": "wf_f01e3c8b-2f6/a408be943f9ff366c"
+    },
+    "CS-03-eval-nm-1": {
+      "assessed_label": "invalid",
+      "violated_requirements": [
+        "R-acronym"
+      ],
+      "regressions": [],
+      "matches_claim": "yes",
+      "claim": "near miss violating R-acronym",
+      "plausible": true,
+      "evidence": "Regressions: the base test_inflection.py (copied over the candidate's) gives 455/455 passed in sandbox-pytest, the same as ref with base tests (455/455), so there are no regressions. Differential probe of 9,505 inputs, run in the sandbox against base and ref sources embedded verbatim (validated: 0 differences when run in base and in ref): humanize and underscore are identical to base, and titleize on every input without lowercase is identical to base/ref. So R-humanize-unchanged, R-underscore-unchanged and R-all-caps-input hold. The stated examples pass: titleize('NASA rocket launch') = 'NASA Rocket Launch' and titleize('read the HTTP spec') = 'Read The HTTP Spec'. VIOLATION of R-acronym: capitalize() runs before '_' is turned into ' ', so \\w+ spans _-, '-'- and camelCase-joined words and lowercases all-caps words inside mixed-case input. Candidate vs ref: titleize('NASA_rocket_launch') gives 'Nasa Rocket Launch' vs 'NASA Rocket Launch'; titleize('rocket_NASA') gives 'Rocket Nasa' vs 'Rocket NASA'; titleize('read the HTTP-spec') gives 'Read The Http Spec' vs 'Read The HTTP Spec'; titleize('HTMLTidy') gives 'Html Tidy' vs 'HTML Tidy'. A check that does not use ref (every space-, _- or '-'-delimited all-caps token of 2+ letters must appear unchanged in the output) fails on 472 inputs where ref passes. All-caps tokens delimited only by whitespace are kept, so this rests on titleize's own word splitting at _ and '-'. Base titleize documents that splitting ('raiders_of_the_lost_ark' -> 'Raiders Of The Lost Ark'), and the output renders NASA as a separate, lowercased word.",
+      "checker": "model:claude-code-subagent:check:cs03-nm",
+      "source": "wf_f01e3c8b-2f6/a1cf30b182d3bd426"
+    },
+    "CS-03-eval-nm-2": {
+      "assessed_label": "invalid",
+      "violated_requirements": [
+        "R-all-caps-input"
+      ],
+      "regressions": [],
+      "matches_claim": "yes",
+      "claim": "near miss violating R-all-caps-input",
+      "plausible": true,
+      "evidence": "Regressions: base tests give 455/455 passed on the candidate and 455/455 on ref, so there are none. Probe of 9,505 inputs: humanize and underscore are identical to base, and titleize on every input containing a lowercase letter is identical to ref, so R-acronym holds exactly as in ref and both of its examples pass. Differences occur only on fully uppercase inputs (301). titleize('HELLO WORLD') = 'Hello World' still passes. VIOLATION of R-all-caps-input: all(part.isupper() for part in word.split()) is False when a whitespace part has no cased letters, so these inputs take the acronym-keeping path. Candidate vs ref/base: titleize('CHAPTER 11') gives 'CHAPTER 11' vs 'Chapter 11'; titleize('ROCK & ROLL') gives 'ROCK & ROLL' vs 'Rock & Roll'; titleize('PART 2') gives 'PART 2' vs 'Part 2'; titleize('42 IS THE ANSWER') gives '42 IS THE ANSWER' vs '42 Is The Answer'. These inputs contain no lowercase letters (str.isupper() is True).",
+      "checker": "model:claude-code-subagent:check:cs03-nm",
+      "source": "wf_f01e3c8b-2f6/a1cf30b182d3bd426"
+    },
+    "CS-03-eval-nm-3": {
+      "assessed_label": "invalid",
+      "violated_requirements": [
+        "R-humanize-unchanged"
+      ],
+      "regressions": [],
+      "matches_claim": "yes",
+      "claim": "near miss violating R-humanize-unchanged",
+      "plausible": true,
+      "evidence": "Regressions: base tests give 455/455 passed on the candidate and 455/455 on ref, so there are none. Probe of 9,505 inputs: underscore is identical to base, and titleize is identical to ref on all inputs, mixed-case and all-caps, so R-acronym, R-all-caps-input and R-underscore-unchanged hold. humanize differs from base on 1,574 inputs. The stated examples still pass: humanize('employee_salary') = 'Employee salary' and humanize('author_id') = 'Author'. VIOLATION of R-humanize-unchanged, candidate vs ref/base: humanize('NASA_rocket_launch') gives 'NASA rocket launch' vs 'Nasa rocket launch'; humanize('read the HTTP spec') gives 'Read the HTTP spec' vs 'Read the http spec'; humanize(\"DON'T panic\") gives \"DON't panic\" vs \"Don't panic\"; humanize('rocket_NASA') gives 'Rocket NASA' vs 'Rocket nasa'.",
+      "checker": "model:claude-code-subagent:check:cs03-nm",
+      "source": "wf_f01e3c8b-2f6/a1cf30b182d3bd426"
+    },
+    "CS-03-eval-nm-4": {
+      "assessed_label": "invalid",
+      "violated_requirements": [
+        "R-underscore-unchanged"
+      ],
+      "regressions": [],
+      "matches_claim": "yes",
+      "claim": "near miss violating R-underscore-unchanged",
+      "plausible": true,
+      "evidence": "Regressions: base tests give 455/455 passed on the candidate and 455/455 on ref, so there are none. Probe of 9,505 inputs: humanize is identical to base, and all-caps titleize is identical to base/ref, so R-humanize-unchanged and R-all-caps-input hold. underscore differs from base on 438 inputs. The stated example underscore('NASARocket') = 'nasa_rocket' still passes. VIOLATION of R-underscore-unchanged: the shared _separate_words regex ([A-Z]+)([A-Z](?!s\\b)[a-z]) no longer splits plural acronyms. Candidate vs ref/base: underscore('URLs') gives 'urls' vs 'ur_ls'; underscore('REST APIs') gives 'rest apis' vs 'rest ap_is'; underscore('IDs') gives 'ids' vs 'i_ds'; underscore('MyURLs') gives 'my_urls' vs 'my_ur_ls'. R-acronym is not violated: mixed-case titleize differs from ref on 451 inputs, all involving plural-acronym tokens, e.g. 'list of URLs' gives 'List Of URLs' vs ref 'List Of UR Ls', and 'NASAIs' gives 'NASAIs' vs ref 'NASA Is'. 407 of those differ only in spacing, and the check that does not use ref (all-caps tokens of 2+ letters kept unchanged) has 0 failures that ref does not also have. The tokens involved are not all-caps words, so this behaviour is unspecified. Both R-acronym examples pass.",
+      "checker": "model:claude-code-subagent:check:cs03-nm",
+      "source": "wf_f01e3c8b-2f6/a1cf30b182d3bd426"
+    },
+    "CS-03-eval-nm-5": {
+      "assessed_label": "invalid",
+      "violated_requirements": [
+        "R-all-caps-input"
+      ],
+      "regressions": [],
+      "matches_claim": "yes",
+      "claim": "near miss violating R-all-caps-input",
+      "plausible": true,
+      "evidence": "Regressions: base tests give 455/455 passed on the candidate and 455/455 on ref, so there are none. Probe of 9,505 inputs: humanize and underscore are identical to base, and mixed-case titleize is identical to ref, so R-acronym holds with both examples passing. All-caps titleize differs from base/ref on 2,100 inputs. titleize('HELLO WORLD') = 'Hello World' still passes. VIOLATION of R-all-caps-input: the all-caps branch uses humanize(word.lower()) and so skips underscore()'s hyphen and digit-capital splitting. Candidate vs ref/base: titleize('X-MEN: THE LAST STAND') gives 'X-Men: The Last Stand' vs 'X Men: The Last Stand'; titleize('WI-FI') gives 'Wi-Fi' vs 'Wi Fi'; titleize('MP3PLAYER') gives 'Mp3Player' vs 'Mp3 Player'; titleize('R2D2') gives 'R2D2' vs 'R2 D2'. It also differs on inputs with no letters, e.g. '-' gives '-' vs ' ', which the contract does not clearly cover; the verdict rests on the cased all-caps examples.",
+      "checker": "model:claude-code-subagent:check:cs03-nm",
+      "source": "wf_f01e3c8b-2f6/a1cf30b182d3bd426"
+    },
+    "CS-03-pre-correction": {
+      "assessed_label": "invalid",
+      "violated_requirements": [
+        "R-all-caps-input"
+      ],
+      "regressions": [],
+      "matches_claim": "not_applicable",
+      "claim": "natural pre-correction state",
+      "plausible": true,
+      "evidence": "Violation (R-all-caps-input): for input with no lowercase letters, the candidate does not run the base pipeline. It titlecases the case-kept string word by word, which differs from base when lowercasing moves a word boundary (Turkish dotted \u0130 lowercases to i + U+0307 just before an apostrophe) and when a circled capital letter follows another letter. (1) titleize(\"KAYSER\u0130'DE HAVA\"): candidate \"Kayseri\u0307'de Hava\", reference and base \"Kayseri\u0307'De Hava\". (2) titleize(\"AL\u0130'N\u0130N EV\u0130\"): candidate \"Ali\u0307'ni\u0307N Evi\u0307\", reference and base \"Ali\u0307'Ni\u0307N Evi\u0307\". (3) titleize('A\u24b7C'): candidate 'A\u24b7C', reference and base 'A\u24d1C'. Every one of these inputs is entirely uppercase (str.isupper() is True). The divergence is limited to non-ASCII input: 0 of 5479 ASCII all-caps probes differ from base, 116 of 617 non-ASCII ones do, and stated examples and variants pass ('HELLO WORLD' -> 'Hello World', 'SCREAMING_SNAKE_CASE', \"DON'T PANIC\" -> \"Don't Panic\"). R-acronym: its code for mixed-case input is the same as the reference's, and output was identical to the reference on all 9573 mixed-case probes, including both stated examples. humanize and underscore outputs equal base on about 15.7k probes; underscore was refactored through _separate_words with no change in output. Regressions: the base test_inflection.py gives 455 passed, the same as the reference.",
+      "checker": "model:claude-code-subagent:check:cs03-altpre",
+      "source": "wf_f01e3c8b-2f6/a408be943f9ff366c"
+    }
+  }
+}

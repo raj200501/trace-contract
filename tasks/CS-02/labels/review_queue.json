@@ -1,0 +1,131 @@
+{
+  "task_id": "CS-02",
+  "note": "Generated from candidate labels and construction checks only; contains no verifier outcome.",
+  "counts": {
+    "unlabeled": 8
+  },
+  "candidates": [
+    {
+      "candidate": "CS-02-pre-correction",
+      "origin": "observed_pre_correction",
+      "proposed": "unlabeled",
+      "violated": [],
+      "check_assessed": "valid"
+    },
+    {
+      "candidate": "CS-02-eval-alt-1",
+      "origin": "valid_alternative",
+      "proposed": "unlabeled",
+      "violated": [],
+      "check_assessed": "valid"
+    },
+    {
+      "candidate": "CS-02-eval-alt-2",
+      "origin": "valid_alternative",
+      "proposed": "unlabeled",
+      "violated": [],
+      "check_assessed": "invalid"
+    },
+    {
+      "candidate": "CS-02-eval-nm-1",
+      "origin": "constructed_near_miss",
+      "proposed": "unlabeled",
+      "violated": [],
+      "check_assessed": null
+    },
+    {
+      "candidate": "CS-02-eval-nm-2",
+      "origin": "constructed_near_miss",
+      "proposed": "unlabeled",
+      "violated": [],
+      "check_assessed": null
+    },
+    {
+      "candidate": "CS-02-eval-nm-3",
+      "origin": "constructed_near_miss",
+      "proposed": "unlabeled",
+      "violated": [],
+      "check_assessed": null
+    },
+    {
+      "candidate": "CS-02-eval-nm-4",
+      "origin": "constructed_near_miss",
+      "proposed": "unlabeled",
+      "violated": [],
+      "check_assessed": null
+    },
+    {
+      "candidate": "CS-02-eval-nm-5",
+      "origin": "constructed_near_miss",
+      "proposed": "unlabeled",
+      "violated": [],
+      "check_assessed": null
+    }
+  ],
+  "review_queue": [
+    {
+      "candidate": "CS-02-pre-correction",
+      "origin": "observed_pre_correction",
+      "proposed": "unlabeled",
+      "violated": [],
+      "check_assessed": "valid",
+      "reason": "no proposal"
+    },
+    {
+      "candidate": "CS-02-eval-alt-1",
+      "origin": "valid_alternative",
+      "proposed": "unlabeled",
+      "violated": [],
+      "check_assessed": "valid",
+      "reason": "no proposal"
+    },
+    {
+      "candidate": "CS-02-eval-alt-2",
+      "origin": "valid_alternative",
+      "proposed": "unlabeled",
+      "violated": [],
+      "check_assessed": "invalid",
+      "reason": "no proposal"
+    },
+    {
+      "candidate": "CS-02-eval-nm-1",
+      "origin": "constructed_near_miss",
+      "proposed": "unlabeled",
+      "violated": [],
+      "check_assessed": null,
+      "reason": "no proposal"
+    },
+    {
+      "candidate": "CS-02-eval-nm-2",
+      "origin": "constructed_near_miss",
+      "proposed": "unlabeled",
+      "violated": [],
+      "check_assessed": null,
+      "reason": "no proposal"
+    },
+    {
+      "candidate": "CS-02-eval-nm-3",
+      "origin": "constructed_near_miss",
+      "proposed": "unlabeled",
+      "violated": [],
+      "check_assessed": null,
+      "reason": "no proposal"
+    },
+    {
+      "candidate": "CS-02-eval-nm-4",
+      "origin": "constructed_near_miss",
+      "proposed": "unlabeled",
+      "violated": [],
+      "check_assessed": null,
+      "reason": "no proposal"
+    },
+    {
+      "candidate": "CS-02-eval-nm-5",
+      "origin": "constructed_near_miss",
+      "proposed": "unlabeled",
+      "violated": [],
+      "check_assessed": null,
+      "reason": "no proposal"
+    }
+  ]
+}

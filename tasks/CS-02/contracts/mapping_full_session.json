@@ -1,0 +1,68 @@
+{
+  "mapper": "model:claude-code-subagent:mapper:v1",
+  "mapper_kind": "model",
+  "map": {
+    "R1": [
+      "R-atomic",
+      "R-original-intact"
+    ],
+    "R2": [
+      "R-atomic",
+      "R-new-content",
+      "R-original-intact"
+    ],
+    "R3": [
+      "R-read-after-write"
+    ],
+    "R4": [
+      "R-new-content",
+      "R-read-after-write",
+      "R-bytes-unchanged"
+    ],
+    "R5": [
+      "R-new-content",
+      "R-bytes-unchanged"
+    ],
+    "R6": [
+      "R-no-temp-files"
+    ],
+    "R7": [
+      "R-no-temp-files"
+    ],
+    "R8": [
+      "R-atomic",
+      "R-original-intact"
+    ],
+    "R9": [
+      "R-new-content",
+      "R-read-after-write"
+    ],
+    "R10": [
+      "R-read-after-write"
+    ]
+  },
+  "contradicts": {
+    "R1": [],
+    "R2": [],
+    "R3": [],
+    "R4": [],
+    "R5": [],
+    "R6": [],
+    "R7": [],
+    "R8": [],
+    "R9": [],
+    "R10": []
+  },
+  "notes": {
+    "R1": "Its disk-full case (ENOSPC injected into the file write, fsync or replace, then json.load of the file equals the old state and TinyDB(path).all() works) tests R-atomic and, at parsed-content rather than byte level, R-original-intact in part; the process-death old-or-new case goes beyond the reference without conflicting with it.",
+    "R2": "The temp-file-plus-replace mechanism and the inode change are extra, but its spy asserting that the file swapped onto the database path holds the new JSON tests R-new-content in part, and its check that a failed rename leaves the old contents in the database file tests R-atomic and R-original-intact in part.",
+    "R3": "Many consecutive write/read cycles on one long-lived JSONStorage and TinyDB, each read returning exactly the data just written, are R-read-after-write (only that requirement's new-TinyDB-on-the-same-path clause is not checked).",
+    "R4": "Asserting that after each of two writes (the second shorter) the file bytes equal the base output, i.e. json.dumps(data, **kwargs) encoded with the given codec, tests R-bytes-unchanged and R-new-content, and its storage.read() / fresh-JSONStorage read-back tests R-read-after-write in part; no contradiction is claimed, but that rests on the unverified assumption (the base code could not be run) that the base in-place writer emits exactly json.dumps(...).encode(enc) with a single BOM for utf-16/utf-8-sig on later writes and the locale encoding for None, and if it did not, whether R4 contradicts R-bytes-unchanged would depend on which of its two clauses (formula vs. base parity) a test enforced.",
+    "R5": "Byte equality of the file with the base output for kwargs such as indent/sort_keys/separators/ensure_ascii, including consecutive writes where the new data is shorter, tests R-bytes-unchanged and R-new-content; no contradiction, assuming (unverified without running the base code) that the base output equals json.dumps(data, **kwargs) in the storage encoding, as both contracts state.",
+    "R6": "os.listdir(dir) == ['db.json'] after each successful write and after close is the successful-write half of R-no-temp-files.",
+    "R7": "os.listdir(dir) == ['db.json'] after a write failed by an injected ENOSPC (write, fsync or replace) or a non-serializable value is the failed-write half of R-no-temp-files.",
+    "R8": "Byte-identical file contents (plus unchanged inode and size) and TinyDB(path).all() returning the old documents after an injected mid-write failure test R-atomic and R-original-intact; the same-inode demand is stricter than, but compatible with, the reference.",
+    "R9": "Its check that a later successful write is persisted (the file holds C) and immediately returned by s.read() on the same instance tests R-new-content in part and R-read-after-write; the demand that the instance still reads the pre-failure data after a failed write is extra and inspects the instance view rather than the file, so it is not credited to R-atomic or R-original-intact.",
+    "R10": "The bounded file-descriptor count is extra, but its assertion that each read over thousands of write/read cycles on one JSONStorage returns the last written data tests R-read-after-write in part."
+  }
+}

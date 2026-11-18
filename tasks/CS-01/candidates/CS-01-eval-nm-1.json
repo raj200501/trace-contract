@@ -1,0 +1,35 @@
+{
+  "schema_version": "0.1.0",
+  "candidate_id": "CS-01-eval-nm-1",
+  "task_id": "CS-01",
+  "origin": "constructed_near_miss",
+  "split": "eval",
+  "patch": "diff --git a/src/humanize/filesize.py b/src/humanize/filesize.py\nindex 386752b227ed3524eaab881cc50a351bee83e03c..4634cd4a33040052d62bca1504e377ef8c9cdf27 100644\n--- a/src/humanize/filesize.py\n+++ b/src/humanize/filesize.py\n@@ -40,6 +40,7 @@ def naturalsize(\n     value: float | str,\n     binary: bool = False,\n     gnu: bool = False,\n+    strip_trailing_zero: bool = False,\n     format: str = \"%.1f\",\n ) -> str:\n     \"\"\"Format a number of bytes like a human-readable filesize (e.g. 10 kB).\n@@ -66,6 +67,10 @@ def naturalsize(\n         '30000.0 QB'\n         >>> naturalsize(-4096, True)\n         '-4.0 KiB'\n+        >>> naturalsize(3000000, strip_trailing_zero=True)\n+        '3 MB'\n+        >>> naturalsize(3000, True, strip_trailing_zero=True)\n+        '2.9 KiB'\n \n         ```\n \n@@ -75,6 +80,9 @@ def naturalsize(\n             2<sup>10</sup> instead of 10<sup>3</sup>.\n         gnu (bool): If `True`, the binary argument is ignored and GNU-style\n             (`ls -sh` style) prefixes are used (K, M) with the 2**10 definition.\n+        strip_trailing_zero (bool): If `True`, zeros at the end of the formatted\n+            decimal part are dropped, and the decimal point too if nothing is left\n+            after it: `3 MB` rather than `3.0 MB`, while `2.9 KiB` is unchanged.\n         format (str): Custom formatter.\n \n     Returns:\n@@ -106,6 +114,14 @@ def naturalsize(\n     # suffix is available, step up one suffix so the result reads \"1.0 MB\".\n     if exp < len(suffix) and abs(float(format % (abs_bytes / (base**exp)))) >= base:\n         exp += 1\n+    number = format % (bytes_ / (base**exp))\n+    if strip_trailing_zero:\n+        # \"3.0\" -> \"3\" and \"3.10\" -> \"3.1\". Only digits after the last \".\" are\n+        # touched, so integer digits and output such as \"3.00e+00\" are kept.\n+        whole, point, fraction = number.rpartition(\".\")\n+        if point and fraction.isdigit():\n+            fraction = fraction.rstrip(\"0\")\n+            number = f\"{whole}.{fraction}\" if fraction else whole\n     space = \"\" if gnu else \" \"\n-    ret: str = format % (bytes_ / (base**exp)) + space + _(suffix[exp - 1])\n+    ret: str = number + space + _(suffix[exp - 1])\n     return ret\ndiff --git a/tests/test_filesize.py b/tests/test_filesize.py\nindex 645751b9fbb3a41d1a32924ca58cd73887fac24a..20c9b132537ef993930dd946d6e472ecb5206bfa 100644\n--- a/tests/test_filesize.py\n+++ b/tests/test_filesize.py\n@@ -101,3 +101,33 @@ def test_naturalsize(test_args: list[int] | list[int | bool], expected: str) ->\n         test_args[0] = f\"-{test_args[0]}\"\n \n     assert humanize.naturalsize(*test_args) == \"-\" + expected\n+\n+\n+@pytest.mark.parametrize(\n+    \"test_args, test_kwargs, expected\",\n+    [\n+        ([3000000], {}, \"3 MB\"),\n+        ([1024, True], {}, \"1 KiB\"),\n+        ([3000, True], {}, \"2.9 KiB\"),\n+        ([1024, False, True], {}, \"1K\"),\n+        ([3000001], {}, \"3 MB\"),  # rounds to \"3.0\" before the zero is stripped\n+        ([10**7], {}, \"10 MB\"),  # only zeros after the decimal point are stripped\n+        ([3000000], {\"format\": \"%.2f\"}, \"3 MB\"),\n+        ([3100000], {\"format\": \"%.2f\"}, \"3.1 MB\"),\n+        ([3141592], {\"format\": \"%.2f\"}, \"3.14 MB\"),\n+        ([10**7], {\"format\": \"%.0f\"}, \"10 MB\"),\n+        ([3000000], {\"format\": \"%.2e\"}, \"3.00e+00 MB\"),  # not fixed-point\n+    ],\n+)\n+def test_naturalsize_strip_trailing_zero(\n+    test_args: list[int] | list[int | bool],\n+    test_kwargs: dict[str, str],\n+    expected: str,\n+) -> None:\n+    result = humanize.naturalsize(*test_args, strip_trailing_zero=True, **test_kwargs)\n+    assert result == expected\n+\n+    # Retest with negative input\n+    test_args[0] *= -1\n+    result = humanize.naturalsize(*test_args, strip_trailing_zero=True, **test_kwargs)\n+    assert result == \"-\" + expected\n",
+  "patch_sha256": "6df89bce59cc109e05016687864d44b32e44bfa0aad6355e7c2912fbbc6e609c",
+  "produced_by": "nearmiss:v1:reference:eval",
+  "description": "strip_trailing_zero is inserted as a positional parameter before format, so a custom format passed as the 4th positional argument is consumed as the flag: naturalsize(3000, False, True, '%.3f') returns '2.9K' instead of '2.930K' (format= keyword still works)",
+  "labels": [
+    {
+      "value": "invalid",
+      "violated_requirements": [
+        "R-custom-format-unchanged"
+      ],
+      "labeler": "nearmiss:v1",
+      "labeler_kind": "construction",
+      "adjudicated": false,
+      "timestamp": "2026-11-18T09:00:36+00:00",
+      "note": ""
+    },
+    {
+      "value": "invalid",
+      "violated_requirements": [
+        "R-custom-format-unchanged"
+      ],
+      "labeler": "builder:refcheck+regression+construction:v1",
+      "labeler_kind": "model",
+      "adjudicated": false,
+      "timestamp": "2026-11-18T09:18:47+00:00",
+      "note": "construction invalid, confirmed on targeted requirement | {\"refcheck_outcome\": \"task_failure\", \"refcheck_failed\": [\"test_reference_check.py::test_custom_format_contract_examples\", \"test_reference_check.py::test_custom_format_positional_table\", \"test_reference_check.py::test_custom_format_random_inputs\"], \"regression_outcome\": \"task_failure\", \"regression_failed\": [\"tests.test_filesize::test_naturalsize[test_args60-3.14 MB]\", \"tests.test_filesize::test_naturalsize[test_args61-2.930K]\", \"tests.test_filesize::test_naturalsize[test_args62-3G]\", \"tests.test_filesize::test_naturalsize[test_args63-2.423 RiB]\"], \"construction\": {\"value\": \"invalid\", \"violated_requirements\": [\"R-custom-format-unchanged\"], \"labeler\": \"nearmiss:v1\", \"labeler_kind\": \"construction\", \"adjudicated\": false, \"timestamp\": \"2026-11-18T09:00:36+00:00\", \"note\": \"\"}}"
+    }
+  ]
+}

@@ -70,7 +70,12 @@
     "candidates/CS-01-dev-attack-initial_only-a3.json",
     "candidates/CS-01-dev-attack-initial_only-a4.json",
     "candidates/CS-01-eval-alt-1.json",
-    "candidates/CS-01-eval-alt-2.json"
+    "candidates/CS-01-eval-alt-2.json",
+    "candidates/CS-01-eval-nm-1.json",
+    "candidates/CS-01-eval-nm-2.json",
+    "candidates/CS-01-eval-nm-3.json",
+    "candidates/CS-01-eval-nm-4.json",
+    "candidates/CS-01-eval-nm-5.json"
   ],
   "notes": ""
 }

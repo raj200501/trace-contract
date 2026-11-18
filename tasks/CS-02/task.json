@@ -43,7 +43,8 @@
     "verifiers/full_plain/spec.json",
     "verifiers/llm_freeform/spec.json",
     "verifiers/initial_audited/spec.json",
-    "verifiers/full_audited/spec.json"
+    "verifiers/full_audited/spec.json",
+    "verifiers/reference_check/spec.json"
   ],
   "candidates": [
     "candidates/CS-02-reference.json",
@@ -59,7 +60,14 @@
     "candidates/CS-02-dev-attack-full_session-a3.json",
     "candidates/CS-02-dev-attack-full_session-a4.json",
     "candidates/CS-02-dev-alt-initial_only.json",
-    "candidates/CS-02-dev-alt-full_session.json"
+    "candidates/CS-02-dev-alt-full_session.json",
+    "candidates/CS-02-eval-alt-1.json",
+    "candidates/CS-02-eval-alt-2.json",
+    "candidates/CS-02-eval-nm-1.json",
+    "candidates/CS-02-eval-nm-2.json",
+    "candidates/CS-02-eval-nm-3.json",
+    "candidates/CS-02-eval-nm-4.json",
+    "candidates/CS-02-eval-nm-5.json"
   ],
   "notes": ""
 }

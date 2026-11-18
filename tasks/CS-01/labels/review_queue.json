@@ -1,0 +1,83 @@
+{
+  "task_id": "CS-01",
+  "note": "Generated from candidate labels and construction checks only; contains no verifier outcome.",
+  "counts": {
+    "invalid": 6,
+    "valid": 2
+  },
+  "candidates": [
+    {
+      "candidate": "CS-01-pre-correction",
+      "origin": "observed_pre_correction",
+      "proposed": "invalid",
+      "violated": [
+        "R-default-unchanged",
+        "R-keep-meaningful",
+        "R-opt-in",
+        "REGRESSION"
+      ],
+      "check_assessed": "invalid"
+    },
+    {
+      "candidate": "CS-01-eval-alt-1",
+      "origin": "valid_alternative",
+      "proposed": "valid",
+      "violated": [],
+      "check_assessed": "valid"
+    },
+    {
+      "candidate": "CS-01-eval-alt-2",
+      "origin": "valid_alternative",
+      "proposed": "valid",
+      "violated": [],
+      "check_assessed": "valid"
+    },
+    {
+      "candidate": "CS-01-eval-nm-1",
+      "origin": "constructed_near_miss",
+      "proposed": "invalid",
+      "violated": [
+        "R-custom-format-unchanged"
+      ],
+      "check_assessed": "invalid"
+    },
+    {
+      "candidate": "CS-01-eval-nm-2",
+      "origin": "constructed_near_miss",
+      "proposed": "invalid",
+      "violated": [
+        "R-keep-meaningful",
+        "R-opt-in"
+      ],
+      "check_assessed": "invalid"
+    },
+    {
+      "candidate": "CS-01-eval-nm-3",
+      "origin": "constructed_near_miss",
+      "proposed": "invalid",
+      "violated": [
+        "R-default-unchanged"
+      ],
+      "check_assessed": "invalid"
+    },
+    {
+      "candidate": "CS-01-eval-nm-4",
+      "origin": "constructed_near_miss",
+      "proposed": "invalid",
+      "violated": [
+        "R-keep-meaningful"
+      ],
+      "check_assessed": "invalid"
+    },
+    {
+      "candidate": "CS-01-eval-nm-5",
+      "origin": "constructed_near_miss",
+      "proposed": "invalid",
+      "violated": [
+        "R-custom-format-unchanged"
+      ],
+      "check_assessed": "invalid"
+    }
+  ],
+  "review_queue": []
+}

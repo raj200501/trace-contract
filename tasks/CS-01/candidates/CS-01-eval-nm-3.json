@@ -1,0 +1,35 @@
+{
+  "schema_version": "0.1.0",
+  "candidate_id": "CS-01-eval-nm-3",
+  "task_id": "CS-01",
+  "origin": "constructed_near_miss",
+  "split": "eval",
+  "patch": "diff --git a/src/humanize/filesize.py b/src/humanize/filesize.py\nindex 386752b227ed3524eaab881cc50a351bee83e03c..f16034235d49edd6e7658440ce68ac9eaeba3dfc 100644\n--- a/src/humanize/filesize.py\n+++ b/src/humanize/filesize.py\n@@ -40,7 +40,9 @@ def naturalsize(\n     value: float | str,\n     binary: bool = False,\n     gnu: bool = False,\n-    format: str = \"%.1f\",\n+    format: str | None = None,\n+    *,\n+    strip_trailing_zero: bool = False,\n ) -> str:\n     \"\"\"Format a number of bytes like a human-readable filesize (e.g. 10 kB).\n \n@@ -66,6 +68,10 @@ def naturalsize(\n         '30000.0 QB'\n         >>> naturalsize(-4096, True)\n         '-4.0 KiB'\n+        >>> naturalsize(3000000, strip_trailing_zero=True)\n+        '3 MB'\n+        >>> naturalsize(3000, True, strip_trailing_zero=True)\n+        '2.9 KiB'\n \n         ```\n \n@@ -75,7 +81,10 @@ def naturalsize(\n             2<sup>10</sup> instead of 10<sup>3</sup>.\n         gnu (bool): If `True`, the binary argument is ignored and GNU-style\n             (`ls -sh` style) prefixes are used (K, M) with the 2**10 definition.\n-        format (str): Custom formatter.\n+        format (str): Custom formatter. Defaults to one decimal place (`%.1f`).\n+        strip_trailing_zero (bool): If `True`, zeros at the end of the formatted\n+            decimal part are dropped, and the decimal point too if nothing is left\n+            after it: `3 MB` rather than `3.0 MB`, while `2.9 KiB` is unchanged.\n \n     Returns:\n         str: Human readable representation of a filesize.\n@@ -99,13 +108,33 @@ def naturalsize(\n \n     from math import log\n \n+    fmt = \"%.1f\" if format is None else format\n     exp = int(min(log(abs_bytes, base), len(suffix)))\n     # The suffix is chosen from the unrounded byte count, but `format` rounds the\n     # mantissa afterward; rounding can push it up to `base` (e.g. 999999 is\n     # 999.999 kB, which formats to \"1000.0 kB\"). When that happens and a larger\n     # suffix is available, step up one suffix so the result reads \"1.0 MB\".\n-    if exp < len(suffix) and abs(float(format % (abs_bytes / (base**exp)))) >= base:\n+    if exp < len(suffix) and abs(float(fmt % (abs_bytes / (base**exp)))) >= base:\n         exp += 1\n+    mantissa = bytes_ / (base**exp)\n+    if format is None:\n+        from decimal import ROUND_HALF_UP, Decimal\n+\n+        # Default format: round to one decimal place with Decimal so that a whole\n+        # number of units is recognised exactly, without binary float noise.\n+        rounded = Decimal(str(mantissa)).quantize(Decimal(\"0.1\"), ROUND_HALF_UP)\n+        if strip_trailing_zero and rounded == rounded.to_integral_value():\n+            rounded = rounded.quantize(Decimal(1))\n+        number = str(rounded)\n+    else:\n+        number = fmt % mantissa\n+        if strip_trailing_zero:\n+            # \"3.0\" -> \"3\" and \"3.10\" -> \"3.1\". Only digits after the last \".\" are\n+            # touched, so integer digits and output such as \"3.00e+00\" are kept.\n+            whole, point, fraction = number.rpartition(\".\")\n+            if point and fraction.isdigit():\n+                fraction = fraction.rstrip(\"0\")\n+                number = f\"{whole}.{fraction}\" if fraction else whole\n     space = \"\" if gnu else \" \"\n-    ret: str = format % (bytes_ / (base**exp)) + space + _(suffix[exp - 1])\n+    ret: str = number + space + _(suffix[exp - 1])\n     return ret\ndiff --git a/tests/test_filesize.py b/tests/test_filesize.py\nindex 645751b9fbb3a41d1a32924ca58cd73887fac24a..92dc557152fcff90370239e1e05103b196617502 100644\n--- a/tests/test_filesize.py\n+++ b/tests/test_filesize.py\n@@ -101,3 +101,29 @@ def test_naturalsize(test_args: list[int] | list[int | bool], expected: str) ->\n         test_args[0] = f\"-{test_args[0]}\"\n \n     assert humanize.naturalsize(*test_args) == \"-\" + expected\n+\n+\n+@pytest.mark.parametrize(\n+    \"test_args, expected\",\n+    [\n+        ([3000000], \"3 MB\"),\n+        ([1024, True], \"1 KiB\"),\n+        ([3000, True], \"2.9 KiB\"),\n+        ([1024, False, True], \"1K\"),\n+        ([3000001], \"3 MB\"),  # rounds to \"3.0\" before the zero is stripped\n+        ([10**7], \"10 MB\"),  # only zeros after the decimal point are stripped\n+        ([3000000, False, False, \"%.2f\"], \"3 MB\"),\n+        ([3100000, False, False, \"%.2f\"], \"3.1 MB\"),\n+        ([3141592, False, False, \"%.2f\"], \"3.14 MB\"),\n+        ([10**7, False, False, \"%.0f\"], \"10 MB\"),\n+        ([3000000, False, False, \"%.2e\"], \"3.00e+00 MB\"),  # not fixed-point\n+    ],\n+)\n+def test_naturalsize_strip_trailing_zero(\n+    test_args: list[int] | list[int | bool], expected: str\n+) -> None:\n+    assert humanize.naturalsize(*test_args, strip_trailing_zero=True) == expected\n+\n+    # Retest with negative input\n+    test_args[0] *= -1\n+    assert humanize.naturalsize(*test_args, strip_trailing_zero=True) == \"-\" + expected\n",
+  "patch_sha256": "5432e970d7101c1cc84183c7b65b6c1cbc1db7218943f1a47613ef80d5c317ff",
+  "produced_by": "nearmiss:v1:reference:eval",
+  "description": "When no format is passed (format now defaults to None) the mantissa is rounded with Decimal(str(m)).quantize(Decimal('0.1'), ROUND_HALF_UP) instead of '%.1f', so default output changes at half-way values: naturalsize(1250) == '1.3 kB' (was '1.2 kB'), naturalsize(1150) == '1.2 kB' (was '1.1 kB'), naturalsize(1280, binary=True) == '1.3 KiB'; explicit formats are unaffected",
+  "labels": [
+    {
+      "value": "invalid",
+      "violated_requirements": [
+        "R-default-unchanged"
+      ],
+      "labeler": "nearmiss:v1",
+      "labeler_kind": "construction",
+      "adjudicated": false,
+      "timestamp": "2026-11-18T09:02:46+00:00",
+      "note": ""
+    },
+    {
+      "value": "invalid",
+      "violated_requirements": [
+        "R-default-unchanged"
+      ],
+      "labeler": "builder:refcheck+regression+construction:v1",
+      "labeler_kind": "model",
+      "adjudicated": false,
+      "timestamp": "2026-11-18T09:18:57+00:00",
+      "note": "construction invalid, confirmed on targeted requirement | {\"refcheck_outcome\": \"task_failure\", \"refcheck_failed\": [\"test_reference_check.py::test_default_random_inputs_all_modes\"], \"regression_outcome\": \"pass\", \"regression_failed\": [], \"construction\": {\"value\": \"invalid\", \"violated_requirements\": [\"R-default-unchanged\"], \"labeler\": \"nearmiss:v1\", \"labeler_kind\": \"construction\", \"adjudicated\": false, \"timestamp\": \"2026-11-18T09:02:46+00:00\", \"note\": \"\"}}"
+    }
+  ]
+}

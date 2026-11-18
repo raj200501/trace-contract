@@ -14,21 +14,21 @@
       "violated": [
         "R-zero-step"
       ],
-      "check_assessed": null
+      "check_assessed": "invalid"
     },
     {
       "candidate": "CS-04-eval-alt-1",
       "origin": "valid_alternative",
       "proposed": "valid",
       "violated": [],
-      "check_assessed": null
+      "check_assessed": "valid"
     },
     {
       "candidate": "CS-04-eval-alt-2",
       "origin": "valid_alternative",
       "proposed": "valid",
       "violated": [],
-      "check_assessed": null
+      "check_assessed": "valid"
     },
     {
       "candidate": "CS-04-eval-nm-1",
@@ -37,7 +37,7 @@
       "violated": [
         "R-negative-step"
       ],
-      "check_assessed": null
+      "check_assessed": "invalid"
     },
     {
       "candidate": "CS-04-eval-nm-2",
@@ -46,7 +46,7 @@
       "violated": [
         "R-zero-step"
       ],
-      "check_assessed": null
+      "check_assessed": "invalid"
     },
     {
       "candidate": "CS-04-eval-nm-3",
@@ -60,7 +60,7 @@
         "R-step",
         "R-zero-step"
       ],
-      "check_assessed": null
+      "check_assessed": "invalid"
     },
     {
       "candidate": "CS-04-eval-nm-4",
@@ -72,14 +72,14 @@
         "R-positional-ordering",
         "R-step"
       ],
-      "check_assessed": null
+      "check_assessed": "invalid"
     },
     {
       "candidate": "CS-04-eval-nm-5",
       "origin": "constructed_near_miss",
       "proposed": "ambiguous",
       "violated": [],
-      "check_assessed": null
+      "check_assessed": "invalid"
     }
   ],
   "review_queue": [
@@ -88,7 +88,7 @@
       "origin": "constructed_near_miss",
       "proposed": "ambiguous",
       "violated": [],
-      "check_assessed": null,
+      "check_assessed": "invalid",
       "reason": "ambiguous under D19"
     }
   ]

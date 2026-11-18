@@ -1,0 +1,49 @@
+{
+  "mapper": "model:claude-code-subagent:mapper:v1",
+  "mapper_kind": "model",
+  "map": {
+    "R1": [
+      "R-new-content"
+    ],
+    "R2": [
+      "R-atomic",
+      "R-original-intact"
+    ],
+    "R3": [
+      "R-read-after-write"
+    ],
+    "R4": [
+      "R-new-content",
+      "R-bytes-unchanged"
+    ],
+    "R5": [],
+    "R6": [
+      "R-no-temp-files"
+    ],
+    "R7": [],
+    "R8": [
+      "R-atomic",
+      "R-original-intact"
+    ]
+  },
+  "contradicts": {
+    "R1": [],
+    "R2": [],
+    "R3": [],
+    "R4": [],
+    "R5": [],
+    "R6": [],
+    "R7": [],
+    "R8": []
+  },
+  "notes": {
+    "R1": "Its check that json.load of the database file equals the new data after an insert and after shrinking the data (many inserts, then most removed) tests R-new-content; the temp-file/os.replace mechanism and inode-change checks are extra because the reference prescribes no mechanism, and it injects no failure, so it does not test R-atomic or R-original-intact.",
+    "R2": "It injects part-way write failures (RLIMIT_FSIZE overflow with SIGXFSZ ignored, failing os.replace/os.rename, a non-serializable value) and asserts the file is byte-identical and still loads the old documents, which is R-atomic plus R-original-intact; the SIGKILL old-or-new case goes beyond the reference but does not conflict with it.",
+    "R3": "Same-instance db.all()/len()/get() after each insert/update/remove, storage.write()/storage.read() cycles and a reopened TinyDB returning the final documents are exactly the checks of R-read-after-write (the reopen check is that requirement's new-TinyDB clause, so it is not also credited to R-new-content).",
+    "R4": "Its base-parity check of the file text after inserts with sort_keys/indent/separators (plus the cp936 round trip) tests R-bytes-unchanged and, since it asserts the exact file content after successful writes, R-new-content in part; the create_dirs, access_mode='r' refusal (a refused write, not a halfway failure, so not credited to R-original-intact or R-no-temp-files), relative-path and existing-test-suite clauses are extra, and whether some existing test pins a base detail that a reference-satisfying solution could break is unknown because the suite was neither read nor run here.",
+    "R5": "It only constrains where the temporary file is created (same filesystem, normally the database directory, no copy fallback), which no reference requirement specifies, and its unspecific 'data reads back correctly' sanity check is not what it demands, so it is extra.",
+    "R6": "Comparing os.listdir() of the database directory before and after successful writes and after failed writes (RLIMIT_FSIZE overflow, failing os.replace/os.rename, a non-serializable value) is exactly R-no-temp-files.",
+    "R7": "It only requires that a failed write raises to the caller, which no reference requirement specifies (its test asserts nothing about file contents or the directory), so it is extra, and raising does not conflict with any reference requirement.",
+    "R8": "The fsync-before-replace ordering spy is extra, but its check that with os.fsync/os.fdatasync raising EIO the insert fails and the database file stays byte-identical is an injected part-way failure, which tests R-atomic and R-original-intact."
+  }
+}

@@ -90,5 +90,9 @@
       }
     ],
     "assessment": "benign: all 13 hits are the refcheck agent creating, editing, listing or self-testing its own output directory tasks/CS-01/verifiers/reference_check/ (and a host-side simulation script in the scratchpad that imports only the agent's own test file); no other verifier, candidate, workspace or sealed path appears in any tool input"
+  },
+  "eval-nm": {
+    "transcript_sha256": "63684f79e75f500a7ce45674a004a6b423db902a68a29c09eb421b33869c27da",
+    "hits": []
   }
 }

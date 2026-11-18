@@ -1,0 +1,49 @@
+{
+  "mapper": "model:claude-code-subagent:mapper:v1#2",
+  "mapper_kind": "model",
+  "map": {
+    "R1": [
+      "R-new-content"
+    ],
+    "R2": [
+      "R-atomic",
+      "R-original-intact"
+    ],
+    "R3": [
+      "R-read-after-write"
+    ],
+    "R4": [
+      "R-new-content",
+      "R-bytes-unchanged"
+    ],
+    "R5": [],
+    "R6": [
+      "R-no-temp-files"
+    ],
+    "R7": [],
+    "R8": [
+      "R-atomic",
+      "R-original-intact"
+    ]
+  },
+  "contradicts": {
+    "R1": [],
+    "R2": [],
+    "R3": [],
+    "R4": [],
+    "R5": [],
+    "R6": [],
+    "R7": [],
+    "R8": []
+  },
+  "notes": {
+    "R1": "Its explicit clause that after a successful write the file holds exactly the new serialized data, also when the data shrinks (checked with json.load of the file), is R-new-content; the temp-file/os.replace mechanism and inode-change check are extra constraints the reference neither imposes nor forbids, so there is no contradiction.",
+    "R2": "It requires that a write failing part-way (RLIMIT_FSIZE as in R-atomic's own observable, a failed swap, an unserializable value) leaves the file byte-for-byte as before and still loading the old documents, which tests R-atomic and R-original-intact; the extra process-death case (old or new allowed) is compatible with both.",
+    "R3": "It requires reads through the same TinyDB/JSONStorage instance to return the newly written data after each of a series of writes, and a reopened TinyDB to see the latest data, which is exactly R-read-after-write; no conflict.",
+    "R4": "Its clause that the file text equals what the base implementation writes for the same json.dumps arguments and encoding, checked by comparing the file after inserts, tests R-bytes-unchanged and with it that the file holds exactly the new data (R-new-content); the option, read-only, relative-path and existing-suite clauses are extra, their incidental read-backs and the read-only refusal (not a mid-write failure) were not counted, and because it is defined relative to the base output just like R-bytes-unchanged there is no contradiction.",
+    "R5": "It requires the temporary file to sit on the database's filesystem so the swap remains a rename even when TMPDIR is elsewhere, which no reference requirement asks for (its 'data reads back correctly' only sanity-checks that configuration), so it is extra and contradicts nothing.",
+    "R6": "It requires the database directory listing to be unchanged after successful writes and after failed ones (RLIMIT_FSIZE, failed swap, unserializable value), which is R-no-temp-files; no conflict.",
+    "R7": "It only requires that a failed write raise an exception, and its test checks nothing but that exception; the reference neither requires nor forbids raising, so it is extra and not a contradiction.",
+    "R8": "The fsync-before-swap demand itself is extra, but its explicit clause that flush/fsync errors abort the write before the database file is replaced, tested by making os.fsync/os.fdatasync raise EIO and checking the file is byte-identical, tests R-atomic and R-original-intact for that failure; requiring sync calls is stricter than, not contrary to, the reference."
+  }
+}

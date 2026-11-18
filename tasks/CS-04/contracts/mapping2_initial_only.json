@@ -1,0 +1,26 @@
+{
+  "mapper": "model:claude-code-subagent:mapper:v1#2",
+  "mapper_kind": "model",
+  "map": {
+    "R1": [
+      "R-step"
+    ],
+    "R2": [
+      "R-step"
+    ],
+    "R3": [
+      "R-default-unchanged",
+      "R-positional-ordering"
+    ]
+  },
+  "contradicts": {
+    "R1": [],
+    "R2": [],
+    "R3": []
+  },
+  "notes": {
+    "R1": "A correct test of R1 only asserts that consecutive_groups([2, 4, 6, 10, 12], step=2) accepts the step keyword and can be fully consumed without TypeError, which checks the 'accepts a step argument' part of R-step but not its grouping result; it contradicts nothing because the reference also passes step by keyword.",
+    "R2": "R2's observable asserts R-step's own example ([[2, 4, 6], [10, 12]] for step=2) plus a run-splitting generalisation that it explicitly limits to integer inputs and positive integer steps, so it does not check R-negative-step or R-zero-step, and nothing in it conflicts with the reference.",
+    "R3": "R3 requires every call that omits step to keep the base result (its observable compares consecutive_groups(x) with the base implementation and with step=1), which is R-default-unchanged, and because it also requires existing callers and the existing consecutive_groups tests to be unaffected it covers step-less consecutive_groups(iterable, ordering) calls with ordering positional, i.e. R-positional-ordering in part (I did not inspect which call forms the existing tests use); it contradicts nothing, since step=1 matching the default agrees with the reference's step-defaults-to-1 rationale."
+  }
+}

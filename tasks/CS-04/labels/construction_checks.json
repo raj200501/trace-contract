@@ -1,0 +1,108 @@
+{
+  "note": "Independent construction checks (advisory evidence for human review; never change labels).",
+  "checks": {
+    "CS-04-eval-alt-1": {
+      "assessed_label": "valid",
+      "violated_requirements": [],
+      "regressions": [],
+      "matches_claim": "yes",
+      "claim": "valid alternative",
+      "plausible": true,
+      "evidence": "Sandbox probes (95 targeted + randomized differential), candidate vs reference (ref) / base. R-step: consecutive_groups([2,4,6,10,12], step=2) -> [[2,4,6],[10,12]] (ref same); [0,3,6,7,8,11,20], step=3 -> [[0,3,6],[7],[8,11],[20]] (ref same); 'acegjlmo', ord, step=2 -> [['a','c','e','g'],['j','l'],['m','o']] (ref same); Fraction(1,3) step on [1/3,2/3,1,2,7/3] -> [[1/3,2/3,1],[2,7/3]] (ref same); 300 random lists for each of steps -5,-3,-2,-1,2,3,7 and random ord-strings with steps 1,2,-1,-2 give identical digests to ref; a pairwise-difference oracle shows 0 mismatches. R-negative-step: [9,8,7,3,2], step=-1 -> [[9,8,7],[3,2]]; [1,2,3], step=-1 -> [[1],[2],[3]]; 'zyxvu', ord, step=-1 -> [['z','y','x'],['v','u']]; [10,8,6,5,3,4], step=-2 -> [[10,8,6],[5,3],[4]], all same as ref. R-zero-step: step=0 on [1,1,2], [] and ('abc', ord) raises ValueError at call time, as ref does (also for 0.0, -0.0, Fraction(0), Decimal(0), False); the input iterator is left unconsumed. R-positional-ordering: consecutive_groups('abcdfgilmnop', ord) -> [['a','b','c','d'],['f','g'],['i'],['l','m','n','o','p']], same as base; the ordering-call sequence is identical to base. R-lazy: groups are map objects (not lists) and iter(g) is g; for [1,3,5,10,12,20], step=2, after next(first)=1 and next(groups), list(first)=[] and second=[10,12], same as ref; the first group of count(0,3) with step=3 is lazy (take 4 -> [0,3,6,9]); nothing is consumed at call; the source pull counts match ref and base. R-default-unchanged: the digest over 400 random inputs equals base (b06c2a2de3f64cdf), and exception cases (None, ['a','b']) and __rsub__ objects match base. Only deviations from ref: (1) consecutive_groups([2,4,6,10,12], None, 2) -> [[2,4,6],[10,12]], whereas ref and base raise TypeError. Step is accepted as a third positional argument; the contract does not require keyword-only, so this is not a violation. (2) Floats that are not exactly representable round differently because offsets accumulate via count(0, step) rather than step*index: [0.1*i for i in range(12)], step=0.1 -> 3 groups (cand) vs 1 group (ref). The contract does not specify float rounding, so this is not a violation. Regressions: base tests/test_more.py and tests/test_recipes.py copied over the candidate's tests give 771 passed, 21203 subtests passed, identical to ref (771 passed, 21203 subtests).",
+      "checker": "model:claude-code-subagent:check:cs04-altpre",
+      "source": "wf_7cdea048-2be/af08fdf501974eacf"
+    },
+    "CS-04-eval-alt-2": {
+      "assessed_label": "valid",
+      "violated_requirements": [],
+      "regressions": [],
+      "matches_claim": "yes",
+      "claim": "valid alternative",
+      "plausible": true,
+      "evidence": "All 95 targeted sandbox probes are byte-identical to the reference (ref). R-step: consecutive_groups([2,4,6,10,12], step=2) -> [[2,4,6],[10,12]] (ref same); [0,3,6,7,8,11,20], step=3 -> [[0,3,6],[7],[8,11],[20]]; 'acegjlmo', ord, step=2 -> [['a','c','e','g'],['j','l'],['m','o']]; the Fraction(1,3) step result matches ref; randomized differential checks (steps -5..7, ord-strings with steps 1,2,-1,-2, long ranges) match ref digests; the pairwise-difference oracle shows 0 mismatches. R-negative-step: [9,8,7,3,2], step=-1 -> [[9,8,7],[3,2]]; [1,2,3], step=-1 -> [[1],[2],[3]]; 'zyxvu', ord, step=-1 -> [['z','y','x'],['v','u']], same as ref. R-zero-step: step=0 (and 0.0, -0.0, Fraction(0), Decimal(0), False, empty input, ord positional or keyword) raises ValueError at call time without consuming the input, same as ref. R-positional-ordering: consecutive_groups('abcdfgilmnop', ord) -> [['a','b','c','d'],['f','g'],['i'],['l','m','n','o','p']], identical to base, including the ordering-call sequence. R-lazy: yielded groups are map iterators (iter(g) is g, not list) that share the source (first group exhausted after advancing: [1, [], [10,12], [[20]]], same as ref); infinite inputs work lazily; nothing is consumed at call. R-default-unchanged: step==1 uses enumerate exactly as base; the 400-input random digest equals base (b06c2a2de3f64cdf); edge and exception cases match base. Only informational difference from ref: floats that are not exactly representable round differently (count(0, step) accumulation vs step*index), e.g. [0.1*i for i in range(12)], step=0.1 -> 3 groups vs ref 1 group. The contract does not specify float rounding, so this is not a violation. Regressions: base tests/test_more.py and tests/test_recipes.py copied over the candidate's tests give 771 passed, 21203 subtests passed, identical to ref.",
+      "checker": "model:claude-code-subagent:check:cs04-altpre",
+      "source": "wf_7cdea048-2be/af08fdf501974eacf"
+    },
+    "CS-04-eval-nm-1": {
+      "assessed_label": "invalid",
+      "violated_requirements": [
+        "R-negative-step"
+      ],
+      "regressions": [],
+      "matches_claim": "yes",
+      "claim": "near miss violating R-negative-step",
+      "plausible": true,
+      "evidence": "Code: for step<0 it sets step=-step and, when an ordering is given, rebinds ordering = lambda x: -ordering(x) (late-binding self-reference). R-negative-step VIOLATED: consecutive_groups('zyxvu', ord, step=-1) -> candidate: RecursionError (maximum recursion depth exceeded) while iterating; reference: [['z','y','x'], ['v','u']]. Same with ordering=ord keyword, with consecutive_groups('zxvsq', ordering=ord, step=-2) (ref [['z','x','v'], ['s','q']]), and even the identity ordering: consecutive_groups([9,8,7,3,2], ordering=lambda x: x, step=-1) -> RecursionError vs ref [[9,8,7],[3,2]]. Without an ordering negative steps match the reference: [9,8,7,3,2] step=-1 -> [[9,8,7],[3,2]]; [1,2,3] step=-1 -> [[1],[2],[3]]; [10,8,6,1,-1] step=-2 -> [[10,8,6],[1,-1]]; float -1.0 and Fraction(-1,3) also OK. Every other probe matches the reference: R-step (example, longer list, step=3, Fraction/float steps, ord with step=2 both positional and keyword), R-zero-step (0, 0.0, Fraction(0), -0.0 and Decimal(0) all raise ValueError at call time), R-positional-ordering ('abcdfgilmnop', ord gives the base groups), R-lazy (map groups; the previous group is empty after advancing; nothing consumed at call; 1 item consumed per next; unbounded source OK), R-default-unchanged (all no-step probes, including floats, Decimal, complex and Fractions, equal base). Regressions: base tests/test_more.py + tests/test_recipes.py: 771 passed, 21203 subtests, identical to the reference (771 passed).",
+      "checker": "model:claude-code-subagent:check:cs04-nm",
+      "source": "wf_7cdea048-2be/a69680b2f58b3d4a7"
+    },
+    "CS-04-eval-nm-2": {
+      "assessed_label": "invalid",
+      "violated_requirements": [
+        "R-zero-step"
+      ],
+      "regressions": [],
+      "matches_claim": "yes",
+      "claim": "near miss violating R-zero-step",
+      "plausible": true,
+      "evidence": "Code: no zero check; it remains a generator function using key value - step*index. R-zero-step VIOLATED: consecutive_groups([1, 1, 2], step=0) -> candidate: no exception at call, and iterating returns [[1, 1], [2]]; reference: ValueError('step must not be zero') at call. Identical for step=0.0, Fraction(0), -0.0 and Decimal(0); consecutive_groups('aab', ordering=ord, step=0) -> [['a','a'], ['b']] (ref ValueError); consecutive_groups([], step=0) -> [] (ref ValueError). All other probes match the reference: R-step (step=2 example -> [[2,4,6],[10,12]], ordering variants, Fraction/float steps), R-negative-step (example -> [[9,8,7],[3,2]]; with ord: 'zyxvu' -> [['z','y','x'],['v','u']]), R-positional-ordering (base groups), R-lazy (map groups, shared source, nothing consumed at call), R-default-unchanged (all no-step probes equal base). Regressions: base tests 771 passed, same as the reference.",
+      "checker": "model:claude-code-subagent:check:cs04-nm",
+      "source": "wf_7cdea048-2be/a69680b2f58b3d4a7"
+    },
+    "CS-04-eval-nm-3": {
+      "assessed_label": "invalid",
+      "violated_requirements": [
+        "R-positional-ordering"
+      ],
+      "regressions": [
+        "tests/test_more.py::ConsecutiveGroupsTest::test_custom_ordering",
+        "tests/test_more.py::ConsecutiveGroupsTest::test_exotic_ordering"
+      ],
+      "matches_claim": "yes",
+      "claim": "near miss violating R-positional-ordering",
+      "plausible": true,
+      "evidence": "Code: signature is consecutive_groups(iterable, step=1, ordering=None). R-positional-ordering VIOLATED: consecutive_groups('abcdfgilmnop', ord) -> candidate: TypeError (unsupported operand type(s) for *: 'builtin_function_or_method' and 'int') while iterating; base and reference: [['a','b','c','d'], ['f','g'], ['i'], ['l','m','n','o','p']]. Also consecutive_groups([1,2,4], None) -> TypeError (base [[1,2],[4]]); consecutive_groups(['1','10','11',...], lambda x: int(x)) -> TypeError. Combining a positional ordering with a step keyword, e.g. consecutive_groups('acegjlmo', ord, step=2), step=-1 or step=0, raises TypeError (got multiple values for argument 'step') at call; the reference returns groups or raises ValueError. I attributed these to the positional-ordering break, because the same steps with ordering=ord as a keyword match the reference exactly. Satisfied: R-step ([2,4,6,10,12] step=2 -> [[2,4,6],[10,12]]), R-negative-step (example -> [[9,8,7],[3,2]]), R-zero-step (ValueError at call for 0, 0.0, Fraction(0), -0.0, Decimal(0)), R-lazy (map, shared source, lazy), R-default-unchanged (consecutive_groups(x) and consecutive_groups(x, ordering=f) equal base on all probes). Overlap note: under a caller's-view reading of 'without step', the positional ord call could also count against R-default-unchanged; I did not count it, because the positional argument binds to step in this API and R-positional-ordering covers that call. Regressions: running the base tests gives 2 failed and 769 passed (both tests pass ordering positionally); the reference passes all 771.",
+      "checker": "model:claude-code-subagent:check:cs04-nm",
+      "source": "wf_7cdea048-2be/a69680b2f58b3d4a7"
+    },
+    "CS-04-eval-nm-4": {
+      "assessed_label": "invalid",
+      "violated_requirements": [
+        "R-lazy"
+      ],
+      "regressions": [],
+      "matches_claim": "yes",
+      "claim": "near miss violating R-lazy",
+      "plausible": true,
+      "evidence": "Code: each run is yielded as iter([item for _, item in g]). R-lazy VIOLATED: groups = consecutive_groups(iter([1,2,3,10,11])); first = next(groups); next(first) -> 1; second = next(groups); list(first) -> candidate [2, 3] (does not share the source); reference and base [] (first group exhausted by advancing); list(second) = [10, 11] in both. Groups are list_iterator, not map. After the first next(groups) the candidate has consumed 4 source items vs 1 for the reference. With an unbounded source (count() guarded to raise after 5000 items), next(consecutive_groups(src)) over-consumes and hits the guard RuntimeError; the reference returns a lazy group whose first 4 items are [0,1,2,3]. [list(g) for g in list(consecutive_groups([1,2,3,10,11]))] -> candidate [[1,2,3],[10,11]] vs base/ref [[],[]]. Same with step=2 ([2,4,6,10,12]: previous group yields [4,6] vs []), step=-1 and ordering=ord. Nothing is consumed at call time (matches ref). All group contents for R-step, R-negative-step, R-zero-step (ValueError at call), R-positional-ordering and R-default-unchanged match the reference and base. Overlap note: the sharing change also shows in no-step and positional-ordering calls, which a maximal reading of 'works exactly as before' or 'identical results' could count; group contents there are identical, so I attributed it to R-lazy only. Regressions: base tests 771 passed, same as the reference.",
+      "checker": "model:claude-code-subagent:check:cs04-nm",
+      "source": "wf_7cdea048-2be/a69680b2f58b3d4a7"
+    },
+    "CS-04-eval-nm-5": {
+      "assessed_label": "invalid",
+      "violated_requirements": [
+        "R-default-unchanged"
+      ],
+      "regressions": [],
+      "matches_claim": "yes",
+      "claim": "near miss violating R-default-unchanged",
+      "plausible": true,
+      "evidence": "Code: unified key round(position - step*index, 9), also used when step is omitted. R-default-unchanged VIOLATED: consecutive_groups([0.1, 1.1, 2.1, 3.1]) -> candidate [[0.1, 1.1, 2.1, 3.1]]; base and reference [[0.1], [1.1, 2.1, 3.1]]. [1, 2.0000000001, 3] -> candidate [[1, 2.0000000001, 3]] vs base [[1], [2.0000000001], [3]]. [1.5, 2.5, 3.5000000001] -> merged vs [[1.5, 2.5], [3.5000000001]]. [1j, 1+1j, 5j] -> TypeError (complex doesn't define __round__) vs base [[1j, (1+1j)], [5j]]. [Decimal('1e30'), Decimal('1e30')+1, Decimal('1e30')+3] -> decimal.InvalidOperation vs base groups. Integer and Fraction no-step inputs match base. Satisfied: R-step ([2,4,6,10,12] step=2 -> [[2,4,6],[10,12]]; Fraction(1,3) step OK), R-negative-step, R-zero-step (ValueError at call), R-positional-ordering ('abcdfgilmnop', ord gives the base groups), R-lazy (map, shared source, lazy). Deviations from the reference that I did not count: the contract does not specify float tolerance for non-default steps. step=0.1 on [0.1,0.2,0.3,0.4] gives one group (ref [[0.1,0.2],[0.3,0.4]]); step=2 on [2, 4.0000000001, 6] gives one group (ref splits). Overlap note: the rounding also changes positional float-valued orderings, e.g. consecutive_groups([0.1,1.1,2.1,3.1], lambda x: x) is merged (base [[0.1],[1.1,2.1,3.1]]). The contract's positional-ordering example passes, so I attributed this to R-default-unchanged only. Regressions: base tests 771 passed, same as the reference.",
+      "checker": "model:claude-code-subagent:check:cs04-nm",
+      "source": "wf_7cdea048-2be/a69680b2f58b3d4a7"
+    },
+    "CS-04-pre-correction": {
+      "assessed_label": "invalid",
+      "violated_requirements": [
+        "R-zero-step"
+      ],
+      "regressions": [],
+      "matches_claim": "not_applicable",
+      "claim": "natural pre-correction state",
+      "plausible": true,
+      "evidence": "R-zero-step VIOLATED: there is no check for step==0, so the key degenerates to the item itself and no error is ever raised. consecutive_groups([1, 1, 2], step=0) -> candidate returns groups [[1, 1], [2]] with no exception at call or iteration; ref raises ValueError at call. More examples: consecutive_groups([], step=0) -> candidate [] vs ref ValueError; consecutive_groups('abc', ord, step=0) -> candidate [['a'],['b'],['c']] vs ref ValueError; consecutive_groups([1,2,3], step=0.0) -> [[1],[2],[3]] vs ref ValueError; consecutive_groups('abc', step=0) -> TypeError at iteration vs ref ValueError at call. All other scored requirements match ref or base. R-step: [2,4,6,10,12], step=2 -> [[2,4,6],[10,12]], and the randomized integer-step, Fraction and even float probes are identical to ref, since it uses the same key formula. R-negative-step: [9,8,7,3,2], step=-1 -> [[9,8,7],[3,2]] and [1,2,3], step=-1 -> [[1],[2],[3]], same as ref. R-positional-ordering: consecutive_groups('abcdfgilmnop', ord) matches base. R-lazy: groups are shared-source map iterators and nothing is consumed at call (generator function). R-default-unchanged: the 400-input random digest equals base. Regressions: base tests/test_more.py and tests/test_recipes.py give 771 passed, 21203 subtests passed, identical to ref, so there are none.",
+      "checker": "model:claude-code-subagent:check:cs04-altpre",
+      "source": "wf_7cdea048-2be/af08fdf501974eacf"
+    }
+  }
+}

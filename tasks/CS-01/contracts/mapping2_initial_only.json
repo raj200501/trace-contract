@@ -1,0 +1,25 @@
+{
+  "mapper": "model:claude-code-subagent:mapper:v1#2",
+  "mapper_kind": "model",
+  "map": {
+    "R1": ["R-default-trim"],
+    "R2": ["R-default-trim"],
+    "R3": ["R-keep-meaningful", "R-default-unchanged"],
+    "R4": ["R-default-trim"],
+    "R5": ["R-default-trim"]
+  },
+  "contradicts": {
+    "R1": ["R-default-unchanged"],
+    "R2": ["R-default-unchanged"],
+    "R3": [],
+    "R4": ["R-default-unchanged"],
+    "R5": ["R-default-unchanged"]
+  },
+  "notes": {
+    "R1": "A test of R1 asserts naturalsize(3000000) == '3 MB' with no new argument, which is exactly the decimal example of the superseded R-default-trim (not R-opt-in, whose '3 MB' needs strip_trailing_zero=True), and that assertion directly contradicts R-default-unchanged's explicit naturalsize(3000000) == '3.0 MB'.",
+    "R2": "A test of R2 asserts naturalsize(1024, binary=True) == '1 KiB' with no new argument, which is exactly the binary example of the superseded R-default-trim (not R-opt-in, whose '1 KiB' needs strip_trailing_zero=True), and that assertion directly contradicts R-default-unchanged's explicit naturalsize(1024, binary=True) == '1.0 KiB'.",
+    "R3": "A test of R3 asserts the no-flag call naturalsize(3000, binary=True) == '2.9 KiB', which is the default-call half of R-keep-meaningful (its strip_trailing_zero=True half is not checked), and asserting that such non-zero-decimal default outputs stay unchanged also checks R-default-unchanged on that subset of inputs; I see no contradiction, but that assumes its extra examples ('1.5 KiB' for 1536 binary, '2.5 MB' for 2500000) are what the base prints, which I cannot verify without running code.",
+    "R4": "R4 generalises the superseded R-default-trim (no-argument '.0' dropping) to every decimal and binary unit and expressly includes the two quoted inputs, so a test of it checks R-default-trim and contradicts R-default-unchanged's explicit '3.0 MB' and '1.0 KiB' examples, which fall under its rule; whether each of R4's own listed examples (1000 -> '1 kB', 10**9 -> '1 GB' and so on) also differs from the base output depends on what the base prints, which I cannot verify without running code, but the contradiction does not rest on them.",
+    "R5": "R5 extends the superseded R-default-trim's no-argument '.0' dropping to sizes that merely round to N.0, and its universal clause (no default-format result ends its number in '.0') covers R-default-trim's own examples, so it maps to R-default-trim and contradicts R-default-unchanged through the explicit '3.0 MB' and '1.0 KiB' examples; R5's claim that 1040000 and 2999999 currently print '1.0 MB' and '3.0 MB' is a statement about base output that I cannot verify without running code, but the contradiction does not rest on it."
+  }
+}

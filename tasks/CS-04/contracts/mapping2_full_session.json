@@ -1,0 +1,45 @@
+{
+  "mapper": "model:claude-code-subagent:mapper:v1#2",
+  "mapper_kind": "model",
+  "map": {
+    "R1": [
+      "R-step"
+    ],
+    "R2": [
+      "R-negative-step"
+    ],
+    "R3": [
+      "R-zero-step"
+    ],
+    "R4": [
+      "R-positional-ordering",
+      "R-default-unchanged"
+    ],
+    "R5": [
+      "R-lazy"
+    ],
+    "R6": [
+      "R-default-unchanged",
+      "R-positional-ordering"
+    ],
+    "R7": []
+  },
+  "contradicts": {
+    "R1": [],
+    "R2": [],
+    "R3": [],
+    "R4": [],
+    "R5": [],
+    "R6": [],
+    "R7": []
+  },
+  "notes": {
+    "R1": "R1 asserts R-step's own example ([[2, 4, 6], [10, 12]] for step=2) plus an extra positive-step case ([1, 3, 5, 6, 8, 11] -> [[1, 3, 5], [6, 8], [11]]) that I hand-checked follows the same each-item-exactly-step-more rule, so it maps to R-step only and contradicts nothing.",
+    "R2": "R2 asserts R-negative-step's own example ([9, 8, 7, 3, 2] with step=-1 -> [[9, 8, 7], [3, 2]]) plus a step=-2 case ([10, 8, 6, 5, 3] -> [[10, 8, 6], [5, 3]]) that I hand-checked follows the same descending-run rule, so it maps to R-negative-step only and contradicts nothing.",
+    "R3": "R3 asserts ValueError for step=0 with both the call and the full iteration inside the raises block, which is R-zero-step and fits its 'when iterating or calling' allowance, so there is no contradiction.",
+    "R4": "R4 asserts that step-less calls passing ordering positionally (consecutive_groups('abcdfgi', ord) and the int-ordered string list) keep their old results and that step does not take ordering's slot, which is R-positional-ordering and also part of R-default-unchanged (step-less results equal base, reinforced by its pre-existing-tests clause); it contradicts nothing provided its hard-coded expected groups are what the base code outputs, which I hand-checked against +1-run grouping of the ordering values but could not run.",
+    "R5": "R5's probes (iter(g) is g and g is not a list/tuple, no RuntimeError when only the first item is requested from a source that raises on its third pull, no hang on an itertools.count source, nothing consumed at call time, for both default and non-default step) all test R-lazy, and its step=2 calls are only vehicles for those probes rather than checks of R-step's grouping; no contradiction is expected, but the default-step probes rely on the base groups being lazy iterators that share the source, as R-lazy's 'as before' states, which I could not confirm by running the base code.",
+    "R6": "R6 asserts that omitting step reproduces the base +1 grouping ([1, 2, 3, 5, 6, 8] -> [[1, 2, 3], [5, 6], [8]]) and equals step=1, which is R-default-unchanged, and because it requires all step-less calls to behave exactly as before and the pre-existing consecutive_groups tests to pass it also partly checks step-less positional-ordering calls, i.e. R-positional-ordering (I did not inspect which call forms those tests use); it contradicts nothing provided the hard-coded groups match the base output, which I hand-checked but could not run.",
+    "R7": "R7 asserts only the step-with-ordering combination (consecutive_groups('acegjl', ord, step=2) -> [['a', 'c', 'e', 'g'], ['j', 'l']]), which no reference requirement specifies; passing ordering positionally with step as a keyword is incidental set-up, not a check of R-positional-ordering's step-less call or of R-step's default-ordering result, so R7 is extra, and it contradicts nothing because the reference is silent on that combination."
+  }
+}

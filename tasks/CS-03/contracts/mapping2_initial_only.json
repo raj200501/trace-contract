@@ -1,0 +1,25 @@
+{
+  "mapper": "model:claude-code-subagent:mapper:v1#2",
+  "mapper_kind": "model",
+  "map": {
+    "R1": ["R-acronym"],
+    "R2": ["R-acronym"],
+    "R3": ["R-acronym"],
+    "R4": [],
+    "R5": ["R-humanize-unchanged", "R-underscore-unchanged"]
+  },
+  "contradicts": {
+    "R1": [],
+    "R2": [],
+    "R3": [],
+    "R4": [],
+    "R5": []
+  },
+  "notes": {
+    "R1": "A test of R1 asserts titleize('NASA rocket launch') == 'NASA Rocket Launch', which is exactly the first example of R-acronym (an all-caps word kept as written in input that also contains lowercase letters), and it is consistent with every other reference requirement.",
+    "R2": "A test of R2 asserts titleize('read the HTTP spec') == 'Read The HTTP Spec', which is exactly the second example of R-acronym, and it is consistent with every other reference requirement.",
+    "R3": "R3 is the general rule of R-acronym (any all-caps word of two or more letters is kept as written, in any position, in input that also contains non-uppercase words) and excludes fully uppercase input, so it neither tests nor, under its natural reading, contradicts R-all-caps-input; its condition 'contains non-uppercase words' differs from the reference's 'contains lowercase letters' only on edge inputs such as 'NASA 2024', where a literal test could demand 'NASA 2024' against R-all-caps-input's base output, but that depends on counting '2024' as a non-uppercase word and on what the base code returns (presumably 'Nasa 2024', unverified because I cannot run code), so no contradiction is listed.",
+    "R4": "R4 requires base-identical titleize output on inputs with no all-caps acronym (its observable restricts the differential test to inputs without two consecutive capitals, e.g. 'rocket launch', 'ActiveRecord') plus ordinary capitalization of non-acronym words, which no reference requirement constrains (R-acronym governs only all-caps words of two or more letters in mixed-case input, and R-all-caps-input only fully uppercase input, which R4's observable excludes and R6 leaves unresolved), so it is an extra requirement with no contradiction; its quoted example outputs are unverified base-output claims, but the reference does not constrain those inputs either way.",
+    "R5": "R5's differential tests of the other public functions against the base code explicitly cover humanize and underscore on all inputs, including all-caps inputs such as 'NASA rocket launch' and 'HTTPServer', so they check R-humanize-unchanged and R-underscore-unchanged; the camelize/other-function and existing-test-suite parts are extra, and no contradiction arises because the suite clause exempts tests asserting the old acronym-mangling titleize output (this assumes, as in standard inflection, that no other public function calls titleize, which I could not verify without reading or running the base code)."
+  }
+}

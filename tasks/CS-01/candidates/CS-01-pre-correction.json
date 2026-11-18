@@ -8,5 +8,20 @@
   "patch_sha256": "d0d74c86e5a29202635fe9f76217794ba8c0e9a3c3d316e8fd1e2b7bca37bf0e",
   "produced_by": "session:CS-01-session@after_U1",
   "description": "Agent state after the initial request, before the scripted correction (naturally observed).",
-  "labels": []
+  "labels": [
+    {
+      "value": "invalid",
+      "violated_requirements": [
+        "R-default-unchanged",
+        "R-keep-meaningful",
+        "R-opt-in",
+        "REGRESSION"
+      ],
+      "labeler": "builder:refcheck+regression+construction:v1",
+      "labeler_kind": "model",
+      "adjudicated": false,
+      "timestamp": "2026-11-18T09:19:10+00:00",
+      "note": "natural candidate fails reference checks and/or regression norm | {\"refcheck_outcome\": \"task_failure\", \"refcheck_failed\": [\"test_reference_check.py::test_opt_in_contract_examples\", \"test_reference_check.py::test_opt_in_explicit_false_is_the_default\", \"test_reference_check.py::test_opt_in_drops_point_zero_for_every_suffix\", \"test_reference_check.py::test_opt_in_drops_point_zero_after_rounding_and_for_negative_and_string_input\", \"test_reference_check.py::test_opt_in_keeps_integer_zeros\", \"test_reference_check.py::test_opt_in_leaves_byte_counts_unchanged\", \"test_reference_check.py::test_opt_in_random_point_zero_outputs\", \"test_reference_check.py::test_keep_meaningful_contract_example\", \"test_reference_check.py::test_keep_meaningful_nonzero_decimals_table\", \"test_reference_check.py::test_keep_meaningful_random_nonzero_decimals\", \"test_reference_check.py::test_default_contract_examples\", \"test_reference_check.py::test_default_base_suite_and_docstring_outputs\", \"test_reference_check.py::test_default_random_inputs_all_modes\"], \"regression_outcome\": \"task_failure\", \"regression_failed\": [\"tests.test_filesize::test_naturalsize[test_args1-1.0 kB]\", \"tests.test_filesize::test_naturalsize[test_args10-1.0 RB]\", \"tests.test_filesize::test_naturalsize[test_args11-1.0 QB]\", \"tests.test_filesize::test_naturalsize[test_args12-31.0 kB]\", \"tests.test_filesize::test_naturalsize[test_args13-32.0 MB]\", \"tests.test_filesize::test_naturalsize[test_args14-33.0 GB]\", \"tests.test_filesize::test_naturalsize[test_args15-34.0 TB]\", \"tests.test_filesize::test_naturalsize[test_args16-35.0 PB]\", \"tests.test_filesize::test_naturalsize[test_args17-36.0 EB]\", \"tests.test_filesize::test_naturalsize[test_args18-37.0 ZB]\", \"tests.test_filesize::test_naturalsize[test_args19-38.0 YB]\", \"tests.test_filesize::test_naturalsize[test_args2-1.0 kB]\", \"tests.test_filesize::test_naturalsize[test_args20-39.0 RB]\", \"tests.test_filesize::test_naturalsize[test_args21-40.0 QB]\", \"tests.test_filesize::test_naturalsize[test_args23-31.0 KiB]\", \"tests.test_filesize::test_naturalsize[test_args24-32.0 MiB]\", \"tests.test_filesize::test_naturalsize[test_args25-33.0 GiB]\", \"tests.test_filesize::test_naturalsize[test_args26-34.0 TiB]\", \"tests.test_filesize::test_naturalsize[test_args27-35.0 PiB]\", \"tests.test_filesize::test_naturalsize[test_args28-36.0 EiB]\"], \"construction\": null}"
+    }
+  ]
 }

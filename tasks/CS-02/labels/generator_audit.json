@@ -1,0 +1,14 @@
+{
+  "eval-alt-1": {
+    "transcript_sha256": "f00c18df4bbcd0bed8fc9d847a3ed3f7fadb6864a706a40b5a80478247d148e5",
+    "hits": []
+  },
+  "eval-alt-2": {
+    "transcript_sha256": "93ad3047ea83183fe16b225d9fc034185f88df9ba55f382995b247cf18de27b5",
+    "hits": []
+  },
+  "eval-nm": {
+    "transcript_sha256": "b763611c6d2daf94a1c77f2b2685de65d64171a85b90f43b2e789225926cf79b",
+    "hits": []
+  }
+}

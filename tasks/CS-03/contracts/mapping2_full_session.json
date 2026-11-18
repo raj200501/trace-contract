@@ -1,0 +1,25 @@
+{
+  "mapper": "model:claude-code-subagent:mapper:v1#2",
+  "mapper_kind": "model",
+  "map": {
+    "R1": ["R-acronym"],
+    "R2": [],
+    "R5": ["R-all-caps-input"],
+    "R6": ["R-humanize-unchanged"],
+    "R7": ["R-underscore-unchanged"]
+  },
+  "contradicts": {
+    "R1": [],
+    "R2": [],
+    "R5": [],
+    "R6": [],
+    "R7": []
+  },
+  "notes": {
+    "R1": "A test of R1 asserts both R-acronym examples (titleize('NASA rocket launch') == 'NASA Rocket Launch' and titleize('read the HTTP spec') == 'Read The HTTP Spec') on input that contains lowercase letters and explicitly leaves input without lowercase letters to R5, so it checks R-acronym and does not conflict with R-all-caps-input.",
+    "R2": "R2 requires base-identical titleize output only for inputs in which every uppercase letter is immediately followed by a lowercase letter, a set that contains no all-caps word and no fully uppercase input, so a test of it exercises none of the reference requirements (an extra requirement) and cannot conflict with them; its quoted example outputs are unverified base-output claims, but the reference does not constrain those inputs either way.",
+    "R5": "A test of R5 asserts titleize('HELLO WORLD') == 'Hello World' and base-identical output for input with no lowercase letters, which is R-all-caps-input (its 'no lowercase letters' criterion is the one in the reference's own evidence quote), with no contradiction; its claim that 'NASA ROCKET LAUNCH' gives 'Nasa Rocket Launch' today is a base-output claim I could not verify, and it would matter only if a test hard-coded that value instead of comparing against the base implementation.",
+    "R6": "R6 is the same invariant as R-humanize-unchanged (humanize output unchanged for every input, with the same humanize('employee_salary') == 'Employee salary' example), so a test of it checks that reference requirement directly; no contradiction.",
+    "R7": "R7 is the same invariant as R-underscore-unchanged (underscore output unchanged for every input, with the same 'NASARocket' example); its parenthetical claim that the base returns 'nasa_rocket' matches my reading of the standard inflection underscore() but could not be verified without running the base code, and only if that claim is wrong would a test that hard-codes 'nasa_rocket' reject solutions satisfying R-underscore-unchanged, so no contradiction is asserted."
+  }
+}

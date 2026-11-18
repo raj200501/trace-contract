@@ -1,20 +1,53 @@
-% Every entry below was checked against its primary page (arXiv abstract-page
-% citation metadata or the software's official record) on 2026-11-13.
+% Bibliography for the manuscript draft. Only entries verified against primary sources.
+%
+% Source: docs/research/verified_bibliography.bib (every entry checked on 2026-11-18 (UTC) against
+% its primary page: arXiv abstract-page citation_* metas and submission history, GitHub, or the
+% venue page). Bibliographic fields are copied unchanged. The long provenance notes of that file are
+% moved into the comment above each entry, so that they do not print in the reference list.
+%
+% Three entries were verified in the review-revision step on 2026-11-18 and are NOT yet in
+% docs/research/verified_bibliography.bib: kim2026swewhatif and he2026swegate (arXiv abstract
+% pages) and anonymous2026agentic (OpenReview search API; abstract only).
+%
+% The legacy keys swechat, trace2eval and swetogether are kept as the entry keys. Each entry
+% lists its key in verified_bibliography.bib under `ids`, so biber resolves either key to the
+% same entry.
+%
 % Do not add entries without verification; see paper/README.md.
 
+% --- Industry problem statement ---------------------------------------------------------------
+
+% verified 2026-11-18: https://www.sfdata.com/blog/production-traces/ (byline date 2026-10-01).
+@misc{guo2026production,
+  title        = {{Production traces and the future of data}},
+  author       = {Guo, Brandon and Siddiqi, Faiz},
+  year         = {2026},
+  howpublished = {San Francisco Data (blog essay)},
+  url          = {https://www.sfdata.com/blog/production-traces/},
+  note         = {Essay dated 1 October 2026}
+}
+
+% --- Sessions and session-derived tasks -------------------------------------------------------
+
+% verified 2026-11-18: https://arxiv.org/abs/2604.20779 (v1 2026-04-22; v2 2026-10-01; primary cs.AI).
+% COLM 2026 acceptance confirmed on colm.cc/Conferences/2026/AcceptedPapers, which lists the
+% third author as "Kevin Li"; arXiv form kept.
 @misc{swechat,
-  title         = {{SWE-chat}: Coding Agent Interactions From Real Users in the Wild},
+  ids           = {baumann2026swechat},
+  title         = {{SWE-chat: Coding Agent Interactions From Real Users in the Wild}},
   author        = {Baumann, Joachim and Padmakumar, Vishakh and Li, Xiang and Yang, John and Yang, Diyi and Koyejo, Sanmi},
   year          = {2026},
   eprint        = {2604.20779},
   archivePrefix = {arXiv},
-  primaryClass  = {cs.SE},
-  note          = {Version 2. arXiv comments state acceptance at COLM 2026 (not independently confirmed)},
-  url           = {https://arxiv.org/abs/2604.20779}
+  primaryClass  = {cs.AI},
+  url           = {https://arxiv.org/abs/2604.20779},
+  note          = {Version 2. Accepted at COLM 2026}
 }
 
+% verified 2026-11-18: https://arxiv.org/abs/2611.06506 (v1 2026-11-04, only version; primary cs.SE).
 @misc{trace2eval,
-  title         = {{Trace2Eval}: Contextualized Evaluation of Coding Agents from Real-World Traces},
+  ids           = {shi2026trace2eval},
+  title         = {{Trace2Eval: Contextualized Evaluation of Coding Agents from Real-World Traces}},
   author        = {Shi, Ji and Jie, Lirong and Zou, Lexiao and Zhu, Yaoming and Yang, Yifan and Cao, Xuezhi and Cai, Xunliang and Zhang, Miao},
   year          = {2026},
   eprint        = {2611.06506},
@@ -23,11 +56,298 @@
   url           = {https://arxiv.org/abs/2611.06506}
 }
 
+% verified 2026-11-18: https://arxiv.org/abs/2606.29957 (v1 2026-06-29, only version; primary cs.AI).
 @misc{swetogether,
-  title         = {{SWE-Together}: Evaluating Coding Agents in Interactive User Sessions},
+  ids           = {wu2026swetogether},
+  title         = {{SWE-Together: Evaluating Coding Agents in Interactive User Sessions}},
   author        = {Wu, Yifan and Zhao, Zhuokai and Li, Songlin and Lee, Ho Hin and Zhu, Jiacheng and Wu, Shirley and Yu, Tianhe and Li, Serena and Zhang, Lizhu and Fan, Xiangjun and Li, Shengzhi},
   year          = {2026},
   eprint        = {2606.29957},
   archivePrefix = {arXiv},
+  primaryClass  = {cs.AI},
   url           = {https://arxiv.org/abs/2606.29957}
+}
+
+% verified 2026-11-18: https://arxiv.org/abs/2611.02440 (v1 2026-11-02, only version). Code and
+% benchmark links in the arXiv comments were not publicly reachable on 2026-11-18.
+@misc{lu2026harvesting,
+  title         = {{Harvesting SWE Benchmarks from Wild Vibe Coding Sessions}},
+  author        = {Lu, Ao and Zeng, Yuanhao and Lan, Shaocheng and Xu, Sijie and Bao, Jiacheng and Yan, Kuang and Lin, Heng and Ren, Kan},
+  year          = {2026},
+  eprint        = {2611.02440},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.SE},
+  url           = {https://arxiv.org/abs/2611.02440}
+}
+
+% verified 2026-11-18: https://arxiv.org/abs/2607.09900 (v1 2026-07-10, only version).
+@misc{paltenghi2026aftervibe,
+  title         = {{AfterVibe: What Remains When the Conversation Ends}},
+  author        = {Paltenghi, Matteo and Chandra, Satish},
+  year          = {2026},
+  eprint        = {2607.09900},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.SE},
+  url           = {https://arxiv.org/abs/2607.09900}
+}
+
+% verified 2026-11-18: https://arxiv.org/abs/2604.01527 (v1 2026-04-02; v4 2026-07-28).
+@misc{jha2026reap,
+  title         = {{REAP: Automatic Curation of Coding Agent Benchmarks from Interactive Production Usage}},
+  author        = {Jha, Smriti and Paltenghi, Matteo and Maddila, Chandra and Murali, Vijayaraghavan and Ugare, Shubham and Chandra, Satish},
+  year          = {2026},
+  eprint        = {2604.01527},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.SE},
+  url           = {https://arxiv.org/abs/2604.01527},
+  note          = {Accepted at ASE 2026 Industry Showcase (arXiv comment)}
+}
+
+% verified 2026-11-18: https://github.com/huggingface/traj2envs (HEAD a09204ed, 2026-11-05;
+% version 0.1.0; Apache-2.0). No paper found.
+@misc{huggingface2026traj2envs,
+  title        = {{traj2envs}},
+  author       = {{Hugging Face}},
+  year         = {2026},
+  howpublished = {GitHub repository, version 0.1.0, commit a09204ed},
+  url          = {https://github.com/huggingface/traj2envs}
+}
+
+% verified 2026-11-18: https://icml.cc/virtual/2026/82740 (landing page only; OpenReview kWrudm978A,
+% PDF not accessible; no arXiv version found).
+@misc{islam2026vibeswebench,
+  title        = {{VibeSWEBench: Can AI Co-Worker Agents Do Real-World Software Engineering by Vibe Coding?}},
+  author       = {Islam, Md. Ashraful and Ali, Mohammed Eunus and Du, Xiaoning and Parvez, Md Rizwan},
+  year         = {2026},
+  howpublished = {Poster, ICML 2026 Workshop on Deep Learning for Code: Towards Human-Centered Coding Agents},
+  url          = {https://icml.cc/virtual/2026/82740}
+}
+
+% verified 2026-11-18 in the review revision (not yet in verified_bibliography.bib): OpenReview
+% search API record bbOKndWGRf, venue "ICLR 2027 Conference Submission", anonymous; created
+% 2026-09-19, public 2026-10-03, modified 2026-10-05. Only the abstract was accessible.
+@misc{anonymous2026agentic,
+  title        = {{Agentic Auto-Rubrics: Verifiable Rubrics for Judging Multi-Turn Coding Agents}},
+  author       = {{Anonymous}},
+  year         = {2026},
+  howpublished = {ICLR 2027 Conference Submission (OpenReview)},
+  url          = {https://openreview.net/forum?id=bbOKndWGRf},
+  note         = {Under review; only the abstract was accessible to us}
+}
+
+% verified 2026-11-18 in the review revision (not yet in verified_bibliography.bib):
+% https://arxiv.org/abs/2611.21095, citation_title/citation_author metas; v1 2026-11-16, only
+% version; primary cs.CL. arXiv title says "Session" (the HTML says "Sessions"); arXiv form kept.
+@misc{kim2026swewhatif,
+  title         = {{SWE-WhatIf: Simulating Real Users of Coding Agents from Recorded Session}},
+  author        = {Kim, Tae Soo and Wu, Tongshuang and Kim, Juho},
+  year          = {2026},
+  eprint        = {2611.21095},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CL},
+  url           = {https://arxiv.org/abs/2611.21095}
+}
+
+% --- Later requirements and corrections -------------------------------------------------------
+
+% verified 2026-11-18: https://arxiv.org/abs/2611.05739 (v1 2026-11-03, only version).
+@misc{wang2026personacodebench,
+  title         = {{PersonaCodeBench: Evaluating Coding Agents in Persona-driven Human-Interactive Sessions}},
+  author        = {Wang, Haixin and Hou, Jianheng and Shen, Hongyu and Fan, Wenzhe and Huang, Wei-Chieh and Zhu, Qianyu and Li, Weichen and Li, Taoran and Yao, Yuhang and Wang, Ruohan and Peng, Zhejian and Jiang, Wanting and Chen, Yifan and Liang, Shushu and Li, Haoming and Cao, Defu and Hu, Xu and Wu, Siyang and Yang, Chen and Hu, Haodi and Zhang, Haichao and Wang, Cong and Yu, Zhiyuan and Zhang, Weizhi and Wang, Yifan and Huang, Jintao and Sun, Yizhou and Wang, Yijun and Hao, Yuexing and Li, Xiaomin},
+  year          = {2026},
+  eprint        = {2611.05739},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.AI},
+  url           = {https://arxiv.org/abs/2611.05739}
+}
+
+% verified 2026-11-18 in the review revision (not yet in verified_bibliography.bib):
+% https://arxiv.org/abs/2609.04167, citation_title/citation_author metas; v1 2026-09-03, only
+% version; primary cs.SE.
+@misc{he2026swegate,
+  title         = {{SWE-Gate: Passing Functional Tests Is Not Enough for Software Engineering Agents}},
+  author        = {He, Xin and Wang, Yanlin and Liu, Mingwei and Chen, Jiachi and Zhang, Hongyu and Li, Guanbin},
+  year          = {2026},
+  eprint        = {2609.04167},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.SE},
+  url           = {https://arxiv.org/abs/2609.04167}
+}
+
+% verified 2026-11-18: https://arxiv.org/abs/2611.14364 (v1 2026-11-10, only version).
+@misc{lin2026arebench,
+  title         = {{ARE-bench: Benchmarking Agents' Research Ability in Real-World Researcher Sessions and Workspaces}},
+  author        = {Lin, Jiahang and Ren, Wanying and Xu, Wanghan and Sha, Huayu and Shu, Yang and Lu, Zhonghang and Pan, Chengjun and Dong, Yi and Liu, Shichun and Hu, Yuyang and Dou, Shihan and Guo, Honglin and Lv, Huijie and Zheng, Pujun and Sun, Zhe and Ying, Yuankai and Wang, Yiding and Chen, Jiahao and Yang, Zhixiong and Yuan, Dingbo and Zou, Yicheng and Wang, Zhecan and He, Guoxiu and Xing, Xiaoyu and Zhang, Qi and Gui, Tao and Huang, Xuanjing},
+  year          = {2026},
+  eprint        = {2611.14364},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CL},
+  url           = {https://arxiv.org/abs/2611.14364}
+}
+
+% verified 2026-11-18: https://arxiv.org/abs/2610.35488 (FeatureLoop; v1 2026-10-26; v2 2026-10-29).
+@misc{feng2026benchmarking,
+  title         = {{Benchmarking Coding Agents under Evolving Requirements}},
+  author        = {Feng, Jia and Wu, Alyssa and Gao, Cuiyun and Wang, Yunlong and Lu, Songyuanyi and Hu, Zhichao},
+  year          = {2026},
+  eprint        = {2610.35488},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.SE},
+  url           = {https://arxiv.org/abs/2610.35488}
+}
+
+% verified 2026-11-18: https://arxiv.org/abs/2509.18808 (v1 2025-09-23; v2 2026-03-17).
+@misc{zhan2025sreval,
+  title         = {{SR-Eval: Evaluating LLMs on Code Generation under Stepwise Requirement Refinement}},
+  author        = {Zhan, Zexun and Gao, Shuzheng and Hu, Ruida and Gao, Cuiyun},
+  year          = {2025},
+  eprint        = {2509.18808},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.SE},
+  url           = {https://arxiv.org/abs/2509.18808}
+}
+
+% verified 2026-11-18: https://arxiv.org/abs/2606.13174 (v1 2026-06-11; v2 2026-10-25). The v1
+% title differs; the note names it so that either version can be identified.
+@misc{zhou2026tellonce,
+  title         = {{TellOnce: Correcting Coding Agents Once, Improving Their Future Actions}},
+  author        = {Zhou, Yujun and Guo, Kehan and Zhuang, Haomin and Wang, Xiangqi and Huang, Yue and Liang, Zhenwen and Chen, Pin-Yu and Gao, Tian and Moniz, Nuno and Chawla, Nitesh V. and Zhang, Xiangliang},
+  year          = {2026},
+  eprint        = {2606.13174},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.LG},
+  url           = {https://arxiv.org/abs/2606.13174},
+  note          = {Version 2. Version 1 (2026-06-11) was titled ``Getting Better at Working With You: Compiling User Corrections into Runtime Enforcement for Coding Agents''}
+}
+
+% --- Environment synthesis --------------------------------------------------------------------
+
+% verified 2026-11-18: https://arxiv.org/abs/2504.21798 (v1 2025-04-30; v2 2025-05-21).
+@misc{yang2025swesmith,
+  title         = {{SWE-smith: Scaling Data for Software Engineering Agents}},
+  author        = {Yang, John and Lieret, Kilian and Jimenez, Carlos E. and Wettig, Alexander and Khandpur, Kabir and Zhang, Yanzhe and Hui, Binyuan and Press, Ofir and Schmidt, Ludwig and Yang, Diyi},
+  year          = {2025},
+  eprint        = {2504.21798},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.SE},
+  url           = {https://arxiv.org/abs/2504.21798}
+}
+
+% verified 2026-11-18: https://arxiv.org/abs/2504.07164 (v1 2025-04-09, only version).
+@misc{jain2025r2egym,
+  title         = {{R2E-Gym: Procedural Environments and Hybrid Verifiers for Scaling Open-Weights SWE Agents}},
+  author        = {Jain, Naman and Singh, Jaskirat and Shetty, Manish and Zheng, Liang and Sen, Koushik and Stoica, Ion},
+  year          = {2025},
+  eprint        = {2504.07164},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.SE},
+  url           = {https://arxiv.org/abs/2504.07164}
+}
+
+% --- Verifier fidelity ------------------------------------------------------------------------
+
+% verified 2026-11-18: https://arxiv.org/abs/2610.28679 (v1 2026-10-19; v2 2026-10-30).
+@misc{yin2026verifierbench,
+  title         = {{VerifierBench: Benchmarking the Generation of Executable Verifiers for LLM Agents}},
+  author        = {Yin, Jianing and Chen, Ziyi and Wang, Hao and Sun, Yiyou and Jin, Zijian and Song, Dawn and Zhang, Daoan},
+  year          = {2026},
+  eprint        = {2610.28679},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.SE},
+  url           = {https://arxiv.org/abs/2610.28679}
+}
+
+% verified 2026-11-18: https://arxiv.org/abs/2606.08960 (v1 2026-06-08, only version).
+@misc{zhong2026hardening,
+  title         = {{Hardening Agent Benchmarks with Adversarial Hacker-Fixer Loops}},
+  author        = {Zhong, Ziqian and Segal, Ivgeni and Bercovich, Ivan and Saxena, Shashwat and Zhang, Kexun and Raghunathan, Aditi},
+  year          = {2026},
+  eprint        = {2606.08960},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CR},
+  url           = {https://arxiv.org/abs/2606.08960}
+}
+
+% verified 2026-11-18: https://arxiv.org/abs/2603.00520 (v1 2026-02-28, only version).
+@misc{yu2026sweabs,
+  title         = {{SWE-ABS: Adversarial Benchmark Strengthening Exposes Inflated Success Rates on Test-based Benchmark}},
+  author        = {Yu, Boxi and Cao, Yang and Zhang, Yuzhong and Lin, Liting and Xu, Junjielong and Zhong, Zhiqing and Xu, Qinghua and Wang, Guancheng and Cao, Jialun and Cheung, Shing-Chi and He, Pinjia and Briand, Lionel},
+  year          = {2026},
+  eprint        = {2603.00520},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.SE},
+  url           = {https://arxiv.org/abs/2603.00520}
+}
+
+% verified 2026-11-18: https://arxiv.org/abs/2503.15223 (PatchDiff; v1 2025-03-19; v2 2025-09-09);
+% ICSE '26 per Crossref for the DOI below. Straight quotes in the title typeset as TeX quotes.
+@misc{wang2025are,
+  title         = {{Are ``Solved Issues'' in SWE-bench Really Solved Correctly? An Empirical Study}},
+  author        = {Wang, You and Pradel, Michael and Liu, Zhongxin},
+  year          = {2025},
+  eprint        = {2503.15223},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.SE},
+  doi           = {10.1145/3744916.3764576},
+  url           = {https://arxiv.org/abs/2503.15223}
+}
+
+% verified 2026-11-18: https://arxiv.org/abs/2506.09289 (v1 2025-06-10, only version;
+% journal-ref ACL 2025).
+@misc{yu2025utboost,
+  title         = {{UTBoost: Rigorous Evaluation of Coding Agents on SWE-Bench}},
+  author        = {Yu, Boxi and Zhu, Yuxuan and He, Pinjia and Kang, Daniel},
+  year          = {2025},
+  eprint        = {2506.09289},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.SE},
+  url           = {https://arxiv.org/abs/2506.09289},
+  note          = {ACL 2025 (arXiv journal-ref)}
+}
+
+% verified 2026-11-18: https://arxiv.org/abs/2506.05817 (v1 2025-06-06, only version).
+@misc{wang2025codecontests,
+  title         = {{CodeContests+: High-Quality Test Case Generation for Competitive Programming}},
+  author        = {Wang, Zihan and Liu, Siyao and Sun, Yang and Li, Hongyan and Shen, Kai},
+  year          = {2025},
+  eprint        = {2506.05817},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.SE},
+  url           = {https://arxiv.org/abs/2506.05817}
+}
+
+% verified 2026-11-18: https://arxiv.org/abs/2505.24098 (v1 2025-05-30 "HardTests", 9 authors;
+% v2 2026-11-08 "HARDTESTGEN", 10 authors; v2 metadata used).
+@misc{he2025hardtestgen,
+  title         = {{HARDTESTGEN: A High-Quality RL Verifier Generation Pipeline for LLM Algorithmic Coding}},
+  author        = {He, Zhongmou and Choi, Yee Man and Zhang, Kexun and Ji, Jiabao and Zhou, Junting and Xu, Dejia and Bercovich, Ivan and Zhang, Aidan and Zeng, Yixiao and Li, Lei},
+  year          = {2025},
+  eprint        = {2505.24098},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CL},
+  url           = {https://arxiv.org/abs/2505.24098},
+  note          = {Version 2; the original version was published at ICLR 2026 (arXiv comment)}
+}
+
+% verified 2026-11-18: https://arxiv.org/abs/2609.33295 (v1 2026-09-27, only version).
+@misc{min2026tracedance,
+  title         = {{TraceDance: An Automated System for Building Agent Behavior Benchmarks from Real-World Agent Deployment Traces}},
+  author        = {Min, Dehai and Zhang, Daoan and Zeng, Yiming and Zhang, Huayi and Chen, Ziyi and Zhang, Yan and Bai, Qinbo and Chao, Mengyuan and Ning, Jing and Hua, Qiyue and Chen, Huiyi and Zhang, Hanrong and Zou, Henry Peng and Yang, Jie and Xu, Wei and Yu, Philip S.},
+  year          = {2026},
+  eprint        = {2609.33295},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.AI},
+  url           = {https://arxiv.org/abs/2609.33295}
+}
+
+% verified 2026-11-18: https://arxiv.org/abs/2606.03889 (v1 2026-06-02; v3 2026-08-28). Code link
+% in the abstract: https://anonymous.4open.science/r/real-claw-bench-582B.
+@misc{lv2026realclawbench,
+  title         = {{RealClawBench: Live OpenClaw Benchmarks from Real Developer-Agent Sessions}},
+  author        = {Lv, Zongwei and Li, Yaoming and Tan, Zhewen and Yao, Yilun and Tian, Yuxuan and Sun, Lin and Zhang, Xiangzheng and Lin, Weihong and Yang, Tong and Zhao, Guangxiang},
+  year          = {2026},
+  eprint        = {2606.03889},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CL},
+  url           = {https://arxiv.org/abs/2606.03889}
 }

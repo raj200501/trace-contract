@@ -1,0 +1,28 @@
+{
+  "mapper": "model:claude-code-subagent:mapper:v1#2",
+  "mapper_kind": "model",
+  "map": {
+    "R2": ["R-keep-meaningful", "R-default-unchanged"],
+    "R4": ["R-default-unchanged", "R-keep-meaningful"],
+    "R5": ["R-opt-in", "R-keep-meaningful", "R-default-unchanged"],
+    "R6": ["R-custom-format-unchanged"],
+    "R8": ["R-opt-in", "R-keep-meaningful", "R-default-unchanged"],
+    "R9": ["R-opt-in"]
+  },
+  "contradicts": {
+    "R2": [],
+    "R4": [],
+    "R5": [],
+    "R6": [],
+    "R8": [],
+    "R9": []
+  },
+  "notes": {
+    "R2": "R2 restates R-keep-meaningful (3000 binary gives '2.9 KiB' with and without strip_trailing_zero=True, plus 2900000 gives '2.9 MB' with the flag), and its no-flag assertion that 3000 binary 'still renders' as '2.9 KiB' is also a one-point check of R-default-unchanged; it passes the flag but asserts no '.0' removal, so it does not check R-opt-in's trimming, and nothing in it conflicts with the reference.",
+    "R4": "R4 is R-default-unchanged restricted to default-format calls (differential test against the base, same '3.0 MB' and '1.0 KiB' examples), and its listed example naturalsize(3000, binary=True) == '2.9 KiB' is also the no-flag half of R-keep-meaningful, while custom formats are outside its stated scope (so no R-custom-format-unchanged mapping); its jinja2-equality checks at 1, 300, 1024, 3000, 2900000 and 3000000 contradict nothing only if the base already equals filesizeformat at those values, as its 'wherever the base version matched it' wording assumes, which I cannot verify without running code.",
+    "R5": "R5 contains R-opt-in's keyword (default False) and both of its examples (3000000 gives '3 MB' and 1024 binary gives '1 KiB' with strip_trailing_zero=True), R-keep-meaningful's flagged assertion (3000 binary gives '2.9 KiB'), and R-default-unchanged's naturalsize(3000000) == '3.0 MB' when the flag is omitted or False, and none of it conflicts with the reference.",
+    "R6": "R6 restates R-custom-format-unchanged with its identical examples (naturalsize(3000, False, True, '%.3f') == '2.930K' and naturalsize(3000000, format='%.2f') == '3.00 MB') and the unchanged positional order, custom-format calls being outside R-default-unchanged's default-argument outputs, and nothing in it conflicts with the reference.",
+    "R8": "R8's flagged assertions apply R-opt-in's '.0' dropping ('1K' for 1024 gnu, '-3 MB', '-4 KiB') and R-keep-meaningful's keep-the-decimal rule ('2.9K' for 3000 gnu, '-2.9 KiB') to GNU and negative inputs the reference does not enumerate, and its no-flag naturalsize(1024, gnu=True) == '1.0K' is a one-point check of R-default-unchanged; I assert no contradiction, but that holds only if the base prints '1.0K', '-3.0 MB', '-4.0 KiB' and '-2.9 KiB' for these inputs, which I cannot verify without running code.",
+    "R9": "R9's flagged assertions that drop a rendered '.0' while keeping integer digits (3000001 gives '3 MB', 10**7 gives '10 MB', 10**8 gives '100 MB', 3*10**34 gives '30000 QB') apply R-opt-in's rule to inputs the reference does not list, and its byte-count cases ('100 Bytes', '1 Byte' with the flag) are extra; I do not assert a contradiction because it depends on base output I cannot check without running code: if the base prints 999999 as '1000.0 kB' (unit chosen before rounding), naturalsize(999999, strip_trailing_zero=True) == '1 MB' would reject a solution that only drops the trailing '.0' as R-opt-in describes (giving '1000 kB'), and '30000 QB' likewise presumes the base prints '30000.0 QB'."
+  }
+}
