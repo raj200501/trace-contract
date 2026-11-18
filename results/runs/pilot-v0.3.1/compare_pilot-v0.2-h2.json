@@ -4,6 +4,9 @@
   "pairs_in_both": 4,
   "pairs_same_verifier": 0,
   "pairs_changed_verifier": 4,
+  "check_list_criterion": {
+    "number of checks": 4
+  },
   "changed_verifier_reward_agreement": 1.0,
   "changed_verifier_pairs": [
     {

@@ -2,6 +2,7 @@
 
 Pairs graded in both runs: 4 (only in pilot-v0.2-h2: 0, only in pilot-v0.3.1: 236).
 Pairs with an unchanged verifier: 0; pairs whose verifier changed between the runs: 4.
+Scored check lists compared by: number of checks (4 pairs).
 
 * Reward agreement on unchanged-verifier pairs (pass vs non-pass): 0/0
 * Exact-outcome agreement on unchanged-verifier pairs: 0/0

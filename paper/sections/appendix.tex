@@ -1,10 +1,11 @@
 \section{Annotation guide}
-The guide for human reviewers is \texttt{docs/annotation\_guide.md} (v0.2). It covers:
+The guide for human reviewers is \texttt{docs/annotation\_guide.md} (v0.3). It covers:
 \begin{itemize}
 \item contract review: evidence, kind, status, supersession, observability;
-\item candidate labels: valid, invalid with violated requirement ids or \texttt{REGRESSION}, or ambiguous;
-\item the review queue, which lists candidates without showing any verifier outcome;
-\item the evidence a reviewer may consult after forming an own judgement.
+\item candidate labels, made from a blinded review packet (\texttt{tracecontract review-packet}): the session, the reference contract and each held-out candidate's change and file state under a random id, in shuffled order, with no origin, description, proposal or verifier outcome; the key stays with a coordinator;
+\item label values: valid, invalid with violated requirement ids or \texttt{REGRESSION}, or ambiguous;
+\item merging two complete reviews per task (\texttt{tracecontract merge-reviews}) and adjudicating disagreements;
+\item the review queue and the evidence a reviewer may consult only after the labels are merged.
 \end{itemize}
 
 \section{Verifiers}

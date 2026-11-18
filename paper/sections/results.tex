@@ -50,12 +50,12 @@ The correction-aware verifiers accept the first three and reject the last two. T
 \IfFileExists{generated/sensitivity_table.tex}{\input{generated/sensitivity_table.tex}}{}
 \IfFileExists{generated/posthoc_table.tex}{\input{generated/posthoc_table.tex}}{}
 
-\paragraph{Duplicated candidates.} Two held-out \texttt{more-itertools} candidates have the same graded patch as a development attack used in C4's audit:
+\paragraph{Duplicated candidates.} Three held-out candidates duplicate a development attack used in their family's C4 audit:
 \begin{itemize}
-\item the pre-correction state;
-\item one near miss that omits the zero-step check.
+\item the \texttt{more-itertools} pre-correction state and one \texttt{more-itertools} near miss that omits the zero-step check, which have the same graded patch as the attack;
+\item one \texttt{humanize} near miss that breaks custom formats, which differs from its attack by one docstring line.
 \end{itemize}
-That audit made no revision, but the pool counts this behaviour twice. Without both candidates (exploratory), C1 accepts 4 of 15 and C3/C4 accept 0 of 15.
+Neither audit made a revision, but the pool counts the \texttt{more-itertools} behaviour twice. Without the three candidates (exploratory), C1 accepts 4 of 14, C3 and C4 accept 0 of 14, and B1 accepts 4 of 14.
 
 \paragraph{Label uncertainty.} The independent construction checks dispute the proposals of two \texttt{inflection} candidates that the rule labels valid:
 \begin{itemize}
@@ -68,5 +68,5 @@ The checks also dispute a \texttt{tinydb} alternative, which fails read-after-wr
 \paragraph{Contract recovery.} Contracts recovered from the whole session cover every active requirement of the reference contract in all four families. The initial-only contracts cover between half and all of them (Table~\ref{tab:coverage}). In \texttt{humanize} the initial-only contract maps to one requirement that its other requirements contradict (reported separately as ``covered but contradicted''). A second, independent model mapper agrees closely with the first ($\kappa = 0.92$--$1.00$), but both are the same model, and the second mapper (and the first for \texttt{tinydb}) received one extra instruction (D41). We corrected one mapper-1 contradiction claim for \texttt{humanize} after a sandbox check showed that it rested on a wrong assumption about the base behaviour (\texttt{tasks/CS-01/contracts/mapping\_full\_session.json}, field \texttt{corrections}; D42). Without the correction, that full-session contract would show one contradicting requirement and one covered-but-contradicted requirement; its coverage would be unchanged.
 \IfFileExists{generated/coverage_table.tex}{\input{generated/coverage_table.tex}}{}
 
-\paragraph{Harness reliability.} A superseded run under harness 0.1.0 graded 108 of the same pairs. On the 99 pairs whose verifier did not change, its rewards agree with the final run in every case. The other 9 pairs are \texttt{more-itertools} B1 pairs graded with the earlier, truncated check selection (D31); 8 of them agree. The one that differs is the pair that the harness resource-limit defects turned into a ten-minute stall (D28--D30). The final run under harness 0.3.1 also agrees, pair by pair, with the run under 0.3.0 (Table~\ref{tab:reliability}).
+\paragraph{Harness reliability.} A superseded run under harness 0.1.0 graded 108 of the same pairs (99 with an unchanged verifier plus 9; Table~\ref{tab:reliability}). On the 99 pairs whose verifier did not change, its rewards agree with the final run in every case. The other 9 pairs are \texttt{more-itertools} B1 pairs graded with the earlier, truncated check selection (D31); 8 of them agree. The one that differs is the pair that the harness resource-limit defects turned into a 600-second stall (D28--D30). The final run under harness 0.3.2 also agrees, pair by pair, with the runs under 0.3.1 and 0.3.0.
 \IfFileExists{generated/reliability_table.tex}{\input{generated/reliability_table.tex}}{}

@@ -1,7 +1,7 @@
 {
   "schema": "tracecontract.third_party_downloads/v1",
   "updated": "2026-11-18",
-  "note": "One record per third-party download documented in the research notes, the review files, the brief or the task manifests, rebuilt on 2026-11-18 (privacy and rights review, finding P6). Nothing listed here is in the repository unless in_repo is true. Sizes: du -sb on 2026-11-18 (sum over all listed paths), or 'unknown (deleted)'. <scratchpad> is the study's session scratchpad, a temporary directory outside the repository whose absolute path is not recorded. Deleting any copy is an owner decision; nothing was deleted.",
+  "note": "One record per third-party download documented in the research notes, the review files, the brief, the task manifests or the submission notes, rebuilt on 2026-11-18 (privacy and rights review, finding P6). Nothing listed here is in the repository unless in_repo is true. Sizes: du -sb on 2026-11-18 (sum over all listed paths), or 'unknown (deleted)'. <scratchpad> is the study's session scratchpad, a temporary directory outside the repository whose absolute path is not recorded. Deleting any copy is an owner decision; nothing was deleted. The arXiv help pages record was added on 2026-11-18 after the dispositions review (decision log D40).",
   "license_refs": {
     "NOASSERTION": "SPDX: no licence assertion is made (mixed per-item licences or no licence stated; see license_note)",
     "LicenseRef-all-rights-reserved": "the source carries a copyright notice and states no open licence",
@@ -1335,6 +1335,29 @@
       "purpose": "brief revision",
       "third_party_personal_data": "none beyond author, maintainer or contributor names that the source itself publishes",
       "retention": "Untrusted download kept outside the repository for re-checking the review. Deleting it is an owner decision.",
+      "in_repo": false
+    },
+    {
+      "id": "pages-arxiv-help",
+      "kind": "web_pages",
+      "source": [
+        "https://info.arxiv.org/help/submit/",
+        "https://info.arxiv.org/help/moderation/",
+        "https://info.arxiv.org/help/endorsement.html",
+        "https://info.arxiv.org/help/license/index.html",
+        "https://info.arxiv.org/help/ancillary_files.html",
+        "https://info.arxiv.org/help/policies/"
+      ],
+      "version": "fetched 2026-11-18 (08:51-08:52 UTC)",
+      "license": "NOASSERTION",
+      "size_bytes": 653605,
+      "local_path": "<scratchpad>/arxiv_pages",
+      "documented_in": [
+        "docs/submission_readiness.md (arXiv requirements, re-checked 2026-11-18)"
+      ],
+      "purpose": "submission requirements (endorsement, licence, moderation, format rules)",
+      "third_party_personal_data": "none",
+      "retention": "Temporary copy in the study's session scratchpad, outside the repository; not committed. It disappears when the scratchpad is cleared. Deleting it earlier is an owner decision.",
       "in_repo": false
     }
   ]

@@ -1,12 +1,13 @@
-# Annotation guide (v0.2)
+# Annotation guide (v0.3)
 
 This guide is for human reviewers of TraceContract tasks. It covers two jobs:
 reviewing **contracts** (what the user actually required) and labeling
 **candidates** (whether a patch is an acceptable solution). Model or rule outputs
 in the repository are proposals; your decisions are the ground truth.
 
-Record every decision in the task files with your pseudonymous reviewer id (e.g.
-`R1`), never your name.
+Record contract decisions in the task files (section 1) and candidate labels in your
+packet label file (section 2), with your pseudonymous reviewer id (e.g. `R1`), never
+your name.
 
 ## 0. Before you start
 
@@ -50,19 +51,37 @@ Record a review on each requirement:
 `tracecontract validate-task tasks/<id>` shows which requirements still block the
 acceptance gate.
 
-## 2. Candidate labels
+## 2. Candidate labels (blinded)
 
-A candidate is a patch against the base snapshot. Inspect it with the patch text
-in `tasks/<id>/candidates/<candidate>.json` and, if needed, run it. Running needs the
-base snapshot (once per task; needs `git` and access to github.com) and Docker:
+Candidates are labeled from a **blinded review packet**, never from the task files.
+The candidate files, their ids and the review queue show how each candidate was made
+and what the label rule proposed; seeing them first would anchor your judgement.
+
+**The coordinator** (not a reviewer) builds the packet and keeps its key:
 
 ```
-tracecontract snapshot tasks/<id>                                              # once per task
-tracecontract materialize tasks/<id> <candidate-id> --out /tmp/<candidate-id>  # base + graded patch; runs no code
-tracecontract sandbox-python tasks/<id> /tmp/<candidate-id> -c '...'           # offline, unprivileged sandbox
+tracecontract review-packet tasks/CS-01 tasks/CS-02 tasks/CS-03 tasks/CS-04 --out <packet> --key <key file> --seed <number>
 ```
 
-Label each **evaluation** candidate:
+The packet has, per task, the session (`session.txt`), the reference contract
+(`reference_contract.md`), and each held-out candidate under a random id
+(`candidates/<id>/changes.diff`, and `candidates/<id>/state/`, the base repository
+with the change applied), in shuffled order. It holds no candidate id, origin,
+description, proposal, check or verifier outcome. The key, which maps the random ids
+to candidates, stays with the coordinator and must be written outside the packet.
+
+**Each reviewer** works only from the packet. Until you have recorded every label,
+do not open `tasks/*/candidates/`, `tasks/*/labels/` (including `review_queue.json`),
+`tasks/*/verifiers/*/tests/`, `results/`, `paper/` or the HTML reports, and do not
+discuss candidates with the other reviewer. To run code in a candidate's state (needs
+the base snapshot, Docker and this repository):
+
+```
+tracecontract snapshot tasks/<id>                                                  # once per task; needs git and github.com
+tracecontract sandbox-python tasks/<id> <packet>/<id>/candidates/<cid>/state -c '...'  # offline, unprivileged sandbox
+```
+
+Label each candidate in the packet:
 
 * **valid** — satisfies every scored, active requirement of the reference contract,
   and does not break existing behaviour that the user did not ask to change
@@ -80,31 +99,37 @@ Things that do **not** make a candidate invalid: code style, missing docs or
 tests, different parameter placement that the contract allows, different error
 messages unless the contract specifies them, extra (harmless) functionality.
 
-Record the label:
+Record your labels in a copy of the packet's `labels_template.json`, named
+`labels_<your reviewer id>.json`, with your pseudonymous reviewer id in `reviewer` and,
+for each candidate, `value`, `violated_requirements` and a short `note` with your
+reason. Give the file to the coordinator.
 
-```json
-{"value": "valid|invalid|ambiguous", "violated_requirements": ["R-..."], "labeler": "R1",
- "labeler_kind": "human", "adjudicated": false, "timestamp": "...", "note": "..."}
+**The coordinator** merges the files once every task has two complete reviews:
+
+```
+tracecontract merge-reviews <packet>/*/labels_*.json --key <key file>
 ```
 
-Append it to the candidate's `labels` list (do not delete proposals; they are kept
-for auditing). When two reviewers disagree, a third person or a discussion produces
-an adjudicated label with `"adjudicated": true`.
+It refuses to merge before then. It appends each review to the candidate's `labels`
+list as a human label (labeler `human:<reviewer id>`; proposals are kept for
+auditing) and lists the disagreements. For each disagreement, a third person or a
+discussion produces an adjudicated label with `"adjudicated": true`, appended to the
+candidate file:
 
-## 2a. The pilot's review queue and the evidence you may use
+```json
+{"value": "valid|invalid|ambiguous", "violated_requirements": ["R-..."], "labeler": "human:<id>",
+ "labeler_kind": "human", "adjudicated": true, "timestamp": "...", "note": "..."}
+```
 
-Every held-out candidate needs a human label before the primary analysis can run.
-Start with the queue in `tasks/<id>/labels/review_queue.json`. It contains no
-verifier outcome; regenerate it with `python scripts/write_review_queue.py
-tasks/<id>`. It lists candidates that rule D19 marked **ambiguous**, candidates
-with no proposal, and candidates whose independent construction check disagrees
-with the proposal. Do not use the run analysis (`results/runs/*/analysis.md`) for
-this: it shows verifier outcomes.
+## 2a. After your labels are merged: the queue and the evidence
 
-**Form your own judgment first**, from the session, the reference contract and
-the patch. Only then compare it with the recorded proposals:
+Only after the merge may you open the queue (`tasks/<id>/labels/review_queue.json`,
+which contains no verifier outcome; regenerate it with `python
+scripts/write_review_queue.py tasks/<id>`) and the recorded evidence, to note where
+it disagrees with your label. Do not use the run analysis
+(`results/runs/*/analysis.md`) for this: it shows verifier outcomes.
 
-* **The D19 proposal** is the last label in the candidate file, labeler
+* **The D19 proposal** is the last rule label in the candidate file, labeler
   `builder:refcheck+regression+construction:v1`. Its `note` lists:
   * the failing independent reference checks (written from the reference contract;
     they are *not* the verifiers under evaluation);
@@ -119,6 +144,11 @@ the patch. Only then compare it with the recorded proposals:
 * **The generator's description** of what it built is in the candidate's
   `description`.
 
+Do not change a merged label. If the evidence changes your mind, tell the coordinator:
+the change goes through adjudication, and the adjudicated label's note records that the
+reviewer had seen the evidence. The primary analysis uses the adjudicated label where
+one exists.
+
 A near miss is invalid only if the behaviour it gets wrong is actually required
 by an active, scored requirement. Example: a near miss that changes output for
 inputs no requirement covers is **valid** under this guide, even though it was
@@ -126,7 +156,7 @@ built to be wrong. Record such cases in `note`; they are evidence about how near
 misses are constructed.
 
 Never open `tasks/<id>/verifiers/*/tests/` or `results/runs/*/results.jsonl` before
-your labels for the task are recorded.
+your labels for the task are merged.
 
 ## 3. What to report
 

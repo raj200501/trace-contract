@@ -690,12 +690,32 @@ written and hashed at 2026-11-18T14:12:50Z, sha256
 `3fa9d843cf5d53013e17e8e66f457eb684c5da9127b687612dfbf0bc1ff02aa0`, before the 0.3.2
 label re-proposal and run.
 
+**Labels re-proposed under 0.3.2** (2026-11-18, 14:16–14:24 UTC, `scripts/propose_labels.py`,
+all four tasks): all 32 D19 proposals are identical to the 0.3.1 proposals; in the 36 label
+files only the timestamp line changed.
+
+**Final run `pilot-v0.3.2`** (2026-11-18, 14:24:59–14:40:41 UTC, revision `0a94529`, one
+invocation): 240 pairs under harness 0.3.2, no infrastructure outcomes. It agrees with
+`pilot-v0.3.1` and `pilot-v0.3` on all 240 pairs, in reward and in exact outcome, so every
+reported number is unchanged except the exploratory duplicates view (now three candidates).
+Against `pilot-v0.2` the 99 pairs with an unchanged verifier agree, and 8 of the 9
+changed-verifier pairs; the 4 `pilot-v0.2-h2` pairs all have a changed verifier.
+
+**Older reports.** The HTML reports of `pilot-v0.3` and `pilot-v0.3.1` predate the output
+changes above: they show no macro rates, exact intervals, degenerate marks, per-metric
+denominators or "covered but contradicted". Protocol v0.4 §12 was met there only by
+`analysis.md` and the paper tables. Recorded outputs are not edited; `results/runs/README.md`
+marks the superseded runs.
+
 ### D41. Corrections to earlier entries (found by the reviews of D40)
 The log is append-only, so earlier entries are corrected here. The one non-append
 edit is the `## 2026-11-18` heading inserted before D30 (resolved). Entries from there
 to D39 were written on 2026-11-18 but sat under the 2026-11-13 heading.
 * **D5, D10, D11 ("registered", "pre-registered").** These mean hashed and logged
   locally before the session, not a formal preregistration (D15).
+* **D11 ("exact evidence quotes").** One reference requirement, CS-04
+  `R-default-unchanged`, is inferred and has no quote. The same holds for the
+  frozen protocol text (§5).
 * **D11, D12, D26 ("ground truth").** This means the sealed reference material
   (scenario, reference proposals, reference contract), the study's labeling standard.
   The study's AI agent wrote the scenarios and the reference operationalisations before
@@ -753,6 +773,8 @@ to D39 were written on 2026-11-18 but sat under the 2026-11-13 heading.
   imports (D40).
 * **D39.** The label re-proposal ran 11:59–12:07 UTC (last label 12:07:24), not
   11:59–12:06.
+* **Protocol v0.5 §13** (already hashed) should say that mapper 2 (all tasks) and mapper 1
+  for CS-02 got the extra sentence, and cite D41 rather than D40 for it.
 
 ### D42. Records the log lacked
 * **B1 forgeability probe** (commit `18e4878`, 2026-11-18T08:53:54Z):

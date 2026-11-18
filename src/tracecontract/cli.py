@@ -370,6 +370,22 @@ def cmd_export_gen_workspace(a) -> None:
     _out({"workspace": str(out), "files": sorted(p.name for p in out.iterdir())})
 
 
+def cmd_review_packet(a) -> None:
+    """Blinded review packet for human labeling (annotation guide v0.3)."""
+    from .review import export_packet
+
+    _out(export_packet([Path(t).resolve() for t in a.tasks], Path(a.out), Path(a.key), snapshot_root=SNAPSHOTS,
+                       repo_root=REPO, seed=a.seed))
+
+
+def cmd_merge_reviews(a) -> None:
+    """Merge reviewers' label files from a blinded packet into the candidate records."""
+    from .review import merge_labels
+
+    _out(merge_labels([Path(f) for f in a.label_files], Path(a.key), REPO / "tasks", min_reviewers=a.min_reviewers,
+                      dry_run=a.dry_run))
+
+
 def cmd_evaluate(a) -> None:
     from .evaluate import run_matrix
     from .schemas import Split
@@ -456,6 +472,14 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--with-reference-tests", action="store_true",
                    help="with --with-reference-patch: keep the reference's test-file hunks (B1 material; off by default)")
     p.add_argument("--with-first-prompt", action="store_true"); p.set_defaults(fn=cmd_export_gen_workspace)
+
+    p = sub.add_parser("review-packet", help="blinded packet of held-out candidates for human reviewers (opaque ids; key kept apart)")
+    p.add_argument("tasks", nargs="+"); p.add_argument("--out", required=True); p.add_argument("--key", required=True)
+    p.add_argument("--seed", type=int, required=True); p.set_defaults(fn=cmd_review_packet)
+    p = sub.add_parser("merge-reviews", help="append reviewers' blinded labels to the candidate records as human labels")
+    p.add_argument("label_files", nargs="+"); p.add_argument("--key", required=True)
+    p.add_argument("--min-reviewers", type=int, default=2); p.add_argument("--dry-run", action="store_true")
+    p.set_defaults(fn=cmd_merge_reviews)
 
     p = sub.add_parser("evaluate", help="score every frozen verifier on every evaluation candidate (sandboxed)")
     p.add_argument("tasks", nargs="+"); p.add_argument("--run-id", required=True); p.add_argument("--split", default="eval")
