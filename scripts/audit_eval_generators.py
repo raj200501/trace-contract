@@ -7,12 +7,26 @@ Writes/updates tasks/<task>/labels/generator_audit.json.
 from __future__ import annotations
 
 import json
+import re
 import sys
 from pathlib import Path
 
 from tracecontract.controlled import audit_generator_transcript
 
 R = Path(__file__).resolve().parents[1]
+_SESSION_ID = re.compile(r"\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b")
+_SCRATCHPAD = re.compile(r"/tmp/claude-0/[^/\s'\"`]+/[^/\s'\"`]+/scratchpad")
+
+
+def _redact(x):
+    """Session ids and session-local scratchpad paths are not published (decision log D21)."""
+    if isinstance(x, str):
+        return _SCRATCHPAD.sub("<scratchpad>", _SESSION_ID.sub("<session>", x))
+    if isinstance(x, list):
+        return [_redact(v) for v in x]
+    if isinstance(x, dict):
+        return {k: _redact(v) for k, v in x.items()}
+    return x
 
 
 def main(task: str, *items: str) -> None:
@@ -25,7 +39,7 @@ def main(task: str, *items: str) -> None:
         transcript, own = item.split(":", 1)
         hits = audit_generator_transcript(Path(transcript), forbidden=forbidden, allowed=(own, "/root/.local/bin/"))
         name = Path(own).name
-        out[name] = {"transcript_sha256": __import__("hashlib").sha256(Path(transcript).read_bytes()).hexdigest(), "hits": hits}
+        out[name] = {"transcript_sha256": __import__("hashlib").sha256(Path(transcript).read_bytes()).hexdigest(), "hits": _redact(hits)}
         print(name, "hits:", len(hits))
         for h in hits[:8]:
             print("   ", h["tool"], h["match"], "|", h["text"][:160])

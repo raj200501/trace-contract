@@ -1,6 +1,7 @@
 \begin{table}[t]\centering\footnotesize
-\caption{Agreement of earlier runs with the final run \texttt{pilot-v0.3} on pairs graded in both. Reward agreement is pass vs non-pass; outcome agreement is the exact outcome. Both are computed on pairs whose verifier is unchanged (same version, test content and number of scored checks). The last column covers pairs whose verifier changed between the runs (B1 re-selection, D31).}\label{tab:reliability}
+\caption{Agreement of earlier runs with the final run \texttt{pilot-v0.3.1} on pairs graded in both. Reward agreement is pass vs non-pass; outcome agreement is the exact outcome. Both are computed on pairs whose verifier is unchanged (same version, test content and number of scored checks). The last column covers pairs whose verifier changed between the runs (B1 re-selection, D31).}\label{tab:reliability}
 \begin{tabular}{llrrrr}\toprule Earlier run & Harness & Pairs & Reward agr. & Outcome agr. & Changed verifier \\\midrule
+\texttt{pilot-v0.3} & 0.3.0 & 240 & 240/240 & 240/240 & -- \\
 \texttt{pilot-v0.2} & 0.1.0 & 99 & 99/99 & 99/99 & 8/9 \\
-\texttt{pilot-v0.2-h2} & 0.2.0 & 4 & 4/4 & 4/4 & -- \\
+\texttt{pilot-v0.2-h2} & 0.2.0 & 0 & -- & -- & 4/4 \\
 \bottomrule\end{tabular}\end{table}

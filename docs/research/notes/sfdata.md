@@ -35,7 +35,7 @@ Statement ids V3–V15 are shared with the research brief §1.2. Former V1–V2 
 
 ### 2.1 Framing (untitled introduction)
 
-- Paraphrase: training data written by paid expert contractors gets harder to scale as models overtake those experts. Even a very capable system will meet unfamiliar businesses, changing requirements and new problems. Products in which AI does real work gather evidence about those problems as production traces, so real economic activity can become the largest source of training data.
+- Paraphrase: training data written by paid expert contractors gets harder to scale as models overtake those experts. Even a very capable system will meet unfamiliar businesses, changing requirements and new problems. Products in which AI does real work gather evidence about those problems as production traces, so the essay expects ordinary paid work to grow into the main supply of training data.
 
 ### 2.2 What a production trace is, and why traces rather than final artifacts ("Why production traces matter")
 
@@ -45,13 +45,13 @@ Statement ids V3–V15 are shared with the research brief §1.2. Former V1–V2 
 
 ### 2.3 The problems the essay names ("Turning traces into training data")
 
-- **V5** (paraphrase): turning traces into high-quality training data that demonstrably improves models is presented as a hard, open research problem. Four problems follow.
+- **V5** (paraphrase): converting traces into data of a quality that measurably helps models is presented as a hard, open research problem. Four problems follow.
 
 **P1. Session selection**
 - **V6** (paraphrase): the first problem is finding sessions with something to learn from. Many traces are repetitive, incomplete or too basic for frontier model development, and a failure may come from a broken environment rather than from a limitation of the model.
 
 **P2. Reconstructing objectives and environments into reproducible tasks**
-- **V7** (paraphrase with one quoted phrase): the next problem is making sessions into reproducible tasks. That requires recovering the user's explicit and implicit objectives, "including requirements introduced through later corrections", plus enough of the original environment that a different model could try the task.
+- **V7** (paraphrase with one quoted phrase): the next problem is making sessions into reproducible tasks. That means reconstructing what the user wanted, both stated and unstated, "including requirements introduced through later corrections", plus enough of the original environment that a different model could try the task.
 - **V9** (paraphrase): a missing input, or a service that can no longer be reached, can leave a useful trace unusable unless it is augmented.
 - **V8** (verbatim): "Preserving the initial prompt alone may produce a task that rewards precisely the behavior the user rejected." This is the TraceContract hypothesis, stated as a claim. The essay gives no measurement.
 
@@ -143,7 +143,7 @@ Everything in this section is my judgment. It positions this research against a 
 - **Name:** SF Data, "Production traces and the future of data" (industry essay)
 - **Citation:** Guo, B., & Siddiqi, F. (2026, October 1). *Production traces and the future of data*. San Francisco Data (company essay). https://www.sfdata.com/blog/production-traces/ (accessed 2026-11-13)
 - **Task source:** production traces from partner companies' AI products (the time-ordered record of AI working on a real task, V3), with coding agents as the stated initial focus. No public dataset.
-- **Reconstruction assumptions:** stated as requirements, not as a method. Recover explicit and implicit objectives, including later corrections, and enough of the original environment. Missing inputs or services may need augmentation. Permissions and filtering limit which tasks can be constructed.
+- **Reconstruction assumptions:** stated as requirements, not as a method. Recover what the user wanted, stated or not, corrections included, plus as much of the original setup as another attempt needs. Missing inputs or services may need augmentation. Permissions and filtering limit which tasks can be constructed.
 - **User corrections:** central (V8, quoted in §2.3). Not measured.
 - **Verifier type:** not stated. Requirements: check what the user needed, withstand gaming. Existing tests can miss constraints, and naive user approval is not evidence of correctness.
 - **Independent validation:** not stated (no public labels or adjudication).

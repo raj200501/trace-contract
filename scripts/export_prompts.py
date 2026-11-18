@@ -36,6 +36,7 @@ _REDACTIONS = [
 ]
 # Session-local paths must never survive redaction.
 _FORBIDDEN = [re.compile(r"/tmp/claude-0/-|/root/\.claude/projects/")]
+_N_GENERIC = len(_REDACTIONS)  # rules after this index are owner-specific (load_private)
 # Workflow runs that are not exported, with the reason (stated in the README).
 _NOT_EXPORTED = {"tracecontract-privacy-fixes": "its prompts concern the repository owner's personal information"}
 
@@ -52,13 +53,21 @@ def load_private(path: str) -> None:
     _FORBIDDEN.extend(re.compile(f, re.I) for f in d.get("forbidden", []))
 
 
-def redact(text: str) -> str:
-    for pat, rep in _REDACTIONS:
-        text = pat.sub(rep, text)
+def redact(text: str) -> tuple[str, bool]:
+    """Return the redacted text and whether an owner-specific rule changed it.
+
+    When one did, the original's hash is withheld: the rest of the text is public, so a
+    hash of the original would let anyone confirm a guess of the redacted wording.
+    """
+    private_hit = False
+    for i, (pat, rep) in enumerate(_REDACTIONS):
+        new = pat.sub(rep, text)
+        private_hit |= i >= _N_GENERIC and new != text
+        text = new
     left = sorted({m.group(0).lower() for f in _FORBIDDEN for m in f.finditer(text)})
     if left:
         raise SystemExit(f"export_prompts: redaction incomplete ({len(left)} forbidden marker(s) survived); nothing written")
-    return text
+    return text, private_hit
 
 
 def first_prompt(path: Path) -> str | None:
@@ -91,18 +100,24 @@ def main(session_dir: str, *opts: str) -> None:
         if name and name.group(1) in _NOT_EXPORTED:
             continue
         fname = f"{name.group(1) if name else 'workflow'}__{d['runId']}.js"
+        body, private_hit = redact(script)
+        orig = ("withheld (owner-specific redaction applied)" if private_hit
+                else hashlib.sha256(script.encode()).hexdigest())
         header = (f"// Exported by scripts/export_prompts.py from the workflow run record {d['runId']} "
-                  f"(started {d.get('timestamp')}); sha256 of the original script: "
-                  f"{hashlib.sha256(script.encode()).hexdigest()}. Redacted: owner messages and personal information, session paths/ids.\n")
-        (OUT / "workflows" / fname).write_text(header + redact(script), encoding="utf-8")
+                  f"(started {d.get('timestamp')}); sha256 of the original script: {orig}; "
+                  f"sha256 of this export: {hashlib.sha256(body.encode()).hexdigest()}. "
+                  "Redacted: owner messages and personal information, session paths/ids.\n")
+        (OUT / "workflows" / fname).write_text(header + body, encoding="utf-8")
         n_wf += 1
     rows = []
     for t in sorted((sd / "subagents").glob("agent-*.jsonl")):
         prompt = first_prompt(t)
         if prompt is None:
             continue
-        rows.append({"agent_id": t.stem.removeprefix("agent-"), "prompt_sha256": hashlib.sha256(prompt.encode()).hexdigest(),
-                     "transcript_sha256": hashlib.sha256(t.read_bytes()).hexdigest(), "prompt": redact(prompt)})
+        body, private_hit = redact(prompt)
+        rows.append({"agent_id": t.stem.removeprefix("agent-"),
+                     "prompt_sha256": None if private_hit else hashlib.sha256(prompt.encode()).hexdigest(),
+                     "transcript_sha256": hashlib.sha256(t.read_bytes()).hexdigest(), "prompt": body})
     (OUT / "agent_prompts.jsonl").write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows), encoding="utf-8")
     (OUT / "README.md").write_text(
         "# Prompts of the model-generated artifacts\n\n"
@@ -114,7 +129,11 @@ def main(session_dir: str, *opts: str) -> None:
         "* `agent_prompts.jsonl`: the prompt of every standalone agent (e.g. controlled-session agents, held-out generators "
         "for CS-03/CS-04, reference-check writers, mappers), with the sha256 of the original prompt and transcript.\n\n"
         "Redacted before export: notes about the repository owner's messages and personal information (using "
-        "owner-specific rules kept outside the repository), session-local paths and ids, e-mail addresses. "
+        "owner-specific rules kept outside the repository), session ids, session-local paths and e-mail addresses. Where an "
+        "owner-specific rule changed a prompt, the hash of the original is withheld (`prompt_sha256` is null; workflow "
+        "headers say \"withheld\"), because it would let anyone confirm a guess of the removed wording. Workflow-run ids "
+        "(`wf_...`) and agent ids are opaque harness identifiers; they are kept as provenance keys, for example in "
+        "`tasks/*/labels/construction_checks.json` (`source`). "
         "The full transcripts are kept outside the repository (they contain harness internals); their hashes are recorded "
         "here and in `tasks/*/labels/generator_audit.json`.\n", encoding="utf-8")
     print(f"exported {n_wf} workflow scripts and {len(rows)} agent prompts to {OUT.relative_to(R)}")

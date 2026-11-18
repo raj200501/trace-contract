@@ -54,7 +54,7 @@ Every row cites the essay (`guo2026productiontraces`) and names its section.
 | V15 | As users bring new problems to agentic products, each deployment produces sessions that show where the system fails, so the supply of traces grows with use [sf §2.2] | same | Preference for failures observed in real use (replaces former V2) |
 | V5 | Making traces into training data that demonstrably improves models is presented as a hard, open research problem | "Turning traces into training data" | Framing |
 | V6 | The first problem is finding sessions with something to learn from; a failure may come from a broken environment rather than from the model | same | P1 session selection; failure attribution |
-| V7 | Reconstruction must recover the user's explicit and implicit objectives, "including requirements introduced through later corrections", plus enough of the original setup for a different model to try the task | same | P2 reconstruction |
+| V7 | Reconstruction must recover what the user wanted, stated and unstated, "including requirements introduced through later corrections", plus enough of the original setup for a different model to try the task | same | P2 reconstruction |
 | V8 | "Preserving the initial prompt alone may produce a task that rewards precisely the behavior the user rejected." | same | P2; this is TraceContract's hypothesis, stated without data |
 | V9 | A missing input or a service that can no longer be reached can leave a useful trace unusable unless it is augmented | same | P2 environment |
 | V10 | Existing tests can miss an important constraint, and a user's approval does not by itself show that the work is correct | same | P3 verification |
@@ -616,7 +616,7 @@ Estimate (INFERENCE, low confidence): **15–35 candidate Python tasks from v2**
 - State is captured between U1 and U2. That captured state is the observed pre-correction candidate.
 - Transcripts are sanitized and audited for out-of-workspace file access. Ground truth is sealed while verifiers and candidates are generated [DL D12].
 
-**Strengths.** Exact pre-correction states; pre-registered ground truth; no third-party data rights issues (MIT repositories at pinned commits).
+**Strengths.** Exact pre-correction states; intended requirements hashed and logged before each session (not a formal preregistration); permissively licensed (MIT) repositories at pinned commits, whose notices are reproduced in `THIRD_PARTY_LICENSES/`.
 
 **Limitations, to be reported:**
 - Corrections are designed by the study.

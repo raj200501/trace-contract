@@ -1,4 +1,4 @@
-// Exported by scripts/export_prompts.py from the workflow run record wf_7cdea048-2be (started 2026-11-18T09:05:52.550Z); sha256 of the original script: 487eecab25fcafd353f078ea0944c9fe9cf9b6d8de08dcd8baee6f3531fc67f6. Redacted: owner messages and personal information, session paths/ids.
+// Exported by scripts/export_prompts.py from the workflow run record wf_7cdea048-2be (started 2026-11-18T09:05:52.550Z); sha256 of the original script: 487eecab25fcafd353f078ea0944c9fe9cf9b6d8de08dcd8baee6f3531fc67f6; sha256 of this export: 487eecab25fcafd353f078ea0944c9fe9cf9b6d8de08dcd8baee6f3531fc67f6. Redacted: owner messages and personal information, session paths/ids.
 export const meta = {
   name: 'tracecontract-heldout',
   description: 'Generate held-out candidates, reference checks or contract mappings for TraceContract tasks, then independently check each item',

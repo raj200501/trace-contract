@@ -26,7 +26,8 @@ tinydb, `CS-03` inflection, `CS-04` more-itertools).
 | `tasks/*/labels/base_tests_overlay/` | The upstream test files at the pinned commit, unchanged (byte-identical). |
 | `tasks/*/verifiers/repo_tests/overlay/` | The same upstream test files. In one file per task the study added the tests of the reference solution (CS-01 `tests/test_filesize.py`, CS-02 `tests/test_storages.py`, CS-03 `test_inflection.py`, CS-04 `tests/test_more.py`); the upstream lines are unchanged. |
 | `tasks/*/candidates/*.json` | Candidate patches as unified diffs against the upstream source. Their context and removed lines are upstream code. |
-| Verifier tests copied from upstream | `tasks/CS-02/verifiers/initial_plain/tests/test_existing_suite.py` and `tasks/CS-02/verifiers/initial_audited/tests/test_existing_suite.py` are mostly upstream tinydb tests. `tasks/CS-03/verifiers/initial_{plain,audited}/tests/test_preserved_behaviour.py` and `tasks/CS-01/verifiers/full_{plain,audited}/tests/test_naturalsize_strip_trailing_zero.py` reuse some upstream test lines. |
+| Verifier tests copied from upstream | `tasks/CS-02/verifiers/initial_plain/tests/test_existing_suite.py` and `tasks/CS-02/verifiers/initial_audited/tests/test_existing_suite.py` are mostly upstream tinydb tests. `tasks/CS-03/verifiers/initial_{plain,audited}/tests/test_preserved_behaviour.py` and `tasks/CS-01/verifiers/full_{plain,audited}/tests/test_naturalsize_strip_trailing_zero.py` reuse some upstream test lines. `tasks/CS-03/verifiers/full_{plain,audited}/tests/test_titleize_acronyms.py` copy about 15 lines of inflection's `underscore`, `humanize` and `titleize` as `_base_*` helpers. |
+| `results/runs/*/report.html` | The candidate patches, embedded as unified diffs (upstream context and removed lines). |
 | `data/controlled/transcripts/*.jsonl` | Excerpts of upstream files in the agent's tool results. |
 
 Base snapshots of the upstream repositories are not stored (`snapshots/` is

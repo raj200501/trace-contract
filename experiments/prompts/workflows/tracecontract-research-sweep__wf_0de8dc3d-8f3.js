@@ -1,4 +1,4 @@
-// Exported by scripts/export_prompts.py from the workflow run record wf_0de8dc3d-8f3 (started 2026-11-13T04:05:51.917Z); sha256 of the original script: d97ebd633d7990011676e678dfb1d688ae4c5a071f1ab5af9f1c32cc106adcff. Redacted: owner messages and personal information, session paths/ids.
+// Exported by scripts/export_prompts.py from the workflow run record wf_0de8dc3d-8f3 (started 2026-11-13T04:05:51.917Z); sha256 of the original script: withheld (owner-specific redaction applied); sha256 of this export: be3c5bd9a4ec446fadbb00e9f6cc466810a03312d3f191c5268cbd99990ef416. Redacted: owner messages and personal information, session paths/ids.
 export const meta = {
   name: 'tracecontract-research-sweep',
   description: 'Parallel primary-source research on related work, data sources, Harbor integration, and novelty threats; then draft the research brief',

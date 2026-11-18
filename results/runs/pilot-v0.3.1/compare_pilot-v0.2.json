@@ -1,0 +1,106 @@
+{
+  "old_run": "pilot-v0.2",
+  "new_run": "pilot-v0.3.1",
+  "pairs_in_both": 108,
+  "pairs_same_verifier": 99,
+  "pairs_changed_verifier": 9,
+  "changed_verifier_reward_agreement": 0.8888888888888888,
+  "changed_verifier_pairs": [
+    {
+      "verifier_id": "repo_tests",
+      "candidate_id": "CS-04-eval-alt-1",
+      "old": "task_failure",
+      "new": "pass",
+      "old_version": 1,
+      "new_version": 2,
+      "old_n_checks": 616,
+      "new_n_checks": 777
+    },
+    {
+      "verifier_id": "repo_tests",
+      "candidate_id": "CS-04-eval-alt-2",
+      "old": "pass",
+      "new": "pass",
+      "old_version": 1,
+      "new_version": 2,
+      "old_n_checks": 616,
+      "new_n_checks": 777
+    },
+    {
+      "verifier_id": "repo_tests",
+      "candidate_id": "CS-04-eval-nm-1",
+      "old": "pass",
+      "new": "pass",
+      "old_version": 1,
+      "new_version": 2,
+      "old_n_checks": 616,
+      "new_n_checks": 777
+    },
+    {
+      "verifier_id": "repo_tests",
+      "candidate_id": "CS-04-eval-nm-2",
+      "old": "task_failure",
+      "new": "task_failure",
+      "old_version": 1,
+      "new_version": 2,
+      "old_n_checks": 616,
+      "new_n_checks": 777
+    },
+    {
+      "verifier_id": "repo_tests",
+      "candidate_id": "CS-04-eval-nm-3",
+      "old": "task_failure",
+      "new": "task_failure",
+      "old_version": 1,
+      "new_version": 2,
+      "old_n_checks": 616,
+      "new_n_checks": 777
+    },
+    {
+      "verifier_id": "repo_tests",
+      "candidate_id": "CS-04-eval-nm-4",
+      "old": "task_failure",
+      "new": "task_failure",
+      "old_version": 1,
+      "new_version": 2,
+      "old_n_checks": 616,
+      "new_n_checks": 777
+    },
+    {
+      "verifier_id": "repo_tests",
+      "candidate_id": "CS-04-eval-nm-5",
+      "old": "pass",
+      "new": "pass",
+      "old_version": 1,
+      "new_version": 2,
+      "old_n_checks": 616,
+      "new_n_checks": 777
+    },
+    {
+      "verifier_id": "repo_tests",
+      "candidate_id": "CS-04-noop-eval",
+      "old": "task_failure",
+      "new": "task_failure",
+      "old_version": 1,
+      "new_version": 2,
+      "old_n_checks": 616,
+      "new_n_checks": 777
+    },
+    {
+      "verifier_id": "repo_tests",
+      "candidate_id": "CS-04-pre-correction",
+      "old": "task_failure",
+      "new": "task_failure",
+      "old_version": 1,
+      "new_version": 2,
+      "old_n_checks": 616,
+      "new_n_checks": 777
+    }
+  ],
+  "only_in_old": 0,
+  "only_in_new": 132,
+  "reward_agreement": 1.0,
+  "outcome_agreement": 1.0,
+  "reward_discordant": [],
+  "outcome_discordant": []
+}

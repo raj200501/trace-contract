@@ -30,7 +30,7 @@ The other two families differ:
 
 \paragraph{Baselines.} The full-session LLM baseline (B2) accepts 1 of 17 invalid candidates, a near miss that changes rounding of the default output, and rejects no valid one.
 
-Repository tests at the reference state (B1) have the highest false-rejection rate (4/10) and the lowest Youden's $J$. Their false acceptance (5/17) equals C2's and is below C1's (6/17). Two caveats apply to B1:
+Repository tests at the reference state (B1) have the highest false-rejection rate (4/10) and the lowest Youden's $J$. Their pooled false acceptance (5/17) equals C2's and is below C1's (6/17). Their macro rate, which weights the four families equally, is slightly above C1's (0.38 vs.\ 0.37; Table~\ref{tab:summary}). Two caveats apply to B1:
 \begin{itemize}
 \item \emph{Agent-added tests.} The reference is the session agent's final state, so B1 includes 6--12 tests per family that the agent itself added. All four of B1's false rejections come from those tests. Restricted to the base commit's own tests (exploratory), B1 rejects no valid candidate but accepts 13 of 17 invalid ones.
 \item \emph{Not blind to construction.} The near-miss generators had B1's test files in their workspaces and ran them (decision log D37), so B1's outcomes on near misses are not blind to construction.

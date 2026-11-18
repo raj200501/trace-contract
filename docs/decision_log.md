@@ -629,3 +629,10 @@ reference-check and regression outcomes. In the 36 label files (32 candidate rec
 D35 validation (0.3.0) no longer covered it. `scripts/harbor_validate.sh` with Harbor 0.25.0 on the
 synthetic fixture task (population `fixture`, not evidence; exported harness `tc-harness/0.3.1`):
 `harbor lint` rc=0; oracle with `CANDIDATE=reference` 1.0; oracle with the wrong candidate 0.0; `nop` 0.0.
+
+**Result of the re-run.** `pilot-v0.3.1` graded all 240 pairs under `tc-harness/0.3.1` in one invocation
+(2026-11-18, 12:18:50–12:34:52 UTC) at revision `c830977`, with no infrastructure outcomes. It agrees with
+`pilot-v0.3` (harness 0.3.0) on all 240 pairs, in reward and in exact outcome. Every number in the analysis
+is identical; only metadata differs (harness version, input-file hashes). Compared with the superseded runs:
+`pilot-v0.2` agrees on all 99 pairs whose verifier is unchanged and on 8 of the 9 changed CS-04 B1 pairs.
+`pilot-v0.2-h2` has only 4 pairs, all graded with the earlier CS-04 B1 selection, and agrees on all 4.

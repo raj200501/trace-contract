@@ -125,8 +125,10 @@ def results(run: Path, led: Ledger) -> None:
         f"Verifier reward fidelity on the held-out pool, run \\texttt{{{tex(run_id)}}} ({a['n_tasks']} tasks, {a['n_families']} families). " + pre +
         "Rates with (num/den) and 95\\% task-family bootstrap interval ($^{*}$: degenerate, every family has the same rate); "
         "below, the exact binomial interval (ignores clustering; reference scale only) and the macro rate (mean over families). "
-        "Reference solution and no-op excluded; ambiguous candidates excluded. $J$ = (1$-$FR)$-$FA.", "tab:summary", "lp{0.25\\linewidth}p{0.25\\linewidth}rrr",
-        "Condition & False acceptance & False rejection & $J$ & Tasks w/ accepted neg. & Infra", rows, size="\\footnotesize"))
+        "Reference solution and no-op excluded; ambiguous candidates excluded. $J$ = (1$-$FR)$-$FA. "
+        "Tasks w/ FA: families with at least one accepted invalid candidate. Infra: infrastructure outcomes.", "tab:summary",
+        "lp{0.23\\linewidth}p{0.23\\linewidth}rrr",
+        "Condition & False acceptance & False rejection & $J$ & Tasks w/ FA & Infra", rows, size="\\footnotesize"))
 
     crow = []
     for d in a["comparisons"]:
@@ -269,9 +271,10 @@ def comparisons(new_run: Path, old_runs: list[Path], led: Ledger) -> None:
         ch_txt = f"{ch_same}/{len(ch)}" if ch else "--"
         harness = sorted({json.loads(x).get("harness_version") or "?" for x in (old / "results.jsonl").read_text().splitlines() if x.strip()})
         h_txt = ", ".join(h.split("/")[-1] for h in harness)
-        rows.append(f"\\texttt{{{tex(d['old_run'])}}} & {tex(h_txt)} & {n} & {n - rd}/{n} & {n - od}/{n} & {ch_txt} \\\\")
+        r_txt, o_txt = (f"{n - rd}/{n}", f"{n - od}/{n}") if n else ("--", "--")
+        rows.append(f"\\texttt{{{tex(d['old_run'])}}} & {tex(h_txt)} & {n} & {r_txt} & {o_txt} & {ch_txt} \\\\")
         led.add("reliability", f"{d['old_run']} vs {d['new_run']}: unchanged-verifier pairs, reward agreement, outcome agreement",
-                f"{n}, {n - rd}/{n}, {n - od}/{n}", rel(p))
+                f"{n}, {r_txt}, {o_txt}", rel(p))
         if ch:
             led.add("reliability", f"{d['old_run']} vs {d['new_run']}: changed-verifier pairs with the same reward", ch_txt, rel(p))
     if rows:

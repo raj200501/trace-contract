@@ -82,7 +82,8 @@ last element does not exist yet.
 Run `results/runs/pilot-v0.3.1`:
 * 4 tasks × 6 conditions × 10 candidates = 240 graded pairs;
 * harness 0.3.1, one code revision;
-* no infrastructure outcomes.
+* no infrastructure outcomes;
+* it agrees with the earlier run `pilot-v0.3` (harness 0.3.0) on all 240 pairs.
 
 Of the 32 held-out candidates, 17 are labeled invalid, 10 valid and 5 ambiguous
 (excluded). The report is `results/runs/pilot-v0.3.1/report.html`; the analysis is

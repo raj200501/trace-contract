@@ -66,8 +66,9 @@ Proposals by rule D19 (`tasks/*/candidates/*.json`, labeler
 * Upstream code redistributed here is covered by each source repository's licence
   (all MIT). It consists of the upstream test files in
   `tasks/*/labels/base_tests_overlay/` and `tasks/*/verifiers/repo_tests/overlay/`,
-  the upstream lines in candidate patches, verifier tests that copy upstream tests,
-  and excerpts of upstream files in the controlled transcripts. The MIT copyright and
+  the upstream lines in candidate patches (also embedded in the HTML reports
+  `results/runs/*/report.html`), verifier tests that copy upstream tests or code, and
+  excerpts of upstream files in the controlled transcripts. The MIT copyright and
   permission notices, copied verbatim from each repository at the pinned commit, are
   in `THIRD_PARTY_LICENSES/`. Its README lists which paths hold which project's code.
   Base snapshots are not stored.
@@ -82,17 +83,30 @@ Proposals by rule D19 (`tasks/*/candidates/*.json`, labeler
 
 ## Personal information
 
-* The controlled transcripts contain the public names of upstream authors and
-  maintainers, as they appear in package metadata the agent read (`pyproject.toml`
-  or `setup.cfg` author and maintainer fields, and one module docstring copyright
-  line): two names for CS-01 and one each for CS-02 to CS-04. E-mail addresses in
-  the transcripts are replaced by `[EMAIL REDACTED]`.
+* The controlled transcripts contain public names and GitHub handles of upstream
+  authors, maintainers and contributors, as the upstream repositories publish them in
+  files the agent read:
+  * author and maintainer fields in package metadata (`pyproject.toml` or
+    `setup.cfg`) and one module docstring copyright line: two names for CS-01 and one
+    each for CS-02 to CS-04;
+  * the more-itertools changelog (`docs/versions.rst`, CS-04 lines 12 and 27), whose
+    40 "thanks to" credits name about 20 distinct contributors, mostly by GitHub
+    handle;
+  * user-level GitHub URLs in configuration files (CS-01 line 42: two users; CS-02
+    line 17: one user).
+
+  They are kept as published, as attribution. E-mail addresses in the transcripts are
+  replaced by `[EMAIL REDACTED]`.
 * Paths in transcripts refer to this study's sandbox workspaces, temporary files
   and standard system locations, with two exceptions: tool results in CS-01
   (line 107) and CS-04 (line 43) list host tool locations under `/root/.local/bin`
   (ruff, black, mypy and stubtest).
 * `THIRD_PARTY_LICENSES/` reproduces the upstream copyright notices verbatim, as
   the MIT licence requires; the tinydb notice includes its author's e-mail address.
+* Harness workflow-run ids (`wf_…`) and agent ids appear in `experiments/prompts/`
+  and in `tasks/*/labels/construction_checks.json` (`source`). They are opaque random
+  identifiers, kept as provenance keys that link each check to the exported workflow
+  script. Session ids and session-local paths are redacted.
 * The repository owner's identity appears only as the git commit author.
 
 ## Known biases and limitations

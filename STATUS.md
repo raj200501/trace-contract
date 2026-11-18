@@ -36,6 +36,8 @@ repository owner. Nothing here is peer reviewed, and no human labels exist.
 * **Final pilot run** `results/runs/pilot-v0.3.1`:
   * 240 pairs, harness 0.3.1, one code revision, no infrastructure outcomes;
   * labels re-proposed under 0.3.1 first, identical to the earlier proposals (D39);
+  * agrees with `pilot-v0.3` (harness 0.3.0) on all 240 pairs, in reward and in
+    exact outcome;
   * analysis, report (`report.html`), and comparisons with the superseded runs
     `pilot-v0.3` (harness 0.3.0), `pilot-v0.2` and `pilot-v0.2-h2`.
 * **Research brief** adversarially verified, using close reading, a fresh search,
@@ -46,7 +48,7 @@ repository owner. Nothing here is peer reviewed, and no human labels exist.
   * all sections drafted;
   * every table generated from records (`paper/make_tables.py`);
   * an evidence ledger;
-  * compiles to 20 pages.
+  * compiles to 22 pages.
 * **Adversarial internal review** (six lenses; every finding checked by independent
   skeptics until the skeptic stage was stopped for the final run). Findings, verdicts
   and dispositions are in `docs/internal_review.md`.

@@ -114,10 +114,10 @@
         "docs/data_card.md"
       ],
       "purpose": "source repository of controlled task CS-01 (base snapshot, upstream tests, candidate patches)",
-      "third_party_personal_data": "upstream author and maintainer names in package metadata and the copyright notice; these names also appear in the controlled transcripts (docs/data_card.md)",
+      "third_party_personal_data": "public names and GitHub handles of upstream authors, maintainers and contributors as the repository publishes them (package metadata, copyright notice, changelog credits, configuration URLs); some appear in the controlled transcripts (docs/data_card.md)",
       "retention": "Read-only reference copy outside the repository, kept for re-checks. Deleting it is an owner decision.",
       "in_repo": true,
-      "in_repo_detail": "partly: upstream test files and patch context under tasks/CS-01/; see THIRD_PARTY_LICENSES/README.md"
+      "in_repo_detail": "partly: upstream test files and patch context (also embedded in results/runs/*/report.html) under tasks/CS-01/; see THIRD_PARTY_LICENSES/README.md"
     },
     {
       "id": "clone-tinydb",
@@ -134,10 +134,10 @@
         "docs/data_card.md"
       ],
       "purpose": "source repository of controlled task CS-02 (base snapshot, upstream tests, candidate patches)",
-      "third_party_personal_data": "upstream author and maintainer names in package metadata and the copyright notice; these names also appear in the controlled transcripts (docs/data_card.md)",
+      "third_party_personal_data": "public names and GitHub handles of upstream authors, maintainers and contributors as the repository publishes them (package metadata, copyright notice, changelog credits, configuration URLs); some appear in the controlled transcripts (docs/data_card.md)",
       "retention": "Read-only reference copy outside the repository, kept for re-checks. Deleting it is an owner decision.",
       "in_repo": true,
-      "in_repo_detail": "partly: upstream test files and patch context under tasks/CS-02/; see THIRD_PARTY_LICENSES/README.md"
+      "in_repo_detail": "partly: upstream test files and patch context (also embedded in results/runs/*/report.html) under tasks/CS-02/; see THIRD_PARTY_LICENSES/README.md"
     },
     {
       "id": "clone-inflection",
@@ -154,10 +154,10 @@
         "docs/data_card.md"
       ],
       "purpose": "source repository of controlled task CS-03 (base snapshot, upstream tests, candidate patches)",
-      "third_party_personal_data": "upstream author and maintainer names in package metadata and the copyright notice; these names also appear in the controlled transcripts (docs/data_card.md)",
+      "third_party_personal_data": "public names and GitHub handles of upstream authors, maintainers and contributors as the repository publishes them (package metadata, copyright notice, changelog credits, configuration URLs); some appear in the controlled transcripts (docs/data_card.md)",
       "retention": "Read-only reference copy outside the repository, kept for re-checks. Deleting it is an owner decision.",
       "in_repo": true,
-      "in_repo_detail": "partly: upstream test files and patch context under tasks/CS-03/; see THIRD_PARTY_LICENSES/README.md"
+      "in_repo_detail": "partly: upstream test files and patch context (also embedded in results/runs/*/report.html) under tasks/CS-03/; see THIRD_PARTY_LICENSES/README.md"
     },
     {
       "id": "clone-more-itertools",
@@ -174,10 +174,10 @@
         "docs/data_card.md"
       ],
       "purpose": "source repository of controlled task CS-04 (base snapshot, upstream tests, candidate patches)",
-      "third_party_personal_data": "upstream author and maintainer names in package metadata and the copyright notice; these names also appear in the controlled transcripts (docs/data_card.md)",
+      "third_party_personal_data": "public names and GitHub handles of upstream authors, maintainers and contributors as the repository publishes them (package metadata, copyright notice, changelog credits, configuration URLs); some appear in the controlled transcripts (docs/data_card.md)",
       "retention": "Read-only reference copy outside the repository, kept for re-checks. Deleting it is an owner decision.",
       "in_repo": true,
-      "in_repo_detail": "partly: upstream test files and patch context under tasks/CS-04/; see THIRD_PARTY_LICENSES/README.md"
+      "in_repo_detail": "partly: upstream test files and patch context (also embedded in results/runs/*/report.html) under tasks/CS-04/; see THIRD_PARTY_LICENSES/README.md"
     },
     {
       "id": "clone-python-slugify",
