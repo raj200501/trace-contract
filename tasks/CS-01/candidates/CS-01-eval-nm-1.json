@@ -28,7 +28,7 @@
       "labeler": "builder:refcheck+regression+construction:v1",
       "labeler_kind": "model",
       "adjudicated": false,
-      "timestamp": "2026-11-18T14:16:20+00:00",
+      "timestamp": "2026-11-18T17:48:03+00:00",
       "note": "construction invalid, confirmed on targeted requirement | {\"refcheck_outcome\": \"task_failure\", \"refcheck_failed\": [\"test_reference_check.py::test_custom_format_contract_examples\", \"test_reference_check.py::test_custom_format_positional_table\", \"test_reference_check.py::test_custom_format_random_inputs\"], \"regression_outcome\": \"task_failure\", \"regression_failed\": [\"tests.test_filesize::test_naturalsize[test_args60-3.14 MB]\", \"tests.test_filesize::test_naturalsize[test_args61-2.930K]\", \"tests.test_filesize::test_naturalsize[test_args62-3G]\", \"tests.test_filesize::test_naturalsize[test_args63-2.423 RiB]\"], \"construction\": {\"value\": \"invalid\", \"violated_requirements\": [\"R-custom-format-unchanged\"], \"labeler\": \"nearmiss:v1\", \"labeler_kind\": \"construction\", \"adjudicated\": false, \"timestamp\": \"2026-11-18T09:00:36+00:00\", \"note\": \"\"}}"
     }
   ]

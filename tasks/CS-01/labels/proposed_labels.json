@@ -230,7 +230,7 @@
       "why": "natural candidate fails reference checks and/or regression norm"
     }
   },
-  "created_at": "2026-11-18T14:16:05+00:00",
+  "created_at": "2026-11-18T17:47:47+00:00",
   "labeler": "builder:refcheck+regression+construction:v1",
   "task_id": "CS-01"
 }
