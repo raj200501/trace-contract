@@ -1,6 +1,6 @@
 # Experimental protocol
 
-Version: **v0.3 (pilot, exploratory)**. v0.1 was written before the first evaluation run. The v0.2 amendments (§10) were also made before any evaluation run. The v0.3 amendments (§11) were made after two superseded runs and before the final pilot run.
+Version: **v0.4 (pilot, exploratory)**. v0.1 was written before the first evaluation run. The v0.2 amendments (§10) were also made before any evaluation run. The v0.3 amendments (§11) were made after two superseded runs and before the final pilot run. The v0.4 amendments (§12) were made after the internal review of that run.
 Timestamp and SHA-256 of this file are recorded in `docs/decision_log.md`. This is a
 locally timestamped protocol, **not** a formal preregistration. Any later change is
 made in a new version with a decision-log entry; results are always reported
@@ -195,3 +195,29 @@ version fixes how the final pilot run is made and what it reports.
   primary.
 * **Unchanged.** Primary metrics, comparisons, label rule D19, the candidate
   recipe, and the exclusion of the reference and no-op from FA/FR.
+
+## 12. Amendments in v0.4 (after the internal review of `pilot-v0.3`)
+
+The adversarial internal review (decision log D36–D38) found the following:
+* **A harness security defect.** Candidate code could replace the wrapper's own
+  modules (D36). The fix is `tc-harness/0.3.1`.
+* **Integrity issues to disclose (D37):**
+  * two held-out CS-04 candidates duplicate a development attack;
+  * B1's tests were present in the near-miss workspaces;
+  * the reference checks were written concurrently with the pool.
+* **Presentation gaps.**
+
+Under §8 every condition of every task is re-run under 0.3.1, and the D19 labels are
+re-proposed first (run `pilot-v0.3.1`). `pilot-v0.3` is kept and compared pair by
+pair. Primary metrics, comparisons and the label rule are **unchanged**.
+
+The following are added as **exploratory, post-hoc** analyses. They were chosen after
+seeing `pilot-v0.3`, are labeled as such, and are never primary:
+* acceptance of near misses by D19 status;
+* rates under the independent construction checks' labels;
+* rates without the duplicated candidates;
+* B1 restricted to checks from the base commit's own tests;
+* exact unclustered intervals next to the cluster bootstrap.
+
+Macro rates and per-metric denominators, which §6 already required, are now shown in
+every output.

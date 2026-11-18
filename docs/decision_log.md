@@ -522,3 +522,100 @@ Re-validated with Harbor 0.25.0 on the synthetic fixture task (population
 * `nop`: 0.0.
 
 As before, the trials used the `local-validation` network variant (D20).
+
+### D36. Harness 0.3.1: candidate code cannot replace the wrapper's own modules (internal review SEC-1/SEC-2)
+The adversarial internal review (2026-11-18, security lens) showed a forging channel in
+the process-separated grader. Docker proof: a wrong candidate received reward 1.0.
+* **Shadowing.** Sandbox children started with the candidate directory on `sys.path`
+  ahead of the standard library. A candidate `json.py` therefore replaced the
+  serialiser of the trusted wrapper, which then signed the forged payload with the
+  real per-call key.
+* **Runtime hooks.** A `sitecustomize.py` written to `/work` at runtime ran in every
+  later call. The patch filter is static and cannot stop runtime writes.
+* **Script directory.** A shadow in `/tmp` was exposed through the wrapper script's
+  directory.
+
+**Fix (`tc-harness/0.3.1`).**
+1. Children start with `-s -S -P`.
+2. The wrapper removes the candidate directories from `sys.path`, runs `site.main()`
+   and imports `os`, `json`, `hmac`, `hashlib` and `traceback`.
+3. Only then does it put the candidate directories back, for the snippet.
+
+Two Docker regression probes were added (a forging `json.py` shadow; startup hooks
+planted in `/work`, `/tmp` and the user site). Both fail under 0.3.0 and pass under
+0.3.1.
+
+**Scope.** The honest-candidate pilot results are not affected: the wrapper's
+behaviour for code that does not attack it is unchanged. Under §8 every condition is
+still re-run under 0.3.1 (run `pilot-v0.3.1`). Within one call, candidate code still
+controls what it reports, for example by detecting the grading environment. That
+remains a documented limitation. B1 runs in-process and is not covered by this fix
+(it is forgeable; D37).
+
+### D37. Integrity disclosures and exploratory analyses from the internal review
+**Integrity disclosures.** Verified against git history and the agent transcripts.
+* **Duplicates of a dev attack.** Two CS-04 held-out candidates have the same graded
+  patch as development attack `CS-04-dev-attack-full_session-a3`, which C4's audit
+  used: `CS-04-pre-correction` (the anchor negative) and `CS-04-eval-nm-2`. CS-04's
+  C4 audit made no revision (C4 = C3), so the verifier's tests did not change because
+  of it. The pool still double-counts one behaviour, and the C4 audit was not blind to
+  it.
+* **B1 tests in near-miss workspaces.** Near-miss workspaces were exported with the
+  full reference diff, which includes the reference state's test files. Those files
+  are B1's tests, and the generators ran them before registering their near misses.
+  B1's outcomes on near misses are therefore not blind to construction.
+* **Reference-check timing.** The independent reference checks of CS-01 and CS-04
+  were written while the held-out pool was being generated; their writers had no
+  access to it (audited). CS-02's were written after the pool existed. The evaluated
+  verifiers (C1–C4, B1 v1, B2) were all frozen before any generated held-out
+  candidate existed. B1 v2 for CS-04 is the exception (D31).
+* **Near-miss prompt change.** The near-miss prompt used for CS-01 and CS-02 added the
+  repository-test command and "finish one near miss before the next", relative to
+  CS-03 and CS-04 (`experiments/prompts/`).
+* **Audit limits.** Generator audits inspect tool *inputs* only. Some tool outputs,
+  such as a `git status` listing, showed held-out file names to fix agents. Agents
+  also shared a scratch directory.
+* **Content hash.** The verifier content hash covered test files only. Specs now also
+  record `checks_sha256` (backfilled for all 28 frozen specs; D36 commit) and
+  `frozen_at` for new freezes.
+
+**Exploratory analyses added after the review (not pre-specified; never primary):**
+* near-miss acceptance by D19 status;
+* rates under the independent construction checks' labels;
+* rates without the duplicated candidates;
+* B1 restricted to checks that exist in the base commit's own tests
+  (`scripts/b1_upstream_checks.py`). B1 includes 6–12 tests per task that the session
+  agent added.
+* exact (Clopper–Pearson, unclustered) intervals next to the cluster bootstrap, with
+  degenerate bootstrap intervals flagged;
+* macro rates in every output;
+* per-metric denominators in the paired comparisons;
+* "covered but contradicted" in contract coverage.
+
+**Reliability comparison.** It now separates pairs whose verifier changed between
+runs.
+
+### D38. Transcript sanitiser v2
+* **Diff decorators.** The e-mail pattern matched diff decorator lines (`+@pytest...`),
+  corrupting two published diffs. It no longer does: a local part needs a letter or
+  digit after leading diff markers.
+* **Opaque fields.** Content-block `signature` and `caller` fields are dropped.
+* **Harness messages.** These are marked `isMeta`. Their content is replaced, but the
+  line is kept so event ids stay stable. The scripted user turn, delivered as a meta
+  message, is kept.
+
+All four transcripts were re-sanitised from the raw source with `sanitize:v2`:
+* line counts and user turns are unchanged;
+* `validate-task` passes;
+* one real e-mail address per transcript is redacted.
+
+The provenance records carry the new hashes; the previous ones are kept. The CS-02
+record had wrongly said `not_needed_controlled` and lacked its sanitisation record;
+both are fixed.
+
+### D39. Re-run under harness 0.3.1 and protocol v0.4
+Protocol v0.4 (§12) records the D36–D38 changes. It was written and hashed before
+re-proposing labels and re-running the full matrix under 0.3.1 as `pilot-v0.3.1`.
+`pilot-v0.3` (harness 0.3.0) is kept and compared pair by pair.
+
+Protocol v0.4 written and hashed at 2026-11-18T11:58:51Z, sha256 `70ffee9a56b2f676df1d0a2606a824e345bec02f91ce3878a3ea7755c5d7adec`, before the 0.3.1 label re-proposal and run.
