@@ -46,7 +46,7 @@ from ..schemas import (
 )
 
 HARNESS_SRC = Path(__file__).parent / "harness"
-HARNESS_VERSION = "tc-harness/0.3.1"
+HARNESS_VERSION = "tc-harness/0.3.2"
 BASE_IMAGE = "python:3.12-slim@sha256:5e2bdb1b0d542d5039cffb8181c65930093949194a65c365dfb1b0fe13a4fa5b"
 DEFAULT_TEST_REQUIREMENTS = (
     "pytest==8.3.5", "hypothesis==6.131.0", "attrs==26.1.0", "iniconfig==2.3.1",
@@ -410,7 +410,13 @@ def verify_candidate(
             outcomes.append(oc)
             last_checks = checks
             all_diags += [f"[run {i}] {d}" for d in diags if d not in pdiags]
-            logs.append(raw.stdout + "\n--stderr--\n" + raw.stderr)
+            log = raw.stdout + "\n--stderr--\n" + raw.stderr
+            if spec.isolation == Isolation.in_process and isinstance(raw.results, dict):
+                # Repository tests run in a child of the grader, which keeps only the
+                # tails of their output in the results file; keep them in the log too.
+                log += ("\n--repo-tests stdout (tail)--\n" + str(raw.results.get("stdout_tail", ""))
+                        + "\n--repo-tests stderr (tail)--\n" + str(raw.results.get("stderr_tail", "")))
+            logs.append(log)
         distinct = set(outcomes)
         if len(distinct) == 1:
             outcome = outcomes[0]

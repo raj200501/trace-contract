@@ -156,6 +156,8 @@ def analyze(run_dir: Path, tasks_root: Path, *, allow_proposed: bool = False, n_
             "false_rejection": {"rate": s.fr.value, "num": s.fr.num, "den": s.fr.den, "ci95": s.fr_ci, "macro": s.fr_macro,
                                 "exact95": s.fr_exact, "ci95_degenerate": s.fr_ci_degenerate},
             "infrastructure": {"num": s.infra.num, "den": s.infra.den},
+            "per_task_rates": {t: {"fa_num": v["fa"].num, "fa_den": v["fa"].den, "fr_num": v["fr"].num, "fr_den": v["fr"].den}
+                               for t, v in s.per_task.items()},
             "excluded_unlabeled_or_ambiguous": s.excluded_unlabeled,
             "sensitivity_excluding_infra": {"fa": sx.fa.value, "fa_den": sx.fa.den, "fr": sx.fr.value, "fr_den": sx.fr.den},
         }
@@ -202,7 +204,9 @@ def analyze(run_dir: Path, tasks_root: Path, *, allow_proposed: bool = False, n_
             ss = summarize(sprim, condition=c, n_boot=n_boot)
             out["sensitivity_construction_labels"][c] = {
                 "fa": ss.fa.value, "fa_num": ss.fa.num, "fa_den": ss.fa.den, "fa_ci95": ss.fa_ci,
-                "fr": ss.fr.value, "fr_num": ss.fr.num, "fr_den": ss.fr.den, "fr_ci95": ss.fr_ci}
+                "fa_exact95": ss.fa_exact, "fa_ci95_degenerate": ss.fa_ci_degenerate,
+                "fr": ss.fr.value, "fr_num": ss.fr.num, "fr_den": ss.fr.den, "fr_ci95": ss.fr_ci,
+                "fr_exact95": ss.fr_exact, "fr_ci95_degenerate": ss.fr_ci_degenerate}
     if allow_proposed:
         out.update(_post_hoc(run_dir, tasks_root, rows, primary, conds, n_boot, exclude_origins))
     out["labels"] = label_summary([tasks_root / t for t in tasks])
@@ -218,16 +222,27 @@ def _sha(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def _input_hashes(run_dir: Path, task_dirs: list[Path]) -> dict:
-    """Revision and file hashes of every input the analysis read (labels, contracts, mappings, checks)."""
+def _git_revision(cwd: Path) -> str | None:
+    """HEAD, with ``+dirty`` when tracked files differ from it (as in evaluate.code_revision)."""
     try:
-        rev = subprocess.run(["git", "rev-parse", "HEAD"], cwd=run_dir, capture_output=True, text=True).stdout.strip() or None
+        rev = subprocess.run(["git", "rev-parse", "HEAD"], cwd=cwd, capture_output=True, text=True).stdout.strip() or None
+        dirty = subprocess.run(["git", "status", "--porcelain", "--untracked-files=no"], cwd=cwd,
+                               capture_output=True, text=True).stdout.strip()
     except OSError:
-        rev = None
+        return None
+    return None if rev is None else rev + ("+dirty" if dirty else "")
+
+
+def _input_hashes(run_dir: Path, task_dirs: list[Path]) -> dict:
+    """Revision and file hashes of every input the analysis read (labels, contracts, mappings, checks) and of its code."""
+    rev = _git_revision(run_dir)
     files: dict[str, str] = {"results.jsonl": _sha(run_dir / "results.jsonl"), "manifest.json": _sha(run_dir / "manifest.json")}
+    pkg = Path(__file__).resolve().parent
+    for name in ("analysis.py", "metrics.py", "schemas.py", "store.py", "patches.py"):
+        files[f"code/{name}"] = _sha(pkg / name)
     for td in task_dirs:
         for pat in ("task.json", "candidates/*.json", "contracts/*.json", "labels/construction_checks.json",
-                    "verifiers/repo_tests/upstream_check_ids.json"):
+                    "labels/duplicates.json", "verifiers/repo_tests/upstream_check_ids.json"):
             for f in sorted(td.glob(pat)):
                 files[f"{td.name}/{f.relative_to(td)}"] = _sha(f)
     return {"git_revision": rev, "files_sha256": files}
@@ -283,6 +298,11 @@ def _post_hoc(run_dir: Path, tasks_root: Path, rows: list[Row], primary: list[Ro
                 seen[k] = c.candidate_id
             if hits:
                 dup[c.candidate_id] = {"task_id": t, **hits}
+        # Same code apart from comments and docstrings (recorded by scripts/find_duplicates.py, D40).
+        dp = tasks_root / t / "labels" / "duplicates.json"
+        if dp.exists():
+            for cid, hits in json.loads(dp.read_text()).get("duplicates", {}).items():
+                dup.setdefault(cid, {"task_id": t}).update({k: ", ".join(v) for k, v in hits.items()})
     out["duplicates"] = dup
     if dup:
         drows = [r for r in primary if r.candidate_id not in dup]
@@ -357,20 +377,35 @@ def to_markdown(a: dict) -> str:
         ref = s.get("reference", {})
         noop = s.get("noop", {})
         lines.append(f"| {c} | {ref.get('pass', '-')}/{ref.get('n', '-')} | {noop.get('pass', '-')}/{noop.get('n', '-')} |")
+    lines += ["", "## Per-family rates behind the macro rates", "",
+              "| Condition | " + " | ".join(f"{t} FA | {t} FR" for t in sorted(a["per_task"])) + " |",
+              "| --- | " + " | ".join("--- | ---" for _ in a["per_task"]) + " |"]
+    for c, d in a["conditions"].items():
+        pt = d.get("per_task_rates", {})
+        cells = []
+        for t in sorted(a["per_task"]):
+            x = pt.get(t)
+            cells += ["-", "-"] if x is None else [f"{x['fa_num']}/{x['fa_den']}", f"{x['fr_num']}/{x['fr_den']}"]
+        lines.append(f"| {c} | " + " | ".join(cells) + " |")
     lines += ["", "## Paired comparisons (same candidates)", "",
+              "Intervals marked * are degenerate (every family has the same difference).", "",
               "| A | B | Metric | A - B | 95% CI | n labeled for metric | families | A acc & B rej | A rej & B acc |", "| --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
     for d in a["comparisons"]:
         diff = "n/a" if d["difference"] is None else f"{d['difference']:+.2f}"
-        ci = "n/a" if not d["ci95"] else f"[{d['ci95'][0]:+.2f}, {d['ci95'][1]:+.2f}]"
+        ci = "n/a" if not d["ci95"] else f"[{d['ci95'][0]:+.2f}, {d['ci95'][1]:+.2f}]" + ("*" if d.get("ci95_degenerate") else "")
         lines.append(f"| {d['a']} | {d['b']} | {d['metric'].upper()} | {diff} | {ci} | {d.get('n_metric', d['n_common'])} | {d['n_families']} | "
                      f"{d['discordant']['a_accepts_b_rejects']} | {d['discordant']['a_rejects_b_accepts']} |")
     if a.get("sensitivity_construction_labels"):
-        lines += ["", "## Exploratory sensitivity: construction-intent labels (not pre-specified)", "",
+        lines += ["", "## Exploratory sensitivity: construction-intent labels (protocol v0.3; not pre-specified)", "",
                   "Constructed candidates labeled by how they were built (near miss = invalid, alternative = valid), "
-                  "including those the D19 rule marked ambiguous; natural candidates keep their D19 label.", "",
-                  "| Condition | False acceptance | False rejection |", "| --- | --- | --- |"]
+                  "including those the D19 rule marked ambiguous; the observed pre-correction state keeps its D19 label. "
+                  "Intervals marked * are degenerate.", "",
+                  "| Condition | False acceptance | FA exact 95% | False rejection | FR exact 95% |", "| --- | --- | --- | --- | --- |"]
         for c, d in a["sensitivity_construction_labels"].items():
-            lines.append(f"| {c} | {_fmt(d['fa'], d['fa_num'], d['fa_den'], d['fa_ci95'])} | {_fmt(d['fr'], d['fr_num'], d['fr_den'], d['fr_ci95'])} |")
+            st = lambda k: "*" if d.get(f"{k}_ci95_degenerate") else ""  # noqa: E731
+            exs = lambda k: "n/a" if not d.get(f"{k}_exact95") else f"[{d[k + '_exact95'][0]:.2f}, {d[k + '_exact95'][1]:.2f}]"  # noqa: E731
+            lines.append(f"| {c} | {_fmt(d['fa'], d['fa_num'], d['fa_den'], d['fa_ci95'])}{st('fa')} | {exs('fa')} | "
+                         f"{_fmt(d['fr'], d['fr_num'], d['fr_den'], d['fr_ci95'])}{st('fr')} | {exs('fr')} |")
     if a.get("near_miss_crosstab"):
         lines += ["", "## Post-hoc analyses after the internal review (exploratory, not pre-specified)", "",
                   "### Near misses accepted, by label status", "", "| Condition | D19-confirmed invalid | D19 ambiguous |", "| --- | --- | --- |"]
@@ -382,7 +417,7 @@ def to_markdown(a: dict) -> str:
         for c, d in a["sensitivity_check_labels"].items():
             lines.append(f"| {c} | {_fmt(d['fa'], d['fa_num'], d['fa_den'])} | {_fmt(d['fr'], d['fr_num'], d['fr_den'])} |")
     if a.get("duplicates"):
-        lines += ["", "### Held-out candidates whose graded patch duplicates another candidate", ""]
+        lines += ["", "### Held-out candidates that duplicate another candidate (same graded patch, or same code apart from comments and docstrings)", ""]
         for cid, d in a["duplicates"].items():
             lines.append(f"* {cid}: " + ", ".join(f"{k.replace('_', ' ')} {v}" for k, v in d.items() if k != "task_id"))
         lines += ["", "| Condition | FA without duplicates | FR without duplicates |", "| --- | --- | --- |"]
@@ -401,14 +436,15 @@ def to_markdown(a: dict) -> str:
                          f"{d['counts'].get('unlabeled', 0)} | {q} |")
     if a.get("coverage"):
         lines += ["", "## Contract recovery (model mappings, proposals)", "",
-                  "| Task | Variant | Coverage of active reference requirements (mapper 1) | Unsupported | Contradicting | Coverage (mapper 2) | Mapping agreement (kappa) |",
-                  "| --- | --- | --- | --- | --- | --- | --- |"]
+                  "| Task | Variant | Coverage of active reference requirements (mapper 1) | Covered but contradicted | Unsupported | Contradicting | Coverage (mapper 2) | Mapping agreement (kappa) |",
+                  "| --- | --- | --- | --- | --- | --- | --- | --- |"]
         for t, cov in a["coverage"].items():
             ag = a.get("mapping_agreement", {}).get(t, {})
             for v, d in cov.get("variants", {}).items():
                 d2 = cov.get("variants_mapper2", {}).get(v)
                 k = ag.get(v, {}).get("kappa")
                 lines.append(f"| {t} | {v} | {_fmt(d['coverage'], len(d['covered']), len(cov['reference_scored']))} | "
+                             f"{', '.join(d.get('covered_but_contradicted', [])) or '-'} | "
                              f"{len(d['unsupported'])}/{d['n_recovered_scored']} | {len(d['contradicting'])} | "
                              f"{_fmt(d2['coverage'], len(d2['covered']), len(cov['reference_scored'])) if d2 else '-'} | "
                              f"{'n/a' if k is None else f'{k:.2f}'} |")

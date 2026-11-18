@@ -1,0 +1,6 @@
+{
+  "duplicates": {},
+  "rule": "same code apart from comments and docstrings, different graded patch",
+  "snapshot_manifest_sha256": "23d3be29cf4ba18308a6db7658382cdb9d20184d556646d7d854675531f92c2f",
+  "task_id": "CS-04"
+}

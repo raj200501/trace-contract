@@ -15,6 +15,7 @@ import json
 import shutil
 from pathlib import Path
 
+from tracecontract.ingest.claude_code import sanitize_transcript
 from tracecontract.tasks import compile_controlled_task
 
 R = Path(__file__).resolve().parents[1]
@@ -62,8 +63,12 @@ def main() -> None:
     props = json.loads((SP / "reference" / f"{tid}.json").read_text())
     ws = json.loads((root / "workspace_record.json").read_text())
     overlays = {rel: (root / a.repo_dir / rel).read_text() for rel in a.overlay}
+    # Sanitise the raw transcript here (sanitize:v2), keeping the scripted user turns that
+    # the harness delivers as meta messages (decision log D10, D38).
+    san = sanitize_transcript(root / "transcript.jsonl", root / "transcript.sanitized.jsonl", session_id=f"{tid}-session",
+                              keep_meta_containing=tuple(v for k, v in sc["turns"].items() if k.startswith("U")))
     tdir = compile_controlled_task(
-        scenario=sc, reference_proposals=props, transcript=root / "transcript.sanitized.jsonl",
+        scenario=sc, reference_proposals=props, transcript=root / "transcript.sanitized.jsonl", sanitization=san,
         states={"after_U1": root / "states/after_U1", "final": root / "states/final"}, workspace_record=ws,
         tasks_root=R / "tasks", snapshot_root=R / "snapshots", cache_dir=Path.home() / ".cache/tracecontract",
         repo_test_args=a.repo_test_args, candidate_pythonpath=a.pythonpath, allowed_roots=(str(root),), overlays=overlays)

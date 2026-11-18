@@ -48,12 +48,18 @@ MARKER = "<<TC_RESULT>>"
 TAMPER_EVENTS: list[dict[str, Any]] = []
 
 # The child is started with ``-s -S -P`` (no user site, no automatic ``site``, no
-# script directory on sys.path). The wrapper removes the candidate's directories from
-# sys.path before it imports anything, enables site-packages, imports the trusted
-# modules it needs, and only then puts the candidate's directories back for the
-# snippet. A candidate file named like a stdlib module (``json.py``), or a
-# ``sitecustomize.py``/``usercustomize.py`` written at runtime, can therefore never
-# replace the code that serialises and signs the result (decision log D36).
+# script directory on sys.path) and WITHOUT ``PYTHONPATH``: the interpreter imports
+# modules such as ``encodings`` from sys.path while it starts, before the wrapper's
+# first line runs, so no candidate directory may be on sys.path at that point
+# (decision log D40; harness 0.3.1 still exported PYTHONPATH at start-up). The wrapper
+# also removes any candidate directory from sys.path, enables site-packages, imports
+# the trusted modules it needs, and only then puts the candidate's directories on
+# sys.path and restores ``PYTHONPATH`` in ``os.environ`` (for subprocesses that the
+# snippet starts). A candidate file named like a stdlib module (``json.py``,
+# ``encodings/``), or a ``sitecustomize.py``/``usercustomize.py`` written at runtime,
+# can therefore not replace the code that serialises and signs the result before the
+# snippet runs (decision log D36, D40). Code imported BY the snippet runs in the same
+# process and can still change what that call reports (the documented residual risk).
 _WRAPPER = r'''
 import sys as _tc_sys
 _tc_cand = %(cand_paths)r
@@ -61,7 +67,11 @@ _tc_sys.path[:] = [p for p in _tc_sys.path if p not in _tc_cand and p not in (""
 import site as _tc_site
 _tc_site.main()
 import os as _tc_os, json as _tc_json, hmac as _tc_hmac, hashlib as _tc_hashlib, traceback as _tc_traceback
-_tc_sys.path[0:0] = _tc_cand
+_tc_sys.path[0:0] = %(late_paths)r
+_tc_pp = %(pythonpath)r
+if _tc_pp is not None:
+    _tc_os.environ["PYTHONPATH"] = _tc_pp
+del _tc_pp
 def _tc_main():
     key = _tc_os.read(%(keyfd)d, 64)
     _tc_os.close(%(keyfd)d)
@@ -180,7 +190,8 @@ def reap_sandbox_processes() -> int:
 
 
 def _spawn(argv: list[str], *, timeout: float, input_bytes: bytes | None, cwd: str | None,
-           env: dict[str, str] | None, pass_fds: tuple[int, ...] = ()) -> tuple[int | None, str, str, bool]:
+           env: dict[str, str], pass_fds: tuple[int, ...] = ()) -> tuple[int | None, str, str, bool]:
+    """Start ``argv`` as the sandbox user with exactly the environment ``env``."""
     _check_sandbox_home()
     out_f = tempfile.TemporaryFile()
     err_f = tempfile.TemporaryFile()
@@ -190,7 +201,7 @@ def _spawn(argv: list[str], *, timeout: float, input_bytes: bytes | None, cwd: s
         stdout=out_f,
         stderr=err_f,
         cwd=cwd or WORKDIR,
-        env=_sandbox_env(env),
+        env=env,
         user=SANDBOX_UID,
         group=SANDBOX_GID,
         extra_groups=[],
@@ -240,14 +251,21 @@ def run_python(snippet: str, *, timeout: float = 20.0, env: dict[str, str] | Non
     os.write(w, key)
     os.close(w)
     cand_paths = [x for x in CANDIDATE_PYTHONPATH.split(os.pathsep) if x]
-    code = _WRAPPER % {"marker": MARKER, "snippet": snippet, "keyfd": r, "cand_paths": cand_paths}
+    child_env = _sandbox_env(env)
+    # PYTHONPATH is withheld from the interpreter's start-up and restored by the wrapper
+    # (D40). The snippet then sees the same sys.path and os.environ as under 0.3.1.
+    pythonpath = child_env.pop("PYTHONPATH", None)
+    pp_entries = [os.path.abspath(x) for x in pythonpath.split(os.pathsep)] if pythonpath else []
+    late_paths = cand_paths + [x for x in pp_entries if x not in cand_paths]
+    code = _WRAPPER % {"marker": MARKER, "snippet": snippet, "keyfd": r, "cand_paths": cand_paths,
+                       "late_paths": late_paths, "pythonpath": pythonpath}
     fd, path = tempfile.mkstemp(prefix="tc_call_", suffix=".py", dir="/tmp")
     with os.fdopen(fd, "w", encoding="utf-8") as fh:
         fh.write(code)
     os.chmod(path, 0o644)
     try:
         rc, stdout, stderr, timed_out = _spawn([PYTHON, "-s", "-S", "-P", path], timeout=timeout, input_bytes=None, cwd=None,
-                                               env=env, pass_fds=(r,))
+                                               env=child_env, pass_fds=(r,))
     finally:
         os.close(r)
         try:
@@ -293,9 +311,14 @@ class CmdResult:
 
 def run_cmd(argv: list[str], *, timeout: float = 30.0, input_text: str | None = None, cwd: str | None = None,
             env: dict[str, str] | None = None) -> CmdResult:
-    """Run a command (e.g. a CLI entry point) as the sandbox user."""
+    """Run a command (e.g. a CLI entry point) as the sandbox user.
+
+    The command starts with ``PYTHONPATH`` set to the candidate directories, so a
+    Python command imports candidate code from its first line; nothing it reports is
+    authenticated. The repository-test baseline (B1) uses this and is in-process.
+    """
     rc, stdout, stderr, timed_out = _spawn(
         list(argv), timeout=timeout, input_bytes=None if input_text is None else input_text.encode("utf-8"),
-        cwd=cwd, env=env,
+        cwd=cwd, env=_sandbox_env(env),
     )
     return CmdResult(rc, stdout, stderr, timed_out)

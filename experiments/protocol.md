@@ -1,6 +1,6 @@
 # Experimental protocol
 
-Version: **v0.4 (pilot, exploratory)**. v0.1 was written before the first evaluation run. The v0.2 amendments (§10) were also made before any evaluation run. The v0.3 amendments (§11) were made after two superseded runs and before the final pilot run. The v0.4 amendments (§12) were made after the internal review of that run.
+Version: **v0.5 (pilot, exploratory)**. v0.1 was written before the first evaluation run. The v0.2 amendments (§10) were also made before any evaluation run. The v0.3 amendments (§11) were made after two superseded runs and before the final pilot run. The v0.4 amendments (§12) were made after the internal review of that run. The v0.5 amendments (§13) were made after the review of the internal-review dispositions and a final claims audit of `pilot-v0.3.1`, before `pilot-v0.3.2`.
 Timestamp and SHA-256 of this file are recorded in `docs/decision_log.md`. This is a
 locally timestamped protocol, **not** a formal preregistration. Any later change is
 made in a new version with a decision-log entry; results are always reported
@@ -221,3 +221,49 @@ seeing `pilot-v0.3`, are labeled as such, and are never primary:
 
 Macro rates and per-metric denominators, which §6 already required, are now shown in
 every output.
+
+## 13. Amendments in v0.5 (after the dispositions review and the claims audit of `pilot-v0.3.1`)
+
+A read-only review of how each internal-review finding was resolved, and a final audit
+of every public claim (both run by model agents; decision log D40), found the following:
+* **A remaining harness defect.** Harness 0.3.1 still started sandbox children with
+  the candidate directory on `PYTHONPATH`. The interpreter imports `encodings` from
+  `sys.path` before the wrapper's first line runs, so a candidate `encodings` package,
+  shipped in the patch or written to `/work` at runtime, ran before the trusted imports.
+  In a Docker proof a wrong candidate received reward 1.0. The fix is
+  `tc-harness/0.3.2`: the child starts without `PYTHONPATH`, which the wrapper restores
+  after its trusted imports. The fix also keeps the repository-test (B1) output tails
+  in the host logs.
+* **A third duplicate.** Held-out near miss `CS-01-eval-nm-5` differs from development
+  attack `CS-01-dev-attack-full_session-a3` by one docstring line.
+
+Under §8 every condition of every task is re-run under 0.3.2. The D19 labels are
+re-proposed first. The run is `pilot-v0.3.2`; `pilot-v0.3.1` is kept and compared pair
+by pair. Primary metrics, comparisons and the label rule are **unchanged**.
+
+The following output changes are made:
+* Degenerate (zero-width) bootstrap intervals are marked in every table, including
+  the paired comparisons and the construction-label sensitivity analysis.
+* The sensitivity analysis also shows exact intervals.
+* Every output shows the per-family counts behind the macro rates, the per-metric
+  denominators and "covered but contradicted".
+* The exploratory duplicates view of §12 is widened. It now also excludes held-out
+  candidates that have the same code as another candidate apart from comments and
+  docstrings (`scripts/find_duplicates.py`). This change was made after seeing
+  `pilot-v0.3.1` and is exploratory.
+
+Corrections to the wording of earlier sections, which are kept as written:
+* **§5.** "Pre-registered" means hashed and logged locally, not a formal
+  preregistration. The reference contract is the labeling standard. It was
+  operationalised by a model and has so far been reviewed only by a model.
+* **§3 and §11.** The held-out pool is generated after freezing, with two exceptions.
+  First, the pre-correction state, which was captured during the session. B2's
+  generator and the full-session contract proposer saw its edits, in abbreviated form,
+  in the session text. Second, CS-04's B1 re-selection (D31).
+* **§11.** The candidate recipe and the mapper instructions were not quite unchanged.
+  The 2026-11-18 held-out prompts differ from the CS-03/CS-04 prompts, and mapper 2
+  got one extra sentence (D40).
+* **§12.** The reference checks were written while the pools were being generated
+  (CS-01, CS-02, CS-04), or just before CS-03's pool was registered. CS-02's checks
+  were revised after its pool was complete.
+* **§6.** The generation costs were not recorded. This is a deviation.

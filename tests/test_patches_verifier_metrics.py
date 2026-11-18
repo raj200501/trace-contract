@@ -141,6 +141,19 @@ def test_freeze_detects_modification(tmp_path):
         check_frozen(frozen, task)
 
 
+def test_freeze_refuses_refreeze_and_requires_check_hash(tmp_path):
+    task = tmp_path / "task"
+    d = _tree(task / "verifiers" / "v1", {"test_a.py": GOOD_TEST})
+    spec = build_spec(verifier_id="v1", task_id="t", condition=VerifierCondition.full_plain, test_dir=d, task_dir=task)
+    frozen = freeze(spec, task)
+    with pytest.raises(ValueError, match="already frozen"):
+        freeze(frozen, task)
+    with pytest.raises(ValueError, match="no hash of its scored check list"):
+        check_frozen(frozen.model_copy(update={"checks_sha256": None}), task)
+    with pytest.raises(ValueError, match="scored check list changed"):
+        check_frozen(frozen.model_copy(update={"checks": frozen.checks[:-1]}), task)
+
+
 # --------------------------------------------------------------------------- aggregation
 
 

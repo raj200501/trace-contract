@@ -437,8 +437,43 @@ def test_stdlib_shadow_cannot_forge_results(image, task, tmp_path):
     assert res.outcome == Outcome.task_failure, (res.outcome, [c.message[-300:] for c in res.checks])
 
 
+ENCODINGS_SHADOW = '''"""Candidate-supplied encodings package (decision log D40).
+
+The interpreter imports ``encodings`` from sys.path while it starts, before the first
+line of the wrapper runs. This one loads the real package, then puts a directory that
+is not one of the candidate paths at the front of sys.path, so that the wrapper's
+later ``import json`` finds the forging json.py stored there.
+"""
+import sys as _sys
+
+_here = __file__.rsplit("/", 2)[0]
+del _sys.modules["encodings"]
+_saved = _sys.path[:]
+_sys.path[:] = [p for p in _sys.path if p != _here]
+import encodings as _real  # noqa: E402  (the stdlib package; registers the codec search)
+_sys.path[:] = _saved
+_sys.modules["encodings"] = _real
+_sys.path.insert(0, _here + "/_tc_forge")
+'''
+
+
+def test_startup_encodings_shadow_cannot_forge_results(image, task, tmp_path):
+    """Regression (D40): a candidate ``encodings`` package must not load when the child starts.
+
+    Under harness 0.3.1 the candidate directory was on PYTHONPATH at interpreter start,
+    so this candidate received reward 1.0 in this probe.
+    """
+    cand = _candidate(task[0], tmp_path, "encodings_shadow", {
+        "calc.py": "def add(a, b):\n    return a - b\n",
+        "encodings/__init__.py": ENCODINGS_SHADOW,
+        "_tc_forge/json.py": JSON_SHADOW,
+    })
+    res = _grade(image, task, cand)
+    assert res.outcome == Outcome.task_failure, (res.outcome, [c.message[-300:] for c in res.checks])
+
+
 def test_runtime_startup_hooks_not_loaded(image, tmp_path):
-    """Regression (D36): hooks written to /work, HOME or /tmp at runtime never run in later calls."""
+    """Regression (D36, D40): hooks and packages written to /work, HOME or /tmp at runtime never load in later calls."""
     base = tmp_path / "base"
     base.mkdir()
     (base / "calc.py").write_text("x = 1\n")

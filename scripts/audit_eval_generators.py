@@ -43,6 +43,9 @@ def main(task: str, *items: str) -> None:
         print(name, "hits:", len(hits))
         for h in hits[:8]:
             print("   ", h["tool"], h["match"], "|", h["text"][:160])
+    out["_rules"] = {"forbidden_substrings": list(forbidden), "allowed": ["the agent's own exported workspace", "/root/.local/bin/"],
+                     "scope": "tool inputs only (commands and file paths an agent passed to its tools); tool outputs are "
+                              "not inspected (decision log D37)", "script": "scripts/audit_eval_generators.py"}
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(out, indent=2) + "\n")
 

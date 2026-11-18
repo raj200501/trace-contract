@@ -18,9 +18,9 @@ Layout follows the Harbor 0.25.0 task schema (see docs/research/notes/harbor.md)
 
 ``network`` = ``intended`` writes ``no-network`` for agent and verifier phases
 (an LLM agent run needs an allowlist override for its model endpoint).
-``local-validation`` writes ``public`` because Harbor rejects ``no-network`` on hosts
-without nftables egress control (observed here); use it only for oracle/no-op runs
-of trusted candidates.
+``local-validation`` writes ``public`` because Harbor rejected ``no-network`` on the
+host used for validation (decision log D20; only the rejection was observed, not its
+cause); use it only for oracle/no-op runs of trusted candidates.
 """
 
 from __future__ import annotations

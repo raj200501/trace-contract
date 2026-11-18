@@ -167,7 +167,7 @@ def cmd_freeze(a) -> None:
 def cmd_validate_task(a) -> None:
     from .contract import acceptance_gate, validate_contract
     from .tasks import session_for_task, verify_snapshot
-    from .verifier import hash_test_dir, lint_process_separated
+    from .verifier import checks_sha256, hash_test_dir, lint_process_separated
 
     tdir, m = _task(a.task)
     report: dict = {"task_id": m.task_id, "status": m.status}
@@ -197,8 +197,10 @@ def cmd_validate_task(a) -> None:
         actual = hash_test_dir(tdir / s.test_dir)
         lint = lint_process_separated(tdir / s.test_dir) if s.isolation == Isolation.process_separated else []
         report["verifiers"][s.verifier_id] = {"condition": s.condition.value, "frozen": s.frozen,
-                                              "hash_matches": actual == s.content_sha256, "n_checks": len(s.checks),
-                                              "lint_issues": len(lint)}
+                                              "hash_matches": actual == s.content_sha256,
+                                              "checks_hash_matches": (None if s.checks_sha256 is None
+                                                                      else checks_sha256(s) == s.checks_sha256),
+                                              "n_checks": len(s.checks), "lint_issues": len(lint)}
     _out(report)
 
 
@@ -354,8 +356,13 @@ def cmd_export_gen_workspace(a) -> None:
         (out / "contract.json").write_text(json.dumps({"variant": c.variant.value, "requirements": reqs}, indent=2) + "\n")
         (out / "instruction.md").write_text(render_instruction(c))
     if a.with_reference_patch:
+        from .patches import filter_patch
+
         ref = next(load(tdir / p, Candidate) for p in m.candidates if "reference" in p)
-        (out / "reference.diff").write_text(ref.patch)
+        # By default only the graded part of the reference diff: the session agent's test
+        # files belong to the repository-test baseline (B1) and are left out (decision log
+        # D37, D40). --with-reference-tests restores the full diff.
+        (out / "reference.diff").write_text(ref.patch if a.with_reference_tests else filter_patch(ref.patch)[0])
     if a.with_session:
         (out / "session.txt").write_text(render_session(session_for_task(tdir, REPO)))
     if a.with_first_prompt:
@@ -446,6 +453,8 @@ def main(argv: list[str] | None = None) -> None:
     p = sub.add_parser("export-gen-workspace", help="isolated workspace for a generation agent")
     p.add_argument("task"); p.add_argument("--out", required=True); p.add_argument("--contract")
     p.add_argument("--with-reference-patch", action="store_true"); p.add_argument("--with-session", action="store_true")
+    p.add_argument("--with-reference-tests", action="store_true",
+                   help="with --with-reference-patch: keep the reference's test-file hunks (B1 material; off by default)")
     p.add_argument("--with-first-prompt", action="store_true"); p.set_defaults(fn=cmd_export_gen_workspace)
 
     p = sub.add_parser("evaluate", help="score every frozen verifier on every evaluation candidate (sandboxed)")

@@ -8,7 +8,10 @@
         "text": "ls tasks/CS-03/ && ls tasks/CS-03/verifiers/ 2>/dev/null; ls -la tasks/CS-03/verifiers/reference_check 2>/dev/null; .venv/bin/tracecontract --help 2>&1 | head -60"
       }
     ],
-    "assessment": "benign: one `ls` of tasks/CS-03/verifiers/ (directory names) and of the refcheck agent's own output directory reference_check/; no verifier test file of another condition was read"
+    "assessment": "benign: one `ls` of tasks/CS-03/verifiers/ (directory names) and of the refcheck agent's own output directory reference_check/; no verifier test file of another condition was read",
+    "writer_agent_id": "a397688937b6585e6",
+    "writer_transcript_sha256": "95229e339063797c3681cc826b6cb7bfefaff10b7c66118966e7c93b3bcf7df8",
+    "note_2026_11_18": "Writer transcript identified from experiments/prompts/agent_prompts.jsonl (decision log D40). Re-running the audit script on it with the reference-check directory allowed gives the recorded `ls` plus the writer's commands in the workspace exported for it (gen_workspaces/CS-03/refcheck), which this record treats as the agent's own workspace."
   },
   "eval-alt-2": {
     "transcript_sha256": "2947de0f68eb6334b25690e222219362badc6f2ed64cf070b1a179c4be696874",
@@ -21,5 +24,27 @@
   "eval-nm": {
     "transcript_sha256": "5620c5688b11db1406b4910d28db7752b3dbd35b621da1878d33033e51e630c7",
     "hits": []
+  },
+  "_rules": {
+    "forbidden_substrings": [
+      "tasks/CS-03/verifiers",
+      "tasks/CS-03/candidates",
+      "trace-contract/results",
+      "trace-contract/data",
+      "trace-contract/docs",
+      "cs_workspaces",
+      "gen_workspaces/CS-03/",
+      ".tc_sealed",
+      "scratchpad/sealed",
+      "scratchpad/scenarios",
+      "scratchpad/reference",
+      "/root/"
+    ],
+    "allowed": [
+      "the agent's own exported workspace",
+      "/root/.local/bin/ (tool binaries; allowed from 2026-11-13T03:43Z, commit 5bb402a)"
+    ],
+    "scope": "tool inputs only (commands and file paths an agent passed to its tools); tool outputs are not inspected (decision log D37)",
+    "script": "scripts/audit_eval_generators.py"
   }
 }

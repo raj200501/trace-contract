@@ -4,7 +4,8 @@ Usage: python scripts/compare_runs.py results/runs/<old> results/runs/<new>
 Writes <new>/compare_<old>.json and .md. A pair is a (verifier, candidate) graded in
 both runs. Agreement is reported on reward (pass vs non-pass) and on the exact outcome,
 separately for pairs whose verifier is unchanged between the runs (same version, test
-content hash and number of scored checks) and for pairs whose verifier changed (for
+content hash and scored check list: the check-list hash when both run manifests record
+it, otherwise the number of scored checks) and for pairs whose verifier changed (for
 example B1 re-selection, decision log D31). Every discordant pair is listed with both
 runs' diagnostics.
 """
@@ -13,6 +14,7 @@ from __future__ import annotations
 
 import json
 import sys
+from collections import Counter
 from pathlib import Path
 
 
@@ -36,12 +38,18 @@ def main(old_dir: str, new_dir: str) -> None:
     common = sorted(set(old) & set(new))
     reward_disc, outcome_disc = [], []
     changed_verifier = []
+    criteria: Counter = Counter()
     for k in common:
         a, b = old[k], new[k]
         key = f"{a['task_id']}/{k[0]}"
         oa, ob = vo.get(key, {}), vn.get(key, {})
-        same = (oa.get("version") == ob.get("version") and oa.get("content_sha256") == ob.get("content_sha256")
-                and len(a.get("checks", [])) == len(b.get("checks", [])))
+        if oa.get("checks_sha256") and ob.get("checks_sha256"):
+            criteria["check-list hash"] += 1
+            same_checks = oa["checks_sha256"] == ob["checks_sha256"]
+        else:
+            criteria["number of checks"] += 1
+            same_checks = len(a.get("checks", [])) == len(b.get("checks", []))
+        same = oa.get("version") == ob.get("version") and oa.get("content_sha256") == ob.get("content_sha256") and same_checks
         if not same:
             changed_verifier.append({"verifier_id": k[0], "candidate_id": k[1], "old": a["outcome"], "new": b["outcome"],
                                      "old_version": oa.get("version"), "new_version": ob.get("version"),
@@ -59,6 +67,7 @@ def main(old_dir: str, new_dir: str) -> None:
     summary = {
         "old_run": old_p.name, "new_run": new_p.name, "pairs_in_both": len(common),
         "pairs_same_verifier": n, "pairs_changed_verifier": len(changed_verifier),
+        "check_list_criterion": dict(criteria),
         "changed_verifier_reward_agreement": (sum((c["old"] == "pass") == (c["new"] == "pass") for c in changed_verifier)
                                               / len(changed_verifier)) if changed_verifier else None,
         "changed_verifier_pairs": changed_verifier,
@@ -70,7 +79,8 @@ def main(old_dir: str, new_dir: str) -> None:
     (new_p / f"compare_{old_p.name}.json").write_text(json.dumps(summary, indent=2) + "\n")
     md = [f"# Run comparison: {old_p.name} vs {new_p.name}", "",
           f"Pairs graded in both runs: {len(common)} (only in {old_p.name}: {summary['only_in_old']}, only in {new_p.name}: {summary['only_in_new']}).",
-          f"Pairs with an unchanged verifier: {n}; pairs whose verifier changed between the runs: {len(changed_verifier)}.", "",
+          f"Pairs with an unchanged verifier: {n}; pairs whose verifier changed between the runs: {len(changed_verifier)}.",
+          "Scored check lists compared by: " + ", ".join(f"{k} ({v} pairs)" for k, v in criteria.items()) + ".", "",
           f"* Reward agreement on unchanged-verifier pairs (pass vs non-pass): {n - len(reward_disc)}/{n}",
           f"* Exact-outcome agreement on unchanged-verifier pairs: {n - len(outcome_disc)}/{n}",
           f"* Changed-verifier pairs with the same reward: {sum((c['old'] == 'pass') == (c['new'] == 'pass') for c in changed_verifier)}/{len(changed_verifier)}", "",

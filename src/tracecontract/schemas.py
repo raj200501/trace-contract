@@ -501,7 +501,10 @@ class Eligibility(str, Enum):
 class RedactionStatus(str, Enum):
     source_redacted = "source_redacted"  # redacted upstream (e.g. SWE-chat Presidio/TruffleHog)
     redacted_by_us = "redacted_by_us"
-    not_needed_controlled = "not_needed_controlled"  # no third-party personal data by construction
+    # Legacy value, no longer assigned: controlled transcripts can still contain third-party
+    # personal data from the repository (author names in metadata, changelog credits), so
+    # they are sanitised like any other transcript (decision log D38, D40).
+    not_needed_controlled = "not_needed_controlled"
     pending = "pending"
 
 

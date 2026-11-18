@@ -14,7 +14,7 @@ data/gated/
 
 # Large or regenerable artifacts
 results/runs/*/logs/
-snapshots/
+/snapshots/
 paper/build/
 paper/*.aux
 paper/*.log

@@ -1,0 +1,12 @@
+{
+  "duplicates": {
+    "CS-01-eval-nm-5": {
+      "same_code_as_dev": [
+        "CS-01-dev-attack-full_session-a3"
+      ]
+    }
+  },
+  "rule": "same code apart from comments and docstrings, different graded patch",
+  "snapshot_manifest_sha256": "0e87b6c1b51f5c87ce008d9a1145a9a38543fc92299a356f587a72ed8a229179",
+  "task_id": "CS-01"
+}

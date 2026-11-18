@@ -406,6 +406,8 @@ measured in D29.
 `pilot-v0.2-h2` was stopped after 4 pairs. It is kept as a superseded partial run.
 Work paused at this point at the owner's request.
 
+## 2026-11-18
+
 ### D30 (resolved 2026-11-18). Harness 0.3.0: bounded malloc arenas; per-UID process limit 256
 **Mechanism confirmed.** A probe ran as candidate code under harness 0.2.0: 30
 rounds of 32 allocating threads, then 60 waiting threads.
@@ -636,3 +638,139 @@ synthetic fixture task (population `fixture`, not evidence; exported harness `tc
 is identical; only metadata differs (harness version, input-file hashes). Compared with the superseded runs:
 `pilot-v0.2` agrees on all 99 pairs whose verifier is unchanged and on 8 of the 9 changed CS-04 B1 pairs.
 `pilot-v0.2-h2` has only 4 pairs, all graded with the earlier CS-04 B1 selection, and agrees on all 4.
+
+### D40. Dispositions review, final claims audit, harness 0.3.2 and protocol v0.5
+**Reviews (model agents, read-only; not human review).**
+* **Dispositions review** (workflow `tracecontract-review-dispositions`, 12:19–13:46 UTC).
+  For each of the 64 internal-review findings, one agent per lens group recorded how it
+  had been resolved, and a second agent tried to show that disposition wrong. Result:
+  23 fixed, 33 partly fixed, 5 disclosed, 3 fixed and disclosed. The checker corrected
+  29 dispositions. The remaining items are addressed below, in D41 and D42, or listed
+  as open in `docs/internal_review.md`.
+* **Final claims audit** (workflow `tracecontract-final-audit`). Four lenses: numbers,
+  procedure, consistency and reproducibility. Each finding was checked by a verifier
+  agent, and a critic looked for gaps. Findings the verifiers confirmed are fixed in
+  the same change as this entry.
+
+**Harness 0.3.2 (`tc-harness/0.3.2`).** The D36 fix was incomplete: sandbox children
+still started with the candidate directory on `PYTHONPATH`. The interpreter imports
+the `encodings` package from `sys.path` while it starts, before the wrapper's first
+line. A candidate `encodings` package could therefore run before the trusted imports
+and redirect them. It could be shipped in the patch (`encodings/` is not a protected
+path) or written to `/work` at runtime.
+
+Docker proof under 0.3.1: a wrong candidate that ships `encodings/__init__.py`, which
+puts a forging `json.py` on `sys.path`, received reward 1.0. A runtime-written
+`/work/encodings` loaded at the start of the next call.
+
+The fix: `run_python` children start without `PYTHONPATH`. The wrapper restores it in
+`os.environ` and puts the candidate directories on `sys.path` after its trusted imports.
+
+Equivalence check: under both candidate-path layouts used here (`/work` and
+`/work/src:/work`), a snippet sees the same `sys.path`, `PYTHONPATH`, interpreter flags,
+loaded modules and environment under 0.3.1 and 0.3.2. Both probes fail under 0.3.1 and
+pass under 0.3.2 (`tests/test_sandbox_isolation.py`).
+
+The repository-test baseline (B1) now keeps the pytest output tails in the host logs.
+Before, its log files held only a separator. Within one call, code imported by the
+snippet still controls what that call reports (the documented in-call limit), and B1
+remains in-process and forgeable (D42).
+
+**Third duplicate.** Held-out near miss `CS-01-eval-nm-5` differs from development
+attack `CS-01-dev-attack-full_session-a3`, which C4's audit used, by one docstring
+line. CS-01's C4 audit made no revision (C4 = C3), so the overlap did not change C4's
+tests.
+
+`scripts/find_duplicates.py` now records same-code duplicates (comments and docstrings
+ignored; Python compared by syntax tree) in `tasks/*/labels/duplicates.json`. It finds
+no others in the four tasks, and the preflight check fails if the record is out of date.
+
+**Protocol v0.5** (§13) records these changes and corrections of wording. It was
+written and hashed at 2026-11-18T14:12:50Z, sha256
+`3fa9d843cf5d53013e17e8e66f457eb684c5da9127b687612dfbf0bc1ff02aa0`, before the 0.3.2
+label re-proposal and run.
+
+### D41. Corrections to earlier entries (found by the reviews of D40)
+The log is append-only, so earlier entries are corrected here. The one non-append
+edit is the `## 2026-11-18` heading inserted before D30 (resolved). Entries from there
+to D39 were written on 2026-11-18 but sat under the 2026-11-13 heading.
+* **D5, D10, D11 ("registered", "pre-registered").** These mean hashed and logged
+  locally before the session, not a formal preregistration (D15).
+* **D11, D12, D26 ("ground truth").** This means the sealed reference material
+  (scenario, reference proposals, reference contract), the study's labeling standard.
+  The study's AI agent wrote the scenarios and the reference operationalisations before
+  each session. It is the same model as the session agent. So far only a model has
+  reviewed them, and no human has written or reviewed them. The legacy proposer label
+  `study-design:pre-registered` in `tasks/*/contracts/reference.json` has the same
+  meaning. New builds write `study-design:hashed-scenario`.
+* **D14, D37 (held-out separation).** Generators and reference-check writers ran as the
+  same user (root) in the repository checkout. Frozen verifiers, the reference patch
+  and registered candidates were therefore readable, and the near-miss workspaces also
+  held B1's test files (D37). Separation rested on instructions and on the tool-input
+  audit, which found no forbidden read. "Had no access" in D37 should read "no
+  recorded read". The pre-correction state was captured during the session, before
+  any verifier existed. B2's generator and the full-session contract proposer saw its
+  edits, abbreviated, in the session text. CS-04's B1 was re-selected after its pool
+  existed (D31).
+* **D26.** Agents ran as uid 0, so the mode-0700 directory was no barrier. The
+  2026-11-18 held-out prompts name it in their do-not-read list.
+* **D21.** The counts were wrong (D38). CS-01 had one address plus one diff decorator
+  that was wrongly redacted and restored in `sanitize:v2`. CS-02 had one address,
+  which D21 did not list. CS-03 and CS-04 had one each.
+* **D33.**
+  * The 2026-11-18 held-out prompts were not "the same prompt templates as for
+    CS-03/CS-04". The shared preamble gained a working-style line, "tool outputs" in
+    the data-not-instructions line, a different owner-context note and a longer
+    do-not-read list. The near-miss steps gained the repository-test command, a
+    one-at-a-time instruction and a package-path hint. The alternative and
+    reference-check steps changed too, the reference-check prompt most.
+  * Stopped attempts: besides the two CS-01 near-miss attempts, four CS-02 agents
+    (alternatives, near misses, reference checks, a mapper) were started on
+    2026-11-13 and stopped at the D30 pause. They ran only inspection commands and
+    registered nothing. These six transcripts were not audited. The prompt export
+    marks them (`experiments/prompts/agent_prompts.jsonl`, field `note`).
+  * CS-03 alternative 1 diverges from the reference on modifier apostrophes (U+02BB,
+    U+02BC) and on 98 ASCII probes, all apostrophe-joined tokens. The CS-03
+    pre-correction state diverges only on non-ASCII all-caps input (Turkish dotted İ,
+    circled capitals) and matches on all 5,479 ASCII all-caps probes. D33 said both
+    were identical on all ASCII probes.
+  * Mapper 2 (all tasks) and mapper 1 for CS-02 got one extra sentence: they cannot
+    run code, so a contradiction claim that depends on what the base code outputs must
+    be flagged in the note, not asserted. It was added after the CS-01 mapper-1
+    correction (D42). The agreement in D33 is therefore between slightly different
+    instructions.
+* **D37 (reference-check timing).**
+  * CS-01 and CS-04: written while their pools were being generated.
+  * CS-02: its writer wrote its test files at 08:48–08:52 UTC, before the first CS-02
+    candidate was registered (08:53). The review-and-fix rounds ran 09:13–10:20, mostly
+    after the pool was complete (09:18), and the checks were frozen at 10:21
+    (`fe30c15`). D37 said "after the pool existed".
+  * CS-03: frozen (`07bdd71`, 04:01) before its pool was registered (04:06–04:12).
+* **D37 (audit limits).** The shared scratch directory held held-out material, and the
+  third CS-02 reference-check reviewer listed it (10:12 UTC). The listing showed a
+  held-out file name (`CS-02-eval-alt-1`).
+* **D36.** "(it is forgeable; D37)" should point to D42. The fix did not cover start-up
+  imports (D40).
+* **D39.** The label re-proposal ran 11:59–12:07 UTC (last label 12:07:24), not
+  11:59–12:06.
+
+### D42. Records the log lacked
+* **B1 forgeability probe** (commit `18e4878`, 2026-11-18T08:53:54Z):
+  `tests/test_sandbox_isolation.py::test_in_process_repo_tests_report_is_forgeable_known_limitation`.
+  An honest wrong candidate fails B1. A candidate whose `atexit` hook rewrites the
+  JUnit report passes. This is a documented limitation of the in-process baseline.
+* **CS-01 mapping correction** (commit `d7a3e02`). The builder changed mapper 1's
+  `contradicts.R9` in `tasks/CS-01/contracts/mapping_full_session.json` from
+  `[R-opt-in]` to `[]` (field `corrections`). The mapper, which could not run code, had
+  assumed that the base renders `naturalsize(999999)` as `1000.0 kB`. In the sandbox
+  it renders `1.0 MB`, which is consistent with R9's assertion. Effect on the coverage
+  table: CS-01 full-session "Contradicting" goes from 1 to 0 and "covered but
+  contradicted" from 1 to 0. Coverage is 4/4 either way.
+* **CS-02 audit outcomes.** C2 needed 0 revisions and is identical to C1. C4 needed
+  1 revision. All audit outcomes are now in the generated verifier table
+  (`paper/generated/verifiers_table.tex`).
+* **Costs not recorded (deviation from protocol §6).** Generation cost per condition
+  and per accepted task was not recorded and is not reported. The verifier specs'
+  generation fields (`run_id` "unrecorded", empty `prompt_sha256` and budget) were
+  never filled. The prompts are exported separately (`experiments/prompts/`) and are
+  not linked from each spec.

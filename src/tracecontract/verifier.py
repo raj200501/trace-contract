@@ -167,7 +167,11 @@ def freeze(spec: VerifierSpec, task_dir: Path) -> VerifierSpec:
     """Mark a verifier frozen; its content hash must match the files on disk.
 
     Freezing also records the hash of the scored check list and the time of freezing.
+    An already frozen spec is refused: changing a frozen verifier requires a new version.
     """
+    if spec.frozen:
+        raise ValueError(f"{spec.verifier_id}: already frozen (at {spec.frozen_at or 'an unrecorded time'}); "
+                         "build a new version instead of re-freezing")
     actual = hash_test_dir(task_dir / spec.test_dir)
     if actual != spec.content_sha256:
         raise ValueError(f"{spec.verifier_id}: test files changed since the spec was built")
@@ -182,7 +186,9 @@ def check_frozen(spec: VerifierSpec, task_dir: Path) -> None:
         return
     if hash_test_dir(task_dir / spec.test_dir) != spec.content_sha256:
         raise ValueError(f"{spec.verifier_id}: frozen verifier was modified; bump the version and rerun")
-    if spec.checks_sha256 is not None and checks_sha256(spec) != spec.checks_sha256:
+    if spec.checks_sha256 is None:
+        raise ValueError(f"{spec.verifier_id}: frozen spec records no hash of its scored check list")
+    if checks_sha256(spec) != spec.checks_sha256:
         raise ValueError(f"{spec.verifier_id}: scored check list changed after freezing; bump the version and rerun")
 
 

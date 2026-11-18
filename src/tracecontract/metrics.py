@@ -111,8 +111,8 @@ def summarize(rows: list[Row], *, condition: str, exclude_infra: bool = False, n
     s.fr_ci = cluster_bootstrap(rows, "fr", n_boot=n_boot, seed=seed, exclude_infra=exclude_infra)
     s.fa_exact = clopper_pearson(fa.num, fa.den)
     s.fr_exact = clopper_pearson(fr.num, fr.den)
-    s.fa_ci_degenerate = _degenerate(per_task, "fa")
-    s.fr_ci_degenerate = _degenerate(per_task, "fr")
+    s.fa_ci_degenerate = _degenerate(per_task, "fa") or bool(s.fa_ci and s.fa_ci[0] == s.fa_ci[1])
+    s.fr_ci_degenerate = _degenerate(per_task, "fr") or bool(s.fr_ci and s.fr_ci[0] == s.fr_ci[1])
     return s
 
 
@@ -198,6 +198,9 @@ def paired_difference(rows: list[Row], cond_a: str, cond_b: str, metric: str, *,
     for i, k in enumerate(common):
         fams[a[k].family_id].append(i)
     keys = sorted(fams)
+    # Degenerate: every family has the same difference, so resampling families cannot vary it.
+    per_family = {kk: stat([ra[i] for i in fams[kk]], [rb[i] for i in fams[kk]]) for kk in keys}
+    degenerate = len({v for v in per_family.values() if v is not None}) <= 1
     ci = None
     if len(keys) >= 2 and point is not None:
         rng = random.Random(seed)
@@ -222,4 +225,5 @@ def paired_difference(rows: list[Row], cond_a: str, cond_b: str, metric: str, *,
     want = "invalid" if metric == "fa" else "valid"
     n_metric = sum(1 for x in ra if x.label == want)
     return {"metric": metric, "a": cond_a, "b": cond_b, "n_common": len(common), "n_metric": n_metric, "n_families": len(keys),
-            "difference": point, "ci95": ci, "discordant": disc}
+            "difference": point, "ci95": ci, "ci95_degenerate": bool(ci) and (degenerate or ci[0] == ci[1]),
+            "per_family_difference": per_family, "discordant": disc}

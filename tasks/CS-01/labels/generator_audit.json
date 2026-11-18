@@ -94,5 +94,27 @@
   "eval-nm": {
     "transcript_sha256": "63684f79e75f500a7ce45674a004a6b423db902a68a29c09eb421b33869c27da",
     "hits": []
+  },
+  "_rules": {
+    "forbidden_substrings": [
+      "tasks/CS-01/verifiers",
+      "tasks/CS-01/candidates",
+      "trace-contract/results",
+      "trace-contract/data",
+      "trace-contract/docs",
+      "cs_workspaces",
+      "gen_workspaces/CS-01/",
+      ".tc_sealed",
+      "scratchpad/sealed",
+      "scratchpad/scenarios",
+      "scratchpad/reference",
+      "/root/"
+    ],
+    "allowed": [
+      "the agent's own exported workspace",
+      "/root/.local/bin/ (tool binaries; allowed from 2026-11-13T03:43Z, commit 5bb402a)"
+    ],
+    "scope": "tool inputs only (commands and file paths an agent passed to its tools); tool outputs are not inspected (decision log D37)",
+    "script": "scripts/audit_eval_generators.py"
   }
 }

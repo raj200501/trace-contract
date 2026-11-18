@@ -62,15 +62,26 @@ def run_matrix(task_dirs: list[Path], *, run_id: str, out_root: Path, cache_dir:
                                                                "tasks": [d.name for d in task_dirs],
                                                                "code_revision": code_revision(repo_root or Path.cwd())}],
     }
+    from .tasks import verify_snapshot
+
+    # Check every task's snapshot and frozen verifiers before grading anything, so a run
+    # cannot stop part-way on a missing or modified input.
     for td in task_dirs:
-        m, specs, cands = load_task(td)
+        m, specs, _ = load_task(td)
         base = snapshot_root / m.task_id
         if not base.is_dir():
             raise FileNotFoundError(f"snapshot for {m.task_id} not built at {base} (run `tracecontract snapshot`)")
-        from .tasks import verify_snapshot
-
         if not verify_snapshot(td, snapshot_root):
             raise ValueError(f"snapshot for {m.task_id} at {base} does not match its recorded manifest (run `tracecontract snapshot`)")
+        for s in specs:
+            if conditions and s.condition.value not in conditions:
+                continue
+            if require_frozen and not s.frozen:
+                raise ValueError(f"{s.verifier_id} is not frozen; freeze verifiers before final evaluation")
+            check_frozen(s, td)
+    for td in task_dirs:
+        m, specs, cands = load_task(td)
+        base = snapshot_root / m.task_id
         snap = load(td / (m.snapshot or "snapshot.json"), Snapshot)
         tag, image_id = build_env_image(m.env_requirements, cache_dir)
         entry = {"task_id": m.task_id, "family_id": m.family_id, "image": tag, "image_id": image_id,

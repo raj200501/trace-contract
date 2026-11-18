@@ -16,10 +16,35 @@
         "text": "ls -la && echo ---- && ls tasks/CS-04/ && echo ---- && ls tasks/CS-04/verifiers/ 2>&1"
       }
     ],
-    "assessment": "benign: one `ls tasks/CS-04/verifiers/` listing directory names only; no verifier test file of another condition was read"
+    "assessment": "benign: one `ls tasks/CS-04/verifiers/` listing directory names only; no verifier test file of another condition was read",
+    "writer_agent_id": "a12a8772152ac446d",
+    "writer_transcript_sha256": "eaf4dc14c38b8170549c1020bc5d80fb747559f261433a8782db27de5a61632b",
+    "note_2026_11_18": "Writer transcript identified from experiments/prompts/agent_prompts.jsonl (decision log D40). Re-running the audit script on it with the reference-check directory allowed gives the recorded `ls` plus the writer's commands in the workspace exported for it (gen_workspaces/CS-04/refcheck), which this record treats as the agent's own workspace."
   },
   "eval-nm": {
     "transcript_sha256": "a365177ab30cd898d78c7d8e0564b04256efe9606188d57454a314573c6a7eba",
     "hits": []
+  },
+  "_rules": {
+    "forbidden_substrings": [
+      "tasks/CS-04/verifiers",
+      "tasks/CS-04/candidates",
+      "trace-contract/results",
+      "trace-contract/data",
+      "trace-contract/docs",
+      "cs_workspaces",
+      "gen_workspaces/CS-04/",
+      ".tc_sealed",
+      "scratchpad/sealed",
+      "scratchpad/scenarios",
+      "scratchpad/reference",
+      "/root/"
+    ],
+    "allowed": [
+      "the agent's own exported workspace",
+      "/root/.local/bin/ (tool binaries; allowed from 2026-11-13T03:43Z, commit 5bb402a)"
+    ],
+    "scope": "tool inputs only (commands and file paths an agent passed to its tools); tool outputs are not inspected (decision log D37)",
+    "script": "scripts/audit_eval_generators.py"
   }
 }

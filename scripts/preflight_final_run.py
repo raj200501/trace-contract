@@ -9,8 +9,11 @@ Fails (exit 1) unless, for every task given:
 * the base snapshot exists and matches its recorded manifest;
 * no other sandbox container is running and the git working tree is clean.
 
-Held-out candidates whose graded patch equals a development candidate's are reported
-as warnings (decision log D37).
+Held-out candidates whose graded patch equals a development candidate's or another
+held-out candidate's are reported as warnings (decision log D37). Same-code duplicates
+(comments and docstrings ignored) must match the record in ``labels/duplicates.json``
+(written by ``scripts/find_duplicates.py``; decision log D40), so a new one cannot go
+unrecorded.
 
 Usage: python scripts/preflight_final_run.py tasks/CS-01 tasks/CS-02 ...
 """
@@ -62,10 +65,26 @@ def main(*task_dirs: str) -> int:
         from tracecontract.analysis import _norm_patch
 
         dev = {_norm_patch(c.patch): c.candidate_id for c in cands if c.split.value == "dev" and c.patch}
+        seen: dict[str, str] = {}
         for c in held:
-            if c.patch and _norm_patch(c.patch) in dev:
-                print(f"WARN: {m.task_id}: held-out {c.candidate_id} has the same graded patch as development candidate "
-                      f"{dev[_norm_patch(c.patch)]}")
+            if not c.patch:
+                continue
+            k = _norm_patch(c.patch)
+            if k in dev:
+                print(f"WARN: {m.task_id}: held-out {c.candidate_id} has the same graded patch as development candidate {dev[k]}")
+            if k in seen:
+                print(f"WARN: {m.task_id}: held-out {c.candidate_id} has the same graded patch as held-out candidate {seen[k]}")
+            seen.setdefault(k, c.candidate_id)
+        if (SNAPSHOTS / m.task_id).is_dir():
+            from tracecontract.duplicates import same_code_duplicates
+
+            rec = same_code_duplicates(td, SNAPSHOTS)
+            dp = td / "labels" / "duplicates.json"
+            if not dp.exists() or json.loads(dp.read_text()) != rec:
+                problems.append(f"{m.task_id}: same-code duplicates differ from labels/duplicates.json "
+                                f"(run scripts/find_duplicates.py and disclose): {rec['duplicates']}")
+            for cid, hits in rec["duplicates"].items():
+                print(f"WARN: {m.task_id}: held-out {cid} has the same code (comments and docstrings ignored) as {hits}")
         audit_p = td / "labels" / "generator_audit.json"
         audit = json.loads(audit_p.read_text()) if audit_p.exists() else {}
         for ws, rec in audit.items():
