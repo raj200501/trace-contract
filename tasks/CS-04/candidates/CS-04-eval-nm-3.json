@@ -33,7 +33,7 @@
       "labeler": "builder:refcheck+regression+construction:v1",
       "labeler_kind": "model",
       "adjudicated": false,
-      "timestamp": "2026-11-13T03:59:02+00:00",
+      "timestamp": "2026-11-18T08:43:19+00:00",
       "note": "construction invalid, confirmed on targeted requirement | {\"refcheck_outcome\": \"task_failure\", \"refcheck_failed\": [\"test_consecutive_groups_step.py::test_positive_step_with_positional_ordering\", \"test_consecutive_groups_step.py::test_negative_step_with_positional_ordering\", \"test_consecutive_groups_step.py::test_zero_step_with_positional_ordering_raises_value_error\", \"test_consecutive_groups_step.py::test_positional_ordering_contract_example\", \"test_consecutive_groups_step.py::test_positional_ordering_matches_base\", \"test_consecutive_groups_step.py::test_positional_ordering_groups_are_lazy_and_shared\"], \"regression_outcome\": \"task_failure\", \"regression_failed\": [\"tests.test_more.ConsecutiveGroupsTest::test_custom_ordering\", \"tests.test_more.ConsecutiveGroupsTest::test_exotic_ordering\"], \"construction\": {\"value\": \"invalid\", \"violated_requirements\": [\"R-positional-ordering\"], \"labeler\": \"nearmiss:v1\", \"labeler_kind\": \"construction\", \"adjudicated\": false, \"timestamp\": \"2026-11-13T03:55:30+00:00\", \"note\": \"\"}}"
     }
   ]

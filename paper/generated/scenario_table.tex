@@ -1,0 +1,8 @@
+\begin{table}[t]\centering\footnotesize
+\caption{Intended requirements of the registered controlled scenarios, by the user turn that introduced them (generated from \texttt{data/controlled/scenarios}).}\label{tab:scenarios}
+\begin{tabular}{llp{0.33\linewidth}p{0.33\linewidth}}\toprule Task & Library & Initial request ($U_1$) & Correction ($U_2$) \\\midrule
+CS-01 & \texttt{humanize} & R-default-trim (superseded), R-keep-meaningful & R-opt-in, R-default-unchanged, R-custom-format-unchanged \\
+CS-02 & \texttt{tinydb} & R-atomic, R-new-content & R-read-after-write, R-bytes-unchanged, R-no-temp-files, R-original-intact \\
+CS-03 & \texttt{inflection} & R-acronym & R-all-caps-input, R-humanize-unchanged, R-underscore-unchanged \\
+CS-04 & \texttt{more-itertools} & R-step & R-negative-step, R-zero-step, R-positional-ordering, R-lazy, R-default-unchanged \\
+\bottomrule\end{tabular}\end{table}

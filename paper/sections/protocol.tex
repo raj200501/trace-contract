@@ -1,3 +1,37 @@
 \section{Experimental protocol}
 \label{sec:protocol}
-The protocol (\texttt{experiments/protocol.md}, v0.1) was hashed and timestamped before the first evaluation run; it is not a formal preregistration. The unit of analysis is the task family. Evaluation candidates are generated only after all verifiers of a family are frozen. False acceptance is the fraction of invalid evaluation candidates that pass; false rejection the fraction of valid evaluation candidates that do not pass. Every non-pass outcome counts as a rejection in the primary analysis; infrastructure outcomes are reported separately and excluded in a sensitivity analysis. Reference solutions (seen by every generator) and no-ops are sanity checks excluded from the rates. Intervals come from a cluster bootstrap over task families. Pre-specified paired comparisons: C1 vs C3 and C2 vs C4 (information loss), C1 vs C2 and C3 vs C4 (audit), B2 vs C4 (structured contract vs LLM baseline), B1 vs C4.
+The protocol (\texttt{experiments/protocol.md}) was hashed and timestamped before the first evaluation run (v0.1). Amendments were also hashed and logged:
+\begin{itemize}
+\item v0.2: additional descriptive metrics, made before any run;
+\item v0.3: harness requirement, sanity grading, reliability and mapper-agreement measurements, and one analysis labeled exploratory, made after two superseded runs and before the final run.
+\end{itemize}
+It is not a formal preregistration.
+
+\paragraph{Unit of analysis.} The unit is the task family: one source session and everything derived from it. Candidates are never treated as independent samples. Intervals are percentile intervals from a cluster bootstrap over families (2,000 resamples). With four families they describe variability; they are not evidence of an effect.
+
+\paragraph{Held-out candidate pool.} Per family the pool contains:
+\begin{itemize}
+\item the agent's own pre-correction state, captured after $U_1$ and before $U_2$;
+\item two independently written valid alternatives, implemented from the reference instruction without the reference diff;
+\item five constructed near misses, each built from the reference to violate exactly one reference requirement, mostly requirements introduced by the correction.
+\end{itemize}
+The no-op and the reference solution are graded as sanity checks and excluded from the rates. Held-out candidates were generated only after every verifier of the family was frozen, by separate agents in workspaces that contained no verifier files. Every generator transcript was audited for reads of verifiers, other candidates, sealed scenario material or other workspaces.
+
+\paragraph{Labels.} Ground truth is the reference contract: the study's pre-registered intended requirements, operationalised with exact quotes. It is combined with a regression norm: breaking behaviour covered by the repository's own tests makes a candidate invalid. Human labels are the primary standard; none exist yet. The automated pilot instead uses a pre-specified rule (D19) that combines three signals:
+\begin{itemize}
+\item independent reference checks, written from the reference contract and validated only on the reference and the no-op;
+\item the regression norm;
+\item construction intent.
+\end{itemize}
+Agreement gives a valid or invalid label; disagreement gives \emph{ambiguous}, which is excluded from the rates and queued for human review. A second agent independently checked every held-out candidate in the sandbox. Its verdicts are advisory evidence for reviewers and never change a label.
+
+\paragraph{Metrics and comparisons.} False acceptance (FA) is the share of invalid held-out candidates whose outcome is \emph{pass}; false rejection (FR) is the share of valid held-out candidates without \emph{pass}. Every non-pass outcome counts as a rejection; infrastructure outcomes are reported separately. We also report Youden's $J=(1-\mathrm{FR})-\mathrm{FA}$ and the number of families with at least one accepted negative. Negatives are broken down by type (whether a violated requirement was introduced after the first request) and by origin (observed pre-correction state vs.\ near miss). The pre-specified paired comparisons, all on the same candidates, are:
+\begin{itemize}
+\item C1--C3 and C2--C4 (information lost by initial-only reconstruction);
+\item C1--C2 and C3--C4 (audit effect);
+\item B2--C4 and B2--C3 (structured contract vs.\ full-session LLM);
+\item B1--C4 (repository tests vs.\ the proposed verifier).
+\end{itemize}
+Secondary measures: requirement coverage of the recovered contracts against the reference, using two independent model mappers and their agreement; and pass/non-pass agreement between superseded runs and the final run.
+
+\paragraph{Final run.} Every condition of every task was graded under harness 0.3.0 in a single run, one container at a time, with no other sandbox workload on the host.

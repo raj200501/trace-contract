@@ -1,9 +1,51 @@
-\section{Contracts, verifiers and audit}
+\section{Contracts, verifiers and grading}
 \label{sec:method}
-\paragraph{Requirement contracts.} A contract is a set of requirements, each with a statement, a kind (change, invariant, constraint, non-goal), a status (explicit, inferred, superseded, unresolved), the event that introduced it, and evidence spans that must match the session text exactly. Proposed requirements whose quotes cannot be aligned to user messages are rejected (or downgraded to \emph{inferred} if a rationale is given). Supersession links must point forward in time; active requirements may not conflict; unresolved requirements cannot be scored; inferred requirements need a human review before a task is accepted. The \emph{initial-only} contract is recovered by the same proposer from the first user request alone; the \emph{full} contract from the whole session.
+\paragraph{Requirement contracts.} A contract is a set of requirements. Each has:
+\begin{itemize}
+\item a statement and a kind (change, invariant, constraint, non-goal);
+\item a status: \emph{explicit}, \emph{inferred}, \emph{superseded} or \emph{unresolved};
+\item the session event that introduced it;
+\item evidence spans that must match the session text exactly.
+\end{itemize}
+A proposed requirement whose quotes cannot be aligned to user messages is rejected, or downgraded to \emph{inferred} if the proposer gave a rationale. Further rules:
+\begin{itemize}
+\item supersession links must point forward in time;
+\item active requirements may not conflict;
+\item superseded and unresolved requirements are never scored;
+\item inferred requirements, and every requirement of a reference contract, need human review before a task is accepted.
+\end{itemize}
+One proposer prompt (\texttt{contract:v1}) recovers the \emph{full-session} contract from the whole session, and the \emph{initial-only} contract from the first user request alone. The comparison therefore isolates the information that reaches the verifier, not the capability of the agent that produced the session.
 
-\paragraph{Verifier conditions.} From a contract, a generator writes 6--14 behavioural tests (C1 initial/plain, C3 full/plain). The audited conditions start from these tests and apply the audit below (C2 initial/audited, C4 full/audited). Baselines: B1, the repository's tests at the reference state restricted to those passing on the reference; B2, a generator given the whole session transcript without contract machinery. All generators see the base repository and the reference diff and use the same model and prompt template.
+\paragraph{Verifier conditions.} From a contract, a generator writes 6--14 black-box tests:
+\begin{itemize}
+\item C1 (initial-only, plain) and C3 (full-session, plain) are single-pass;
+\item C2 and C4 start from the C1 and C3 tests respectively and apply the audit below.
+\end{itemize}
+There are two baselines. B1 consists of the repository's own tests at the reference state, restricted to those that pass on the reference (PASS-on-reference selection); these tests import candidate code directly. B2 is a generator given the whole session transcript and no contract machinery, a competent ``just ask an LLM'' baseline. All generators see the base repository and the reference diff, use the same model and prompt template, and may run code only against the base repository.
 
-\paragraph{Audit (audit:v1).} Using development candidates only (the reference solution repeated three times, the no-op, four development attacks that each violate one contract requirement, and one development valid alternative), the audit requires: the reference passes on every repeat, the no-op and every attack fail, the alternative passes, every scored requirement is mapped to a check, and static lint is clean. At most three revision rounds are allowed; the verifier is then frozen.
+\paragraph{Audit (audit:v1).} The audit uses development candidates only:
+\begin{itemize}
+\item the reference solution, graded three times;
+\item the no-op;
+\item four development attacks, each written to violate one contract requirement;
+\item one development valid alternative.
+\end{itemize}
+It requires that the reference passes every repeat, that the no-op and every attack fail, that the alternative passes, that every scored requirement maps to a check, and that static lint is clean: every test calls the sandbox API and asserts on concrete values, with no imports of candidate code, no writes outside scratch space and no parametrisation. At most three revision rounds are allowed. All verifiers of a task are then frozen by content hash before any held-out candidate exists.
 
-\paragraph{Process-separated grading.} Hidden tests run in a trusted grader process; candidate code runs only in child processes under an unprivileged user that cannot read the tests or write the results. Each child's result is authenticated with a per-call key; the host recomputes the outcome from the results file and a per-run nonce, so missing or stale results are verifier errors, never passes. Containers run without network, with all capabilities dropped except those needed to switch users, and with resource limits. Candidate edits to test files and test configuration are discarded before grading. \S\ref{sec:repro} lists the isolation probes.
+\paragraph{Process-separated grading.} Hidden tests run in a trusted grader process (root) inside the container. Candidate code runs only in child processes started by the test through a small API (\texttt{run\_python}, \texttt{run\_cmd}). These children run under an unprivileged user ID allocated for that container alone. That user cannot read the tests, write the results or signal the grader.
+\begin{itemize}
+\item \emph{Authentication.} Each child's reported value is authenticated with a per-call key passed through an inherited pipe.
+\item \emph{Trusted aggregation.} The host recomputes the outcome from a root-owned results file and a per-run nonce. Missing, stale, unparseable or incomplete results are verifier errors, never passes.
+\item \emph{Container.} Containers run without network, with all capabilities dropped except those needed to switch users, signal and hand over files, with \texttt{no-new-privileges}, a read-only root filesystem, tmpfs scratch space and an init process.
+\item \emph{Limits.} Each container gets 2 CPUs, 4\,GiB of memory and 512 PIDs. Candidate processes additionally get CPU-time, 1.5\,GiB address-space, 64\,MiB file-size and 256-process limits, with bounded malloc arenas.
+\item \emph{Protected files.} Candidate edits to test files and test configuration (\texttt{tests/}, \texttt{test\_*.py}, \texttt{conftest.py}, \texttt{pytest.ini}, \texttt{tox.ini}, \texttt{setup.cfg}, \texttt{sitecustomize.py}, \texttt{*.pth}, \dots) are discarded before grading.
+\item \emph{Patch policy.} Patches with path traversal, binary content or symbolic links are rejected.
+\end{itemize}
+Outcomes are \emph{pass}, \emph{task\_failure}, \emph{environment\_failure}, \emph{verifier\_error}, \emph{timeout} and \emph{unresolved} (repeated runs disagree); only \emph{pass} yields reward.
+
+\paragraph{Resource isolation had to be fixed during the pilot.} Two harness defects surfaced during the pilot (decision log D29--D31).
+\begin{enumerate}
+\item Every container initially ran candidate code as the same user ID. The kernel counts the per-user process limit across the whole host, so concurrent grading runs, and interactive sandbox calls, consumed one another's thread budget. In a probe, a container could start 30 of 30 threads alone but 2 of 30 while another container held 60 threads under the same ID.
+\item The address-space limit counted the 64\,MiB malloc arena that glibc reserves per thread. This capped candidate code at about 21 threads, and long threaded test sessions stalled nondeterministically.
+\end{enumerate}
+One consequence was that a reference run used to select B1's checks for one task aborted part-way, so that verifier was rebuilt. Harness 0.3.0 fixes both defects and has regression probes. All reported results use it, and runs under earlier versions are kept as superseded.

@@ -1,0 +1,81 @@
+# Evidence ledger
+
+Every number in `paper/generated/*.tex` with its source. Regenerate with `python paper/make_tables.py <final run dir> [--compare <run dir> ...]`.
+
+- [tasks] CS-01 verifiers / held-out candidates = 7 / 3 <- `tasks/CS-01/task.json`
+- [scenarios] CS-01 requirements U1/U2 = 2/3 <- `data/controlled/scenarios/CS-01.json`
+- [tasks] CS-02 verifiers / held-out candidates = 6 / 1 <- `tasks/CS-02/task.json`
+- [scenarios] CS-02 requirements U1/U2 = 2/4 <- `data/controlled/scenarios/CS-02.json`
+- [tasks] CS-03 verifiers / held-out candidates = 7 / 8 <- `tasks/CS-03/task.json`
+- [scenarios] CS-03 requirements U1/U2 = 1/3 <- `data/controlled/scenarios/CS-03.json`
+- [tasks] CS-04 verifiers / held-out candidates = 7 / 8 <- `tasks/CS-04/task.json`
+- [scenarios] CS-04 requirements U1/U2 = 1/5 <- `data/controlled/scenarios/CS-04.json`
+- [summary] pilot-v0.2 full_audited false_acceptance = 0.0 (0/7) ci95=[0.0, 0.0] <- `results/runs/pilot-v0.2/analysis.json conditions.full_audited.false_acceptance`
+- [summary] pilot-v0.2 full_audited false_rejection = 0.0 (0/5) ci95=[0.0, 0.0] <- `results/runs/pilot-v0.2/analysis.json conditions.full_audited.false_rejection`
+- [summary] pilot-v0.2 full_audited youden_j = 1.0 <- `results/runs/pilot-v0.2/analysis.json conditions.full_audited.youden_j`
+- [summary] pilot-v0.2 full_audited tasks_with_any_accepted_negative = 0/2 <- `results/runs/pilot-v0.2/analysis.json conditions.full_audited`
+- [summary] pilot-v0.2 full_audited infrastructure = 0/16 <- `results/runs/pilot-v0.2/analysis.json conditions.full_audited`
+- [summary] pilot-v0.2 full_plain false_acceptance = 0.0 (0/7) ci95=[0.0, 0.0] <- `results/runs/pilot-v0.2/analysis.json conditions.full_plain.false_acceptance`
+- [summary] pilot-v0.2 full_plain false_rejection = 0.0 (0/5) ci95=[0.0, 0.0] <- `results/runs/pilot-v0.2/analysis.json conditions.full_plain.false_rejection`
+- [summary] pilot-v0.2 full_plain youden_j = 1.0 <- `results/runs/pilot-v0.2/analysis.json conditions.full_plain.youden_j`
+- [summary] pilot-v0.2 full_plain tasks_with_any_accepted_negative = 0/2 <- `results/runs/pilot-v0.2/analysis.json conditions.full_plain`
+- [summary] pilot-v0.2 full_plain infrastructure = 0/16 <- `results/runs/pilot-v0.2/analysis.json conditions.full_plain`
+- [summary] pilot-v0.2 initial_audited false_acceptance = 0.5714285714285714 (4/7) ci95=[0.0, 0.8] <- `results/runs/pilot-v0.2/analysis.json conditions.initial_audited.false_acceptance`
+- [summary] pilot-v0.2 initial_audited false_rejection = 0.0 (0/5) ci95=[0.0, 0.0] <- `results/runs/pilot-v0.2/analysis.json conditions.initial_audited.false_rejection`
+- [summary] pilot-v0.2 initial_audited youden_j = 0.4285714285714286 <- `results/runs/pilot-v0.2/analysis.json conditions.initial_audited.youden_j`
+- [summary] pilot-v0.2 initial_audited tasks_with_any_accepted_negative = 1/2 <- `results/runs/pilot-v0.2/analysis.json conditions.initial_audited`
+- [summary] pilot-v0.2 initial_audited infrastructure = 0/16 <- `results/runs/pilot-v0.2/analysis.json conditions.initial_audited`
+- [summary] pilot-v0.2 initial_plain false_acceptance = 0.7142857142857143 (5/7) ci95=[0.5, 0.8] <- `results/runs/pilot-v0.2/analysis.json conditions.initial_plain.false_acceptance`
+- [summary] pilot-v0.2 initial_plain false_rejection = 0.0 (0/5) ci95=[0.0, 0.0] <- `results/runs/pilot-v0.2/analysis.json conditions.initial_plain.false_rejection`
+- [summary] pilot-v0.2 initial_plain youden_j = 0.2857142857142857 <- `results/runs/pilot-v0.2/analysis.json conditions.initial_plain.youden_j`
+- [summary] pilot-v0.2 initial_plain tasks_with_any_accepted_negative = 2/2 <- `results/runs/pilot-v0.2/analysis.json conditions.initial_plain`
+- [summary] pilot-v0.2 initial_plain infrastructure = 0/16 <- `results/runs/pilot-v0.2/analysis.json conditions.initial_plain`
+- [summary] pilot-v0.2 llm_freeform false_acceptance = 0.0 (0/7) ci95=[0.0, 0.0] <- `results/runs/pilot-v0.2/analysis.json conditions.llm_freeform.false_acceptance`
+- [summary] pilot-v0.2 llm_freeform false_rejection = 0.0 (0/5) ci95=[0.0, 0.0] <- `results/runs/pilot-v0.2/analysis.json conditions.llm_freeform.false_rejection`
+- [summary] pilot-v0.2 llm_freeform youden_j = 1.0 <- `results/runs/pilot-v0.2/analysis.json conditions.llm_freeform.youden_j`
+- [summary] pilot-v0.2 llm_freeform tasks_with_any_accepted_negative = 0/2 <- `results/runs/pilot-v0.2/analysis.json conditions.llm_freeform`
+- [summary] pilot-v0.2 llm_freeform infrastructure = 0/16 <- `results/runs/pilot-v0.2/analysis.json conditions.llm_freeform`
+- [summary] pilot-v0.2 repo_tests false_acceptance = 0.42857142857142855 (3/7) ci95=[0.2, 1.0] <- `results/runs/pilot-v0.2/analysis.json conditions.repo_tests.false_acceptance`
+- [summary] pilot-v0.2 repo_tests false_rejection = 0.4 (2/5) ci95=[0.3333333333333333, 0.5] <- `results/runs/pilot-v0.2/analysis.json conditions.repo_tests.false_rejection`
+- [summary] pilot-v0.2 repo_tests youden_j = 0.17142857142857143 <- `results/runs/pilot-v0.2/analysis.json conditions.repo_tests.youden_j`
+- [summary] pilot-v0.2 repo_tests tasks_with_any_accepted_negative = 2/2 <- `results/runs/pilot-v0.2/analysis.json conditions.repo_tests`
+- [summary] pilot-v0.2 repo_tests infrastructure = 0/16 <- `results/runs/pilot-v0.2/analysis.json conditions.repo_tests`
+- [comparisons] pilot-v0.2 initial_plain - full_plain fa = 0.7142857142857143 ci95=[0.5, 0.8] n=16 discordant={'a_accepts_b_rejects': 5, 'a_rejects_b_accepts': 0} <- `results/runs/pilot-v0.2/analysis.json comparisons`
+- [comparisons] pilot-v0.2 initial_plain - full_plain fr = 0.0 ci95=[0.0, 0.0] n=16 discordant={'a_accepts_b_rejects': 0, 'a_rejects_b_accepts': 0} <- `results/runs/pilot-v0.2/analysis.json comparisons`
+- [comparisons] pilot-v0.2 initial_audited - full_audited fa = 0.5714285714285714 ci95=[0.0, 0.8] n=16 discordant={'a_accepts_b_rejects': 4, 'a_rejects_b_accepts': 0} <- `results/runs/pilot-v0.2/analysis.json comparisons`
+- [comparisons] pilot-v0.2 initial_audited - full_audited fr = 0.0 ci95=[0.0, 0.0] n=16 discordant={'a_accepts_b_rejects': 0, 'a_rejects_b_accepts': 0} <- `results/runs/pilot-v0.2/analysis.json comparisons`
+- [comparisons] pilot-v0.2 initial_plain - initial_audited fa = 0.1428571428571429 ci95=[0.0, 0.5] n=16 discordant={'a_accepts_b_rejects': 1, 'a_rejects_b_accepts': 0} <- `results/runs/pilot-v0.2/analysis.json comparisons`
+- [comparisons] pilot-v0.2 initial_plain - initial_audited fr = 0.0 ci95=[0.0, 0.0] n=16 discordant={'a_accepts_b_rejects': 0, 'a_rejects_b_accepts': 0} <- `results/runs/pilot-v0.2/analysis.json comparisons`
+- [comparisons] pilot-v0.2 full_plain - full_audited fa = 0.0 ci95=[0.0, 0.0] n=16 discordant={'a_accepts_b_rejects': 0, 'a_rejects_b_accepts': 0} <- `results/runs/pilot-v0.2/analysis.json comparisons`
+- [comparisons] pilot-v0.2 full_plain - full_audited fr = 0.0 ci95=[0.0, 0.0] n=16 discordant={'a_accepts_b_rejects': 0, 'a_rejects_b_accepts': 0} <- `results/runs/pilot-v0.2/analysis.json comparisons`
+- [comparisons] pilot-v0.2 llm_freeform - full_audited fa = 0.0 ci95=[0.0, 0.0] n=16 discordant={'a_accepts_b_rejects': 0, 'a_rejects_b_accepts': 0} <- `results/runs/pilot-v0.2/analysis.json comparisons`
+- [comparisons] pilot-v0.2 llm_freeform - full_audited fr = 0.0 ci95=[0.0, 0.0] n=16 discordant={'a_accepts_b_rejects': 0, 'a_rejects_b_accepts': 0} <- `results/runs/pilot-v0.2/analysis.json comparisons`
+- [comparisons] pilot-v0.2 llm_freeform - full_plain fa = 0.0 ci95=[0.0, 0.0] n=16 discordant={'a_accepts_b_rejects': 0, 'a_rejects_b_accepts': 0} <- `results/runs/pilot-v0.2/analysis.json comparisons`
+- [comparisons] pilot-v0.2 llm_freeform - full_plain fr = 0.0 ci95=[0.0, 0.0] n=16 discordant={'a_accepts_b_rejects': 0, 'a_rejects_b_accepts': 0} <- `results/runs/pilot-v0.2/analysis.json comparisons`
+- [comparisons] pilot-v0.2 repo_tests - full_audited fa = 0.42857142857142855 ci95=[0.2, 1.0] n=16 discordant={'a_accepts_b_rejects': 3, 'a_rejects_b_accepts': 0} <- `results/runs/pilot-v0.2/analysis.json comparisons`
+- [comparisons] pilot-v0.2 repo_tests - full_audited fr = 0.4 ci95=[0.3333333333333333, 0.5] n=16 discordant={'a_accepts_b_rejects': 0, 'a_rejects_b_accepts': 2} <- `results/runs/pilot-v0.2/analysis.json comparisons`
+- [negatives] pilot-v0.2 full_audited accepted pre-correction/near-miss/correction-violating/initial-violating = 0/1, 0/6, 0/7, 0/0 <- `results/runs/pilot-v0.2/analysis.json per_task`
+- [negatives] pilot-v0.2 full_plain accepted pre-correction/near-miss/correction-violating/initial-violating = 0/1, 0/6, 0/7, 0/0 <- `results/runs/pilot-v0.2/analysis.json per_task`
+- [negatives] pilot-v0.2 initial_audited accepted pre-correction/near-miss/correction-violating/initial-violating = 1/1, 3/6, 4/7, 0/0 <- `results/runs/pilot-v0.2/analysis.json per_task`
+- [negatives] pilot-v0.2 initial_plain accepted pre-correction/near-miss/correction-violating/initial-violating = 1/1, 4/6, 5/7, 0/0 <- `results/runs/pilot-v0.2/analysis.json per_task`
+- [negatives] pilot-v0.2 llm_freeform accepted pre-correction/near-miss/correction-violating/initial-violating = 0/1, 0/6, 0/7, 0/0 <- `results/runs/pilot-v0.2/analysis.json per_task`
+- [negatives] pilot-v0.2 repo_tests accepted pre-correction/near-miss/correction-violating/initial-violating = 0/1, 3/6, 3/7, 0/0 <- `results/runs/pilot-v0.2/analysis.json per_task`
+- [sanity] pilot-v0.2 full_audited reference/no-op passes = None/None, 0/2 <- `results/runs/pilot-v0.2/analysis.json sanity.full_audited`
+- [sanity] pilot-v0.2 full_plain reference/no-op passes = None/None, 0/2 <- `results/runs/pilot-v0.2/analysis.json sanity.full_plain`
+- [sanity] pilot-v0.2 initial_audited reference/no-op passes = None/None, 0/2 <- `results/runs/pilot-v0.2/analysis.json sanity.initial_audited`
+- [sanity] pilot-v0.2 initial_plain reference/no-op passes = None/None, 0/2 <- `results/runs/pilot-v0.2/analysis.json sanity.initial_plain`
+- [sanity] pilot-v0.2 llm_freeform reference/no-op passes = None/None, 0/2 <- `results/runs/pilot-v0.2/analysis.json sanity.llm_freeform`
+- [sanity] pilot-v0.2 repo_tests reference/no-op passes = None/None, 0/2 <- `results/runs/pilot-v0.2/analysis.json sanity.repo_tests`
+- [sensitivity] pilot-v0.2 full_audited construction-label FA/FR = 0.18181818181818182 (2/11), 0.0 (0/5) <- `results/runs/pilot-v0.2/analysis.json sensitivity_construction_labels.full_audited`
+- [sensitivity] pilot-v0.2 full_plain construction-label FA/FR = 0.18181818181818182 (2/11), 0.0 (0/5) <- `results/runs/pilot-v0.2/analysis.json sensitivity_construction_labels.full_plain`
+- [sensitivity] pilot-v0.2 initial_audited construction-label FA/FR = 0.6363636363636364 (7/11), 0.0 (0/5) <- `results/runs/pilot-v0.2/analysis.json sensitivity_construction_labels.initial_audited`
+- [sensitivity] pilot-v0.2 initial_plain construction-label FA/FR = 0.7272727272727273 (8/11), 0.0 (0/5) <- `results/runs/pilot-v0.2/analysis.json sensitivity_construction_labels.initial_plain`
+- [sensitivity] pilot-v0.2 llm_freeform construction-label FA/FR = 0.2727272727272727 (3/11), 0.0 (0/5) <- `results/runs/pilot-v0.2/analysis.json sensitivity_construction_labels.llm_freeform`
+- [sensitivity] pilot-v0.2 repo_tests construction-label FA/FR = 0.5454545454545454 (6/11), 0.4 (2/5) <- `results/runs/pilot-v0.2/analysis.json sensitivity_construction_labels.repo_tests`
+- [labels] CS-03 valid/invalid/ambiguous/unlabeled/queued = 3/2/3/0/3 <- `results/runs/pilot-v0.2/analysis.json labels.CS-03`
+- [labels] CS-04 valid/invalid/ambiguous/unlabeled/queued = 2/5/1/0/1 <- `results/runs/pilot-v0.2/analysis.json labels.CS-04`
+- [coverage] CS-03 full_session coverage/unsupported/contradicting/coverage2/kappa = 1.0 (4/4), 1/5, 0, None, None <- `results/runs/pilot-v0.2/analysis.json coverage.CS-03 / mapping_agreement.CS-03`
+- [coverage] CS-03 initial_only coverage/unsupported/contradicting/coverage2/kappa = 0.75 (3/4), 1/5, 0, None, None <- `results/runs/pilot-v0.2/analysis.json coverage.CS-03 / mapping_agreement.CS-03`
+- [coverage] CS-04 full_session coverage/unsupported/contradicting/coverage2/kappa = 1.0 (6/6), 1/7, 0, None, None <- `results/runs/pilot-v0.2/analysis.json coverage.CS-04 / mapping_agreement.CS-04`
+- [coverage] CS-04 initial_only coverage/unsupported/contradicting/coverage2/kappa = 0.5 (3/6), 0/3, 0, None, None <- `results/runs/pilot-v0.2/analysis.json coverage.CS-04 / mapping_agreement.CS-04`
+- [matrix] pilot-v0.2 outcome matrix rows = 16 <- `results/runs/pilot-v0.2/analysis.json per_task`

@@ -507,8 +507,314 @@
       "youden_j": 0.17142857142857143
     }
   },
+  "coverage": {
+    "CS-03": {
+      "reference_scored": [
+        "R-acronym",
+        "R-all-caps-input",
+        "R-humanize-unchanged",
+        "R-underscore-unchanged"
+      ],
+      "task_id": "CS-03",
+      "variants": {
+        "full_session": {
+          "contradicting": [],
+          "coverage": 1.0,
+          "covered": [
+            "R-acronym",
+            "R-all-caps-input",
+            "R-humanize-unchanged",
+            "R-underscore-unchanged"
+          ],
+          "mapper": "model:claude-code-subagent:mapper:v1",
+          "mapper_kind": "model",
+          "missing": [],
+          "n_recovered_scored": 5,
+          "superseded_requirements": [],
+          "unsupported": [
+            "R2"
+          ],
+          "unsupported_rate": 0.2
+        },
+        "initial_only": {
+          "contradicting": [],
+          "coverage": 0.75,
+          "covered": [
+            "R-acronym",
+            "R-humanize-unchanged",
+            "R-underscore-unchanged"
+          ],
+          "mapper": "model:claude-code-subagent:mapper:v1",
+          "mapper_kind": "model",
+          "missing": [
+            "R-all-caps-input"
+          ],
+          "n_recovered_scored": 5,
+          "superseded_requirements": [],
+          "unsupported": [
+            "R4"
+          ],
+          "unsupported_rate": 0.2
+        }
+      },
+      "variants_mapper2": {}
+    },
+    "CS-04": {
+      "reference_scored": [
+        "R-default-unchanged",
+        "R-lazy",
+        "R-negative-step",
+        "R-positional-ordering",
+        "R-step",
+        "R-zero-step"
+      ],
+      "task_id": "CS-04",
+      "variants": {
+        "full_session": {
+          "contradicting": [],
+          "coverage": 1.0,
+          "covered": [
+            "R-default-unchanged",
+            "R-lazy",
+            "R-negative-step",
+            "R-positional-ordering",
+            "R-step",
+            "R-zero-step"
+          ],
+          "mapper": "model:claude-code-subagent:mapper:v1",
+          "mapper_kind": "model",
+          "missing": [],
+          "n_recovered_scored": 7,
+          "superseded_requirements": [],
+          "unsupported": [
+            "R7"
+          ],
+          "unsupported_rate": 0.14285714285714285
+        },
+        "initial_only": {
+          "contradicting": [],
+          "coverage": 0.5,
+          "covered": [
+            "R-default-unchanged",
+            "R-positional-ordering",
+            "R-step"
+          ],
+          "mapper": "model:claude-code-subagent:mapper:v1",
+          "mapper_kind": "model",
+          "missing": [
+            "R-lazy",
+            "R-negative-step",
+            "R-zero-step"
+          ],
+          "n_recovered_scored": 3,
+          "superseded_requirements": [],
+          "unsupported": [],
+          "unsupported_rate": 0.0
+        }
+      },
+      "variants_mapper2": {}
+    }
+  },
+  "labels": {
+    "CS-03": {
+      "candidates": [
+        {
+          "candidate": "CS-03-pre-correction",
+          "check_assessed": null,
+          "origin": "observed_pre_correction",
+          "proposed": "valid",
+          "violated": []
+        },
+        {
+          "candidate": "CS-03-eval-alt-2",
+          "check_assessed": null,
+          "origin": "valid_alternative",
+          "proposed": "valid",
+          "violated": []
+        },
+        {
+          "candidate": "CS-03-eval-nm-1",
+          "check_assessed": null,
+          "origin": "constructed_near_miss",
+          "proposed": "ambiguous",
+          "violated": []
+        },
+        {
+          "candidate": "CS-03-eval-nm-2",
+          "check_assessed": null,
+          "origin": "constructed_near_miss",
+          "proposed": "ambiguous",
+          "violated": []
+        },
+        {
+          "candidate": "CS-03-eval-nm-3",
+          "check_assessed": null,
+          "origin": "constructed_near_miss",
+          "proposed": "invalid",
+          "violated": [
+            "R-humanize-unchanged"
+          ]
+        },
+        {
+          "candidate": "CS-03-eval-nm-4",
+          "check_assessed": null,
+          "origin": "constructed_near_miss",
+          "proposed": "ambiguous",
+          "violated": []
+        },
+        {
+          "candidate": "CS-03-eval-nm-5",
+          "check_assessed": null,
+          "origin": "constructed_near_miss",
+          "proposed": "invalid",
+          "violated": [
+            "R-all-caps-input"
+          ]
+        },
+        {
+          "candidate": "CS-03-eval-alt-1",
+          "check_assessed": null,
+          "origin": "valid_alternative",
+          "proposed": "valid",
+          "violated": []
+        }
+      ],
+      "counts": {
+        "ambiguous": 3,
+        "invalid": 2,
+        "valid": 3
+      },
+      "review_queue": [
+        {
+          "candidate": "CS-03-eval-nm-1",
+          "check_assessed": null,
+          "origin": "constructed_near_miss",
+          "proposed": "ambiguous",
+          "reason": "ambiguous under D19",
+          "violated": []
+        },
+        {
+          "candidate": "CS-03-eval-nm-2",
+          "check_assessed": null,
+          "origin": "constructed_near_miss",
+          "proposed": "ambiguous",
+          "reason": "ambiguous under D19",
+          "violated": []
+        },
+        {
+          "candidate": "CS-03-eval-nm-4",
+          "check_assessed": null,
+          "origin": "constructed_near_miss",
+          "proposed": "ambiguous",
+          "reason": "ambiguous under D19",
+          "violated": []
+        }
+      ]
+    },
+    "CS-04": {
+      "candidates": [
+        {
+          "candidate": "CS-04-pre-correction",
+          "check_assessed": null,
+          "origin": "observed_pre_correction",
+          "proposed": "invalid",
+          "violated": [
+            "R-zero-step"
+          ]
+        },
+        {
+          "candidate": "CS-04-eval-alt-1",
+          "check_assessed": null,
+          "origin": "valid_alternative",
+          "proposed": "valid",
+          "violated": []
+        },
+        {
+          "candidate": "CS-04-eval-alt-2",
+          "check_assessed": null,
+          "origin": "valid_alternative",
+          "proposed": "valid",
+          "violated": []
+        },
+        {
+          "candidate": "CS-04-eval-nm-1",
+          "check_assessed": null,
+          "origin": "constructed_near_miss",
+          "proposed": "invalid",
+          "violated": [
+            "R-negative-step"
+          ]
+        },
+        {
+          "candidate": "CS-04-eval-nm-2",
+          "check_assessed": null,
+          "origin": "constructed_near_miss",
+          "proposed": "invalid",
+          "violated": [
+            "R-zero-step"
+          ]
+        },
+        {
+          "candidate": "CS-04-eval-nm-3",
+          "check_assessed": null,
+          "origin": "constructed_near_miss",
+          "proposed": "invalid",
+          "violated": [
+            "R-default-unchanged",
+            "R-lazy",
+            "R-negative-step",
+            "R-positional-ordering",
+            "R-step",
+            "R-zero-step"
+          ]
+        },
+        {
+          "candidate": "CS-04-eval-nm-4",
+          "check_assessed": null,
+          "origin": "constructed_near_miss",
+          "proposed": "invalid",
+          "violated": [
+            "R-lazy",
+            "R-negative-step",
+            "R-positional-ordering",
+            "R-step"
+          ]
+        },
+        {
+          "candidate": "CS-04-eval-nm-5",
+          "check_assessed": null,
+          "origin": "constructed_near_miss",
+          "proposed": "ambiguous",
+          "violated": []
+        }
+      ],
+      "counts": {
+        "ambiguous": 1,
+        "invalid": 5,
+        "valid": 2
+      },
+      "review_queue": [
+        {
+          "candidate": "CS-04-eval-nm-5",
+          "check_assessed": null,
+          "origin": "constructed_near_miss",
+          "proposed": "ambiguous",
+          "reason": "ambiguous under D19",
+          "violated": []
+        }
+      ]
+    }
+  },
+  "mapping_agreement": {
+    "CS-03": {},
+    "CS-04": {}
+  },
   "meta": {
+    "harness_versions": {
+      "tc-harness/0.1.0": 108
+    },
     "label_policy": "proposed labels allowed (automated pilot)",
+    "label_rule": "pilot",
     "n_results": 108,
     "tasks": {}
   },
@@ -1296,6 +1602,104 @@
         },
         "pass": 0
       }
+    }
+  },
+  "sensitivity_construction_labels": {
+    "full_audited": {
+      "fa": 0.18181818181818182,
+      "fa_ci95": [
+        0.16666666666666666,
+        0.2
+      ],
+      "fa_den": 11,
+      "fa_num": 2,
+      "fr": 0.0,
+      "fr_ci95": [
+        0.0,
+        0.0
+      ],
+      "fr_den": 5,
+      "fr_num": 0
+    },
+    "full_plain": {
+      "fa": 0.18181818181818182,
+      "fa_ci95": [
+        0.16666666666666666,
+        0.2
+      ],
+      "fa_den": 11,
+      "fa_num": 2,
+      "fr": 0.0,
+      "fr_ci95": [
+        0.0,
+        0.0
+      ],
+      "fr_den": 5,
+      "fr_num": 0
+    },
+    "initial_audited": {
+      "fa": 0.6363636363636364,
+      "fa_ci95": [
+        0.4,
+        0.8333333333333334
+      ],
+      "fa_den": 11,
+      "fa_num": 7,
+      "fr": 0.0,
+      "fr_ci95": [
+        0.0,
+        0.0
+      ],
+      "fr_den": 5,
+      "fr_num": 0
+    },
+    "initial_plain": {
+      "fa": 0.7272727272727273,
+      "fa_ci95": [
+        0.6,
+        0.8333333333333334
+      ],
+      "fa_den": 11,
+      "fa_num": 8,
+      "fr": 0.0,
+      "fr_ci95": [
+        0.0,
+        0.0
+      ],
+      "fr_den": 5,
+      "fr_num": 0
+    },
+    "llm_freeform": {
+      "fa": 0.2727272727272727,
+      "fa_ci95": [
+        0.16666666666666666,
+        0.4
+      ],
+      "fa_den": 11,
+      "fa_num": 3,
+      "fr": 0.0,
+      "fr_ci95": [
+        0.0,
+        0.0
+      ],
+      "fr_den": 5,
+      "fr_num": 0
+    },
+    "repo_tests": {
+      "fa": 0.5454545454545454,
+      "fa_ci95": [
+        0.3333333333333333,
+        0.8
+      ],
+      "fa_den": 11,
+      "fa_num": 6,
+      "fr": 0.4,
+      "fr_ci95": [
+        0.3333333333333333,
+        0.5
+      ],
+      "fr_den": 5,
+      "fr_num": 2
     }
   }
 }

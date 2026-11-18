@@ -58,6 +58,35 @@ Rates with (numerator/denominator) and 95% cluster-bootstrap interval over task 
 | repo_tests | full_audited | FA | +0.43 | [+0.20, +1.00] | 16 | 2 | 3 | 0 |
 | repo_tests | full_audited | FR | +0.40 | [+0.33, +0.50] | 16 | 2 | 0 | 2 |
 
+## Exploratory sensitivity: construction-intent labels (not pre-specified)
+
+Constructed candidates labeled by how they were built (near miss = invalid, alternative = valid), including those the D19 rule marked ambiguous; natural candidates keep their D19 label.
+
+| Condition | False acceptance | False rejection |
+| --- | --- | --- |
+| initial_plain | 0.73 (8/11) [0.60, 0.83] | 0.00 (0/5) [0.00, 0.00] |
+| initial_audited | 0.64 (7/11) [0.40, 0.83] | 0.00 (0/5) [0.00, 0.00] |
+| full_plain | 0.18 (2/11) [0.17, 0.20] | 0.00 (0/5) [0.00, 0.00] |
+| full_audited | 0.18 (2/11) [0.17, 0.20] | 0.00 (0/5) [0.00, 0.00] |
+| llm_freeform | 0.27 (3/11) [0.17, 0.40] | 0.00 (0/5) [0.00, 0.00] |
+| repo_tests | 0.55 (6/11) [0.33, 0.80] | 0.40 (2/5) [0.33, 0.50] |
+
+## Labels and human-review queue
+
+| Task | valid | invalid | ambiguous | unlabeled | queued for review |
+| --- | --- | --- | --- | --- | --- |
+| CS-03 | 3 | 2 | 3 | 0 | CS-03-eval-nm-1, CS-03-eval-nm-2, CS-03-eval-nm-4 |
+| CS-04 | 2 | 5 | 1 | 0 | CS-04-eval-nm-5 |
+
+## Contract recovery (model mappings, proposals)
+
+| Task | Variant | Coverage of active reference requirements (mapper 1) | Unsupported | Contradicting | Coverage (mapper 2) | Mapping agreement (kappa) |
+| --- | --- | --- | --- | --- | --- | --- |
+| CS-03 | initial_only | 0.75 (3/4) | 1/5 | 0 | - | n/a |
+| CS-03 | full_session | 1.00 (4/4) | 1/5 | 0 | - | n/a |
+| CS-04 | initial_only | 0.50 (3/6) | 0/3 | 0 | - | n/a |
+| CS-04 | full_session | 1.00 (6/6) | 1/7 | 0 | - | n/a |
+
 ## Per-task outcomes
 
 ### CS-03
