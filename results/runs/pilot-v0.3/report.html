@@ -24,19 +24,19 @@ details { margin:6px 0; } summary { cursor:pointer; }
 <h1>TraceContract run report</h1><div class='muted'>run <code>pilot-v0.3</code> · code fe30c159ea48a543d1f1571e5545f6a5e1138009 · started 2026-11-18T10:22:04+00:00 · label policy: proposed labels allowed (automated pilot)</div>
 <div class='banner'><b>Automated pilot.</b> Candidate labels are model or construction proposals awaiting human adjudication. Sessions are <b>controlled</b> (real agent runs with scripted user turns), not natural user traffic. With this few independent task families, rates are descriptive only.</div>
 <h2>Summary by verifier condition</h2><p class='muted'>Tasks: 4 · task families: 4 · recorded verification results: 240. Reference solution and no-op excluded from the rates (sanity table below).</p><div class='scroll'><table><tr><th>Condition</th><th>False acceptance</th><th>False rejection</th><th>Infrastructure outcomes</th><th>Excluded (unlabeled/ambiguous)</th></tr>
-<tr><td>full_audited</td><td>0.00 (0/17) [0.00, 0.00]</td><td>0.00 (0/10) [0.00, 0.00]</td><td>0/32</td><td>5</td></tr>
-<tr><td>full_plain</td><td>0.00 (0/17) [0.00, 0.00]</td><td>0.00 (0/10) [0.00, 0.00]</td><td>0/32</td><td>5</td></tr>
-<tr><td>initial_audited</td><td>0.29 (5/17) [0.00, 0.63]</td><td>0.20 (2/10) [0.00, 0.67]</td><td>0/32</td><td>5</td></tr>
-<tr><td>initial_plain</td><td>0.35 (6/17) [0.07, 0.71]</td><td>0.20 (2/10) [0.00, 0.67]</td><td>0/32</td><td>5</td></tr>
-<tr><td>llm_freeform</td><td>0.06 (1/17) [0.00, 0.14]</td><td>0.00 (0/10) [0.00, 0.00]</td><td>0/32</td><td>5</td></tr>
-<tr><td>repo_tests</td><td>0.29 (5/17) [0.11, 0.64]</td><td>0.40 (4/10) [0.00, 0.82]</td><td>0/32</td><td>5</td></tr>
+<tr><td>C1 initial-only, plain <span class='muted'>(initial_plain)</span></td><td>0.35 (6/17) [0.07, 0.71]</td><td>0.20 (2/10) [0.00, 0.67]</td><td>0/32</td><td>5</td></tr>
+<tr><td>C2 initial-only, audited <span class='muted'>(initial_audited)</span></td><td>0.29 (5/17) [0.00, 0.63]</td><td>0.20 (2/10) [0.00, 0.67]</td><td>0/32</td><td>5</td></tr>
+<tr><td>C3 correction-aware, plain <span class='muted'>(full_plain)</span></td><td>0.00 (0/17) [0.00, 0.00]</td><td>0.00 (0/10) [0.00, 0.00]</td><td>0/32</td><td>5</td></tr>
+<tr><td>C4 correction-aware, audited <span class='muted'>(full_audited)</span></td><td>0.00 (0/17) [0.00, 0.00]</td><td>0.00 (0/10) [0.00, 0.00]</td><td>0/32</td><td>5</td></tr>
+<tr><td>B2 full-session LLM <span class='muted'>(llm_freeform)</span></td><td>0.06 (1/17) [0.00, 0.14]</td><td>0.00 (0/10) [0.00, 0.00]</td><td>0/32</td><td>5</td></tr>
+<tr><td>B1 repository tests <span class='muted'>(repo_tests)</span></td><td>0.29 (5/17) [0.11, 0.64]</td><td>0.40 (4/10) [0.00, 0.82]</td><td>0/32</td><td>5</td></tr>
 </table></div><h3>Sanity checks</h3><div class='scroll'><table><tr><th>Condition</th><th>Reference passes</th><th>No-op passes</th></tr>
-<tr><td>full_audited</td><td>4/4</td><td>0/4</td></tr>
-<tr><td>full_plain</td><td>4/4</td><td>0/4</td></tr>
-<tr><td>initial_audited</td><td>3/4</td><td>0/4</td></tr>
-<tr><td>initial_plain</td><td>3/4</td><td>0/4</td></tr>
-<tr><td>llm_freeform</td><td>4/4</td><td>0/4</td></tr>
-<tr><td>repo_tests</td><td>4/4</td><td>0/4</td></tr>
+<tr><td>C1 initial-only, plain <span class='muted'>(initial_plain)</span></td><td>3/4</td><td>0/4</td></tr>
+<tr><td>C2 initial-only, audited <span class='muted'>(initial_audited)</span></td><td>3/4</td><td>0/4</td></tr>
+<tr><td>C3 correction-aware, plain <span class='muted'>(full_plain)</span></td><td>4/4</td><td>0/4</td></tr>
+<tr><td>C4 correction-aware, audited <span class='muted'>(full_audited)</span></td><td>4/4</td><td>0/4</td></tr>
+<tr><td>B2 full-session LLM <span class='muted'>(llm_freeform)</span></td><td>4/4</td><td>0/4</td></tr>
+<tr><td>B1 repository tests <span class='muted'>(repo_tests)</span></td><td>4/4</td><td>0/4</td></tr>
 </table></div><h3>Paired comparisons on the same candidates</h3><div class='scroll'><table><tr><th>A</th><th>B</th><th>Metric</th><th>A − B</th><th>95% CI</th><th>n</th><th>families</th><th>A accepts, B rejects</th><th>A rejects, B accepts</th></tr>
 <tr><td>initial_plain</td><td>full_plain</td><td>FA</td><td>+0.35</td><td>[+0.07, +0.71]</td><td>32</td><td>4</td><td>6</td><td>0</td></tr>
 <tr><td>initial_plain</td><td>full_plain</td><td>FR</td><td>+0.20</td><td>[+0.00, +0.67]</td><td>32</td><td>4</td><td>0</td><td>2</td></tr>
@@ -55,12 +55,12 @@ details { margin:6px 0; } summary { cursor:pointer; }
 </table></div>
 <p class='muted'>Grading harness: <code>tc-harness/0.3.0</code> (240 results)</p>
 <h3>Exploratory sensitivity: construction-intent labels</h3><p class='muted'>Not pre-specified. Constructed candidates labeled by how they were built (including those the pre-specified rule marked ambiguous); natural candidates keep their proposed label.</p><div class='scroll'><table><tr><th>Condition</th><th>False acceptance</th><th>False rejection</th></tr>
-<tr><td>full_audited</td><td>0.14 (3/22) [0.04, 0.20]</td><td>0.00 (0/10) [0.00, 0.00]</td></tr>
-<tr><td>full_plain</td><td>0.14 (3/22) [0.04, 0.20]</td><td>0.00 (0/10) [0.00, 0.00]</td></tr>
-<tr><td>initial_audited</td><td>0.41 (9/22) [0.18, 0.70]</td><td>0.20 (2/10) [0.00, 0.67]</td></tr>
-<tr><td>initial_plain</td><td>0.45 (10/22) [0.18, 0.73]</td><td>0.20 (2/10) [0.00, 0.67]</td></tr>
-<tr><td>llm_freeform</td><td>0.23 (5/22) [0.17, 0.33]</td><td>0.00 (0/10) [0.00, 0.00]</td></tr>
-<tr><td>repo_tests</td><td>0.36 (8/22) [0.10, 0.67]</td><td>0.40 (4/10) [0.00, 0.82]</td></tr>
+<tr><td>C1 initial-only, plain <span class='muted'>(initial_plain)</span></td><td>0.45 (10/22) [0.18, 0.73]</td><td>0.20 (2/10) [0.00, 0.67]</td></tr>
+<tr><td>C2 initial-only, audited <span class='muted'>(initial_audited)</span></td><td>0.41 (9/22) [0.18, 0.70]</td><td>0.20 (2/10) [0.00, 0.67]</td></tr>
+<tr><td>C3 correction-aware, plain <span class='muted'>(full_plain)</span></td><td>0.14 (3/22) [0.04, 0.20]</td><td>0.00 (0/10) [0.00, 0.00]</td></tr>
+<tr><td>C4 correction-aware, audited <span class='muted'>(full_audited)</span></td><td>0.14 (3/22) [0.04, 0.20]</td><td>0.00 (0/10) [0.00, 0.00]</td></tr>
+<tr><td>B2 full-session LLM <span class='muted'>(llm_freeform)</span></td><td>0.23 (5/22) [0.17, 0.33]</td><td>0.00 (0/10) [0.00, 0.00]</td></tr>
+<tr><td>B1 repository tests <span class='muted'>(repo_tests)</span></td><td>0.36 (8/22) [0.10, 0.67]</td><td>0.40 (4/10) [0.00, 0.82]</td></tr>
 </table></div>
 <h3>Labels and human-review queue</h3><div class='scroll'><table><tr><th>Task</th><th>Valid</th><th>Invalid</th><th>Ambiguous</th><th>Unlabeled</th><th>Queued for human review</th></tr>
 <tr><td>CS-01</td><td>2</td><td>6</td><td>0</td><td>0</td><td>—</td></tr>

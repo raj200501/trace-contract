@@ -41,6 +41,20 @@ details { margin:6px 0; } summary { cursor:pointer; }
 """
 
 
+ORDER = ["initial_plain", "initial_audited", "full_plain", "full_audited", "llm_freeform", "repo_tests"]
+NAMES = {"initial_plain": "C1 initial-only, plain", "initial_audited": "C2 initial-only, audited",
+         "full_plain": "C3 correction-aware, plain", "full_audited": "C4 correction-aware, audited",
+         "llm_freeform": "B2 full-session LLM", "repo_tests": "B1 repository tests"}
+
+
+def _ordered(d: dict) -> list:
+    return [(k, d[k]) for k in ORDER if k in d] + [(k, v) for k, v in d.items() if k not in ORDER]
+
+
+def _cname(c: str) -> str:
+    return f"{NAMES.get(c, c)} <span class='muted'>({c})</span>" if c in NAMES else c
+
+
 def _e(s) -> str:
     return html.escape("" if s is None else str(s))
 
@@ -76,13 +90,13 @@ def build_report(run_dir: Path, tasks_root: Path, repo_root: Path, out: Path) ->
                  f"{analysis['n_families']} · recorded verification results: {analysis['meta']['n_results']}. Reference solution and "
                  "no-op excluded from the rates (sanity table below).</p><div class='scroll'><table><tr><th>Condition</th><th>False acceptance</th>"
                  "<th>False rejection</th><th>Infrastructure outcomes</th><th>Excluded (unlabeled/ambiguous)</th></tr>")
-    for c, d in analysis["conditions"].items():
-        parts.append(f"<tr><td>{_e(c)}</td><td>{_rate(d['false_acceptance'])}</td><td>{_rate(d['false_rejection'])}</td>"
+    for c, d in _ordered(analysis["conditions"]):
+        parts.append(f"<tr><td>{_cname(c)}</td><td>{_rate(d['false_acceptance'])}</td><td>{_rate(d['false_rejection'])}</td>"
                      f"<td>{d['infrastructure']['num']}/{d['infrastructure']['den']}</td><td>{d['excluded_unlabeled_or_ambiguous']}</td></tr>")
     parts.append("</table></div><h3>Sanity checks</h3><div class='scroll'><table><tr><th>Condition</th><th>Reference passes</th><th>No-op passes</th></tr>")
-    for c, s in analysis["sanity"].items():
+    for c, s in _ordered(analysis["sanity"]):
         r, n = s.get("reference", {}), s.get("noop", {})
-        parts.append(f"<tr><td>{_e(c)}</td><td>{r.get('pass', '-')}/{r.get('n', '-')}</td><td>{n.get('pass', '-')}/{n.get('n', '-')}</td></tr>")
+        parts.append(f"<tr><td>{_cname(c)}</td><td>{r.get('pass', '-')}/{r.get('n', '-')}</td><td>{n.get('pass', '-')}/{n.get('n', '-')}</td></tr>")
     parts.append("</table></div><h3>Paired comparisons on the same candidates</h3><div class='scroll'><table><tr><th>A</th><th>B</th><th>Metric</th>"
                  "<th>A − B</th><th>95% CI</th><th>n</th><th>families</th><th>A accepts, B rejects</th><th>A rejects, B accepts</th></tr>")
     for d in analysis["comparisons"]:
@@ -101,8 +115,8 @@ def build_report(run_dir: Path, tasks_root: Path, repo_root: Path, out: Path) ->
                      "candidates labeled by how they were built (including those the pre-specified rule marked ambiguous); natural "
                      "candidates keep their proposed label.</p><div class='scroll'><table><tr><th>Condition</th><th>False acceptance</th>"
                      "<th>False rejection</th></tr>")
-        for c, d in sens.items():
-            parts.append(f"<tr><td>{_e(c)}</td><td>{_rate({'rate': d['fa'], 'num': d['fa_num'], 'den': d['fa_den'], 'ci95': d['fa_ci95']})}</td>"
+        for c, d in _ordered(sens):
+            parts.append(f"<tr><td>{_cname(c)}</td><td>{_rate({'rate': d['fa'], 'num': d['fa_num'], 'den': d['fa_den'], 'ci95': d['fa_ci95']})}</td>"
                          f"<td>{_rate({'rate': d['fr'], 'num': d['fr_num'], 'den': d['fr_den'], 'ci95': d['fr_ci95']})}</td></tr>")
         parts.append("</table></div>")
     labels = analysis.get("labels")
