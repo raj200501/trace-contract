@@ -405,3 +405,37 @@ measured in D29.
 
 `pilot-v0.2-h2` was stopped after 4 pairs. It is kept as a superseded partial run.
 Work paused at this point at the owner's request.
+
+### D30 (resolved 2026-11-18). Harness 0.3.0: bounded malloc arenas; per-UID process limit 256
+**Mechanism confirmed.** A probe ran as candidate code under harness 0.2.0: 30
+rounds of 32 allocating threads, then 60 waiting threads.
+* Only 21 of 60 threads started, with VmSize 1,534 MiB, i.e. at the 1.5 GiB
+  `RLIMIT_AS`. Each new thread costs a 64 MiB arena reservation plus an 8 MiB stack.
+* With `MALLOC_ARENA_MAX=2` in the sandbox environment, all 60 started (VmSize
+  567 MiB).
+
+**Second limit.** The reference state's
+`TestConcurrentTee::test_concurrent_consumers` (CS-04) starts 100 threads. The
+sandbox UID's `RLIMIT_NPROC` of 64 then failed it on every candidate, including the
+reference. Since D29 that UID is unique to one container. Fork-bomb containment
+therefore rests on a per-container `RLIMIT_NPROC` of 256, below
+`--pids-limit 512`, and the fork-bomb probe now asserts fewer than 256 forks.
+
+**Harness `tc-harness/0.3.0`** = 0.2.0 + `MALLOC_ARENA_MAX=2` + `RLIMIT_NPROC` 256.
+Regression probe `test_thread_capacity_after_churn` added. All 54 tests pass.
+Previously stalling B1 pairs (CS-04 nm-1 and alt-1, two runs each) now complete in
+about 40 s with no stall.
+
+### D31. CS-04 B1 rebuilt as version 2 (selection was truncated by the harness bug)
+Re-running B1's PASS-on-reference selection under 0.3.0
+(`scripts/reselect_repo_tests.py`):
+* CS-01, CS-02 and CS-03 keep identical selections (737, 239 and 466 checks).
+* CS-04's frozen selection had 616 checks, from a reference run that aborted at the
+  thread-heavy tests under harness 0.1.0. It included a spurious empty check id and
+  missed 162 tests. Under 0.3.0, all 777 tests pass on the reference.
+
+B1 for CS-04 is therefore version 2: same overlay (content hash unchanged), 777
+checks, frozen. The previous selection is kept as `selection_v1.json`. The rebuild
+is mechanical: the same overlay graded on the same reference candidate, with no
+exposure to held-out candidates. Results from `pilot-v0.2` that used B1 v1 remain
+superseded.

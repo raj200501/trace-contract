@@ -40,7 +40,7 @@ CANDIDATE_PYTHONPATH = os.environ.get("TC_CANDIDATE_PYTHONPATH", WORKDIR)
 PYTHON = os.environ.get("TC_SANDBOX_PYTHON", "/usr/local/bin/python3")
 MEM_LIMIT = int(os.environ.get("TC_SANDBOX_MEM_BYTES", str(1536 * 1024 * 1024)))
 FSIZE_LIMIT = int(os.environ.get("TC_SANDBOX_FSIZE_BYTES", str(64 * 1024 * 1024)))
-NPROC_LIMIT = int(os.environ.get("TC_SANDBOX_NPROC", "64"))
+NPROC_LIMIT = int(os.environ.get("TC_SANDBOX_NPROC", "256"))  # per container UID (D29); below --pids-limit 512
 OUTPUT_TAIL = 200_000
 MARKER = "<<TC_RESULT>>"
 
@@ -113,6 +113,10 @@ def _sandbox_env(extra: dict[str, str] | None = None) -> dict[str, str]:
         "HOME": SANDBOX_HOME,
         "USER": "sandbox",  # the per-run sandbox UID has no passwd entry
         "LOGNAME": "sandbox",
+        # glibc reserves a 64 MiB malloc arena per thread (up to 8 x CPUs) and never
+        # releases it; under RLIMIT_AS that capped candidate code at ~21 threads and made
+        # long threaded test sessions stall nondeterministically (decision log D30).
+        "MALLOC_ARENA_MAX": "2",
         "PYTHONPATH": CANDIDATE_PYTHONPATH,
         "PYTHONDONTWRITEBYTECODE": "1",
         "PYTHONHASHSEED": "0",

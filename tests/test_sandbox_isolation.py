@@ -101,7 +101,7 @@ PROBE_TESTS = textwrap.dedent('''
 
     def test_fork_bomb_is_contained():
         r = run_python("import os\\nn=0\\ntry:\\n    while True:\\n        if os.fork()==0:\\n            import time; time.sleep(30); os._exit(0)\\n        n+=1\\nexcept OSError:\\n    pass\\nresult=n", timeout=10)
-        assert r.ok and r.value < 200, r
+        assert r.ok and r.value < 256, r  # bounded by RLIMIT_NPROC (256) of the per-container UID
 
     def test_daemon_leftovers_are_reaped():
         run_python("import os,time\\nif os.fork()==0:\\n    os.setsid()\\n    if os.fork()==0:\\n        time.sleep(60)\\n    os._exit(0)\\nresult=1", timeout=5)
@@ -294,3 +294,55 @@ def test_sandbox_uids_are_distinct_and_unused(image, monkeypatch):
                 assert (u1, u2) == (30001, 30002)
     finally:
         subprocess.run(["docker", "kill", holder], capture_output=True)
+
+
+ARENA_PROBE = textwrap.dedent('''
+    from tc_sandbox import run_python
+
+    SNIPPET = (
+        "import threading\\n"
+        "def work():\\n"
+        "    x = [bytearray(4096) for _ in range(256)]\\n"
+        "    del x\\n"
+        "for _ in range(30):\\n"
+        "    ts = [threading.Thread(target=work) for _ in range(32)]\\n"
+        "    [t.start() for t in ts]\\n"
+        "    [t.join() for t in ts]\\n"
+        "ev = threading.Event()\\n"
+        "n = 0\\n"
+        "try:\\n"
+        "    for _ in range(60):\\n"
+        "        threading.Thread(target=ev.wait, daemon=True).start()\\n"
+        "        n += 1\\n"
+        "except RuntimeError:\\n"
+        "    pass\\n"
+        "ev.set()\\n"
+        "result = n"
+    )
+
+    def test_threads_after_churn():
+        r = run_python(SNIPPET, timeout=60)
+        assert r.ok, r
+        assert r.value == 60, r.value
+''')
+
+
+def test_thread_capacity_after_churn(image, tmp_path):
+    """Regression (D30): malloc arenas must not exhaust the address-space cap.
+
+    Under harness 0.2.0 this probe started 21 of 60 threads (VmSize at the 1.5 GiB
+    RLIMIT_AS); with MALLOC_ARENA_MAX=2 all 60 start.
+    """
+    base = tmp_path / "base"
+    base.mkdir()
+    (base / "calc.py").write_text("x = 1\n")
+    tdir = tmp_path / "task"
+    (tdir / "tests").mkdir(parents=True)
+    (tdir / "tests" / "test_arena.py").write_text(ARENA_PROBE)
+    spec = VerifierSpec(verifier_id="arena", task_id="t", condition=VerifierCondition.reference_check,
+                        isolation=Isolation.process_separated, test_dir="tests",
+                        checks=[CheckSpec(check_id=c) for c in discover_checks(tdir / "tests")], content_sha256="x")
+    cand = Candidate(candidate_id="noop", task_id="t", origin=CandidateOrigin.noop, split=Split.eval, patch="",
+                     patch_sha256=sha256_text(""), produced_by="fixture")
+    res = verify_candidate(image=image, base_dir=base, spec=spec, task_dir=tdir, candidate=cand, run_id="iso")
+    assert res.outcome == Outcome.passed, [c.message[-400:] for c in res.checks]

@@ -8,10 +8,6 @@
   "test_dir": "verifiers/repo_tests/overlay",
   "checks": [
     {
-      "check_id": "",
-      "requirement_ids": []
-    },
-    {
       "check_id": "tests.test_more.AdjacentTests::test_call_once",
       "requirement_ids": []
     },
@@ -2296,6 +2292,58 @@
       "requirement_ids": []
     },
     {
+      "check_id": "tests.test_more.TestConcurrentTee::test_concurrent_consumers",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.TestRandomOrderedRange::test_lcg_mitigation",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.TestRandomOrderedRange::test_vs_ordered_baseline",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.TestRunningMax::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.TestRunningMax::test_maxlen",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.TestRunningMax::test_stability",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.TestRunningMin::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.TestRunningMin::test_maxlen",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.TestRunningMin::test_stability",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.TestRunningStats::test_datatypes",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.TestRunningStats::test_early_error_detection",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.TestRunningStats::test_single_example",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.TestRunningStats::test_stat_properties",
+      "requirement_ids": []
+    },
+    {
       "check_id": "tests.test_more.TestSerialize::test_concurrent_calls",
       "requirement_ids": []
     },
@@ -2309,6 +2357,22 @@
     },
     {
       "check_id": "tests.test_more.TestSerialize::test_serialize_methods_attribute_error",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.TestSubfactorial::test_error_cases",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.TestSubfactorial::test_oeis_baseline",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.TestSubfactorial::test_vs_derangements",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_more.TestSynchronized::test_concurrent_calls",
       "requirement_ids": []
     },
     {
@@ -2470,11 +2534,591 @@
     {
       "check_id": "tests.test_more.ZipOffsetTest::test_shortest",
       "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.AllEqualTests::test_empty",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.AllEqualTests::test_false",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.AllEqualTests::test_groupby_calls",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.AllEqualTests::test_key",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.AllEqualTests::test_one",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.AllEqualTests::test_tricky",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.AllEqualTests::test_true",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.BatchedTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.BatchedTests::test_strict",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.BeforeAndAfterTests::test_empty",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.BeforeAndAfterTests::test_nested_remainder",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.BeforeAndAfterTests::test_never_false",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.BeforeAndAfterTests::test_never_true",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.BeforeAndAfterTests::test_some_true",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.ConsumeTests::test_negative_consume",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.ConsumeTests::test_null_consume",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.ConsumeTests::test_sanity",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.ConsumeTests::test_total_consume",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.Convolvetests::test_derivative",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.Convolvetests::test_infinite_signal",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.Convolvetests::test_moving_average",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.DotproductTests::test_happy_path",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.FactorTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.FactorTests::test_cross_check",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.FirstTrueTests::test_default",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.FirstTrueTests::test_nothing_true",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.FirstTrueTests::test_pred",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.FirstTrueTests::test_something_true",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.FlattenTests::test_basic_usage",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.FlattenTests::test_single_level",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.GrouperTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.GrouperTests::test_fill",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.GrouperTests::test_ignore",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.GrouperTests::test_invalid_incomplete",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.GrouperTests::test_strict",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.GrouperTests::test_strict_fails",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.IterExceptTests::test_exact_exception",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.IterExceptTests::test_first",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.IterExceptTests::test_generic_exception",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.IterExceptTests::test_multiple",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.IterExceptTests::test_uncaught_exception_is_raised",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.IterIndexTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.IterIndexTests::test_start",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.IterIndexTests::test_stop",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.LoopsTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.MatMulTests::test_m_by_n",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.MatMulTests::test_n_by_n",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.MultinomialTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.NcyclesTests::test_happy_path",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.NcyclesTests::test_null_case",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.NcyclesTests::test_pathological_case",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.NthCombinationTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.NthCombinationTests::test_invalid_index",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.NthCombinationTests::test_invalid_r",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.NthCombinationTests::test_long",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.NthPermutationTests::test_invalid_index",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.NthPermutationTests::test_invalid_r",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.NthPermutationTests::test_long",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.NthPermutationTests::test_negative_index",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.NthPermutationTests::test_null",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.NthPermutationTests::test_r_equal_to_n",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.NthPermutationTests::test_r_less_than_n",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.NthTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.NthTests::test_default",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.NthTests::test_negative_item_raises",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.PadnoneTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.PartitionTests::test_arbitrary",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.PartitionTests::test_bool",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.PartitionTests::test_pred_is_none",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.PolynomialDerivativeTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.PolynomialEvalTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.PolynomialFromRootsTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.PolynomialFromRootsTests::test_large",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.PowersetTests::test_combinatorics",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.PrependTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.PrependTests::test_multiple",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.PrimeFunctionTests::test_is_prime_pseudoprimes",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.PrimeFunctionTests::test_nth_prime_approximate",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.PrimeFunctionTests::test_nth_prime_tightened_bound",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.PrimeFunctionTests::test_primes",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.PrimeFunctionTests::test_special_primes",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.QuantifyTests::test_custom_predicate",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.QuantifyTests::test_happy_path",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.RandomCombinationTests::test_no_replacement",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.RandomCombinationTests::test_pseudorandomness",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.RandomCombinationWithReplacementTests::test_pseudorandomness",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.RandomCombinationWithReplacementTests::test_replacement",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.RandomPermutationTests::test_full_permutation",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.RandomPermutationTests::test_partial_permutation",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.RandomProductTests::test_list_with_repeat",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.RandomProductTests::test_simple_lists",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.RepeatfuncTests::test_added_arguments",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.RepeatfuncTests::test_finite_repeat",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.RepeatfuncTests::test_null_times",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.RepeatfuncTests::test_simple_repeat",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.ReshapeTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.ReshapeTests::test_empty",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.ReshapeTests::test_multidimensional",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.ReshapeTests::test_zero",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.RoundrobinTests::test_even_groups",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.RoundrobinTests::test_uneven_groups",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.RunningMeanTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.RunningMeanTests::test_maxlen",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.RunningMedianTests::test_error_cases",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.RunningMedianTests::test_vs_statistics_median",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.RunningMedianTests::test_vs_statistics_median_windowed",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.RunningWindowSizeTests::test_index_protocol",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.RunningWindowSizeTests::test_noninteger_window",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.RunningWindowSizeTests::test_nonpositive_index",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.SieveTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.SieveTests::test_prime_counts",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.SieveTests::test_small_numbers",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.SlidingWindowTests::test_deque_version",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.SlidingWindowTests::test_islice_version",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.SlidingWindowTests::test_zero",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.SubslicesTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.SumOfSquaresTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.TabulateTests::test_count",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.TabulateTests::test_simple_tabulate",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.TailTests::test_iterator_equal",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.TailTests::test_iterator_greater",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.TailTests::test_iterator_less",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.TailTests::test_sized_equal",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.TailTests::test_sized_greater",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.TailTests::test_sized_less",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.TakeTests::test_negative_take",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.TakeTests::test_null_take",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.TakeTests::test_simple_take",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.TakeTests::test_take_too_much",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.TestRandomDerangement::test_basics",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.TotientTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.TransposeTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.TransposeTests::test_empty",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.TransposeTests::test_incompatible_error",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.TriplewiseTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.UniqueEverseenTests::test_custom_key",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.UniqueEverseenTests::test_everseen",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.UniqueEverseenTests::test_unhashable_dicts",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.UniqueEverseenTests::test_unhashable_lists",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.UniqueEverseenTests::test_unhashable_sets",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.UniqueJustseenTests::test_custom_key",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.UniqueJustseenTests::test_justseen",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.UniqueTests::test_basic",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.UniqueTests::test_key",
+      "requirement_ids": []
+    },
+    {
+      "check_id": "tests.test_recipes.UniqueTests::test_reverse",
+      "requirement_ids": []
     }
   ],
   "content_sha256": "41002085ee793a6cd77c9df354a3a0abc1b513fa48da58b8b0d8d82b0f3c38fa",
   "generation": null,
   "audit": null,
   "frozen": true,
-  "version": 1
+  "version": 2
 }
