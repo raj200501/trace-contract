@@ -30,6 +30,8 @@ packages = ["src/tracecontract"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# tests/fixtures holds task data (e.g. verifier tests that run only inside the sandbox), not project tests.
+addopts = ["--ignore=tests/fixtures"]
 markers = [
   "docker: requires a working local Docker daemon",
 ]
