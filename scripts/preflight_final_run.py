@@ -88,12 +88,14 @@ def main(*task_dirs: str) -> int:
         audit_p = td / "labels" / "generator_audit.json"
         audit = json.loads(audit_p.read_text()) if audit_p.exists() else {}
         for ws, rec in audit.items():
+            if ws == "_rules":
+                continue
             if rec.get("hits") and not rec.get("assessment"):
                 problems.append(f"{m.task_id}: generator audit {ws} has unassessed hits")
             strict = rec.get("strict_reaudit")
-            if ws != "_rules" and not strict:
+            if not strict:
                 problems.append(f"{m.task_id}: generator audit {ws} has no strict re-audit (scripts/strict_reaudit.py, D44)")
-            elif strict and (not strict.get("assessment") or any("error" in t for t in strict.get("transcripts", {}).values())):
+            elif not strict.get("assessment") or any("error" in t for t in strict.get("transcripts", {}).values()):
                 problems.append(f"{m.task_id}: strict re-audit of {ws} is unassessed or lacks a transcript")
         needed = {"eval-alt-1", "eval-alt-2", "eval-nm"}
         missing = sorted(needed - set(audit))
