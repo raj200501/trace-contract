@@ -29,7 +29,7 @@
       "labeler": "builder:refcheck+regression+construction:v1",
       "labeler_kind": "model",
       "adjudicated": false,
-      "timestamp": "2026-11-18T12:00:17+00:00",
+      "timestamp": "2026-11-18T14:17:16+00:00",
       "note": "construction invalid, confirmed on targeted requirement | {\"refcheck_outcome\": \"task_failure\", \"refcheck_failed\": [\"test_written_bytes.py::test_default_storage_bytes_match_json_dumps\"], \"regression_outcome\": \"pass\", \"regression_failed\": [], \"construction\": {\"value\": \"invalid\", \"violated_requirements\": [\"R-bytes-unchanged\"], \"labeler\": \"nearmiss:v1\", \"labeler_kind\": \"construction\", \"adjudicated\": false, \"timestamp\": \"2026-11-18T09:18:32+00:00\", \"note\": \"\"}}"
     }
   ]

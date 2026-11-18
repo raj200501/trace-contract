@@ -3,29 +3,31 @@
 The protocol (\texttt{experiments/protocol.md}) was hashed and timestamped before the first evaluation run (v0.1). Amendments were also hashed and logged:
 \begin{itemize}
 \item v0.2: additional descriptive metrics, made before any run;
-\item v0.3: harness requirement, sanity grading, reliability and mapper-agreement measurements, and one analysis labeled exploratory, made after two superseded runs and before the first final run;
-\item v0.4: the harness security fix and its required re-run, plus post-hoc exploratory analyses, made after the internal review of that run.
+\item v0.3: harness requirement, sanity grading, reliability and mapper-agreement measurements, a coverage rule that does not count a contradicted requirement as covered, and one analysis labeled exploratory, made after two superseded runs and before the first final run;
+\item v0.4: the harness security fix and its required re-run, plus post-hoc exploratory analyses, made after the internal review of that run;
+\item v0.5: the fix of a remaining start-up defect and its required re-run, marks for degenerate intervals in every table, a wider exploratory duplicates view, and corrections of wording, made after a review of the internal review's dispositions and a final audit of our claims.
 \end{itemize}
 It is not a formal preregistration.
 
-\paragraph{Unit of analysis.} The unit is the task family: one source session and everything derived from it. Candidates are never treated as independent samples. Intervals are percentile intervals from a cluster bootstrap over families (2,000 resamples). With four families they describe variability; they are not evidence of an effect.
+\paragraph{Unit of analysis.} The unit is the task family: one source session and everything derived from it. Candidates are never treated as independent samples. Intervals are percentile intervals from a cluster bootstrap over families (2,000 resamples). With four families they describe variability; they are not evidence of an effect. When every family has the same rate or difference (for example zero events), the interval has zero width; such intervals are marked, and exact binomial intervals, which ignore clustering, are shown as a reference scale.
 
 \paragraph{Held-out candidate pool.} Per family the pool contains:
 \begin{itemize}
 \item the agent's own pre-correction state, captured after $U_1$ and before $U_2$;
 \item two independently written valid alternatives, implemented from the reference instruction without the reference diff;
-\item five constructed near misses, each built from the reference to violate exactly one reference requirement, mostly requirements introduced by the correction.
+\item five constructed near misses, each built from the reference to target one reference requirement, mostly requirements introduced by the correction (for five of them the rule's labels record two to six violated requirements).
 \end{itemize}
-The no-op and the reference solution are graded as sanity checks and excluded from the rates. Held-out candidates were generated only after every evaluated verifier of the family was frozen, by separate agents in isolated workspaces. Every generator transcript was audited for reads of verifiers, other candidates, sealed scenario material or other workspaces. The audit inspects tool inputs only. Three exceptions are disclosed (decision log D37):
+The no-op and the reference solution are graded as sanity checks and excluded from the rates. The alternatives and near misses were generated only after every evaluated verifier of the family was frozen (the one later rebuild is described in \S\ref{sec:method}), by separate agents, each exporting its own workspace directory. The agents ran as the same user in the repository checkout, so frozen verifiers and registered candidates were readable; they were told not to read them. Every transcript of a generator whose output was registered was audited for reads of verifiers, other candidates, sealed scenario material or other workspaces, and none was found. The audit inspects tool inputs only. The pre-correction state was captured during the session; its edits appear, abbreviated, in the session text that the full-session contract proposer and B2 read. Further departures are disclosed (decision log D37, D40, D41):
 \begin{itemize}
 \item Near-miss workspaces contained the full reference diff, whose test files are B1's tests, and the generators ran them.
-\item The near-miss prompt for two families gained a test command and a ``one at a time'' instruction.
-\item Two \texttt{more-itertools} candidates (the pre-correction state and one near miss) have the same graded patch as a development attack used in that family's audit.
+\item The prompts for the \texttt{humanize} and \texttt{tinydb} pools, generated last, differ from those for \texttt{inflection} and \texttt{more-itertools}: a shared preamble with a working-style line, and near-miss steps with a test command and a ``one at a time'' instruction.
+\item Three held-out candidates duplicate a development attack used in their family's audit: two \texttt{more-itertools} candidates (the pre-correction state and one near miss) have the same graded patch, and one \texttt{humanize} near miss differs by one docstring line. In both families the audit of the correction-aware verifier made no revision.
+\item Some tool outputs showed held-out file names to some agents, and agents shared a scratch directory that held held-out material.
 \end{itemize}
 
-\paragraph{Labels.} The labeling standard is the reference contract: the study's intended requirements, hashed and logged locally before each session ran, operationalised by a model with quotes from the session. It is model-reviewed only. For \texttt{humanize} the operationalisation was written after the agent's first output had been seen, and one \texttt{more-itertools} requirement is inferred without a quote. It is combined with a regression norm: breaking behaviour covered by the repository's own tests makes a candidate invalid. Human labels are the primary standard; none exist yet. The automated pilot instead uses a pre-specified rule (D19) that combines three signals:
+\paragraph{Labels.} The labeling standard is the reference contract: the study's intended requirements, hashed and logged locally before each session ran, operationalised with quotes from the session. The study's AI agent, the same model as the session agent, wrote the scenarios and their operationalisation, and so far only a model has reviewed them. For \texttt{humanize} the operationalisation was written after the agent's first output had been seen, and one \texttt{more-itertools} requirement is inferred without a quote. It is combined with a regression norm: breaking behaviour covered by the repository's own tests makes a candidate invalid. Human labels are the primary standard; none exist yet. The automated pilot instead uses a pre-specified rule (D19) that combines three signals:
 \begin{itemize}
-\item independent reference checks, written from the reference contract without access to the pool and validated only on the reference and the no-op (written concurrently with the pool for two families and after it for one);
+\item independent reference checks, written from the reference contract with no recorded read of the pool and validated only on the reference and the no-op (written while the pool was being generated for three families and just before the fourth family's pool was registered; one family's checks were revised after its pool was complete);
 \item the regression norm;
 \item construction intent.
 \end{itemize}
@@ -33,7 +35,7 @@ Agreement gives a valid or invalid label; disagreement gives \emph{ambiguous}, w
 
 \paragraph{Metrics and comparisons.} False acceptance (FA) is the share of invalid held-out candidates whose outcome is \emph{pass}; false rejection (FR) is the share of valid held-out candidates without \emph{pass}. Every non-pass outcome counts as a rejection; infrastructure outcomes are reported separately. We also report:
 \begin{itemize}
-\item macro rates;
+\item macro rates, with the per-family counts behind them;
 \item Youden's $J=(1-\mathrm{FR})-\mathrm{FA}$;
 \item the number of families with at least one accepted negative.
 \end{itemize} Negatives are broken down by type (whether a violated requirement was introduced after the first request) and by origin (observed pre-correction state vs.\ near miss). The pre-specified paired comparisons, all on the same candidates, are:
@@ -43,6 +45,6 @@ Agreement gives a valid or invalid label; disagreement gives \emph{ambiguous}, w
 \item B2--C4 and B2--C3 (structured contract vs.\ full-session LLM);
 \item B1--C4 (repository tests vs.\ the proposed verifier).
 \end{itemize}
-Secondary measures: requirement coverage of the recovered contracts against the reference, using two independent model mappers and their agreement; and pass/non-pass agreement between superseded runs and the final run.
+Secondary measures: requirement coverage of the recovered contracts against the reference, using two independent model mappers and their agreement (mapper 2, and mapper 1 for \texttt{tinydb}, received one extra instruction; D41); pass/non-pass agreement between earlier runs and the final run; verifier flakiness over the audit's repeated gradings; valid-task yield; and generation cost.
 
-\paragraph{Final run and deviations.} Every condition of every task was graded under harness 0.3.1 in a single run, one container at a time, with no other sandbox workload on the host. The protocol also asked for generation cost per condition and per accepted task; these were not recorded systematically, and we do not report them. Yield is 4 of 4 controlled sessions. In every audit record, the three repeated gradings of the reference agreed.
+\paragraph{Final run and deviations.} Every condition of every task was graded under harness 0.3.2 in a single run (\texttt{pilot-v0.3.2}), one container at a time, with no other sandbox workload on the host. Generation did not run exactly as the published workflow scripts (D17, D24). Several workflow agents refused to run the audits, the freeze step or one attack set, and some revisers rewrote audited tests from scratch; all audited verifiers were therefore reset to their plain tests, and the audit and freezing were run by the trusted host command line. The revisers and the regenerated initial-only development attacks for \texttt{humanize} received the template plus a context note. The contract tooling was fixed after the \texttt{humanize} full-session proposer had run, and that family's generation was stopped and resumed. The protocol also asked for generation cost per condition and per accepted task; these were not recorded, and we do not report them (D42). All four controlled sessions were compiled into tasks and none was rejected; all four remain pending human review, so none has passed the acceptance gate. In every audit record, the three repeated gradings of the reference agreed.

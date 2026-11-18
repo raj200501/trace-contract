@@ -17,7 +17,7 @@
       "labeler": "builder:refcheck+regression+construction:v1",
       "labeler_kind": "model",
       "adjudicated": false,
-      "timestamp": "2026-11-18T12:07:24+00:00",
+      "timestamp": "2026-11-18T14:24:18+00:00",
       "note": "natural candidate fails reference checks and/or regression norm | {\"refcheck_outcome\": \"task_failure\", \"refcheck_failed\": [\"test_consecutive_groups_step.py::test_zero_step_raises_value_error\", \"test_consecutive_groups_step.py::test_zero_step_with_positional_ordering_raises_value_error\"], \"regression_outcome\": \"pass\", \"regression_failed\": [], \"construction\": null}"
     }
   ]

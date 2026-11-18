@@ -20,8 +20,9 @@ requires the repository owner's explicit instruction.
    log D34). The verified brief (`docs/research_brief.md`) finds partial precedents
    for every component, notably SessionFarmer, SWE-Together and Trace2Eval. The
    claim is limited to their combination: initial-only vs correction-aware verifiers
-   from one frozen procedure, one frozen held-out pool anchored on the session's own
-   pre-correction states, and independent human labels. The third element does not
+   from one frozen procedure, one held-out pool anchored on the session's own
+   pre-correction states (its other candidates generated after the verifiers were
+   frozen; departures in decision log D37, D40, D41), and independent human labels. The third element does not
    exist yet, so the claim cannot be made in a submission until it does. It is not a
    claim about task reconstruction.
 5. **Single model family** for all generated artifacts. A second model family for
@@ -90,11 +91,13 @@ state the following:
 
 ## AI-assistance disclosure (draft text for the human authors to adapt)
 
-> Most of the software, the task-construction pipeline, the controlled sessions,
-> the verifier and candidate generation, and the first draft of this manuscript
-> were produced with substantial assistance from Anthropic's Claude models
-> (via Claude Code). The human author(s) designed and reviewed [to be completed
-> truthfully], performed the human annotation, and take full responsibility for
+> The software, the controlled-session scenarios and protocol, the controlled
+> sessions, every generated artifact (contracts, verifiers, candidates, label
+> proposals, checks and mappings), the analyses, the internal reviews and the first
+> draft of this manuscript were produced by Anthropic's Claude models (via Claude
+> Code), working largely autonomously under the owner's standing instructions. The
+> human author(s) [describe truthfully what they designed and reviewed, and any
+> human annotation they performed, once it exists] and take full responsibility for
 > the content.
 
 The bracketed part must describe only what the human authors actually did.
@@ -103,7 +106,7 @@ The bracketed part must describe only what the human authors actually did.
 
 - [ ] Human contract reviews and candidate labels recorded; agreement reported.
 - [ ] Natural-session tasks included, or claims explicitly limited to controlled sessions.
-- [x] Adversarial internal review completed and its revisions applied (`docs/internal_review.md`); a fresh review is needed after human labels exist.
+- [ ] Adversarial internal review by model agents: run on `pilot-v0.3` (six lenses; the skeptic stage was stopped before every finding was checked), followed by a dispositions review and a final claims audit on `pilot-v0.3.1` (decision log D40); findings and dispositions in `docs/internal_review.md`. Tick only after a review of the final version, including human review, once human labels exist.
 - [ ] All numbers regenerated from recorded runs (`paper/make_tables.py`) and present in `paper/evidence_ledger.md`.
 - [ ] Bibliography entries verified against primary pages (dates recorded).
 - [ ] Data rights re-checked (SWE-chat terms, removal requests, repository licences).

@@ -26,12 +26,13 @@ tinydb, `CS-03` inflection, `CS-04` more-itertools).
 | `tasks/*/labels/base_tests_overlay/` | The upstream test files at the pinned commit, unchanged (byte-identical). |
 | `tasks/*/verifiers/repo_tests/overlay/` | The same upstream test files. In one file per task the study added the tests of the reference solution (CS-01 `tests/test_filesize.py`, CS-02 `tests/test_storages.py`, CS-03 `test_inflection.py`, CS-04 `tests/test_more.py`); the upstream lines are unchanged. |
 | `tasks/*/candidates/*.json` | Candidate patches as unified diffs against the upstream source. Their context and removed lines are upstream code. |
-| Verifier tests copied from upstream | `tasks/CS-02/verifiers/initial_plain/tests/test_existing_suite.py` and `tasks/CS-02/verifiers/initial_audited/tests/test_existing_suite.py` are mostly upstream tinydb tests. `tasks/CS-03/verifiers/initial_{plain,audited}/tests/test_preserved_behaviour.py` and `tasks/CS-01/verifiers/full_{plain,audited}/tests/test_naturalsize_strip_trailing_zero.py` reuse some upstream test lines. `tasks/CS-03/verifiers/full_{plain,audited}/tests/test_titleize_acronyms.py` copy about 15 lines of inflection's `underscore`, `humanize` and `titleize` as `_base_*` helpers. |
+| Verifier tests copied from upstream | `tasks/CS-02/verifiers/initial_plain/tests/test_existing_suite.py` and `tasks/CS-02/verifiers/initial_audited/tests/test_existing_suite.py` are mostly upstream tinydb tests. `tasks/CS-03/verifiers/initial_{plain,audited}/tests/test_preserved_behaviour.py` embed inflection's `inflection/__init__.py` at the pinned commit (docstrings removed) and reuse upstream test lines. `tasks/CS-01/verifiers/{full_plain,full_audited,llm_freeform}/tests/test_naturalsize_strip_trailing_zero.py` copy humanize's `naturalsize` as a helper or oracle, and `tasks/CS-01/verifiers/reference_check/tests/test_reference_check.py` re-implements it as `_base_naturalsize`. `tasks/CS-03/verifiers/full_{plain,audited}/tests/test_titleize_acronyms.py` copy about 15 lines of inflection's `underscore`, `humanize` and `titleize` as `_base_*` helpers, and `tasks/CS-03/verifiers/reference_check/tests/test_{underscore_unchanged,humanize_unchanged,titleize_all_caps}.py` copy inflection's `underscore`, `humanize` and `titleize`. |
 | `results/runs/*/report.html` | The candidate patches, embedded as unified diffs (upstream context and removed lines). |
 | `data/controlled/transcripts/*.jsonl` | Excerpts of upstream files in the agent's tool results. |
 
-Base snapshots of the upstream repositories are not stored (`snapshots/` is
-git-ignored). `tracecontract snapshot` rebuilds them from the pinned commits.
+Base snapshots of the upstream repositories are not stored (the top-level
+`snapshots/` is git-ignored). `tracecontract snapshot` rebuilds them from the pinned
+commits.
 
 The tinydb copyright line includes its author's e-mail address. It is kept because
 the licence requires the notice to be reproduced as published.

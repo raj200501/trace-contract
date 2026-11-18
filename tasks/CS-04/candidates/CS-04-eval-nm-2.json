@@ -28,7 +28,7 @@
       "labeler": "builder:refcheck+regression+construction:v1",
       "labeler_kind": "model",
       "adjudicated": false,
-      "timestamp": "2026-11-18T12:04:24+00:00",
+      "timestamp": "2026-11-18T14:21:27+00:00",
       "note": "construction invalid, confirmed on targeted requirement | {\"refcheck_outcome\": \"task_failure\", \"refcheck_failed\": [\"test_consecutive_groups_step.py::test_zero_step_raises_value_error\", \"test_consecutive_groups_step.py::test_zero_step_with_positional_ordering_raises_value_error\"], \"regression_outcome\": \"pass\", \"regression_failed\": [], \"construction\": {\"value\": \"invalid\", \"violated_requirements\": [\"R-zero-step\"], \"labeler\": \"nearmiss:v1\", \"labeler_kind\": \"construction\", \"adjudicated\": false, \"timestamp\": \"2026-11-13T03:55:30+00:00\", \"note\": \"\"}}"
     }
   ]

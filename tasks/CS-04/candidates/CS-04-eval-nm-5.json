@@ -26,7 +26,7 @@
       "labeler": "builder:refcheck+regression+construction:v1",
       "labeler_kind": "model",
       "adjudicated": false,
-      "timestamp": "2026-11-18T12:06:36+00:00",
+      "timestamp": "2026-11-18T14:23:37+00:00",
       "note": "construction invalid but reference checks and regression norm pass | {\"refcheck_outcome\": \"pass\", \"refcheck_failed\": [], \"regression_outcome\": \"pass\", \"regression_failed\": [], \"construction\": {\"value\": \"invalid\", \"violated_requirements\": [\"R-default-unchanged\"], \"labeler\": \"nearmiss:v1\", \"labeler_kind\": \"construction\", \"adjudicated\": false, \"timestamp\": \"2026-11-13T03:55:31+00:00\", \"note\": \"\"}}"
     }
   ]

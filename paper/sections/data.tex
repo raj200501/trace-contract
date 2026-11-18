@@ -3,7 +3,7 @@
 \paragraph{Populations.} We keep three populations separate:
 \begin{itemize}
 \item \emph{natural} sessions with real users;
-\item \emph{controlled} sessions: real agent runs whose user turns the study wrote before the run;
+\item \emph{controlled} sessions: real agent runs whose user turns the study wrote before the run (drafted by the study's AI agent, the same model as the session agent; no human wrote or reviewed them);
 \item synthetic \emph{fixtures}, used only for software tests.
 \end{itemize}
 Natural sessions from SWE-chat \cite{swechat} are pending acceptance of the dataset's access terms by the repository owner. All results in this draft are therefore on controlled sessions. Controlled feedback is synthetic and is never described as user traffic.
@@ -15,7 +15,7 @@ Natural sessions from SWE-chat \cite{swechat} are pending acceptance of the data
 \item a neutral reply for clarification questions;
 \item the study's intended final requirements, each tagged with the turn that introduced it.
 \end{itemize}
-A Claude Code agent (a general-purpose subagent) works in a fresh git working copy of a pinned commit of a permissively licensed Python library. It can run repository code only through two wrapper scripts that execute it in an offline Docker sandbox. Its workspace is captured after $U_1$ (before the correction) and again at the end. The correction is delivered through a subagent messaging channel that wraps it in a short harness frame; this deviation from natural sessions is recorded with each task.
+A Claude Code agent (a general-purpose subagent) works in a fresh git working copy of a pinned commit of a permissively licensed Python library. It can run repository code only through two wrapper scripts that execute it in an offline Docker sandbox. Its workspace is captured after $U_1$ (before the correction) and again at the end. The correction is delivered through a subagent messaging channel that wraps it in a short harness frame; this deviation from natural sessions applies to every controlled task and is recorded in the decision log (D10).
 
 The transcript is then processed in two steps:
 \begin{enumerate}
@@ -27,10 +27,10 @@ Table~\ref{tab:scenarios} lists the four scenarios and Table~\ref{tab:tasks} the
 \item \texttt{humanize}: \texttt{naturalsize} should drop a trailing ``.0''; the correction makes this opt-in and freezes the default and custom-format output.
 \item \texttt{tinydb}: atomic JSON writes; the correction adds read-after-write, byte-identical output, no leftover temporary files and an intact original on failure.
 \item \texttt{inflection}: \texttt{titleize} should keep acronyms; the correction keeps all-uppercase input title-cased and \texttt{humanize}/\texttt{underscore} unchanged.
-\item \texttt{more-itertools}: \texttt{consecutive\_groups} gets a \texttt{step}; the correction adds negative steps, an error for zero, positional ordering and lazy groups.
+\item \texttt{more-itertools}: \texttt{consecutive\_groups} gets a \texttt{step}; the correction adds negative steps, an error for zero, positional ordering and lazy groups, and keeps the default output unchanged (an inferred requirement without a quote).
 \end{itemize}
 In one scenario the correction supersedes a requirement of the initial request; in the other three it adds requirements.
 \IfFileExists{generated/scenario_table.tex}{\input{generated/scenario_table.tex}}{\unfilled{scenario table}}
 \IfFileExists{generated/tasks_table.tex}{\input{generated/tasks_table.tex}}{\unfilled{task table generated from tasks/*/task.json}}
 
-\paragraph{Initial state and leakage.} The base snapshot is the exact tree of the pinned commit (\texttt{git archive}, no history). A generated build artefact (a hatch-vcs version file) is added for one task and recorded as an approximation. A leakage check verifies that no file changed by the reference solution already contains its post-image in the snapshot. Sealed study material (scenarios, reference contracts) was withheld from agent workspaces until the task's verifiers were frozen. For part of the pilot it sat in a scratch directory that agents could have listed. It was then moved to a location no prompt names. A scan of all 78 agent transcripts available at that point found no read of it other than one mapping agent whose task was to read the reference contract (decision log D26).
+\paragraph{Initial state and leakage.} The base snapshot is the exact tree of the pinned commit (\texttt{git archive}, no history). A generated build artefact (a hatch-vcs version file) is added for one task and recorded as an approximation. A leakage check verifies that no file changed by the reference solution already contains its post-image in the snapshot. Sealed study material (scenarios, reference contracts) was withheld from agent workspaces until the task's verifiers were frozen. For part of the pilot it sat in a scratch directory that agents could have listed. It was then moved to a root-owned directory that no prompt named while it held sealed material; the agents also ran as root, so the separation rested on instructions and on the transcript scan. A scan of all 78 agent transcripts available at that point found no read of it other than one mapping agent whose task was to read the reference contract (decision log D26, D41).

@@ -6,9 +6,9 @@
 \item reject both independently written valid alternatives;
 \item reject the reference solution.
 \end{itemize}
-This is the complete inversion the problem statement predicts: the reward points at the rejected behaviour and away from the wanted one. The predefined audit detects the inconsistency (the reference fails), but a revision that stays faithful to the contract cannot repair it.
+This is the failure the problem statement predicts (the reward points at the rejected behaviour), together with one it does not name: the reward also points away from the wanted behaviour. The predefined audit detects the inconsistency (the reference fails), but a revision that stays faithful to the contract cannot repair it.
 
-\paragraph{Missing edge cases when a correction adds requirements (\texttt{more-itertools}).} The first request added a \texttt{step} argument. The correction added negative steps, an error for \texttt{step=0}, the positional \texttt{ordering} argument and lazy groups. The initial-only verifiers accept:
+\paragraph{Missing edge cases when a correction adds requirements (\texttt{more-itertools}).} The first request added a \texttt{step} argument. The correction added negative steps, an error for \texttt{step=0}, the positional \texttt{ordering} argument and lazy groups, and kept the default output unchanged. The initial-only verifiers accept:
 \begin{itemize}
 \item the pre-correction state, where \texttt{step=0} silently returns groups;
 \item the near misses that break negative steps, the zero-step error or laziness.
@@ -24,12 +24,12 @@ They reject only the near miss that breaks positional ordering, which also break
 \end{itemize}
 These appear as \emph{inferred} requirements, which our acceptance gate requires a human to confirm. Initial-only and correction-aware verifiers then make identical decisions. The ``information lost'' by initial-only reconstruction is a property of the session \emph{and} the proposer, not of the session alone.
 
-\paragraph{When the agent anticipates the correction (\texttt{inflection}, \texttt{tinydb}).} In two of four sessions, the agent's state before the correction passes the reference checks and the regression norm, and the rule labels it valid. In \texttt{inflection}, for example, it had already handled all-uppercase input and kept the helper functions unchanged. The user's correction then restates rather than changes the requirement, and the rule treats the observed state as a valid candidate. For \texttt{inflection}, the independent check disputes that label: it finds divergences from the reference, limited to exotic Unicode input. Whether ``behaves as before'' extends to modifier apostrophes and the dotted~İ is exactly the kind of judgement our labels must leave to humans.
+\paragraph{When the agent anticipates the correction (\texttt{inflection}, \texttt{tinydb}).} In two of four sessions, the agent's state before the correction passes the reference checks and the regression norm, and the rule labels it valid. In \texttt{inflection}, for example, it had already handled all-uppercase input and kept the helper functions unchanged. The agent's state then already met what the correction asked for, and the rule treats the observed state as a valid candidate. For \texttt{inflection}, the independent check disputes that label: it finds divergences from the reference, limited to non-ASCII all-caps input. Whether ``behaves as before'' extends to the Turkish dotted~İ and circled capital letters is exactly the kind of judgement our labels must leave to humans.
 
-\paragraph{Two failure modes of repository tests.} Repository tests taken at the reference state fail in both directions:
+\paragraph{Two failure modes of repository tests.} Repository tests taken at the reference state, which include the session agent's own tests, fail in both directions:
 \begin{itemize}
-\item They \emph{under-specify} the correction's invariants. They accept near misses that break custom formats or rounding in \texttt{humanize}, negative steps in \texttt{more-itertools}, and unchanged helper behaviour in \texttt{inflection}.
-\item They \emph{over-specify} the reference's implementation. They reject valid alternatives that lack a private reopen hook or the reference's clean-up of stale temporary files, and one that splits CamelCase acronyms differently.
+\item They \emph{under-specify} the correction's invariants. They accept near misses that break custom formats or rounding in \texttt{humanize}, negative steps in \texttt{more-itertools}, and all-uppercase input and unchanged helper behaviour in \texttt{inflection}.
+\item The tests the session agent added \emph{over-specify} the reference's implementation; all four false rejections come from them. They reject valid alternatives that lack a private reopen hook or the reference's clean-up of stale temporary files, and one that splits CamelCase acronyms differently.
 \end{itemize}
 The second mode also rejects the valid \texttt{tinydb} pre-correction state.
 

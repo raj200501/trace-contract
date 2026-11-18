@@ -53,11 +53,13 @@ acceptance gate.
 ## 2. Candidate labels
 
 A candidate is a patch against the base snapshot. Inspect it with the patch text
-in `tasks/<id>/candidates/<candidate>.json` and, if needed, run it:
+in `tasks/<id>/candidates/<candidate>.json` and, if needed, run it. Running needs the
+base snapshot (once per task; needs `git` and access to github.com) and Docker:
 
 ```
-tracecontract add-candidate ...       # (already done for existing candidates)
-tracecontract sandbox-python tasks/<id> <state-dir> -c '...'   # check behaviour
+tracecontract snapshot tasks/<id>                                              # once per task
+tracecontract materialize tasks/<id> <candidate-id> --out /tmp/<candidate-id>  # base + graded patch; runs no code
+tracecontract sandbox-python tasks/<id> /tmp/<candidate-id> -c '...'           # offline, unprivileged sandbox
 ```
 
 Label each **evaluation** candidate:

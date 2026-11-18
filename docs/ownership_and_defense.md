@@ -40,14 +40,22 @@ Produced with Claude (via Claude Code), reviewed only by the model so far:
 * all package code, tests, scripts, CLI, report and Harbor exporter;
 * the research notes and research brief (multi-agent literature review), the
   decision log, protocol v0.1, annotation guide, data card and the manuscript draft;
+* the controlled-session scenarios (scripted user turns, including the corrections,
+  and the intended requirements that define the labels) and their reference
+  operationalisations, written by the same model as the session agent;
 * the controlled sessions themselves (the coding agent is a Claude model), the
   recovered contracts, all generated verifiers, development attacks, valid
   alternatives, near misses, reference checks, and every proposed label;
 * the independent construction checks, both requirement mappers, and the
   adversarial verification of the research brief (skeptics, citation and fact
   checks) together with the resulting revisions;
-* the diagnosis and fixes of the two harness defects (D29–D31), protocol amendments
-  v0.2 and v0.3, and the pilot's results text.
+* the diagnosis and fixes of the four harness defects (D29–D31, D36, D40), protocol
+  amendments v0.2 to v0.5, transcript sanitiser v2 (D38), the post-hoc analyses
+  (D37), the CS-02 reference-check review loop, the CS-01 mapping correction (D42) and
+  the pilot's results text;
+* the six-lens internal review with its skeptic agents, the dispositions review and
+  the final claims audit (D36–D41), all run by model agents, and the fixes that
+  followed them.
 
 ## Human decisions and reviews still required
 
@@ -58,7 +66,8 @@ Produced with Claude (via Claude Code), reviewed only by the model so far:
 3. **Scope of the claim.** The adversarial review (D34) narrowed it to a
    conjunction. SessionFarmer is the closest work; its Table 3 already compares
    suites with and without refinement on a held-out pool, with LLM labels. Confirm
-   or revise the narrowed wording, and update D25 accordingly.
+   or revise the narrowed wording, and record the decision as a new decision-log
+   entry (the log is append-only, so D25 is not edited).
 4. **Repository licence** and the licence of released task data.
 5. **Authorship, AI-use disclosure, and whether/when to submit anything.**
 6. **Spending**: whether to approve any paid model or compute budget (default zero),
