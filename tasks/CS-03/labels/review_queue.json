@@ -1,0 +1,97 @@
+{
+  "task_id": "CS-03",
+  "note": "Generated from candidate labels and construction checks only; contains no verifier outcome.",
+  "counts": {
+    "valid": 3,
+    "ambiguous": 3,
+    "invalid": 2
+  },
+  "candidates": [
+    {
+      "candidate": "CS-03-pre-correction",
+      "origin": "observed_pre_correction",
+      "proposed": "valid",
+      "violated": [],
+      "check_assessed": null
+    },
+    {
+      "candidate": "CS-03-eval-alt-2",
+      "origin": "valid_alternative",
+      "proposed": "valid",
+      "violated": [],
+      "check_assessed": null
+    },
+    {
+      "candidate": "CS-03-eval-nm-1",
+      "origin": "constructed_near_miss",
+      "proposed": "ambiguous",
+      "violated": [],
+      "check_assessed": null
+    },
+    {
+      "candidate": "CS-03-eval-nm-2",
+      "origin": "constructed_near_miss",
+      "proposed": "ambiguous",
+      "violated": [],
+      "check_assessed": null
+    },
+    {
+      "candidate": "CS-03-eval-nm-3",
+      "origin": "constructed_near_miss",
+      "proposed": "invalid",
+      "violated": [
+        "R-humanize-unchanged"
+      ],
+      "check_assessed": null
+    },
+    {
+      "candidate": "CS-03-eval-nm-4",
+      "origin": "constructed_near_miss",
+      "proposed": "ambiguous",
+      "violated": [],
+      "check_assessed": null
+    },
+    {
+      "candidate": "CS-03-eval-nm-5",
+      "origin": "constructed_near_miss",
+      "proposed": "invalid",
+      "violated": [
+        "R-all-caps-input"
+      ],
+      "check_assessed": null
+    },
+    {
+      "candidate": "CS-03-eval-alt-1",
+      "origin": "valid_alternative",
+      "proposed": "valid",
+      "violated": [],
+      "check_assessed": null
+    }
+  ],
+  "review_queue": [
+    {
+      "candidate": "CS-03-eval-nm-1",
+      "origin": "constructed_near_miss",
+      "proposed": "ambiguous",
+      "violated": [],
+      "check_assessed": null,
+      "reason": "ambiguous under D19"
+    },
+    {
+      "candidate": "CS-03-eval-nm-2",
+      "origin": "constructed_near_miss",
+      "proposed": "ambiguous",
+      "violated": [],
+      "check_assessed": null,
+      "reason": "ambiguous under D19"
+    },
+    {
+      "candidate": "CS-03-eval-nm-4",
+      "origin": "constructed_near_miss",
+      "proposed": "ambiguous",
+      "violated": [],
+      "check_assessed": null,
+      "reason": "ambiguous under D19"
+    }
+  ]
+}

@@ -49,6 +49,40 @@ licences and ancillary files must be re-read at submission time.
 * **Data/code:** limited facilities for ancillary files; the repository should be
   the primary artifact.
 
+## arXiv guidance re-checked on 2026-11-18
+
+Pages re-fetched on 2026-11-18. No page shows a last-updated date.
+* https://info.arxiv.org/help/submit/
+* https://info.arxiv.org/help/moderation/
+* https://info.arxiv.org/help/endorsement.html
+* https://info.arxiv.org/help/license/index.html
+* https://info.arxiv.org/help/ancillary_files.html
+
+No material change from 2026-11-13. The pages that were not yet reviewed then
+state the following:
+
+* **Endorsement:** "arXiv requires that users be endorsed before submitting their
+  first paper to arXiv or a new category." Endorsers "must have authored a certain
+  number of papers within the endorsement domain". First-time submitters "are
+  encouraged to associate an institutional email address if they have one". An
+  endorsement is requested by sending an endorser a "six-character alphanumeric
+  endorsement code". No endorser has been or will be contacted without the owner's
+  instruction.
+* **Licences offered:** CC BY 4.0, CC BY-SA 4.0, CC BY-NC-SA 4.0, CC BY-NC-ND 4.0,
+  the arXiv.org perpetual, non-exclusive licence 1.0, and CC0 1.0. "The license
+  chosen for each version is irrevocable." This is an owner decision.
+* **Ancillary files:** "There are limited facilities for including ancillary files";
+  the feature "is not supported with PDF submissions"; TeX files must not go in the
+  ancillary directory. The code and data stay in the repository.
+* **Unchanged:**
+  * the generative-AI policy: report "any significant use of sophisticated tools",
+    including text-to-text generative AI, and such tools "should not be listed as
+    an author";
+  * the submission rate: "up to two new submissions per calendar month with a limit
+    of three active submissions";
+  * the format rule: "We do not accept dvi, PS, or PDF created from TeX/LaTeX
+    source".
+
 ## AI-assistance disclosure (draft text for the human authors to adapt)
 
 > Most of the software, the task-construction pipeline, the controlled sessions,

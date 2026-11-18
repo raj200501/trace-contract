@@ -1,4 +1,4 @@
-# Annotation guide (v0.1)
+# Annotation guide (v0.2)
 
 This guide is for human reviewers of TraceContract tasks. It covers two jobs:
 reviewing **contracts** (what the user actually required) and labeling
@@ -88,6 +88,43 @@ Record the label:
 Append it to the candidate's `labels` list (do not delete proposals; they are kept
 for auditing). When two reviewers disagree, a third person or a discussion produces
 an adjudicated label with `"adjudicated": true`.
+
+## 2a. The pilot's review queue and the evidence you may use
+
+Every held-out candidate needs a human label before the primary analysis can run.
+Start with the queue in `tasks/<id>/labels/review_queue.json`. It contains no
+verifier outcome; regenerate it with `python scripts/write_review_queue.py
+tasks/<id>`. It lists candidates that rule D19 marked **ambiguous**, candidates
+with no proposal, and candidates whose independent construction check disagrees
+with the proposal. Do not use the run analysis (`results/runs/*/analysis.md`) for
+this: it shows verifier outcomes.
+
+**Form your own judgment first**, from the session, the reference contract and
+the patch. Only then compare it with the recorded proposals:
+
+* **The D19 proposal** is the last label in the candidate file, labeler
+  `builder:refcheck+regression+construction:v1`. Its `note` lists:
+  * the failing independent reference checks (written from the reference contract;
+    they are *not* the verifiers under evaluation);
+  * the failing base repository tests (regression norm);
+  * the construction claim.
+* **The construction check** is in `tasks/<id>/labels/construction_checks.json`. A
+  second agent probed the candidate in the sandbox against the reference solution.
+  It records concrete inputs with the candidate's and the reference's outputs, the
+  requirements it judged violated, and whether that matches the construction claim.
+  Re-run any input you rely on (`tracecontract sandbox-python ...`). Do not take the
+  agent's word for it.
+* **The generator's description** of what it built is in the candidate's
+  `description`.
+
+A near miss is invalid only if the behaviour it gets wrong is actually required
+by an active, scored requirement. Example: a near miss that changes output for
+inputs no requirement covers is **valid** under this guide, even though it was
+built to be wrong. Record such cases in `note`; they are evidence about how near
+misses are constructed.
+
+Never open `tasks/<id>/verifiers/*/tests/` or `results/runs/*/results.jsonl` before
+your labels for the task are recorded.
 
 ## 3. What to report
 

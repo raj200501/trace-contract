@@ -1,3 +1,24 @@
-\section{Reproducibility}
+\section{Reproducibility and isolation tests}
 \label{sec:repro}
-Every artifact is a typed JSON record (sessions, contracts, snapshots, candidates, verifier specs, results) with content hashes. Docker images are built offline from pinned wheelhouses. The repository contains the commands to rebuild snapshots, re-grade any candidate, rerun evaluation, regenerate analysis tables and this paper's numbers. The grading boundary is covered by integration tests: results directory not writable and hidden tests not readable by candidate code, grader not signalable, no network, unprivileged user, per-call timeouts, fork-bomb containment, reaping of daemonised processes, detection of forged or rewritten results, removal of candidate edits to test files, and rejection of path-traversal patches. Model-generated artifacts are recorded with the prompts that produced them; regeneration is not bit-reproducible.
+\paragraph{Records.} Every artifact is a typed JSON record with content hashes: sessions, contracts, snapshots, candidates, verifier specs and results. Evaluation runs are append-only. Each run manifest records the code revision, image identifiers, and verifier and candidate hashes per invocation. Docker images are built offline from pinned wheelhouses. The repository contains the commands to:
+\begin{itemize}
+\item rebuild snapshots from the pinned public commits;
+\item re-grade any (verifier, candidate) pair;
+\item rerun the evaluation matrix;
+\item regenerate the analysis, the HTML report, and this paper's tables and evidence ledger.
+\end{itemize}
+Model-generated artifacts (sessions, contracts, tests, candidates, label proposals and mappings) are recorded together with the prompts that produced them. Regenerating them is not bit-reproducible. Everything downstream of them is.
+\paragraph{Isolation probes.} The grading boundary is covered by Docker integration tests, run as part of the test suite. Candidate code:
+\begin{itemize}
+\item cannot write the results directory, read the hidden tests, signal the grader or read the grader's environment;
+\item has no network;
+\item runs as an unprivileged user ID unique to the container;
+\item is bounded by per-call timeouts, and its fork bombs are contained and daemonised processes reaped.
+\end{itemize}
+Forged or rewritten results are detected. Candidate edits to test files are removed before grading, and path-traversal patches are rejected. Three regression probes target the defects found during the pilot:
+\begin{itemize}
+\item per-user limits are not shared with other containers;
+\item concurrent UID allocations are distinct;
+\item thread creation survives allocation churn under the address-space limit.
+\end{itemize}
+\paragraph{Known exploit surface.} Within one sandbox call, candidate code controls the value it reports, so tests assert on concrete values computed by the trusted grader. The repository-test baseline (B1) runs pytest with candidate code imported into the reporting process. A deliberately adversarial candidate could therefore forge B1's report. B1 is meaningful only for non-adversarial candidates, such as the held-out pool here.

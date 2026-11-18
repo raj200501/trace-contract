@@ -1,3 +1,22 @@
-\section{Ethics and data rights}
+\section{Ethics, data rights and AI assistance}
 \label{sec:ethics}
-Controlled sessions contain no third-party personal data. Source repositories are public and permissively licensed; candidate patches and snapshots remain under those licences. For natural sessions we would follow the SWE-chat licence and access terms, not redistribute raw transcripts, honour its data-removal policy, and re-scan derived files for secrets and personal information. \todo{AI-assistance disclosure according to venue and arXiv policy; see docs/submission\_readiness.md}
+\paragraph{Data.}
+\begin{itemize}
+\item Controlled sessions contain no third-party personal data. The user turns were written by the study, and the agent worked only in sandboxed copies of public repositories.
+\item Published transcripts are sanitised: harness internals are dropped, internal identifiers relabeled and e-mail addresses redacted.
+\item Source repositories are public and MIT-licensed. Candidate patches and snapshots remain under those licences, with attribution by repository URL and commit.
+\item No private, employer or customer material was used.
+\end{itemize}
+\paragraph{Natural sessions.} For natural sessions we would:
+\begin{itemize}
+\item follow the SWE-chat licence and access terms;
+\item reference sessions by identifier and dataset revision instead of redistributing raw transcripts;
+\item honour the dataset's data-removal policy by re-checking identifiers against the current release before publication;
+\item re-scan every derived file for secrets and personal information.
+\end{itemize}
+\paragraph{Benchmark misuse.} Trace-derived verifiers can be used as training rewards.
+\begin{itemize}
+\item The process-separated verifiers resist the tampering probes we tested (\S\ref{sec:repro}).
+\item The repository-test baseline imports candidate code into the reporting process and is therefore not suitable as a reward for adversarial policies.
+\end{itemize}
+\paragraph{AI assistance.} The software, the controlled sessions, the recovered contracts, every verifier, all candidates, the label proposals and the first draft of this text were produced with an AI coding agent (Claude Code), working under instructions from the human author(s). Every number in the paper is generated from recorded runs (\texttt{paper/evidence\_ledger.md}). No human has yet labeled candidates or reviewed contracts, and the paper says so wherever labels are used. Responsibility for the content rests with the human authors, who must review it before any submission.

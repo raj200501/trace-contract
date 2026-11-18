@@ -1,0 +1,95 @@
+{
+  "task_id": "CS-04",
+  "note": "Generated from candidate labels and construction checks only; contains no verifier outcome.",
+  "counts": {
+    "invalid": 5,
+    "valid": 2,
+    "ambiguous": 1
+  },
+  "candidates": [
+    {
+      "candidate": "CS-04-pre-correction",
+      "origin": "observed_pre_correction",
+      "proposed": "invalid",
+      "violated": [
+        "R-zero-step"
+      ],
+      "check_assessed": null
+    },
+    {
+      "candidate": "CS-04-eval-alt-1",
+      "origin": "valid_alternative",
+      "proposed": "valid",
+      "violated": [],
+      "check_assessed": null
+    },
+    {
+      "candidate": "CS-04-eval-alt-2",
+      "origin": "valid_alternative",
+      "proposed": "valid",
+      "violated": [],
+      "check_assessed": null
+    },
+    {
+      "candidate": "CS-04-eval-nm-1",
+      "origin": "constructed_near_miss",
+      "proposed": "invalid",
+      "violated": [
+        "R-negative-step"
+      ],
+      "check_assessed": null
+    },
+    {
+      "candidate": "CS-04-eval-nm-2",
+      "origin": "constructed_near_miss",
+      "proposed": "invalid",
+      "violated": [
+        "R-zero-step"
+      ],
+      "check_assessed": null
+    },
+    {
+      "candidate": "CS-04-eval-nm-3",
+      "origin": "constructed_near_miss",
+      "proposed": "invalid",
+      "violated": [
+        "R-default-unchanged",
+        "R-lazy",
+        "R-negative-step",
+        "R-positional-ordering",
+        "R-step",
+        "R-zero-step"
+      ],
+      "check_assessed": null
+    },
+    {
+      "candidate": "CS-04-eval-nm-4",
+      "origin": "constructed_near_miss",
+      "proposed": "invalid",
+      "violated": [
+        "R-lazy",
+        "R-negative-step",
+        "R-positional-ordering",
+        "R-step"
+      ],
+      "check_assessed": null
+    },
+    {
+      "candidate": "CS-04-eval-nm-5",
+      "origin": "constructed_near_miss",
+      "proposed": "ambiguous",
+      "violated": [],
+      "check_assessed": null
+    }
+  ],
+  "review_queue": [
+    {
+      "candidate": "CS-04-eval-nm-5",
+      "origin": "constructed_near_miss",
+      "proposed": "ambiguous",
+      "violated": [],
+      "check_assessed": null,
+      "reason": "ambiguous under D19"
+    }
+  ]
+}
