@@ -1,10 +1,10 @@
 \begin{table}[t]\centering\footnotesize
-\caption{Verifier reward fidelity on the held-out pool, run \texttt{pilot-v0.2} (2 tasks, 2 families). \textbf{Automated pilot: labels are rule-based proposals (D19), not human labels.} Rates with (num/den) and 95\% task-family bootstrap interval. Reference solution and no-op excluded; ambiguous candidates excluded. $J$ = (1$-$FR)$-$FA.}\label{tab:summary}
+\caption{Verifier reward fidelity on the held-out pool, run \texttt{pilot-v0.3} (4 tasks, 4 families). \textbf{Automated pilot: labels are rule-based proposals (D19), not human labels.} Rates with (num/den) and 95\% task-family bootstrap interval. Reference solution and no-op excluded; ambiguous candidates excluded. $J$ = (1$-$FR)$-$FA.}\label{tab:summary}
 \begin{tabular}{lllrrr}\toprule Condition & False acceptance & False rejection & $J$ & Tasks w/ accepted neg. & Infra \\\midrule
-C4 full, audited & 0.00 (0/7) [0.00, 0.00] & 0.00 (0/5) [0.00, 0.00] & +1.00 & 0/2 & 0/16 \\
-C3 full, plain & 0.00 (0/7) [0.00, 0.00] & 0.00 (0/5) [0.00, 0.00] & +1.00 & 0/2 & 0/16 \\
-C2 initial, audited & 0.57 (4/7) [0.00, 0.80] & 0.00 (0/5) [0.00, 0.00] & +0.43 & 1/2 & 0/16 \\
-C1 initial, plain & 0.71 (5/7) [0.50, 0.80] & 0.00 (0/5) [0.00, 0.00] & +0.29 & 2/2 & 0/16 \\
-B2 full-session LLM & 0.00 (0/7) [0.00, 0.00] & 0.00 (0/5) [0.00, 0.00] & +1.00 & 0/2 & 0/16 \\
-B1 repository tests & 0.43 (3/7) [0.20, 1.00] & 0.40 (2/5) [0.33, 0.50] & +0.17 & 2/2 & 0/16 \\
+C1 initial, plain & 0.35 (6/17) [0.07, 0.71] & 0.20 (2/10) [0.00, 0.67] & +0.45 & 3/4 & 0/32 \\
+C2 initial, audited & 0.29 (5/17) [0.00, 0.63] & 0.20 (2/10) [0.00, 0.67] & +0.51 & 2/4 & 0/32 \\
+C3 full, plain & 0.00 (0/17) [0.00, 0.00] & 0.00 (0/10) [0.00, 0.00] & +1.00 & 0/4 & 0/32 \\
+C4 full, audited & 0.00 (0/17) [0.00, 0.00] & 0.00 (0/10) [0.00, 0.00] & +1.00 & 0/4 & 0/32 \\
+B2 full-session LLM & 0.06 (1/17) [0.00, 0.14] & 0.00 (0/10) [0.00, 0.00] & +0.94 & 1/4 & 0/32 \\
+B1 repository tests & 0.29 (5/17) [0.11, 0.64] & 0.40 (4/10) [0.00, 0.82] & +0.31 & 3/4 & 0/32 \\
 \bottomrule\end{tabular}\end{table}

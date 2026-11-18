@@ -1,5 +1,18 @@
 \section{Annotation guide}
-See \texttt{docs/annotation\_guide.md}. \todo{include final version}
+The guide for human reviewers is \texttt{docs/annotation\_guide.md} (v0.2). It covers:
+\begin{itemize}
+\item contract review: evidence, kind, status, supersession, observability;
+\item candidate labels: valid, invalid with violated requirement ids or \texttt{REGRESSION}, or ambiguous;
+\item the review queue, which lists candidates without showing any verifier outcome;
+\item the evidence a reviewer may consult after forming an own judgement.
+\end{itemize}
 
-\section{Example task}
-\unfilled{CS-01 walk-through generated from the report}
+\section{Example task: \texttt{humanize} (CS-01)}
+\begin{enumerate}
+\item The user asks that \texttt{naturalsize} drop a trailing ``.0''.
+\item The agent changes the default output.
+\item The user corrects. The default output must stay exactly as before, because templates and snapshot tests depend on it. Trimming becomes an opt-in keyword argument. Calls with a custom \texttt{format}, including positional ones, must not change.
+\end{enumerate}
+The reference contract therefore contains five intended requirements, and the default-trimming requirement of the first request is \emph{superseded}. The initial-only contract keeps it, so its verifiers reward the pre-correction state and reject every candidate that honours the correction (Table~\ref{tab:matrix}). The correction-aware contract marks it superseded and scores the opt-in, keep-meaningful-decimals and unchanged-output requirements.
+
+\IfFileExists{generated/outcome_matrix.tex}{\input{generated/outcome_matrix.tex}}{\unfilled{outcome matrix}}

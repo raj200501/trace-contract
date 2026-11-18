@@ -1,3 +1,13 @@
 \begin{abstract}
-Coding tasks reconstructed from agent sessions are increasingly used as evaluation and training environments. In a real session the user's requirements evolve: later turns correct, refine or retract the initial request. If a task's executable verifier is built from an incomplete account of those requirements, it can reward solutions the user would have rejected (false acceptance) or reject solutions the user would have accepted (false rejection). We study this \emph{reward-fidelity} failure directly. We compare verifiers built from the initial request with verifiers built from an evidence-linked, correction-aware requirement contract; each is evaluated with and without a predefined audit procedure, against repository tests and a full-session LLM baseline. All verifiers score the \emph{same} held-out candidate patches, including the agent's naturally observed pre-correction code state, constructed near misses, and independent valid alternatives. Grading runs in a process-separated sandbox whose isolation properties are tested. \unfilled{summary of results; the current draft reports only an automated pilot on controlled sessions with model-proposed labels}.
+Coding tasks reconstructed from agent sessions are increasingly used as evaluation and training environments. In a real session the user's requirements evolve: later turns correct, refine or retract the initial request. If a task's executable verifier is built from an incomplete account of those requirements, it can reward solutions the user rejected (false acceptance) or reject solutions the user would accept (false rejection).
+
+We present a measurement design for this reward-fidelity failure. One frozen procedure produces verifiers from initial-request-only and from evidence-linked, correction-aware contracts, with and without a predefined audit, next to repository tests and a full-session LLM baseline. All of them are scored on one frozen held-out pool. The pool is anchored on the agent's own pre-correction states and also contains independent valid alternatives and constructed near misses. Grading runs in a process-separated sandbox with tested isolation.
+
+We ran an automated pilot on four controlled sessions: real agent runs with study-scripted corrections, 32 held-out candidates, and labels proposed by a pre-specified rule rather than by humans. In it, initial-only verifiers accepted 6 of 17 invalid candidates and rejected 2 of 10 valid ones. Given the correction-aware contract, the same procedure accepted none and rejected none. Repository tests accepted 5 and rejected 4. The pilot also shows where the measurement is fragile:
+\begin{itemize}
+\item the near misses that the labeling rule excludes as ambiguous are the hard cases;
+\item two of the four pre-correction states are valid;
+\item the information lost depends on the contract proposer.
+\end{itemize}
+Human labels are required before any conclusion.
 \end{abstract}

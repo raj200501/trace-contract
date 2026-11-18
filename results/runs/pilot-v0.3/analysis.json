@@ -1,0 +1,3094 @@
+{
+  "by_negative_type": {
+    "full_audited": {
+      "correction_violating": {
+        "accepted": 0,
+        "n": 16
+      },
+      "initial_violating": {
+        "accepted": 0,
+        "n": 1
+      }
+    },
+    "full_plain": {
+      "correction_violating": {
+        "accepted": 0,
+        "n": 16
+      },
+      "initial_violating": {
+        "accepted": 0,
+        "n": 1
+      }
+    },
+    "initial_audited": {
+      "correction_violating": {
+        "accepted": 5,
+        "n": 16
+      },
+      "initial_violating": {
+        "accepted": 0,
+        "n": 1
+      }
+    },
+    "initial_plain": {
+      "correction_violating": {
+        "accepted": 6,
+        "n": 16
+      },
+      "initial_violating": {
+        "accepted": 0,
+        "n": 1
+      }
+    },
+    "llm_freeform": {
+      "correction_violating": {
+        "accepted": 1,
+        "n": 16
+      },
+      "initial_violating": {
+        "accepted": 0,
+        "n": 1
+      }
+    },
+    "repo_tests": {
+      "correction_violating": {
+        "accepted": 5,
+        "n": 16
+      },
+      "initial_violating": {
+        "accepted": 0,
+        "n": 1
+      }
+    }
+  },
+  "comparisons": [
+    {
+      "a": "initial_plain",
+      "b": "full_plain",
+      "ci95": [
+        0.07142857142857142,
+        0.7142857142857143
+      ],
+      "description": "information lost: initial-only vs correction-aware contract (plain tests)",
+      "difference": 0.35294117647058826,
+      "discordant": {
+        "a_accepts_b_rejects": 6,
+        "a_rejects_b_accepts": 0
+      },
+      "metric": "fa",
+      "n_common": 32,
+      "n_families": 4
+    },
+    {
+      "a": "initial_plain",
+      "b": "full_plain",
+      "ci95": [
+        0.0,
+        0.6666666666666666
+      ],
+      "description": "information lost: initial-only vs correction-aware contract (plain tests)",
+      "difference": 0.2,
+      "discordant": {
+        "a_accepts_b_rejects": 0,
+        "a_rejects_b_accepts": 2
+      },
+      "metric": "fr",
+      "n_common": 32,
+      "n_families": 4
+    },
+    {
+      "a": "initial_audited",
+      "b": "full_audited",
+      "ci95": [
+        0.0,
+        0.631578947368421
+      ],
+      "description": "information lost: initial-only vs correction-aware contract (audited tests)",
+      "difference": 0.29411764705882354,
+      "discordant": {
+        "a_accepts_b_rejects": 5,
+        "a_rejects_b_accepts": 0
+      },
+      "metric": "fa",
+      "n_common": 32,
+      "n_families": 4
+    },
+    {
+      "a": "initial_audited",
+      "b": "full_audited",
+      "ci95": [
+        0.0,
+        0.6666666666666666
+      ],
+      "description": "information lost: initial-only vs correction-aware contract (audited tests)",
+      "difference": 0.2,
+      "discordant": {
+        "a_accepts_b_rejects": 0,
+        "a_rejects_b_accepts": 2
+      },
+      "metric": "fr",
+      "n_common": 32,
+      "n_families": 4
+    },
+    {
+      "a": "initial_plain",
+      "b": "initial_audited",
+      "ci95": [
+        0.0,
+        0.2727272727272727
+      ],
+      "description": "audit effect, initial-only contract",
+      "difference": 0.05882352941176472,
+      "discordant": {
+        "a_accepts_b_rejects": 1,
+        "a_rejects_b_accepts": 0
+      },
+      "metric": "fa",
+      "n_common": 32,
+      "n_families": 4
+    },
+    {
+      "a": "initial_plain",
+      "b": "initial_audited",
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "description": "audit effect, initial-only contract",
+      "difference": 0.0,
+      "discordant": {
+        "a_accepts_b_rejects": 0,
+        "a_rejects_b_accepts": 0
+      },
+      "metric": "fr",
+      "n_common": 32,
+      "n_families": 4
+    },
+    {
+      "a": "full_plain",
+      "b": "full_audited",
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "description": "audit effect, correction-aware contract",
+      "difference": 0.0,
+      "discordant": {
+        "a_accepts_b_rejects": 0,
+        "a_rejects_b_accepts": 0
+      },
+      "metric": "fa",
+      "n_common": 32,
+      "n_families": 4
+    },
+    {
+      "a": "full_plain",
+      "b": "full_audited",
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "description": "audit effect, correction-aware contract",
+      "difference": 0.0,
+      "discordant": {
+        "a_accepts_b_rejects": 0,
+        "a_rejects_b_accepts": 0
+      },
+      "metric": "fr",
+      "n_common": 32,
+      "n_families": 4
+    },
+    {
+      "a": "llm_freeform",
+      "b": "full_audited",
+      "ci95": [
+        0.0,
+        0.13636363636363635
+      ],
+      "description": "full-session LLM baseline vs structured contract + audit",
+      "difference": 0.058823529411764705,
+      "discordant": {
+        "a_accepts_b_rejects": 1,
+        "a_rejects_b_accepts": 0
+      },
+      "metric": "fa",
+      "n_common": 32,
+      "n_families": 4
+    },
+    {
+      "a": "llm_freeform",
+      "b": "full_audited",
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "description": "full-session LLM baseline vs structured contract + audit",
+      "difference": 0.0,
+      "discordant": {
+        "a_accepts_b_rejects": 0,
+        "a_rejects_b_accepts": 0
+      },
+      "metric": "fr",
+      "n_common": 32,
+      "n_families": 4
+    },
+    {
+      "a": "llm_freeform",
+      "b": "full_plain",
+      "ci95": [
+        0.0,
+        0.13636363636363635
+      ],
+      "description": "full-session LLM baseline vs structured contract (plain)",
+      "difference": 0.058823529411764705,
+      "discordant": {
+        "a_accepts_b_rejects": 1,
+        "a_rejects_b_accepts": 0
+      },
+      "metric": "fa",
+      "n_common": 32,
+      "n_families": 4
+    },
+    {
+      "a": "llm_freeform",
+      "b": "full_plain",
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "description": "full-session LLM baseline vs structured contract (plain)",
+      "difference": 0.0,
+      "discordant": {
+        "a_accepts_b_rejects": 0,
+        "a_rejects_b_accepts": 0
+      },
+      "metric": "fr",
+      "n_common": 32,
+      "n_families": 4
+    },
+    {
+      "a": "repo_tests",
+      "b": "full_audited",
+      "ci95": [
+        0.1111111111111111,
+        0.6363636363636364
+      ],
+      "description": "repository tests vs structured contract + audit",
+      "difference": 0.29411764705882354,
+      "discordant": {
+        "a_accepts_b_rejects": 5,
+        "a_rejects_b_accepts": 0
+      },
+      "metric": "fa",
+      "n_common": 32,
+      "n_families": 4
+    },
+    {
+      "a": "repo_tests",
+      "b": "full_audited",
+      "ci95": [
+        0.0,
+        0.8181818181818182
+      ],
+      "description": "repository tests vs structured contract + audit",
+      "difference": 0.4,
+      "discordant": {
+        "a_accepts_b_rejects": 0,
+        "a_rejects_b_accepts": 4
+      },
+      "metric": "fr",
+      "n_common": 32,
+      "n_families": 4
+    }
+  ],
+  "conditions": {
+    "full_audited": {
+      "excluded_unlabeled_or_ambiguous": 5,
+      "false_acceptance": {
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "den": 17,
+        "macro": 0.0,
+        "num": 0,
+        "rate": 0.0
+      },
+      "false_rejection": {
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "den": 10,
+        "macro": 0.0,
+        "num": 0,
+        "rate": 0.0
+      },
+      "infrastructure": {
+        "den": 32,
+        "num": 0
+      },
+      "sensitivity_excluding_infra": {
+        "fa": 0.0,
+        "fa_den": 17,
+        "fr": 0.0,
+        "fr_den": 10
+      },
+      "tasks_with_any_accepted_negative": {
+        "den": 4,
+        "num": 0
+      },
+      "youden_j": 1.0
+    },
+    "full_plain": {
+      "excluded_unlabeled_or_ambiguous": 5,
+      "false_acceptance": {
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "den": 17,
+        "macro": 0.0,
+        "num": 0,
+        "rate": 0.0
+      },
+      "false_rejection": {
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "den": 10,
+        "macro": 0.0,
+        "num": 0,
+        "rate": 0.0
+      },
+      "infrastructure": {
+        "den": 32,
+        "num": 0
+      },
+      "sensitivity_excluding_infra": {
+        "fa": 0.0,
+        "fa_den": 17,
+        "fr": 0.0,
+        "fr_den": 10
+      },
+      "tasks_with_any_accepted_negative": {
+        "den": 4,
+        "num": 0
+      },
+      "youden_j": 1.0
+    },
+    "initial_audited": {
+      "excluded_unlabeled_or_ambiguous": 5,
+      "false_acceptance": {
+        "ci95": [
+          0.0,
+          0.631578947368421
+        ],
+        "den": 17,
+        "macro": 0.24166666666666667,
+        "num": 5,
+        "rate": 0.29411764705882354
+      },
+      "false_rejection": {
+        "ci95": [
+          0.0,
+          0.6666666666666666
+        ],
+        "den": 10,
+        "macro": 0.25,
+        "num": 2,
+        "rate": 0.2
+      },
+      "infrastructure": {
+        "den": 32,
+        "num": 0
+      },
+      "sensitivity_excluding_infra": {
+        "fa": 0.29411764705882354,
+        "fa_den": 17,
+        "fr": 0.2,
+        "fr_den": 10
+      },
+      "tasks_with_any_accepted_negative": {
+        "den": 4,
+        "num": 2
+      },
+      "youden_j": 0.5058823529411764
+    },
+    "initial_plain": {
+      "excluded_unlabeled_or_ambiguous": 5,
+      "false_acceptance": {
+        "ci95": [
+          0.07142857142857142,
+          0.7142857142857143
+        ],
+        "den": 17,
+        "macro": 0.3666666666666667,
+        "num": 6,
+        "rate": 0.35294117647058826
+      },
+      "false_rejection": {
+        "ci95": [
+          0.0,
+          0.6666666666666666
+        ],
+        "den": 10,
+        "macro": 0.25,
+        "num": 2,
+        "rate": 0.2
+      },
+      "infrastructure": {
+        "den": 32,
+        "num": 0
+      },
+      "sensitivity_excluding_infra": {
+        "fa": 0.35294117647058826,
+        "fa_den": 17,
+        "fr": 0.2,
+        "fr_den": 10
+      },
+      "tasks_with_any_accepted_negative": {
+        "den": 4,
+        "num": 3
+      },
+      "youden_j": 0.4470588235294118
+    },
+    "llm_freeform": {
+      "excluded_unlabeled_or_ambiguous": 5,
+      "false_acceptance": {
+        "ci95": [
+          0.0,
+          0.13636363636363635
+        ],
+        "den": 17,
+        "macro": 0.041666666666666664,
+        "num": 1,
+        "rate": 0.058823529411764705
+      },
+      "false_rejection": {
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "den": 10,
+        "macro": 0.0,
+        "num": 0,
+        "rate": 0.0
+      },
+      "infrastructure": {
+        "den": 32,
+        "num": 0
+      },
+      "sensitivity_excluding_infra": {
+        "fa": 0.058823529411764705,
+        "fa_den": 17,
+        "fr": 0.0,
+        "fr_den": 10
+      },
+      "tasks_with_any_accepted_negative": {
+        "den": 4,
+        "num": 1
+      },
+      "youden_j": 0.9411764705882353
+    },
+    "repo_tests": {
+      "excluded_unlabeled_or_ambiguous": 5,
+      "false_acceptance": {
+        "ci95": [
+          0.1111111111111111,
+          0.6363636363636364
+        ],
+        "den": 17,
+        "macro": 0.3833333333333333,
+        "num": 5,
+        "rate": 0.29411764705882354
+      },
+      "false_rejection": {
+        "ci95": [
+          0.0,
+          0.8181818181818182
+        ],
+        "den": 10,
+        "macro": 0.3333333333333333,
+        "num": 4,
+        "rate": 0.4
+      },
+      "infrastructure": {
+        "den": 32,
+        "num": 0
+      },
+      "sensitivity_excluding_infra": {
+        "fa": 0.29411764705882354,
+        "fa_den": 17,
+        "fr": 0.4,
+        "fr_den": 10
+      },
+      "tasks_with_any_accepted_negative": {
+        "den": 4,
+        "num": 3
+      },
+      "youden_j": 0.30588235294117644
+    }
+  },
+  "coverage": {
+    "CS-01": {
+      "reference_scored": [
+        "R-custom-format-unchanged",
+        "R-default-unchanged",
+        "R-keep-meaningful",
+        "R-opt-in"
+      ],
+      "task_id": "CS-01",
+      "variants": {
+        "full_session": {
+          "contradicting": [],
+          "coverage": 1.0,
+          "covered": [
+            "R-custom-format-unchanged",
+            "R-default-unchanged",
+            "R-keep-meaningful",
+            "R-opt-in"
+          ],
+          "mapper": "model:claude-code-subagent:mapper:v1",
+          "mapper_kind": "model",
+          "missing": [],
+          "n_recovered_scored": 6,
+          "superseded_requirements": [
+            "R1"
+          ],
+          "unsupported": [],
+          "unsupported_rate": 0.0
+        },
+        "initial_only": {
+          "contradicting": [
+            "R1",
+            "R2",
+            "R4",
+            "R5"
+          ],
+          "coverage": 0.5,
+          "covered": [
+            "R-default-unchanged",
+            "R-keep-meaningful"
+          ],
+          "mapper": "model:claude-code-subagent:mapper:v1",
+          "mapper_kind": "model",
+          "missing": [
+            "R-custom-format-unchanged",
+            "R-opt-in"
+          ],
+          "n_recovered_scored": 5,
+          "superseded_requirements": [],
+          "unsupported": [
+            "R1",
+            "R2",
+            "R4",
+            "R5"
+          ],
+          "unsupported_rate": 0.8
+        }
+      },
+      "variants_mapper2": {
+        "full_session": {
+          "contradicting": [],
+          "coverage": 1.0,
+          "covered": [
+            "R-custom-format-unchanged",
+            "R-default-unchanged",
+            "R-keep-meaningful",
+            "R-opt-in"
+          ],
+          "mapper": "model:claude-code-subagent:mapper:v1#2",
+          "mapper_kind": "model",
+          "missing": [],
+          "n_recovered_scored": 6,
+          "superseded_requirements": [
+            "R1"
+          ],
+          "unsupported": [],
+          "unsupported_rate": 0.0
+        },
+        "initial_only": {
+          "contradicting": [
+            "R1",
+            "R2",
+            "R4",
+            "R5"
+          ],
+          "coverage": 0.5,
+          "covered": [
+            "R-default-unchanged",
+            "R-keep-meaningful"
+          ],
+          "mapper": "model:claude-code-subagent:mapper:v1#2",
+          "mapper_kind": "model",
+          "missing": [
+            "R-custom-format-unchanged",
+            "R-opt-in"
+          ],
+          "n_recovered_scored": 5,
+          "superseded_requirements": [],
+          "unsupported": [
+            "R1",
+            "R2",
+            "R4",
+            "R5"
+          ],
+          "unsupported_rate": 0.8
+        }
+      }
+    },
+    "CS-02": {
+      "reference_scored": [
+        "R-atomic",
+        "R-bytes-unchanged",
+        "R-new-content",
+        "R-no-temp-files",
+        "R-original-intact",
+        "R-read-after-write"
+      ],
+      "task_id": "CS-02",
+      "variants": {
+        "full_session": {
+          "contradicting": [],
+          "coverage": 1.0,
+          "covered": [
+            "R-atomic",
+            "R-bytes-unchanged",
+            "R-new-content",
+            "R-no-temp-files",
+            "R-original-intact",
+            "R-read-after-write"
+          ],
+          "mapper": "model:claude-code-subagent:mapper:v1",
+          "mapper_kind": "model",
+          "missing": [],
+          "n_recovered_scored": 10,
+          "superseded_requirements": [],
+          "unsupported": [],
+          "unsupported_rate": 0.0
+        },
+        "initial_only": {
+          "contradicting": [],
+          "coverage": 1.0,
+          "covered": [
+            "R-atomic",
+            "R-bytes-unchanged",
+            "R-new-content",
+            "R-no-temp-files",
+            "R-original-intact",
+            "R-read-after-write"
+          ],
+          "mapper": "model:claude-code-subagent:mapper:v1",
+          "mapper_kind": "model",
+          "missing": [],
+          "n_recovered_scored": 8,
+          "superseded_requirements": [],
+          "unsupported": [
+            "R5",
+            "R7"
+          ],
+          "unsupported_rate": 0.25
+        }
+      },
+      "variants_mapper2": {
+        "full_session": {
+          "contradicting": [],
+          "coverage": 1.0,
+          "covered": [
+            "R-atomic",
+            "R-bytes-unchanged",
+            "R-new-content",
+            "R-no-temp-files",
+            "R-original-intact",
+            "R-read-after-write"
+          ],
+          "mapper": "model:claude-code-subagent:mapper:v1#2",
+          "mapper_kind": "model",
+          "missing": [],
+          "n_recovered_scored": 10,
+          "superseded_requirements": [],
+          "unsupported": [],
+          "unsupported_rate": 0.0
+        },
+        "initial_only": {
+          "contradicting": [],
+          "coverage": 1.0,
+          "covered": [
+            "R-atomic",
+            "R-bytes-unchanged",
+            "R-new-content",
+            "R-no-temp-files",
+            "R-original-intact",
+            "R-read-after-write"
+          ],
+          "mapper": "model:claude-code-subagent:mapper:v1#2",
+          "mapper_kind": "model",
+          "missing": [],
+          "n_recovered_scored": 8,
+          "superseded_requirements": [],
+          "unsupported": [
+            "R5",
+            "R7"
+          ],
+          "unsupported_rate": 0.25
+        }
+      }
+    },
+    "CS-03": {
+      "reference_scored": [
+        "R-acronym",
+        "R-all-caps-input",
+        "R-humanize-unchanged",
+        "R-underscore-unchanged"
+      ],
+      "task_id": "CS-03",
+      "variants": {
+        "full_session": {
+          "contradicting": [],
+          "coverage": 1.0,
+          "covered": [
+            "R-acronym",
+            "R-all-caps-input",
+            "R-humanize-unchanged",
+            "R-underscore-unchanged"
+          ],
+          "mapper": "model:claude-code-subagent:mapper:v1",
+          "mapper_kind": "model",
+          "missing": [],
+          "n_recovered_scored": 5,
+          "superseded_requirements": [],
+          "unsupported": [
+            "R2"
+          ],
+          "unsupported_rate": 0.2
+        },
+        "initial_only": {
+          "contradicting": [],
+          "coverage": 0.75,
+          "covered": [
+            "R-acronym",
+            "R-humanize-unchanged",
+            "R-underscore-unchanged"
+          ],
+          "mapper": "model:claude-code-subagent:mapper:v1",
+          "mapper_kind": "model",
+          "missing": [
+            "R-all-caps-input"
+          ],
+          "n_recovered_scored": 5,
+          "superseded_requirements": [],
+          "unsupported": [
+            "R4"
+          ],
+          "unsupported_rate": 0.2
+        }
+      },
+      "variants_mapper2": {
+        "full_session": {
+          "contradicting": [],
+          "coverage": 1.0,
+          "covered": [
+            "R-acronym",
+            "R-all-caps-input",
+            "R-humanize-unchanged",
+            "R-underscore-unchanged"
+          ],
+          "mapper": "model:claude-code-subagent:mapper:v1#2",
+          "mapper_kind": "model",
+          "missing": [],
+          "n_recovered_scored": 5,
+          "superseded_requirements": [],
+          "unsupported": [
+            "R2"
+          ],
+          "unsupported_rate": 0.2
+        },
+        "initial_only": {
+          "contradicting": [],
+          "coverage": 0.75,
+          "covered": [
+            "R-acronym",
+            "R-humanize-unchanged",
+            "R-underscore-unchanged"
+          ],
+          "mapper": "model:claude-code-subagent:mapper:v1#2",
+          "mapper_kind": "model",
+          "missing": [
+            "R-all-caps-input"
+          ],
+          "n_recovered_scored": 5,
+          "superseded_requirements": [],
+          "unsupported": [
+            "R4"
+          ],
+          "unsupported_rate": 0.2
+        }
+      }
+    },
+    "CS-04": {
+      "reference_scored": [
+        "R-default-unchanged",
+        "R-lazy",
+        "R-negative-step",
+        "R-positional-ordering",
+        "R-step",
+        "R-zero-step"
+      ],
+      "task_id": "CS-04",
+      "variants": {
+        "full_session": {
+          "contradicting": [],
+          "coverage": 1.0,
+          "covered": [
+            "R-default-unchanged",
+            "R-lazy",
+            "R-negative-step",
+            "R-positional-ordering",
+            "R-step",
+            "R-zero-step"
+          ],
+          "mapper": "model:claude-code-subagent:mapper:v1",
+          "mapper_kind": "model",
+          "missing": [],
+          "n_recovered_scored": 7,
+          "superseded_requirements": [],
+          "unsupported": [
+            "R7"
+          ],
+          "unsupported_rate": 0.14285714285714285
+        },
+        "initial_only": {
+          "contradicting": [],
+          "coverage": 0.5,
+          "covered": [
+            "R-default-unchanged",
+            "R-positional-ordering",
+            "R-step"
+          ],
+          "mapper": "model:claude-code-subagent:mapper:v1",
+          "mapper_kind": "model",
+          "missing": [
+            "R-lazy",
+            "R-negative-step",
+            "R-zero-step"
+          ],
+          "n_recovered_scored": 3,
+          "superseded_requirements": [],
+          "unsupported": [],
+          "unsupported_rate": 0.0
+        }
+      },
+      "variants_mapper2": {
+        "full_session": {
+          "contradicting": [],
+          "coverage": 1.0,
+          "covered": [
+            "R-default-unchanged",
+            "R-lazy",
+            "R-negative-step",
+            "R-positional-ordering",
+            "R-step",
+            "R-zero-step"
+          ],
+          "mapper": "model:claude-code-subagent:mapper:v1#2",
+          "mapper_kind": "model",
+          "missing": [],
+          "n_recovered_scored": 7,
+          "superseded_requirements": [],
+          "unsupported": [
+            "R7"
+          ],
+          "unsupported_rate": 0.14285714285714285
+        },
+        "initial_only": {
+          "contradicting": [],
+          "coverage": 0.5,
+          "covered": [
+            "R-default-unchanged",
+            "R-positional-ordering",
+            "R-step"
+          ],
+          "mapper": "model:claude-code-subagent:mapper:v1#2",
+          "mapper_kind": "model",
+          "missing": [
+            "R-lazy",
+            "R-negative-step",
+            "R-zero-step"
+          ],
+          "n_recovered_scored": 3,
+          "superseded_requirements": [],
+          "unsupported": [],
+          "unsupported_rate": 0.0
+        }
+      }
+    }
+  },
+  "labels": {
+    "CS-01": {
+      "candidates": [
+        {
+          "candidate": "CS-01-pre-correction",
+          "check_assessed": "invalid",
+          "origin": "observed_pre_correction",
+          "proposed": "invalid",
+          "violated": [
+            "R-default-unchanged",
+            "R-keep-meaningful",
+            "R-opt-in",
+            "REGRESSION"
+          ]
+        },
+        {
+          "candidate": "CS-01-eval-alt-1",
+          "check_assessed": "valid",
+          "origin": "valid_alternative",
+          "proposed": "valid",
+          "violated": []
+        },
+        {
+          "candidate": "CS-01-eval-alt-2",
+          "check_assessed": "valid",
+          "origin": "valid_alternative",
+          "proposed": "valid",
+          "violated": []
+        },
+        {
+          "candidate": "CS-01-eval-nm-1",
+          "check_assessed": "invalid",
+          "origin": "constructed_near_miss",
+          "proposed": "invalid",
+          "violated": [
+            "R-custom-format-unchanged"
+          ]
+        },
+        {
+          "candidate": "CS-01-eval-nm-2",
+          "check_assessed": "invalid",
+          "origin": "constructed_near_miss",
+          "proposed": "invalid",
+          "violated": [
+            "R-keep-meaningful",
+            "R-opt-in"
+          ]
+        },
+        {
+          "candidate": "CS-01-eval-nm-3",
+          "check_assessed": "invalid",
+          "origin": "constructed_near_miss",
+          "proposed": "invalid",
+          "violated": [
+            "R-default-unchanged"
+          ]
+        },
+        {
+          "candidate": "CS-01-eval-nm-4",
+          "check_assessed": "invalid",
+          "origin": "constructed_near_miss",
+          "proposed": "invalid",
+          "violated": [
+            "R-keep-meaningful"
+          ]
+        },
+        {
+          "candidate": "CS-01-eval-nm-5",
+          "check_assessed": "invalid",
+          "origin": "constructed_near_miss",
+          "proposed": "invalid",
+          "violated": [
+            "R-custom-format-unchanged"
+          ]
+        }
+      ],
+      "counts": {
+        "invalid": 6,
+        "valid": 2
+      },
+      "review_queue": []
+    },
+    "CS-02": {
+      "candidates": [
+        {
+          "candidate": "CS-02-pre-correction",
+          "check_assessed": "valid",
+          "origin": "observed_pre_correction",
+          "proposed": "valid",
+          "violated": []
+        },
+        {
+          "candidate": "CS-02-eval-alt-1",
+          "check_assessed": "valid",
+          "origin": "valid_alternative",
+          "proposed": "valid",
+          "violated": []
+        },
+        {
+          "candidate": "CS-02-eval-alt-2",
+          "check_assessed": "invalid",
+          "origin": "valid_alternative",
+          "proposed": "valid",
+          "violated": []
+        },
+        {
+          "candidate": "CS-02-eval-nm-1",
+          "check_assessed": "invalid",
+          "origin": "constructed_near_miss",
+          "proposed": "invalid",
+          "violated": [
+            "R-no-temp-files"
+          ]
+        },
+        {
+          "candidate": "CS-02-eval-nm-2",
+          "check_assessed": "invalid",
+          "origin": "constructed_near_miss",
+          "proposed": "invalid",
+          "violated": [
+            "R-bytes-unchanged",
+            "R-new-content"
+          ]
+        },
+        {
+          "candidate": "CS-02-eval-nm-3",
+          "check_assessed": "invalid",
+          "origin": "constructed_near_miss",
+          "proposed": "invalid",
+          "violated": [
+            "R-read-after-write"
+          ]
+        },
+        {
+          "candidate": "CS-02-eval-nm-4",
+          "check_assessed": "invalid",
+          "origin": "constructed_near_miss",
+          "proposed": "ambiguous",
+          "violated": []
+        },
+        {
+          "candidate": "CS-02-eval-nm-5",
+          "check_assessed": "invalid",
+          "origin": "constructed_near_miss",
+          "proposed": "invalid",
+          "violated": [
+            "R-bytes-unchanged",
+            "R-new-content"
+          ]
+        }
+      ],
+      "counts": {
+        "ambiguous": 1,
+        "invalid": 4,
+        "valid": 3
+      },
+      "review_queue": [
+        {
+          "candidate": "CS-02-eval-alt-2",
+          "check_assessed": "invalid",
+          "origin": "valid_alternative",
+          "proposed": "valid",
+          "reason": "construction check disagrees with proposal",
+          "violated": []
+        },
+        {
+          "candidate": "CS-02-eval-nm-4",
+          "check_assessed": "invalid",
+          "origin": "constructed_near_miss",
+          "proposed": "ambiguous",
+          "reason": "ambiguous under D19",
+          "violated": []
+        }
+      ]
+    },
+    "CS-03": {
+      "candidates": [
+        {
+          "candidate": "CS-03-pre-correction",
+          "check_assessed": "invalid",
+          "origin": "observed_pre_correction",
+          "proposed": "valid",
+          "violated": []
+        },
+        {
+          "candidate": "CS-03-eval-alt-2",
+          "check_assessed": "valid",
+          "origin": "valid_alternative",
+          "proposed": "valid",
+          "violated": []
+        },
+        {
+          "candidate": "CS-03-eval-nm-1",
+          "check_assessed": "invalid",
+          "origin": "constructed_near_miss",
+          "proposed": "ambiguous",
+          "violated": []
+        },
+        {
+          "candidate": "CS-03-eval-nm-2",
+          "check_assessed": "invalid",
+          "origin": "constructed_near_miss",
+          "proposed": "ambiguous",
+          "violated": []
+        },
+        {
+          "candidate": "CS-03-eval-nm-3",
+          "check_assessed": "invalid",
+          "origin": "constructed_near_miss",
+          "proposed": "invalid",
+          "violated": [
+            "R-humanize-unchanged"
+          ]
+        },
+        {
+          "candidate": "CS-03-eval-nm-4",
+          "check_assessed": "invalid",
+          "origin": "constructed_near_miss",
+          "proposed": "ambiguous",
+          "violated": []
+        },
+        {
+          "candidate": "CS-03-eval-nm-5",
+          "check_assessed": "invalid",
+          "origin": "constructed_near_miss",
+          "proposed": "invalid",
+          "violated": [
+            "R-all-caps-input"
+          ]
+        },
+        {
+          "candidate": "CS-03-eval-alt-1",
+          "check_assessed": "invalid",
+          "origin": "valid_alternative",
+          "proposed": "valid",
+          "violated": []
+        }
+      ],
+      "counts": {
+        "ambiguous": 3,
+        "invalid": 2,
+        "valid": 3
+      },
+      "review_queue": [
+        {
+          "candidate": "CS-03-pre-correction",
+          "check_assessed": "invalid",
+          "origin": "observed_pre_correction",
+          "proposed": "valid",
+          "reason": "construction check disagrees with proposal",
+          "violated": []
+        },
+        {
+          "candidate": "CS-03-eval-nm-1",
+          "check_assessed": "invalid",
+          "origin": "constructed_near_miss",
+          "proposed": "ambiguous",
+          "reason": "ambiguous under D19",
+          "violated": []
+        },
+        {
+          "candidate": "CS-03-eval-nm-2",
+          "check_assessed": "invalid",
+          "origin": "constructed_near_miss",
+          "proposed": "ambiguous",
+          "reason": "ambiguous under D19",
+          "violated": []
+        },
+        {
+          "candidate": "CS-03-eval-nm-4",
+          "check_assessed": "invalid",
+          "origin": "constructed_near_miss",
+          "proposed": "ambiguous",
+          "reason": "ambiguous under D19",
+          "violated": []
+        },
+        {
+          "candidate": "CS-03-eval-alt-1",
+          "check_assessed": "invalid",
+          "origin": "valid_alternative",
+          "proposed": "valid",
+          "reason": "construction check disagrees with proposal",
+          "violated": []
+        }
+      ]
+    },
+    "CS-04": {
+      "candidates": [
+        {
+          "candidate": "CS-04-pre-correction",
+          "check_assessed": "invalid",
+          "origin": "observed_pre_correction",
+          "proposed": "invalid",
+          "violated": [
+            "R-zero-step"
+          ]
+        },
+        {
+          "candidate": "CS-04-eval-alt-1",
+          "check_assessed": "valid",
+          "origin": "valid_alternative",
+          "proposed": "valid",
+          "violated": []
+        },
+        {
+          "candidate": "CS-04-eval-alt-2",
+          "check_assessed": "valid",
+          "origin": "valid_alternative",
+          "proposed": "valid",
+          "violated": []
+        },
+        {
+          "candidate": "CS-04-eval-nm-1",
+          "check_assessed": "invalid",
+          "origin": "constructed_near_miss",
+          "proposed": "invalid",
+          "violated": [
+            "R-negative-step"
+          ]
+        },
+        {
+          "candidate": "CS-04-eval-nm-2",
+          "check_assessed": "invalid",
+          "origin": "constructed_near_miss",
+          "proposed": "invalid",
+          "violated": [
+            "R-zero-step"
+          ]
+        },
+        {
+          "candidate": "CS-04-eval-nm-3",
+          "check_assessed": "invalid",
+          "origin": "constructed_near_miss",
+          "proposed": "invalid",
+          "violated": [
+            "R-default-unchanged",
+            "R-lazy",
+            "R-negative-step",
+            "R-positional-ordering",
+            "R-step",
+            "R-zero-step"
+          ]
+        },
+        {
+          "candidate": "CS-04-eval-nm-4",
+          "check_assessed": "invalid",
+          "origin": "constructed_near_miss",
+          "proposed": "invalid",
+          "violated": [
+            "R-lazy",
+            "R-negative-step",
+            "R-positional-ordering",
+            "R-step"
+          ]
+        },
+        {
+          "candidate": "CS-04-eval-nm-5",
+          "check_assessed": "invalid",
+          "origin": "constructed_near_miss",
+          "proposed": "ambiguous",
+          "violated": []
+        }
+      ],
+      "counts": {
+        "ambiguous": 1,
+        "invalid": 5,
+        "valid": 2
+      },
+      "review_queue": [
+        {
+          "candidate": "CS-04-eval-nm-5",
+          "check_assessed": "invalid",
+          "origin": "constructed_near_miss",
+          "proposed": "ambiguous",
+          "reason": "ambiguous under D19",
+          "violated": []
+        }
+      ]
+    }
+  },
+  "mapping_agreement": {
+    "CS-01": {
+      "full_session": {
+        "agreement": 1.0,
+        "contradicts": {
+          "agreement": 1.0,
+          "disagreements": [],
+          "kappa": 1.0,
+          "units": 30
+        },
+        "kappa": 1.0,
+        "map": {
+          "agreement": 1.0,
+          "disagreements": [],
+          "kappa": 1.0,
+          "units": 30
+        },
+        "units": 30
+      },
+      "initial_only": {
+        "agreement": 1.0,
+        "contradicts": {
+          "agreement": 1.0,
+          "disagreements": [],
+          "kappa": 1.0,
+          "units": 25
+        },
+        "kappa": 1.0,
+        "map": {
+          "agreement": 1.0,
+          "disagreements": [],
+          "kappa": 1.0,
+          "units": 25
+        },
+        "units": 25
+      }
+    },
+    "CS-02": {
+      "full_session": {
+        "agreement": 0.9666666666666667,
+        "contradicts": {
+          "agreement": 1.0,
+          "disagreements": [],
+          "kappa": 1.0,
+          "units": 60
+        },
+        "kappa": 0.9180327868852459,
+        "map": {
+          "agreement": 0.9666666666666667,
+          "disagreements": [
+            "R1->R-original-intact",
+            "R2->R-original-intact"
+          ],
+          "kappa": 0.9180327868852459,
+          "units": 60
+        },
+        "units": 60
+      },
+      "initial_only": {
+        "agreement": 1.0,
+        "contradicts": {
+          "agreement": 1.0,
+          "disagreements": [],
+          "kappa": 1.0,
+          "units": 48
+        },
+        "kappa": 1.0,
+        "map": {
+          "agreement": 1.0,
+          "disagreements": [],
+          "kappa": 1.0,
+          "units": 48
+        },
+        "units": 48
+      }
+    },
+    "CS-03": {
+      "full_session": {
+        "agreement": 1.0,
+        "contradicts": {
+          "agreement": 1.0,
+          "disagreements": [],
+          "kappa": 1.0,
+          "units": 20
+        },
+        "kappa": 1.0,
+        "map": {
+          "agreement": 1.0,
+          "disagreements": [],
+          "kappa": 1.0,
+          "units": 20
+        },
+        "units": 20
+      },
+      "initial_only": {
+        "agreement": 1.0,
+        "contradicts": {
+          "agreement": 1.0,
+          "disagreements": [],
+          "kappa": 1.0,
+          "units": 20
+        },
+        "kappa": 1.0,
+        "map": {
+          "agreement": 1.0,
+          "disagreements": [],
+          "kappa": 1.0,
+          "units": 20
+        },
+        "units": 20
+      }
+    },
+    "CS-04": {
+      "full_session": {
+        "agreement": 1.0,
+        "contradicts": {
+          "agreement": 1.0,
+          "disagreements": [],
+          "kappa": 1.0,
+          "units": 42
+        },
+        "kappa": 1.0,
+        "map": {
+          "agreement": 1.0,
+          "disagreements": [],
+          "kappa": 1.0,
+          "units": 42
+        },
+        "units": 42
+      },
+      "initial_only": {
+        "agreement": 1.0,
+        "contradicts": {
+          "agreement": 1.0,
+          "disagreements": [],
+          "kappa": 1.0,
+          "units": 18
+        },
+        "kappa": 1.0,
+        "map": {
+          "agreement": 1.0,
+          "disagreements": [],
+          "kappa": 1.0,
+          "units": 18
+        },
+        "units": 18
+      }
+    }
+  },
+  "meta": {
+    "harness_versions": {
+      "tc-harness/0.3.0": 240
+    },
+    "label_policy": "proposed labels allowed (automated pilot)",
+    "label_rule": "pilot",
+    "n_results": 240,
+    "tasks": {}
+  },
+  "n_families": 4,
+  "n_tasks": 4,
+  "outcome_counts": {
+    "full_audited": {
+      "pass": 17,
+      "task_failure": 23
+    },
+    "full_plain": {
+      "pass": 17,
+      "task_failure": 23
+    },
+    "initial_audited": {
+      "pass": 20,
+      "task_failure": 20
+    },
+    "initial_plain": {
+      "pass": 21,
+      "task_failure": 19
+    },
+    "llm_freeform": {
+      "pass": 19,
+      "task_failure": 21
+    },
+    "repo_tests": {
+      "pass": 18,
+      "task_failure": 22
+    }
+  },
+  "per_task": {
+    "CS-01": {
+      "full_audited": [
+        {
+          "candidate": "CS-01-pre-correction",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "observed_pre_correction",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-01-eval-alt-1",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "valid_alternative",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-01-eval-alt-2",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "valid_alternative",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-01-eval-nm-1",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-01-eval-nm-2",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-01-eval-nm-3",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-01-eval-nm-4",
+          "label": "invalid",
+          "negative_type": "initial_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-01-eval-nm-5",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        }
+      ],
+      "full_plain": [
+        {
+          "candidate": "CS-01-pre-correction",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "observed_pre_correction",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-01-eval-alt-1",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "valid_alternative",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-01-eval-alt-2",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "valid_alternative",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-01-eval-nm-1",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-01-eval-nm-2",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-01-eval-nm-3",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-01-eval-nm-4",
+          "label": "invalid",
+          "negative_type": "initial_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-01-eval-nm-5",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        }
+      ],
+      "initial_audited": [
+        {
+          "candidate": "CS-01-pre-correction",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "observed_pre_correction",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-01-eval-alt-1",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "valid_alternative",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-01-eval-alt-2",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "valid_alternative",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-01-eval-nm-1",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-01-eval-nm-2",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-01-eval-nm-3",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-01-eval-nm-4",
+          "label": "invalid",
+          "negative_type": "initial_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-01-eval-nm-5",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        }
+      ],
+      "initial_plain": [
+        {
+          "candidate": "CS-01-pre-correction",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "observed_pre_correction",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-01-eval-alt-1",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "valid_alternative",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-01-eval-alt-2",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "valid_alternative",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-01-eval-nm-1",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-01-eval-nm-2",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-01-eval-nm-3",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-01-eval-nm-4",
+          "label": "invalid",
+          "negative_type": "initial_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-01-eval-nm-5",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        }
+      ],
+      "llm_freeform": [
+        {
+          "candidate": "CS-01-pre-correction",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "observed_pre_correction",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-01-eval-alt-1",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "valid_alternative",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-01-eval-alt-2",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "valid_alternative",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-01-eval-nm-1",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-01-eval-nm-2",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-01-eval-nm-3",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-01-eval-nm-4",
+          "label": "invalid",
+          "negative_type": "initial_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-01-eval-nm-5",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        }
+      ],
+      "repo_tests": [
+        {
+          "candidate": "CS-01-pre-correction",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "observed_pre_correction",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-01-eval-alt-1",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "valid_alternative",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-01-eval-alt-2",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "valid_alternative",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-01-eval-nm-1",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-01-eval-nm-2",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-01-eval-nm-3",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-01-eval-nm-4",
+          "label": "invalid",
+          "negative_type": "initial_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-01-eval-nm-5",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "pass"
+        }
+      ]
+    },
+    "CS-02": {
+      "full_audited": [
+        {
+          "candidate": "CS-02-pre-correction",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "observed_pre_correction",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-02-eval-alt-1",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "valid_alternative",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-02-eval-alt-2",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "valid_alternative",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-02-eval-nm-1",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-02-eval-nm-2",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-02-eval-nm-3",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-02-eval-nm-4",
+          "label": "ambiguous",
+          "negative_type": "",
+          "origin": "constructed_near_miss",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-02-eval-nm-5",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        }
+      ],
+      "full_plain": [
+        {
+          "candidate": "CS-02-pre-correction",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "observed_pre_correction",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-02-eval-alt-1",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "valid_alternative",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-02-eval-alt-2",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "valid_alternative",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-02-eval-nm-1",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-02-eval-nm-2",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-02-eval-nm-3",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-02-eval-nm-4",
+          "label": "ambiguous",
+          "negative_type": "",
+          "origin": "constructed_near_miss",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-02-eval-nm-5",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        }
+      ],
+      "initial_audited": [
+        {
+          "candidate": "CS-02-pre-correction",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "observed_pre_correction",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-02-eval-alt-1",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "valid_alternative",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-02-eval-alt-2",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "valid_alternative",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-02-eval-nm-1",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-02-eval-nm-2",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-02-eval-nm-3",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-02-eval-nm-4",
+          "label": "ambiguous",
+          "negative_type": "",
+          "origin": "constructed_near_miss",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-02-eval-nm-5",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        }
+      ],
+      "initial_plain": [
+        {
+          "candidate": "CS-02-pre-correction",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "observed_pre_correction",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-02-eval-alt-1",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "valid_alternative",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-02-eval-alt-2",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "valid_alternative",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-02-eval-nm-1",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-02-eval-nm-2",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-02-eval-nm-3",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-02-eval-nm-4",
+          "label": "ambiguous",
+          "negative_type": "",
+          "origin": "constructed_near_miss",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-02-eval-nm-5",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        }
+      ],
+      "llm_freeform": [
+        {
+          "candidate": "CS-02-pre-correction",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "observed_pre_correction",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-02-eval-alt-1",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "valid_alternative",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-02-eval-alt-2",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "valid_alternative",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-02-eval-nm-1",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-02-eval-nm-2",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-02-eval-nm-3",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-02-eval-nm-4",
+          "label": "ambiguous",
+          "negative_type": "",
+          "origin": "constructed_near_miss",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-02-eval-nm-5",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        }
+      ],
+      "repo_tests": [
+        {
+          "candidate": "CS-02-pre-correction",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "observed_pre_correction",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-02-eval-alt-1",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "valid_alternative",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-02-eval-alt-2",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "valid_alternative",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-02-eval-nm-1",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-02-eval-nm-2",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-02-eval-nm-3",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-02-eval-nm-4",
+          "label": "ambiguous",
+          "negative_type": "",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-02-eval-nm-5",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        }
+      ]
+    },
+    "CS-03": {
+      "full_audited": [
+        {
+          "candidate": "CS-03-pre-correction",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "observed_pre_correction",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-03-eval-alt-2",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "valid_alternative",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-03-eval-nm-1",
+          "label": "ambiguous",
+          "negative_type": "",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-03-eval-nm-2",
+          "label": "ambiguous",
+          "negative_type": "",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-03-eval-nm-3",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-03-eval-nm-4",
+          "label": "ambiguous",
+          "negative_type": "",
+          "origin": "constructed_near_miss",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-03-eval-nm-5",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-03-eval-alt-1",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "valid_alternative",
+          "outcome": "pass"
+        }
+      ],
+      "full_plain": [
+        {
+          "candidate": "CS-03-pre-correction",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "observed_pre_correction",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-03-eval-alt-2",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "valid_alternative",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-03-eval-nm-1",
+          "label": "ambiguous",
+          "negative_type": "",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-03-eval-nm-2",
+          "label": "ambiguous",
+          "negative_type": "",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-03-eval-nm-3",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-03-eval-nm-4",
+          "label": "ambiguous",
+          "negative_type": "",
+          "origin": "constructed_near_miss",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-03-eval-nm-5",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-03-eval-alt-1",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "valid_alternative",
+          "outcome": "pass"
+        }
+      ],
+      "initial_audited": [
+        {
+          "candidate": "CS-03-pre-correction",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "observed_pre_correction",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-03-eval-alt-2",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "valid_alternative",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-03-eval-nm-1",
+          "label": "ambiguous",
+          "negative_type": "",
+          "origin": "constructed_near_miss",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-03-eval-nm-2",
+          "label": "ambiguous",
+          "negative_type": "",
+          "origin": "constructed_near_miss",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-03-eval-nm-3",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-03-eval-nm-4",
+          "label": "ambiguous",
+          "negative_type": "",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-03-eval-nm-5",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-03-eval-alt-1",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "valid_alternative",
+          "outcome": "pass"
+        }
+      ],
+      "initial_plain": [
+        {
+          "candidate": "CS-03-pre-correction",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "observed_pre_correction",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-03-eval-alt-2",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "valid_alternative",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-03-eval-nm-1",
+          "label": "ambiguous",
+          "negative_type": "",
+          "origin": "constructed_near_miss",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-03-eval-nm-2",
+          "label": "ambiguous",
+          "negative_type": "",
+          "origin": "constructed_near_miss",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-03-eval-nm-3",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-03-eval-nm-4",
+          "label": "ambiguous",
+          "negative_type": "",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-03-eval-nm-5",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-03-eval-alt-1",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "valid_alternative",
+          "outcome": "pass"
+        }
+      ],
+      "llm_freeform": [
+        {
+          "candidate": "CS-03-pre-correction",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "observed_pre_correction",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-03-eval-alt-2",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "valid_alternative",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-03-eval-nm-1",
+          "label": "ambiguous",
+          "negative_type": "",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-03-eval-nm-2",
+          "label": "ambiguous",
+          "negative_type": "",
+          "origin": "constructed_near_miss",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-03-eval-nm-3",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-03-eval-nm-4",
+          "label": "ambiguous",
+          "negative_type": "",
+          "origin": "constructed_near_miss",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-03-eval-nm-5",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-03-eval-alt-1",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "valid_alternative",
+          "outcome": "pass"
+        }
+      ],
+      "repo_tests": [
+        {
+          "candidate": "CS-03-pre-correction",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "observed_pre_correction",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-03-eval-alt-2",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "valid_alternative",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-03-eval-nm-1",
+          "label": "ambiguous",
+          "negative_type": "",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-03-eval-nm-2",
+          "label": "ambiguous",
+          "negative_type": "",
+          "origin": "constructed_near_miss",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-03-eval-nm-3",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-03-eval-nm-4",
+          "label": "ambiguous",
+          "negative_type": "",
+          "origin": "constructed_near_miss",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-03-eval-nm-5",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-03-eval-alt-1",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "valid_alternative",
+          "outcome": "pass"
+        }
+      ]
+    },
+    "CS-04": {
+      "full_audited": [
+        {
+          "candidate": "CS-04-pre-correction",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "observed_pre_correction",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-04-eval-alt-1",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "valid_alternative",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-04-eval-alt-2",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "valid_alternative",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-04-eval-nm-1",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-04-eval-nm-2",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-04-eval-nm-3",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-04-eval-nm-4",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-04-eval-nm-5",
+          "label": "ambiguous",
+          "negative_type": "",
+          "origin": "constructed_near_miss",
+          "outcome": "pass"
+        }
+      ],
+      "full_plain": [
+        {
+          "candidate": "CS-04-pre-correction",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "observed_pre_correction",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-04-eval-alt-1",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "valid_alternative",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-04-eval-alt-2",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "valid_alternative",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-04-eval-nm-1",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-04-eval-nm-2",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-04-eval-nm-3",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-04-eval-nm-4",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-04-eval-nm-5",
+          "label": "ambiguous",
+          "negative_type": "",
+          "origin": "constructed_near_miss",
+          "outcome": "pass"
+        }
+      ],
+      "initial_audited": [
+        {
+          "candidate": "CS-04-pre-correction",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "observed_pre_correction",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-04-eval-alt-1",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "valid_alternative",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-04-eval-alt-2",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "valid_alternative",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-04-eval-nm-1",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-04-eval-nm-2",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-04-eval-nm-3",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-04-eval-nm-4",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-04-eval-nm-5",
+          "label": "ambiguous",
+          "negative_type": "",
+          "origin": "constructed_near_miss",
+          "outcome": "pass"
+        }
+      ],
+      "initial_plain": [
+        {
+          "candidate": "CS-04-pre-correction",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "observed_pre_correction",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-04-eval-alt-1",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "valid_alternative",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-04-eval-alt-2",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "valid_alternative",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-04-eval-nm-1",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-04-eval-nm-2",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-04-eval-nm-3",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-04-eval-nm-4",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-04-eval-nm-5",
+          "label": "ambiguous",
+          "negative_type": "",
+          "origin": "constructed_near_miss",
+          "outcome": "pass"
+        }
+      ],
+      "llm_freeform": [
+        {
+          "candidate": "CS-04-pre-correction",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "observed_pre_correction",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-04-eval-alt-1",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "valid_alternative",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-04-eval-alt-2",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "valid_alternative",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-04-eval-nm-1",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-04-eval-nm-2",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-04-eval-nm-3",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-04-eval-nm-4",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-04-eval-nm-5",
+          "label": "ambiguous",
+          "negative_type": "",
+          "origin": "constructed_near_miss",
+          "outcome": "pass"
+        }
+      ],
+      "repo_tests": [
+        {
+          "candidate": "CS-04-pre-correction",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "observed_pre_correction",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-04-eval-alt-1",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "valid_alternative",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-04-eval-alt-2",
+          "label": "valid",
+          "negative_type": "",
+          "origin": "valid_alternative",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-04-eval-nm-1",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "pass"
+        },
+        {
+          "candidate": "CS-04-eval-nm-2",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-04-eval-nm-3",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-04-eval-nm-4",
+          "label": "invalid",
+          "negative_type": "correction_violating",
+          "origin": "constructed_near_miss",
+          "outcome": "task_failure"
+        },
+        {
+          "candidate": "CS-04-eval-nm-5",
+          "label": "ambiguous",
+          "negative_type": "",
+          "origin": "constructed_near_miss",
+          "outcome": "pass"
+        }
+      ]
+    }
+  },
+  "sanity": {
+    "full_audited": {
+      "noop": {
+        "n": 4,
+        "outcomes": {
+          "task_failure": 4
+        },
+        "pass": 0
+      },
+      "reference": {
+        "n": 4,
+        "outcomes": {
+          "pass": 4
+        },
+        "pass": 4
+      }
+    },
+    "full_plain": {
+      "noop": {
+        "n": 4,
+        "outcomes": {
+          "task_failure": 4
+        },
+        "pass": 0
+      },
+      "reference": {
+        "n": 4,
+        "outcomes": {
+          "pass": 4
+        },
+        "pass": 4
+      }
+    },
+    "initial_audited": {
+      "noop": {
+        "n": 4,
+        "outcomes": {
+          "task_failure": 4
+        },
+        "pass": 0
+      },
+      "reference": {
+        "n": 4,
+        "outcomes": {
+          "pass": 3,
+          "task_failure": 1
+        },
+        "pass": 3
+      }
+    },
+    "initial_plain": {
+      "noop": {
+        "n": 4,
+        "outcomes": {
+          "task_failure": 4
+        },
+        "pass": 0
+      },
+      "reference": {
+        "n": 4,
+        "outcomes": {
+          "pass": 3,
+          "task_failure": 1
+        },
+        "pass": 3
+      }
+    },
+    "llm_freeform": {
+      "noop": {
+        "n": 4,
+        "outcomes": {
+          "task_failure": 4
+        },
+        "pass": 0
+      },
+      "reference": {
+        "n": 4,
+        "outcomes": {
+          "pass": 4
+        },
+        "pass": 4
+      }
+    },
+    "repo_tests": {
+      "noop": {
+        "n": 4,
+        "outcomes": {
+          "task_failure": 4
+        },
+        "pass": 0
+      },
+      "reference": {
+        "n": 4,
+        "outcomes": {
+          "pass": 4
+        },
+        "pass": 4
+      }
+    }
+  },
+  "sensitivity_construction_labels": {
+    "full_audited": {
+      "fa": 0.13636363636363635,
+      "fa_ci95": [
+        0.043478260869565216,
+        0.2
+      ],
+      "fa_den": 22,
+      "fa_num": 3,
+      "fr": 0.0,
+      "fr_ci95": [
+        0.0,
+        0.0
+      ],
+      "fr_den": 10,
+      "fr_num": 0
+    },
+    "full_plain": {
+      "fa": 0.13636363636363635,
+      "fa_ci95": [
+        0.043478260869565216,
+        0.2
+      ],
+      "fa_den": 22,
+      "fa_num": 3,
+      "fr": 0.0,
+      "fr_ci95": [
+        0.0,
+        0.0
+      ],
+      "fr_den": 10,
+      "fr_num": 0
+    },
+    "initial_audited": {
+      "fa": 0.4090909090909091,
+      "fa_ci95": [
+        0.18181818181818182,
+        0.6956521739130435
+      ],
+      "fa_den": 22,
+      "fa_num": 9,
+      "fr": 0.2,
+      "fr_ci95": [
+        0.0,
+        0.6666666666666666
+      ],
+      "fr_den": 10,
+      "fr_num": 2
+    },
+    "initial_plain": {
+      "fa": 0.45454545454545453,
+      "fa_ci95": [
+        0.18181818181818182,
+        0.7272727272727273
+      ],
+      "fa_den": 22,
+      "fa_num": 10,
+      "fr": 0.2,
+      "fr_ci95": [
+        0.0,
+        0.6666666666666666
+      ],
+      "fr_den": 10,
+      "fr_num": 2
+    },
+    "llm_freeform": {
+      "fa": 0.22727272727272727,
+      "fa_ci95": [
+        0.16666666666666666,
+        0.3333333333333333
+      ],
+      "fa_den": 22,
+      "fa_num": 5,
+      "fr": 0.0,
+      "fr_ci95": [
+        0.0,
+        0.0
+      ],
+      "fr_den": 10,
+      "fr_num": 0
+    },
+    "repo_tests": {
+      "fa": 0.36363636363636365,
+      "fa_ci95": [
+        0.09523809523809523,
+        0.6666666666666666
+      ],
+      "fa_den": 22,
+      "fa_num": 8,
+      "fr": 0.4,
+      "fr_ci95": [
+        0.0,
+        0.8181818181818182
+      ],
+      "fr_den": 10,
+      "fr_num": 4
+    }
+  }
+}

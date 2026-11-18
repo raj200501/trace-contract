@@ -1,0 +1,11 @@
+{
+  "old_run": "pilot-v0.2-h2",
+  "new_run": "pilot-v0.3",
+  "pairs_in_both": 4,
+  "only_in_old": 0,
+  "only_in_new": 236,
+  "reward_agreement": 1.0,
+  "outcome_agreement": 1.0,
+  "reward_discordant": [],
+  "outcome_discordant": []
+}

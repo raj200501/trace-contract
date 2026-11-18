@@ -21,6 +21,14 @@ COND_TEX = {"initial_plain": "C1 initial, plain", "initial_audited": "C2 initial
             "full_audited": "C4 full, audited", "llm_freeform": "B2 full-session LLM", "repo_tests": "B1 repository tests"}
 
 
+ORDER = ["initial_plain", "initial_audited", "full_plain", "full_audited", "llm_freeform", "repo_tests"]
+
+
+def ordered(d: dict) -> list:
+    """Items of a per-condition dict in the paper's canonical order (C1-C4, B2, B1)."""
+    return [(k, d[k]) for k in ORDER if k in d] + [(k, v) for k, v in d.items() if k not in ORDER]
+
+
 def tex(s: str) -> str:
     return (str(s).replace("\\", r"\textbackslash{}").replace("_", r"\_").replace("%", r"\%").replace("&", r"\&")
             .replace("#", r"\#"))
@@ -91,7 +99,7 @@ def results(run: Path, led: Ledger) -> None:
     pilot = "automated pilot" in a["meta"]["label_policy"]
     pre = ("\\textbf{Automated pilot: labels are rule-based proposals (D19), not human labels.} " if pilot else "")
     rows = []
-    for c, d in a["conditions"].items():
+    for c, d in ordered(a["conditions"]):
         fa, fr = d["false_acceptance"], d["false_rejection"]
         j = "n/a" if d.get("youden_j") is None else f"{d['youden_j']:+.2f}"
         tn = d["tasks_with_any_accepted_negative"]
@@ -126,7 +134,7 @@ def results(run: Path, led: Ledger) -> None:
     # Accepted negatives by origin and type.
     nrows = []
     per_task = a["per_task"]
-    for c in a["conditions"]:
+    for c, _ in ordered(a["conditions"]):
         def acc(pred):
             sub = [r for t in per_task.values() for r in t.get(c, []) if r["label"] == "invalid" and pred(r)]
             return sum(r["outcome"] == "pass" for r in sub), len(sub)
@@ -143,7 +151,7 @@ def results(run: Path, led: Ledger) -> None:
         "lrrrr", "Condition & Pre-correction state & Near miss & Correction-violating & Initial-violating", nrows, size="\\footnotesize"))
 
     srows = []
-    for c, s in a["sanity"].items():
+    for c, s in ordered(a["sanity"]):
         r, n = s.get("reference", {}), s.get("noop", {})
         srows.append(f"{tex(COND_TEX.get(c, c))} & {r.get('pass', '-')}/{r.get('n', '-')} & {n.get('pass', '-')}/{n.get('n', '-')} \\\\")
         led.add("sanity", f"{run_id} {c} reference/no-op passes", f"{r.get('pass')}/{r.get('n')}, {n.get('pass')}/{n.get('n')}", f"{src} sanity.{c}")
@@ -153,7 +161,7 @@ def results(run: Path, led: Ledger) -> None:
 
     if a.get("sensitivity_construction_labels"):
         xrows = []
-        for c, d in a["sensitivity_construction_labels"].items():
+        for c, d in ordered(a["sensitivity_construction_labels"]):
             xrows.append(f"{tex(COND_TEX.get(c, c))} & {fmt_rate(d['fa'], d['fa_num'], d['fa_den'], d['fa_ci95'])} & "
                          f"{fmt_rate(d['fr'], d['fr_num'], d['fr_den'], d['fr_ci95'])} \\\\")
             led.add("sensitivity", f"{run_id} {c} construction-label FA/FR", f"{d['fa']} ({d['fa_num']}/{d['fa_den']}), {d['fr']} ({d['fr_num']}/{d['fr_den']})",
@@ -196,7 +204,7 @@ def results(run: Path, led: Ledger) -> None:
 
     # Compact outcome matrix (appendix).
     mrows = []
-    conds = list(a["conditions"])
+    conds = [c for c, _ in ordered(a["conditions"])]
     for t, cd in per_task.items():
         cands: dict = {}
         for c in conds:

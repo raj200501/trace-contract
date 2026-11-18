@@ -1,20 +1,36 @@
 \begin{table}[t]\centering\scriptsize
-\caption{Outcome of every verifier on every held-out candidate, run \texttt{pilot-v0.2} (\checkmark{} pass, $\times$ any non-pass outcome).}\label{tab:matrix}
-\begin{tabular}{lllcccccc}\toprule Candidate & Origin & Label & C4 & C3 & C2 & C1 & B2 & B1 \\\midrule
+\caption{Outcome of every verifier on every held-out candidate, run \texttt{pilot-v0.3} (\checkmark{} pass, $\times$ any non-pass outcome).}\label{tab:matrix}
+\begin{tabular}{lllcccccc}\toprule Candidate & Origin & Label & C1 & C2 & C3 & C4 & B2 & B1 \\\midrule
+CS-01-eval-alt-1 & alternative & valid & $\times$ & $\times$ & \checkmark & \checkmark & \checkmark & \checkmark \\
+CS-01-eval-alt-2 & alternative & valid & $\times$ & $\times$ & \checkmark & \checkmark & \checkmark & \checkmark \\
+CS-01-eval-nm-1 & near miss & invalid & $\times$ & $\times$ & $\times$ & $\times$ & $\times$ & $\times$ \\
+CS-01-eval-nm-2 & near miss & invalid & $\times$ & $\times$ & $\times$ & $\times$ & $\times$ & $\times$ \\
+CS-01-eval-nm-3 & near miss & invalid & $\times$ & $\times$ & $\times$ & $\times$ & \checkmark & \checkmark \\
+CS-01-eval-nm-4 & near miss & invalid & $\times$ & $\times$ & $\times$ & $\times$ & $\times$ & $\times$ \\
+CS-01-eval-nm-5 & near miss & invalid & $\times$ & $\times$ & $\times$ & $\times$ & $\times$ & \checkmark \\
+CS-01-pre-correction & pre-corr. & invalid & \checkmark & \checkmark & $\times$ & $\times$ & $\times$ & $\times$ \\
+CS-02-eval-alt-1 & alternative & valid & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & $\times$ \\
+CS-02-eval-alt-2 & alternative & valid & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & $\times$ \\
+CS-02-eval-nm-1 & near miss & invalid & $\times$ & $\times$ & $\times$ & $\times$ & $\times$ & $\times$ \\
+CS-02-eval-nm-2 & near miss & invalid & $\times$ & $\times$ & $\times$ & $\times$ & $\times$ & $\times$ \\
+CS-02-eval-nm-3 & near miss & invalid & $\times$ & $\times$ & $\times$ & $\times$ & $\times$ & $\times$ \\
+CS-02-eval-nm-4 & near miss & ambiguous & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & $\times$ \\
+CS-02-eval-nm-5 & near miss & invalid & $\times$ & $\times$ & $\times$ & $\times$ & $\times$ & $\times$ \\
+CS-02-pre-correction & pre-corr. & valid & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & $\times$ \\
 CS-03-eval-alt-1 & alternative & valid & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark \\
 CS-03-eval-alt-2 & alternative & valid & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & $\times$ \\
-CS-03-eval-nm-1 & near miss & ambiguous & $\times$ & $\times$ & \checkmark & \checkmark & $\times$ & $\times$ \\
-CS-03-eval-nm-2 & near miss & ambiguous & $\times$ & $\times$ & \checkmark & \checkmark & \checkmark & \checkmark \\
+CS-03-eval-nm-1 & near miss & ambiguous & \checkmark & \checkmark & $\times$ & $\times$ & $\times$ & $\times$ \\
+CS-03-eval-nm-2 & near miss & ambiguous & \checkmark & \checkmark & $\times$ & $\times$ & \checkmark & \checkmark \\
 CS-03-eval-nm-3 & near miss & invalid & $\times$ & $\times$ & $\times$ & $\times$ & $\times$ & \checkmark \\
-CS-03-eval-nm-4 & near miss & ambiguous & \checkmark & \checkmark & $\times$ & $\times$ & \checkmark & \checkmark \\
-CS-03-eval-nm-5 & near miss & invalid & $\times$ & $\times$ & $\times$ & \checkmark & $\times$ & \checkmark \\
+CS-03-eval-nm-4 & near miss & ambiguous & $\times$ & $\times$ & \checkmark & \checkmark & \checkmark & \checkmark \\
+CS-03-eval-nm-5 & near miss & invalid & \checkmark & $\times$ & $\times$ & $\times$ & $\times$ & \checkmark \\
 CS-03-pre-correction & pre-corr. & valid & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark \\
-CS-04-eval-alt-1 & alternative & valid & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & $\times$ \\
+CS-04-eval-alt-1 & alternative & valid & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark \\
 CS-04-eval-alt-2 & alternative & valid & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark \\
-CS-04-eval-nm-1 & near miss & invalid & $\times$ & $\times$ & \checkmark & \checkmark & $\times$ & \checkmark \\
-CS-04-eval-nm-2 & near miss & invalid & $\times$ & $\times$ & \checkmark & \checkmark & $\times$ & $\times$ \\
+CS-04-eval-nm-1 & near miss & invalid & \checkmark & \checkmark & $\times$ & $\times$ & $\times$ & \checkmark \\
+CS-04-eval-nm-2 & near miss & invalid & \checkmark & \checkmark & $\times$ & $\times$ & $\times$ & $\times$ \\
 CS-04-eval-nm-3 & near miss & invalid & $\times$ & $\times$ & $\times$ & $\times$ & $\times$ & $\times$ \\
-CS-04-eval-nm-4 & near miss & invalid & $\times$ & $\times$ & \checkmark & \checkmark & $\times$ & $\times$ \\
+CS-04-eval-nm-4 & near miss & invalid & \checkmark & \checkmark & $\times$ & $\times$ & $\times$ & $\times$ \\
 CS-04-eval-nm-5 & near miss & ambiguous & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark \\
-CS-04-pre-correction & pre-corr. & invalid & $\times$ & $\times$ & \checkmark & \checkmark & $\times$ & $\times$ \\
+CS-04-pre-correction & pre-corr. & invalid & \checkmark & \checkmark & $\times$ & $\times$ & $\times$ & $\times$ \\
 \bottomrule\end{tabular}\end{table}

@@ -1,12 +1,31 @@
 \section{Introduction}
 \label{sec:intro}
-Converting recorded agent sessions into executable tasks is attractive: the tasks come from real usage rather than curated issue trackers, and their verifiers can supply rewards for training. Recent systems reconstruct tasks and environments from interaction traces \cite{trace2eval}, curate executable tasks from real developer--agent sessions \cite{swetogether}, and release large collections of such sessions \cite{swechat}. A session, however, is not a specification. Users routinely push back on what the agent did; in SWE-chat, prompts classified as corrections are a substantial share of user turns \cite{swechat}. A reconstruction that keeps only the initial request, or that summarises the session without tracking which requirement was introduced, superseded, or left unresolved, can produce a verifier that rewards the wrong behaviour.
+Converting recorded agent sessions into executable tasks is attractive. The tasks come from real usage rather than curated issue trackers, and their verifiers can supply rewards for training. Several recent systems build on this:
+\begin{itemize}
+\item task and environment reconstruction from interaction traces \cite{trace2eval};
+\item curation of executable tasks from real developer--agent sessions \cite{swetogether,lu2026harvesting};
+\item large public collections of such sessions \cite{swechat}.
+\end{itemize}
+A session, however, is not a specification. Users routinely push back on what the agent did \cite{swechat}. A reconstruction that keeps only the initial request, or that summarises the session without tracking which requirement was introduced, superseded or left unresolved, can produce a verifier that rewards the behaviour the user rejected. An industry essay states exactly this risk without measuring it \cite{guo2026production}.
 
-This paper asks: \emph{when coding tasks are reconstructed from agent sessions, how often do omitted user corrections cause a verifier to reward an unacceptable solution, and which reconstruction and validation methods reduce that error without rejecting valid alternatives?} The comparison of initial-request-only and correction-aware reconstruction measures information lost during dataset construction, not the capability of an agent that was never told a requirement.
+We ask: \emph{when coding tasks are reconstructed from agent sessions, how often do omitted user corrections cause a verifier to reward an unacceptable solution, and which reconstruction and validation methods reduce that error without rejecting valid alternatives?} Comparing initial-request-only with correction-aware reconstruction measures information lost during dataset construction. It does not measure the capability of an agent that was never told a requirement.
 
-\paragraph{Scope and contributions.} Reconstructing executable tasks from real sessions, writing correction-aware task statements, refining tests against mutants, and scoring verifiers on held-out pools of valid and invalid variants all have recent precedents (\S\ref{sec:related}); we do not claim them. Our contribution is narrower: a pre-specified, verifier-level counterfactual \emph{measurement} of correction-attributable reward errors.
+\paragraph{Scope and contributions.} Several ingredients have recent precedents (\S\ref{sec:related}), and we do not claim them:
+\begin{itemize}
+\item reconstructing executable tasks from real sessions;
+\item writing correction-aware task statements;
+\item refining tests against mutants;
+\item comparing test suites with and without refinement on a shared held-out pool;
+\item two-sided verifier metrics.
+\end{itemize}
+Our contribution is a measurement design, its tested infrastructure, and an automated pilot.
 \begin{enumerate}
-\item A measurement design in which verifiers are produced by one frozen procedure from initial-request-only versus correction-aware contracts, with and without a predefined audit, alongside repository tests and a full-session LLM baseline, and all are scored on one frozen, held-out candidate pool. The pool's anchor negatives are the agent's own pre-correction code states, which the user rejected in the session; it also contains independently written valid alternatives and constructed near misses.
-\item Evidence-linked requirement contracts (explicit, inferred, superseded and unresolved requirements with exact quotes) with a human-review acceptance gate, and a process-separated grading sandbox whose isolation boundary is tested with adversarial probes.
-\item \unfilled{A small, fully provenanced task set with human labels, and the measured false-acceptance and false-rejection rates per condition, including the discrepancy between model-proposed and human labels. The current draft has only controlled sessions and model-proposed labels.}
+\item \emph{A verifier-level counterfactual measurement design.} One frozen procedure produces verifiers from initial-request-only versus correction-aware contracts, with and without a predefined audit, alongside repository tests and a full-session LLM baseline. All of them are scored on one frozen, held-out candidate pool. The pool is anchored on the agent's own pre-correction states and also holds independently written valid alternatives and constructed near misses, all to be judged against independent human labels. We are not aware of prior work that combines these elements; the claim is limited to that combination.
+\item \emph{Infrastructure.} Evidence-linked requirement contracts (explicit, inferred, superseded and unresolved requirements with exact quotes) with a human-review acceptance gate. A process-separated grading sandbox whose isolation boundary is covered by adversarial probes. The pilot surfaced two resource-isolation defects; both are fixed and regression-tested.
+\item \emph{An automated pilot on four controlled sessions.} Real agent runs with study-scripted corrections, 32 held-out candidates and labels proposed by a pre-specified rule, with every number generated from recorded runs. Human labels do not exist yet, so the pilot is descriptive. Its main value is to show where the measurement is fragile:
+\begin{itemize}
+\item labels that independent checks dispute;
+\item pre-correction states that are not negatives;
+\item contract proposers that infer much of a later correction.
+\end{itemize}
 \end{enumerate}

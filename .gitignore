@@ -28,3 +28,4 @@ paper/*.run.xml
 paper/*.synctex.gz
 paper/*.toc
 paper/main.pdf
+paper/*-SAVE-ERROR

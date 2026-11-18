@@ -1,3 +1,41 @@
-\section{Qualitative error analysis}
+\section{Qualitative analysis}
 \label{sec:analysis}
-\unfilled{case studies of accepted negatives and rejected valid alternatives, drawn from the report}
+\paragraph{Reward inversion when a correction retracts a request (\texttt{humanize}).} The first request asked \texttt{naturalsize} to drop a trailing ``.0'' by default. The correction kept the default output unchanged and made trimming opt-in. The initial-only contract faithfully encodes the first request, and four of its five scored requirements contradict the reference. The verifiers built from it therefore:
+\begin{itemize}
+\item reward the agent's own pre-correction state, the one the user rejected;
+\item reject both independently written valid alternatives;
+\item reject the reference solution.
+\end{itemize}
+This is the complete inversion the problem statement predicts: the reward points at the rejected behaviour and away from the wanted one. The predefined audit detects the inconsistency (the reference fails), but a revision that stays faithful to the contract cannot repair it.
+
+\paragraph{Missing edge cases when a correction adds requirements (\texttt{more-itertools}).} The first request added a \texttt{step} argument. The correction added negative steps, an error for \texttt{step=0}, the positional \texttt{ordering} argument and lazy groups. The initial-only verifiers accept:
+\begin{itemize}
+\item the pre-correction state, where \texttt{step=0} silently returns groups;
+\item the near misses that break negative steps, the zero-step error or laziness.
+\end{itemize}
+They reject only the near miss that breaks positional ordering, which also breaks existing behaviour. Every correction-aware condition rejects all four invalid near misses and the pre-correction state.
+
+\paragraph{When the first request already implies the correction (\texttt{tinydb}).} For an atomic-write request, the contract proposer inferred from the first message most of what the user said later:
+\begin{itemize}
+\item reads through the same instance see the write;
+\item the bytes are unchanged;
+\item no temporary files are left behind;
+\item the original file is intact after a failure.
+\end{itemize}
+These appear as \emph{inferred} requirements, which our acceptance gate requires a human to confirm. Initial-only and correction-aware verifiers then make identical decisions. The ``information lost'' by initial-only reconstruction is a property of the session \emph{and} the proposer, not of the session alone.
+
+\paragraph{When the agent anticipates the correction (\texttt{inflection}, \texttt{tinydb}).} In two of four sessions, the agent's state before the correction passes the reference checks and the regression norm. In \texttt{inflection}, for example, it had already handled all-uppercase input and kept the helper functions unchanged. The user's correction then restates rather than changes the requirement, and the observed state is a valid candidate. For \texttt{inflection}, the independent check still finds divergences from the reference, limited to exotic Unicode input. Whether ``behaves as before'' extends to modifier apostrophes and the dotted~İ is exactly the kind of judgement our labels must leave to humans.
+
+\paragraph{Two failure modes of repository tests.} Repository tests taken at the reference state fail in both directions:
+\begin{itemize}
+\item They \emph{under-specify} the correction's invariants. They accept near misses that break custom formats or rounding in \texttt{humanize}, negative steps in \texttt{more-itertools}, and unchanged helper behaviour in \texttt{inflection}.
+\item They \emph{over-specify} the reference's implementation. They reject valid alternatives that lack a private reopen hook or the reference's clean-up of stale temporary files, and one that splits CamelCase acronyms differently.
+\end{itemize}
+The second mode also rejects the valid \texttt{tinydb} pre-correction state.
+
+\paragraph{The hard cases escape most verifiers.} The near misses that the rule marks ambiguous are those whose violation appears only in a specific setup. The independent reference checks used for labeling miss them, so the rule cannot confirm them. Most verifiers miss them too:
+\begin{itemize}
+\item \texttt{more-itertools}: floating-point positions in the default grouping. Every condition accepts it.
+\item \texttt{tinydb}: a relative database path followed by \texttt{os.chdir}. Every generated-test condition accepts it, including both correction-aware ones.
+\item \texttt{inflection}: plural acronyms. The same holds.
+\end{itemize} Our headline rates are therefore optimistic about every condition in the same direction. Measuring these cases needs human labels and verifiers written with explicit probes of the setup space.

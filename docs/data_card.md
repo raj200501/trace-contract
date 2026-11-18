@@ -26,6 +26,30 @@ Scenario texts, intended requirements and registration hashes are in
 `data/controlled/scenarios/` (added after each session finished) and
 `docs/decision_log.md`.
 
+## Held-out candidates and labels (per task)
+
+Every task has the same pool. It was generated only after all of the task's
+verifiers were frozen, by separate agents in isolated workspaces, and every
+generator transcript was audited for forbidden reads.
+
+| Origin | Per task | Produced by | Label source |
+| --- | --- | --- | --- |
+| `observed_pre_correction` | 1 | the session agent's own workspace after U1, before U2 | rule D19 (natural: reference checks + regression norm) |
+| `valid_alternative` | 2 | independent implementations from the reference instruction, without the reference diff | rule D19 (construction + checks) |
+| `constructed_near_miss` | 5 | built from the reference, each violating one requirement (mostly correction requirements) | rule D19 |
+| `noop`, `reference` | 1 + 1 | base state; the study's reference solution | sanity checks, excluded from rates |
+
+Proposals by rule D19 (`tasks/*/candidates/*.json`, labeler
+`builder:refcheck+regression+construction:v1`) are **not** human labels.
+
+* An independent model check of every held-out candidate is in
+  `tasks/*/labels/construction_checks.json`. It is advisory and never changes a
+  label.
+* Candidates needing human review are listed in `tasks/*/labels/review_queue.json`.
+  The queue file contains no verifier outcome.
+* Two independent model mappings of each recovered contract to the reference
+  contract are in `tasks/*/contracts/mapping{,2}_*.json`.
+
 ## What is stored in this repository
 
 * Sanitised controlled transcripts (`data/controlled/transcripts/<id>.jsonl`):
@@ -58,9 +82,15 @@ appears only as the git commit author.
 
 ## Known biases and limitations
 
-* Every model-generated artifact (agent sessions, contracts, tests, attacks,
-  alternatives, near misses) comes from the same model family, which can correlate
-  errors across conditions and with the labels' proposals.
+* Every model-generated artifact comes from the same model family. This covers
+  agent sessions, contracts, tests, attacks, alternatives, near misses, reference
+  checks, label proposals, construction checks and requirement mappings. It can
+  correlate errors across conditions and with the label proposals.
+* In two of the four controlled sessions (CS-02, CS-03), the agent's pre-correction
+  state passes the reference checks and the regression norm, so rule D19 labels it
+  valid: the agent had already done most of what the correction asked. For CS-03
+  the independent check finds divergences on exotic Unicode input only. The
+  "rejected" state is therefore not automatically a negative.
 * Scenarios were designed by the study to contain corrections; natural correction
   frequency and content are not represented.
 * Base snapshots may be approximate (e.g. generated build artefacts such as

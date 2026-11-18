@@ -1,0 +1,47 @@
+{
+  "old_run": "pilot-v0.2",
+  "new_run": "pilot-v0.3",
+  "pairs_in_both": 108,
+  "only_in_old": 0,
+  "only_in_new": 132,
+  "reward_agreement": 0.9907407407407407,
+  "outcome_agreement": 0.9907407407407407,
+  "reward_discordant": [
+    {
+      "verifier_id": "repo_tests",
+      "candidate_id": "CS-04-eval-alt-1",
+      "old": "task_failure",
+      "new": "pass",
+      "old_harness": "tc-harness/0.1.0",
+      "new_harness": "tc-harness/0.3.0",
+      "old_diagnostics": [
+        "protected path change removed before grading: tests/test_more.py",
+        "[run 0] repository tests failed to collect"
+      ],
+      "new_diagnostics": [
+        "protected path change removed before grading: tests/test_more.py"
+      ],
+      "old_wall_s": 600.3,
+      "new_wall_s": 38.4
+    }
+  ],
+  "outcome_discordant": [
+    {
+      "verifier_id": "repo_tests",
+      "candidate_id": "CS-04-eval-alt-1",
+      "old": "task_failure",
+      "new": "pass",
+      "old_harness": "tc-harness/0.1.0",
+      "new_harness": "tc-harness/0.3.0",
+      "old_diagnostics": [
+        "protected path change removed before grading: tests/test_more.py",
+        "[run 0] repository tests failed to collect"
+      ],
+      "new_diagnostics": [
+        "protected path change removed before grading: tests/test_more.py"
+      ],
+      "old_wall_s": 600.3,
+      "new_wall_s": 38.4
+    }
+  ]
+}
