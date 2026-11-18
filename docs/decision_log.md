@@ -506,3 +506,19 @@ exist yet, the current pilot can make descriptive statements only. D25 is not
 edited, since the log is append-only. The narrowed wording is used in the
 manuscript (`paper/sections/related.tex`, introduction) and awaits the owner's
 confirmation (brief §8 item 4).
+
+### D35. Harbor export uses a per-run sandbox UID; re-validated under harness 0.3.0
+The Harbor grade script (`harbor_export.GRADE_PY`) ran candidate code as the fixed
+UID 1001. That is the D29 coupling, in case Harbor runs trials concurrently on one
+host. It now draws a UID from 20000–59999 for each run. Inside a container a
+host-wide check is not possible; a random UID from a large range makes a collision
+unlikely.
+
+Re-validated with Harbor 0.25.0 on the synthetic fixture task (population
+`fixture`, not evidence), re-exported with harness 0.3.0:
+* `harbor lint` rc=0;
+* oracle with `CANDIDATE=reference`: reward 1.0;
+* oracle with the wrong candidate: 0.0;
+* `nop`: 0.0.
+
+As before, the trials used the `local-validation` network variant (D20).

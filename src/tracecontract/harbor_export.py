@@ -84,7 +84,10 @@ def main():
     nonce = secrets.token_hex(16)
     work = tempfile.mkdtemp(prefix="tc_work_")
     os.chmod(work, 0o755)
-    env = dict(os.environ, TC_RUN_NONCE=nonce, TC_SANDBOX_UID="1001", TC_SANDBOX_GID="1001", TC_WORKDIR=work,
+    # A sandbox UID drawn per run (decision log D29): per-user kernel limits are shared by
+    # every process of a UID on the host, so concurrent trials must not share one.
+    uid = str(20000 + secrets.randbelow(40000))
+    env = dict(os.environ, TC_RUN_NONCE=nonce, TC_SANDBOX_UID=uid, TC_SANDBOX_GID=uid, TC_WORKDIR=work,
                TC_CANDIDATE_PYTHONPATH=__PYTHONPATH__.replace("{work}", work), PYTHONDONTWRITEBYTECODE="1")
     proc = subprocess.run([sys.executable, "-I", "/tests/harness/tc_runner.py", "--mode", "process_separated",
                            "--tests-dir", "/tests/verifier_tests", "--candidate", ws, "--workdir", work, "--results", res_dir],
