@@ -41,11 +41,19 @@ Every task has the same pool:
   verifiers were frozen (CS-04's B1 was re-selected afterwards; decision log D31), by
   separate agents, each exporting its own workspace directory. The agents ran as the
   same user in the repository checkout, so verifiers and registered candidates were
-  readable. They were told not to read them. An audit of the tool inputs of every
-  generator whose output was registered found no forbidden read; tool outputs are not
-  inspected.
+  readable. They were told not to read them. They also shared the build session's
+  scratch directory. An audit of the tool inputs of every generator whose output was
+  registered found no forbidden read. A stricter re-audit of all 21 generator and
+  reference-check transcripts (decision log D44) resolves the paths instead of
+  matching substrings and treats the whole scratch directory as forbidden. It also
+  found no read of forbidden material. The listings it found, and the one read of
+  another agent's file in the scratch directory, are given in the exceptions below.
+  Neither audit script reads tool outputs, and the re-audit script matches paths that
+  inline code builds at run time only by name. The re-audit's assessments, in
+  `tasks/*/labels/generator_audit.json`, come from reading each transcript, tool
+  outputs included.
 
-Exceptions (decision log D31, D37, D40, D41):
+Exceptions (decision log D31, D37, D40, D41, D44):
 * near-miss generators had, and ran, B1's test files (the test hunks of the reference
   diff);
 * three held-out candidates duplicate a development attack used in their family's C4
@@ -53,11 +61,31 @@ Exceptions (decision log D31, D37, D40, D41):
   `CS-04-dev-attack-full_session-a3`. `CS-01-eval-nm-5` differs from
   `CS-01-dev-attack-full_session-a3` by one docstring line (`tasks/*/labels/duplicates.json`).
   Neither C4 audit made a revision;
-* the reference checks were written while the pools were being generated (CS-01,
-  CS-02, CS-04) or just before (CS-03); CS-02's were revised after its pool was
-  complete;
-* the CS-01 and CS-02 held-out prompts differ from the CS-03 and CS-04 ones;
-* agents shared a scratch directory that held held-out material;
+* in all four families the reference checks were written while the pool was being
+  generated; CS-03's were frozen before its pool was registered, and CS-02's were
+  revised after its pool was complete;
+* the held-out and reference-check prompts of 2026-11-18 (CS-01's near-miss prompts
+  and all of CS-02's) differ from the CS-03/CS-04 prompts, which CS-01's alternatives
+  and reference checks also used;
+* the held-out generators, the reference-check writers and their reviewers shared the
+  build session's scratch directory with the builder (the study's AI agent) and with
+  each other. The first audit treated only its sealed subfolders as forbidden. The
+  rest held other agents' working files and some material derived from candidates: the
+  patch of `CS-04-eval-alt-1`, which the builder extracted there on 2026-11-13, and the
+  independent check agents' outputs for registered candidates (from 2026-11-18). The
+  re-audit found listings that showed names only:
+  * the directory's top level, listed once each by CS-02's near-miss generator and by
+    the third reviewer of CS-02's reference checks; both listings showed
+    `CS-02-eval-alt-1` in a file name;
+  * `tasks/<id>/verifiers/`, listed by the CS-03 and CS-04 reference-check writers;
+  * the directory that holds CS-02's workspaces, listed by one fixer of CS-02's
+    reference checks.
+
+  The third reviewer also listed the first reviewer's folder there and read the first
+  50 lines of its test runner, which imports the four reference-check test modules and
+  prints PASS or FAIL. The runner is outside the read-only list in the reviewer's
+  prompt and holds no candidate or other verifier material. Every other read in the
+  scratch directory was of the reading agent's own files;
 * the hash of each verifier's scored check list was added after the run `pilot-v0.3`.
 
 | Origin | Per task | Produced by | Label source |
@@ -83,10 +111,11 @@ Proposals by rule D19 (`tasks/*/candidates/*.json`, labeler
 ## What is stored in this repository
 
 * Sanitised controlled transcripts (`data/controlled/transcripts/<id>.jsonl`):
-  conversation content, tool calls/results, timestamps, model name and token usage
-  only. Harness internals and internal ids are removed (decision log D9, D38). The
-  session agent's thinking text is kept as recorded: 178 thinking blocks, 111 of
-  them empty.
+  conversation content, tool calls/results, timestamps, entry ids (`uuid`,
+  `parentUuid`), model name, stop reasons and token usage only. Harness internals and
+  internal session and agent ids are removed, and every entry is relabelled with a
+  study session id (decision log D9, D38). The session agent's thinking text is kept
+  as recorded: 178 thinking blocks, 111 of them empty.
 * Task directories (`tasks/<id>/`): manifests, provenance, snapshot manifests,
   contracts, candidate patches, verifier tests and specs.
 * Not stored: base snapshots of the source repositories (rebuilt from the pinned
@@ -136,12 +165,22 @@ Proposals by rule D19 (`tasks/*/candidates/*.json`, labeler
   (ruff, black, mypy and stubtest).
 * `THIRD_PARTY_LICENSES/` reproduces the upstream copyright notices verbatim, as
   the MIT licence requires; the tinydb notice includes its author's e-mail address.
-* Harness workflow-run ids (`wf_…`) and agent ids appear in `experiments/prompts/`
-  and in `tasks/*/labels/construction_checks.json` (`source`). They are opaque random
-  identifiers, kept as provenance keys that link each check to the exported workflow
-  script. Session ids and session-local paths are redacted in the working tree;
-  earlier commits still contain them in `tasks/*/labels/generator_audit.json` (see
-  the owner decisions in `STATUS.md`).
+  The HTML reports now embed these notices (decision log D43), so the reports of
+  `pilot-v0.3.2` and `pilot-v0.3.3` contain the address too.
+  `scripts/scan_tracked_files.py` lists the address as an allowed string.
+* Harness workflow-run ids (`wf_…`) and agent ids appear in `experiments/prompts/`,
+  in `tasks/*/labels/construction_checks.json` (`source`) and in
+  `tasks/*/labels/generator_audit.json` (the audited agents). A few are also cited in
+  `docs/decision_log.md`, `docs/internal_review.md` and `scripts/export_prompts.py`.
+  They are opaque random identifiers, kept as provenance keys, for example to link
+  each check to the exported workflow script. Session ids and session-local paths are
+  redacted in the working tree. Earlier commits, already pushed, still contain the
+  build session's id, in most files as part of its scratchpad path:
+  * seven research notes in `docs/research/notes/` (commits `2a81036` to `f6c8e9f`);
+  * `scripts/compile_controlled.py` (`cbb8dcd` to `89ccce5`);
+  * `tasks/CS-0{1,3,4}/labels/generator_audit.json` (`0339400` to `f6c8e9f`).
+
+  See the owner decisions in `STATUS.md`.
 * The repository owner's identity appears only as the git commit author.
 
 ## Known biases and limitations

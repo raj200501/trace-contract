@@ -8,8 +8,8 @@ requires the repository owner's explicit instruction.
 
 1. **No human labels or contract reviews.** Every result so far is an automated
    pilot with model/construction labels. The paper's central claims need
-   human-adjudicated labels, with a second reviewer on an overlap subset and
-   agreement statistics (protocol §5, §9).
+   human-adjudicated labels, from two reviewers for every task, and agreement
+   statistics (protocol §5, §9, §14).
 2. **No natural sessions.** All tasks are controlled sessions with scripted
    corrections. Natural SWE-chat tasks are blocked on the dataset's access terms
    (decision log D4). Without them, external-validity claims must be limited to
@@ -22,7 +22,7 @@ requires the repository owner's explicit instruction.
    claim is limited to their combination: initial-only vs correction-aware verifiers
    from one frozen procedure, one held-out pool anchored on the session's own
    pre-correction states (its other candidates generated after the verifiers were
-   frozen; departures in decision log D37, D40, D41), and independent human labels. The third element does not
+   frozen; departures in decision log D31, D37, D40, D41, D44), and independent human labels. The third element does not
    exist yet, so the claim cannot be made in a submission until it does. It is not a
    claim about task reconstruction.
 5. **Single model family** for all generated artifacts. A second model family for
@@ -106,7 +106,7 @@ The bracketed part must describe only what the human authors actually did.
 
 - [ ] Human contract reviews and candidate labels recorded; agreement reported.
 - [ ] Natural-session tasks included, or claims explicitly limited to controlled sessions.
-- [ ] Adversarial internal review by model agents: run on `pilot-v0.3` (six lenses; the skeptic stage was stopped before every finding was checked), followed by a dispositions review and a final claims audit on `pilot-v0.3.1` (decision log D40); findings and dispositions in `docs/internal_review.md`. Tick only after a review of the final version, including human review, once human labels exist.
+- [ ] Adversarial internal review by model agents: run on `pilot-v0.3` (six lenses; the skeptic stage was stopped before every finding was checked), followed by a dispositions review and a final claims audit on `pilot-v0.3.1` (decision log D40), findings and dispositions in `docs/internal_review.md`; then a read-only verification of the resulting fixes (decision log D44). Tick only after a review of the final version, including human review, once human labels exist.
 - [ ] All numbers regenerated from recorded runs (`paper/make_tables.py`) and present in `paper/evidence_ledger.md`.
 - [ ] Bibliography entries verified against primary pages (dates recorded).
 - [ ] Data rights re-checked (SWE-chat terms, removal requests, repository licences).

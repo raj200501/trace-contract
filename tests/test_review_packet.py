@@ -1,4 +1,4 @@
-"""Blinded review packet (annotation guide v0.3, decision log D43, D44).
+"""Blinded review packet (annotation guide v0.4, decision log D43-D45).
 
 Nothing in the packet names a candidate's id, origin or description; the session text
 holds user turns only; identical diffs share one item; state directories are readable by
@@ -119,3 +119,31 @@ def test_merge_rejects_unscored_or_inconsistent_labels(tmp_path, monkeypatch):
         f.write_text(json.dumps(d))
         with pytest.raises(ValueError, match=msg):
             merge_labels([f], key, tmp_path / "tasks", min_reviewers=1)
+
+
+def test_packet_session_holds_user_turns_only(tmp_path, monkeypatch):
+    """The agent's messages and tool calls, which show its edits before the correction, stay out of the packet."""
+    td = _task(tmp_path)
+    monkeypatch.setattr(tasks_mod, "verify_snapshot", lambda t, s: True)
+    tr = tmp_path / "data" / "fixtures" / "transcripts" / "FX-01.jsonl"
+    tr.parent.mkdir(parents=True)
+    rows = [
+        {"type": "user", "uuid": "u0", "parentUuid": None, "sessionId": "s", "timestamp": "2026-01-01T00:00:00Z",
+         "message": {"role": "user", "content": "Please make add() work. USER-TURN-ONE"}},
+        {"type": "assistant", "uuid": "a0", "parentUuid": "u0", "sessionId": "s", "timestamp": "2026-01-01T00:00:01Z",
+         "message": {"role": "assistant", "content": [
+             {"type": "text", "text": "I will edit calc.py. ASSISTANT-TEXT"},
+             {"type": "tool_use", "id": "t0", "name": "Edit",
+              "input": {"file_path": "calc.py", "old_string": "x", "new_string": "FIRST-ATTEMPT-EDIT"}}]}},
+        {"type": "user", "uuid": "u1", "parentUuid": "a0", "sessionId": "s", "timestamp": "2026-01-01T00:00:02Z",
+         "message": {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "t0", "content": "TOOL-OUTPUT"}]}},
+        {"type": "user", "uuid": "u2", "parentUuid": "u1", "sessionId": "s", "timestamp": "2026-01-01T00:00:03Z",
+         "message": {"role": "user", "content": "Keep the old default too. USER-TURN-TWO"}},
+    ]
+    tr.write_text("".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
+    out = tmp_path / "packet"
+    export_packet([td], out, tmp_path / "key.json", snapshot_root=FX / "snapshots", repo_root=tmp_path, seed=3)
+    text = (out / "FX-01" / "session.txt").read_text()
+    assert "USER-TURN-ONE" in text and "USER-TURN-TWO" in text
+    for leak in ("ASSISTANT-TEXT", "FIRST-ATTEMPT-EDIT", "TOOL-OUTPUT"):
+        assert leak not in text, leak

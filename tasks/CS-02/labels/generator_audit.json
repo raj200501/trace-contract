@@ -238,6 +238,6 @@
     ],
     "scope": "tool inputs only (commands and file paths an agent passed to its tools); tool outputs are not inspected (decision log D37)",
     "script": "scripts/audit_eval_generators.py",
-    "strict_reaudit": "2026-11-18, decision log D44: scripts/strict_reaudit.py resolves paths (shell segments, cd, variables set in the same command, find -prune) instead of matching substrings, adds the build session's shared scratch directory to the forbidden material, and classifies each read of that directory by the agent that wrote the file last; tool outputs are not inspected by the script; each assessment comes from reading the transcript"
+    "strict_reaudit": "2026-11-18, decision log D44: scripts/strict_reaudit.py resolves paths (shell segments, cd, variables set in the same command, find -prune) instead of matching substrings, adds the build session's shared scratch directory to the forbidden material, and classifies each read of that directory by the agent that wrote the file last; tool outputs are not inspected by the script; the accesses it flags were assessed by reading the transcript, tool outputs included, and the other assessments restate the script's classification"
   }
 }

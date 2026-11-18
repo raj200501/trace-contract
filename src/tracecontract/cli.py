@@ -375,7 +375,7 @@ def cmd_export_gen_workspace(a) -> None:
 
 
 def cmd_review_packet(a) -> None:
-    """Blinded review packet for human labeling (annotation guide v0.3)."""
+    """Blinded review packet for human labeling (annotation guide v0.4)."""
     from .review import export_packet
 
     _out(export_packet([Path(t).resolve() for t in a.tasks], Path(a.out), Path(a.key), snapshot_root=SNAPSHOTS,

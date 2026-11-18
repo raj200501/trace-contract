@@ -48,17 +48,26 @@ TraceContract measures both directly.
   * Superseded requirements are never scored.
   * Inferred requirements need human review before a task is accepted
     (`src/tracecontract/contract.py`).
-* **Process-separated grading (harness `tc-harness/0.3.2`)** for C1–C4 and B2.
+* **Process-separated grading (harness `tc-harness/0.3.3`)** for C1–C4 and B2.
   * Hidden tests run in a trusted grader.
   * Candidate code runs only as an unprivileged UID allocated to that container. It
     cannot read the tests or write the results.
   * Per-call results are authenticated, and the host recomputes outcomes, so a
     missing or stale result never becomes a reward.
+  * **In-call limit:** within one call, code that the snippet runs, directly or
+    through candidate modules it imports, still controls what that call reports. It
+    can, for example, detect that it is being graded. Every test of these verifiers
+    therefore asserts on a returned value, not only on success; the test lint flags
+    any test whose only assertions are on success (decision log D3, D36, D40).
   * Adversarial Docker probes cover the boundary (`tests/test_sandbox_isolation.py`).
     They include regression probes for the defects found during the pilot and its
     reviews: two in resource isolation (decision log D29–D31) and two start-up paths
     for forged results, a module shadowing the standard library (D36) and an
     `encodings` package loaded while the interpreter starts (D40).
+  * A later verification by model agents found a further path for forged results in
+    0.3.2: a candidate `ast.py` could load while the wrapper formatted a snippet's
+    exception. Harness 0.3.3 closes it and adds a regression probe for it. No candidate
+    patch in the pool ships an `ast` or `unicodedata` module (D44).
   * **Exception:** the repository-test baseline B1 runs pytest with candidate code in
     the reporting process. An adversarial candidate can forge its report (see
     Limitations).
@@ -72,11 +81,18 @@ TraceContract measures both directly.
   * An independent model check of every held-out candidate
     (`tasks/*/labels/construction_checks.json`) is advisory only.
   * A human-review queue that shows no verifier outcomes is in
-    `tasks/*/labels/review_queue.json`.
+    `tasks/*/labels/review_queue.json`. Reviewers open it only after their labels are
+    merged.
   * Human labels are to be made from a blinded review packet (`tracecontract
-    review-packet`): random ids, shuffled, with no origin, proposal or outcome; the
-    key stays with a coordinator, and `tracecontract merge-reviews` needs two complete
-    reviews per task (`docs/annotation_guide.md`, decision log D43).
+    review-packet`): the session's user turns, the reference contract, and each
+    held-out change under a random id, shuffled, with no proposal or outcome;
+    identical changes share one id. The packet hides the origin field but not the
+    origin, which the content can reveal: near misses resemble each other and the
+    reference, and the user's corrections describe the agent's first attempt. Each
+    reviewer therefore records an origin guess per candidate, and the merge reports
+    how often the guesses are right. The key stays with a coordinator, and
+    `tracecontract merge-reviews` needs two complete reviews per task
+    (`docs/annotation_guide.md`, decision log D43, D44).
 * **Harbor export** (pinned 0.25.0, separate verifier, only approved artifacts).
 
 Related work: [docs/research_brief.md](docs/research_brief.md), adversarially
@@ -90,16 +106,16 @@ exist yet, and the pool's departures from blindness are listed under Limitations
 
 ## Pilot results (automated labels, four controlled task families)
 
-Run `results/runs/pilot-v0.3.2`:
+Run `results/runs/pilot-v0.3.3`:
 * 4 tasks × 6 conditions × 10 candidates = 240 graded pairs;
-* harness 0.3.2, one code revision;
+* harness 0.3.3, one code revision;
 * no infrastructure outcomes;
-* it agrees with the earlier runs `pilot-v0.3.1` (harness 0.3.1) and `pilot-v0.3`
-  (harness 0.3.0) on all 240 pairs.
+* it agrees with the earlier runs `pilot-v0.3.2` (harness 0.3.2), `pilot-v0.3.1`
+  (harness 0.3.1) and `pilot-v0.3` (harness 0.3.0) on all 240 pairs (D45).
 
 Of the 32 held-out candidates, 17 are labeled invalid, 10 valid and 5 ambiguous
-(excluded). The report is `results/runs/pilot-v0.3.2/report.html`; the analysis is
-`results/runs/pilot-v0.3.2/analysis.md`.
+(excluded). The report is `results/runs/pilot-v0.3.3/report.html`; the analysis is
+`results/runs/pilot-v0.3.3/analysis.md`.
 
 | Condition | False acceptance | False rejection |
 | --- | --- | --- |
@@ -150,7 +166,7 @@ How to read this:
     for C3 and C4.
   * Exact binomial intervals are printed next to them; for 0/17 the upper bound is
     0.20.
-  * Eight candidates are queued for human review, five of them because the rule
+  * Eight candidates are in the human-review queue, five of them because the rule
     marked them ambiguous.
 
   **These are descriptive pilot numbers, not evidence of an effect.**
@@ -166,7 +182,7 @@ How to read this:
 
 The agent's state after step 2 is a natural negative: it satisfies the initial
 request but violates the correction.
-* In run `pilot-v0.3.2`, both initial-only verifiers (C1, C2) accept it, and reject
+* In run `pilot-v0.3.3`, both initial-only verifiers (C1, C2) accept it, and reject
   both valid alternatives and the reference solution.
 * All correction-aware conditions reject it and accept the alternatives.
 
@@ -227,14 +243,16 @@ for t in CS-01 CS-02 CS-03 CS-04; do .venv/bin/tracecontract snapshot tasks/$t; 
 ```
 
 ```bash
-.venv/bin/python scripts/compare_runs.py results/runs/pilot-v0.3.2 results/runs/my-run
+.venv/bin/python scripts/compare_runs.py results/runs/pilot-v0.3.3 results/runs/my-run
 ```
 
 ```bash
-.venv/bin/python paper/make_tables.py results/runs/pilot-v0.3.2 --compare results/runs/pilot-v0.3.1 results/runs/pilot-v0.3 results/runs/pilot-v0.2 results/runs/pilot-v0.2-h2
+.venv/bin/python paper/make_tables.py results/runs/pilot-v0.3.3 --compare results/runs/pilot-v0.3.2 results/runs/pilot-v0.3.1 results/runs/pilot-v0.3 results/runs/pilot-v0.2 results/runs/pilot-v0.2-h2
 ```
 
-To give an annotator one candidate's final file state without running any code:
+To write one candidate's final file state to a directory without running any code
+(reviewers label from the blinded packet and use this only after their labels are
+merged):
 
 ```bash
 .venv/bin/tracecontract materialize tasks/CS-01 CS-01-pre-correction --out /tmp/review-CS-01-pre
@@ -261,8 +279,12 @@ the recorded git revision). Re-grading reproduces outcomes, not bytes: results c
 timestamps and durations, and tests have time limits. `paper/evidence_ledger.md`
 lists every number in the generated tables with its source file.
 
-Before every push, `scripts/scan_tracked_files.py` checks every file git would
-publish for credentials, session-local paths and e-mail addresses.
+Before each push, `scripts/scan_tracked_files.py --private-markers <file kept outside
+the repository>` is run as a manual step, not as a git hook. It checks the
+working tree and every file version in the commits the push would send for
+credentials, session-local paths, e-mail addresses and the private markers (decision
+log D44). Earlier commits, already pushed, still hold material that has since been
+removed; STATUS.md lists it.
 
 ## Limitations
 
@@ -279,15 +301,26 @@ publish for credentials, session-local paths and e-mail addresses.
   probe in the test suite shows this. B1 also includes tests that the session agent
   wrote.
 * The held-out discipline is imperfect, and each departure is disclosed in decision
-  log D31, D37, D40 and D41:
-  * generators ran as the same user in the repository checkout, so separation rested
-    on instructions and on audits of their tool inputs (tool outputs showed held-out
-    file names to some agents, and agents shared a scratch directory);
+  log D31, D37, D40, D41 and D44:
+  * generators and reference-check writers ran as the same user in the repository
+    checkout, so separation rested on instructions and on audits of their tool inputs
+    (tool outputs showed held-out file names to some agents);
+  * the held-out generators, the reference-check writers and their reviewers shared
+    the build session's scratch directory, which also held other agents' working
+    files and some material derived from candidates. The first audit treated only its
+    sealed subfolders as forbidden. A stricter re-audit, which treats the whole
+    directory as forbidden, found no read of forbidden material. Some listings showed
+    file names, and one reviewer of CS-02's checks read part of another reviewer's
+    test runner, which holds no candidate or other verifier material
+    (`strict_reaudit` in `tasks/*/labels/generator_audit.json`);
   * near-miss generators could run B1's tests;
   * three held-out candidates duplicate a development attack;
-  * the reference checks were written while the pools were being generated, or just
-    before;
-  * the held-out prompts of CS-01/CS-02 differ from those of CS-03/CS-04;
+  * the reference checks were written while the pools were being generated; CS-03's
+    were frozen before its pool was registered, and CS-02's were revised mostly after
+    its pool was complete;
+  * the prompts of 2026-11-18 (CS-01's near misses, and all of CS-02's held-out
+    candidates and reference checks) differ from the earlier CS-03/CS-04 prompts,
+    which CS-01's alternatives and reference checks also used;
   * CS-04's B1 was re-selected after its pool existed;
   * the hash of each scored check list was added only after the run `pilot-v0.3`.
 * Natural data (SWE-chat) is blocked on dataset access terms.
@@ -299,7 +332,7 @@ src/tracecontract/   schemas, ingest, contract, snapshot, patches, sandbox/, ver
                      evaluate, metrics, analysis, report, harbor_export, controlled, tasks, cli
 tasks/<id>/          task manifests, provenance, contracts (+ mappings), candidates, verifiers, labels
 data/                manifests, sanitised controlled transcripts, scenarios, reference proposals
-experiments/         protocol.md (v0.5), prompts/ (workflow scripts and agent prompts)
+experiments/         protocol.md (v0.6), prompts/ (workflow scripts and agent prompts)
 results/runs/<id>/   manifest, raw results, analysis, comparisons, report (logs are local only)
 results/harbor_validation/  recorded Harbor validation outputs (fixture task)
 scripts/             label proposals, construction checks, review queues, duplicates, preflight, run comparison, publication scan

@@ -1000,3 +1000,97 @@ is a manual step before each push, not a git hook. Results on 2026-11-18:
 2026-11-18T17:43:44Z, sha256
 `c70a26ebfb1fac57cb11bc254985fa1d7f3ee29082e2705e7838be4cdc5f766d`, before the 0.3.3 label
 re-proposal and run.
+
+### D45. Re-run under harness 0.3.3 and protocol v0.6; text corrections; corrections to D44
+**Labels re-proposed under 0.3.3** (2026-11-18, 17:47–17:56 UTC, `scripts/propose_labels.py`,
+all four tasks, commit `5cb8d95`): all 32 D19 proposals are identical to the 0.3.2 proposals;
+in the 36 label files only the timestamp line changed.
+
+**Preflight.** Its new strict re-audit check (D44) first failed with an exception: it read
+the `_rules` entry of `generator_audit.json` as a record. The fix (`c997779`) only skips that
+entry. The run started from that commit.
+
+**Final run `pilot-v0.3.3`** (2026-11-18, 17:56:44–18:11:58 UTC, revision `c997779`, one
+invocation): 240 pairs under harness 0.3.3, no infrastructure outcomes.
+* It agrees with `pilot-v0.3.2`, `pilot-v0.3.1` and `pilot-v0.3` on all 240 pairs, in reward
+  and in exact outcome, so every reported number is unchanged.
+* Against `pilot-v0.2`, the 99 pairs with an unchanged verifier agree, and 8 of the 9
+  changed-verifier pairs. The 4 `pilot-v0.2-h2` pairs all have a changed verifier.
+* The comparison files are written to the new run's folder only. No file of an earlier run
+  was regenerated. `pilot-v0.3.2` is marked superseded (`SUPERSEDED.md`, `results/runs/README.md`).
+* The analysis, report, paper tables and evidence ledger were regenerated from it (`fe5cc50`).
+  Only run names and two captions changed: the duplicate count now comes from the analysis,
+  and the reliability caption names the check-list criterion.
+
+**Harbor export re-validated under 0.3.3** (2026-11-18, 18:12–18:14 UTC, `feab025`), from the
+tracked fixture snapshot. Results:
+* `harbor lint` rc=0;
+* oracle with `CANDIDATE=reference`: 1.0;
+* oracle with the wrong candidate: 0.0;
+* `nop`: 0.0.
+
+The outputs are in `results/harbor_validation/tc-harness-0.3.3/`. The export step also ran
+from a fresh clone.
+
+**Text corrections.** Workflow `tracecontract-text-corrections` (run `wf_d90a88d4-3c3`,
+17:58–19:36 UTC). The confirmed text findings of the verification (D44) went to six batches
+of disjoint files:
+* the paper core;
+* the paper's front matter and appendix;
+* the annotation guide and governance notes;
+* the data documents;
+* the research brief;
+* README and STATUS.
+
+For each batch, one agent edited a separate git worktree. A second agent then checked the
+edits against the sources. It reported 29 issues (two medium, the rest low) and corrected 25
+of them, all errors of precision or scope. Of the other four, one needed no change and three
+were left to the builder: a medium one (the blinding gap below) and two run-dependent updates. The builder
+read the result and applied it to the checkout. The builder then made the run-dependent
+updates (run names, harness versions, counts), which the editors had been told to leave.
+
+The reviewers also raised points outside their batches, which were handled as follows:
+* **A blinding gap.** `data/controlled/transcripts/` holds the full sessions, including the
+  agent's edits before the correction. Neither the packet README nor the guide told reviewers
+  to stay out of it. Both lists now name `data/`.
+* **A missing test.** Nothing checked that the packet's session text holds only user turns.
+  `tests/test_review_packet.py` now does, with a synthetic transcript.
+* **Stale version mentions.** Three code files still named annotation guide v0.3. They now
+  say v0.4, the guide's new version.
+* **The history list.** STATUS's list of removed material still in pushed history gave the
+  redaction rules for `c830977` only. They are in `scripts/export_prompts.py` from `c830977`
+  to `74f6c73`, and one of them is built from part of the build session's id.
+
+`docs/internal_review.md` gains a section on the verification of the fixes, with a
+disposition for every finding and critic area. The Method section now says "six others"
+(methodology L7–L10, reproducibility R9 and R10) where it said "three others".
+
+**Review procedure checked end to end** (2026-11-18, in the scratch directory; nothing
+recorded). `review-packet` for CS-01 and CS-03 wrote:
+* a key file with mode 0600;
+* state directories with mode 0755;
+* a session text with the user turns only.
+
+`sandbox-python` ran in a packet state directory. The documented merge command
+(`<packet>/*/labels_*.json`, dry run) did not match the templates. It reported the
+disagreements of two synthetic reviewers. It refused a reviewer named by a real name, and an
+"invalid" label that cites a superseded requirement.
+
+**Corrections to D44.**
+* **Outputs of superseded runs.** D44 said that no raw result, manifest, analysis or report of
+  a superseded run was edited, and D40 said that recorded outputs are not edited. Both are
+  wrong for derived files. No raw result or manifest of any run was edited. But:
+  * `47b15ad` (2026-11-18, 08:49 UTC) added sections to `pilot-v0.2`'s analysis, after D29
+    had declared that run superseded;
+  * `c9065d1` and `8c13e0c` (10:44 and 11:58 UTC) regenerated `pilot-v0.3`'s report, its
+    analysis and its comparison with `pilot-v0.2` shortly before it was superseded;
+  * `55a2346` regenerated the comparison files of `pilot-v0.3` and `pilot-v0.3.1`.
+
+  Git keeps every earlier version, and `results/runs/README.md` and the `SUPERSEDED.md` files
+  now state this.
+* **Assessments.** "Each assessment comes from reading the transcript, tool outputs included"
+  holds for the accesses the script flags. The assessments of records without flags restate
+  the script's classification. The `_rules` text of the four `generator_audit.json` files
+  now says so; these files are not inputs of the analysis.
+
+**Tests.** After these changes, 76 tests pass (59 offline, 17 Docker).

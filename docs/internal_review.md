@@ -1,8 +1,8 @@
 # Internal review
 
-Three adversarial reviews of the repository and the manuscript, all run on 2026-11-18 by model
-agents (Claude, the same model family that built the study). They are not peer review, and no
-human has reviewed their findings yet.
+Three adversarial reviews of the repository and the manuscript, and a verification of the fixes
+that followed them, all run on 2026-11-18 by model agents (Claude, the same model family that
+built the study). They are not peer review, and no human has reviewed their findings yet.
 
 ## Method
 
@@ -11,7 +11,8 @@ human has reviewed their findings yet.
    integrity, privacy and rights, security, reproducibility), returned findings with evidence
    and a severity. Each finding went to two skeptic agents told to refute it. The skeptic stage
    was stopped before it finished, to free the host for the final run, so the claims and
-   integrity findings and three others have no skeptic verdict or only one. The builder acted
+   integrity findings and six others (methodology L7-L10, reproducibility R9 and R10) have no
+   skeptic verdict or only one. The builder acted
    on every finding, verified or not (decision log D36-D39).
 2. **Dispositions review** (12:19-13:46 UTC). For each finding, one read-only agent per lens
    group recorded how it had been resolved, against the repository and its git history, and a
@@ -23,9 +24,15 @@ human has reviewed their findings yet.
    one verifier agent per lens and a completeness critic. Findings the verifiers confirmed
    were fixed in the commits that followed `787176e`; the critic's findings are listed at
    the end.
+4. **Verification of the fixes** (14:51-17:07 UTC) made after `787176e`, up to `45c654c`.
+   Four lenses (paper; documents; code; diff and privacy), one agent each, read the changed text
+   and code against the sources. A second agent tried to refute each finding, and a critic looked
+   for areas no lens had read. The confirmed findings were fixed from `84e0ec3` on (D44 and the
+   commits after it); the dispositions are in the last section.
 
 Prompts: `experiments/prompts/workflows/tracecontract-internal-review__*.js`,
-`tracecontract-review-dispositions__*.js` and `tracecontract-final-audit__*.js`.
+`tracecontract-review-dispositions__*.js`, `tracecontract-final-audit__*.js` and
+`tracecontract-fix-verification__*.js`.
 
 A skeptic verdict of "refuted" means that the skeptic argued the finding is wrong or is not a
 defect. Some refuted findings were fixed anyway, for example the two security findings, whose
@@ -35,6 +42,7 @@ Docker proofs reproduced.
 
 * **Internal review:** 64 findings (3 high, 22 medium, 39 low).
 * **Final claims audit:** 69 findings; the verifiers confirmed 65 and rejected 4.
+* **Verification of the fixes:** 72 findings (26 medium, 46 low); the second agents confirmed 68 and refuted 4.
 
 | Internal-review disposition | Findings |
 | --- | --- |
@@ -52,7 +60,7 @@ Docker proofs reproduced.
 * `integrity:M2`: The near-miss template in the exported workflow scripts still tells generators to run the repository tests; a new batch should change it.
 * `integrity:M4`: There is still no tool-output scan and no private per-agent scratch directory for future runs.
 * `integrity:M5`: `frozen_at` is null in all 28 specs; the freeze order rests on git commit times.
-* `privacy:P1`: Git history, already pushed, still holds the earlier research notes, the unredacted research prompt (8c13e0c), redaction rules that spell out the owner's context (c830977), original-script hashes in earlier prompt exports, and session ids and session-local paths in earlier generator audit files. Rewriting it needs a force-push and cannot recall copies already fetched: an owner decision. A competing-interests statement is also the owner's call.
+* `privacy:P1`: Git history, already pushed, still holds material removed from the working tree: the earlier research notes; the unredacted research prompt (8c13e0c); redaction rules in scripts/export_prompts.py that spell out the owner's context, one of them built from part of the build session's id (c830977 to 74f6c73); hashes now withheld (original-script hashes in the prompt exports and one agent's original-prompt hash, 8c13e0c to c37b941); and the build session's id, mostly as part of its scratchpad path, in seven research notes (2a81036 to f6c8e9f), scripts/compile_controlled.py (cbb8dcd to 89ccce5) and three generator audit files (0339400 to f6c8e9f). Rewriting it needs a force-push and cannot recall copies already fetched: an owner decision. A competing-interests statement is also the owner's call.
 * `privacy:P6`: Deleting the third-party session data and other downloads kept outside the repository is an owner decision (listed in STATUS).
 * `privacy:P7`: Earlier commits, already pushed, still hold the long-quote versions (owner decision on history; see P1).
 * `reproducibility:R1`: The verifier specs' generation fields are still unfilled and not linked to the exported prompts. Agent transcripts and the D17 proposals.json are not published, so third parties cannot re-check the generator audits or the CS-01 contract rebuild; the paper now says so.
@@ -460,7 +468,7 @@ Docker proofs reproduced.
 * **Skeptics:** 1 of 2 finished refuted; third not finished
 * **Disposition:** partly fixed. c830977 removed the material and the mapping from the research note and the brief. Both now rely on the public essay, and use the homepage and sitemap only to check that no other essay exists. c830977 also redacted the exported research prompt, and c37b941 (a commit after the four listed) moved the owner-specific redaction rules out of the repository. A grep of tracked files at HEAD finds no remaining markers.
 * **Evidence:** `docs/research/notes/sfdata.md:4-7`; `docs/research/notes/sfdata.md:15-19`; `docs/research_brief.md:34`; `scripts/export_prompts.py:11-16`; `scripts/export_prompts.py:43-54`; `STATUS.md:122-126`; `paper/main.tex:19`; commit c830977; commit c37b941
-* **Remaining:** Git history, already pushed, still holds the earlier research notes, the unredacted research prompt (8c13e0c), redaction rules that spell out the owner's context (c830977), original-script hashes in earlier prompt exports, and session ids and session-local paths in earlier generator audit files. Rewriting it needs a force-push and cannot recall copies already fetched: an owner decision. A competing-interests statement is also the owner's call.
+* **Remaining:** Git history, already pushed, still holds material removed from the working tree: the earlier research notes; the unredacted research prompt (8c13e0c); redaction rules in scripts/export_prompts.py that spell out the owner's context, one of them built from part of the build session's id (c830977 to 74f6c73); hashes now withheld (original-script hashes in the prompt exports and one agent's original-prompt hash, 8c13e0c to c37b941); and the build session's id, mostly as part of its scratchpad path, in seven research notes (2a81036 to f6c8e9f), scripts/compile_controlled.py (cbb8dcd to 89ccce5) and three generator audit files (0339400 to f6c8e9f). Rewriting it needs a force-push and cannot recall copies already fetched: an owner decision. A competing-interests statement is also the owner's call.
 * **Builder note:** Checker correction accepted: the remote was already at 787176e, so this material is pushed. STATUS lists it as an owner decision.
 
 ### `privacy:P2` (high): Redistributed upstream MIT code lacked copyright and permission notices
@@ -527,7 +535,7 @@ Docker proofs reproduced.
 * **Skeptics:** 2 of 2 refuted
 * **Disposition:** fixed and disclosed. c830977 replaced the paths and the session id with <scratchpad> and <session>, and relabelled the construction-check sources with study-local names. No tracked file at HEAD contains the session id or the scratchpad path.
 * **Evidence:** `docs/research/notes/corrections.md:4`; `tasks/CS-01/labels/generator_audit.json:41`; `tasks/CS-01/labels/construction_checks.json:13`; `experiments/prompts/agent_prompts.jsonl:1-30`; `experiments/prompts/workflows/`; commit c830977
-* **Builder note:** Checker correction accepted: workflow and agent ids are kept as provenance keys (disclosed in the data card). Follow-up (D40-D42): `scripts/scan_tracked_files.py` scans every file git would publish (credentials, session paths, e-mail addresses, private markers) and is run before each push.
+* **Builder note:** Checker correction accepted: workflow and agent ids are kept as provenance keys (disclosed in the data card). Follow-up (D40-D44): `scripts/scan_tracked_files.py` scans the working tree and every file version in the commits a push would send (credentials, session paths, e-mail addresses and, with `--private-markers`, private markers); the builder runs it by hand before each push (D44). Earlier commits also hold the session id in seven research notes, scripts/compile_controlled.py and three generator audits; privacy:P1 lists them (D44, D45).
 
 ### `privacy:P10` (low): Host tool paths in transcripts versus data card statement on sandbox paths
 
@@ -550,7 +558,7 @@ Docker proofs reproduced.
 * **Skeptics:** 2 of 2 refuted
 * **Disposition:** fixed and disclosed. Harness 0.3.1 (8c13e0c, D36) starts children with -s -S -P. The wrapper now removes candidate paths before importing json, hmac, hashlib and traceback. A json.py Docker regression probe was added, and D36, the paper and STATUS describe the defect and say candidate code still controls its own report within one call.
 * **Evidence:** `src/tracecontract/sandbox/harness/tc_sandbox.py:57-64`; `src/tracecontract/sandbox/harness/tc_sandbox.py:249`; `src/tracecontract/sandbox/harness/tc_sandbox.py:132`; `src/tracecontract/patches.py:26-30`; `tests/test_sandbox_isolation.py:432`; docs/decision_log.md D36; `paper/sections/method.tex:35`; `paper/sections/limitations.tex:11`; `8c13e0c`
-* **Builder note:** The checker confirmed the start-up gap and listed further overstated statements (method.tex, reproducibility.tex, STATUS, the D36 heading). Follow-up (D40-D42): harness 0.3.2 starts sandbox children without PYTHONPATH and restores it after the trusted imports. Under 0.3.1, a wrong candidate shipping an `encodings` package received reward 1.0 in Docker; under 0.3.2 it fails. Two probes were added, every reported result was re-run under 0.3.2 (`pilot-v0.3.2`), and the paper, README, STATUS and D40 describe four defects. Code that a snippet imports still controls what that call reports; this in-call limit is documented.
+* **Builder note:** The checker confirmed the start-up gap and listed further overstated statements (method.tex, reproducibility.tex, STATUS, the D36 heading). Follow-up (D40-D42): harness 0.3.2 starts sandbox children without PYTHONPATH and restores it after the trusted imports. Under 0.3.1, a wrong candidate shipping an `encodings` package received reward 1.0 in Docker; under 0.3.2 it fails. Two probes were added, every reported result was re-run under 0.3.2 (`pilot-v0.3.2`), and the paper, README, STATUS and D40 describe four defects. The verification of the fixes then found a fifth defect: the wrapper's own error path imported `ast` from the candidate directories while formatting an exception. Harness 0.3.3 closes it, a Docker probe was added and every result was re-run (`pilot-v0.3.3`, D44, D45). Code that the snippet runs, directly or through candidate modules it imports, still controls what that call reports; this in-call limit is documented.
 
 ### `security:SEC-2` (low): Runtime-written /work/sitecustomize.py bypassed the static protected-path filter
 
@@ -639,7 +647,7 @@ Docker proofs reproduced.
 * **Skeptics:** not verified (skeptic stage stopped)
 * **Disposition:** fixed. 8c13e0c added 'tracecontract materialize', built on prepare_workspace, so protected test paths are removed as in grading. The README shows the command.
 * **Evidence:** `src/tracecontract/cli.py:312-332`; `src/tracecontract/cli.py:444-445`; `README.md:218-220`; `docs/annotation_guide.md:55-61`
-* **Builder note:** Follow-up (D40-D42): the annotation guide now shows `snapshot`, `materialize` and `sandbox-python`.
+* **Builder note:** Follow-up (D40-D44): the annotation guide (v0.4) shows `snapshot` and `sandbox-python` on the blinded packet's state directories; README shows `materialize` for use after the labels are merged.
 
 ## Final claims audit
 
@@ -669,7 +677,7 @@ Verified: the verifier agent's verdict (yes = the finding is real). Disposition:
 | `PD-07` | procedure | medium | `docs/decision_log.md:612` | In all four provenance records the main trace_sha256 field still holds the old sanitize:v1 hash, which matches no transcript in the working tree. | yes | fixed: provenance trace hashes name the published transcripts; manifests rebuilt |
 | `PD-08` | procedure | medium | `paper/sections/method.tex:33` | Coming right after 'frozen by content hash', this implies the check-list hash was part of the freeze record. | yes | fixed: method section says the check-list hash was added after pilot-v0.3 |
 | `PD-09` | procedure | medium | `docs/data_card.md:32` | The data card describes the held-out pool without any of the exceptions D37 discloses. | yes | fixed: data card lists the exceptions |
-| `PD-10` | procedure | medium | `README.md:253` | The bullet lists three departures, but D37 lists six. | yes | fixed: README, paper and protocol v0.5 list every departure |
+| `PD-10` | procedure | medium | `README.md:253` | The bullet lists three departures, but D37 lists six. | yes | fixed: README and paper list every departure; protocol v0.6 section 14 corrects the wording of section 3 (D44) |
 | `PD-11` | procedure | low | `paper/sections/method.tex:51` | There were two stalled gradings, not one. | yes | fixed: see N1; the minor D28 defect is named |
 | `PD-12` | procedure | low | `docs/decision_log.md:452` | Three problems. | yes | fixed: D41 records the prompt differences and the six stopped agents; paper says registered generators were audited |
 | `PD-13` | procedure | low | `docs/decision_log.md:474` | Mapper 2 did not get the same instructions as mapper 1 for CS-01, CS-03 and CS-04. | yes | fixed: D41 and the paper note the extra mapper instruction |
@@ -714,7 +722,7 @@ Verified: the verifier agent's verdict (yes = the finding is real). Disposition:
 | `REPRO-6` | reproducibility | low | `README.md:171` | The requirements say Python ≥ 3.12 (line 160), but this command needs 3.13. | yes | fixed: README states the tested Python version |
 | `REPRO-7` | reproducibility | low | `experiments/prompts/README.md:3` | Five of the 14 exported scripts are not exact: redaction changed them, and their headers show either a different original hash or `withheld`. | yes | fixed: export README template rewritten |
 | `REPRO-8` | reproducibility | low | `results/runs/pilot-v0.3.1/analysis.json:1709` | The analysis records revision c37b941, but it read uncommitted inputs. | yes | fixed: analysis records +dirty and code hashes; regenerated on a committed tree |
-| `REPRO-9` | reproducibility | low | `docs/annotation_guide.md:60` | The guide tells reviewers to run a candidate but never says how to get its <state-dir>. | yes | fixed: annotation guide shows snapshot, materialize and sandbox-python |
+| `REPRO-9` | reproducibility | low | `docs/annotation_guide.md:60` | The guide tells reviewers to run a candidate but never says how to get its <state-dir>. | yes | fixed: the annotation guide (v0.4) shows snapshot and sandbox-python on the packet's state directories |
 | `REPRO-10` | reproducibility | low | `paper/README.md:8` | This rule does not match the folder. | yes | fixed: see N11 |
 
 ### Completeness critic
@@ -728,8 +736,112 @@ Areas the critic found that no lens had checked, its findings, and what the buil
 3. **Run outputs other than analysis.md: the HTML report text and the superseded run folders.** `results/runs/pilot-v0.3.1/report.html:26`: experiments/protocol.md:222-223 (v0.4 §12) says: 'Macro rates and per-metric denominators, which §6 already required, are now shown in every output.' The report README calls 'The report' does not meet this.; `results/runs/pilot-v0.2/analysis.md:3`: protocol.md:155-157 says pilot-v0.2 and pilot-v0.2-h2 are superseded and 'not reported as pilot results'.; `results/runs/pilot-v0.3.1/report.html:8733`: The report is one self-contained file.
    **Disposition:** fixed: run index and superseded-run notes; D40 records the older reports' gaps; the HTML report embeds the licence notices
 4. **Public text written after the audited commit 787176e (29a1382, 0a94529 and the working tree).** `experiments/protocol.md:264`: D41 (docs/decision_log.md:740) and paper protocol.tex:48 say that mapper 2 for all tasks and mapper 1 for CS-02 got the extra sentence.
-   **Disposition:** fixed: D41 corrects the protocol v0.5 wording; the text written after 787176e went to the verification step below
+   **Disposition:** fixed: D41 corrects the protocol v0.5 wording; the text written after 787176e was checked by the verification of the fixes (last section)
 5. **Implementation and isolation claims compared with the source code.** No problem found.
    **Disposition:** no problem found
 6. **Related-work claims checked against the primary papers (not only the brief).** No problem found.
+   **Disposition:** no problem found
+
+## Verification of the fixes
+
+Verified: the second agent's verdict (yes = the finding is real). Disposition: what the builder did.
+
+| ID | Lens | Severity | Where | Finding | Verified | Disposition |
+| --- | --- | --- | --- | --- | --- | --- |
+| `PAPE-01` | paper | medium | `paper/generated/posthoc_table.tex:2` | The caption of Table posthoc is stale. | yes | fixed: the caption takes the duplicate count from analysis.json and has a ledger entry |
+| `PAPE-02` | paper | medium | `paper/sections/method.tex:19` | The test budget is wrong. | yes | fixed: method.tex gives the generation prompt's 6-14, the reviser's 6-16 and the generated verifiers' 12-15 checks |
+| `PAPE-03` | paper | medium | `paper/sections/results.tex:47` | This misdescribes the inputs of the labeling instrument, in the paper's central caveat. | yes | fixed: results and limitations say both writers worked from contracts covering the same requirements and saw the base and the reference diff; labels come from rule D19 |
+| `PAPE-04` | paper | medium | `paper/sections/appendix.tex:5` | The packet is presented as hiding each candidate's origin, but its own session.txt lets a reviewer pick out the observed pre-correction state. | yes | fixed and disclosed: the packet's session text holds user turns only (a test checks it); appendix, guide and D44 say origin can still be inferred, and reviewers record origin guesses |
+| `PAPE-05` | paper | low | `paper/sections/method.tex:35` | The paragraph names both API calls (run_python, run_cmd) and then describes 'each child', but this holds only for run_python. | yes | fixed: method.tex limits the start-up and authentication statements to run_python; run_cmd described |
+| `PAPE-06` | paper | low | `paper/sections/method.tex:33` | This overstates what the audit's lint gate enforces. | yes | fixed: method.tex describes the lint as implemented (verifier.py docstring likewise) |
+| `PAPE-07` | paper | low | `paper/sections/protocol.tex:6` | The paraphrase of the v0.3 coverage rule contradicts the coverage table and results.tex:68. | yes | fixed: protocol.tex paraphrases the coverage rule as implemented |
+| `PAPE-08` | paper | low | `paper/sections/protocol.tex:12` | The paper says exact binomial intervals accompany degenerate intervals for differences as well as rates. | yes | fixed: exact intervals are described as given for rates only |
+| `PAPE-09` | paper | low | `paper/sections/abstract.tex:4` | Three freeze-order statements omit the CS-04 B1 exception: this one, introduction.tex:23 ('generated after the verifiers were frozen') and the claimed conjunction element (ii) in related.tex:16 ('near misses generated a… | yes | fixed: abstract, introduction and related work carry the CS-04 B1 exception |
+| `PAPE-10` | paper | low | `paper/sections/protocol.tex:23` | The statement is partly inaccurate and the list of differences is incomplete. | yes | fixed: protocol.tex and limitations name the 2026-11-18 prompts (CS-01 near misses, all CS-02 material) |
+| `PAPE-11` | paper | low | `paper/sections/analysis.tex:27` | The sentence states as fact a label that the independent check disputes, which reintroduces the problem fixed under claims:L2. | yes | fixed: analysis.tex attributes the valid label to the rule's checks |
+| `PAPE-12` | paper | low | `paper/sections/ethics.tex:22` | The narrowed provenance statement, the fix for claims:L10 and N11, is still not true of the text. | yes | fixed: provenance statements in ethics.tex, paper/README.md and the introduction name the recorded files |
+| `DOCU-01` | documents | medium | `docs/annotation_guide.md:110` | The documented merge command cannot succeed. | yes | fixed: the template is label_template.json, which the documented merge glob does not match |
+| `DOCU-02` | documents | medium | `docs/annotation_guide.md:81` | The packet's state directories are created with mode 0700. | yes | fixed: packet state directories are made readable for the sandbox user; test |
+| `DOCU-03` | documents | medium | `docs/annotation_guide.md:51` | The blinded procedure (D43) still shows reviewers origins and rule proposals before they label. | yes | fixed: validate-task hides candidate details unless --show-candidates; the guide's and the packet's do-not-open lists name README, STATUS, docs/, data/ (added in D45) and the rest; origin inference disclosed |
+| `DOCU-04` | documents | medium | `src/tracecontract/review.py:129` | The README inside the packet, which is what reviewers actually have in hand, tells them to use their name. | yes | fixed: the packet README asks for a pseudonymous reviewer id; merge enforces it |
+| `DOCU-05` | documents | medium | `STATUS.md:157` | The list of material still in pushed history, which the owner's decision on rewriting history depends on, is incomplete (PD-21 is marked fixed). | yes | fixed: STATUS and the data card list the remaining history items |
+| `DOCU-06` | documents | medium | `docs/internal_review.md:672` | Protocol v0.5 does not list every departure. | yes | fixed: protocol v0.6 section 14 corrects section 3's workspace wording |
+| `DOCU-07` | documents | medium | `docs/data_card.md:56` | CS-03's reference checks were not written 'just before' its pool. | yes | fixed: README, data card and limitations say CS-03's checks were written while its pool was generated |
+| `DOCU-08` | documents | low | `docs/internal_review.md:717` | Annotation guide v0.3 no longer shows materialize. | yes | fixed: R10 and REPRO-9 dispositions describe the guide as it is |
+| `DOCU-09` | documents | low | `docs/internal_review.md:403` | data/controlled/README.md does not explain the legacy proposer label. | yes | fixed: data/controlled/README.md explains the legacy proposer label |
+| `DOCU-10` | documents | low | `docs/internal_review.md:14` | Seven other findings, not three, lack a full skeptic verdict. | yes | fixed: the Method section says six others (methodology L7-L10, reproducibility R9 and R10) |
+| `DOCU-11` | documents | low | `docs/decision_log.md:752` | D41's list of the stopped CS-02 agents does not match the prompt export. | yes | fixed: the export marks seven stopped agents; D44 corrects D41 |
+| `DOCU-12` | documents | low | `docs/decision_log.md:716` | D40 and D41 were extended in place after their first commit, so the log has more non-append edits than this one. | yes | fixed: D44 corrects D41 on in-place edits; later additions go into new entries |
+| `DOCU-13` | documents | low | `docs/decision_log.md:669` | No task uses /work/src:/work. | yes | fixed: D44 corrects the layouts; the equivalence check now covers /work, /work/src and /work/src:/work |
+| `DOCU-14` | documents | low | `docs/internal_review.md:551` | STATUS has never stated the in-call limit, and neither has README. | yes | fixed: README and STATUS state the in-call limit |
+| `DOCU-15` | documents | low | `docs/ownership_and_defense.md:57` | The records of the reviews and their fixes extend to D43. | yes | fixed: ownership document covers D36-D44 and the review tooling |
+| `DOCU-16` | documents | low | `docs/research_brief.md:1035` | This sources table was edited after 787176e but is stale. | yes | fixed: brief source rows updated to D44 and protocol v0.6 |
+| `DOCU-17` | documents | low | `docs/research_brief.md:387` | The list is presented as 'the departures' but omits ones that README and the data card list. | yes | fixed: brief limits the freeze statement to the evaluated verifiers and points to the full list of departures |
+| `DOCU-18` | documents | low | `results/runs/README.md:4` | Three statements in the run index do not match the run folders. | yes | fixed: run index wording matches the folders |
+| `DOCU-19` | documents | low | `data/controlled/README.md:13` | This freeze-order statement lacks the CS-04 B1 exception. | yes | fixed: data/controlled README and data card carry the B1 exception, the sanitiser references and the kept entry ids |
+| `DOCU-20` | documents | low | `docs/data_card.md:137` | Since D43, the same address also appears in results/runs/pilot-v0.3.2/report.html, which the data card does not mention. | yes | fixed: data card names the reports that embed the notice and the scan allowlist |
+| `DOCU-21` | documents | low | `THIRD_PARTY_LICENSES/README.md:29` | The path map, which REPRO-5 says lists every file that embeds upstream code, leaves out CS-04's initial-only verifiers. | yes | fixed: THIRD_PARTY_LICENSES lists CS-04's initial-only verifiers |
+| `DOCU-22` | documents | low | `docs/internal_review.md:731` | This points to a verification step that the document never describes, neither below this line nor in the Method section. | yes | fixed: this document now describes the verification (Method item 4 and this section) |
+| `DOCU-23` | documents | low | `docs/annotation_guide.md:20` | The double-review procedure is inconsistent, and contract review cannot be blind as written. | yes | fixed: every task is reviewed by two reviewers; contract reviews go into each reviewer's label file; the scripted-turn remark corrected; how contract disagreements and `edit` decisions are resolved is left to the owner (the guide warns that the gate counts `edit` as acceptance) |
+| `DOCU-24` | documents | low | `README.md:290` | For CS-01 only the near-miss prompt differs. | yes | fixed: README and data card name the 2026-11-18 prompts precisely |
+| `CODE-01` | code | medium | `src/tracecontract/review.py:77` | The packet's shuffle and its 'random' opaque ids (line 98, R + 24 bits from the same stream) all come from random.Random seeded with an integer the coordinator picks (cli.py:478 '--seed', type=int, required; guide line… | no | not a defect (verifier); ids are now drawn from secrets.token_hex(3) anyway |
+| `CODE-02` | code | medium | `src/tracecontract/review.py:87` | session.txt is rendered with tool calls (render_session defaults to include_tools=True, tasks.py:225). | yes | fixed and disclosed: the packet's session text holds user turns only (a test checks it); origin inference disclosed and measured by origin guesses |
+| `CODE-03` | code | medium | `src/tracecontract/cli.py:191` | validate-task prints every candidate's id, origin, human label and proposed (D19) label. | yes | fixed: validate-task --show-candidates; hidden by default |
+| `CODE-04` | code | medium | `src/tracecontract/review.py:112` | The documented merge command 'tracecontract merge-reviews <packet>/*/labels_*.json --key <key file>' (annotation_guide.md:110) matches every task's labels_template.json. | yes | fixed: template renamed label_template.json |
+| `CODE-05` | code | medium | `src/tracecontract/review.py:190` | merge_labels appends both reviewers' labels, in reviewer-name order, with adjudicated=False. | yes | fixed: final_label() gives no label on an unadjudicated disagreement; the analysis queues it; test |
+| `CODE-06` | code | low | `src/tracecontract/review.py:191` | Running merge-reviews a second time with the same files appends the same human labels again. | yes | fixed: merged labels carry the packet's key tag and a second merge of the same packet is refused |
+| `CODE-07` | code | low | `src/tracecontract/review.py:166` | Merge validation accepts violated-requirement ids of superseded or unscored requirements, which the packet itself says are not scored. | yes | fixed: merge accepts only active scored requirement ids or REGRESSION, empty lists for valid and ambiguous, a note for ambiguous |
+| `CODE-08` | code | low | `src/tracecontract/review.py:129` | The packet README tells reviewers to put their name in the file name, whereas the guide requires a pseudonymous id, 'never your name' (annotation_guide.md:8-10). | yes | fixed: packet README asks for a pseudonymous id and its do-not-open list matches the guide |
+| `CODE-09` | code | low | `src/tracecontract/review.py:117` | export_packet refuses an existing packet directory but silently overwrites an existing key file, which is the only record of the mapping; labels from the earlier packet can then no longer be merged. | yes | fixed: export refuses an existing key; the key is created with O_EXCL and mode 0600 |
+| `CODE-10` | code | medium | `paper/make_tables.py:218` | The caption of paper/generated/posthoc_table.tex has a typed-in count: it says the no-duplicate rates leave out 'the two candidates that duplicate a development attack'. | yes | fixed: caption count generated from the analysis, with a ledger entry |
+| `CODE-11` | code | medium | `scripts/scan_tracked_files.py:1` | The pre-push scan (D40, and internal_review.md:530: 'scans every file git would publish ... | yes | fixed: the scan also covers every file version in the commits a push would send (--all-history for all) |
+| `CODE-12` | code | low | `scripts/scan_tracked_files.py:69` | The e-mail rule skips every match preceded by a backslash. | yes | fixed: escaped addresses are tested after dropping the escape letter; TLD {2,}; pytest decorators skipped |
+| `CODE-13` | code | low | `src/tracecontract/sandbox/harness/tc_sandbox.py:258` | The PYTHONPATH entries are made absolute in the grader process, whose cwd is /grader ('-w /grader', docker_runner.py:275), not in the child, whose cwd is /work, where the 0.3.1 interpreter resolved them. | yes | fixed: PYTHONPATH entries resolved against the child's working directory (harness 0.3.3) |
+| `CODE-14` | code | medium | `src/tracecontract/sandbox/harness/tc_sandbox.py:70` | After the late paths are added, the wrapper's own error path (traceback.format_exc() at line 86) imports `ast` lazily; Python 3.12's traceback does this when it computes caret anchors for frames with source. | yes | fixed: harness 0.3.3 restores the trusted import path before formatting and signing; Docker regression test; re-run pilot-v0.3.3 (D44, D45) |
+| `CODE-15` | code | low | `scripts/export_prompts.py:14` | Workflow exports are written one at a time inside the loop (line 140), before the next script is redacted (line 130). | yes | fixed: the export writes nothing until every text is redacted |
+| `CODE-16` | code | low | `tests/test_harbor_export.py:21` | The assertion checks only that the file exists on disk, not that git tracks it. | no | not a defect (verifier); no change |
+| `CODE-17` | code | low | `scripts/compile_controlled.py:6` | The docstring says sealed material goes to the scratchpad. | yes | fixed: docstring names ~/.tc_sealed |
+| `DIFF-01` | diff and privacy | medium | `paper/generated/posthoc_table.tex:2` | The paper table caption gives the wrong count. | yes | fixed: caption from the analysis, with a ledger entry |
+| `DIFF-02` | diff and privacy | medium | `src/tracecontract/review.py:87` | The blinded packet, the D43 fix for labels anchored on construction intent, hides the origin field but not the origin. | yes | fixed and disclosed: user turns only, identical diffs grouped, origin guesses; disclosed in D44, protocol v0.6, the guide, README and the appendix |
+| `DIFF-03` | diff and privacy | medium | `src/tracecontract/review.py:106` | Every packet state directory has mode 0700. | yes | fixed: state directories mode 0755; test |
+| `DIFF-04` | diff and privacy | medium | `docs/annotation_guide.md:110` | The documented merge command always fails. | yes | fixed: template renamed; documented glob tested |
+| `DIFF-05` | diff and privacy | medium | `src/tracecontract/schemas.py:382` | After merge-reviews, an unresolved disagreement is silently settled by reviewer-id order. | yes | fixed: final_label() gives no label on an unadjudicated disagreement; test |
+| `DIFF-06` | diff and privacy | medium | `src/tracecontract/review.py:129` | The packet README, which is what reviewers read, asks for their name, and merge_labels' error says 'reviewer name missing' (line 159). | yes | fixed: pseudonymous ids required by the packet README and enforced by merge |
+| `DIFF-07` | diff and privacy | medium | `docs/decision_log.md:752` | D41 and the export disagree. | yes | fixed: export marks all seven stopped agents; D44 corrects D41 and names the source of CS-02's mapper-1 files |
+| `DIFF-08` | diff and privacy | low | `results/runs/README.md:4` | The commit that added this sentence (55a2346) also regenerated comparison outputs inside superseded run folders. | yes | fixed: the run index and the superseded-run notes say which derived files were regenerated and when; D45 corrects D40 and D44 on this |
+| `DIFF-09` | diff and privacy | low | `docs/data_card.md:142` | The history disclosure is incomplete. | yes | fixed: STATUS, data card and the privacy entries list the history items |
+| `DIFF-10` | diff and privacy | low | `docs/data_card.md:56` | CS-03's reference checks were also written while its pool was being generated. | yes | fixed: README, data card and limitations corrected; D44 |
+| `DIFF-11` | diff and privacy | low | `docs/internal_review.md:13` | The findings table in the same file shows six other findings with no skeptic verdict or only one, not three: methodology L7, L8, L9 and L10 (not verified), reproducibility R10 (not verified) and R9 (one of two finished). | yes | fixed: the Method section says six others |
+| `DIFF-12` | diff and privacy | low | `README.md:264` | The sentence reads as an enforced check, but nothing runs the scan automatically: there is no pre-push hook, and .git/hooks holds only samples. | yes | fixed: README describes the scan as a manual step with --private-markers; D44 records the scan |
+| `DIFF-13` | diff and privacy | low | `paper/sections/method.tex:35` | The sentence follows a list of both API calls (run_python, run_cmd), and line 37 adds 'Each child's reported value is authenticated'. | yes | fixed: method.tex limits the statements to run_python children |
+| `DIFF-14` | diff and privacy | low | `docs/research_brief.md:1035` | This row of the brief's source table was updated in this diff but is already stale: the log ends at D43, which was added in 45c654c. | yes | fixed: brief source rows updated |
+| `DIFF-15` | diff and privacy | low | `paper/generated/reliability_table.tex:2` | The caption is stale after the compare_runs.py change in this diff. | yes | fixed: caption names the check-list criterion |
+| `DIFF-16` | diff and privacy | low | `experiments/protocol.md:3` | The final claims audit had not finished when v0.5 was hashed. | yes | fixed: D44 and protocol v0.6 section 14 record the timing |
+| `DIFF-17` | diff and privacy | low | `paper/sections/introduction.tex:25` | The fix narrowed 'every number' to 'every table', but three paper tables are not generated from runs. | yes | fixed: introduction names the recorded files |
+| `DIFF-18` | diff and privacy | low | `scripts/scan_tracked_files.py:38` | The new scan script puts the upstream author's e-mail address into a tracked file as an allowlist key. | no | not a defect (verifier); the allowlist entry gives its reason |
+| `DIFF-19` | diff and privacy | low | `docs/internal_review.md:55` | The new public review document points by commit to where the owner's removed personal context can still be read in pushed history, and describes what each commit holds; line 463 repeats this, as does STATUS.md:150-160. | no | not a defect (verifier); the public list of history items stays as disclosure while the owner decides |
+
+### Completeness critic of the verification
+
+Areas the critic found that no lens had checked, its findings, and what the builder did.
+
+1. **Blinded review packet as a reviewer receives it (D43 fix).** `paper/sections/appendix.tex:5`: [medium] The packet is described as having "no origin, description, proposal or verifier outcome" (same claim in README.md:77 "with no origin, proposal or outcome" and review.py:14).; `src/tracecontract/review.py:129`: [medium, privacy] PACKET_README tells reviewers to "copy it to `labels_<your name>.json`", and merge_labels raises "reviewer name missing" (review.py:159).
+   **Disposition:** fixed and disclosed: user turns only (tested), grouped identical diffs, pseudonymous ids, origin guesses, and data/ on the do-not-open lists (D44, D45)
+2. **Primary (human-label) analysis after merge-reviews.** `src/tracecontract/schemas.py:373`: [medium] The protocol says "Primary analysis uses human labels (adjudicated where two reviewers exist)" (experiments/protocol.md:85), and annotation_guide.md:149 says the same.
+   **Disposition:** fixed: final_label() gives no label on an unadjudicated disagreement; the analysis queues adjudication; test
+3. **Held-out generator audit (controlled.audit_generator_transcript).** `src/tracecontract/controlled.py:213`: [medium] The audit matches literal substrings, and any command that starts with `.venv/bin/tracecontract add-candidate` is exempt in full.
+   **Disposition:** fixed and disclosed: stricter re-audit of all 21 transcripts, including the shared scratch directory: no read of forbidden material (D44)
+4. **Compiled manuscript.** `paper/make_tables.py:218`: [low] The caption generated into paper/generated/posthoc_table.tex:2 (Table 8) says "rates without the two candidates that duplicate a development attack".
+   **Disposition:** fixed: caption count (see PAPE-01)
+5. **Code comments and latent code paths not read by any lens: the unchanged parts of schemas.py, session loading in tasks.py, and the scripts/propose_labels.py docstring.** `src/tracecontract/schemas.py:400`: [low] The comment reads `reference_check = "reference_check"  # independent human-reviewed checks (label support only)`, and line 250 reads `reference = "reference"  # human-reviewed contract used for labels`.; `src/tracecontract/tasks.py:220`: [low] session_for_task reads every non-controlled population, natural included, from data/fixtures/transcripts, and hard-codes relpath as "data/controlled/transcripts/..." (line 222).; `scripts/propose_labels.py:14`: [low] The docstring says a candidate whose construction label is invalid becomes invalid when the reference checks fail on a targeted requirement "(or the regression check fails)".
+   **Disposition:** fixed: schemas comments, tasks.py transcript path per population, propose_labels docstring
+6. **Body text of the five held-out workflow exports.** `experiments/prompts/workflows/tracecontract-heldout__wf_7cdea048-2be.js:19`: [low] This export, and line 19 of wf_2c429631-ebb, wf_5ef9efad-a4c, wf_b428f318-391 and wf_f01e3c8b-2f6, keeps the sentence "Their latest message asks for this work to continue; an earlier request to pause has been superseded, and their message about not accepting terms referred only to a Hugging F…
+   **Disposition:** fixed: the export's generic redaction rule covers the five held-out exports; re-exported
+7. **docs/research_brief.md outside the six passages changed after 787176e.** `docs/research_brief.md:712`: [low] Stale: "Per-call grading time for the repository's own grader is **not yet measured**." results/runs/pilot-v0.3.2/results.jsonl records wall_s for all 240 calls: median 2.2 s, maximum 42.4 s, 15.7 min in total.; `docs/research_brief.md:615`: [low] The brief says "Intended requirements are the independent ground truth for the reference contract", and its limitations list (line 624) says "One model family produced the sessions, contracts, verifiers, candidates and label proposals".; `docs/research_brief.md:815`: [low] Stale: "Protocol v0.3 was frozen before the final pilot run [DL D32]".
+   **Disposition:** fixed: brief reports the measured timings, drops 'independent' and states the protocol versions
+8. **Frozen protocol sections 1-2, 4 and 6-11 against the implementation (the documents lens read only sections 3, 5 and 11-13).** No problem found.
+   **Disposition:** no problem found
+9. **Verifier test files and B1 artefacts against specs and graded results.** No problem found.
+   **Disposition:** no problem found
+10. **Regenerated records, privacy beyond HEAD, bibliography provenance, and the statistical routines.** No problem found.
    **Disposition:** no problem found

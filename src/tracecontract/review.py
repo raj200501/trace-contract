@@ -1,4 +1,4 @@
-"""Blinded human review of held-out candidates (annotation guide v0.3; decision log D43, D44).
+"""Blinded human review of held-out candidates (annotation guide v0.4; decision log D43-D45).
 
 ``export_packet`` writes, per task, what a reviewer needs to label the held-out
 candidates without being told how any candidate was made:
@@ -181,7 +181,7 @@ One folder per task:
 
 The candidate ids are random. The packet does not say how a candidate was made, what
 anyone else thinks of it, or how any verifier graded it. Until your labels have been
-merged, do not open the study repository's `tasks/`, `results/`, `paper/`,
+merged, do not open the study repository's `tasks/`, `results/`, `paper/`, `data/`,
 `experiments/` or `docs/` folders (except `docs/annotation_guide.md`), its `README.md`
 or `STATUS.md`, any HTML report or the git history; do not run `tracecontract
 validate-task --show-candidates` or `render-session`; and do not discuss candidates or

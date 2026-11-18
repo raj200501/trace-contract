@@ -49,18 +49,24 @@ Produced with Claude (via Claude Code), reviewed only by the model so far:
 * the independent construction checks, both requirement mappers, and the
   adversarial verification of the research brief (skeptics, citation and fact
   checks) together with the resulting revisions;
-* the diagnosis and fixes of the four harness defects (D29–D31, D36, D40), protocol
-  amendments v0.2 to v0.5, transcript sanitiser v2 (D38), the post-hoc analyses
-  (D37), the CS-02 reference-check review loop, the CS-01 mapping correction (D42) and
-  the pilot's results text;
-* the six-lens internal review with its skeptic agents, the dispositions review and
-  the final claims audit (D36–D41), all run by model agents, and the fixes that
-  followed them.
+* the diagnosis and fixes of the five harness defects (D29–D31, D36, D40, D44),
+  protocol amendments v0.2 to v0.6, transcript sanitiser v2 (D38), the post-hoc
+  analyses (D37), the CS-02 reference-check review loop, the CS-01 mapping correction
+  (D42), the blinded review packet tooling (`tracecontract review-packet` and
+  `merge-reviews`; D43, D44), the strict re-audit of the generator transcripts
+  (`scripts/strict_reaudit.py`, D44) and the pilot's results text;
+* the six-lens internal review with its skeptic agents, the dispositions review, the
+  final claims audit and the verification of the resulting fixes (D36–D44), all run by
+  model agents, and the fixes that followed them.
 
 ## Human decisions and reviews still required
 
-1. **Contract review and candidate labels** for every task
-   (`docs/annotation_guide.md`), plus a second reviewer on an overlap subset.
+1. **Contract review and candidate labels** for every task, by two reviewers per task
+   working from the blinded review packet, and adjudication of their disagreements
+   (`docs/annotation_guide.md`; protocol v0.6 §14). Until their labels are merged,
+   reviewers open no task files, results or documents except the annotation guide;
+   this document is one they must not open. Someone who has already read these files
+   is not blind to the proposals and outcomes they state.
 2. **Data access**: accept the SWE-chat terms and supply a working read token, or
    decide on another natural-data source.
 3. **Scope of the claim.** The adversarial review (D34) narrowed it to a

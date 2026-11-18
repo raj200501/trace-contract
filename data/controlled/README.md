@@ -9,9 +9,9 @@ proposals; no human has written or reviewed them.
 
 | Path | Content |
 | --- | --- |
-| `transcripts/<id>.jsonl` | Sanitised transcript: user/assistant messages, tool calls and results, timestamps, model name, token usage. Harness internals and internal ids removed; e-mail addresses redacted (D9, D21). |
-| `scenarios/<id>.json` | The scenario (turn texts, intended requirements, ambiguities), hashed and logged locally before the session (not a formal preregistration; D15, D41). Added only after the task's verifiers were frozen (D12). Its SHA-256 at that time is in the decision log. |
-| `reference/<id>.json` | Reference-contract proposals: the intended requirements operationalised with exact evidence quotes from the scripted turns; inferred requirements (one in CS-04) have none (D11). |
+| `transcripts/<id>.jsonl` | Sanitised transcript (`sanitize:v2`): user/assistant messages, tool calls and results, timestamps, entry ids (`uuid`, `parentUuid`), model name, stop reasons, token usage. Harness internals and internal session and agent ids removed; every entry relabelled with a study session id; e-mail addresses redacted (D9, D38; D41 corrects D21's counts). |
+| `scenarios/<id>.json` | The scenario (turn texts, intended requirements, ambiguities), hashed and logged locally before the session (not a formal preregistration; D15, D41). Its SHA-256 at that time is in the decision log. Added only after the task's evaluated verifiers were frozen (D12); CS-04's B1 was re-selected afterwards (D31). |
+| `reference/<id>.json` | Reference-contract proposals: the intended requirements operationalised with exact evidence quotes from the scripted turns; inferred requirements (one in CS-04) have none (D11). The reference contracts built from them (`tasks/<id>/contracts/reference.json`) carry the legacy proposer label `study-design:pre-registered`, which means hashed and logged locally (D41); new builds write `study-design:hashed-scenario`. |
 
 Known deviations from natural sessions:
 
