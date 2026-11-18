@@ -1,0 +1,1 @@
+{"removed_protected": ["tests/test_calc.py"], "checks": {"test_add.py::test_add": "passed", "test_add.py::test_negative": "passed"}, "tamper_events": []}
