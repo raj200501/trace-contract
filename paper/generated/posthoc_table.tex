@@ -1,5 +1,5 @@
 \begin{table}[t]\centering\footnotesize
-\caption{\textbf{Exploratory, post hoc (protocol v0.4).} Near misses accepted among those the label rule confirmed invalid and among those it marked ambiguous; rates under the independent construction checks' labels; rates without the two candidates that duplicate a development attack. Last row: B1 scored only on checks from the base commit's own tests (all candidates, primary labels).}\label{tab:posthoc}
+\caption{\textbf{Exploratory, post hoc (protocol v0.4; duplicates view widened in v0.5).} Near misses accepted among those the label rule confirmed invalid and among those it marked ambiguous; rates under the independent construction checks' labels; rates without the 3 held-out candidates that duplicate another candidate (same graded patch, or same code apart from comments and docstrings). Last row: B1 scored only on checks from the base commit's own tests (all candidates, primary labels).}\label{tab:posthoc}
 \begin{tabular}{lrrrrrr}\toprule Condition & NM conf. & NM amb. & FA (checks) & FR (checks) & FA (no dup.) & FR (no dup.) \\\midrule
 C1 initial, plain & 4/15 & 4/5 & 13/25 & 2/7 & 4/14 & 2/10 \\
 C2 initial, audited & 3/15 & 4/5 & 12/25 & 2/7 & 3/14 & 2/10 \\

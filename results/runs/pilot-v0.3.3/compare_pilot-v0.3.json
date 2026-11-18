@@ -1,0 +1,18 @@
+{
+  "old_run": "pilot-v0.3",
+  "new_run": "pilot-v0.3.3",
+  "pairs_in_both": 240,
+  "pairs_same_verifier": 240,
+  "pairs_changed_verifier": 0,
+  "check_list_criterion": {
+    "number of checks": 240
+  },
+  "changed_verifier_reward_agreement": null,
+  "changed_verifier_pairs": [],
+  "only_in_old": 0,
+  "only_in_new": 0,
+  "reward_agreement": 1.0,
+  "outcome_agreement": 1.0,
+  "reward_discordant": [],
+  "outcome_discordant": []
+}
