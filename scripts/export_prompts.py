@@ -40,6 +40,10 @@ _REDACTIONS = [
 # Session-local paths must never survive redaction.
 _FORBIDDEN = [re.compile(r"/tmp/claude-0/-|/root/\.claude/projects/")]
 _N_GENERIC = len(_REDACTIONS)  # rules after this index are owner-specific (load_private)
+# Rules whose removal withholds the original's hash: the owner-message notes (the first two
+# generic rules) and every owner-specific rule. A hash of the original would let anyone confirm
+# a guess of the removed wording (decision log D46).
+_WITHHOLD = {0, 1}
 # Workflow runs that are not exported, with the reason (stated in the README).
 _NOT_EXPORTED = {"tracecontract-privacy-fixes": "its prompts concern the repository owner's personal information"}
 # Standalone agents whose output was not used (decision log D40): started on 2026-11-13, stopped at the
@@ -69,15 +73,16 @@ def load_private(path: str) -> None:
 
 
 def redact(text: str) -> tuple[str, bool]:
-    """Return the redacted text and whether an owner-specific rule changed it.
+    """Return the redacted text and whether a rule that withholds the hash changed it.
 
-    When one did, the original's hash is withheld: the rest of the text is public, so a
-    hash of the original would let anyone confirm a guess of the redacted wording.
+    Those rules are the owner-message notes and the owner-specific rules. When one changed
+    the text, the original's hash is withheld: the rest of the text is public, so a hash of
+    the original would let anyone confirm a guess of the redacted wording.
     """
     private_hit = False
     for i, (pat, rep) in enumerate(_REDACTIONS):
         new = pat.sub(rep, text)
-        private_hit |= i >= _N_GENERIC and new != text
+        private_hit |= (i >= _N_GENERIC or i in _WITHHOLD) and new != text
         text = new
     left = sorted({m.group(0).lower() for f in _FORBIDDEN for m in f.finditer(text)})
     if left:
@@ -132,7 +137,7 @@ def main(session_dir: str, *opts: str) -> None:
             continue
         fname = f"{name.group(1) if name else 'workflow'}__{d['runId']}.js"
         body, private_hit = redact(script)
-        orig = ("withheld (owner-specific redaction applied)" if private_hit
+        orig = ("withheld (a note about the owner's messages or personal information was removed)" if private_hit
                 else hashlib.sha256(script.encode()).hexdigest())
         start = (datetime.fromtimestamp(d["startTime"] / 1000, timezone.utc).isoformat(timespec="seconds")
                  if d.get("startTime") else "unrecorded")
@@ -171,10 +176,11 @@ def main(session_dir: str, *opts: str) -> None:
         "* `agent_prompts.jsonl`: the prompt of every standalone agent (e.g. controlled-session agents, held-out generators "
         "for CS-03/CS-04, reference-check writers, mappers), with the time of its first and last transcript entry and the "
         "sha256 of the original prompt and transcript. A `note` marks agents whose output was not used.\n\n"
-        "Redacted before export: notes about the repository owner's messages and personal information (using "
-        "owner-specific rules kept outside the repository), session ids, session-local paths and e-mail addresses. Where an "
-        "owner-specific rule changed a prompt, the hash of the original is withheld (`prompt_sha256` is null; workflow "
-        "headers say \"withheld\"), because it would let anyone confirm a guess of the removed wording. Workflow-run ids "
+        "Redacted before export: notes about the repository owner's messages, personal information (using "
+        "owner-specific rules kept outside the repository), session ids, session-local paths and e-mail addresses. Where a "
+        "note about the owner's messages or personal information was removed, the hash of the original is withheld "
+        "(`prompt_sha256` is null; workflow headers say \"withheld\"), because it would let anyone confirm a guess of the "
+        "removed wording. Exports pushed before 2026-11-18 (decision log D46) published those hashes. Workflow-run ids "
         "(`wf_...`) and agent ids are opaque harness identifiers; they are kept as provenance keys, for example in "
         "`tasks/*/labels/construction_checks.json` (`source`). "
         "The full transcripts are kept outside the repository (they contain harness internals); their hashes are recorded "

@@ -43,9 +43,10 @@ repository owner. Nothing here is peer reviewed, and no human labels exist.
     directory, which also held other agents' files and some material derived from
     candidates; the first audit treated only its sealed subfolders as forbidden. A
     stricter re-audit, which treats the whole directory as forbidden, found no read
-    of forbidden material. Some listings showed file names, and one reviewer read
-    part of another reviewer's test runner, which holds no candidate or other
-    verifier material (D44). Near-miss generators ran B1's tests, and three held-out
+    of candidate, verifier or sealed material. Some listings showed file names
+    (`git status` among them, which named held-out CS-02 candidate files), and one
+    reviewer read all of another reviewer's test runner there, which holds no
+    candidate or other verifier material (D44, D46). Near-miss generators ran B1's tests, and three held-out
     candidates duplicate a development attack (D37, D40, D41);
   * labels: D19 label proposals and independent construction checks; a blinded
     review packet for human labels (`tracecontract review-packet`, D43, D44), which
@@ -79,18 +80,20 @@ repository owner. Nothing here is peer reviewed, and no human labels exist.
   * a review of how each of its findings was resolved;
   * a final audit of every public claim and number (D40);
   * a verification of the fixes that followed them (D44), after which a second
-    workflow corrected the text in six batches, each checked by a second agent (D45).
+    workflow corrected the text in six batches, each checked by a second agent (D45);
+  * a final read-only verification of all of round 3, whose findings were fixed or
+    disclosed (D46).
 
   Findings, verdicts and dispositions are in `docs/internal_review.md`.
 * **Other documents:** annotation guide v0.4 (blinded review packet, D43, D44), data
-  card, decision log D1–D45,
+  card, decision log D1–D46,
   submission-readiness notes (arXiv pages re-checked 2026-11-18), the
   ownership/defense notes, workflow and agent prompts (`experiments/prompts/`), and
   third-party licence notices (`THIRD_PARTY_LICENSES/`).
 
 ## Tested
 
-* **76 tests pass** (2026-11-18, after the final run): 59 offline and 17 Docker.
+* **80 tests pass** (2026-11-18, after the final run): 63 offline and 17 Docker.
 * **Offline tests:**
   * schemas, ingestion and evidence alignment;
   * supersession, contract validation and the acceptance gate;
@@ -100,7 +103,9 @@ repository owner. Nothing here is peer reviewed, and no human labels exist.
   * metrics, label policies, coverage and κ;
   * same-code duplicate detection and the Harbor export layout;
   * audit hold-out guard;
-  * the blinded review packet and its merge, and the strict re-audit's path resolution.
+  * the blinded review packet and its merge (type checks, all-or-nothing writes,
+    disagreement on violated requirements), and the strict re-audit (26 shell forms,
+    attribution of scratch-directory reads).
 * **Docker probes of the grading boundary:**
   * results are not writable and hidden tests are not readable;
   * the grader cannot be signalled, and there is no network;
@@ -174,15 +179,21 @@ repository owner. Nothing here is peer reviewed, and no human labels exist.
     the repository (`data/manifests/third_party_downloads.json`);
   * whether to rewrite the branch's git history. Earlier commits, already pushed,
     still contain material that has since been removed from the working tree
-    (`docs/internal_review.md`, P1, P7, P9; D44, D45):
+    (`docs/internal_review.md`, P1, P7, P9; D44 to D46):
     * the earlier research notes;
     * the exported research prompt in `8c13e0c`;
     * redaction rules in `scripts/export_prompts.py` that spell out the owner's
-      context, one of them built from part of the build session's id (commits
-      `c830977` to `74f6c73`);
-    * hashes that are now withheld: original-script hashes in the prompt exports, and
-      the original-prompt hash of one agent in
-      `experiments/prompts/agent_prompts.jsonl` (commits `8c13e0c` to `c37b941`);
+      context (commits `8c13e0c` to `74f6c73`): the first version quotes the start of
+      an owner message, and one rule in `c830977` and `74f6c73` is built from part of
+      the build session's id;
+    * a note about the owner's messages in five exported held-out workflow scripts
+      (`8c13e0c` to `feab025`);
+    * hashes that are now withheld: original-script hashes in the prompt exports, the
+      original-prompt hash of one agent in `experiments/prompts/agent_prompts.jsonl`
+      (commits `8c13e0c` to `c37b941`), and the original hashes of the prompts and
+      scripts from which a note about the owner's messages was removed (`8c13e0c` to
+      `aa41b45`);
+    * an earlier wording of one line of the ethics section (`3d3024a` to `787176e`);
     * the build session's id, in most files as part of its scratchpad path: in seven
       research notes (commits `2a81036` to `f6c8e9f`), in
       `scripts/compile_controlled.py` (`cbb8dcd` to `89ccce5`) and in
@@ -190,6 +201,8 @@ repository owner. Nothing here is peer reviewed, and no human labels exist.
 
     A rewrite needs a force-push and cannot recall copies already fetched. No
     history has been rewritten.
+  * whether to keep the co-author and `Claude-Session` lines that end every commit
+    message (the session's attribution rules add them).
 
 ## Not run
 

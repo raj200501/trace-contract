@@ -1,8 +1,8 @@
 # Internal review
 
-Three adversarial reviews of the repository and the manuscript, and a verification of the fixes
-that followed them, all run on 2026-11-18 by model agents (Claude, the same model family that
-built the study). They are not peer review, and no human has reviewed their findings yet.
+Three adversarial reviews of the repository and the manuscript, and two verifications of the
+fixes that followed them, all run on 2026-11-18 by model agents (Claude, the same model family
+that built the study). They are not peer review, and no human has reviewed their findings yet.
 
 ## Method
 
@@ -28,11 +28,15 @@ built the study). They are not peer review, and no human has reviewed their find
    Four lenses (paper; documents; code; diff and privacy), one agent each, read the changed text
    and code against the sources. A second agent tried to refute each finding, and a critic looked
    for areas no lens had read. The confirmed findings were fixed from `84e0ec3` on (D44 and the
-   commits after it); the dispositions are in the last section.
+   commits after it); the dispositions are in the section on it.
+5. **Final verification** (19:47-21:46 UTC) of everything changed from `45c654c` to `aa41b45`:
+   the harness fix, the review packet, the stricter re-audit, protocol v0.6, D44 and D45, the
+   final run and the text corrections. Four read-only lenses (records, consistency, code, audit
+   records), one skeptic per lens and a critic; the fixes are recorded in D46.
 
 Prompts: `experiments/prompts/workflows/tracecontract-internal-review__*.js`,
-`tracecontract-review-dispositions__*.js`, `tracecontract-final-audit__*.js` and
-`tracecontract-fix-verification__*.js`.
+`tracecontract-review-dispositions__*.js`, `tracecontract-final-audit__*.js`,
+`tracecontract-fix-verification__*.js` and `tracecontract-round3-verification__*.js`.
 
 A skeptic verdict of "refuted" means that the skeptic argued the finding is wrong or is not a
 defect. Some refuted findings were fixed anyway, for example the two security findings, whose
@@ -43,6 +47,7 @@ Docker proofs reproduced.
 * **Internal review:** 64 findings (3 high, 22 medium, 39 low).
 * **Final claims audit:** 69 findings; the verifiers confirmed 65 and rejected 4.
 * **Verification of the fixes:** 72 findings (26 medium, 46 low); the second agents confirmed 68 and refuted 4.
+* **Final verification:** 27 findings (11 medium, 16 low); the skeptics confirmed 27.
 
 | Internal-review disposition | Findings |
 | --- | --- |
@@ -60,7 +65,7 @@ Docker proofs reproduced.
 * `integrity:M2`: The near-miss template in the exported workflow scripts still tells generators to run the repository tests; a new batch should change it.
 * `integrity:M4`: There is still no tool-output scan and no private per-agent scratch directory for future runs.
 * `integrity:M5`: `frozen_at` is null in all 28 specs; the freeze order rests on git commit times.
-* `privacy:P1`: Git history, already pushed, still holds material removed from the working tree: the earlier research notes; the unredacted research prompt (8c13e0c); redaction rules in scripts/export_prompts.py that spell out the owner's context, one of them built from part of the build session's id (c830977 to 74f6c73); hashes now withheld (original-script hashes in the prompt exports and one agent's original-prompt hash, 8c13e0c to c37b941); and the build session's id, mostly as part of its scratchpad path, in seven research notes (2a81036 to f6c8e9f), scripts/compile_controlled.py (cbb8dcd to 89ccce5) and three generator audit files (0339400 to f6c8e9f). Rewriting it needs a force-push and cannot recall copies already fetched: an owner decision. A competing-interests statement is also the owner's call.
+* `privacy:P1`: Git history, already pushed, still holds material removed from the working tree: the earlier research notes; the unredacted research prompt (8c13e0c); redaction rules in scripts/export_prompts.py that spell out the owner's context (8c13e0c to 74f6c73; the first version quotes the start of an owner message, and one rule in c830977 and 74f6c73 is built from part of the build session's id); a note about the owner's messages in five exported held-out workflow scripts (8c13e0c to feab025); hashes now withheld (original-script hashes in the prompt exports and one agent's original-prompt hash, 8c13e0c to c37b941, and the original hashes of prompts and scripts from which an owner-message note was removed, 8c13e0c to aa41b45); an earlier wording of one line of the ethics section (3d3024a to 787176e); and the build session's id, mostly as part of its scratchpad path, in seven research notes (2a81036 to f6c8e9f), scripts/compile_controlled.py (cbb8dcd to 89ccce5) and three generator audit files (0339400 to f6c8e9f). Rewriting it needs a force-push and cannot recall copies already fetched: an owner decision. So are a competing-interests statement and the co-author and Claude-Session lines of the commit messages.
 * `privacy:P6`: Deleting the third-party session data and other downloads kept outside the repository is an owner decision (listed in STATUS).
 * `privacy:P7`: Earlier commits, already pushed, still hold the long-quote versions (owner decision on history; see P1).
 * `reproducibility:R1`: The verifier specs' generation fields are still unfilled and not linked to the exported prompts. Agent transcripts and the D17 proposals.json are not published, so third parties cannot re-check the generator audits or the CS-01 contract rebuild; the paper now says so.
@@ -468,7 +473,7 @@ Docker proofs reproduced.
 * **Skeptics:** 1 of 2 finished refuted; third not finished
 * **Disposition:** partly fixed. c830977 removed the material and the mapping from the research note and the brief. Both now rely on the public essay, and use the homepage and sitemap only to check that no other essay exists. c830977 also redacted the exported research prompt, and c37b941 (a commit after the four listed) moved the owner-specific redaction rules out of the repository. A grep of tracked files at HEAD finds no remaining markers.
 * **Evidence:** `docs/research/notes/sfdata.md:4-7`; `docs/research/notes/sfdata.md:15-19`; `docs/research_brief.md:34`; `scripts/export_prompts.py:11-16`; `scripts/export_prompts.py:43-54`; `STATUS.md:122-126`; `paper/main.tex:19`; commit c830977; commit c37b941
-* **Remaining:** Git history, already pushed, still holds material removed from the working tree: the earlier research notes; the unredacted research prompt (8c13e0c); redaction rules in scripts/export_prompts.py that spell out the owner's context, one of them built from part of the build session's id (c830977 to 74f6c73); hashes now withheld (original-script hashes in the prompt exports and one agent's original-prompt hash, 8c13e0c to c37b941); and the build session's id, mostly as part of its scratchpad path, in seven research notes (2a81036 to f6c8e9f), scripts/compile_controlled.py (cbb8dcd to 89ccce5) and three generator audit files (0339400 to f6c8e9f). Rewriting it needs a force-push and cannot recall copies already fetched: an owner decision. A competing-interests statement is also the owner's call.
+* **Remaining:** Git history, already pushed, still holds material removed from the working tree: the earlier research notes; the unredacted research prompt (8c13e0c); redaction rules in scripts/export_prompts.py that spell out the owner's context (8c13e0c to 74f6c73; the first version quotes the start of an owner message, and one rule in c830977 and 74f6c73 is built from part of the build session's id); a note about the owner's messages in five exported held-out workflow scripts (8c13e0c to feab025); hashes now withheld (original-script hashes in the prompt exports and one agent's original-prompt hash, 8c13e0c to c37b941, and the original hashes of prompts and scripts from which an owner-message note was removed, 8c13e0c to aa41b45); an earlier wording of one line of the ethics section (3d3024a to 787176e); and the build session's id, mostly as part of its scratchpad path, in seven research notes (2a81036 to f6c8e9f), scripts/compile_controlled.py (cbb8dcd to 89ccce5) and three generator audit files (0339400 to f6c8e9f). Rewriting it needs a force-push and cannot recall copies already fetched: an owner decision. So are a competing-interests statement and the co-author and Claude-Session lines of the commit messages.
 * **Builder note:** Checker correction accepted: the remote was already at 787176e, so this material is pushed. STATUS lists it as an owner decision.
 
 ### `privacy:P2` (high): Redistributed upstream MIT code lacked copyright and permission notices
@@ -835,7 +840,7 @@ Areas the critic found that no lens had checked, its findings, and what the buil
    **Disposition:** fixed: caption count (see PAPE-01)
 5. **Code comments and latent code paths not read by any lens: the unchanged parts of schemas.py, session loading in tasks.py, and the scripts/propose_labels.py docstring.** `src/tracecontract/schemas.py:400`: [low] The comment reads `reference_check = "reference_check"  # independent human-reviewed checks (label support only)`, and line 250 reads `reference = "reference"  # human-reviewed contract used for labels`.; `src/tracecontract/tasks.py:220`: [low] session_for_task reads every non-controlled population, natural included, from data/fixtures/transcripts, and hard-codes relpath as "data/controlled/transcripts/..." (line 222).; `scripts/propose_labels.py:14`: [low] The docstring says a candidate whose construction label is invalid becomes invalid when the reference checks fail on a targeted requirement "(or the regression check fails)".
    **Disposition:** fixed: schemas comments, tasks.py transcript path per population, propose_labels docstring
-6. **Body text of the five held-out workflow exports.** `experiments/prompts/workflows/tracecontract-heldout__wf_7cdea048-2be.js:19`: [low] This export, and line 19 of wf_2c429631-ebb, wf_5ef9efad-a4c, wf_b428f318-391 and wf_f01e3c8b-2f6, keeps the sentence "Their latest message asks for this work to continue; an earlier request to pause has been superseded, and their message about not accepting terms referred only to a Hugging F…
+6. **Body text of the five held-out workflow exports.** `experiments/prompts/workflows/tracecontract-heldout__wf_7cdea048-2be.js:19`: [low] This export, and line 19 of wf_2c429631-ebb, wf_5ef9efad-a4c, wf_b428f318-391 and wf_f01e3c8b-2f6, keeps the sentence [a note about the owner's earlier messages] Each header gives the original-script hash, meaning no owner-specific rule was applied.
    **Disposition:** fixed: the export's generic redaction rule covers the five held-out exports; re-exported
 7. **docs/research_brief.md outside the six passages changed after 787176e.** `docs/research_brief.md:712`: [low] Stale: "Per-call grading time for the repository's own grader is **not yet measured**." results/runs/pilot-v0.3.2/results.jsonl records wall_s for all 240 calls: median 2.2 s, maximum 42.4 s, 15.7 min in total.; `docs/research_brief.md:615`: [low] The brief says "Intended requirements are the independent ground truth for the reference contract", and its limitations list (line 624) says "One model family produced the sessions, contracts, verifiers, candidates and label proposals".; `docs/research_brief.md:815`: [low] Stale: "Protocol v0.3 was frozen before the final pilot run [DL D32]".
    **Disposition:** fixed: brief reports the measured timings, drops 'independent' and states the protocol versions
@@ -844,4 +849,53 @@ Areas the critic found that no lens had checked, its findings, and what the buil
 9. **Verifier test files and B1 artefacts against specs and graded results.** No problem found.
    **Disposition:** no problem found
 10. **Regenerated records, privacy beyond HEAD, bibliography provenance, and the statistical routines.** No problem found.
+   **Disposition:** no problem found
+
+## Final verification
+
+Verified: the second agent's verdict (yes = the finding is real). Disposition: what the builder did.
+
+| ID | Lens | Severity | Where | Finding | Verified | Disposition |
+| --- | --- | --- | --- | --- | --- | --- |
+| `REC-01` | records | medium | `scripts/strict_reaudit.py:213` | The strict re-audit silently drops any read or search aimed at the shared scratch directory itself. | yes | fixed: scripts/strict_reaudit.py lists every access to the scratch directory itself and attributes recursive reads by the listing rule; regression test; re-run on all 21 transcripts (D46) |
+| `REC-02` | records | medium | `docs/data_card.md:52` | D45 retracts exactly this claim. | yes | fixed: the paper and the data card say that only the flagged accesses were assessed by reading the transcripts (D46) |
+| `REC-03` | records | low | `docs/internal_review.md:838` | This is a privacy issue in how the redaction was applied; the content itself is low-sensitivity operational instructions. | yes | fixed: this document no longer quotes the note; STATUS and privacy:P1 list it among the material in pushed history |
+| `REC-04` | records | low | `docs/decision_log.md:912` | Under the re-audit's own rule, the third reviewer's read of run_all.py is a read of forbidden material: it is a file another agent wrote in the scratch directory. | yes | fixed: README, STATUS, the data card and the paper say no read of candidate, verifier or sealed material and name the read of another agent's file; D46 corrects D44 and protocol v0.6 section 14 |
+| `REC-05` | records | low | `docs/decision_log.md:985` | D44 was committed in 84e0ec3. | yes | fixed: D46 corrects D44 (the export marks the seventh stopped agent from aa41b45) |
+| `REC-06` | records | low | `docs/decision_log.md:1045` | The exported workflow uses one worktree for all six batches. | yes | fixed: D46 corrects D45 (one shared worktree, disjoint files) |
+| `REC-07` | records | low | `docs/decision_log.md:1022` | fe5cc50 also added a row to the reliability table, for pilot-v0.3.2 as an earlier run. | yes | fixed: D46 corrects D45 (the reliability table gained a row, the ledger two entries) |
+| `PT-01` | consistency | medium | `paper/sections/protocol.tex:21` | The paper and the data card still say that every assessment of the strict re-audit came from reading the transcript, tool outputs included. | yes | fixed: as REC-02 |
+| `PT-02` | consistency | low | `README.md:311` | The summary of the strict re-audit contradicts itself. | yes | fixed: as REC-04 |
+| `PT-03` | consistency | low | `docs/research_brief.md:1048` | The brief's sources table is stale after the final run. | yes | fixed: the brief's source row runs to D46 |
+| `PT-04` | consistency | low | `paper/sections/method.tex:51` | The defect count is now inconsistent. | yes | fixed: method.tex calls the timeout defect a further one |
+| `PT-05` | consistency | low | `scripts/write_review_queue.py:4` | This docstring is stale and contradicts the blinded human-label procedure. | yes | fixed: the script's docstring says reviewers open the queue only after their labels are merged |
+| `RC-1` | code | medium | `docs/decision_log.md:912` | The list of name-only listings in D44 (and the same list in protocol v0.6 §14, lines 295-301) is incomplete. | yes | fixed: git listings count as recursive listings; the two git status listings are in the CS-02 record, D46 and the disclosures |
+| `RC-2` | code | medium | `src/tracecontract/controlled.py:218` | audit_generator_transcript_strict is described as 'A stricter re-audit', but its parser misses forbidden reads in common shell forms. | yes | fixed: the strict audit splits only at unquoted operators, follows subshells, assignments, wrappers and command substitutions, checks every find root and long recursive options, scans every literal path in a tool input and applies the first audit's rule; 26 shell forms tested; re-run (D46) |
+| `RC-3` | code | medium | `src/tracecontract/review.py:280` | merge_labels checks a note only on ambiguous labels, and never on contract reviews. | yes | fixed: merge checks every field's type before writing anything, also in a dry run, and writes all records or none; test |
+| `RC-4` | code | medium | `src/tracecontract/schemas.py:386` | Unresolved reviewer disagreements can still be decided by one reviewer. | yes | fixed: a difference in violated requirements is a disagreement; proposed_label() returns only proposals; the report shows 'needs adjudication'; test |
+| `RC-5` | code | medium | `scripts/export_prompts.py:80` | This is a privacy weakness that lets anyone confirm a guess of removed text. | yes | fixed: removing a note about the owner's messages withholds the original's hash; re-exported; STATUS lists the hashes already pushed |
+| `RC-6` | code | medium | `src/tracecontract/sandbox/harness/tc_sandbox.py:100` | After _tc_trust(), the wrapper still calls methods the candidate defines: __repr__ (via json.dumps(default=repr)), __str__ (via str(e)) and module __dir__ (via Python 3.12 traceback suggestions). | yes | disclosed: no check in the pool is affected (all 24,880 check results equal those under 0.3.2); the paper's limitations, D46 and the harness comment describe it; a fix is left to the next harness version |
+| `RC-7` | code | low | `scripts/scan_tracked_files.py:1` | The pre-push scan checks only blob contents. | yes | fixed: the scan also covers file paths, commit messages, author fields, tags and the branch name |
+| `RC-8` | code | low | `scripts/strict_reaudit.py:228` | This is an attribution error. | yes | fixed: recursive reads are attributed by the listing rule; test |
+| `RC-9` | code | low | `src/tracecontract/review.py:120` | The keys of label_template.json's 'labels' come out in rng.shuffle order, applied to groups taken in sorted candidate-id order. | yes | fixed: packet folders and template entries follow the random ids; test |
+| `RA1` | audit records | medium | `paper/sections/protocol.tex:21` | The paper, and docs/data_card.md:52-54 ('The re-audit's assessments ... | yes | fixed: as REC-02 |
+| `RA2` | audit records | medium | `scripts/strict_reaudit.py:213` | The script silently discards every non-listing access whose resolved path is the scratch root. | yes | fixed: as REC-01 |
+| `RA3` | audit records | low | `tasks/CS-01/labels/generator_audit.json:65` | The line number is wrong. | yes | fixed: the CS-01 eval-alt-2 assessment names the writing call (transcript line 60) |
+| `RA4` | audit records | low | `src/tracecontract/controlled.py:280` | The path parser behind the strict audit has undisclosed blind spots. | yes | fixed: see RC-2; the CS-03 eval-nm assessment names the subshell as the cause |
+| `RA5` | audit records | low | `docs/decision_log.md:903` | D44, and the data card's exception list (docs/data_card.md:72-75), understate the held-out material in the shared scratch directory. | yes | fixed: the data card and D46 list the further material in the scratch directory; no audited agent opened it |
+| `RA6` | audit records | low | `docs/decision_log.md:922` | The runner is 16 lines long, so 'head -50' showed the whole file. | yes | fixed: the texts and the CS-02 record say the reviewer read the whole 16-line runner |
+
+### Completeness critic of the final verification
+
+Areas the critic found that no lens had checked, its findings, and what the builder did.
+
+1. **Pushed-history disclosure.** `STATUS.md:180`: [medium, privacy disclosure] Quote (STATUS.md:180-182): "redaction rules in `scripts/export_prompts.py` that spell out the owner's context, one of them built from part of the build session's id (commits `c830977` to `74f6c73`)".; `docs/decision_log.md:968`: [low] Quote: "whole history: 99 findings, all in already-disclosed history (STATUS lists the commits)." The count reproduces, but 4 of the 99 match no item in STATUS.md:178-189: - paper/sections/ethics.tex line 8, in three versions: blobs 2918ebd848, 7c7d45448b and eb0b6ae81b, in commits 3d3024a to…; `STATUS.md:175`: [low] The list introduces itself as the material "that has since been removed from the working tree".
+   **Disposition:** fixed: STATUS, the data card and privacy:P1 give the corrected ranges and the owner-message note; D46 breaks down the 99 history findings
+2. **Privacy of what the range published beyond the files at HEAD: commit metadata, the new prompt exports and the new result files** `scripts/scan_tracked_files.py:1`: [low, privacy] Docstring: "Scan what a push would publish for credentials, session-local paths and e-mail addresses." The scan reads only file blobs: working_tree(), and pushed_blobs() via git rev-list --objects and git cat-file blob.
+   **Disposition:** fixed: the scan covers commit messages and author fields; the data card and STATUS name the commit trailer as an owner decision
+3. **The text-correction workflow record (wf_d90a88d4-3c3) and its reviewers' unresolved notes, against D45 and HEAD** `paper/sections/method.tex:51`: [low] Line 46 now reads "Four harness defects surfaced during the pilot and its reviews (decision log D29--D31, D36, D40), and a later verification found one more (D44, below)".; `docs/decision_log.md:1045`: [low] Quote: "For each batch, one agent edited a separate git worktree." This reads as one worktree per batch, which is not what happened: - The run record has a single args.worktree for all six groups. - The exported script gives every editor the same path ('WORKTREE (edit here only): ${W}', exper…
+   **Disposition:** fixed: see PT-04 and REC-06
+4. **Derived final-run outputs that no lens regenerated, and record cross-checks** No problem found.
+   **Disposition:** no problem found
+5. **Claims the lenses called unverifiable, checked against the workflow run records and the build-session transcript (both outside the repository)** No problem found.
    **Disposition:** no problem found

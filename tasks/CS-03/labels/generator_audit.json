@@ -28,14 +28,28 @@
               "path": "/home/user/trace-contract/tasks/CS-03/verifiers",
               "why": "inside forbidden material",
               "text": "ls tasks/CS-03/verifiers/ 2>/dev/null"
+            },
+            {
+              "event_id": "<session>/L000042.00",
+              "tool": "Bash",
+              "path": "/home/user/trace-contract",
+              "why": "recursive search over forbidden material",
+              "text": "git status --short"
+            },
+            {
+              "event_id": "<session>/L000089.00",
+              "tool": "Bash",
+              "path": "/home/user/trace-contract",
+              "why": "recursive search over forbidden material",
+              "text": "git status --short"
             }
           ],
-          "scratch_root_listings": [],
+          "scratch_root_accesses": [],
           "scratch_reads_not_attributed_to_the_agent": [],
           "scratch_reads_of_own_files": 4
         }
       },
-      "assessment": "one `ls tasks/CS-03/verifiers/` (directory names), already assessed in the first audit; no scratch read of another agent's file"
+      "assessment": "one `ls tasks/CS-03/verifiers/` (directory names), already assessed in the first audit; two `git status --short` at the repository root (lines 42 and 89): the first printed nothing, the second named files of other tasks (CS-04's near-miss candidate files among them) and CS-03's own reference-check directory, but no CS-03 candidate; no scratch read of another agent's file"
     }
   },
   "eval-alt-2": {
@@ -49,7 +63,7 @@
           "own_workspace": "/home/user/gen_workspaces/CS-03/eval-alt-2",
           "extra_allowed": [],
           "hits": [],
-          "scratch_root_listings": [],
+          "scratch_root_accesses": [],
           "scratch_reads_not_attributed_to_the_agent": [],
           "scratch_reads_of_own_files": 8
         }
@@ -68,9 +82,9 @@
           "own_workspace": "/home/user/gen_workspaces/CS-03/eval-alt-1",
           "extra_allowed": [],
           "hits": [],
-          "scratch_root_listings": [],
+          "scratch_root_accesses": [],
           "scratch_reads_not_attributed_to_the_agent": [],
-          "scratch_reads_of_own_files": 8
+          "scratch_reads_of_own_files": 10
         }
       },
       "assessment": "no hit; all scratch accesses are to its own difftest and basecheck folders"
@@ -86,21 +100,13 @@
           "agent": "a82712b36de9defd4",
           "own_workspace": "/home/user/gen_workspaces/CS-03/eval-nm",
           "extra_allowed": [],
-          "hits": [
-            {
-              "event_id": "<session>/L000048.00",
-              "tool": "Bash",
-              "path": "/home/user/gen_workspaces/CS-03/reference.diff",
-              "why": "inside forbidden material",
-              "text": "git apply ../reference.diff"
-            }
-          ],
-          "scratch_root_listings": [],
+          "hits": [],
+          "scratch_root_accesses": [],
           "scratch_reads_not_attributed_to_the_agent": [],
-          "scratch_reads_of_own_files": 28
+          "scratch_reads_of_own_files": 19
         }
       },
-      "assessment": "false positive: `git apply ../reference.diff` runs inside `(cd nm$k && ...)`, so the file is eval-nm/reference.diff in its own workspace (the parser does not follow a cd to a directory named with a variable); all scratch accesses are to files it wrote"
+      "assessment": "no hit; the earlier flag on `git apply ../reference.diff` came from a subshell `(cd nm$k && ...)`, which the parser now follows: the file is eval-nm/reference.diff in its own workspace; all scratch accesses are to files it wrote"
     }
   },
   "_rules": {
@@ -124,6 +130,6 @@
     ],
     "scope": "tool inputs only (commands and file paths an agent passed to its tools); tool outputs are not inspected (decision log D37)",
     "script": "scripts/audit_eval_generators.py",
-    "strict_reaudit": "2026-11-18, decision log D44: scripts/strict_reaudit.py resolves paths (shell segments, cd, variables set in the same command, find -prune) instead of matching substrings, adds the build session's shared scratch directory to the forbidden material, and classifies each read of that directory by the agent that wrote the file last; tool outputs are not inspected by the script; the accesses it flags were assessed by reading the transcript, tool outputs included, and the other assessments restate the script's classification"
+    "strict_reaudit": "2026-11-18, decision log D44 and D46: scripts/strict_reaudit.py resolves paths instead of matching substrings, also applies the first audit's substring rule and a scan of every literal path in the tool inputs (heredoc bodies and inline code included), adds the build session's shared scratch directory to the forbidden material, classifies each access to that directory by the agent that wrote the file last, and lists every access to the directory itself; tool outputs are not inspected by the script; the accesses it flags were assessed by reading the transcript, tool outputs included (for a file without a recorded writer, by finding the writing call in the agent's tool inputs), and the other assessments restate the script's classification"
   }
 }

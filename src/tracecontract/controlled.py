@@ -215,90 +215,198 @@ def audit_generator_transcript(path: Path, *, forbidden: tuple[str, ...], allowe
                     hits.append({"event_id": ev.event_id, "tool": ev.tool_name, "match": bad, "text": f[:300]})
     return hits
 
-_SEGMENT = re.compile(r"&&|\|\||;|\||\n")
 _HEREDOC = re.compile(r"<<-?\s*['\"]?([A-Za-z_][A-Za-z0-9_]*)['\"]?")
-# Shell commands whose arguments are paths (read, list, search, copy or apply).
+# Shell commands whose arguments are paths (read, list, search, copy, archive or apply).
 _PATH_CMDS = {"cat", "head", "tail", "less", "more", "sed", "awk", "grep", "egrep", "fgrep", "rg", "find", "ls", "tree", "du",
-              "cp", "mv", "diff", "wc", "file", "stat", "python", "python3", "bash", "sh", "source", "git", "patch", "tar",
-              "zcat", "xxd", "od", "strings", "nl", "sort", "uniq", "cut", "jq", "realpath", "readlink"}
+              "cp", "mv", "diff", "wc", "file", "stat", "python", "python3", "bash", "sh", "source", ".", "git", "patch", "tar",
+              "zcat", "xxd", "od", "strings", "nl", "sort", "uniq", "cut", "jq", "realpath", "readlink", "rsync", "base64",
+              "zip", "unzip", "gzip", "gunzip", "md5sum", "sha256sum", "sha1sum", "cmp", "comm", "paste", "tac", "hexdump",
+              "iconv", "perl", "node", "ruby", "tr", "column", "fold", "rev", "split", "shuf", "look"}
 _SEARCHERS = {"grep", "egrep", "fgrep", "rg"}
+_KEYWORDS = {"do", "then", "else", "elif", "if", "while", "until", "!", "{", "(", "time", "done", "fi"}
+_WRAPPERS = {"env", "timeout", "sudo", "nice", "nohup", "stdbuf", "command", "exec", "xargs", "builtin", "ionice"}
+_GIT_LISTING = {"status", "ls-files", "ls-tree", "grep", "diff", "show", "blame", "archive", "stash", "log", "whatchanged"}
+_EXCLUSION_ARG = re.compile(r"(?:-i?path|-wholename|--exclude(?:-dir)?|--ignore(?:-dir)?)(?:=|\s+)\S+")
+_LITERAL_PATH = re.compile(r"(?<![\w$}{])(?:~|\.\.?)?/?(?:[\w.@%+=,-]+/)+[\w.@%+=,*?-]*")
 
 
-def _shell_segments(cmd: str) -> list[str]:
-    """Command segments of a shell command line, without the bodies of heredocs."""
+def _strip_heredocs(cmd: str) -> str:
+    """The command text with heredoc bodies removed (they are data, or code fed to an interpreter)."""
     out, lines, i = [], cmd.split("\n"), 0
     while i < len(lines):
-        line = lines[i]
-        m = _HEREDOC.search(line)
-        out += [x.strip() for x in _SEGMENT.split(line) if x.strip()]
-        if m:  # skip the heredoc body up to its delimiter
+        out.append(lines[i])
+        m = _HEREDOC.search(lines[i])
+        if m:
             i += 1
             while i < len(lines) and lines[i].strip() != m.group(1):
                 i += 1
         i += 1
-    return out
+    return "\n".join(out)
+
+
+def _split_unquoted(text: str) -> list[str]:
+    """Split at unquoted ``&&``, ``||``, ``;``, ``|``, ``&``, newlines, ``$(`` and backticks."""
+    segs, cur, i, q = [], [], 0, None
+    while i < len(text):
+        c = text[i]
+        if q:
+            cur.append(c)
+            if c == "\\" and q == '"' and i + 1 < len(text):
+                cur.append(text[i + 1])
+                i += 2
+                continue
+            if c == q:
+                q = None
+            i += 1
+            continue
+        if c == "\\" and i + 1 < len(text):
+            cur += [c, text[i + 1]]
+            i += 2
+            continue
+        if c in "'\"":
+            q = c
+            cur.append(c)
+            i += 1
+            continue
+        if text[i:i + 2] in ("&&", "||", "$("):
+            segs.append("".join(cur))
+            cur = []
+            i += 2
+            continue
+        if c in ";|&\n`":
+            segs.append("".join(cur))
+            cur = []
+            i += 1
+            continue
+        cur.append(c)
+        i += 1
+    segs.append("".join(cur))
+    return [x.strip() for x in segs if x.strip()]
+
+
+def _shell_segments(cmd: str) -> list[str]:
+    """Command segments of a shell command line, without the bodies of heredocs."""
+    return _split_unquoted(_strip_heredocs(cmd))
 
 
 _ASSIGN = re.compile(r"^(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)=(.*)$", re.S)
 _VAR = re.compile(r"\$\{([A-Za-z_][A-Za-z0-9_]*)\}|\$([A-Za-z_][A-Za-z0-9_]*)")
 
 
+def _command_words(seg: str, env: dict) -> list[str]:
+    """The words of one segment, without leading keywords, assignments (recorded in ``env``) and wrappers."""
+    import os
+    import shlex
+
+    seg = seg.strip().lstrip("({").rstrip(")}").strip()
+    try:
+        toks = shlex.split(seg, comments=False, posix=True)
+    except ValueError:
+        toks = seg.split()
+    while toks and toks[0] in _KEYWORDS:
+        toks = toks[1:]
+    if toks and toks[0] in ("export", "declare", "local", "readonly", "typeset"):
+        toks = [t for t in toks[1:] if not t.startswith("-")]
+    while toks and _ASSIGN.match(toks[0]):
+        m = _ASSIGN.match(toks[0])
+        env[m.group(1)] = _VAR.sub(lambda v: env.get(v.group(1) or v.group(2), v.group(0)), m.group(2))
+        toks = toks[1:]
+    while toks and os.path.basename(toks[0]) in _WRAPPERS:
+        w, toks = os.path.basename(toks[0]), toks[1:]
+        while toks and (toks[0].startswith("-") or (w == "env" and "=" in toks[0])):
+            toks = toks[1:]
+        if w == "timeout" and toks:
+            toks = toks[1:]  # the duration
+    return [_VAR.sub(lambda v: env.get(v.group(1) or v.group(2), v.group(0)), t) for t in toks]
+
+
 def _scan_command(cmd: str, start: str, norm) -> tuple[list, list, str]:
     """Paths that one shell command reads, lists or searches, for the strict audit.
 
     Returns ``(checks, unresolved, end_cwd)``: ``checks`` holds ``(path, recursive, text,
-    pruned)`` tuples, ``unresolved`` the ``(token, text)`` roots of recursive searches that
-    still hold a variable after the command's own assignments are substituted, and
-    ``end_cwd`` the directory the command ends in.
+    pruned)`` tuples, ``unresolved`` the ``(token, text, directory)`` roots of recursive
+    searches that still hold a variable after the command's own assignments are
+    substituted (with the directory of the literal part before the variable), and
+    ``end_cwd`` the directory the command ends in. A ``cd`` inside ``( ... )`` lasts until
+    the closing parenthesis.
     """
     import os
-    import shlex
 
-    cwd, env, checks, unresolved = start, {}, [], []
+    state = {"cwd": start}
+    env: dict = {}
+    checks: list = []
+    unresolved: list = []
+    stack: list = []
 
-    def expand(t: str) -> str:
-        return _VAR.sub(lambda m: env.get(m.group(1) or m.group(2), m.group(0)), t)
+    def add(tok: str, recursive: bool, seg: str, pruned=()) -> None:
+        if "$" in tok:
+            if recursive:  # with the directory of the literal part before the variable
+                head = tok.split("$", 1)[0]
+                unresolved.append((tok, seg[:300], norm(os.path.dirname(head) or ".", state["cwd"])))
+            return
+        checks.append((norm(tok, state["cwd"]), recursive, seg[:300], pruned))
 
-    for seg in _shell_segments(cmd):
-        if "tracecontract add-candidate" in seg:
-            continue
-        m = _ASSIGN.match(seg)
-        if m:
-            try:
-                val = shlex.split(m.group(2), posix=True)
-            except ValueError:
-                val = m.group(2).split()
-            env[m.group(1)] = expand(val[0]) if len(val) == 1 else m.group(2)
-            continue
-        try:
-            toks = shlex.split(seg, comments=False, posix=True)
-        except ValueError:
-            toks = seg.split()
-        toks = [expand(t) for t in toks]
+    def process(seg: str) -> None:
+        cwd = state["cwd"]
+        toks = _command_words(seg, env)
         if not toks:
-            continue
+            return
         name = os.path.basename(toks[0])
+        if name == "tracecontract" and len(toks) > 1 and toks[1] == "add-candidate":
+            return  # the registration command writes the agent's own candidate
         if name == "cd":
             if len(toks) > 1 and "$" not in toks[1]:
-                cwd = norm(toks[1], cwd)
-                checks.append((cwd, False, seg[:300], ()))
-            continue
+                state["cwd"] = norm(toks[1], cwd)
+                checks.append((state["cwd"], False, seg[:300], ()))
+            return
+        if name == "for":
+            for t in toks[3:] if len(toks) > 3 and toks[2] == "in" else []:
+                add(t, False, seg)
+            return
         if name not in _PATH_CMDS:
-            continue
+            return
+        opts = [t for t in toks[1:] if t.startswith("-")]
         args = [t for t in toks[1:] if not t.startswith("-")]
-        recursive = name in ("find", "tree", "du", "rg") or (name in _SEARCHERS and any(
-            t.startswith("-") and not t.startswith("--") and ("r" in t or "R" in t) for t in toks[1:])) or (
-            name == "ls" and any(t.startswith("-") and "R" in t for t in toks[1:]))
+        short = "".join(t[1:] for t in opts if not t.startswith("--"))
+        recursive = (name in ("find", "tree", "du", "rg", "rsync", "tar", "zip")
+                     or (name in _SEARCHERS and ("r" in short or "R" in short or "--recursive" in opts
+                                                 or "--dereference-recursive" in opts))
+                     or (name == "ls" and ("R" in short or "--recursive" in opts))
+                     or (name == "cp" and ("r" in short or "R" in short or "a" in short or "--recursive" in opts
+                                           or "--archive" in opts))
+                     or (name == "diff" and ("r" in short or "--recursive" in opts)))
         if name == "find":
-            roots = [args[0]] if args and not args[0].startswith(("(", "!")) else ["."]
+            roots = []
+            for t in toks[1:]:
+                if t.startswith(("-", "(", "!", ")", ",")):
+                    break
+                roots.append(t)
             pruned = tuple(norm(toks[i + 1], cwd) for i, t in enumerate(toks[:-1]) if t == "-path" and i + 2 < len(toks)
                            and "-prune" in toks[i + 2:i + 4])
-            for r in roots:
-                if "$" in r:
-                    unresolved.append((r, seg[:300]))
+            for r in roots or ["."]:
+                add(r, True, seg, pruned)
+            return
+        if name == "git":
+            rest, gcwd = toks[1:], cwd
+            while rest and rest[0].startswith("-"):
+                if rest[0] == "-C" and len(rest) > 1:
+                    gcwd = norm(rest[1], cwd)
+                    rest = rest[2:]
                 else:
-                    checks.append((norm(r, cwd), True, seg[:300], pruned))
-            continue
+                    rest = rest[1:]
+            if not rest or rest[0] not in _GIT_LISTING:
+                return
+            sub, rest = rest[0], rest[1:]
+            if "--" in rest:
+                specs = list(rest[rest.index("--") + 1:])
+            else:
+                specs = [t for t in rest if not t.startswith("-") and ("/" in t or "." in t)]
+            specs = [t.split(":", 1)[1] if ":" in t and sub == "show" else t for t in specs]
+            if sub == "log" and not any(o in rest for o in ("-p", "--patch", "--stat", "--name-only", "--name-status")):
+                return  # commit subjects only
+            for t in specs or ["."]:
+                checks.append((norm(t or ".", gcwd), True, seg[:300], ()))
+            return
         if name in _SEARCHERS:
             paths = args[1:]  # the first non-option argument is the pattern
             if recursive and not paths:
@@ -306,37 +414,54 @@ def _scan_command(cmd: str, start: str, norm) -> tuple[list, list, str]:
         else:
             paths = args
         for t in paths:
-            if "$" in t:
-                if recursive:
-                    unresolved.append((t, seg[:300]))
-                continue
-            if name in ("python", "python3", "bash", "sh", "git") and "/" not in t:
-                continue  # module names, subcommands and the like
-            checks.append((norm(t, cwd), recursive, seg[:300], ()))
-    return checks, unresolved, cwd
+            if name in ("python", "python3", "bash", "sh", "perl", "node", "ruby") and "/" not in t:
+                continue  # module names, inline code and the like
+            add(t, recursive, seg)
+
+    for seg in _shell_segments(cmd):
+        raw = seg.strip()
+        if raw.startswith("("):
+            stack.append(state["cwd"])
+        process(raw)
+        if raw.endswith(")") and stack:
+            state["cwd"] = stack.pop()
+    return checks, unresolved, state["cwd"]
 
 
 def audit_generator_transcript_strict(path: Path, *, task: str, own: str, extra_allowed: tuple[str, ...] = (),
                                       extra_forbidden: tuple[str, ...] = (), repo_root: str = "/home/user/trace-contract",
                                       home: str = "/home/user") -> list[dict]:
-    """A stricter re-audit of a generator transcript's tool inputs (decision log D44).
+    """A stricter re-audit of a generator transcript's tool inputs (decision log D44, D46).
 
-    Unlike :func:`audit_generator_transcript`, which matches substrings, it resolves paths.
-    Shell commands are split at ``&&``, ``||``, ``;``, ``|`` and newlines (heredoc bodies are
-    data and skipped); variables assigned earlier in the same command are substituted;
-    ``cd`` is followed within a command; and relative paths are resolved against the
-    repository root, where every Bash call of a subagent starts, and also against the
-    directory the previous call ended in (a conservative extra). A hit is a path inside
-    forbidden material (the task's verifiers or candidates, ``results/``, ``data/``,
-    ``docs/``, the task's other workspaces, sealed material, ``/root`` except tool
-    binaries), a recursive search or listing (``grep -r``, ``rg``, ``find``, ``ls -R``,
-    ``tree``, ``du``, the Grep and Glob tools) whose root contains forbidden material that
-    it does not prune, or a recursive search whose root still holds a variable. Only the
-    ``add-candidate`` segment of a command is exempt. ``extra_allowed`` names directories a
-    role was asked to write (the reference-check directory for its writer);
-    ``extra_forbidden`` adds session-local directories, such as the builder's scratch
-    directory, whose path must not be written into the repository. Tool outputs are not
-    inspected, and a hit is a lead for a manual reading, not a finding.
+    It combines three checks, so that it flags at least what the first audit flags:
+
+    * **Resolved commands.** Shell commands are split at unquoted ``&&``, ``||``, ``;``,
+      ``|``, ``&``, newlines, ``$(`` and backticks, with heredoc bodies set aside. Leading
+      keywords (``do``, ``then``, ``(``), assignments (``VAR=x cmd``) and wrappers (``env``,
+      ``timeout``, ``xargs``, ``sudo``) are removed; variables assigned earlier in the same
+      command are substituted; ``cd`` is followed, within ``( ... )`` only until the closing
+      parenthesis; relative paths are resolved against the repository root, where every
+      Bash call of a subagent starts, and also against the directory the previous call
+      ended in (a conservative extra). Reads of a path inside forbidden material are
+      flagged, and so are recursive searches, listings, copies and archives (``grep -r``,
+      ``--recursive``, ``rg``, every ``find`` root, ``ls -R``, ``tree``, ``du``, ``cp -r``,
+      ``rsync``, ``tar``, ``diff -r``, the Grep and Glob tools, and git listings such as
+      ``git status``, ``git diff`` or ``git show REV:path``) whose root contains forbidden
+      material that they do not prune, and recursive searches whose root still holds a
+      variable.
+    * **Literal paths.** Every path-like token anywhere in the tool input (heredoc bodies,
+      inline code, quoted arguments, search patterns) is resolved and flagged if it lies in
+      forbidden material, except the arguments of exclusion options (``-path``,
+      ``--exclude``) and of the command that registers the agent's own candidate. A held-out
+      candidate id named in another CLI command is flagged too.
+    * **The first audit's substring rule** (:func:`audit_generator_transcript`).
+
+    Forbidden material: the task's verifiers or candidates, ``results/``, ``data/``,
+    ``docs/``, the task's other workspaces, sealed material, ``/root`` except tool binaries,
+    and ``extra_forbidden`` (session-local directories, such as the builder's scratch
+    directory, whose path must not be written into the repository). ``extra_allowed`` names
+    directories a role was asked to write (the reference-check directory for its writer).
+    Tool outputs are not inspected, and a hit is a lead for a manual reading, not a finding.
     """
     import os
 
@@ -389,14 +514,76 @@ def audit_generator_transcript_strict(path: Path, *, task: str, own: str, extra_
             # extra, relative paths are also resolved from the directory an earlier call ended
             # in, in case a working directory carried over between calls.
             c1, u1, end = _scan_command(cmd, repo_root, norm)
-            c2, u2, carried = _scan_command(cmd, carried, norm) if carried != repo_root else ([], [], end)
+            c2, u2, carried_next = _scan_command(cmd, carried, norm) if carried != repo_root else ([], [], end)
             checks += c1 + c2
-            for tok, text in dict.fromkeys(u1 + u2):
-                hits.append({"event_id": ev.event_id, "tool": ev.tool_name, "path": tok, "why": "search rooted at an unresolved variable", "text": text})
+            for tok, text, head in dict.fromkeys(u1 + u2):
+                # Only if the directory before the variable holds forbidden material (a variable
+                # with ".." in its value is not considered).
+                if classify(head, True):
+                    hits.append({"event_id": ev.event_id, "tool": ev.tool_name, "path": tok,
+                                 "why": "search rooted at an unresolved variable", "text": text})
+        # Literal paths anywhere in the tool input (heredoc bodies, inline code, quoted
+        # arguments, search patterns), resolved but not followed: a fail-safe for what the
+        # command parser cannot see.
+        def registers(seg: str) -> bool:
+            w = _command_words(seg, {})
+            return bool(w) and os.path.basename(w[0]) == "tracecontract" and w[1:2] == ["add-candidate"]
+
+        texts = [str(ti[k]) for k in ("file_path", "path", "pattern", "notebook_path", "glob") if ti.get(k)]
+        if cmd:  # every segment, heredoc bodies included, except the registration of the agent's own candidate
+            body = "\n".join(seg for seg in _split_unquoted(cmd) if not registers(seg))
+            # A path given to an exclusion option names what the command avoids (find -path ... -prune).
+            texts.append(_EXCLUSION_ARG.sub(" ", body))
+        # Directories the command may run in: the start, the carried one and every cd target.
+        bases = [repo_root, carried]
+        for seg in _shell_segments(cmd) if cmd else []:
+            w = _command_words(seg, {})
+            if w and w[0] == "cd" and len(w) > 1 and "$" not in w[1]:
+                bases.append(norm(w[1], bases[-1]))
+        bases = list(dict.fromkeys(bases))
+        literal = []
+        for text in texts:
+            for m in _LITERAL_PATH.finditer(text):
+                tok = m.group(0).rstrip(".,:;")
+                ctx = text[max(0, m.start() - 80): m.end() + 80]
+                if tok.startswith(("/", "~")):
+                    literal.append((norm(tok, repo_root), ctx))
+                else:
+                    # A relative path counts only if it lands in forbidden material from every
+                    # directory the command may run in.
+                    resolved = [norm(tok, b) for b in bases]
+                    if all(classify(r, False) for r in resolved):
+                        literal.append((resolved[0], ctx))
+        if cmd:
+            carried = carried_next
         seen = set()
         for p, rec, text, pruned in checks:
             why = classify(p, rec, pruned)
             if why and (p, why) not in seen:
                 seen.add((p, why))
                 hits.append({"event_id": ev.event_id, "tool": ev.tool_name, "path": p, "why": why, "text": text})
+        for p, text in literal:
+            why = classify(p, False)
+            if why and not any(h["event_id"] == ev.event_id and h["path"] == p for h in hits):
+                hits.append({"event_id": ev.event_id, "tool": ev.tool_name, "path": p, "why": "path named in the tool input: " + why,
+                             "text": text})
+        # A held-out candidate named in a CLI command other than the registration of the agent's own candidate.
+        for seg in _shell_segments(cmd) if cmd else []:
+            words = _command_words(seg, {})
+            if words and os.path.basename(words[0]) == "tracecontract" and words[1:2] != ["add-candidate"]:
+                for w in words[1:]:
+                    if re.fullmatch(rf"{re.escape(task)}-(?:eval-[\w-]+|pre-correction)", w):
+                        hits.append({"event_id": ev.event_id, "tool": ev.tool_name, "path": w,
+                                     "why": "held-out candidate named in a CLI command", "text": seg[:300]})
+    # The first audit's substring rule, so that this audit flags everything that one does.
+    v1 = audit_generator_transcript(path, forbidden=(f"tasks/{task}/verifiers", f"tasks/{task}/candidates", "trace-contract/results",
+                                                     "trace-contract/data", "trace-contract/docs", "cs_workspaces",
+                                                     f"gen_workspaces/{task}/", ".tc_sealed", "scratchpad/sealed",
+                                                     "scratchpad/scenarios", "scratchpad/reference", "/root/"),
+                                    allowed=(own.rstrip("/") + "/", own, "/root/.local/bin/",
+                                             *extra_allowed, *[os.path.relpath(x, repo_root) for x in extra_allowed]))
+    for h in v1:
+        if not any(x["event_id"] == h["event_id"] for x in hits):
+            hits.append({"event_id": h["event_id"], "tool": h["tool"], "path": h["match"], "why": "substring match (first audit's rule)",
+                         "text": h["text"]})
     return hits

@@ -1094,3 +1094,124 @@ disagreements of two synthetic reviewers. It refused a reviewer named by a real 
   now says so; these files are not inputs of the analysis.
 
 **Tests.** After these changes, 76 tests pass (59 offline, 17 Docker).
+
+### D46. Final verification of round 3; hardened re-audit; corrections to D44 and D45
+**Verification (model agents, read-only; not human review).** Workflow
+`tracecontract-round3-verification` (run `wf_86ad51e6-055`, 2026-11-18, 19:47–21:46 UTC).
+It covered everything changed from `45c654c` to `aa41b45`. Four lenses (records;
+consistency of the public text; code; the re-audit records against the transcripts),
+one skeptic per lens and a critic. Result: 27 findings (11 medium, 16 low), all
+confirmed; the critic added 6 more. The dispositions are in `docs/internal_review.md`.
+
+**The stricter re-audit, hardened.** The verification showed that the D44 re-audit
+missed several shell forms and dropped accesses to the scratch directory itself:
+* the parser split at `|` and `;` inside quotes and treated `VAR=x cmd` as an
+  assignment;
+* it ignored subshells, loops, command substitutions, wrappers such as `env` or
+  `timeout`, every `find` root but the first, long recursive options and git listings;
+* it exempted any segment that contained the text `tracecontract add-candidate`;
+* `scripts/strict_reaudit.py` kept only listings of the scratch directory's top level,
+  dropped searches, reads and inline code given its path, and attributed recursive
+  reads inside it like single files.
+
+The strict audit now splits only at unquoted operators and follows those forms. It
+also applies the first audit's substring rule and flags every literal forbidden path
+named anywhere in a tool input, so it flags at least what the first audit flags. The
+script lists every access to the scratch directory itself and attributes recursive
+reads by the listing rule. `tests/test_generator_audit.py` covers 26 shell forms
+(20 to flag, 6 controls) and the attribution.
+
+**Re-run on all 21 transcripts** (records in the `strict_reaudit` blocks). New after
+reading the flagged calls, names only:
+* both fixers of CS-02's reference checks ran `git status --short` at the repository
+  root (09:25 and 09:52 UTC); the output named seven and two of CS-02's held-out
+  candidate files;
+* the `git status` of the CS-03 and CS-04 reference-check writers named no candidate of
+  their own task (the CS-03 writer's named CS-04's near-miss files);
+* the first CS-02 reviewer passed the scratch directory's path to its own scripts seven
+  times; they used only folders it had created.
+
+The other earlier flags stay as assessed. The CS-03 near-miss false positive came from a
+subshell, which the parser now follows. The CS-01 alternative-2 record now names the
+call that wrote `base_grid.json`.
+
+Result: no read of candidate, verifier or sealed material. The one read of another
+agent's file in the scratch directory remains the third CS-02 reviewer's read of the
+first reviewer's test runner. It read the whole runner (16 lines, with `head -50`).
+
+**More material in the scratch directory than D44 lists:**
+* `b1probe/`: a state of `CS-04-eval-alt-1` with two of B1's overlay test files
+  (2026-11-13, 04:15);
+* the patch and a state of `CS-03-pre-correction` (04:33);
+* the patches of all eight CS-03 held-out candidates, in two folders that check agents
+  wrote on 2026-11-18 (08:44 and 08:49).
+
+No audited agent opened them. Some of their names appear in a top-level listing that the
+re-audit records.
+
+**Review procedure** (not yet used):
+* `merge_labels` checks the type of every field before writing anything, also in a
+  dry run, and writes all records or none.
+* Reviewers who agree on "invalid" but name different requirements now disagree too,
+  so the candidate has no final label until adjudication.
+* `proposed_label()` returns only proposals.
+* The HTML report shows "needs adjudication" instead of one reviewer's label.
+* Packet folders and template entries follow the random ids, not the seeded order.
+
+The report of `pilot-v0.3.3` regenerates byte for byte. In a scratch copy, its
+`analysis.md` regenerates byte for byte, and `analysis.json` differs only in the
+recorded hash of `schemas.py` and the git revision. The recorded files are kept as
+computed at the run's revision.
+
+**Prompt export.** Removing a note about the owner's messages now also withholds the
+original's hash: 26 of the 30 prompt hashes and 11 workflow headers. Exports pushed
+before this entry published those hashes; STATUS lists them.
+
+**Pre-push scan.** It now also scans file paths, commit messages, author and committer
+fields, tags and the branch name. Over the whole history, with the private markers, it
+gives 99 findings, none in those fields:
+* 95 are in the history STATUS lists;
+* 3 are versions of an earlier line of the ethics section that used a marker word
+  (`3d3024a` to `787176e`), now listed too;
+* 1 is a coincidental five-character match inside an encoded signature field of an
+  earlier CS-02 transcript version (`2e29057` to `6c1af59`).
+
+D44 said that all 99 were in disclosed history. Every commit message ends with a
+co-author line and a `Claude-Session` line; whether they stay is now listed as an owner
+decision.
+
+**Harness 0.3.3: a behaviour change, disclosed and not fixed.** After the snippet, 0.3.3
+restores the trusted import path, and only then formats the result. Methods that
+candidate objects define (`__repr__` of the value, `__str__` of an exception, a module's
+`__getattr__` or `__dir__` for traceback suggestions) therefore run without the candidate
+directories on `sys.path`. One that imports a candidate module fails, which can report a
+correct call as failed. A package-relative import inside one can still load candidate
+code, which the in-call limit already allows.
+
+No check in the pool is affected: all 24,880 check results of `pilot-v0.3.3` equal
+those of `pilot-v0.3.2`. Under §8 no re-run is needed. The harness comment that said the
+error path never imports from a candidate directory is corrected; that is a comment-only
+change, and `tc-harness/0.3.3` is unchanged. The fix is left to the next harness
+version, which will need a re-run.
+
+**Corrections to D44 and D45.**
+* **D44 (result).** It said that no audited agent read forbidden material. Under the
+  re-audit's own rule, the third CS-02 reviewer's read of the first reviewer's test
+  runner was such a read. The accurate statement is: no read of candidate, verifier or
+  sealed material.
+* **D44 and protocol v0.6 §14 (lists).** Their lists of listings omit that reviewer's
+  listings of the first reviewer's folders and the two `git status` listings. §14 is
+  hashed and stays as written.
+* **D44 (stopped agents).** "The prompt export now marks all seven" was premature. The
+  export script listed all seven from `84e0ec3`, but `agent_prompts.jsonl` carried the
+  seventh note only from `aa41b45`.
+* **D44 and D45 (history).** The range of the redaction rules starts at `8c13e0c`, whose
+  version quotes the start of an owner message, not at `c830977`. The note about the
+  owner's messages in five held-out workflow exports (`8c13e0c` to `feab025`) was missing
+  from the list.
+* **D45 (worktree).** The six editors shared one git worktree, separate from the
+  checkout, and worked on disjoint files.
+* **D45 (tables).** Besides run names and two captions, the reliability table gained a
+  row for `pilot-v0.3.2`, and the evidence ledger gained two entries.
+
+**Tests.** 80 pass (63 offline, 17 Docker).

@@ -62,10 +62,15 @@ TAMPER_EVENTS: list[dict[str, Any]] = []
 # while it formats an exception (``ast``, ``unicodedata``) are imported with the trusted
 # ones, and as soon as the snippet returns or raises, the wrapper puts the trusted
 # import path back (sys.path, sys.meta_path, importer cache) before it formats, serialises
-# or signs anything, so the wrapper's own error path never imports from a candidate
-# directory (decision log D44; harness 0.3.2 did). Code that the snippet runs, directly or
-# through candidate modules it imports, runs in the same process and can still change
-# what that call reports (the documented residual risk).
+# or signs anything, so the wrapper itself does not import from a candidate directory
+# (decision log D44; harness 0.3.2 did). Methods that candidate objects define still run
+# while the result is formatted (``__repr__`` of the value, ``__str__`` of an exception,
+# a module's ``__getattr__`` or ``__dir__`` for traceback suggestions); they now run
+# without the candidate directories on ``sys.path``, so one that imports a candidate
+# module fails, and a package-relative import inside one can still load candidate code
+# (decision log D46). Code that the snippet runs, directly or through candidate modules
+# it imports, runs in the same process and can still change what that call reports (the
+# documented residual risk).
 _WRAPPER = r'''
 import sys as _tc_sys
 _tc_cand = %(cand_paths)r

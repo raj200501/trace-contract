@@ -375,25 +375,28 @@ class Candidate(_Model):
 
         Model / rule / construction labels are proposals and never returned here. When
         no label is adjudicated and the latest labels of different human reviewers
-        disagree on the value, the candidate has no final label until an adjudicated one
-        is added (decision log D44).
+        disagree, on the value or on the violated requirements, the candidate has no final
+        label until an adjudicated one is added (decision log D44, D46).
         """
         human = [lb for lb in self.labels if lb.labeler_kind == LabelerKind.human]
         adjudicated = [lb for lb in human if lb.adjudicated]
         if adjudicated:
             return adjudicated[-1]
-        latest = {lb.labeler: lb for lb in human}  # each reviewer's latest label
-        if len({lb.value for lb in latest.values()}) > 1:
+        if self.human_disagreement():
             return None
         return human[-1] if human else None
 
     def human_disagreement(self) -> bool:
-        """True when reviewers' latest human labels disagree on the value and none is adjudicated."""
+        """True when reviewers' latest human labels differ (value or violated requirements) and none is adjudicated."""
         human = [lb for lb in self.labels if lb.labeler_kind == LabelerKind.human]
-        return not any(lb.adjudicated for lb in human) and len({lb.value for lb in {x.labeler: x for x in human}.values()}) > 1
+        latest = {x.labeler: x for x in human}.values()  # each reviewer's latest label
+        return not any(lb.adjudicated for lb in human) and len(
+            {(lb.value, tuple(sorted(lb.violated_requirements))) for lb in latest}) > 1
 
     def proposed_label(self) -> Label | None:
-        return self.labels[-1] if self.labels else None
+        """The latest label that is not a human label (a model, rule or construction proposal)."""
+        proposals = [lb for lb in self.labels if lb.labeler_kind != LabelerKind.human]
+        return proposals[-1] if proposals else None
 
 
 # ---------------------------------------------------------------------------

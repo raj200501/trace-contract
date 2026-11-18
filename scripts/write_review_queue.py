@@ -2,8 +2,9 @@
 
 Usage: python scripts/write_review_queue.py tasks/CS-01 [...]
 Writes tasks/<id>/labels/review_queue.json from the candidates' labels and the
-independent construction checks only (no verifier results), so reviewers can use it
-before labeling (docs/annotation_guide.md section 2a).
+independent construction checks only (no verifier results). It shows each candidate's
+origin and proposed label, so reviewers open it only after their labels have been merged
+(docs/annotation_guide.md section 2a); they label from the blinded review packet.
 """
 
 from __future__ import annotations

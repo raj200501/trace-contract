@@ -117,7 +117,7 @@ def export_packet(task_dirs: list[Path], out: Path, key_path: Path, *, snapshot_
         raise ValueError(f"{out} exists; choose a new directory")
     if key_path.exists():
         raise ValueError(f"{key_path} exists; it may be the only record of an earlier packet's mapping")
-    rng = random.Random(seed)  # order only; the ids themselves are unguessable
+    rng = random.Random(seed)  # recorded in the key; the ids, and the order of folders and entries, come from secrets
     key: dict = {"seed": seed, "created_at": _now(), "tasks": {}}
     used: set[str] = set()
     for td in task_dirs:
@@ -134,12 +134,17 @@ def export_packet(task_dirs: list[Path], out: Path, key_path: Path, *, snapshot_
             groups.setdefault(_norm_patch(c.patch), []).append(c)
         items = list(groups.items())
         rng.shuffle(items)
-        tkey: dict[str, list[str]] = {}
+        named = []
         for diff, cands in items:
             oid = ""
             while not oid or oid in used:
                 oid = "C" + secrets.token_hex(3)
             used.add(oid)
+            named.append((oid, diff, cands))
+        # Folders and template entries are made in the order of the random ids, so neither the
+        # seed nor the creation order maps a position to a candidate.
+        tkey: dict[str, list[str]] = {}
+        for oid, diff, cands in sorted(named, key=lambda x: x[0]):
             ws, _diags, err = prepare_workspace(snapshot_root / m.task_id, cands[0].patch)
             if ws is None:
                 raise ValueError(f"{m.task_id}: a candidate patch could not be applied ({err})")
@@ -232,11 +237,20 @@ def merge_labels(label_files: list[Path], key_path: Path, tasks_root: Path, *, m
         if set(d.get("contract_reviews", {})) != {r.req_id for r in ref.requirements}:
             raise ValueError(f"{f}: contract_reviews must cover exactly the reference requirements of {t}")
         for rid, cr in d["contract_reviews"].items():
-            if cr.get("decision") not in DECISIONS:
+            if not isinstance(cr, dict) or cr.get("decision") not in DECISIONS:
                 raise ValueError(f"{f}: contract review {rid}: decision must be one of {DECISIONS}")
+            if not isinstance(cr.get("note") or "", str):
+                raise ValueError(f"{f}: contract review {rid}: note must be text")
         scored = {r.req_id for r in ref.active() if r.scored} | {"REGRESSION"}
         for oid, lb in d["labels"].items():
-            value, viol = lb.get("value"), list(lb.get("violated_requirements") or [])
+            if not isinstance(lb, dict):
+                raise ValueError(f"{f}: {oid}: a label must be an object")
+            raw_viol = lb.get("violated_requirements") or []
+            if not isinstance(raw_viol, list) or not all(isinstance(x, str) for x in raw_viol):
+                raise ValueError(f"{f}: {oid}: violated_requirements must be a list of requirement ids")
+            if not isinstance(lb.get("note") or "", str):
+                raise ValueError(f"{f}: {oid}: note must be text")
+            value, viol = lb.get("value"), list(raw_viol)
             if value not in VALUES:
                 raise ValueError(f"{f}: {oid}: value must be one of {VALUES}")
             if lb.get("origin_guess") not in ORIGIN_GUESSES:
@@ -261,6 +275,7 @@ def merge_labels(label_files: list[Path], key_path: Path, tasks_root: Path, *, m
                     raise ValueError(f"{t}/{cid}: labels from this packet were merged already")
     report: dict = {"merged_labels": 0, "merged_contract_reviews": 0, "disagreements": {}, "contract_disagreements": {},
                     "origin_guesses": {}}
+    updates: dict[Path, object] = {}  # every record to write, built in memory before anything is written
     for t, revs in by_task.items():
         for oid, cids in key["tasks"][t].items():
             values = {rev: d["labels"][oid] for rev, d in revs.items()}
@@ -274,14 +289,12 @@ def merge_labels(label_files: list[Path], key_path: Path, tasks_root: Path, *, m
                 for rev, v in sorted(values.items()):
                     g = report["origin_guesses"].setdefault(rev, {"correct": 0, "wrong": 0, "unsure": 0})
                     g["unsure" if v["origin_guess"] == "unsure" else "correct" if v["origin_guess"] == truth else "wrong"] += 1
-                    if not dry_run:
-                        c.labels.append(Label(value=v["value"], violated_requirements=list(v.get("violated_requirements") or []),
-                                              labeler=f"human:{rev}", labeler_kind=LabelerKind.human, adjudicated=False,
-                                              timestamp=_now(), note=f"{(v.get('note') or '')[:2000]} "
-                                              f"[origin guess: {v['origin_guess']}] {tag}"))
-                        report["merged_labels"] += 1
-                if not dry_run:
-                    dump(c, path)
+                    c.labels.append(Label(value=v["value"], violated_requirements=list(v.get("violated_requirements") or []),
+                                          labeler=f"human:{rev}", labeler_kind=LabelerKind.human, adjudicated=False,
+                                          timestamp=_now(), note=f"{(v.get('note') or '')[:2000]} "
+                                          f"[origin guess: {v['origin_guess']}] {tag}"))
+                    report["merged_labels"] += 1
+                updates[path] = c
         ref_path = tasks_root / t / "contracts" / "reference.json"
         ref = load(ref_path, TaskContract)
         for r in ref.requirements:
@@ -289,12 +302,20 @@ def merge_labels(label_files: list[Path], key_path: Path, tasks_root: Path, *, m
             if len({v["decision"] for v in decisions.values()}) > 1:
                 report["contract_disagreements"].setdefault(t, []).append(
                     {"requirement": r.req_id, "decisions": {rev: v["decision"] for rev, v in decisions.items()}})
-            if dry_run:
-                continue
             for rev, v in sorted(decisions.items()):
                 r.reviews.append(Review(reviewer=f"human:{rev}", reviewer_kind=ReviewerKind.human, decision=v["decision"],
                                         timestamp=_now(), note=f"{(v.get('note') or '')[:2000]} {tag}"))
                 report["merged_contract_reviews"] += 1
-        if not dry_run:
-            dump(ref, ref_path)
+        updates[ref_path] = ref
+    if dry_run:
+        report["merged_labels"] = report["merged_contract_reviews"] = 0
+        return report
+    originals = {path: path.read_bytes() for path in updates}
+    try:
+        for path, record in updates.items():
+            dump(record, path)
+    except BaseException:
+        for path, data in originals.items():  # all or nothing
+            path.write_bytes(data)
+        raise
     return report

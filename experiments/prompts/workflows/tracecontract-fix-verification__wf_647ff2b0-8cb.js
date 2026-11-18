@@ -1,4 +1,4 @@
-// Exported by scripts/export_prompts.py from the workflow run record wf_647ff2b0-8cb (started 2026-11-18T14:51:09+00:00, finished 2026-11-18T17:07:36.009Z, status completed); sha256 of the original script: withheld (owner-specific redaction applied); sha256 of this export: 8dd3319da55076e59baa70bb01758d5225a8bfc93016ea8be3d786f85bbc1030. Redacted: owner messages and personal information, session paths/ids.
+// Exported by scripts/export_prompts.py from the workflow run record wf_647ff2b0-8cb (started 2026-11-18T14:51:09+00:00, finished 2026-11-18T17:07:36.009Z, status completed); sha256 of the original script: withheld (a note about the owner's messages or personal information was removed); sha256 of this export: 8dd3319da55076e59baa70bb01758d5225a8bfc93016ea8be3d786f85bbc1030. Redacted: owner messages and personal information, session paths/ids.
 export const meta = {
   name: 'tracecontract-fix-verification',
   description: 'Read-only check that the fixes after 787176e are correct and complete, with adversarial verification and a completeness critic',

@@ -10,9 +10,9 @@
           "own_workspace": "/home/user/gen_workspaces/CS-04/eval-alt-1",
           "extra_allowed": [],
           "hits": [],
-          "scratch_root_listings": [],
+          "scratch_root_accesses": [],
           "scratch_reads_not_attributed_to_the_agent": [],
-          "scratch_reads_of_own_files": 17
+          "scratch_reads_of_own_files": 15
         }
       },
       "assessment": "no hit; all scratch accesses are to its own solution.diff and baseline.py"
@@ -29,7 +29,7 @@
           "own_workspace": "/home/user/gen_workspaces/CS-04/eval-alt-2",
           "extra_allowed": [],
           "hits": [],
-          "scratch_root_listings": [],
+          "scratch_root_accesses": [],
           "scratch_reads_not_attributed_to_the_agent": [
             {
               "line": 65,
@@ -41,6 +41,15 @@
               "last_written_at": null
             },
             {
+              "line": 65,
+              "ts": "2026-11-13T03:37:10.800Z",
+              "op": "read",
+              "path": "<scratchpad>/base_default.txt",
+              "text": "grep -v \"^ints\\|^rfloats\" $S/base_default.txt",
+              "last_written_by": null,
+              "last_written_at": null
+            },
+            {
               "line": 103,
               "ts": "2026-11-13T03:38:57.402Z",
               "op": "read",
@@ -57,21 +66,12 @@
               "text": "diff $S/base_default.txt $S/sol_default.txt",
               "last_written_by": null,
               "last_written_at": null
-            },
-            {
-              "line": 103,
-              "ts": "2026-11-13T03:38:57.402Z",
-              "op": "read",
-              "path": "<scratchpad>/sol_default.txt",
-              "text": "wc -l < $S/sol_default.txt) probe lines)\"",
-              "last_written_by": null,
-              "last_written_at": null
             }
           ],
-          "scratch_reads_of_own_files": 3
+          "scratch_reads_of_own_files": 0
         }
       },
-      "assessment": "no hit; base_default.txt and sol_default.txt were written by the agent's own inline Python (lines 65 and 103); every other scratch access is to files it wrote"
+      "assessment": "no hit; base_default.txt and sol_default.txt were written by the agent's own inline Python (transcript lines 65 and 103), so the four scratch accesses without a recorded writer are of its own files"
     }
   },
   "refcheck": {
@@ -102,15 +102,22 @@
               "tool": "Bash",
               "path": "/home/user/trace-contract/tasks/CS-04/verifiers",
               "why": "inside forbidden material",
-              "text": "ls tasks/CS-04/verifiers/ 2>&1"
+              "text": "ls tasks/CS-04/verifiers/ 2>"
+            },
+            {
+              "event_id": "<session>/L000139.00",
+              "tool": "Bash",
+              "path": "/home/user/trace-contract",
+              "why": "recursive search over forbidden material",
+              "text": "git status --short"
             }
           ],
-          "scratch_root_listings": [],
+          "scratch_root_accesses": [],
           "scratch_reads_not_attributed_to_the_agent": [],
-          "scratch_reads_of_own_files": 20
+          "scratch_reads_of_own_files": 26
         }
       },
-      "assessment": "one `ls tasks/CS-04/verifiers/` (directory names), already assessed in the first audit; all scratch accesses are to its own mutants folder, oracle_check.py and grading output"
+      "assessment": "one `ls tasks/CS-04/verifiers/` (directory names), already assessed in the first audit; one `git status --short` (line 139) named only its own reference-check files and task.json; all scratch accesses are to its own mutants folder, oracle_check.py and grading output"
     }
   },
   "eval-nm": {
@@ -124,49 +131,12 @@
           "own_workspace": "/home/user/gen_workspaces/CS-04/eval-nm",
           "extra_allowed": [],
           "hits": [],
-          "scratch_root_listings": [],
-          "scratch_reads_not_attributed_to_the_agent": [
-            {
-              "line": 66,
-              "ts": "2026-11-13T03:47:24.813Z",
-              "op": "read",
-              "path": "<scratchpad>/check_reqs.py) > <scratchpad>/out_",
-              "text": "cat $S/check_reqs.py)\" > \"$S/out_",
-              "last_written_by": null,
-              "last_written_at": null
-            },
-            {
-              "line": 73,
-              "ts": "2026-11-13T03:47:36.285Z",
-              "op": "exec",
-              "path": "<scratchpad>/out_base.json",
-              "text": "python3 \"$S/show.py\" \"$S/out_base.json\"",
-              "last_written_by": null,
-              "last_written_at": null
-            },
-            {
-              "line": 159,
-              "ts": "2026-11-13T03:50:09.703Z",
-              "op": "exec",
-              "path": "<scratchpad>/out_nm$k.json",
-              "text": "python3 \"$S/show.py\" \"$S/out_nm$k.json\"",
-              "last_written_by": null,
-              "last_written_at": null
-            },
-            {
-              "line": 159,
-              "ts": "2026-11-13T03:50:09.703Z",
-              "op": "exec",
-              "path": "<scratchpad>/out_ref.json",
-              "text": "python3 \"$S/show.py\" \"$S/out_ref.json\"",
-              "last_written_by": null,
-              "last_written_at": null
-            }
-          ],
-          "scratch_reads_of_own_files": 13
+          "scratch_root_accesses": [],
+          "scratch_reads_not_attributed_to_the_agent": [],
+          "scratch_reads_of_own_files": 14
         }
       },
-      "assessment": "no hit; the reads without a recorded writer are of check_reqs.py (its own Write, line 58) and out_*.json (its own redirect outputs, lines 66-159), which the parser misreads inside the quoted command substitution"
+      "assessment": "no hit; all scratch accesses are to files it wrote (check_reqs.py, show.py, out_*.json, ref, probe.py)"
     }
   },
   "_rules": {
@@ -190,6 +160,6 @@
     ],
     "scope": "tool inputs only (commands and file paths an agent passed to its tools); tool outputs are not inspected (decision log D37)",
     "script": "scripts/audit_eval_generators.py",
-    "strict_reaudit": "2026-11-18, decision log D44: scripts/strict_reaudit.py resolves paths (shell segments, cd, variables set in the same command, find -prune) instead of matching substrings, adds the build session's shared scratch directory to the forbidden material, and classifies each read of that directory by the agent that wrote the file last; tool outputs are not inspected by the script; the accesses it flags were assessed by reading the transcript, tool outputs included, and the other assessments restate the script's classification"
+    "strict_reaudit": "2026-11-18, decision log D44 and D46: scripts/strict_reaudit.py resolves paths instead of matching substrings, also applies the first audit's substring rule and a scan of every literal path in the tool inputs (heredoc bodies and inline code included), adds the build session's shared scratch directory to the forbidden material, classifies each access to that directory by the agent that wrote the file last, and lists every access to the directory itself; tool outputs are not inspected by the script; the accesses it flags were assessed by reading the transcript, tool outputs included (for a file without a recorded writer, by finding the writing call in the agent's tool inputs), and the other assessments restate the script's classification"
   }
 }

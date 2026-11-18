@@ -44,14 +44,16 @@ Every task has the same pool:
   readable. They were told not to read them. They also shared the build session's
   scratch directory. An audit of the tool inputs of every generator whose output was
   registered found no forbidden read. A stricter re-audit of all 21 generator and
-  reference-check transcripts (decision log D44) resolves the paths instead of
-  matching substrings and treats the whole scratch directory as forbidden. It also
-  found no read of forbidden material. The listings it found, and the one read of
-  another agent's file in the scratch directory, are given in the exceptions below.
-  Neither audit script reads tool outputs, and the re-audit script matches paths that
-  inline code builds at run time only by name. The re-audit's assessments, in
-  `tasks/*/labels/generator_audit.json`, come from reading each transcript, tool
-  outputs included.
+  reference-check transcripts (decision log D44, hardened in D46) resolves the paths
+  instead of matching substrings, also applies the first audit's rule and flags every
+  literal forbidden path in a tool input, and treats the whole scratch directory as
+  forbidden. It found no read of candidate, verifier or sealed material. The listings
+  it found, and the one read of another agent's file in the scratch directory, are
+  given in the exceptions below. Neither audit script reads tool outputs, and the
+  re-audit script matches paths that inline code builds at run time only by name. In
+  `tasks/*/labels/generator_audit.json`, the accesses the re-audit flags were assessed
+  by reading the transcripts, tool outputs included; the other assessments restate the
+  script's classification.
 
 Exceptions (decision log D31, D37, D40, D41, D44):
 * near-miss generators had, and ran, B1's test files (the test hunks of the reference
@@ -70,22 +72,31 @@ Exceptions (decision log D31, D37, D40, D41, D44):
 * the held-out generators, the reference-check writers and their reviewers shared the
   build session's scratch directory with the builder (the study's AI agent) and with
   each other. The first audit treated only its sealed subfolders as forbidden. The
-  rest held other agents' working files and some material derived from candidates: the
-  patch of `CS-04-eval-alt-1`, which the builder extracted there on 2026-11-13, and the
-  independent check agents' outputs for registered candidates (from 2026-11-18). The
-  re-audit found listings that showed names only:
+  rest held other agents' working files and material derived from candidates (decision
+  log D44, D46):
+  * extracted by the builder on 2026-11-13: the patch of `CS-04-eval-alt-1`, a state of
+    that candidate with two of B1's overlay test files (`b1probe/`), and the patch and
+    a state of `CS-03-pre-correction`;
+  * written by the independent check agents on 2026-11-18: outputs for registered
+    candidates, and the patches of all eight CS-03 held-out candidates (two folders).
+
+  No audited agent opened any of them. The re-audit found listings that showed names
+  only:
   * the directory's top level, listed once each by CS-02's near-miss generator and by
     the third reviewer of CS-02's reference checks; both listings showed
     `CS-02-eval-alt-1` in a file name;
   * `tasks/<id>/verifiers/`, listed by the CS-03 and CS-04 reference-check writers;
   * the directory that holds CS-02's workspaces, listed by one fixer of CS-02's
-    reference checks.
+    reference checks;
+  * `git status` at the repository root, run by both fixers of CS-02's reference
+    checks, whose output named CS-02's held-out candidate files (seven and two names).
 
-  The third reviewer also listed the first reviewer's folder there and read the first
-  50 lines of its test runner, which imports the four reference-check test modules and
-  prints PASS or FAIL. The runner is outside the read-only list in the reviewer's
-  prompt and holds no candidate or other verifier material. Every other read in the
-  scratch directory was of the reading agent's own files;
+  The third reviewer also listed the first reviewer's folders there and read that
+  reviewer's whole test runner (16 lines, with `head -50`), which imports the four
+  reference-check test modules and prints PASS or FAIL. Under the re-audit's rule this
+  is a read of forbidden material; the runner is outside the read-only list in the
+  reviewer's prompt and holds no candidate or other verifier material. Every other read
+  in the scratch directory was of the reading agent's own files;
 * the hash of each verifier's scored check list was added after the run `pilot-v0.3`.
 
 | Origin | Per task | Produced by | Label source |
@@ -178,10 +189,15 @@ Proposals by rule D19 (`tasks/*/candidates/*.json`, labeler
   build session's id, in most files as part of its scratchpad path:
   * seven research notes in `docs/research/notes/` (commits `2a81036` to `f6c8e9f`);
   * `scripts/compile_controlled.py` (`cbb8dcd` to `89ccce5`);
-  * `tasks/CS-0{1,3,4}/labels/generator_audit.json` (`0339400` to `f6c8e9f`).
+  * `tasks/CS-0{1,3,4}/labels/generator_audit.json` (`0339400` to `f6c8e9f`);
+  * a redaction rule in `scripts/export_prompts.py` built from part of it (`c830977`
+    and `74f6c73`).
 
   See the owner decisions in `STATUS.md`.
-* The repository owner's identity appears only as the git commit author.
+* The repository owner's identity appears only as the git commit author. Every commit
+  message ends with a co-author line and a `Claude-Session` line (a link to the claude.ai
+  session that built the study), which the session's attribution rules add; whether
+  they stay is the owner's decision.
 
 ## Known biases and limitations
 

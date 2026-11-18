@@ -94,9 +94,15 @@ def _licence_notices(manifest: dict, tasks_root: Path, repo_root: Path) -> str:
 
 
 def _label(c: Candidate, analysis: dict):
-    """The label the analysis used (its label rule); for excluded candidates, the latest proposal."""
+    """The label the analysis used (its label rule); for excluded candidates, the latest proposal.
+
+    A candidate whose human reviewers disagree without adjudication shows no label, never
+    one reviewer's (decision log D46).
+    """
     from .analysis import candidate_label
 
+    if c.human_disagreement():
+        return None
     return candidate_label(c, analysis["meta"].get("label_rule", "human")) or c.final_label() or c.proposed_label()
 
 
@@ -261,7 +267,8 @@ def build_report(run_dir: Path, tasks_root: Path, repo_root: Path, out: Path) ->
         for cid in cids:
             c = cands[cid]
             lb = _label(c, analysis)
-            lab = f"{_e(lb.value)} <span class='muted'>({_e(lb.labeler_kind.value)})</span>" if lb else "—"
+            lab = (f"{_e(lb.value)} <span class='muted'>({_e(lb.labeler_kind.value)})</span>" if lb
+                   else "needs adjudication" if c.human_disagreement() else "—")
             cells = []
             for v in vids:
                 r = grid.get((v, cid))
@@ -280,7 +287,8 @@ def build_report(run_dir: Path, tasks_root: Path, repo_root: Path, out: Path) ->
             lb = _label(c, analysis)
             viol = ", ".join(lb.violated_requirements) if lb and lb.violated_requirements else ""
             parts.append(f"<details><summary><b>{_e(cid)}</b> · {_e(c.origin.value)} · {_e(c.split.value)} · "
-                         f"{_e(lb.value if lb else 'unlabeled')}{(' · violates ' + _e(viol)) if viol else ''} — {_e(c.description)}</summary>"
+                         f"{_e(lb.value if lb else 'needs adjudication' if c.human_disagreement() else 'unlabeled')}"
+                         f"{(' · violates ' + _e(viol)) if viol else ''} — {_e(c.description)}</summary>"
                          f"<pre>{_e(c.patch[:20000])}</pre></details>")
         parts.append("<h3>Verifiers</h3><div class='scroll'><table><tr><th>Verifier</th><th>Condition</th><th>Isolation</th><th>Checks</th><th>Frozen</th><th>Audit</th></tr>")
         for vid, s in specs.items():

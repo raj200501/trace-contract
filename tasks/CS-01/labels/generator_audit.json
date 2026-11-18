@@ -10,12 +10,12 @@
           "own_workspace": "/home/user/gen_workspaces/CS-01/eval-alt-1",
           "extra_allowed": [],
           "hits": [],
-          "scratch_root_listings": [],
+          "scratch_root_accesses": [],
           "scratch_reads_not_attributed_to_the_agent": [],
-          "scratch_reads_of_own_files": 2
+          "scratch_reads_of_own_files": 1
         }
       },
-      "assessment": "no hit; both scratch accesses are to diffcheck.py, which the agent wrote with the Write tool"
+      "assessment": "no hit; its scratch access is to diffcheck.py, which it wrote with the Write tool"
     }
   },
   "eval-alt-2": {
@@ -29,7 +29,7 @@
           "own_workspace": "/home/user/gen_workspaces/CS-01/eval-alt-2",
           "extra_allowed": [],
           "hits": [],
-          "scratch_root_listings": [],
+          "scratch_root_accesses": [],
           "scratch_reads_not_attributed_to_the_agent": [
             {
               "line": 60,
@@ -59,10 +59,10 @@
               "last_written_at": null
             }
           ],
-          "scratch_reads_of_own_files": 16
+          "scratch_reads_of_own_files": 14
         }
       },
-      "assessment": "no hit; the three scratch reads without a recorded writer are of base_grid.json, which the agent's own inline Python wrote (json.dump to the scratch path, transcript line 48); every other scratch access is to files it wrote"
+      "assessment": "no hit; the three scratch accesses without a recorded writer concern base_grid.json, which the agent's own fetch_grid.sh wrote (its embedded Python dumps the grid to the path given as its third argument; transcript line 60, which is that writing call itself; the earlier attempts at lines 48 and 56 failed before writing); every other scratch access is to files it wrote"
     }
   },
   "refcheck": {
@@ -158,9 +158,9 @@
             "/home/user/trace-contract/tasks/CS-01/verifiers/reference_check"
           ],
           "hits": [],
-          "scratch_root_listings": [],
+          "scratch_root_accesses": [],
           "scratch_reads_not_attributed_to_the_agent": [],
-          "scratch_reads_of_own_files": 21
+          "scratch_reads_of_own_files": 23
         }
       },
       "assessment": "no hit with the reference-check directory allowed; all scratch accesses are to its own oracle_check folder and grading output"
@@ -177,31 +177,12 @@
           "own_workspace": "/home/user/gen_workspaces/CS-01/eval-nm",
           "extra_allowed": [],
           "hits": [],
-          "scratch_root_listings": [],
-          "scratch_reads_not_attributed_to_the_agent": [
-            {
-              "line": 61,
-              "ts": "2026-11-18T08:59:29.573Z",
-              "op": "read",
-              "path": "<scratchpad>/base.err",
-              "text": "head -c 300 $SP/base.err",
-              "last_written_by": null,
-              "last_written_at": null
-            },
-            {
-              "line": 64,
-              "ts": "2026-11-18T08:59:35.532Z",
-              "op": "read",
-              "path": "<scratchpad>/base.err",
-              "text": "cat $SP/base.err",
-              "last_written_by": null,
-              "last_written_at": null
-            }
-          ],
-          "scratch_reads_of_own_files": 14
+          "scratch_root_accesses": [],
+          "scratch_reads_not_attributed_to_the_agent": [],
+          "scratch_reads_of_own_files": 8
         }
       },
-      "assessment": "no hit; base.err is the agent's own stderr redirect (2>$SP/base.err, line 61), which the parser misses inside the quoted command; every other scratch access is to files it wrote"
+      "assessment": "no hit; every scratch access is to files it wrote (sweep.py, base.json, base.err, cmp.py, ref)"
     }
   },
   "_rules": {
@@ -225,6 +206,6 @@
     ],
     "scope": "tool inputs only (commands and file paths an agent passed to its tools); tool outputs are not inspected (decision log D37)",
     "script": "scripts/audit_eval_generators.py",
-    "strict_reaudit": "2026-11-18, decision log D44: scripts/strict_reaudit.py resolves paths (shell segments, cd, variables set in the same command, find -prune) instead of matching substrings, adds the build session's shared scratch directory to the forbidden material, and classifies each read of that directory by the agent that wrote the file last; tool outputs are not inspected by the script; the accesses it flags were assessed by reading the transcript, tool outputs included, and the other assessments restate the script's classification"
+    "strict_reaudit": "2026-11-18, decision log D44 and D46: scripts/strict_reaudit.py resolves paths instead of matching substrings, also applies the first audit's substring rule and a scan of every literal path in the tool inputs (heredoc bodies and inline code included), adds the build session's shared scratch directory to the forbidden material, classifies each access to that directory by the agent that wrote the file last, and lists every access to the directory itself; tool outputs are not inspected by the script; the accesses it flags were assessed by reading the transcript, tool outputs included (for a file without a recorded writer, by finding the writing call in the agent's tool inputs), and the other assessments restate the script's classification"
   }
 }

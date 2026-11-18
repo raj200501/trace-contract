@@ -18,7 +18,7 @@ import pytest
 
 import tracecontract.tasks as tasks_mod
 from tracecontract.review import TEMPLATE, export_packet, merge_labels
-from tracecontract.schemas import Candidate, CandidateOrigin, Split, TaskContract, TaskManifest
+from tracecontract.schemas import Candidate, CandidateOrigin, LabelerKind, Split, TaskContract, TaskManifest
 from tracecontract.store import dump, load
 
 FX = Path(__file__).parent / "fixtures" / "harbor_fx01"
@@ -147,3 +147,49 @@ def test_packet_session_holds_user_turns_only(tmp_path, monkeypatch):
     assert "USER-TURN-ONE" in text and "USER-TURN-TWO" in text
     for leak in ("ASSISTANT-TEXT", "FIRST-ATTEMPT-EDIT", "TOOL-OUTPUT"):
         assert leak not in text, leak
+
+
+def test_merge_checks_types_before_writing_anything(tmp_path, monkeypatch):
+    """A malformed reviewer file is rejected by validation (also in a dry run), before any record changes (D46)."""
+    td = _task(tmp_path)
+    monkeypatch.setattr(tasks_mod, "verify_snapshot", lambda t, s: True)
+    out, key = tmp_path / "packet", tmp_path / "key.json"
+    export_packet([td], out, key, snapshot_root=FX / "snapshots", repo_root=tmp_path, seed=5)
+    tmpl = json.loads((out / "FX-01" / TEMPLATE).read_text())
+    assert list(tmpl["labels"]) == sorted(tmpl["labels"])  # entries follow the random ids, not the seeded order
+    records = sorted((td / "candidates").glob("*.json")) + [td / "contracts" / "reference.json"]
+    before = {p: p.read_bytes() for p in records}
+
+    def write(rev: str, note) -> Path:
+        d = dict(tmpl, reviewer=rev, contract_reviews={r: {"decision": "accept", "note": ""} for r in tmpl["contract_reviews"]})
+        d["labels"] = {oid: {"value": "valid", "violated_requirements": [], "origin_guess": "unsure", "note": note}
+                       for oid in tmpl["labels"]}
+        f = out / "FX-01" / f"labels_{rev}.json"
+        f.write_text(json.dumps(d))
+        return f
+
+    files = [write("R1", "fine"), write("R2", 7)]
+    for dry in (True, False):
+        with pytest.raises(ValueError, match="note must be text"):
+            merge_labels(files, key, tmp_path / "tasks", dry_run=dry)
+    assert {p: p.read_bytes() for p in records} == before
+
+
+def test_reviewers_who_name_different_requirements_disagree():
+    """Same value but different violated requirements is a disagreement too, and proposals stay proposals (D46)."""
+    from tracecontract.schemas import Label
+
+    base = load(FX / "tasks" / "FX-01" / "candidates" / "FX-01-wrong.json", Candidate)
+    rule = Label(value="invalid", violated_requirements=["R1"], labeler="rule:d19", labeler_kind=LabelerKind.rule,
+                 timestamp="2026-01-01T00:00:00Z")
+    r1 = Label(value="invalid", violated_requirements=["R1"], labeler="human:R1", labeler_kind=LabelerKind.human,
+               timestamp="2026-01-01T00:00:01Z")
+    r2 = Label(value="invalid", violated_requirements=["R2"], labeler="human:R2", labeler_kind=LabelerKind.human,
+               timestamp="2026-01-01T00:00:02Z")
+    c = base.model_copy(update={"labels": [rule, r1, r2]})
+    assert c.human_disagreement() and c.final_label() is None
+    assert c.proposed_label() is rule
+    adj = Label(value="invalid", violated_requirements=["R1"], labeler="human:R3", labeler_kind=LabelerKind.human,
+                adjudicated=True, timestamp="2026-01-01T00:00:03Z")
+    c2 = c.model_copy(update={"labels": [rule, r1, r2, adj]})
+    assert not c2.human_disagreement() and c2.final_label() is adj

@@ -309,10 +309,11 @@ removed; STATUS.md lists it.
     the build session's scratch directory, which also held other agents' working
     files and some material derived from candidates. The first audit treated only its
     sealed subfolders as forbidden. A stricter re-audit, which treats the whole
-    directory as forbidden, found no read of forbidden material. Some listings showed
-    file names, and one reviewer of CS-02's checks read part of another reviewer's
-    test runner, which holds no candidate or other verifier material
-    (`strict_reaudit` in `tasks/*/labels/generator_audit.json`);
+    directory as forbidden, found no read of candidate, verifier or sealed material.
+    Some listings showed file names (`git status` among them, which named held-out
+    CS-02 candidate files), and one reviewer of CS-02's checks read all of another
+    reviewer's test runner there, which holds no candidate or other verifier material
+    (`strict_reaudit` in `tasks/*/labels/generator_audit.json`; D44, D46);
   * near-miss generators could run B1's tests;
   * three held-out candidates duplicate a development attack;
   * the reference checks were written while the pools were being generated; CS-03's

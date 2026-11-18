@@ -53,10 +53,11 @@ Produced with Claude (via Claude Code), reviewed only by the model so far:
   protocol amendments v0.2 to v0.6, transcript sanitiser v2 (D38), the post-hoc
   analyses (D37), the CS-02 reference-check review loop, the CS-01 mapping correction
   (D42), the blinded review packet tooling (`tracecontract review-packet` and
-  `merge-reviews`; D43, D44), the strict re-audit of the generator transcripts
-  (`scripts/strict_reaudit.py`, D44) and the pilot's results text;
+  `merge-reviews`; D43, D44, D46), the strict re-audit of the generator transcripts
+  (`scripts/strict_reaudit.py`, D44, D46) and the pilot's results text;
 * the six-lens internal review with its skeptic agents, the dispositions review, the
-  final claims audit and the verification of the resulting fixes (D36–D44), all run by
+  final claims audit, the verification of the resulting fixes and the final
+  verification (D36–D46), all run by
   model agents, and the fixes that followed them.
 
 ## Human decisions and reviews still required

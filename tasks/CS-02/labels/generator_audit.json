@@ -10,9 +10,9 @@
           "own_workspace": "/home/user/gen_workspaces/CS-02/eval-alt-1",
           "extra_allowed": [],
           "hits": [],
-          "scratch_root_listings": [],
+          "scratch_root_accesses": [],
           "scratch_reads_not_attributed_to_the_agent": [],
-          "scratch_reads_of_own_files": 7
+          "scratch_reads_of_own_files": 4
         }
       },
       "assessment": "no hit; all scratch accesses are to its own check scripts (check_atomic.py, check_bytes.py, check_edges.py) and base_check folder"
@@ -29,9 +29,9 @@
           "own_workspace": "/home/user/gen_workspaces/CS-02/eval-alt-2",
           "extra_allowed": [],
           "hits": [],
-          "scratch_root_listings": [],
+          "scratch_root_accesses": [],
           "scratch_reads_not_attributed_to_the_agent": [],
-          "scratch_reads_of_own_files": 7
+          "scratch_reads_of_own_files": 5
         }
       },
       "assessment": "no hit; all scratch accesses are to its own check1.py, check2.py and basecheck folder (it overwrote two older files of the same names)"
@@ -48,18 +48,19 @@
           "own_workspace": "/home/user/gen_workspaces/CS-02/eval-nm",
           "extra_allowed": [],
           "hits": [],
-          "scratch_root_listings": [
+          "scratch_root_accesses": [
             {
               "line": 51,
               "ts": "2026-11-18T08:55:24.663Z",
+              "op": "list",
               "text": "ls <scratchpad>"
             }
           ],
           "scratch_reads_not_attributed_to_the_agent": [],
-          "scratch_reads_of_own_files": 38
+          "scratch_reads_of_own_files": 26
         }
       },
-      "assessment": "one `ls` of the scratch directory's top level (2026-11-18T08:55Z) showed file names only, among them files of other agents and of the builder, including outputs of the independent check agents for registered candidates (CS-02-eval-alt-1.json) and a candidate patch the builder had extracted for CS-04 (alt1.patch); the agent opened none of them and worked in its own subfolder cs02_evalnm; every other scratch access is to files it wrote"
+      "assessment": "one `ls` of the scratch directory's top level (2026-11-18T08:55Z) showed file names only, among them files of other agents and of the builder: outputs of the independent check agents for registered candidates (CS-02-eval-alt-1.json, written 10 s earlier), a candidate patch the builder had extracted for CS-04 (alt1.patch) and folders holding candidate states (b1probe); the agent opened none of them and worked in its own subfolder cs02_evalnm; every other scratch access is to files it wrote"
     }
   },
   "refcheck": {
@@ -83,7 +84,7 @@
             "/home/user/trace-contract/tasks/CS-02/verifiers/reference_check"
           ],
           "hits": [],
-          "scratch_root_listings": [],
+          "scratch_root_accesses": [],
           "scratch_reads_not_attributed_to_the_agent": [],
           "scratch_reads_of_own_files": 0
         },
@@ -94,7 +95,50 @@
             "/home/user/trace-contract/tasks/CS-02/verifiers/reference_check"
           ],
           "hits": [],
-          "scratch_root_listings": [],
+          "scratch_root_accesses": [
+            {
+              "line": 93,
+              "ts": "2026-11-18T09:21:56.812Z",
+              "op": "exec",
+              "text": "do python3 -I $SP/make_state.py $SP $a"
+            },
+            {
+              "line": 104,
+              "ts": "2026-11-18T09:23:07.588Z",
+              "op": "exec",
+              "text": "do python3 -I $SP/make_state.py $SP $a"
+            },
+            {
+              "line": 108,
+              "ts": "2026-11-18T09:23:24.936Z",
+              "op": "exec",
+              "text": "python3 - \"$SP\" <<'EOF'"
+            },
+            {
+              "line": 108,
+              "ts": "2026-11-18T09:23:24.936Z",
+              "op": "exec",
+              "text": "do python3 -I $SP/make_state.py $SP $a >/dev/null"
+            },
+            {
+              "line": 112,
+              "ts": "2026-11-18T09:24:40.801Z",
+              "op": "exec",
+              "text": "python3 - \"$SP\" <<'EOF'"
+            },
+            {
+              "line": 112,
+              "ts": "2026-11-18T09:24:40.801Z",
+              "op": "exec",
+              "text": "python3 -I $SP/make_state.py $SP bad4 >/dev/null"
+            },
+            {
+              "line": 116,
+              "ts": "2026-11-18T09:24:49.281Z",
+              "op": "exec",
+              "text": "python3 - \"$SP\" <<'EOF'"
+            }
+          ],
           "scratch_reads_not_attributed_to_the_agent": [
             {
               "line": 116,
@@ -106,7 +150,7 @@
               "last_written_at": null
             }
           ],
-          "scratch_reads_of_own_files": 10
+          "scratch_reads_of_own_files": 13
         },
         "fix1": {
           "agent": "aea60d70e7ff3fbf9",
@@ -114,8 +158,16 @@
           "extra_allowed": [
             "/home/user/trace-contract/tasks/CS-02/verifiers/reference_check"
           ],
-          "hits": [],
-          "scratch_root_listings": [],
+          "hits": [
+            {
+              "event_id": "<session>/L000015.00",
+              "tool": "Bash",
+              "path": "/home/user/trace-contract",
+              "why": "recursive search over forbidden material",
+              "text": "git status --short"
+            }
+          ],
+          "scratch_root_accesses": [],
           "scratch_reads_not_attributed_to_the_agent": [],
           "scratch_reads_of_own_files": 9
         },
@@ -126,8 +178,26 @@
             "/home/user/trace-contract/tasks/CS-02/verifiers/reference_check"
           ],
           "hits": [],
-          "scratch_root_listings": [],
+          "scratch_root_accesses": [],
           "scratch_reads_not_attributed_to_the_agent": [
+            {
+              "line": 73,
+              "ts": "2026-11-18T09:41:16.503Z",
+              "op": "search",
+              "path": "<scratchpad>/states/ref",
+              "text": "cp -r ref v_noclean",
+              "last_written_by": "agent-ae6a4e3ba100d2023",
+              "last_written_at": "2026-11-18T09:21:06.838Z"
+            },
+            {
+              "line": 73,
+              "ts": "2026-11-18T09:41:16.503Z",
+              "op": "search",
+              "path": "<scratchpad>/states/ref",
+              "text": "cp -r ref v_noenc",
+              "last_written_by": "agent-ae6a4e3ba100d2023",
+              "last_written_at": "2026-11-18T09:21:06.838Z"
+            },
             {
               "line": 77,
               "ts": "2026-11-18T09:41:43.841Z",
@@ -152,10 +222,17 @@
               "tool": "Bash",
               "path": "/home/user/gen_workspaces/CS-02",
               "why": "inside forbidden material",
-              "text": "ls /home/user/gen_workspaces/CS-02/ 2>&1"
+              "text": "ls /home/user/gen_workspaces/CS-02/ 2>"
+            },
+            {
+              "event_id": "<session>/L000057.00",
+              "tool": "Bash",
+              "path": "/home/user/trace-contract",
+              "why": "recursive search over forbidden material",
+              "text": "git status --short"
             }
           ],
-          "scratch_root_listings": [],
+          "scratch_root_accesses": [],
           "scratch_reads_not_attributed_to_the_agent": [],
           "scratch_reads_of_own_files": 29
         },
@@ -166,10 +243,11 @@
             "/home/user/trace-contract/tasks/CS-02/verifiers/reference_check"
           ],
           "hits": [],
-          "scratch_root_listings": [
+          "scratch_root_accesses": [
             {
               "line": 81,
               "ts": "2026-11-18T10:12:39.799Z",
+              "op": "list",
               "text": "ls -la $S $S/harness $S/harness/tests"
             }
           ],
@@ -211,10 +289,10 @@
               "last_written_at": "2026-11-18T09:21:06.838Z"
             }
           ],
-          "scratch_reads_of_own_files": 20
+          "scratch_reads_of_own_files": 21
         }
       },
-      "assessment": "gen, fix1: no hit. review1: the one read without a recorded writer is harness_fix/test_no_leftover_files_fixed.py, created by its own inline Python (line 112). review2: the listing of states/ref/_rc is of a folder it had just re-created (rm -rf and cp, line 69; _rc copied from its own rc folder, line 77); the listing shows its own runner.py, not review1's run_all.py. fix2: one `ls ~/gen_workspaces/CS-02/` showed the names of the task's workspaces; it read no file in another workspace (this corrects the first assessment's statement that no tool input names an agent workspace). review3: listed the scratch directory's top level (names only) and the first reviewer's harness folder, and read the first 50 lines of that reviewer's test runner (harness/run_all.py, which imports the four reference-check test modules and prints PASS or FAIL); it then said it would not read the rest and worked in its own folder rc3. Neither folder holds candidate or other verifier material; the runner is outside the READ ONLY list in its prompt, a deviation without held-out exposure."
+      "assessment": "gen: no hit. review1: its seven accesses to the scratch directory itself pass the directory's path to its own make_state.py and inline Python, which use only folders it created (alts, harness, harness_fix, states; transcript lines 93-116); the one read without a recorded writer is harness_fix/test_no_leftover_files_fixed.py, created by its own inline Python (line 112). fix1: `git status --short` at the repository root (line 15, 09:25 UTC) printed the names of CS-02's seven held-out candidate files, and of CS-01's five near misses; names only; its second `git status` (line 67) showed only its own reference-check files. review2: the three accesses attributed to the first reviewer are to states/ref, a folder it had just deleted and re-created (rm -rf and cp, line 69) and then copied (line 73); the listing of states/ref/_rc shows its own runner.py (line 77). fix2: one `ls ~/gen_workspaces/CS-02/` showed the names of the task's workspaces, and `git status --short` at the repository root (line 57, 09:52 UTC) printed the names of CS-02-eval-alt-1 and CS-02-eval-alt-2 among other files; names only; it read no file in another workspace or of a candidate (this corrects the first assessment's statement that no tool input names an agent workspace). review3: listed the scratch directory's top level (names only) and the first reviewer's harness and harness/tests folders, and read that reviewer's whole test runner (harness/run_all.py, 16 lines, with head -50), which imports the four reference-check test modules and prints PASS or FAIL; it then said it would not read the other files and worked in its own folder rc3. Neither folder holds candidate or other verifier material; the runner is outside the READ ONLY list in its prompt, a deviation without held-out exposure."
     }
   },
   "_rules": {
@@ -238,6 +316,6 @@
     ],
     "scope": "tool inputs only (commands and file paths an agent passed to its tools); tool outputs are not inspected (decision log D37)",
     "script": "scripts/audit_eval_generators.py",
-    "strict_reaudit": "2026-11-18, decision log D44: scripts/strict_reaudit.py resolves paths (shell segments, cd, variables set in the same command, find -prune) instead of matching substrings, adds the build session's shared scratch directory to the forbidden material, and classifies each read of that directory by the agent that wrote the file last; tool outputs are not inspected by the script; the accesses it flags were assessed by reading the transcript, tool outputs included, and the other assessments restate the script's classification"
+    "strict_reaudit": "2026-11-18, decision log D44 and D46: scripts/strict_reaudit.py resolves paths instead of matching substrings, also applies the first audit's substring rule and a scan of every literal path in the tool inputs (heredoc bodies and inline code included), adds the build session's shared scratch directory to the forbidden material, classifies each access to that directory by the agent that wrote the file last, and lists every access to the directory itself; tool outputs are not inspected by the script; the accesses it flags were assessed by reading the transcript, tool outputs included (for a file without a recorded writer, by finding the writing call in the agent's tool inputs), and the other assessments restate the script's classification"
   }
 }

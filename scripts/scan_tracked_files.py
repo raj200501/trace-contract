@@ -6,7 +6,10 @@ Scans (1) the working tree: tracked files plus untracked files that are not git-
 (what the next commit could add), and (2) every file version in the commits that a push
 would send: the commits in ``@{upstream}..HEAD`` (all commits if the branch has no
 upstream), or in the whole history with ``--all-history`` (audit mode). A file removed
-in a later commit is still published by a push of the commit that added it.
+in a later commit is still published by a push of the commit that added it. It also scans
+what a push publishes besides file contents: the file paths, the commit messages, author
+and committer fields of the same commits, and the names and messages of tags and of the
+current branch (decision log D46).
 
 Generic rules: credential formats, private-key headers, the session-local paths of the
 build environment, and e-mail addresses not on the allowlist below. ``--private-markers``
@@ -46,7 +49,10 @@ ALLOW = {
                            "(the MIT licence requires the notice)",
     "jane.doe@example.com": "synthetic address in a redaction test",
     "git@github.com": "SSH host name in a repository URL",
+    "noreply@anthropic.com": "co-author trailer that the session's attribution rules add to every commit message",
 }
+# Allowed by domain: the git author's GitHub no-reply address in commit metadata.
+ALLOW_DOMAINS = ("users.noreply.github.com",)
 
 
 def _emails(line: str):
@@ -69,7 +75,7 @@ def scan_text(text: str, where: str, private: list[re.Pattern]) -> int:
                 print(f"{where}:{n}: {name}")
                 hits += 1
         for addr in _emails(line):
-            if addr.lower() not in ALLOW:
+            if addr.lower() not in ALLOW and not addr.lower().endswith(ALLOW_DOMAINS):
                 print(f"{where}:{n}: e-mail address {addr}")
                 hits += 1
         for i, pat in enumerate(private):
@@ -94,12 +100,7 @@ def working_tree() -> list[tuple[str, bytes]]:
 
 
 def pushed_blobs(all_history: bool) -> list[tuple[str, bytes]]:
-    if all_history:
-        rng = ["--all"]
-    else:
-        up = subprocess.run(["git", "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{upstream}"], cwd=R,
-                            capture_output=True, text=True)
-        rng = [f"{up.stdout.strip()}..HEAD"] if up.returncode == 0 and up.stdout.strip() else ["HEAD"]
+    rng = _push_range(all_history)
     seen, out = set(), []
     for line in _git("rev-list", "--objects", *rng).decode().splitlines():
         parts = line.split(" ", 1)
@@ -113,17 +114,45 @@ def pushed_blobs(all_history: bool) -> list[tuple[str, bytes]]:
     return out
 
 
+def _push_range(all_history: bool) -> list[str]:
+    if all_history:
+        return ["--all"]
+    up = subprocess.run(["git", "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{upstream}"], cwd=R,
+                        capture_output=True, text=True)
+    return [f"{up.stdout.strip()}..HEAD"] if up.returncode == 0 and up.stdout.strip() else ["HEAD"]
+
+
+def pushed_metadata(all_history: bool) -> list[tuple[str, str]]:
+    """Commit messages and author/committer fields of the pushed commits, tag names and messages, the branch name."""
+    out = []
+    log = _git("log", "--format=%H%x00%an <%ae>%n%cn <%ce>%n%B%x01", *_push_range(all_history)).decode("utf-8", errors="replace")
+    for rec in log.split("\x01"):
+        if "\x00" in rec:
+            sha, text = rec.strip().split("\x00", 1)
+            out.append((f"commit {sha[:10]} [message and author fields]", text))
+    tags = _git("for-each-ref", "--format=%(refname)%0a%(contents)", "refs/tags").decode("utf-8", errors="replace")
+    if tags.strip():
+        out.append(("tags [names and messages]", tags))
+    out.append(("current branch [name]", _git("rev-parse", "--abbrev-ref", "HEAD").decode().strip()))
+    return out
+
+
 def main(*args: str) -> int:
     private: list[re.Pattern] = []
     if "--private-markers" in args:
         f = args[args.index("--private-markers") + 1]
         private = [re.compile(x, re.I) for x in json.loads(Path(f).read_text(encoding="utf-8")).get("forbidden", [])]
     hits = 0
-    for where, data in working_tree() + pushed_blobs("--all-history" in args):
+    files = working_tree() + pushed_blobs("--all-history" in args)
+    for where, data in files:
+        hits += scan_text(where.split(" (blob ")[0], f"{where} [path]", private)
         if b"\0" in data:
             continue
         hits += scan_text(data.decode("utf-8", errors="replace"), where, private)
-    scope = "the working tree and " + ("the whole history" if "--all-history" in args else "the commits a push would send")
+    for where, text in pushed_metadata("--all-history" in args):
+        hits += scan_text(text, where, private)
+    scope = "the working tree and " + ("the whole history" if "--all-history" in args else "the commits a push would send") \
+        + " (contents, paths, commit messages and author fields, tags)"
     print(f"scan: {hits} finding(s) in {scope}" + ("" if private else " (no private markers given)"))
     return 1 if hits else 0
 
