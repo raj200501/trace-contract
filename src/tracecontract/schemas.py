@@ -247,7 +247,7 @@ class Requirement(_Model):
 class ContractVariant(str, Enum):
     initial_only = "initial_only"  # requirements from the first user request only
     full_session = "full_session"  # correction-aware, structured, evidence-linked
-    reference = "reference"  # human-reviewed contract used for labels
+    reference = "reference"  # reference contract used for labels (human review required before acceptance)
 
 
 class TaskContract(_Model):
@@ -373,13 +373,24 @@ class Candidate(_Model):
     def final_label(self) -> Label | None:
         """Adjudicated human label if present, else the latest human label, else None.
 
-        Model / rule / construction labels are proposals and never returned here.
+        Model / rule / construction labels are proposals and never returned here. When
+        no label is adjudicated and the latest labels of different human reviewers
+        disagree on the value, the candidate has no final label until an adjudicated one
+        is added (decision log D44).
         """
         human = [lb for lb in self.labels if lb.labeler_kind == LabelerKind.human]
         adjudicated = [lb for lb in human if lb.adjudicated]
         if adjudicated:
             return adjudicated[-1]
+        latest = {lb.labeler: lb for lb in human}  # each reviewer's latest label
+        if len({lb.value for lb in latest.values()}) > 1:
+            return None
         return human[-1] if human else None
+
+    def human_disagreement(self) -> bool:
+        """True when reviewers' latest human labels disagree on the value and none is adjudicated."""
+        human = [lb for lb in self.labels if lb.labeler_kind == LabelerKind.human]
+        return not any(lb.adjudicated for lb in human) and len({lb.value for lb in {x.labeler: x for x in human}.values()}) > 1
 
     def proposed_label(self) -> Label | None:
         return self.labels[-1] if self.labels else None
@@ -397,7 +408,7 @@ class VerifierCondition(str, Enum):
     full_audited = "full_audited"  # C4: correction-aware contract, audited tests
     repo_tests = "repo_tests"  # B1: the repository's own test suite
     llm_freeform = "llm_freeform"  # B2: full-session LLM reconstruction without contract machinery
-    reference_check = "reference_check"  # independent human-reviewed checks (label support only)
+    reference_check = "reference_check"  # independent model-written checks (label support only; not human-reviewed)
 
 
 class Isolation(str, Enum):

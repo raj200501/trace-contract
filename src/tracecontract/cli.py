@@ -184,13 +184,17 @@ def cmd_validate_task(a) -> None:
         report["contracts"][variant] = {"errors": [i.__dict__ for i in issues if i.severity == "error"],
                                         "warnings": [i.__dict__ for i in issues if i.severity == "warning"],
                                         "accepted": ok, "gate_reasons": reasons}
-    report["candidates"] = {}
-    for p in m.candidates:
-        c = load(tdir / p, Candidate)  # validates the patch hash
-        fl = c.final_label()
-        report["candidates"][c.candidate_id] = {"origin": c.origin.value, "split": c.split.value,
-                                                "human_label": fl.value if fl else None,
-                                                "proposed_label": (c.proposed_label().value if c.proposed_label() else None)}
+    cands = [load(tdir / p, Candidate) for p in m.candidates]  # loading validates every patch hash
+    if a.show_candidates:  # coordinator only: shows origins and proposals (annotation guide, D44)
+        report["candidates"] = {}
+        for c in cands:
+            fl = c.final_label()
+            report["candidates"][c.candidate_id] = {"origin": c.origin.value, "split": c.split.value,
+                                                    "human_label": fl.value if fl else None,
+                                                    "proposed_label": (c.proposed_label().value if c.proposed_label() else None)}
+    else:
+        report["candidates"] = {"n": len(cands), "patch_hashes_valid": True,
+                                "note": "per-candidate origins and labels hidden; --show-candidates (coordinator only)"}
     report["verifiers"] = {}
     for p in m.verifiers:
         s = load(tdir / p, VerifierSpec)
@@ -443,7 +447,10 @@ def main(argv: list[str] | None = None) -> None:
     p = sub.add_parser("freeze", help="freeze a verifier before final evaluation")
     p.add_argument("task"); p.add_argument("verifier_id"); p.set_defaults(fn=cmd_freeze)
     p = sub.add_parser("validate-task", help="validate a task directory (contracts, candidates, verifiers, snapshot)")
-    p.add_argument("task"); p.set_defaults(fn=cmd_validate_task)
+    p.add_argument("task")
+    p.add_argument("--show-candidates", action="store_true",
+                   help="list each candidate's origin and labels (coordinator only; reviewers must not see them)")
+    p.set_defaults(fn=cmd_validate_task)
     p = sub.add_parser("ingest", help="parse a Claude Code JSONL transcript")
     p.add_argument("transcript"); p.add_argument("--population", default="fixture"); p.add_argument("--source", default="cli")
     p.add_argument("--out"); p.set_defaults(fn=cmd_ingest)

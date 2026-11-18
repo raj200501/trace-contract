@@ -1,6 +1,6 @@
 # Experimental protocol
 
-Version: **v0.5 (pilot, exploratory)**. v0.1 was written before the first evaluation run. The v0.2 amendments (§10) were also made before any evaluation run. The v0.3 amendments (§11) were made after two superseded runs and before the final pilot run. The v0.4 amendments (§12) were made after the internal review of that run. The v0.5 amendments (§13) were made after the review of the internal-review dispositions and a final claims audit of `pilot-v0.3.1`, before `pilot-v0.3.2`.
+Version: **v0.6 (pilot, exploratory)**. v0.1 was written before the first evaluation run. The v0.2 amendments (§10) were also made before any evaluation run. The v0.3 amendments (§11) were made after two superseded runs and before the final pilot run. The v0.4 amendments (§12) were made after the internal review of that run. The v0.5 amendments (§13) were made after the review of the internal-review dispositions and a final claims audit of `pilot-v0.3.1`, before `pilot-v0.3.2`. The v0.6 amendments (§14) were made after a verification of the resulting fixes, before `pilot-v0.3.3`.
 Timestamp and SHA-256 of this file are recorded in `docs/decision_log.md`. This is a
 locally timestamped protocol, **not** a formal preregistration. Any later change is
 made in a new version with a decision-log entry; results are always reported
@@ -267,3 +267,76 @@ Corrections to the wording of earlier sections, which are kept as written:
   (CS-01, CS-02, CS-04), or just before CS-03's pool was registered. CS-02's checks
   were revised after its pool was complete.
 * **§6.** The generation costs were not recorded. This is a deviation.
+
+## 14. Amendments in v0.6 (after the verification of the fixes, before `pilot-v0.3.3`)
+
+A read-only verification of the fixes recorded in D40–D43 (model agents, four lenses:
+paper, documents, code, and diff and privacy; every finding checked by a second agent,
+then a completeness critic; decision log D44) found the following:
+* **A harness defect in the error path.** After its trusted imports, the wrapper puts
+  the candidate directories on `sys.path`. When a snippet raised, the wrapper's own
+  error path then imported modules lazily: Python 3.12's `traceback` imports `ast` and
+  `unicodedata` while formatting a traceback. A candidate `ast.py`, shipped in the patch
+  or written at runtime, therefore ran inside the trusted reporting code and could forge
+  the authenticated result. In a Docker probe under 0.3.2, a snippet that only divides
+  by zero was reported as `ok=True` with a forged value. The fix is `tc-harness/0.3.3`:
+  the wrapper imports `ast`, `unicodedata`, `linecache` and `tokenize` with its trusted
+  imports. After the snippet returns or raises, it restores its own `sys.path` and
+  `sys.meta_path` and clears the import cache before it formats, serialises and signs
+  the result. No candidate in the pool ships a module of any of these names. Under all
+  three candidate-path layouts (`/work`, `/work/src`, `/work/src:/work`), a snippet sees
+  the same `sys.path`, `PYTHONPATH`, interpreter flags and environment under 0.3.2 and
+  0.3.3; only `ast` (with `_ast`) and `unicodedata` are already loaded.
+* **An audit gap.** The held-out generators, the reference-check writers and their
+  reviewers ran as subagents of the build session and shared its scratch directory with
+  the builder and with each other. The tool-input audit (D26, D37) treated only the
+  sealed subfolders of that directory as forbidden. A stricter re-audit (D44) resolves
+  paths, treats the whole scratch directory as forbidden and attributes each read there
+  to the agent that wrote the file. It finds no read of forbidden material. Some
+  listings showed names only:
+  * the scratch directory's top level, listed by two agents;
+  * `tasks/<id>/verifiers/`, listed by the CS-03 and CS-04 reference-check writers
+    (known since D27);
+  * the directory that holds CS-02's workspaces, listed by one fixer of CS-02's
+    reference checks.
+
+  One reviewer of CS-02's reference checks read the first 50 lines of an earlier
+  reviewer's test runner. Every other read in the scratch directory was of the reading
+  agent's own files.
+
+Under §8 every condition of every task is re-run under 0.3.3. The D19 labels are
+re-proposed first. The run is `pilot-v0.3.3`; `pilot-v0.3.2` is kept and compared pair
+by pair. Primary metrics, comparisons and the label rule are **unchanged**.
+
+The following changes are made to the human-label procedure (§5), which has not yet been
+used:
+* Every task is reviewed by two reviewers. The packets are merged only when each task has
+  two complete reviews. Disagreements on validity have no final label until they are
+  adjudicated. Before, the last reviewer's label was used.
+* The packet hides the origin field, the ids, the descriptions, the proposals and the
+  outcomes, but not the origin. A candidate's origin can still be inferred from its
+  content: near misses resemble each other and the reference, and the user's corrections
+  describe what the agent did first. The packet therefore shows the user turns of the
+  session but not the agent's turns or tool output. Identical diffs share one id. Each reviewer
+  records an origin guess per candidate, and the merge reports how often the guesses are
+  right.
+* Contract reviews are recorded per reviewer in the same label file and merged with the
+  labels.
+
+Corrections to the wording of earlier sections, which are kept as written:
+* **§3.** "Workspaces without verifier files": the exported workspaces held no verifier
+  files except B1's repository tests in the near-miss workspaces (§12). The agents ran in
+  the repository checkout, so frozen verifiers were readable (D41). They also shared the
+  build session's scratch directory (above).
+* **§4.** The generation prompt asks for 6–14 tests; the audit's reviser may keep 6–16.
+* **§12 and §13.** The exact (unclustered) intervals are shown for rates only. No
+  exact interval is given for paired differences.
+* **§13.** The 2026-11-18 prompts are CS-01's near-miss prompts and all of CS-02's
+  prompts for held-out candidates and reference checks. CS-01's alternatives and
+  reference checks used the CS-03/CS-04 prompts. CS-03's reference checks, too, were
+  written while its pool was being generated; they were frozen before its pool was
+  registered.
+* **§13 (timing).** v0.5 was hashed after the final claims audit had found and verified
+  its findings. The audit's completeness critic finished after the hash and after
+  `pilot-v0.3.2` had started; its findings (D43) changed no analysis, label rule or
+  graded input.

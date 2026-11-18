@@ -578,7 +578,9 @@ def label_summary(task_dirs: list[Path]) -> dict:
             assessed = chk.get("assessed_label") if chk else None
             row["check_assessed"] = assessed
             disagree = value in ("valid", "invalid") and assessed in ("valid", "invalid") and assessed != value
-            if value in ("ambiguous", "unlabeled") or disagree:
+            if c.human_disagreement():
+                queue.append({**row, "reason": "human reviewers disagree; adjudication needed"})
+            elif value in ("ambiguous", "unlabeled") or disagree:
                 queue.append({**row, "reason": "ambiguous under D19" if value == "ambiguous" else
                               ("no proposal" if value == "unlabeled" else "construction check disagrees with proposal")})
         out[m.task_id] = {"counts": dict(counts), "candidates": rows, "review_queue": queue}

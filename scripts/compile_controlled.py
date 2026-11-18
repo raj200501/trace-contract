@@ -3,7 +3,8 @@
 Usage: python scripts/compile_controlled.py CS-04 more-itertools --pythonpath /work -- tests/test_more.py tests/test_recipes.py
 
 Sealing: the reference contract written by compilation is moved, together with the
-scenario and reference proposals, to the scratchpad 'sealed' directory until the
+scenario and reference proposals, to a sealed directory outside the repository and outside
+the agent-visible scratchpad (~/.tc_sealed/sealed/<task>; decision log D26) until the
 task's verifiers are frozen (decision log D12). `--unseal` restores them.
 """
 

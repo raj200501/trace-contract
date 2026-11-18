@@ -1,11 +1,78 @@
 {
   "eval-alt-1": {
     "transcript_sha256": "f520a0d7bc4ec0a6f535b252fdf07664f7a76e922cc56a2ae83c5f44879dec83",
-    "hits": []
+    "hits": [],
+    "strict_reaudit": {
+      "script": "scripts/strict_reaudit.py",
+      "transcripts": {
+        "main": {
+          "agent": "aa13f0aeeb7a0ef37",
+          "own_workspace": "/home/user/gen_workspaces/CS-04/eval-alt-1",
+          "extra_allowed": [],
+          "hits": [],
+          "scratch_root_listings": [],
+          "scratch_reads_not_attributed_to_the_agent": [],
+          "scratch_reads_of_own_files": 17
+        }
+      },
+      "assessment": "no hit; all scratch accesses are to its own solution.diff and baseline.py"
+    }
   },
   "eval-alt-2": {
     "transcript_sha256": "731c3b55388c86c9bb49e805410f38154e1462c1e91438fcd0e9f9fea19a4c47",
-    "hits": []
+    "hits": [],
+    "strict_reaudit": {
+      "script": "scripts/strict_reaudit.py",
+      "transcripts": {
+        "main": {
+          "agent": "ada3b7966bee2d889",
+          "own_workspace": "/home/user/gen_workspaces/CS-04/eval-alt-2",
+          "extra_allowed": [],
+          "hits": [],
+          "scratch_root_listings": [],
+          "scratch_reads_not_attributed_to_the_agent": [
+            {
+              "line": 65,
+              "ts": "2026-11-13T03:37:10.800Z",
+              "op": "read",
+              "path": "<scratchpad>/base_default.txt",
+              "text": "wc -l $S/base_default.txt",
+              "last_written_by": null,
+              "last_written_at": null
+            },
+            {
+              "line": 103,
+              "ts": "2026-11-13T03:38:57.402Z",
+              "op": "read",
+              "path": "<scratchpad>/base_default.txt",
+              "text": "diff $S/base_default.txt $S/sol_default.txt",
+              "last_written_by": null,
+              "last_written_at": null
+            },
+            {
+              "line": 103,
+              "ts": "2026-11-13T03:38:57.402Z",
+              "op": "read",
+              "path": "<scratchpad>/sol_default.txt",
+              "text": "diff $S/base_default.txt $S/sol_default.txt",
+              "last_written_by": null,
+              "last_written_at": null
+            },
+            {
+              "line": 103,
+              "ts": "2026-11-13T03:38:57.402Z",
+              "op": "read",
+              "path": "<scratchpad>/sol_default.txt",
+              "text": "wc -l < $S/sol_default.txt) probe lines)\"",
+              "last_written_by": null,
+              "last_written_at": null
+            }
+          ],
+          "scratch_reads_of_own_files": 3
+        }
+      },
+      "assessment": "no hit; base_default.txt and sol_default.txt were written by the agent's own inline Python (lines 65 and 103); every other scratch access is to files it wrote"
+    }
   },
   "refcheck": {
     "hits": [
@@ -19,11 +86,88 @@
     "assessment": "benign: one `ls tasks/CS-04/verifiers/` listing directory names only; no verifier test file of another condition was read",
     "writer_agent_id": "a12a8772152ac446d",
     "writer_transcript_sha256": "eaf4dc14c38b8170549c1020bc5d80fb747559f261433a8782db27de5a61632b",
-    "note_2026_11_18": "Writer transcript identified from experiments/prompts/agent_prompts.jsonl (decision log D40). Re-running the audit script on it with the reference-check directory allowed gives the recorded `ls` plus the writer's commands in the workspace exported for it (gen_workspaces/CS-04/refcheck), which this record treats as the agent's own workspace."
+    "note_2026_11_18": "Writer transcript identified from experiments/prompts/agent_prompts.jsonl (decision log D40). Re-running the audit script on it with the reference-check directory allowed gives the recorded `ls` plus the writer's commands in the workspace exported for it (gen_workspaces/CS-04/refcheck), which this record treats as the agent's own workspace.",
+    "strict_reaudit": {
+      "script": "scripts/strict_reaudit.py",
+      "transcripts": {
+        "writer": {
+          "agent": "a12a8772152ac446d",
+          "own_workspace": "/home/user/gen_workspaces/CS-04/refcheck",
+          "extra_allowed": [
+            "/home/user/trace-contract/tasks/CS-04/verifiers/reference_check"
+          ],
+          "hits": [
+            {
+              "event_id": "<session>/L000036.00",
+              "tool": "Bash",
+              "path": "/home/user/trace-contract/tasks/CS-04/verifiers",
+              "why": "inside forbidden material",
+              "text": "ls tasks/CS-04/verifiers/ 2>&1"
+            }
+          ],
+          "scratch_root_listings": [],
+          "scratch_reads_not_attributed_to_the_agent": [],
+          "scratch_reads_of_own_files": 20
+        }
+      },
+      "assessment": "one `ls tasks/CS-04/verifiers/` (directory names), already assessed in the first audit; all scratch accesses are to its own mutants folder, oracle_check.py and grading output"
+    }
   },
   "eval-nm": {
     "transcript_sha256": "a365177ab30cd898d78c7d8e0564b04256efe9606188d57454a314573c6a7eba",
-    "hits": []
+    "hits": [],
+    "strict_reaudit": {
+      "script": "scripts/strict_reaudit.py",
+      "transcripts": {
+        "main": {
+          "agent": "a592bd44bbfa6453f",
+          "own_workspace": "/home/user/gen_workspaces/CS-04/eval-nm",
+          "extra_allowed": [],
+          "hits": [],
+          "scratch_root_listings": [],
+          "scratch_reads_not_attributed_to_the_agent": [
+            {
+              "line": 66,
+              "ts": "2026-11-13T03:47:24.813Z",
+              "op": "read",
+              "path": "<scratchpad>/check_reqs.py) > <scratchpad>/out_",
+              "text": "cat $S/check_reqs.py)\" > \"$S/out_",
+              "last_written_by": null,
+              "last_written_at": null
+            },
+            {
+              "line": 73,
+              "ts": "2026-11-13T03:47:36.285Z",
+              "op": "exec",
+              "path": "<scratchpad>/out_base.json",
+              "text": "python3 \"$S/show.py\" \"$S/out_base.json\"",
+              "last_written_by": null,
+              "last_written_at": null
+            },
+            {
+              "line": 159,
+              "ts": "2026-11-13T03:50:09.703Z",
+              "op": "exec",
+              "path": "<scratchpad>/out_nm$k.json",
+              "text": "python3 \"$S/show.py\" \"$S/out_nm$k.json\"",
+              "last_written_by": null,
+              "last_written_at": null
+            },
+            {
+              "line": 159,
+              "ts": "2026-11-13T03:50:09.703Z",
+              "op": "exec",
+              "path": "<scratchpad>/out_ref.json",
+              "text": "python3 \"$S/show.py\" \"$S/out_ref.json\"",
+              "last_written_by": null,
+              "last_written_at": null
+            }
+          ],
+          "scratch_reads_of_own_files": 13
+        }
+      },
+      "assessment": "no hit; the reads without a recorded writer are of check_reqs.py (its own Write, line 58) and out_*.json (its own redirect outputs, lines 66-159), which the parser misreads inside the quoted command substitution"
+    }
   },
   "_rules": {
     "forbidden_substrings": [
@@ -45,6 +189,7 @@
       "/root/.local/bin/ (tool binaries; allowed from 2026-11-13T03:43Z, commit 5bb402a)"
     ],
     "scope": "tool inputs only (commands and file paths an agent passed to its tools); tool outputs are not inspected (decision log D37)",
-    "script": "scripts/audit_eval_generators.py"
+    "script": "scripts/audit_eval_generators.py",
+    "strict_reaudit": "2026-11-18, decision log D44: scripts/strict_reaudit.py resolves paths (shell segments, cd, variables set in the same command, find -prune) instead of matching substrings, adds the build session's shared scratch directory to the forbidden material, and classifies each read of that directory by the agent that wrote the file last; tool outputs are not inspected by the script; each assessment comes from reading the transcript"
   }
 }

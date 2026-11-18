@@ -10,8 +10,9 @@ Writes ``experiments/prompts/workflows/<name>__<run id>.js`` and
 ``experiments/prompts/agent_prompts.jsonl`` (one record per agent: id, sha256 of the
 original prompt, redacted prompt). Redactions: notes about the repository owner's
 messages, session-local paths, session ids and e-mail addresses, plus owner-specific
-redactions read from a file kept outside the repository (``--private-redactions``). The
-export writes nothing if a forbidden marker survives. Prompts are data; they are not re-run.
+redactions read from a file kept outside the repository (``--private-redactions``). Every
+text is redacted before anything is written, and the export writes nothing if a forbidden
+marker survives anywhere. Prompts are data; they are not re-run.
 
 Usage: python scripts/export_prompts.py <claude project session dir> --private-redactions <file.json>
 """
@@ -30,6 +31,7 @@ OUT = R / "experiments" / "prompts"
 
 _REDACTIONS = [
     (re.compile(r"Their message \"[^\"]*\"[^.]*\.(?: [^.]*\.)?"), "[note about an earlier owner message omitted]."),
+    (re.compile(r"Their latest message asks for this work to continue;[^.]*\."), "[note about an earlier owner message omitted]."),
     (re.compile(r"/tmp/claude-0/[^\s'\"`)]*"), "<scratchpad>"),
     (re.compile(r"/root/\.claude/projects/[^\s'\"`)]*"), "<session-dir>"),
     (re.compile(r"\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b"), "<session-id>"),
@@ -50,6 +52,7 @@ _AGENT_NOTES: dict[str, str] = {
     "a18443e118afd6931": "CS-02 reference-check attempt: " + _STOPPED,
     "a8360e790e2186abc": "CS-01 near-miss attempt: " + _STOPPED,
     "ad15c639ae0764a36": "CS-01 near-miss attempt: " + _STOPPED,
+    "af91f45e0c716a5a2": "CS-02 requirement-mapping attempt: " + _STOPPED,
 }
 
 
@@ -118,6 +121,7 @@ def main(session_dir: str, *opts: str) -> None:
     (OUT / "workflows").mkdir(parents=True, exist_ok=True)
     n_wf = 0
     names: set[str] = set()
+    pending: dict[Path, str] = {}  # nothing is written until every text has passed redaction
     for rec in sorted((sd / "workflows").glob("wf_*.json")):
         d = json.loads(rec.read_text())
         script = d.get("script")
@@ -137,7 +141,7 @@ def main(session_dir: str, *opts: str) -> None:
                   f"sha256 of the original script: {orig}; "
                   f"sha256 of this export: {hashlib.sha256(body.encode()).hexdigest()}. "
                   "Redacted: owner messages and personal information, session paths/ids.\n")
-        (OUT / "workflows" / fname).write_text(header + body, encoding="utf-8")
+        pending[OUT / "workflows" / fname] = header + body
         names.add(name.group(1) if name else "workflow")
         n_wf += 1
     rows = []
@@ -152,7 +156,9 @@ def main(session_dir: str, *opts: str) -> None:
                      **({"note": _AGENT_NOTES[aid]} if aid in _AGENT_NOTES else {}),
                      "prompt_sha256": None if private_hit else hashlib.sha256(prompt.encode()).hexdigest(),
                      "transcript_sha256": hashlib.sha256(t.read_bytes()).hexdigest(), "prompt": body})
-    (OUT / "agent_prompts.jsonl").write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows), encoding="utf-8")
+    pending[OUT / "agent_prompts.jsonl"] = "".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows)
+    for path, text in pending.items():
+        path.write_text(text, encoding="utf-8")
     (OUT / "README.md").write_text(
         "# Prompts of the model-generated artifacts\n\n"
         "* `workflows/`: the script of every workflow run ("

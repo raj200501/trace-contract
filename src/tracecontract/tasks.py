@@ -214,12 +214,16 @@ def compile_controlled_task(
     return tdir
 
 
+_TRANSCRIPT_DIRS = {Population.controlled: "data/controlled/transcripts", Population.fixture: "data/fixtures/transcripts",
+                    Population.natural: "data/natural/transcripts"}
+
+
 def session_for_task(task_dir: Path, repo_root: Path) -> Session:
     m = load(task_dir / "task.json", TaskManifest)
     pop = m.population
-    path = repo_root / "data" / ("controlled" if pop == Population.controlled else "fixtures") / "transcripts" / f"{m.task_id}.jsonl"
-    return parse_claude_code_jsonl(path, population=pop, source="controlled:tracecontract",
-                                   relpath=f"data/controlled/transcripts/{m.task_id}.jsonl", scripted_turns=m.scripted_turns)
+    rel = f"{_TRANSCRIPT_DIRS[pop]}/{m.task_id}.jsonl"
+    return parse_claude_code_jsonl(repo_root / rel, population=pop, source=f"{pop.value}:tracecontract",
+                                   relpath=rel, scripted_turns=m.scripted_turns)
 
 
 def render_session(session: Session, *, include_tools: bool = True, max_tool_chars: int = 600,

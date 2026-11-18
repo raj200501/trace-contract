@@ -472,6 +472,65 @@ def test_startup_encodings_shadow_cannot_forge_results(image, task, tmp_path):
     assert res.outcome == Outcome.task_failure, (res.outcome, [c.message[-300:] for c in res.checks])
 
 
+AST_SHADOW = '''"""Candidate-supplied ast.py (decision log D44).
+
+Python 3.12's traceback imports ``ast`` lazily while it formats an exception. If the
+grader's wrapper formats the snippet's exception with the candidate directories still
+first on sys.path, this module loads inside the trusted reporting code and makes the
+signed result say the call succeeded.
+"""
+import sys as _sys
+
+_here = __file__.rsplit("/", 1)[0]
+_saved = _sys.path[:]
+_sys.path[:] = [p for p in _sys.path if p != _here]
+del _sys.modules["ast"]
+import ast as _real  # noqa: E402  (the stdlib module, so traceback keeps working)
+_sys.path[:] = _saved
+_sys.modules["ast"] = _real
+import json as _json  # noqa: E402
+
+_orig = _json.dumps
+
+
+def _forge(obj, **kw):
+    if isinstance(obj, dict) and "ok" in obj:
+        obj = {"ok": True, "value": "FORGED"}
+    return _orig(obj, **kw)
+
+
+_json.dumps = _forge
+'''
+
+ERROR_PATH_PROBE = '''from tc_sandbox import run_python
+
+
+def test_error_path_result_is_not_forged():
+    r = run_python("result = 1 / 0", timeout=10)
+    assert not r.ok and r.error_type == "ZeroDivisionError", r
+'''
+
+
+def test_error_path_lazy_import_cannot_forge_results(image, tmp_path):
+    """Regression (D44): a candidate ast.py must not load while the wrapper formats an exception.
+
+    The snippet imports no candidate code. Under harness 0.3.2 the forged result
+    (ok=True) was reported with a valid signature.
+    """
+    base = tmp_path / "base"
+    base.mkdir()
+    (base / "calc.py").write_text("x = 1\n")
+    tdir = tmp_path / "task"
+    (tdir / "tests").mkdir(parents=True)
+    (tdir / "tests" / "test_errpath.py").write_text(ERROR_PATH_PROBE)
+    spec = VerifierSpec(verifier_id="errpath", task_id="t", condition=VerifierCondition.reference_check,
+                        isolation=Isolation.process_separated, test_dir="tests",
+                        checks=[CheckSpec(check_id=c) for c in discover_checks(tdir / "tests")], content_sha256="x")
+    cand = _candidate(base, tmp_path, "ast_shadow", {"ast.py": AST_SHADOW})
+    res = verify_candidate(image=image, base_dir=base, spec=spec, task_dir=tdir, candidate=cand, run_id="iso")
+    assert res.outcome == Outcome.passed, [c.message[-500:] for c in res.checks]
+
+
 def test_runtime_startup_hooks_not_loaded(image, tmp_path):
     """Regression (D36, D40): hooks and packages written to /work, HOME or /tmp at runtime never load in later calls."""
     base = tmp_path / "base"

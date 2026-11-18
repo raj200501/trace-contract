@@ -1,15 +1,22 @@
-"""Scan every file git would publish for credentials, session-local paths and e-mail addresses.
+"""Scan what a push would publish for credentials, session-local paths and e-mail addresses.
 
-Usage: python scripts/scan_tracked_files.py [--private-markers <file.json>]
+Usage: python scripts/scan_tracked_files.py [--private-markers <file.json>] [--all-history]
 
-Scans tracked files plus untracked files that are not git-ignored (what the next
-commit could add). Generic rules: credential formats, private-key headers, the
-session-local paths of the build environment, and e-mail addresses not on the
-allowlist below. ``--private-markers`` adds case-insensitive regexes from a JSON file
-kept outside the repository (``{"forbidden": [...]}``, the format of the prompt
-export's private redactions); their matches are reported by file, line and marker
-number only, so the scan output repeats nothing private. Exit code 1 if anything is
-found. Run before every push (decision log D40).
+Scans (1) the working tree: tracked files plus untracked files that are not git-ignored
+(what the next commit could add), and (2) every file version in the commits that a push
+would send: the commits in ``@{upstream}..HEAD`` (all commits if the branch has no
+upstream), or in the whole history with ``--all-history`` (audit mode). A file removed
+in a later commit is still published by a push of the commit that added it.
+
+Generic rules: credential formats, private-key headers, the session-local paths of the
+build environment, and e-mail addresses not on the allowlist below. ``--private-markers``
+adds case-insensitive regexes from a JSON file kept outside the repository
+(``{"forbidden": [...]}``, the format of the prompt export's private redactions, which
+also lists the build session id); their matches are reported by location and marker
+number only, so the output repeats nothing private. Exit code 1 if anything is found.
+
+This is a manual step, not a git hook: the builder runs it with the private markers
+before each push (decision log D44).
 """
 
 from __future__ import annotations
@@ -22,7 +29,7 @@ from pathlib import Path
 
 R = Path(__file__).resolve().parents[1]
 
-EMAIL = re.compile(r"[A-Za-z0-9._%+-]*[A-Za-z0-9]@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,6}\b")
+EMAIL = re.compile(r"[A-Za-z0-9._%+-]*[A-Za-z0-9]@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}\b")
 RULES = [
     # Split so that this rule's own source does not match it.
     ("session-local path", re.compile("/tmp/claude-0/" + "-home|/root/" + r"\.claude/projects/")),
@@ -35,47 +42,89 @@ RULES = [
 ]
 # Public strings that look like e-mail addresses, each with the reason it may stay.
 ALLOW = {
-    "markus@m-siemens.de": "upstream copyright notice in THIRD_PARTY_LICENSES/tinydb.txt (the MIT licence requires it)",
+    "markus@m-siemens.de": "upstream copyright notice in THIRD_PARTY_LICENSES/tinydb.txt, embedded in the HTML reports "
+                           "(the MIT licence requires the notice)",
     "jane.doe@example.com": "synthetic address in a redaction test",
     "git@github.com": "SSH host name in a repository URL",
 }
 
 
-def files() -> list[Path]:
-    out = subprocess.run(["git", "ls-files", "-z", "--cached", "--others", "--exclude-standard"], cwd=R,
-                         capture_output=True, check=True).stdout
-    return [R / p for p in out.decode().split("\0") if p]
+def _emails(line: str):
+    for m in EMAIL.finditer(line):
+        addr = m.group(0)
+        if m.start() > 0 and line[m.start() - 1] == "\\":
+            addr = addr[1:]  # an escape sequence such as "\nalice@..." in JSON text: drop the escape letter
+            if not EMAIL.fullmatch(addr):
+                continue
+        if addr.split("@", 1)[1].lower().startswith("pytest."):
+            continue  # a decorator such as "x@pytest.mark.parametrize", not an address
+        yield addr
+
+
+def scan_text(text: str, where: str, private: list[re.Pattern]) -> int:
+    hits = 0
+    for n, line in enumerate(text.splitlines(), 1):
+        for name, pat in RULES:
+            if pat.search(line):
+                print(f"{where}:{n}: {name}")
+                hits += 1
+        for addr in _emails(line):
+            if addr.lower() not in ALLOW:
+                print(f"{where}:{n}: e-mail address {addr}")
+                hits += 1
+        for i, pat in enumerate(private):
+            if pat.search(line):
+                print(f"{where}:{n}: private marker #{i}")
+                hits += 1
+    return hits
+
+
+def _git(*args: str) -> bytes:
+    return subprocess.run(["git", *args], cwd=R, capture_output=True, check=True).stdout
+
+
+def working_tree() -> list[tuple[str, bytes]]:
+    out = _git("ls-files", "-z", "--cached", "--others", "--exclude-standard")
+    files = []
+    for p in out.decode().split("\0"):
+        f = R / p
+        if p and f.is_file():
+            files.append((p, f.read_bytes()))
+    return files
+
+
+def pushed_blobs(all_history: bool) -> list[tuple[str, bytes]]:
+    if all_history:
+        rng = ["--all"]
+    else:
+        up = subprocess.run(["git", "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{upstream}"], cwd=R,
+                            capture_output=True, text=True)
+        rng = [f"{up.stdout.strip()}..HEAD"] if up.returncode == 0 and up.stdout.strip() else ["HEAD"]
+    seen, out = set(), []
+    for line in _git("rev-list", "--objects", *rng).decode().splitlines():
+        parts = line.split(" ", 1)
+        if len(parts) != 2 or parts[0] in seen:
+            continue
+        sha, path = parts
+        if _git("cat-file", "-t", sha).strip() != b"blob":
+            continue
+        seen.add(sha)
+        out.append((f"{path} (blob {sha[:10]})", _git("cat-file", "blob", sha)))
+    return out
 
 
 def main(*args: str) -> int:
     private: list[re.Pattern] = []
-    if args[:1] == ("--private-markers",):
-        private = [re.compile(f, re.I) for f in json.loads(Path(args[1]).read_text(encoding="utf-8")).get("forbidden", [])]
+    if "--private-markers" in args:
+        f = args[args.index("--private-markers") + 1]
+        private = [re.compile(x, re.I) for x in json.loads(Path(f).read_text(encoding="utf-8")).get("forbidden", [])]
     hits = 0
-    for f in files():
-        if not f.is_file():
-            continue
-        data = f.read_bytes()
+    for where, data in working_tree() + pushed_blobs("--all-history" in args):
         if b"\0" in data:
             continue
-        text = data.decode("utf-8", errors="replace")
-        rel = f.relative_to(R)
-        for n, line in enumerate(text.splitlines(), 1):
-            for name, pat in RULES:
-                if pat.search(line):
-                    print(f"{rel}:{n}: {name}")
-                    hits += 1
-            for m in EMAIL.finditer(line):
-                if m.start() > 0 and line[m.start() - 1] == "\\":
-                    continue  # an escape sequence such as "\n@pytest.mark..." in JSON text
-                if m.group(0).lower() not in ALLOW:
-                    print(f"{rel}:{n}: e-mail address {m.group(0)}")
-                    hits += 1
-            for i, pat in enumerate(private):
-                if pat.search(line):
-                    print(f"{rel}:{n}: private marker #{i}")
-                    hits += 1
-    print(f"scan: {hits} finding(s) in files git would publish" + ("" if private else " (no private markers given)"))
+        hits += scan_text(data.decode("utf-8", errors="replace"), where, private)
+    scope = "the working tree and " + ("the whole history" if "--all-history" in args else "the commits a push would send")
+    print(f"scan: {hits} finding(s) in {scope}" + ("" if private else " (no private markers given)"))
     return 1 if hits else 0
 
 

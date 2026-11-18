@@ -833,3 +833,170 @@ packet. No candidate patch in the pool contains comments that reveal its origin.
 * **Wording of protocol v0.5 §13** on the mapper instruction: corrected in D41.
 * **Implementation claims** checked against the code, and **related-work numbers**
   checked against the primary papers: no problem found.
+
+### D44. Verification of the D40–D43 fixes; harness 0.3.3; stricter generator re-audit; protocol v0.6
+**Verification (model agents, read-only; not human review).** Workflow
+`tracecontract-fix-verification` (run `wf_647ff2b0-8cb`, 2026-11-18, 14:51–17:07 UTC).
+Four lenses (paper; documents; code; diff and privacy) read the changes made since the
+D40 reviews. A second agent tried to refute each finding, and a critic looked for gaps.
+Result: 72 findings (26 medium, 46 low), 68 confirmed and 4 refuted. The confirmed ones
+are fixed in this change or in the text corrections that follow it; any left open are
+listed in `docs/internal_review.md`.
+
+**Harness 0.3.3 (`tc-harness/0.3.3`).** The 0.3.2 fix (D40) left an import path into the
+trusted code. After its trusted imports, the wrapper puts the candidate directories on
+`sys.path`. When a snippet raised, the wrapper's own error path then imported modules
+lazily: Python 3.12's `traceback` imports `ast` (caret positions) and `unicodedata` while
+formatting a traceback. A candidate `ast.py`, shipped in the patch or written at runtime,
+therefore ran inside the code that signs the result, even when the snippet imported no
+candidate module.
+
+Docker proof (`tests/test_sandbox_isolation.py::test_error_path_lazy_import_cannot_forge_results`):
+with a candidate `ast.py` planted, the snippet `result = 1 / 0` was reported under 0.3.2
+as `ok=True` with a forged value. Under 0.3.3 it is reported as `ok=False`,
+`ZeroDivisionError`.
+
+The fix:
+* `ast`, `unicodedata`, `linecache` and `tokenize` are imported with the trusted modules.
+* As soon as the snippet returns or raises, the wrapper puts back its own `sys.path` and
+  `sys.meta_path` (new list objects) and clears `sys.path_importer_cache`. Only then does
+  it format, serialise and sign anything.
+* Relative or empty `PYTHONPATH` entries are now resolved against the child's working
+  directory, as the interpreter resolves them. 0.3.2 resolved them against the grader's
+  working directory. No task uses such an entry.
+
+The in-call limit is unchanged. Code that the snippet runs, directly or through candidate
+modules it imports, can still change what that call reports.
+
+No candidate patch in the pool ships a module named `ast`, `unicodedata`, `linecache`,
+`tokenize`, `traceback`, `encodings`, `json`, `hmac`, `hashlib`, `os` or `sys`.
+
+Equivalence check (2026-11-18, Docker): under all three candidate-path layouts (`/work`
+for CS-02–CS-04, `/work/src` for CS-01, and `/work/src:/work`), a snippet sees the same
+`sys.path`, `PYTHONPATH`, interpreter flags and environment under 0.3.2 and 0.3.3. The
+only difference is that `ast`, `_ast` and `unicodedata` are already loaded. The same
+check of 0.3.1 against 0.3.2 gives identical views under all three layouts. This corrects
+D40, which named `/work/src:/work` (used by no task) instead of CS-01's `/work/src`.
+
+**Stricter re-audit of the generator transcripts.** The tool-input audit (D26, D37)
+matches substrings of the paths an agent passed to its tools. `scripts/strict_reaudit.py`
+(using `controlled.audit_generator_transcript_strict`) resolves them instead:
+* it splits shell commands into segments and skips heredoc bodies;
+* it follows `cd` and substitutes variables set earlier in the same command;
+* it honours `find -prune`;
+* it also resolves relative paths from the directory an earlier call ended in.
+
+It flags reads inside forbidden material, and recursive searches or listings whose root
+contains forbidden material. The script finds each recorded transcript by its sha256. It
+writes a `strict_reaudit` block into every record of `tasks/*/labels/generator_audit.json`
+and keeps the original record. All 21 transcripts were re-audited: the 12 held-out
+generators, the CS-01, CS-03 and CS-04 reference-check writers, and CS-02's writer with
+its three reviewers and two fixers. Each assessment comes from reading the transcript,
+tool outputs included.
+
+The re-audit found an audit gap. The held-out generators, the reference-check writers
+and their reviewers ran as subagents of the build session. They shared its scratch
+directory with the builder and with each other, and many of them wrote their helper
+scripts there. The first audit treated only the sealed subfolders of that directory as
+forbidden. The rest held other agents' working files and some material derived from
+candidates:
+* the patch of `CS-04-eval-alt-1`, which the builder extracted there on 2026-11-13 at
+  04:15 UTC;
+* outputs that the independent check agents wrote for registered candidates, for
+  example `CS-02-eval-alt-1.json` (from 2026-11-18, 08:55 UTC).
+
+The re-audit therefore treats the whole scratch directory as forbidden. It attributes
+each read there to the agent that last wrote the file, using a write index built from
+every transcript of the session, the builder's included.
+
+Result: no audited agent read forbidden material. Listings that showed names only:
+* the generator of CS-02's near misses listed the top level of the scratch directory
+  once (08:55 UTC);
+* the third reviewer of CS-02's reference checks listed it once (10:12 UTC, already in
+  D41);
+* the second fixer of CS-02's reference checks listed `~/gen_workspaces/CS-02/`. This
+  corrects the first assessment's statement that no tool input of that chain names an
+  agent workspace;
+* the CS-03 and CS-04 reference-check writers listed `tasks/<id>/verifiers/` (D27).
+
+Besides listings, the third CS-02 reviewer read the first 50 lines of the first
+reviewer's test runner. That runner imports the four reference-check test modules and
+prints PASS or FAIL, and it is outside the read-only list in the reviewer's prompt; it
+holds no candidate or other verifier material. Every other read in the scratch directory
+was of a file the reading agent had written. The remaining automatic flags are parser
+limits, each explained in its record:
+* files created by the agent's own inline code;
+* redirects inside quoted commands;
+* `cd` to a directory named with a variable.
+
+The checks still do not read tool outputs, and paths that inline code builds at run time
+are matched only by name. `tests/test_generator_audit.py` covers the parser. The
+preflight check now fails if a record lacks an assessed strict re-audit.
+
+**Human-label procedure** (not yet used; protocol v0.6 §14). The verification found that
+the D43 packet hides the origin field but not the origin. The user's corrections describe
+the agent's first attempt. Near misses resemble each other and the reference, and in
+CS-02 the diff structure differs by origin. Packet changes:
+* `session.txt` holds the user turns only.
+* Candidates with identical diffs share one id.
+* Ids are drawn from `secrets.token_hex(3)`. The shuffle stays seeded.
+* The key file is created with `O_EXCL` and mode 0600.
+* State directories are made readable for the sandbox user (mode 0755).
+* The template is named `label_template.json`, so the merge's file pattern does not
+  match it.
+* Reviewers use pseudonymous ids (`R1`, `R2`, …), which the merge enforces.
+* Each reviewer records a contract review and an origin guess per candidate. The merge
+  reports how often the guesses are right.
+* The packet README's do-not-open list now also names `docs/`, `README.md`, `STATUS.md`,
+  `experiments/`, the HTML reports, `validate-task --show-candidates` (candidate details
+  are now hidden by default) and the git history.
+
+Rules for merging and labels:
+* Every task is reviewed by two reviewers. The merge requires two complete reviews per
+  task and refuses to merge the same packet twice.
+* An "invalid" label must name a scored requirement or `REGRESSION`.
+* `Candidate.final_label()` gives no label while the latest human labels disagree and no
+  adjudication exists. Before, it took the last reviewer's label. `analysis` lists such
+  candidates as needing adjudication.
+
+**Pre-push scan.** `scripts/scan_tracked_files.py` now also scans every file version in
+the commits a push would send (`@{upstream}..HEAD`; `--all-history` scans all of
+history). A file added in one commit and removed in a later one is still published by the
+push. `--private-markers` takes the redaction file kept outside the repository. The scan
+is a manual step before each push, not a git hook. Results on 2026-11-18:
+* pending commits: no finding;
+* whole history: 99 findings, all in already-disclosed history (STATUS lists the commits).
+  Rewriting history is the owner's decision.
+
+**Corrections to earlier entries.**
+* **D40 (outputs not edited).** No raw result, manifest, analysis or report of a
+  superseded run was edited. The run-comparison files in the superseded run folders were
+  regenerated on 2026-11-18 with the current `scripts/compare_runs.py` (commit `55a2346`).
+* **D40 (v0.5 timing).** Protocol v0.5 was hashed (14:12:50 UTC) after the final claims
+  audit had found and verified its findings. The audit's completeness critic finished at
+  14:36 UTC, after the hash and after `pilot-v0.3.2` had started (14:24:59 UTC). Its
+  findings (D43) changed no analysis, label rule or graded input.
+* **D41 (non-append edits).** Besides the `## 2026-11-18` heading, D5 (in `cbb8dcd`) and
+  D40 and D41 (in `55a2346` and `45c654c`) were extended after their first commit. No
+  line of the log has been removed. Later additions go into new entries.
+* **D41 (stopped attempts).** Seven agents were stopped at the D30 pause, not six: the
+  two CS-01 near-miss attempts and five CS-02 agents. The CS-02 agents were alternative 1,
+  alternative 2, the near misses, the reference checks, and the mapper
+  `af91f45e0c716a5a2`, which ran 04:30–04:34 UTC on 2026-11-13. The prompt export now
+  marks all seven. CS-02's mapper-1 files come from the 2026-11-18 held-out workflow
+  (`tracecontract-heldout`, run `wf_b428f318-391`, agent `a98177684c912c810`,
+  08:39–08:52 UTC).
+* **README, data card and paper (reference-check timing).** These said that CS-03's
+  reference checks were written "just before" its pool. The writer ran
+  03:45:36–03:57:26 UTC on 2026-11-13, alongside the three CS-03 generators
+  (03:45:36–04:12). The checks were frozen (`07bdd71`, 04:01) before the pool was
+  registered. D41 is accurate.
+* **README, data card and paper (prompts).** These said the prompts of the families
+  generated last differ. The 2026-11-18 prompts are CS-01's near-miss prompts and all of
+  CS-02's prompts for held-out candidates and reference checks. CS-01's alternatives and
+  reference checks used the CS-03/CS-04 prompts, as D41's list implies.
+
+**Protocol v0.6** (§14) records these changes. It was written and hashed at
+2026-11-18T17:43:44Z, sha256
+`c70a26ebfb1fac57cb11bc254985fa1d7f3ee29082e2705e7838be4cdc5f766d`, before the 0.3.3 label
+re-proposal and run.

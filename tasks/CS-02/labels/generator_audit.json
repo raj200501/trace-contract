@@ -1,15 +1,66 @@
 {
   "eval-alt-1": {
     "transcript_sha256": "f00c18df4bbcd0bed8fc9d847a3ed3f7fadb6864a706a40b5a80478247d148e5",
-    "hits": []
+    "hits": [],
+    "strict_reaudit": {
+      "script": "scripts/strict_reaudit.py",
+      "transcripts": {
+        "main": {
+          "agent": "a6e795b1b3140de35",
+          "own_workspace": "/home/user/gen_workspaces/CS-02/eval-alt-1",
+          "extra_allowed": [],
+          "hits": [],
+          "scratch_root_listings": [],
+          "scratch_reads_not_attributed_to_the_agent": [],
+          "scratch_reads_of_own_files": 7
+        }
+      },
+      "assessment": "no hit; all scratch accesses are to its own check scripts (check_atomic.py, check_bytes.py, check_edges.py) and base_check folder"
+    }
   },
   "eval-alt-2": {
     "transcript_sha256": "93ad3047ea83183fe16b225d9fc034185f88df9ba55f382995b247cf18de27b5",
-    "hits": []
+    "hits": [],
+    "strict_reaudit": {
+      "script": "scripts/strict_reaudit.py",
+      "transcripts": {
+        "main": {
+          "agent": "a137897f624f0d6b1",
+          "own_workspace": "/home/user/gen_workspaces/CS-02/eval-alt-2",
+          "extra_allowed": [],
+          "hits": [],
+          "scratch_root_listings": [],
+          "scratch_reads_not_attributed_to_the_agent": [],
+          "scratch_reads_of_own_files": 7
+        }
+      },
+      "assessment": "no hit; all scratch accesses are to its own check1.py, check2.py and basecheck folder (it overwrote two older files of the same names)"
+    }
   },
   "eval-nm": {
     "transcript_sha256": "b763611c6d2daf94a1c77f2b2685de65d64171a85b90f43b2e789225926cf79b",
-    "hits": []
+    "hits": [],
+    "strict_reaudit": {
+      "script": "scripts/strict_reaudit.py",
+      "transcripts": {
+        "main": {
+          "agent": "a4b1b68e5a7b1f2e6",
+          "own_workspace": "/home/user/gen_workspaces/CS-02/eval-nm",
+          "extra_allowed": [],
+          "hits": [],
+          "scratch_root_listings": [
+            {
+              "line": 51,
+              "ts": "2026-11-18T08:55:24.663Z",
+              "text": "ls <scratchpad>"
+            }
+          ],
+          "scratch_reads_not_attributed_to_the_agent": [],
+          "scratch_reads_of_own_files": 38
+        }
+      },
+      "assessment": "one `ls` of the scratch directory's top level (2026-11-18T08:55Z) showed file names only, among them files of other agents and of the builder, including outputs of the independent check agents for registered candidates (CS-02-eval-alt-1.json) and a candidate patch the builder had extracted for CS-04 (alt1.patch); the agent opened none of them and worked in its own subfolder cs02_evalnm; every other scratch access is to files it wrote"
+    }
   },
   "refcheck": {
     "transcripts_sha256": {
@@ -21,7 +72,150 @@
       "review3": "0434fcbdb91e179784a8b9687169f5cd254afc74ca8f8bf7c2e7a271e539d716"
     },
     "hits": [],
-    "assessment": "refcheck writer, three reviewers and two fixers: no tool input names a candidate file, another verifier, a held-out candidate id, an agent workspace or sealed material; the only candidates graded were CS-02-reference and CS-02-noop-dev (checked by pattern scan of every tool input)"
+    "assessment": "refcheck writer, three reviewers and two fixers: no tool input names a candidate file, another verifier, a held-out candidate id, an agent workspace or sealed material; the only candidates graded were CS-02-reference and CS-02-noop-dev (checked by pattern scan of every tool input)",
+    "strict_reaudit": {
+      "script": "scripts/strict_reaudit.py",
+      "transcripts": {
+        "gen": {
+          "agent": "a4ed13934c190f505",
+          "own_workspace": "/home/user/gen_workspaces/CS-02/refcheck",
+          "extra_allowed": [
+            "/home/user/trace-contract/tasks/CS-02/verifiers/reference_check"
+          ],
+          "hits": [],
+          "scratch_root_listings": [],
+          "scratch_reads_not_attributed_to_the_agent": [],
+          "scratch_reads_of_own_files": 0
+        },
+        "review1": {
+          "agent": "ae6a4e3ba100d2023",
+          "own_workspace": "/home/user/gen_workspaces/CS-02/review-refcheck-1",
+          "extra_allowed": [
+            "/home/user/trace-contract/tasks/CS-02/verifiers/reference_check"
+          ],
+          "hits": [],
+          "scratch_root_listings": [],
+          "scratch_reads_not_attributed_to_the_agent": [
+            {
+              "line": 116,
+              "ts": "2026-11-18T09:24:49.281Z",
+              "op": "read",
+              "path": "<scratchpad>/harness_fix/test_no_leftover_files_fixed.py",
+              "text": "sed -n 129,140p $SP/harness_fix/test_no_leftover_files_fixed.py",
+              "last_written_by": null,
+              "last_written_at": null
+            }
+          ],
+          "scratch_reads_of_own_files": 10
+        },
+        "fix1": {
+          "agent": "aea60d70e7ff3fbf9",
+          "own_workspace": "/home/user/gen_workspaces/CS-02/refcheck",
+          "extra_allowed": [
+            "/home/user/trace-contract/tasks/CS-02/verifiers/reference_check"
+          ],
+          "hits": [],
+          "scratch_root_listings": [],
+          "scratch_reads_not_attributed_to_the_agent": [],
+          "scratch_reads_of_own_files": 9
+        },
+        "review2": {
+          "agent": "a072e980da350a632",
+          "own_workspace": "/home/user/gen_workspaces/CS-02/review-refcheck-2",
+          "extra_allowed": [
+            "/home/user/trace-contract/tasks/CS-02/verifiers/reference_check"
+          ],
+          "hits": [],
+          "scratch_root_listings": [],
+          "scratch_reads_not_attributed_to_the_agent": [
+            {
+              "line": 77,
+              "ts": "2026-11-18T09:41:43.841Z",
+              "op": "list",
+              "path": "<scratchpad>/states/ref/_rc",
+              "text": "ls $S/states/ref/_rc $S/states/ref/_rc/tests",
+              "last_written_by": "agent-ae6a4e3ba100d2023",
+              "last_written_at": "2026-11-18T09:21:06.838Z"
+            }
+          ],
+          "scratch_reads_of_own_files": 11
+        },
+        "fix2": {
+          "agent": "a2798c24499cad766",
+          "own_workspace": "/home/user/gen_workspaces/CS-02/refcheck",
+          "extra_allowed": [
+            "/home/user/trace-contract/tasks/CS-02/verifiers/reference_check"
+          ],
+          "hits": [
+            {
+              "event_id": "<session>/L000032.00",
+              "tool": "Bash",
+              "path": "/home/user/gen_workspaces/CS-02",
+              "why": "inside forbidden material",
+              "text": "ls /home/user/gen_workspaces/CS-02/ 2>&1"
+            }
+          ],
+          "scratch_root_listings": [],
+          "scratch_reads_not_attributed_to_the_agent": [],
+          "scratch_reads_of_own_files": 29
+        },
+        "review3": {
+          "agent": "a8b79961d1acbbee1",
+          "own_workspace": "/home/user/gen_workspaces/CS-02/review-refcheck-3",
+          "extra_allowed": [
+            "/home/user/trace-contract/tasks/CS-02/verifiers/reference_check"
+          ],
+          "hits": [],
+          "scratch_root_listings": [
+            {
+              "line": 81,
+              "ts": "2026-11-18T10:12:39.799Z",
+              "text": "ls -la $S $S/harness $S/harness/tests"
+            }
+          ],
+          "scratch_reads_not_attributed_to_the_agent": [
+            {
+              "line": 77,
+              "ts": "2026-11-18T10:12:33.571Z",
+              "op": "list",
+              "path": "<scratchpad>/harness",
+              "text": "ls $S/harness",
+              "last_written_by": "agent-ae6a4e3ba100d2023",
+              "last_written_at": "2026-11-18T09:21:06.838Z"
+            },
+            {
+              "line": 81,
+              "ts": "2026-11-18T10:12:39.799Z",
+              "op": "list",
+              "path": "<scratchpad>/harness",
+              "text": "ls -la $S $S/harness $S/harness/tests",
+              "last_written_by": "agent-ae6a4e3ba100d2023",
+              "last_written_at": "2026-11-18T09:21:06.838Z"
+            },
+            {
+              "line": 81,
+              "ts": "2026-11-18T10:12:39.799Z",
+              "op": "list",
+              "path": "<scratchpad>/harness/tests",
+              "text": "ls -la $S $S/harness $S/harness/tests",
+              "last_written_by": "agent-ae6a4e3ba100d2023",
+              "last_written_at": "2026-11-18T09:21:06.838Z"
+            },
+            {
+              "line": 81,
+              "ts": "2026-11-18T10:12:39.799Z",
+              "op": "read",
+              "path": "<scratchpad>/harness/run_all.py",
+              "text": "head -50 $S/harness/run_all.py",
+              "last_written_by": "agent-ae6a4e3ba100d2023",
+              "last_written_at": "2026-11-18T09:21:06.838Z"
+            }
+          ],
+          "scratch_reads_of_own_files": 20
+        }
+      },
+      "assessment": "gen, fix1: no hit. review1: the one read without a recorded writer is harness_fix/test_no_leftover_files_fixed.py, created by its own inline Python (line 112). review2: the listing of states/ref/_rc is of a folder it had just re-created (rm -rf and cp, line 69; _rc copied from its own rc folder, line 77); the listing shows its own runner.py, not review1's run_all.py. fix2: one `ls ~/gen_workspaces/CS-02/` showed the names of the task's workspaces; it read no file in another workspace (this corrects the first assessment's statement that no tool input names an agent workspace). review3: listed the scratch directory's top level (names only) and the first reviewer's harness folder, and read the first 50 lines of that reviewer's test runner (harness/run_all.py, which imports the four reference-check test modules and prints PASS or FAIL); it then said it would not read the rest and worked in its own folder rc3. Neither folder holds candidate or other verifier material; the runner is outside the READ ONLY list in its prompt, a deviation without held-out exposure."
+    }
   },
   "_rules": {
     "forbidden_substrings": [
@@ -43,6 +237,7 @@
       "/root/.local/bin/ (tool binaries; allowed from 2026-11-13T03:43Z, commit 5bb402a)"
     ],
     "scope": "tool inputs only (commands and file paths an agent passed to its tools); tool outputs are not inspected (decision log D37)",
-    "script": "scripts/audit_eval_generators.py"
+    "script": "scripts/audit_eval_generators.py",
+    "strict_reaudit": "2026-11-18, decision log D44: scripts/strict_reaudit.py resolves paths (shell segments, cd, variables set in the same command, find -prune) instead of matching substrings, adds the build session's shared scratch directory to the forbidden material, and classifies each read of that directory by the agent that wrote the file last; tool outputs are not inspected by the script; each assessment comes from reading the transcript"
   }
 }

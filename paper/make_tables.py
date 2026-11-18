@@ -213,11 +213,14 @@ def results(run: Path, led: Ledger) -> None:
         if b1:
             prow.append(f"B1 upstream tests only & -- & -- & -- & -- & {b1['fa_num']}/{b1['fa_den']} (all) & {b1['fr_num']}/{b1['fr_den']} (all) \\\\")
             led.add("posthoc", f"{run_id} B1 upstream-only FA/FR", f"{b1['fa_num']}/{b1['fa_den']}, {b1['fr_num']}/{b1['fr_den']}", f"{src} b1_upstream_only")
+        n_dup = len(a.get("duplicates", {}))
+        led.add("posthoc", f"{run_id} held-out candidates dropped as duplicates (caption)", n_dup, f"{src} duplicates")
         (GEN / "posthoc_table.tex").write_text(table(
-            "\\textbf{Exploratory, post hoc (protocol v0.4).} Near misses accepted among those the label rule confirmed invalid and "
-            "among those it marked ambiguous; rates under the independent construction checks' labels; rates without the two "
-            "candidates that duplicate a development attack. Last row: B1 scored only on checks from the base commit's own tests "
-            "(all candidates, primary labels).", "tab:posthoc", "lrrrrrr",
+            "\\textbf{Exploratory, post hoc (protocol v0.4; duplicates view widened in v0.5).} Near misses accepted among those "
+            "the label rule confirmed invalid and among those it marked ambiguous; rates under the independent construction "
+            f"checks' labels; rates without the {n_dup} held-out candidates that duplicate another candidate (same graded "
+            "patch, or same code apart from comments and docstrings). Last row: B1 scored only on checks from the base "
+            "commit's own tests (all candidates, primary labels).", "tab:posthoc", "lrrrrrr",
             "Condition & NM conf. & NM amb. & FA (checks) & FR (checks) & FA (no dup.) & FR (no dup.)", prow, size="\\footnotesize"))
 
     lrows = []
@@ -299,8 +302,9 @@ def comparisons(new_run: Path, old_runs: list[Path], led: Ledger) -> None:
         (GEN / "reliability_table.tex").write_text(table(
             f"Agreement of earlier runs with the final run \\texttt{{{tex(new_run.name)}}} on pairs graded in both. Reward agreement "
             "is pass vs non-pass; outcome agreement is the exact outcome. Both are computed on pairs whose verifier is unchanged "
-            "(same version, test content and number of scored checks). The last column covers pairs whose verifier changed "
-            "between the runs (B1 re-selection, D31).", "tab:reliability", "llrrrr",
+            "(same version, test content and scored check list: the check-list hash where both run manifests record it, "
+            "otherwise the number of scored checks). The last column covers pairs whose verifier changed between the runs "
+            "(B1 re-selection, D31).", "tab:reliability", "llrrrr",
             "Earlier run & Harness & Pairs & Reward agr. & Outcome agr. & Changed verifier", rows, size="\\footnotesize"))
 
 

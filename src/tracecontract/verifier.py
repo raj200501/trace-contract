@@ -8,9 +8,15 @@ enforces the parts of that rule that can be checked statically:
 * no ``import`` of anything except the standard library, ``pytest``,
   ``hypothesis`` and ``tc_sandbox`` (so candidate modules are never imported into
   the grader process);
-* no writes to the candidate workspace or the results directory;
-* every test calls the sandbox, and every sandbox result is checked by more than
-  ``r.ok`` alone (to limit no-exception-only checks, see tc_sandbox residual risk).
+* no ``open()`` writes to a literal path in the candidate workspace or the results
+  directory (other writes are not detected);
+* no parametrised tests;
+* each test makes a call (a sandbox call, or any call other than ``print``, ``len``
+  or ``isinstance``) and has an assertion beyond ``r.ok`` (to limit
+  no-exception-only checks, see tc_sandbox residual risk).
+
+The prompts additionally ask that every test go through the sandbox and write only
+under ``/tmp``; the lint does not verify that.
 """
 
 from __future__ import annotations

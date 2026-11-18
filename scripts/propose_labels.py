@@ -11,7 +11,7 @@ For each evaluation candidate of a task:
 Decision rule (pre-specified, docs/decision_log.md D19):
 * construction says valid  + reference checks pass + no regression   -> valid
 * construction says invalid + reference checks fail a check mapped to a
-  violated requirement (or the regression check fails)               -> invalid
+  violated requirement (a failing regression check alone is not enough) -> invalid
 * naturally observed candidates (no construction label): invalid if any reference
   check or regression fails (violated = requirements of failing checks), else valid
 * any disagreement                                                    -> ambiguous

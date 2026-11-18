@@ -46,7 +46,7 @@ from ..schemas import (
 )
 
 HARNESS_SRC = Path(__file__).parent / "harness"
-HARNESS_VERSION = "tc-harness/0.3.2"
+HARNESS_VERSION = "tc-harness/0.3.3"
 BASE_IMAGE = "python:3.12-slim@sha256:5e2bdb1b0d542d5039cffb8181c65930093949194a65c365dfb1b0fe13a4fa5b"
 DEFAULT_TEST_REQUIREMENTS = (
     "pytest==8.3.5", "hypothesis==6.131.0", "attrs==26.1.0", "iniconfig==2.3.1",

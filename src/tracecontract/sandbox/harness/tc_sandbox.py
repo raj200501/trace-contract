@@ -58,8 +58,14 @@ TAMPER_EVENTS: list[dict[str, Any]] = []
 # snippet starts). A candidate file named like a stdlib module (``json.py``,
 # ``encodings/``), or a ``sitecustomize.py``/``usercustomize.py`` written at runtime,
 # can therefore not replace the code that serialises and signs the result before the
-# snippet runs (decision log D36, D40). Code imported BY the snippet runs in the same
-# process and can still change what that call reports (the documented residual risk).
+# snippet runs (decision log D36, D40). The modules that ``traceback`` imports lazily
+# while it formats an exception (``ast``, ``unicodedata``) are imported with the trusted
+# ones, and as soon as the snippet returns or raises, the wrapper puts the trusted
+# import path back (sys.path, sys.meta_path, importer cache) before it formats, serialises
+# or signs anything, so the wrapper's own error path never imports from a candidate
+# directory (decision log D44; harness 0.3.2 did). Code that the snippet runs, directly or
+# through candidate modules it imports, runs in the same process and can still change
+# what that call reports (the documented residual risk).
 _WRAPPER = r'''
 import sys as _tc_sys
 _tc_cand = %(cand_paths)r
@@ -67,11 +73,19 @@ _tc_sys.path[:] = [p for p in _tc_sys.path if p not in _tc_cand and p not in (""
 import site as _tc_site
 _tc_site.main()
 import os as _tc_os, json as _tc_json, hmac as _tc_hmac, hashlib as _tc_hashlib, traceback as _tc_traceback
+import ast as _tc_ast, unicodedata as _tc_unicodedata, linecache as _tc_linecache, tokenize as _tc_tokenize
+_tc_trusted_path = list(_tc_sys.path)
+_tc_trusted_meta_path = list(_tc_sys.meta_path)
 _tc_sys.path[0:0] = %(late_paths)r
 _tc_pp = %(pythonpath)r
 if _tc_pp is not None:
     _tc_os.environ["PYTHONPATH"] = _tc_pp
 del _tc_pp
+def _tc_trust():
+    # New list objects: a value the snippet returns that refers to the old lists is left as it was.
+    _tc_sys.path = list(_tc_trusted_path)
+    _tc_sys.meta_path = list(_tc_trusted_meta_path)
+    _tc_sys.path_importer_cache.clear()
 def _tc_main():
     key = _tc_os.read(%(keyfd)d, 64)
     _tc_os.close(%(keyfd)d)
@@ -80,8 +94,10 @@ def _tc_main():
     ns = {"__name__": "__tc_snippet__"}
     try:
         exec(compile(snippet, "<tc-snippet>", "exec"), ns)
+        _tc_trust()
         res = {"ok": True, "value": ns.get("result")}
     except BaseException as e:  # noqa: BLE001 - report every failure as data
+        _tc_trust()
         res = {"ok": False, "error_type": type(e).__name__, "error": str(e)[:4000],
                "traceback": _tc_traceback.format_exc()[-4000:]}
     try:
@@ -239,6 +255,11 @@ def _spawn(argv: list[str], *, timeout: float, input_bytes: bytes | None, cwd: s
     return (None if timed_out else proc.returncode), stdout, stderr, timed_out
 
 
+def _in_workdir(entry: str) -> str:
+    """A PYTHONPATH entry as the child's interpreter resolves it (relative to WORKDIR; empty = WORKDIR)."""
+    return os.path.normpath(os.path.join(WORKDIR, entry)) if entry else WORKDIR
+
+
 def run_python(snippet: str, *, timeout: float = 20.0, env: dict[str, str] | None = None) -> CallResult:
     """Execute ``snippet`` as the sandbox user; the snippet should assign ``result``.
 
@@ -250,12 +271,14 @@ def run_python(snippet: str, *, timeout: float = 20.0, env: dict[str, str] | Non
     r, w = os.pipe()
     os.write(w, key)
     os.close(w)
-    cand_paths = [x for x in CANDIDATE_PYTHONPATH.split(os.pathsep) if x]
+    cand_paths = [_in_workdir(x) for x in CANDIDATE_PYTHONPATH.split(os.pathsep) if x]
     child_env = _sandbox_env(env)
     # PYTHONPATH is withheld from the interpreter's start-up and restored by the wrapper
-    # (D40). The snippet then sees the same sys.path and os.environ as under 0.3.1.
+    # (D40). Its entries are resolved against the child's working directory, as the
+    # interpreter would resolve them, so the snippet sees the same sys.path and os.environ
+    # as when PYTHONPATH was read at start-up.
     pythonpath = child_env.pop("PYTHONPATH", None)
-    pp_entries = [os.path.abspath(x) for x in pythonpath.split(os.pathsep)] if pythonpath else []
+    pp_entries = [_in_workdir(x) for x in pythonpath.split(os.pathsep)] if pythonpath else []
     late_paths = cand_paths + [x for x in pp_entries if x not in cand_paths]
     code = _WRAPPER % {"marker": MARKER, "snippet": snippet, "keyfd": r, "cand_paths": cand_paths,
                        "late_paths": late_paths, "pythonpath": pythonpath}
