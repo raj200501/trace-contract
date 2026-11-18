@@ -619,3 +619,8 @@ re-proposing labels and re-running the full matrix under 0.3.1 as `pilot-v0.3.1`
 `pilot-v0.3` (harness 0.3.0) is kept and compared pair by pair.
 
 Protocol v0.4 written and hashed at 2026-11-18T11:58:51Z, sha256 `70ffee9a56b2f676df1d0a2606a824e345bec02f91ce3878a3ea7755c5d7adec`, before the 0.3.1 label re-proposal and run.
+
+**Labels re-proposed under 0.3.1** (2026-11-18, 11:59–12:06 UTC, `scripts/propose_labels.py`, all four tasks). All 32
+D19 proposals match the 0.3.0 proposals: same value, same violated requirements and same recorded
+reference-check and regression outcomes. In the 36 label files (32 candidate records and 4
+`proposed_labels.json`), only the timestamp line changed.

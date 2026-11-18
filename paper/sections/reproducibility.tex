@@ -7,7 +7,7 @@
 \item rerun the evaluation matrix;
 \item regenerate the analysis, the HTML report, and this paper's tables and evidence ledger.
 \end{itemize}
-Model-generated artifacts (sessions, contracts, tests, candidates, label proposals and mappings) are recorded together with the prompts that produced them. Regenerating them is not bit-reproducible. Everything downstream of them is.
+Model-generated artifacts (sessions, contracts, tests, candidates, label proposals, checks and mappings) are recorded in the repository. The prompts that produced them are in \texttt{experiments/prompts}: workflow scripts with their prompt templates, and every standalone agent's prompt, with owner messages and session paths redacted. Full agent transcripts are kept outside the repository and identified by hash. Regenerating these artifacts is not bit-reproducible. Everything downstream of them is, and the Harbor export can be re-validated with \texttt{scripts/harbor\_validate.sh}.
 \paragraph{Isolation probes.} The grading boundary is covered by Docker integration tests, run as part of the test suite. Candidate code:
 \begin{itemize}
 \item cannot write the results directory, read the hidden tests, signal the grader or read the grader's environment;
@@ -15,10 +15,12 @@ Model-generated artifacts (sessions, contracts, tests, candidates, label proposa
 \item runs as an unprivileged user ID unique to the container;
 \item is bounded by per-call timeouts, and its fork bombs are contained and daemonised processes reaped.
 \end{itemize}
-Forged or rewritten results are detected. Candidate edits to test files are removed before grading, and path-traversal patches are rejected. Three regression probes target the defects found during the pilot:
+Forged or rewritten results are detected. Candidate edits to test files are removed before grading, and path-traversal patches are rejected. Five regression probes target the defects found during the pilot:
 \begin{itemize}
 \item per-user limits are not shared with other containers;
 \item concurrent UID allocations are distinct;
-\item thread creation survives allocation churn under the address-space limit.
+\item thread creation survives allocation churn under the address-space limit;
+\item a candidate module that shadows the standard library cannot forge results;
+\item startup hooks written at runtime never run in later calls.
 \end{itemize}
-\paragraph{Known exploit surface.} Within one sandbox call, candidate code controls the value it reports, so tests assert on concrete values computed by the trusted grader. The repository-test baseline (B1) runs pytest with candidate code imported into the reporting process. A deliberately adversarial candidate can therefore forge B1's report. A characterisation probe shows it: a candidate that rewrites the report at exit passes, while an honestly wrong one fails. B1 is meaningful only for non-adversarial candidates, such as the held-out pool here. The process-separated verifiers do not have this exposure.
+\paragraph{Known exploit surface.} Within one sandbox call, candidate code controls the value it reports, and it can detect that it is being graded. Tests therefore assert on concrete values computed by the trusted grader, but they cannot rule out behaviour that differs under test. The repository-test baseline (B1) runs pytest with candidate code imported into the reporting process. A deliberately adversarial candidate can therefore forge B1's report. A characterisation probe shows it: a candidate that rewrites the report at exit passes, while an honestly wrong one fails. B1 is meaningful only for non-adversarial candidates, such as the held-out pool here. The process-separated verifiers do not have this exposure.

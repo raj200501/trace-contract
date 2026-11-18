@@ -15,7 +15,7 @@ This is the complete inversion the problem statement predicts: the reward points
 \end{itemize}
 They reject only the near miss that breaks positional ordering, which also breaks existing behaviour. Every correction-aware condition rejects all four invalid near misses and the pre-correction state.
 
-\paragraph{When the first request already implies the correction (\texttt{tinydb}).} For an atomic-write request, the contract proposer inferred from the first message most of what the user said later:
+\paragraph{When the first request already implies the correction (\texttt{tinydb}).} For an atomic-write request, the contract proposer inferred from the first message requirements covering everything the user said later:
 \begin{itemize}
 \item reads through the same instance see the write;
 \item the bytes are unchanged;
@@ -24,7 +24,7 @@ They reject only the near miss that breaks positional ordering, which also break
 \end{itemize}
 These appear as \emph{inferred} requirements, which our acceptance gate requires a human to confirm. Initial-only and correction-aware verifiers then make identical decisions. The ``information lost'' by initial-only reconstruction is a property of the session \emph{and} the proposer, not of the session alone.
 
-\paragraph{When the agent anticipates the correction (\texttt{inflection}, \texttt{tinydb}).} In two of four sessions, the agent's state before the correction passes the reference checks and the regression norm. In \texttt{inflection}, for example, it had already handled all-uppercase input and kept the helper functions unchanged. The user's correction then restates rather than changes the requirement, and the observed state is a valid candidate. For \texttt{inflection}, the independent check still finds divergences from the reference, limited to exotic Unicode input. Whether ``behaves as before'' extends to modifier apostrophes and the dotted~İ is exactly the kind of judgement our labels must leave to humans.
+\paragraph{When the agent anticipates the correction (\texttt{inflection}, \texttt{tinydb}).} In two of four sessions, the agent's state before the correction passes the reference checks and the regression norm, and the rule labels it valid. In \texttt{inflection}, for example, it had already handled all-uppercase input and kept the helper functions unchanged. The user's correction then restates rather than changes the requirement, and the rule treats the observed state as a valid candidate. For \texttt{inflection}, the independent check disputes that label: it finds divergences from the reference, limited to exotic Unicode input. Whether ``behaves as before'' extends to modifier apostrophes and the dotted~İ is exactly the kind of judgement our labels must leave to humans.
 
 \paragraph{Two failure modes of repository tests.} Repository tests taken at the reference state fail in both directions:
 \begin{itemize}
@@ -33,9 +33,10 @@ These appear as \emph{inferred} requirements, which our acceptance gate requires
 \end{itemize}
 The second mode also rejects the valid \texttt{tinydb} pre-correction state.
 
-\paragraph{The hard cases escape most verifiers.} The near misses that the rule marks ambiguous are those whose violation appears only in a specific setup. The independent reference checks used for labeling miss them, so the rule cannot confirm them. Most verifiers miss them too:
+\paragraph{The hard cases escape most verifiers (exploratory).} The near misses that the rule marks ambiguous are those whose violation appears only in a specific setup. The independent reference checks used for labeling miss them, so the rule cannot confirm them. Most verifiers miss them too:
 \begin{itemize}
 \item \texttt{more-itertools}: floating-point positions in the default grouping. Every condition accepts it.
 \item \texttt{tinydb}: a relative database path followed by \texttt{os.chdir}. Every generated-test condition accepts it, including both correction-aware ones.
-\item \texttt{inflection}: plural acronyms. The same holds.
-\end{itemize} Our headline rates are therefore optimistic about every condition in the same direction. Measuring these cases needs human labels and verifiers written with explicit probes of the setup space.
+\item \texttt{inflection}: plural acronyms. Accepted by both correction-aware verifiers, B2 and B1, but rejected by both initial-only ones.
+\end{itemize}
+The other two ambiguous \texttt{inflection} near misses (acronyms joined by underscores; all-uppercase input with digits or symbols) are rejected by both correction-aware verifiers. If the construction claims are correct, excluding these candidates makes the headline rates optimistic about every condition. Settling that needs human labels and verifiers that probe the setup space explicitly.

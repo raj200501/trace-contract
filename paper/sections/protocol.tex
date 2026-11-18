@@ -3,7 +3,8 @@
 The protocol (\texttt{experiments/protocol.md}) was hashed and timestamped before the first evaluation run (v0.1). Amendments were also hashed and logged:
 \begin{itemize}
 \item v0.2: additional descriptive metrics, made before any run;
-\item v0.3: harness requirement, sanity grading, reliability and mapper-agreement measurements, and one analysis labeled exploratory, made after two superseded runs and before the final run.
+\item v0.3: harness requirement, sanity grading, reliability and mapper-agreement measurements, and one analysis labeled exploratory, made after two superseded runs and before the first final run;
+\item v0.4: the harness security fix and its required re-run, plus post-hoc exploratory analyses, made after the internal review of that run.
 \end{itemize}
 It is not a formal preregistration.
 
@@ -15,17 +16,27 @@ It is not a formal preregistration.
 \item two independently written valid alternatives, implemented from the reference instruction without the reference diff;
 \item five constructed near misses, each built from the reference to violate exactly one reference requirement, mostly requirements introduced by the correction.
 \end{itemize}
-The no-op and the reference solution are graded as sanity checks and excluded from the rates. Held-out candidates were generated only after every verifier of the family was frozen, by separate agents in workspaces that contained no verifier files. Every generator transcript was audited for reads of verifiers, other candidates, sealed scenario material or other workspaces.
-
-\paragraph{Labels.} Ground truth is the reference contract: the study's pre-registered intended requirements, operationalised with exact quotes. It is combined with a regression norm: breaking behaviour covered by the repository's own tests makes a candidate invalid. Human labels are the primary standard; none exist yet. The automated pilot instead uses a pre-specified rule (D19) that combines three signals:
+The no-op and the reference solution are graded as sanity checks and excluded from the rates. Held-out candidates were generated only after every evaluated verifier of the family was frozen, by separate agents in isolated workspaces. Every generator transcript was audited for reads of verifiers, other candidates, sealed scenario material or other workspaces. The audit inspects tool inputs only. Three exceptions are disclosed (decision log D37):
 \begin{itemize}
-\item independent reference checks, written from the reference contract and validated only on the reference and the no-op;
+\item Near-miss workspaces contained the full reference diff, whose test files are B1's tests, and the generators ran them.
+\item The near-miss prompt for two families gained a test command and a ``one at a time'' instruction.
+\item Two \texttt{more-itertools} candidates (the pre-correction state and one near miss) have the same graded patch as a development attack used in that family's audit.
+\end{itemize}
+
+\paragraph{Labels.} The labeling standard is the reference contract: the study's intended requirements, hashed and logged locally before each session ran, operationalised by a model with quotes from the session. It is model-reviewed only. For \texttt{humanize} the operationalisation was written after the agent's first output had been seen, and one \texttt{more-itertools} requirement is inferred without a quote. It is combined with a regression norm: breaking behaviour covered by the repository's own tests makes a candidate invalid. Human labels are the primary standard; none exist yet. The automated pilot instead uses a pre-specified rule (D19) that combines three signals:
+\begin{itemize}
+\item independent reference checks, written from the reference contract without access to the pool and validated only on the reference and the no-op (written concurrently with the pool for two families and after it for one);
 \item the regression norm;
 \item construction intent.
 \end{itemize}
 Agreement gives a valid or invalid label; disagreement gives \emph{ambiguous}, which is excluded from the rates and queued for human review. A second agent independently checked every held-out candidate in the sandbox. Its verdicts are advisory evidence for reviewers and never change a label.
 
-\paragraph{Metrics and comparisons.} False acceptance (FA) is the share of invalid held-out candidates whose outcome is \emph{pass}; false rejection (FR) is the share of valid held-out candidates without \emph{pass}. Every non-pass outcome counts as a rejection; infrastructure outcomes are reported separately. We also report Youden's $J=(1-\mathrm{FR})-\mathrm{FA}$ and the number of families with at least one accepted negative. Negatives are broken down by type (whether a violated requirement was introduced after the first request) and by origin (observed pre-correction state vs.\ near miss). The pre-specified paired comparisons, all on the same candidates, are:
+\paragraph{Metrics and comparisons.} False acceptance (FA) is the share of invalid held-out candidates whose outcome is \emph{pass}; false rejection (FR) is the share of valid held-out candidates without \emph{pass}. Every non-pass outcome counts as a rejection; infrastructure outcomes are reported separately. We also report:
+\begin{itemize}
+\item macro rates;
+\item Youden's $J=(1-\mathrm{FR})-\mathrm{FA}$;
+\item the number of families with at least one accepted negative.
+\end{itemize} Negatives are broken down by type (whether a violated requirement was introduced after the first request) and by origin (observed pre-correction state vs.\ near miss). The pre-specified paired comparisons, all on the same candidates, are:
 \begin{itemize}
 \item C1--C3 and C2--C4 (information lost by initial-only reconstruction);
 \item C1--C2 and C3--C4 (audit effect);
@@ -34,4 +45,4 @@ Agreement gives a valid or invalid label; disagreement gives \emph{ambiguous}, w
 \end{itemize}
 Secondary measures: requirement coverage of the recovered contracts against the reference, using two independent model mappers and their agreement; and pass/non-pass agreement between superseded runs and the final run.
 
-\paragraph{Final run.} Every condition of every task was graded under harness 0.3.0 in a single run, one container at a time, with no other sandbox workload on the host.
+\paragraph{Final run and deviations.} Every condition of every task was graded under harness 0.3.1 in a single run, one container at a time, with no other sandbox workload on the host. The protocol also asked for generation cost per condition and per accepted task; these were not recorded systematically, and we do not report them. Yield is 4 of 4 controlled sessions. In every audit record, the three repeated gradings of the reference agreed.

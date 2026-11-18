@@ -99,13 +99,22 @@ def results(run: Path, led: Ledger) -> None:
     pilot = "automated pilot" in a["meta"]["label_policy"]
     pre = ("\\textbf{Automated pilot: labels are rule-based proposals (D19), not human labels.} " if pilot else "")
     rows = []
+
+    def cell(x: dict) -> str:
+        star = "$^{*}$" if x.get("ci95_degenerate") else ""
+        ex = "" if not x.get("exact95") else f" \\newline {{\\scriptsize exact [{x['exact95'][0]:.2f}, {x['exact95'][1]:.2f}]; macro {x['macro']:.2f}}}" \
+            if x.get("macro") is not None else f" \\newline {{\\scriptsize exact [{x['exact95'][0]:.2f}, {x['exact95'][1]:.2f}]}}"
+        return fmt_rate(x["rate"], x["num"], x["den"], x["ci95"]) + star + ex
+
     for c, d in ordered(a["conditions"]):
         fa, fr = d["false_acceptance"], d["false_rejection"]
         j = "n/a" if d.get("youden_j") is None else f"{d['youden_j']:+.2f}"
         tn = d["tasks_with_any_accepted_negative"]
-        rows.append(f"{tex(COND_TEX.get(c, c))} & {fmt_rate(fa['rate'], fa['num'], fa['den'], fa['ci95'])} & "
-                    f"{fmt_rate(fr['rate'], fr['num'], fr['den'], fr['ci95'])} & {j} & {tn['num']}/{tn['den']} & "
+        rows.append(f"{tex(COND_TEX.get(c, c))} & {cell(fa)} & {cell(fr)} & {j} & {tn['num']}/{tn['den']} & "
                     f"{d['infrastructure']['num']}/{d['infrastructure']['den']} \\\\")
+        for k, x in (("false_acceptance", fa), ("false_rejection", fr)):
+            led.add("summary", f"{run_id} {c} {k} exact95 / macro / bootstrap degenerate", f"{x.get('exact95')} / {x.get('macro')} / {x.get('ci95_degenerate')}",
+                    f"{src} conditions.{c}.{k}")
         for k in ("false_acceptance", "false_rejection"):
             v = d[k]
             led.add("summary", f"{run_id} {c} {k}", f"{v['rate']} ({v['num']}/{v['den']}) ci95={v['ci95']}", f"{src} conditions.{c}.{k}")
@@ -114,8 +123,9 @@ def results(run: Path, led: Ledger) -> None:
         led.add("summary", f"{run_id} {c} infrastructure", f"{d['infrastructure']['num']}/{d['infrastructure']['den']}", f"{src} conditions.{c}")
     (GEN / "results_summary.tex").write_text(table(
         f"Verifier reward fidelity on the held-out pool, run \\texttt{{{tex(run_id)}}} ({a['n_tasks']} tasks, {a['n_families']} families). " + pre +
-        "Rates with (num/den) and 95\\% task-family bootstrap interval. Reference solution and no-op excluded; ambiguous "
-        "candidates excluded. $J$ = (1$-$FR)$-$FA.", "tab:summary", "lllrrr",
+        "Rates with (num/den) and 95\\% task-family bootstrap interval ($^{*}$: degenerate, every family has the same rate); "
+        "below, the exact binomial interval (ignores clustering; reference scale only) and the macro rate (mean over families). "
+        "Reference solution and no-op excluded; ambiguous candidates excluded. $J$ = (1$-$FR)$-$FA.", "tab:summary", "lp{0.25\\linewidth}p{0.25\\linewidth}rrr",
         "Condition & False acceptance & False rejection & $J$ & Tasks w/ accepted neg. & Infra", rows, size="\\footnotesize"))
 
     crow = []
@@ -123,12 +133,12 @@ def results(run: Path, led: Ledger) -> None:
         diff = "n/a" if d["difference"] is None else f"{d['difference']:+.2f}"
         ci = "n/a" if not d["ci95"] else f"[{d['ci95'][0]:+.2f}, {d['ci95'][1]:+.2f}]"
         crow.append(f"{tex(COND_TEX.get(d['a'], d['a']))} & {tex(COND_TEX.get(d['b'], d['b']))} & {d['metric'].upper()} & {diff} & {ci} & "
-                    f"{d['n_common']} & {d['discordant']['a_accepts_b_rejects']}/{d['discordant']['a_rejects_b_accepts']} \\\\")
+                    f"{d.get('n_metric', d['n_common'])} & {d['discordant']['a_accepts_b_rejects']}/{d['discordant']['a_rejects_b_accepts']} \\\\")
         led.add("comparisons", f"{run_id} {d['a']} - {d['b']} {d['metric']}", f"{d['difference']} ci95={d['ci95']} n={d['n_common']} "
                 f"discordant={d['discordant']}", f"{src} comparisons")
     (GEN / "results_comparisons.tex").write_text(table(
         f"Pre-specified paired comparisons on the same candidates, run \\texttt{{{tex(run_id)}}}" + (" (automated pilot)" if pilot else "") +
-        ". Last column: A accepts \\& B rejects / A rejects \\& B accepts.", "tab:comparisons", "lllllrr",
+        ". n: labeled candidates for the metric (invalid for FA, valid for FR). Last column: A accepts \\& B rejects / A rejects \\& B accepts.", "tab:comparisons", "lllllrr",
         "A & B & Metric & A$-$B & 95\\% CI & n & discordant", crow, size="\\footnotesize"))
 
     # Accepted negatives by origin and type.
@@ -164,12 +174,36 @@ def results(run: Path, led: Ledger) -> None:
         for c, d in ordered(a["sensitivity_construction_labels"]):
             xrows.append(f"{tex(COND_TEX.get(c, c))} & {fmt_rate(d['fa'], d['fa_num'], d['fa_den'], d['fa_ci95'])} & "
                          f"{fmt_rate(d['fr'], d['fr_num'], d['fr_den'], d['fr_ci95'])} \\\\")
-            led.add("sensitivity", f"{run_id} {c} construction-label FA/FR", f"{d['fa']} ({d['fa_num']}/{d['fa_den']}), {d['fr']} ({d['fr_num']}/{d['fr_den']})",
+            led.add("sensitivity", f"{run_id} {c} construction-label FA/FR", f"{d['fa']} ({d['fa_num']}/{d['fa_den']}) ci95={d['fa_ci95']}, {d['fr']} ({d['fr_num']}/{d['fr_den']}) ci95={d['fr_ci95']}",
                     f"{src} sensitivity_construction_labels.{c}")
         (GEN / "sensitivity_table.tex").write_text(table(
             "\\textbf{Exploratory, not pre-specified:} rates when constructed candidates are labeled by construction intent "
             "(including those the pre-specified rule marked ambiguous).", "tab:sensitivity", "lll",
             "Condition & False acceptance & False rejection", xrows, size="\\footnotesize"))
+
+    if a.get("near_miss_crosstab"):
+        prow = []
+        xt, ck, nd = a["near_miss_crosstab"], a.get("sensitivity_check_labels", {}), a.get("sensitivity_without_duplicates", {})
+        for c, _ in ordered(xt):
+            x = xt[c]
+            k = ck.get(c, {})
+            n = nd.get(c, {})
+            prow.append(f"{tex(COND_TEX.get(c, c))} & {x['confirmed_invalid']['accepted']}/{x['confirmed_invalid']['n']} & "
+                        f"{x['ambiguous']['accepted']}/{x['ambiguous']['n']} & {k.get('fa_num', '-')}/{k.get('fa_den', '-')} & "
+                        f"{k.get('fr_num', '-')}/{k.get('fr_den', '-')} & {n.get('fa_num', '-')}/{n.get('fa_den', '-')} & {n.get('fr_num', '-')}/{n.get('fr_den', '-')} \\\\")
+            led.add("posthoc", f"{run_id} {c} near-miss accepted confirmed/ambiguous; check-label FA/FR; no-duplicate FA/FR",
+                    f"{x['confirmed_invalid']}, {x['ambiguous']}; {k.get('fa_num')}/{k.get('fa_den')}, {k.get('fr_num')}/{k.get('fr_den')}; "
+                    f"{n.get('fa_num')}/{n.get('fa_den')}, {n.get('fr_num')}/{n.get('fr_den')}", f"{src} near_miss_crosstab / sensitivity_check_labels / sensitivity_without_duplicates")
+        b1 = a.get("b1_upstream_only")
+        if b1:
+            prow.append(f"B1 upstream tests only & -- & -- & -- & -- & {b1['fa_num']}/{b1['fa_den']} (all) & {b1['fr_num']}/{b1['fr_den']} (all) \\\\")
+            led.add("posthoc", f"{run_id} B1 upstream-only FA/FR", f"{b1['fa_num']}/{b1['fa_den']}, {b1['fr_num']}/{b1['fr_den']}", f"{src} b1_upstream_only")
+        (GEN / "posthoc_table.tex").write_text(table(
+            "\\textbf{Exploratory, post hoc (protocol v0.4).} Near misses accepted among those the label rule confirmed invalid and "
+            "among those it marked ambiguous; rates under the independent construction checks' labels; rates without the two "
+            "candidates that duplicate a development attack. Last row: B1 scored only on checks from the base commit's own tests "
+            "(all candidates, primary labels).", "tab:posthoc", "lrrrrrr",
+            "Condition & NM conf. & NM amb. & FA (checks) & FR (checks) & FA (no dup.) & FR (no dup.)", prow, size="\\footnotesize"))
 
     lrows = []
     for t, d in a.get("labels", {}).items():

@@ -2,9 +2,9 @@
 \label{sec:ethics}
 \paragraph{Data.}
 \begin{itemize}
-\item Controlled sessions contain no third-party personal data. The user turns were written by the study, and the agent worked only in sandboxed copies of public repositories.
+\item The user turns of the controlled sessions were written by the study, and the agent worked only in sandboxed copies of public repositories. The transcripts contain the public names of upstream maintainers taken from package metadata, kept as attribution; e-mail addresses are redacted.
 \item Published transcripts are sanitised: harness internals are dropped, internal identifiers relabeled and e-mail addresses redacted.
-\item Source repositories are public and MIT-licensed. Candidate patches and snapshots remain under those licences, with attribution by repository URL and commit.
+\item Source repositories are public and MIT-licensed. Redistributed upstream code (test files, candidate patches) remains under those licences, with their notices in \texttt{THIRD\_PARTY\_LICENSES/} and attribution by repository URL and commit.
 \item No private, employer or customer material was used.
 \end{itemize}
 \paragraph{Natural sessions.} For natural sessions we would:
@@ -19,4 +19,4 @@
 \item The process-separated verifiers resist the tampering probes we tested (\S\ref{sec:repro}).
 \item The repository-test baseline imports candidate code into the reporting process and is therefore not suitable as a reward for adversarial policies.
 \end{itemize}
-\paragraph{AI assistance.} The software, the controlled sessions, the recovered contracts, every verifier, all candidates, the label proposals and the first draft of this text were produced with an AI coding agent (Claude Code), working under instructions from the human author(s). Every number in the paper is generated from recorded runs (\texttt{paper/evidence\_ledger.md}). No human has yet labeled candidates or reviewed contracts, and the paper says so wherever labels are used. Responsibility for the content rests with the human authors, who must review it before any submission.
+\paragraph{AI assistance.} The software, the controlled sessions, the recovered contracts, every verifier, all candidates, the label proposals and the first draft of this text were produced with an AI coding agent (Claude Code), working under instructions from the human author(s). Every number in the paper's tables is generated from recorded runs and listed in \texttt{paper/evidence\_ledger.md}. Numbers in the text repeat table values or counts recorded in the decision log. No human has yet labeled candidates or reviewed contracts, and the paper says so wherever labels are used. Responsibility for the content rests with the human authors, who must review it before any submission.

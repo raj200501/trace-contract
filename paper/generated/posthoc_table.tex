@@ -1,0 +1,11 @@
+\begin{table}[t]\centering\footnotesize
+\caption{\textbf{Exploratory, post hoc (protocol v0.4).} Near misses accepted among those the label rule confirmed invalid and among those it marked ambiguous; rates under the independent construction checks' labels; rates without the two candidates that duplicate a development attack. Last row: B1 scored only on checks from the base commit's own tests (all candidates, primary labels).}\label{tab:posthoc}
+\begin{tabular}{lrrrrrr}\toprule Condition & NM conf. & NM amb. & FA (checks) & FR (checks) & FA (no dup.) & FR (no dup.) \\\midrule
+C1 initial, plain & 4/15 & 4/5 & 13/25 & 2/7 & 4/15 & 2/10 \\
+C2 initial, audited & 3/15 & 4/5 & 12/25 & 2/7 & 3/15 & 2/10 \\
+C3 full, plain & 0/15 & 3/5 & 6/25 & 0/7 & 0/15 & 0/10 \\
+C4 full, audited & 0/15 & 3/5 & 6/25 & 0/7 & 0/15 & 0/10 \\
+B2 full-session LLM & 1/15 & 4/5 & 8/25 & 0/7 & 1/15 & 0/10 \\
+B1 repository tests & 5/15 & 3/5 & 10/25 & 3/7 & 5/15 & 4/10 \\
+B1 upstream tests only & -- & -- & -- & -- & 13/17 (all) & 0/10 (all) \\
+\bottomrule\end{tabular}\end{table}
