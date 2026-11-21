@@ -47,8 +47,14 @@ TraceContract measures both directly.
     quotes from the session.
   * Superseded requirements are never scored.
   * Inferred requirements need human review before a task is accepted
-    (`src/tracecontract/contract.py`).
-* **Process-separated grading (harness `tc-harness/0.3.3`)** for C1–C4 and B2.
+    (`src/tracecontract/contract.py`). `tracecontract accept-task` sets a task's status
+    to `accepted` only if this gate passes. `evaluate` refuses rejected tasks, and it
+    evaluates a task that has not been accepted only with `--pilot`, which the run
+    manifest records. No task has passed the gate, since no human review exists.
+* **Process-separated grading (harness `tc-harness/0.3.3` for the pilot)** for C1–C4
+  and B2. New runs use `tc-harness/0.3.4`, which differs only in that a failure while
+  formatting a value or an exception for a result message is replaced by the type
+  name, so formatting cannot change an outcome (protocol v0.7 §15.3; D46).
   * Hidden tests run in a trusted grader.
   * Candidate code runs only as an unprivileged UID allocated to that container. It
     cannot read the tests or write the results.
@@ -93,7 +99,15 @@ TraceContract measures both directly.
     how often the guesses are right. The key stays with a coordinator, and
     `tracecontract merge-reviews` needs two complete reviews per task
     (`docs/annotation_guide.md`, decision log D43, D44).
-* **Harbor export** (pinned 0.25.0, separate verifier, only approved artifacts).
+* **Harbor export** (pinned 0.25.0, separate verifier, only approved artifacts;
+  exporter `tc-harbor-export/0.2.0`). Harbor makes the separate verifier's reward
+  directory world-writable before the test runs. Under the earlier exporter, two probes
+  whose candidate code writes its own reward file (on a grader timeout and on a
+  collection error) received reward 1.0. Exporter 0.2.0 locks the directory before
+  candidate code runs and removes every reward file it did not write, and both probes
+  now end without a reward (`results/harbor_validation/tc-harbor-export-0.2.0/`). It
+  exports only the reference solution unless candidates are named, and it refuses
+  rejected tasks.
 
 Related work: [docs/research_brief.md](docs/research_brief.md), adversarially
 verified by model agents (not yet reviewed by a human), and
@@ -219,7 +233,15 @@ for t in CS-01 CS-02 CS-03 CS-04; do .venv/bin/tracecontract snapshot tasks/$t; 
 ```
 
 ```bash
+.venv/bin/tracecontract reconstruction-check tasks/CS-01   # the base against the session's own record; exit 1 if a check fails
+```
+
+```bash
 .venv/bin/tracecontract validate-task tasks/CS-01
+```
+
+```bash
+.venv/bin/tracecontract accept-task tasks/CS-01 --dry-run   # the acceptance gate: what blocks the task; changes nothing
 ```
 
 ```bash
@@ -231,8 +253,11 @@ for t in CS-01 CS-02 CS-03 CS-04; do .venv/bin/tracecontract snapshot tasks/$t; 
 ```
 
 ```bash
-.venv/bin/tracecontract evaluate tasks/CS-01 tasks/CS-02 tasks/CS-03 tasks/CS-04 --run-id my-run --conditions initial_plain initial_audited full_plain full_audited llm_freeform repo_tests
+.venv/bin/tracecontract evaluate tasks/CS-01 tasks/CS-02 tasks/CS-03 tasks/CS-04 --run-id my-run --conditions initial_plain initial_audited full_plain full_audited llm_freeform repo_tests --pilot
 ```
+
+`--pilot` is required because no task has passed the acceptance gate; without it,
+`evaluate` refuses the four tasks and writes nothing.
 
 ```bash
 .venv/bin/tracecontract analyze results/runs/my-run --allow-proposed-labels
@@ -250,6 +275,21 @@ for t in CS-01 CS-02 CS-03 CS-04; do .venv/bin/tracecontract snapshot tasks/$t; 
 .venv/bin/python paper/make_tables.py results/runs/pilot-v0.3.3 --compare results/runs/pilot-v0.3.2 results/runs/pilot-v0.3.1 results/runs/pilot-v0.3 results/runs/pilot-v0.2 results/runs/pilot-v0.2-h2
 ```
 
+```bash
+.venv/bin/python scripts/verify_frozen_inputs.py   # pilot-v0.3.3's inputs unchanged; its analysis and report regenerate byte for byte
+```
+
+```bash
+.venv/bin/python scripts/exploratory_reanalysis.py   # post hoc, exploratory re-analysis of pilot-v0.3.3 and planning simulation (D49)
+```
+
+The frozen-input check compares against the commit `c5ede4c` and regenerates the
+analysis and report in a temporary copy of the run directory; it is run at the end of
+every phase. The exploratory re-analysis reads the frozen run and the task records
+without changing them, and writes `results/analyses/pilot-v0.3.3-exploratory/`,
+`paper/generated/exploratory/` and `paper/evidence_ledger_exploratory.md`; every table
+it writes is marked post hoc and exploratory.
+
 To write one candidate's final file state to a directory without running any code
 (reviewers label from the blinded packet and use this only after their labels are
 merged):
@@ -266,6 +306,10 @@ HARBOR=/path/to/harbor scripts/harbor_validate.sh
 ```
 
 ```bash
+.venv/bin/python scripts/check_abstract.py   # the abstract's length without TeX markup (at most 1,900 characters)
+```
+
+```bash
 cd paper && latexmk -pdf main.tex
 ```
 
@@ -274,10 +318,14 @@ checks and mappings) are recorded in the repository. The prompts that produced t
 are in `experiments/prompts/`, with owner messages and session paths redacted; the
 full agent transcripts are not published. Regenerating these artifacts is not
 bit-reproducible. From the recorded results, the analysis, tables, evidence ledger,
-report and run comparisons regenerate byte for byte (`analysis.json` differs only in
-the recorded git revision). Re-grading reproduces outcomes, not bytes: results carry
-timestamps and durations, and tests have time limits. `paper/evidence_ledger.md`
-lists every number in the generated tables with its source file.
+report and run comparisons regenerate byte for byte, except `analysis.json`: it records
+the current git revision and the hashes of the analysis code, which has changed since
+the run without changing any output (D46 records the first such change, to
+`schemas.py`). `scripts/verify_frozen_inputs.py` checks the analysis and report of
+`pilot-v0.3.3`, and the frozen inputs, at the end of every phase. Re-grading
+reproduces outcomes, not bytes: results carry timestamps and durations, and tests have
+time limits. `paper/evidence_ledger.md` lists every number in the generated tables
+with its source file.
 
 Before each push, `scripts/scan_tracked_files.py --private-markers <file kept outside
 the repository>` is run as a manual step, not as a git hook. It checks the
@@ -324,22 +372,32 @@ removed; STATUS.md lists it.
     which CS-01's alternatives and reference checks also used;
   * CS-04's B1 was re-selected after its pool existed;
   * the hash of each scored check list was added only after the run `pilot-v0.3`.
-* Natural data (SWE-chat) is blocked on dataset access terms.
+* No natural data yet. SWE-chat is blocked on its access terms, which only the owner
+  can accept (D4). Two ungated, openly licensed sources are being screened as separate
+  populations: AIDev v5 pull-request review threads and Trace Commons sessions (D47,
+  D48). No natural task has been built from them.
 
 ## Layout
 
 ```
-src/tracecontract/   schemas, ingest, contract, snapshot, patches, sandbox/, verifier, audit,
-                     evaluate, metrics, analysis, report, harbor_export, controlled, tasks, cli
-tasks/<id>/          task manifests, provenance, contracts (+ mappings), candidates, verifiers, labels
-data/                manifests, sanitised controlled transcripts, scenarios, reference proposals
-experiments/         protocol.md (v0.6), prompts/ (workflow scripts and agent prompts)
+src/tracecontract/   schemas, ingest, contract, snapshot, reconstruction, patches, sandbox/, verifier,
+                     audit, evaluate, strata, metrics, analysis, report, review, duplicates, triage,
+                     shadowing, harbor_export, controlled, tasks, store, cli
+tasks/<id>/          task manifests, provenance, contracts (+ mappings), candidates, verifiers, labels,
+                     reconstruction check
+data/                manifests (incl. natural-data screening records), sanitised controlled transcripts,
+                     scenarios, reference proposals
+experiments/         protocol.md (v0.7), precision_plan_v1.0-draft.md (not adopted),
+                     prompts/ (workflow scripts and agent prompts)
 results/runs/<id>/   manifest, raw results, analysis, comparisons, report (logs are local only)
+results/analyses/    post hoc, exploratory re-analyses of frozen runs
 results/harbor_validation/  recorded Harbor validation outputs (fixture task)
-scripts/             label proposals, construction checks, review queues, duplicates, preflight, run comparison, publication scan
+scripts/             label proposals, construction checks, review queues, duplicates, preflight, run comparison,
+                     publication scan, frozen-input check, exploratory re-analysis, natural-data screening,
+                     agent workspaces, abstract check
 docs/                research brief, decision log, data card, annotation guide, internal review, status docs
 THIRD_PARTY_LICENSES/ licence notices of the redistributed upstream code
-paper/               LaTeX draft, verified bibliography, table generator, evidence ledger
+paper/               LaTeX draft, verified bibliography, table generator, evidence ledgers (main, exploratory)
 ```
 
 Licence: not yet chosen by the repository owner.

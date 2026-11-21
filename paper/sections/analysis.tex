@@ -2,11 +2,11 @@
 \label{sec:analysis}
 \paragraph{Reward inversion when a correction retracts a request (\texttt{humanize}).} The first request asked \texttt{naturalsize} to drop a trailing ``.0'' by default. The correction kept the default output unchanged and made trimming opt-in. The initial-only contract faithfully encodes the first request, and four of its five scored requirements contradict the reference. The verifiers built from it therefore:
 \begin{itemize}
-\item reward the agent's own pre-correction state, the one the user rejected;
+\item reward the agent's own pre-correction state, the state before the scripted correction;
 \item reject both independently written valid alternatives;
 \item reject the reference solution.
 \end{itemize}
-This is the failure the problem statement predicts (the reward points at the rejected behaviour), together with one it does not name: the reward also points away from the wanted behaviour. The predefined audit detects the inconsistency (the reference fails), but a revision that stays faithful to the contract cannot repair it.
+This is the failure the problem statement predicts (the reward points at the behaviour the correction ruled out), together with one it does not name: the reward also points away from the wanted behaviour. The predefined audit detects the inconsistency (the reference fails), but a revision that stays faithful to the contract cannot repair it.
 
 \paragraph{Missing edge cases when a correction adds requirements (\texttt{more-itertools}).} The first request added a \texttt{step} argument. The correction added negative steps, an error for \texttt{step=0}, the positional \texttt{ordering} argument and lazy groups, and kept the default output unchanged. The initial-only verifiers accept:
 \begin{itemize}

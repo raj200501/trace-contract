@@ -50,7 +50,7 @@ Produced with Claude (via Claude Code), reviewed only by the model so far:
   adversarial verification of the research brief (skeptics, citation and fact
   checks) together with the resulting revisions;
 * the diagnosis and fixes of the five harness defects (D29–D31, D36, D40, D44),
-  protocol amendments v0.2 to v0.6, transcript sanitiser v2 (D38), the post-hoc
+  protocol amendments v0.2 to v0.7, transcript sanitiser v2 (D38), the post-hoc
   analyses (D37), the CS-02 reference-check review loop, the CS-01 mapping correction
   (D42), the blinded review packet tooling (`tracecontract review-packet` and
   `merge-reviews`; D43, D44, D46), the strict re-audit of the generator transcripts
@@ -68,8 +68,10 @@ Produced with Claude (via Claude Code), reviewed only by the model so far:
    reviewers open no task files, results or documents except the annotation guide;
    this document is one they must not open. Someone who has already read these files
    is not blind to the proposals and outcomes they state.
-2. **Data access**: accept the SWE-chat terms and supply a working read token, or
-   decide on another natural-data source.
+2. **Data access**: accept the SWE-chat terms and supply a working read token. Two
+   ungated, openly licensed sources, AIDev v5 pull-request review threads and Trace
+   Commons sessions, need neither and are being screened (D47, D48). Decide whether
+   pull-request review comments count as user corrections for the claim (D47).
 3. **Scope of the claim.** The adversarial review (D34) narrowed it to a
    conjunction. SessionFarmer is the closest work; its Table 3 already compares
    suites with and without refinement on a held-out pool, with LLM labels. Confirm
@@ -115,8 +117,8 @@ Produced with Claude (via Claude Code), reviewed only by the model so far:
     condition? What does the exploratory construction-label analysis show, and why
     is it not primary?
 13. In two of four sessions the pre-correction state is labeled valid. What does
-    that say about using "the state the user rejected" as a negative? How would you
-    sample natural sessions to estimate how often it happens?
+    that say about using the state before a scripted correction as a negative? How
+    would you sample natural sessions to estimate how often it happens?
 
 ## Exercises to understand and modify the core system
 
@@ -133,6 +135,9 @@ Produced with Claude (via Claude Code), reviewed only by the model so far:
    the effect.
 5. Replace B2's prompt with the SecureForge-style full-session reconstruction
    prompt described in the research notes and compare.
-6. Export a task to Harbor (`src/tracecontract/harbor_export.py`), run the oracle
-   with two different `CANDIDATE` values, and check that Harbor's reward matches
-   `tracecontract grade`.
+6. Export a task to Harbor (`src/tracecontract/harbor_export.py`) with at least one
+   named candidate (`export_task(..., candidates=[...])`; by default only the
+   reference solution is packaged), run the oracle with two different `CANDIDATE`
+   values, and check that Harbor's reward matches `tracecontract grade`. Then read
+   how exporter 0.2.0 keeps candidate code from writing its own reward file, and the
+   two probes that show it (`scripts/harbor_validate.sh`).

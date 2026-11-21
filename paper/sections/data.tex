@@ -1,12 +1,12 @@
 \section{Tasks and data}
 \label{sec:data}
-\paragraph{Populations.} We keep three populations separate:
+\paragraph{Populations.} We keep three kinds of population separate:
 \begin{itemize}
-\item \emph{natural} sessions with real users;
+\item \emph{natural} data from real use of coding agents, one population per source;
 \item \emph{controlled} sessions: real agent runs whose user turns the study wrote before the run (drafted by the study's AI agent, the same model as the session agent; no human wrote or reviewed them);
 \item synthetic \emph{fixtures}, used only for software tests.
 \end{itemize}
-Natural sessions from SWE-chat \cite{swechat} are pending acceptance of the dataset's access terms by the repository owner. All results in this draft are therefore on controlled sessions. Controlled feedback is synthetic and is never described as user traffic.
+Natural sessions from SWE-chat \cite{swechat} are blocked until the repository owner accepts the dataset's access terms. Two ungated, openly licensed sources need no such step and are being screened: agent sessions from Trace Commons, and pull-request review threads from AIDev v5, in which a reviewer's comment on an agent's pull request takes the place of the user's correction (decision log D47, D48). No natural task has been built from either yet, so all results in this draft are on controlled sessions. Controlled feedback is synthetic and is never described as user traffic.
 
 \paragraph{Controlled sessions (protocol CS-v1).} Each scenario is hashed and logged locally before the run (not a formal preregistration), and fixes:
 \begin{itemize}
@@ -33,4 +33,13 @@ In one scenario the correction supersedes a requirement of the initial request; 
 \IfFileExists{generated/scenario_table.tex}{\input{generated/scenario_table.tex}}{\unfilled{scenario table}}
 \IfFileExists{generated/tasks_table.tex}{\input{generated/tasks_table.tex}}{\unfilled{task table generated from tasks/*/task.json}}
 
-\paragraph{Initial state and leakage.} The base snapshot is the exact tree of the pinned commit (\texttt{git archive}, no history). A generated build artefact (a hatch-vcs version file) is added for one task and recorded as an approximation. A leakage check verifies that no file changed by the reference solution already contains its post-image in the snapshot. Sealed study material (scenarios, reference contracts) was withheld from agent workspaces until the task's verifiers were frozen. For part of the pilot it sat in a scratch directory that agents could have listed. It was then moved to a root-owned directory that no prompt named while it held sealed material; the agents also ran as root, so the separation rested on instructions and on the transcript scan. A scan of all 78 agent transcripts available at that point found no read of it other than one mapping agent whose task was to read the reference contract (decision log D26, D41).
+\paragraph{Initial state and leakage.} The base snapshot is the exact tree of the pinned commit (\texttt{git archive}, no history). A generated build artefact (a hatch-vcs version file) is added for one task and recorded as an approximation. The leakage check recorded with each snapshot was vacuous as called: it compared the base with itself, so it could flag only a \texttt{.git} directory and would have passed a base that already held the solution (decision log D47). A reconstruction check added after the pilot (\texttt{tracecontract reconstruction-check}, records in \texttt{tasks/*/reconstruction\_check.json}) instead tests each base against its own session, from recorded material only:
+\begin{itemize}
+\item replaying the session's edits on the base reproduces the captured pre-correction and final states of every file they wrote;
+\item at each file's first edit, the replaced text occurs in the base as the edit tool requires, and the new text does not;
+\item every file content the agent saw while the file was unchanged (Read and Grep results, and plain \texttt{cat}, \texttt{sed} and \texttt{head} output) equals the base;
+\item the rebuilt base equals the workspace manifest recorded before the session, and it holds no compiled or backup copy of a changed file.
+\end{itemize}
+All four bases pass. Two parts of \texttt{humanize} cannot be checked. The agent rewrote one test file with a script before its first edit of that file, so that edit and the file's pre-correction state are not covered. The recorded manifest predates the added version file, and of that file's four lines the session saw one, which matches.
+
+Sealed study material (scenarios, reference contracts) was withheld from agent workspaces until the task's verifiers were frozen. For part of the pilot it sat in a scratch directory that agents could have listed. It was then moved to a root-owned directory that no prompt named while it held sealed material; the agents also ran as root, so the separation rested on instructions and on the transcript scan. A scan of all 78 agent transcripts available at that point found no read of it other than one mapping agent whose task was to read the reference contract (decision log D26, D41).

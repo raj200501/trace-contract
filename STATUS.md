@@ -1,21 +1,33 @@
 # Status
 
-Last updated: 2026-11-18 (UTC). Milestone: **M2 complete** (automated pilot on four
-controlled task families). **M3** (human labels, natural data) is blocked on the
-repository owner. Nothing here is peer reviewed, and no human labels exist.
+Last updated: 2026-11-21 (UTC), in part: round 4 is in progress (decision log D47
+onwards). Milestone: **M2 complete** (automated pilot on four controlled task
+families). **M3** (human labels, natural data) needs the repository owner for the
+human labels and for SWE-chat; two ungated, openly licensed natural sources are being
+screened without that, and no natural task has been built yet (D47, D48). Nothing here
+is peer reviewed, and no human labels exist.
 
 ## Completed
 
 * **Package `src/tracecontract/`:**
   * ingestion: schemas, Claude Code transcript ingestion and sanitisation;
-  * contracts: recovery, validation and the acceptance gate;
-  * snapshots with a leakage check, and the patch policy;
+  * contracts: recovery, validation and the acceptance gate, which `tracecontract
+    accept-task` applies and `evaluate` enforces (a task that has not passed it is
+    evaluated only with `--pilot`; none has passed);
+  * snapshots and the patch policy. The leakage check recorded in each
+    `snapshot.json` was vacuous as called: it compared the base with itself, so it
+    could flag only a `.git` directory (D47). A reconstruction check of each base
+    against its own session is used instead (`tracecontract reconstruction-check`,
+    records in `tasks/*/reconstruction_check.json`); all four bases pass;
   * grading: a process-separated sandbox grader with trusted aggregation (harness
-    `tc-harness/0.3.3`). A later verification by model agents found a further path
-    for forged results in the error handling of 0.3.2, which harness 0.3.3 closes (D44).
-    Within one call, code that the snippet runs still controls what that call
-    reports, so every test of the process-separated verifiers asserts on a returned
-    value, not only on success (the in-call limit; D3, D36, D40);
+    `tc-harness/0.3.3` for the pilot). A later verification by model agents found a
+    further path for forged results in the error handling of 0.3.2, which harness
+    0.3.3 closes (D44). New runs use `tc-harness/0.3.4`, in which a failure while
+    formatting a result can no longer change its outcome (the 0.3.3 behaviour
+    disclosed in D46; protocol v0.7 §15.3). Within one call, code that the snippet
+    runs still controls what that call reports, so every test of the process-separated
+    verifiers asserts on a returned value, not only on success (the in-call limit; D3,
+    D36, D40);
   * verifiers: specs (hashing, linting, freezing) and audit:v1;
   * evaluation: the evaluation matrix, and metrics (FA/FR, task-family cluster
     bootstrap, paired differences);
@@ -54,9 +66,10 @@ repository owner. Nothing here is peer reviewed, and no human labels exist.
   * review queue: `labels/review_queue.json`, with no verifier outcomes, which
     reviewers open only after their labels are merged;
   * two model requirement mappings.
-* **Protocol** v0.1 → v0.2 → v0.3 → v0.4 → v0.5 → v0.6 (`experiments/protocol.md`).
-  Each version was hashed and logged locally before the runs it governs (D15, D22,
-  D32, D39, D40, D44). This is not a formal preregistration.
+* **Protocol** v0.1 → v0.2 → v0.3 → v0.4 → v0.5 → v0.6 → v0.7
+  (`experiments/protocol.md`). Each version was hashed and logged locally before the
+  runs it governs (D15, D22, D32, D39, D40, D44, D48); v0.7 governs only later runs and
+  re-analyses and changes nothing in the pilot. This is not a formal preregistration.
 * **Final pilot run** `results/runs/pilot-v0.3.3`:
   * 240 pairs, harness 0.3.3, one code revision, no infrastructure outcomes;
   * labels re-proposed under 0.3.3 first, identical to the earlier proposals (D45);
@@ -73,7 +86,7 @@ repository owner. Nothing here is peer reviewed, and no human labels exist.
   * all sections drafted;
   * every table generated from records (`paper/make_tables.py`);
   * an evidence ledger listing every table number with its source file;
-  * compiles to 27 pages.
+  * compiles to 28 pages (2026-11-21, after the text corrections of round 4).
 * **Reviews by model agents** (Claude, the same model family; not human review):
   * an internal review with six lenses, whose skeptic agents checked findings until
     that stage was stopped for the final run;
@@ -86,19 +99,36 @@ repository owner. Nothing here is peer reviewed, and no human labels exist.
 
   Findings, verdicts and dispositions are in `docs/internal_review.md`.
 * **Other documents:** annotation guide v0.4 (blinded review packet, D43, D44), data
-  card, decision log D1–D46,
+  card, decision log D1–D46 (round 4: D47 onwards),
   submission-readiness notes (arXiv pages re-checked 2026-11-18), the
   ownership/defense notes, workflow and agent prompts (`experiments/prompts/`), and
   third-party licence notices (`THIRD_PARTY_LICENSES/`).
+* **Round 4 (2026-11-21, in progress; D47 onwards):**
+  * a re-audit against the specification by model agents (D47), and protocol v0.7
+    (D48);
+  * natural-data screening (D47, D48). All 30 Trace Commons sessions were rejected,
+    none reconstructable (`data/manifests/screening_natural.json`). In AIDev v5, the
+    deterministic stages S1 to S8a leave 684 review comments on 190 pull requests, of
+    which a sample of 150 is drawn for the model-assisted stage S9
+    (`data/manifests/screening_natural_aidev.json`);
+  * harness `tc-harness/0.3.4` for new runs (above), and Harbor exporter
+    `tc-harbor-export/0.2.0` (see Tested);
+  * a frozen-input check, `scripts/verify_frozen_inputs.py`, which `pilot-v0.3.3`
+    passes;
+  * the reconstruction check and the enforced acceptance gate (above);
+  * an exploratory re-analysis of `pilot-v0.3.3` and a draft precision plan, which is
+    not adopted (D49).
 
 ## Tested
 
-* **80 tests pass** (2026-11-18, after the final run): 63 offline and 17 Docker.
+* **80 tests passed** on 2026-11-18, after the final run: 63 offline and 17 Docker.
+  The tests added in round 4 are not counted here yet.
 * **Offline tests:**
   * schemas, ingestion and evidence alignment;
   * supersession, contract validation and the acceptance gate;
-  * patch policy, leakage check, and verifier lint/freeze (re-freezing refused, the
-    check-list hash required);
+  * patch policy, the leakage-check function (given an independent reference base;
+    the task build called it without one, D47), and verifier lint/freeze (re-freezing
+    refused, the check-list hash required);
   * trusted aggregation: missing, stale or crashed results never pass;
   * metrics, label policies, coverage and κ;
   * same-code duplicate detection and the Harbor export layout;
@@ -124,7 +154,11 @@ repository owner. Nothing here is peer reviewed, and no human labels exist.
 * **Harbor:** export validated with oracle and no-op trials on a fixture task under
   harness 0.3.3 (Harbor 0.25.0; D35, D39, D40, D45). The outputs are recorded in
   `results/harbor_validation/tc-harness-0.3.3/` (and, for 0.3.2,
-  `tc-harness-0.3.2/`).
+  `tc-harness-0.3.2/`). Exporter `tc-harbor-export/0.2.0` was validated on 2026-11-21
+  with the same trials and two probes whose candidate code writes its own reward file,
+  on a grader timeout and on a collection error. Both now end without a reward; under
+  the earlier exporter both received reward 1.0
+  (`results/harbor_validation/tc-harbor-export-0.2.0/`).
 
 ## Main pilot findings (automated labels; descriptive only)
 
@@ -164,7 +198,11 @@ repository owner. Nothing here is peer reviewed, and no human labels exist.
   queue (`tasks/*/labels/review_queue.json`) is opened only after the merge. The
   paper's central claim needs these labels.
 * **Natural data (SWE-chat).** The dataset's Hugging Face terms must be accepted by
-  the owner, and the saved token fails authentication (`/api/whoami-v2` → 401).
+  the owner, and the saved token fails authentication (`/api/whoami-v2` → 401). The
+  two ungated, openly licensed sources (AIDev v5 pull-request review threads, Trace
+  Commons sessions) need neither and are being screened (Completed, round 4). Whether
+  pull-request review comments count as user corrections for the claim is an owner
+  decision (D47).
 * **Harbor `no-network` on this host.** Harbor rejected `no-network` on this host
   (the rejection was observed; its cause was not probed). Exported tasks declare
   `no-network`, and a `local-validation` variant is used only for oracle/no-op

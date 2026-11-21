@@ -10,10 +10,12 @@ requires the repository owner's explicit instruction.
    pilot with model/construction labels. The paper's central claims need
    human-adjudicated labels, from two reviewers for every task, and agreement
    statistics (protocol §5, §9, §14).
-2. **No natural sessions.** All tasks are controlled sessions with scripted
+2. **No natural tasks.** All tasks are controlled sessions with scripted
    corrections. Natural SWE-chat tasks are blocked on the dataset's access terms
-   (decision log D4). Without them, external-validity claims must be limited to
-   controlled sessions.
+   (decision log D4). Two ungated, openly licensed sources, AIDev v5 pull-request
+   review threads and Trace Commons sessions, are being screened (D47, D48), but no
+   natural task has been built from them. Until one is, external-validity claims must
+   be limited to controlled sessions.
 3. **Too few independent task families** for any inferential claim. The pilot is
    descriptive; a confirmatory study needs a v1.0 protocol frozen after the pilot.
 4. **Novelty positioning** is narrowed but not yet confirmed by the owner (decision
