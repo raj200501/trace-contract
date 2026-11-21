@@ -546,3 +546,50 @@ def test_runtime_startup_hooks_not_loaded(image, tmp_path):
                      patch_sha256=sha256_text(""), produced_by="fixture")
     res = verify_candidate(image=image, base_dir=base, spec=spec, task_dir=tdir, candidate=cand, run_id="iso")
     assert res.outcome == Outcome.passed, [c.message[-500:] for c in res.checks]
+
+
+FORMAT_PROBE = '''from tc_sandbox import run_python
+
+
+def test_value_whose_repr_imports_a_candidate_module():
+    r = run_python("from fmtmod import Box\\nresult = Box()", timeout=10)
+    assert r.ok, r
+    assert r.value == "<unformattable Box>", r
+
+
+def test_exception_whose_str_imports_a_candidate_module():
+    r = run_python("from fmtmod import Boom\\nraise Boom()", timeout=10)
+    assert not r.ok and r.error_type == "Boom", r
+    assert r.error == "<unformattable Boom>", r
+'''
+
+FMT_MODULE = '''class Box:
+    def __repr__(self):
+        import fmthelper  # a candidate module, not importable once the trusted path is restored
+        return fmthelper.label(self)
+
+
+class Boom(Exception):
+    def __str__(self):
+        import fmthelper
+        return fmthelper.label(self)
+'''
+
+
+def test_formatting_failure_never_changes_the_outcome(image, tmp_path):
+    """Harness 0.3.4 (protocol v0.7 §15.3, D46): formatting runs after the trusted path is
+    restored, so a candidate __repr__ or __str__ that imports a candidate module fails.
+    The failure must become a placeholder; under 0.3.3 the successful call was reported
+    as a SerializationError."""
+    base = tmp_path / "base"
+    base.mkdir()
+    (base / "calc.py").write_text("x = 1\n")
+    tdir = tmp_path / "task"
+    (tdir / "tests").mkdir(parents=True)
+    (tdir / "tests" / "test_fmt.py").write_text(FORMAT_PROBE)
+    spec = VerifierSpec(verifier_id="fmt", task_id="t", condition=VerifierCondition.reference_check,
+                        isolation=Isolation.process_separated, test_dir="tests",
+                        checks=[CheckSpec(check_id=c) for c in discover_checks(tdir / "tests")], content_sha256="x")
+    cand = _candidate(base, tmp_path, "fmt", {"fmtmod.py": FMT_MODULE, "fmthelper.py": "def label(o):\n    return 'ok'\n"})
+    res = verify_candidate(image=image, base_dir=base, spec=spec, task_dir=tdir, candidate=cand, run_id="iso")
+    assert res.outcome == Outcome.passed, [c.message[-500:] for c in res.checks]

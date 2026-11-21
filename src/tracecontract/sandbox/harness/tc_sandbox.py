@@ -65,10 +65,12 @@ TAMPER_EVENTS: list[dict[str, Any]] = []
 # or signs anything, so the wrapper itself does not import from a candidate directory
 # (decision log D44; harness 0.3.2 did). Methods that candidate objects define still run
 # while the result is formatted (``__repr__`` of the value, ``__str__`` of an exception,
-# a module's ``__getattr__`` or ``__dir__`` for traceback suggestions); they now run
-# without the candidate directories on ``sys.path``, so one that imports a candidate
-# module fails, and a package-relative import inside one can still load candidate code
-# (decision log D46). Code that the snippet runs, directly or through candidate modules
+# a module's ``__getattr__`` or ``__dir__`` for traceback suggestions); they run without
+# the candidate directories on ``sys.path``, so one that imports a candidate module
+# fails, and a package-relative import inside one can still load candidate code
+# (decision log D46). Since harness 0.3.4 such a failure is caught and replaced by a
+# placeholder naming the type, so formatting never changes whether a call succeeded
+# (protocol v0.7 §15.3). Code that the snippet runs, directly or through candidate modules
 # it imports, runs in the same process and can still change what that call reports (the
 # documented residual risk).
 _WRAPPER = r'''
@@ -91,6 +93,23 @@ def _tc_trust():
     _tc_sys.path = list(_tc_trusted_path)
     _tc_sys.meta_path = list(_tc_trusted_meta_path)
     _tc_sys.path_importer_cache.clear()
+def _tc_tname(o):
+    try:
+        return str(type(o).__name__)
+    except BaseException:  # noqa: BLE001
+        return "object"
+def _tc_default(o):
+    # Formatting can run candidate code (a __repr__) after the trusted path is restored;
+    # a failure there becomes a placeholder and never changes the outcome (0.3.4).
+    try:
+        return repr(o)
+    except BaseException:  # noqa: BLE001
+        return "<unformattable %%s>" %% _tc_tname(o)
+def _tc_text(fn, fallback):
+    try:
+        return fn()
+    except BaseException:  # noqa: BLE001
+        return fallback
 def _tc_main():
     key = _tc_os.read(%(keyfd)d, 64)
     _tc_os.close(%(keyfd)d)
@@ -103,10 +122,11 @@ def _tc_main():
         res = {"ok": True, "value": ns.get("result")}
     except BaseException as e:  # noqa: BLE001 - report every failure as data
         _tc_trust()
-        res = {"ok": False, "error_type": type(e).__name__, "error": str(e)[:4000],
-               "traceback": _tc_traceback.format_exc()[-4000:]}
+        res = {"ok": False, "error_type": _tc_tname(e),
+               "error": _tc_text(lambda: str(e)[:4000], "<unformattable %%s>" %% _tc_tname(e)),
+               "traceback": _tc_text(lambda: _tc_traceback.format_exc()[-4000:], "<traceback unavailable>")}
     try:
-        payload = _tc_json.dumps(res, default=repr, sort_keys=True)
+        payload = _tc_json.dumps(res, default=_tc_default, sort_keys=True)
     except Exception as e:  # noqa: BLE001
         payload = _tc_json.dumps({"ok": False, "error_type": "SerializationError", "error": repr(e)})
     mac = _tc_hmac.new(key, payload.encode("utf-8"), _tc_hashlib.sha256).hexdigest()
