@@ -1215,3 +1215,77 @@ version, which will need a re-run.
   row for `pilot-v0.3.2`, and the evidence ledger gained two entries.
 
 **Tests.** 80 pass (63 offline, 17 Docker).
+
+## 2026-11-21
+
+### D47. Re-audit against the specification; round-4 plan; ungated natural sources adopted for screening
+**Re-audit (2026-11-21, 01:00-02:40).** The owner asked for a re-audit against the
+original specification. Seven model agents audited the repository at `c5ede4c`,
+read-only: pipeline and deliverables, data, design and statistics, the manuscript, an
+"impressiveness" reader, a natural-data scout and a build-recipe extractor. An eighth
+agent merged their findings. All are Claude agents, not human reviewers. Verdict: the
+project does not yet meet the specification's bar. It is a careful Milestone-2
+demonstration with a strong grading core, but:
+* the evidence stops at four scripted two-turn families;
+* the labels equal the model-written reference checks;
+* the comparisons that test the hypothesis are null: B2 matches C3/C4 within one
+  candidate, and the audit changed 1 of 32 outcomes;
+* there is no natural population, no fresh-agent attempt and no precision plan;
+* several pipeline stages are scaffolding. Among them, the leakage check as called can
+  flag only a `.git` directory (`tasks.py:155`).
+
+The merged plan has eleven phases: truth fixes; an exploratory re-analysis and a
+precision plan; batch isolation and records; a Trace Commons screen with transcript
+replay and triage; an independent labeler and fresh-agent attempts; an AIDev screen;
+natural PR-review tasks; a controlled expansion; pipeline completeness; a manuscript
+rebuild; and a re-audit with a stop rule. Its stop rule is to stop once only
+owner-blocked gaps remain. Without human labels the ceiling stays an automated pilot
+plus a natural screening study.
+
+**Decision: screen two ungated, openly licensed natural sources, as separate
+populations.** The specification allows changing the source dataset when the
+evidence supports it (§2) and asks for offline progress while blocked (§10). Brief §8
+Q6 had left these sources to the owner. They need no terms, gate or spending, so
+screening them moves into the plan. Accepting the SWE-chat terms stays with the owner
+(D4), and the third-party LuminTime transcripts stay untouched pending the owner.
+* `natural:pr-review`: AIDev v5 (`hao-li/AIDev`, tag `v5` =
+  `b37f9fd1613cfec55886105bb76721918d015dc7`). It is a CC-BY-4.0 compilation in which
+  each source repository keeps its own licence, and it was ungated on 2026-11-21 (Hub
+  API, `gated: false`). Files: `repository`, `pr_review_comments`, `pull_request`,
+  `pr_commits`, `related_issue` and `issue` (1,107,208,277 bytes); `pr_reviews` only if
+  needed; never `all_user`. They are kept outside the repository, each sha256 is
+  checked against its LFS oid, and every file is recorded in
+  `data/manifests/third_party_downloads.json` as holding personal data (GitHub logins,
+  comment text).
+* `natural:chat`: Trace Commons (`trace-commons/agent-traces` at `112ebd4d`, a
+  CC-BY-4.0 compilation, ungated), 30 sessions, screened for reconstructability,
+  triage and the rejection ledger.
+* Never pooled with controlled data. No verbatim comment, PR, issue or session text,
+  no logins and no @handles in git: only IDs, SHAs, sha256 hashes of texts, and
+  paraphrased requirements.
+* Model-assisted screening stage (behaviour change addressed by a later commit): a
+  uniform random sample of up to 150 comments that survive the deterministic filters,
+  seed 20261121. Its outputs are labelled as model proposals.
+* Precedent and distinct value. SWE-Gate (arXiv 2609.04167) and SWE-Shield (arXiv
+  2604.05955) already derive requirements from PR review comments and measure
+  test-based false acceptance (`docs/research/review_novelty_search.md` §3.3). This
+  arm adds only the generated initial-only versus correction-aware verifier pair,
+  scored on the observed pre-review state together with valid alternatives.
+* Construct caveat. A review comment is not a chat correction, and the reviewer is
+  often not the requester. The initial request is a linked human-written issue where
+  one exists. Otherwise it is the agent's own PR body, which is flagged and is not user
+  evidence. Whether PR-review corrections count as user corrections for the claim (D34)
+  is the owner's decision.
+* Correction to the brief (§4.3) and the notes. AIDev pre-review states are not exact
+  without checks: `pull_request` has no base or head SHA, `pr_commits` has no dates or
+  parents, and the reviewed commit was missing from the PR's commit list in 3 of 19
+  sampled behaviour comments. Each state must be verified by fetching it from its
+  repository.
+
+**Wording correction.** README, STATUS, the data card and the paper said that natural
+data was blocked. Only SWE-chat is. Protocol §2 is hashed and stays as written; this
+entry records the correction.
+
+**Frozen pilot.** `results/runs/pilot-v0.3.3`, the hashed protocol text and the frozen
+task files are not edited. New candidates, populations and analyses go into new runs,
+strata and sidecar files, and a frozen-input check runs at the end of every phase.
