@@ -1,0 +1,38 @@
+{
+  "schema_version": "0.1.0",
+  "candidate_id": "CS-02-fresh-B-u1-2",
+  "task_id": "CS-02",
+  "origin": "fresh_attempt",
+  "split": "eval",
+  "patch": "diff --git a/tinydb/storages.py b/tinydb/storages.py\nindex 59337a1c15ca931e33a2822994dea314b5cc8ad9..80b20b6926a4317ba69c337ce8b57eee0f29b93f 100644\n--- a/tinydb/storages.py\n+++ b/tinydb/storages.py\n@@ -3,9 +3,11 @@ Contains the :class:`base class <tinydb.storages.Storage>` for storages and\n implementations.\n \"\"\"\n \n-import io\n+import contextlib\n import json\n import os\n+import shutil\n+import tempfile\n import warnings\n from abc import ABC, abstractmethod\n from typing import Any, Optional\n@@ -103,6 +105,8 @@ class JSONStorage(Storage):\n         super().__init__()\n \n         self._mode = access_mode\n+        self._path = path\n+        self._encoding = encoding\n         self.kwargs = kwargs\n \n         if access_mode not in ('r', 'rb', 'r+', 'rb+'):\n@@ -140,25 +144,80 @@ class JSONStorage(Storage):\n             return json.load(self._handle)\n \n     def write(self, data: dict[str, dict[str, Any]]):\n-        # Move the cursor to the beginning of the file just in case\n-        self._handle.seek(0)\n+        # Refuse to write through a read-only handle, as before\n+        if not any(character in self._mode for character in ('+', 'w', 'a')):\n+            raise IOError('Cannot write to the database. Access mode is \"{0}\"'.format(self._mode))\n \n-        # Serialize the database state using the user-provided arguments\n+        # Serialize the database state using the user-provided arguments.\n+        # This happens before touching the file, so a serialization error\n+        # leaves the stored database unchanged.\n         serialized = json.dumps(data, **self.kwargs)\n \n-        # Write the serialized data to the file\n-        try:\n-            self._handle.write(serialized)\n-        except io.UnsupportedOperation:\n-            raise IOError('Cannot write to the database. Access mode is \"{0}\"'.format(self._mode))\n+        self._write_atomically(serialized)\n \n-        # Ensure the file has been written\n-        self._handle.flush()\n-        os.fsync(self._handle.fileno())\n+    def _write_atomically(self, serialized: str) -> None:\n+        \"\"\"\n+        Replace the storage file's contents so that the file on disk is\n+        always either the old version or the new one.\n \n-        # Remove data that is behind the new cursor in case the file has\n-        # gotten shorter\n-        self._handle.truncate()\n+        The data is written and fsynced to a temporary file in the same\n+        directory, which is then renamed over the target with ``os.replace``\n+        (atomic on POSIX and Windows).\n+        \"\"\"\n+        # Follow symlinks so that the link itself is kept and the target\n+        # file is what gets replaced\n+        target = os.path.realpath(self._path)\n+        directory = os.path.dirname(target) or '.'\n+\n+        fd, tmp_path = tempfile.mkstemp(\n+            dir=directory,\n+            prefix=os.path.basename(target) + '.',\n+            suffix='.tmp',\n+        )\n+        try:\n+            with os.fdopen(fd, 'w', encoding=self._encoding) as tmp:\n+                tmp.write(serialized)\n+                tmp.flush()\n+                os.fsync(tmp.fileno())\n+\n+            # Keep the permissions of the existing database file\n+            try:\n+                shutil.copymode(target, tmp_path)\n+            except FileNotFoundError:\n+                pass\n+\n+            # The old handle refers to the old file, which is about to be\n+            # replaced. Close it first, as Windows cannot replace open files.\n+            self._handle.close()\n+            try:\n+                os.replace(tmp_path, target)\n+            finally:\n+                # Always reopen the handle so the storage stays usable,\n+                # pointing at whichever file is now on disk\n+                self._handle = open(\n+                    target,\n+                    mode='rb+' if 'b' in self._mode else 'r+',\n+                    encoding=self._encoding,\n+                )\n+\n+            # Make the rename itself durable (best effort; not supported on\n+            # every platform)\n+            try:\n+                dir_fd = os.open(directory, os.O_RDONLY)\n+            except OSError:\n+                pass\n+            else:\n+                try:\n+                    os.fsync(dir_fd)\n+                except OSError:\n+                    pass\n+                finally:\n+                    os.close(dir_fd)\n+        except BaseException:\n+            # Do not leave temporary files behind; the target is untouched\n+            with contextlib.suppress(FileNotFoundError):\n+                os.unlink(tmp_path)\n+            raise\n \n \n class MemoryStorage(Storage):\n",
+  "patch_sha256": "3c6bd55564a7c2dc3b90012e3ac9c549bf90079801d5fb4005c4cd95668f6779",
+  "produced_by": "fresh-attempt:config-B",
+  "description": "",
+  "labels": [],
+  "attempt": {
+    "attempt_id": "CS-02-fresh-B-u1-2",
+    "configuration": "config-B",
+    "variant": "u1",
+    "instruction_sha256": "59e6af35c20e5866188af4d3132909a9ff1104f3eb1f90dd6a51ca2f732786da",
+    "started_at": "2026-11-21T09:12:48.109Z",
+    "ended_at": "2026-11-21T09:13:54.154Z",
+    "wall_s": 66.045,
+    "turns": 14,
+    "tool_calls": 18,
+    "tokens": 1239941,
+    "ended": "finished",
+    "patch_sha256": "3c6bd55564a7c2dc3b90012e3ac9c549bf90079801d5fb4005c4cd95668f6779",
+    "run_record": "build-session:subagents/workflows/wf_9632d58c-40e/agent-ac859ada899c17e55.jsonl",
+    "audit": {
+      "profile": "fresh-attempt:v1",
+      "passed": true,
+      "findings": [
+        "fresh-attempt audit: no hit, no exposure",
+        "file tools (Read, Edit) named only workspace paths; every shell command began with a cd into the workspace",
+        "verdict: passed, nothing outside the workspace was read"
+      ],
+      "audited_at": "2026-11-21T10:39:02Z",
+      "record": "data/fresh/fresh-v1/audit_CS-02.json"
+    }
+  }
+}

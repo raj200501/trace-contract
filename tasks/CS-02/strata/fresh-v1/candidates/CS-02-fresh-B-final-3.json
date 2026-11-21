@@ -1,0 +1,39 @@
+{
+  "schema_version": "0.1.0",
+  "candidate_id": "CS-02-fresh-B-final-3",
+  "task_id": "CS-02",
+  "origin": "fresh_attempt",
+  "split": "eval",
+  "patch": "diff --git a/tinydb/storages.py b/tinydb/storages.py\nindex 59337a1c15ca931e33a2822994dea314b5cc8ad9..5b0f75b8bea17f78e18b05994918f26963619ebf 100644\n--- a/tinydb/storages.py\n+++ b/tinydb/storages.py\n@@ -3,9 +3,10 @@ Contains the :class:`base class <tinydb.storages.Storage>` for storages and\n implementations.\n \"\"\"\n \n-import io\n import json\n import os\n+import stat\n+import tempfile\n import warnings\n from abc import ABC, abstractmethod\n from typing import Any, Optional\n@@ -13,6 +14,25 @@ from typing import Any, Optional\n __all__ = ('Storage', 'JSONStorage', 'MemoryStorage')\n \n \n+def _fsync_directory(directory: str) -> None:\n+    \"\"\"\n+    Best-effort fsync of a directory, so that a rename inside it is durable.\n+    Silently does nothing on platforms that do not support it.\n+    \"\"\"\n+\n+    try:\n+        fd = os.open(directory, os.O_RDONLY)\n+    except OSError:\n+        return\n+\n+    try:\n+        os.fsync(fd)\n+    except OSError:\n+        pass\n+    finally:\n+        os.close(fd)\n+\n+\n def touch(path: str, create_dirs: bool):\n     \"\"\"\n     Create a file if it doesn't exist yet.\n@@ -104,6 +124,16 @@ class JSONStorage(Storage):\n \n         self._mode = access_mode\n         self.kwargs = kwargs\n+        self._encoding = encoding\n+\n+        # Writes replace the file (see ``write``), so the handle is reopened\n+        # afterwards. Reopening must not truncate the file again, so the\n+        # truncating/appending modes are turned into read-write modes.\n+        self._reopen_mode = access_mode.replace('w', 'r+').replace('a', 'r+')\n+\n+        # Real path of the file, resolved once so that writes replace the file\n+        # a symlink points to instead of replacing the symlink itself\n+        self._path = os.path.realpath(path)\n \n         if access_mode not in ('r', 'rb', 'r+', 'rb+'):\n             warnings.warn(\n@@ -140,25 +170,53 @@ class JSONStorage(Storage):\n             return json.load(self._handle)\n \n     def write(self, data: dict[str, dict[str, Any]]):\n-        # Move the cursor to the beginning of the file just in case\n-        self._handle.seek(0)\n-\n-        # Serialize the database state using the user-provided arguments\n+        # Serialize the database state using the user-provided arguments first,\n+        # so that a serialization error leaves the file untouched\n         serialized = json.dumps(data, **self.kwargs)\n \n-        # Write the serialized data to the file\n-        try:\n-            self._handle.write(serialized)\n-        except io.UnsupportedOperation:\n+        if not any(character in self._mode for character in ('+', 'w', 'a')):\n             raise IOError('Cannot write to the database. Access mode is \"{0}\"'.format(self._mode))\n \n-        # Ensure the file has been written\n-        self._handle.flush()\n-        os.fsync(self._handle.fileno())\n+        # Write the new contents to a temporary file in the same directory (so\n+        # the final rename stays on one filesystem), then atomically swap it\n+        # into place. The file on disk is always either the old or the new\n+        # version, never a partially written one.\n+        binary = 'b' in self._mode\n+        directory = os.path.dirname(self._path) or '.'\n+        tmp_fd, tmp_path = tempfile.mkstemp(\n+            dir=directory, prefix=os.path.basename(self._path) + '.', suffix='.tmp'\n+        )\n+        swapped = False\n \n-        # Remove data that is behind the new cursor in case the file has\n-        # gotten shorter\n-        self._handle.truncate()\n+        try:\n+            with os.fdopen(tmp_fd, 'wb' if binary else 'w',\n+                           encoding=None if binary else self._encoding) as tmp_file:\n+                tmp_file.write(serialized)\n+                tmp_file.flush()\n+                os.fsync(tmp_file.fileno())\n+\n+            # Keep the permissions of the existing file (mkstemp creates 0600)\n+            try:\n+                os.chmod(tmp_path, stat.S_IMODE(os.stat(self._path).st_mode))\n+            except FileNotFoundError:\n+                pass\n+\n+            self._handle.close()\n+            try:\n+                os.replace(tmp_path, self._path)\n+            finally:\n+                # Always reopen, so this instance reads whatever is on disk now\n+                self._handle = open(self._path, mode=self._reopen_mode, encoding=self._encoding)\n+\n+            swapped = True\n+        finally:\n+            if not swapped:\n+                try:\n+                    os.unlink(tmp_path)\n+                except FileNotFoundError:\n+                    pass\n+\n+        _fsync_directory(directory)\n \n \n class MemoryStorage(Storage):\n",
+  "patch_sha256": "d8d429c12edab5dd20d1e201d848bc24e900179bd70956187894186232530705",
+  "produced_by": "fresh-attempt:config-B",
+  "description": "",
+  "labels": [],
+  "attempt": {
+    "attempt_id": "CS-02-fresh-B-final-3",
+    "configuration": "config-B",
+    "variant": "final",
+    "instruction_sha256": "65f692f08ef2364b9b472feba2b60aea6c3219715c3aad56756c10632939e7ad",
+    "started_at": "2026-11-21T09:43:46.105Z",
+    "ended_at": "2026-11-21T09:45:17.599Z",
+    "wall_s": 91.494,
+    "turns": 13,
+    "tool_calls": 18,
+    "tokens": 1197389,
+    "ended": "finished",
+    "patch_sha256": "d8d429c12edab5dd20d1e201d848bc24e900179bd70956187894186232530705",
+    "run_record": "build-session:subagents/workflows/wf_9632d58c-40e/agent-a94c1e5e90ecfc77f.jsonl",
+    "audit": {
+      "profile": "fresh-attempt:v1",
+      "passed": true,
+      "findings": [
+        "fresh-attempt audit: no hit, 1 exposure; read in the transcript",
+        "false positive: the exposure is a token of its own run_python.sh (a setting that names the container's /repo), printed by a command that named the wrapper by its absolute workspace path and that the parser resolved against the repository",
+        "file tools (Read, Edit, Write) named only workspace paths; every shell command but that one began with a cd into the workspace",
+        "verdict: passed, nothing outside the workspace was read"
+      ],
+      "audited_at": "2026-11-21T10:39:02Z",
+      "record": "data/fresh/fresh-v1/audit_CS-02.json"
+    }
+  }
+}

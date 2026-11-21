@@ -1,0 +1,39 @@
+{
+  "schema_version": "0.1.0",
+  "candidate_id": "CS-02-fresh-B-final-1",
+  "task_id": "CS-02",
+  "origin": "fresh_attempt",
+  "split": "eval",
+  "patch": "diff --git a/tinydb/storages.py b/tinydb/storages.py\nindex 59337a1c15ca931e33a2822994dea314b5cc8ad9..8b0c510d4ec078758d49d5c6c28cd3814da07461 100644\n--- a/tinydb/storages.py\n+++ b/tinydb/storages.py\n@@ -3,9 +3,10 @@ Contains the :class:`base class <tinydb.storages.Storage>` for storages and\n implementations.\n \"\"\"\n \n-import io\n import json\n import os\n+import shutil\n+import tempfile\n import warnings\n from abc import ABC, abstractmethod\n from typing import Any, Optional\n@@ -102,7 +103,9 @@ class JSONStorage(Storage):\n \n         super().__init__()\n \n+        self._path = path\n         self._mode = access_mode\n+        self._encoding = encoding\n         self.kwargs = kwargs\n \n         if access_mode not in ('r', 'rb', 'r+', 'rb+'):\n@@ -119,6 +122,14 @@ class JSONStorage(Storage):\n         # Open the file for reading/writing\n         self._handle = open(path, mode=self._mode, encoding=encoding)\n \n+        # Mode used to reopen the file after an atomic replace in ``write``.\n+        # Reopening must never truncate or create the file, so write-only\n+        # modes are reopened read/write instead.\n+        if self._handle.readable():\n+            self._reopen_mode = self._mode\n+        else:\n+            self._reopen_mode = 'rb+' if 'b' in self._mode else 'r+'\n+\n     def close(self) -> None:\n         self._handle.close()\n \n@@ -140,25 +151,69 @@ class JSONStorage(Storage):\n             return json.load(self._handle)\n \n     def write(self, data: dict[str, dict[str, Any]]):\n-        # Move the cursor to the beginning of the file just in case\n-        self._handle.seek(0)\n+        if not self._handle.writable():\n+            raise IOError('Cannot write to the database. Access mode is \"{0}\"'.format(self._mode))\n \n-        # Serialize the database state using the user-provided arguments\n+        # Serialize the database state using the user-provided arguments.\n+        # This happens before anything touches the disk, so a serialization\n+        # error leaves the database file untouched.\n         serialized = json.dumps(data, **self.kwargs)\n \n-        # Write the serialized data to the file\n-        try:\n-            self._handle.write(serialized)\n-        except io.UnsupportedOperation:\n-            raise IOError('Cannot write to the database. Access mode is \"{0}\"'.format(self._mode))\n+        # Write the new contents to a temporary file in the same directory as\n+        # the database, so that the final rename stays on one filesystem and\n+        # is atomic. The database file itself is never written to directly.\n+        target = os.path.realpath(self._path)\n+        directory = os.path.dirname(target) or '.'\n+        fd, tmp_path = tempfile.mkstemp(\n+            dir=directory, prefix='.' + os.path.basename(target) + '.', suffix='.tmp'\n+        )\n \n-        # Ensure the file has been written\n-        self._handle.flush()\n-        os.fsync(self._handle.fileno())\n-\n-        # Remove data that is behind the new cursor in case the file has\n-        # gotten shorter\n-        self._handle.truncate()\n+        try:\n+            with os.fdopen(fd, 'w', encoding=self._encoding) as tmp_handle:\n+                tmp_handle.write(serialized)\n+                tmp_handle.flush()\n+                os.fsync(tmp_handle.fileno())\n+\n+            # Keep the permission bits of the existing database file\n+            try:\n+                shutil.copymode(target, tmp_path)\n+            except OSError:\n+                pass\n+\n+            # Release our handle before swapping (required on Windows), then\n+            # atomically move the temporary file over the database file. The\n+            # handle is reopened in every case, so the storage keeps reading\n+            # the current file: the old contents if the swap failed, the new\n+            # contents if it succeeded.\n+            self._handle.close()\n+            try:\n+                os.replace(tmp_path, target)\n+            finally:\n+                self._handle = open(self._path, mode=self._reopen_mode, encoding=self._encoding)\n+        except BaseException:\n+            # Do not leave the temporary file behind on failure\n+            try:\n+                os.unlink(tmp_path)\n+            except FileNotFoundError:\n+                pass\n+            raise\n+\n+        self._fsync_directory(directory)\n+\n+    @staticmethod\n+    def _fsync_directory(directory: str) -> None:\n+        # Persist the rename itself. Not supported on every platform (e.g.\n+        # Windows), in which case it is skipped.\n+        try:\n+            dir_fd = os.open(directory, os.O_RDONLY)\n+        except OSError:\n+            return\n+        try:\n+            os.fsync(dir_fd)\n+        except OSError:\n+            pass\n+        finally:\n+            os.close(dir_fd)\n \n \n class MemoryStorage(Storage):\n",
+  "patch_sha256": "a84945bdb15b641bace45149461da0e78a37e33f23273e44d543e525aeebcd2e",
+  "produced_by": "fresh-attempt:config-B",
+  "description": "",
+  "labels": [],
+  "attempt": {
+    "attempt_id": "CS-02-fresh-B-final-1",
+    "configuration": "config-B",
+    "variant": "final",
+    "instruction_sha256": "5aab99704f52066b6c7183d1c198609114803c4bb8f1c4be25f5e4ae772e2bdc",
+    "started_at": "2026-11-21T09:09:49.082Z",
+    "ended_at": "2026-11-21T09:11:20.060Z",
+    "wall_s": 90.978,
+    "turns": 16,
+    "tool_calls": 19,
+    "tokens": 1493018,
+    "ended": "finished",
+    "patch_sha256": "a84945bdb15b641bace45149461da0e78a37e33f23273e44d543e525aeebcd2e",
+    "run_record": "build-session:subagents/workflows/wf_9632d58c-40e/agent-a3fe127ae8110c8d1.jsonl",
+    "audit": {
+      "profile": "fresh-attempt:v1",
+      "passed": true,
+      "findings": [
+        "fresh-attempt audit: 1 hit, no exposure; read in the transcript",
+        "the hit: a stray command created a file in /tmp, the container's temporary directory (a system location under §18.1), which the attempt removed later and never read",
+        "file tools (Read, Edit) named only workspace paths; every shell command but one began with a cd into the workspace, and that one removed the /tmp file before its cd into the workspace's repo",
+        "verdict: passed, nothing outside the workspace was read"
+      ],
+      "audited_at": "2026-11-21T10:39:02Z",
+      "record": "data/fresh/fresh-v1/audit_CS-02.json"
+    }
+  }
+}

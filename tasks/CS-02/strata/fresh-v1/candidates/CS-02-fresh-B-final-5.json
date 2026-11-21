@@ -1,0 +1,39 @@
+{
+  "schema_version": "0.1.0",
+  "candidate_id": "CS-02-fresh-B-final-5",
+  "task_id": "CS-02",
+  "origin": "fresh_attempt",
+  "split": "eval",
+  "patch": "diff --git a/tinydb/storages.py b/tinydb/storages.py\nindex 59337a1c15ca931e33a2822994dea314b5cc8ad9..a122f3467020864116374a6af28cf0b5b24c129b 100644\n--- a/tinydb/storages.py\n+++ b/tinydb/storages.py\n@@ -3,9 +3,10 @@ Contains the :class:`base class <tinydb.storages.Storage>` for storages and\n implementations.\n \"\"\"\n \n-import io\n import json\n import os\n+import shutil\n+import tempfile\n import warnings\n from abc import ABC, abstractmethod\n from typing import Any, Optional\n@@ -116,8 +117,15 @@ class JSONStorage(Storage):\n         if any([character in self._mode for character in ('+', 'w', 'a')]):  # any of the writing modes\n             touch(path, create_dirs=create_dirs)\n \n+        # Remember where the file lives and how it was opened, so that the\n+        # handle can be re-opened after an atomic replace (see ``write``).\n+        # The real path is used so that writes through a symlink keep the\n+        # symlink intact instead of replacing it with a regular file.\n+        self._path = os.path.realpath(path)\n+        self._encoding = encoding\n+\n         # Open the file for reading/writing\n-        self._handle = open(path, mode=self._mode, encoding=encoding)\n+        self._handle = open(self._path, mode=self._mode, encoding=encoding)\n \n     def close(self) -> None:\n         self._handle.close()\n@@ -140,25 +148,77 @@ class JSONStorage(Storage):\n             return json.load(self._handle)\n \n     def write(self, data: dict[str, dict[str, Any]]):\n-        # Move the cursor to the beginning of the file just in case\n-        self._handle.seek(0)\n-\n         # Serialize the database state using the user-provided arguments\n         serialized = json.dumps(data, **self.kwargs)\n \n-        # Write the serialized data to the file\n-        try:\n-            self._handle.write(serialized)\n-        except io.UnsupportedOperation:\n+        # Refuse to write through handles that cannot be written to (e.g. the\n+        # 'r' access mode), before anything is touched on disk\n+        if not self._handle.writable():\n             raise IOError('Cannot write to the database. Access mode is \"{0}\"'.format(self._mode))\n+        if 'b' in self._mode:\n+            # Binary handles never accepted ``str`` data\n+            raise TypeError('write() argument must be bytes-like, not str')\n+\n+        # Write the new contents to a temporary file in the same directory, so\n+        # that the final rename stays on one filesystem and is atomic. The\n+        # original file is only replaced once the new contents are on disk.\n+        directory = os.path.dirname(self._path)\n+        fd, tmp_path = tempfile.mkstemp(\n+            dir=directory,\n+            prefix=os.path.basename(self._path) + '.',\n+            suffix='.tmp',\n+        )\n+        try:\n+            with os.fdopen(fd, mode='w', encoding=self._encoding) as tmp_handle:\n+                tmp_handle.write(serialized)\n+                tmp_handle.flush()\n+                os.fsync(tmp_handle.fileno())\n+\n+            # Keep the permissions of the file being replaced\n+            try:\n+                shutil.copymode(self._path, tmp_path)\n+            except OSError:\n+                pass\n+\n+            # Atomically swap the new file into place\n+            os.replace(tmp_path, self._path)\n+        except BaseException:\n+            # Never leave the temporary file behind; the original file is\n+            # untouched because the replace did not happen\n+            try:\n+                os.unlink(tmp_path)\n+            except OSError:\n+                pass\n+            raise\n+\n+        self._sync_directory(directory)\n+\n+        # The old handle still refers to the replaced inode, so re-open the\n+        # file to make subsequent reads on this storage see the new contents\n+        new_handle = open(self._path, mode=self._mode, encoding=self._encoding)\n+        old_handle, self._handle = self._handle, new_handle\n+        old_handle.close()\n+\n+    @staticmethod\n+    def _sync_directory(directory: str) -> None:\n+        \"\"\"\n+        Best-effort fsync of the directory, so the rename itself is durable.\n+        \"\"\"\n+\n+        if os.name != 'posix':\n+            return\n \n-        # Ensure the file has been written\n-        self._handle.flush()\n-        os.fsync(self._handle.fileno())\n+        try:\n+            dir_fd = os.open(directory, os.O_RDONLY)\n+        except OSError:\n+            return\n \n-        # Remove data that is behind the new cursor in case the file has\n-        # gotten shorter\n-        self._handle.truncate()\n+        try:\n+            os.fsync(dir_fd)\n+        except OSError:\n+            pass\n+        finally:\n+            os.close(dir_fd)\n \n \n class MemoryStorage(Storage):\n",
+  "patch_sha256": "6800a635e5fdea2425720b46b965bf5a5baca444cc325f1835d2b57cede31d8e",
+  "produced_by": "fresh-attempt:config-B",
+  "description": "",
+  "labels": [],
+  "attempt": {
+    "attempt_id": "CS-02-fresh-B-final-5",
+    "configuration": "config-B",
+    "variant": "final",
+    "instruction_sha256": "81503478e41774e3fcb76d86b91b461f29d893448c4e4c1e7018901ea85828a2",
+    "started_at": "2026-11-21T10:15:59.967Z",
+    "ended_at": "2026-11-21T10:16:47.331Z",
+    "wall_s": 47.364,
+    "turns": 9,
+    "tool_calls": 9,
+    "tokens": 774378,
+    "ended": "finished",
+    "patch_sha256": "6800a635e5fdea2425720b46b965bf5a5baca444cc325f1835d2b57cede31d8e",
+    "run_record": "build-session:subagents/workflows/wf_9632d58c-40e/agent-ae4681475159980f8.jsonl",
+    "audit": {
+      "profile": "fresh-attempt:v1",
+      "passed": true,
+      "findings": [
+        "fresh-attempt audit: no hit, no exposure",
+        "file tools (Read) named only workspace paths; every shell command began with a cd into the workspace",
+        "it listed only its own workspace root, which is inside the workspace",
+        "verdict: passed, nothing outside the workspace was read"
+      ],
+      "audited_at": "2026-11-21T10:39:02Z",
+      "record": "data/fresh/fresh-v1/audit_CS-02.json"
+    }
+  }
+}

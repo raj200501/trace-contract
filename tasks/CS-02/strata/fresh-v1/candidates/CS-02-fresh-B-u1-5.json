@@ -1,0 +1,40 @@
+{
+  "schema_version": "0.1.0",
+  "candidate_id": "CS-02-fresh-B-u1-5",
+  "task_id": "CS-02",
+  "origin": "fresh_attempt",
+  "split": "eval",
+  "patch": "diff --git a/tinydb/storages.py b/tinydb/storages.py\nindex 59337a1c15ca931e33a2822994dea314b5cc8ad9..45899df0a8eb6848561869030cb4c92770503a24 100644\n--- a/tinydb/storages.py\n+++ b/tinydb/storages.py\n@@ -3,9 +3,10 @@ Contains the :class:`base class <tinydb.storages.Storage>` for storages and\n implementations.\n \"\"\"\n \n-import io\n import json\n import os\n+import shutil\n+import tempfile\n import warnings\n from abc import ABC, abstractmethod\n from typing import Any, Optional\n@@ -76,6 +77,33 @@ class Storage(ABC):\n         pass\n \n \n+def _remove_quietly(path: str) -> None:\n+    \"\"\"\n+    Remove a file, ignoring errors (used to clean up temporary files).\n+    \"\"\"\n+    try:\n+        os.remove(path)\n+    except OSError:\n+        pass\n+\n+\n+def _fsync_directory(directory: str) -> None:\n+    \"\"\"\n+    Flush a directory entry to disk so that a completed rename survives a\n+    crash. Not supported on every platform, so errors are ignored.\n+    \"\"\"\n+    try:\n+        dir_fd = os.open(directory, os.O_RDONLY)\n+    except OSError:\n+        return\n+    try:\n+        os.fsync(dir_fd)\n+    except OSError:\n+        pass\n+    finally:\n+        os.close(dir_fd)\n+\n+\n class JSONStorage(Storage):\n     \"\"\"\n     Store the data in a JSON file.\n@@ -103,6 +131,8 @@ class JSONStorage(Storage):\n         super().__init__()\n \n         self._mode = access_mode\n+        self._path = path\n+        self._encoding = encoding\n         self.kwargs = kwargs\n \n         if access_mode not in ('r', 'rb', 'r+', 'rb+'):\n@@ -111,14 +141,24 @@ class JSONStorage(Storage):\n                 'or \\'rb+\\' can cause data loss or corruption'\n             )\n \n+        # Whether the access mode allows writing to the database\n+        self._writable = any([character in self._mode for character in ('+', 'w', 'a')])\n+\n         # Create the file if it doesn't exist and creating is allowed by the\n         # access mode\n-        if any([character in self._mode for character in ('+', 'w', 'a')]):  # any of the writing modes\n+        if self._writable:\n             touch(path, create_dirs=create_dirs)\n \n         # Open the file for reading/writing\n         self._handle = open(path, mode=self._mode, encoding=encoding)\n \n+        # Mode used when the handle is reopened after an atomic write. It must\n+        # not truncate the file (``w``) or create it again (``a``).\n+        if self._writable:\n+            self._reopen_mode = 'rb+' if 'b' in self._mode else 'r+'\n+        else:\n+            self._reopen_mode = self._mode\n+\n     def close(self) -> None:\n         self._handle.close()\n \n@@ -140,25 +180,51 @@ class JSONStorage(Storage):\n             return json.load(self._handle)\n \n     def write(self, data: dict[str, dict[str, Any]]):\n-        # Move the cursor to the beginning of the file just in case\n-        self._handle.seek(0)\n+        if not self._writable:\n+            raise IOError('Cannot write to the database. Access mode is \"{0}\"'.format(self._mode))\n \n         # Serialize the database state using the user-provided arguments\n         serialized = json.dumps(data, **self.kwargs)\n \n-        # Write the serialized data to the file\n+        # Write the new contents to a temporary file in the same directory as\n+        # the database, so that ``os.replace`` is an atomic rename on the same\n+        # filesystem. The database file is only touched by the final swap: if\n+        # the process dies or the disk fills up while writing, the file on disk\n+        # still holds the old version in full.\n+        target = os.path.realpath(self._path)\n+        target_dir = os.path.dirname(target)\n+        fd, tmp_path = tempfile.mkstemp(\n+            dir=target_dir,\n+            prefix='.' + os.path.basename(target) + '.',\n+            suffix='.tmp',\n+        )\n         try:\n-            self._handle.write(serialized)\n-        except io.UnsupportedOperation:\n-            raise IOError('Cannot write to the database. Access mode is \"{0}\"'.format(self._mode))\n-\n-        # Ensure the file has been written\n-        self._handle.flush()\n-        os.fsync(self._handle.fileno())\n-\n-        # Remove data that is behind the new cursor in case the file has\n-        # gotten shorter\n-        self._handle.truncate()\n+            with os.fdopen(fd, 'w', encoding=self._encoding) as tmp_file:\n+                tmp_file.write(serialized)\n+                # Ensure the new contents are on disk before swapping them in\n+                tmp_file.flush()\n+                os.fsync(tmp_file.fileno())\n+\n+            # Keep the permissions of the existing database file\n+            if os.path.exists(target):\n+                shutil.copymode(target, tmp_path)\n+        except BaseException:\n+            _remove_quietly(tmp_path)\n+            raise\n+\n+        # Close the current handle (required on platforms that cannot replace\n+        # an open file), swap the new file into place and reopen it so that\n+        # subsequent reads see the new contents\n+        self._handle.close()\n+        try:\n+            os.replace(tmp_path, target)\n+        except BaseException:\n+            _remove_quietly(tmp_path)\n+            raise\n+        finally:\n+            self._handle = open(target, mode=self._reopen_mode, encoding=self._encoding)\n+\n+        _fsync_directory(target_dir)\n \n \n class MemoryStorage(Storage):\n",
+  "patch_sha256": "ec9fecda2ca4208a0c4da99ebc86d04d3df45bc2745ff1b39e4eedbf1c436d75",
+  "produced_by": "fresh-attempt:config-B",
+  "description": "",
+  "labels": [],
+  "attempt": {
+    "attempt_id": "CS-02-fresh-B-u1-5",
+    "configuration": "config-B",
+    "variant": "u1",
+    "instruction_sha256": "03f9abb8d9654234f7aea8c5b82c572f2d06df8b546d80b663d57a4d6e3d49d5",
+    "started_at": "2026-11-21T10:02:09.364Z",
+    "ended_at": "2026-11-21T10:05:36.600Z",
+    "wall_s": 207.236,
+    "turns": 13,
+    "tool_calls": 18,
+    "tokens": 1190743,
+    "ended": "finished",
+    "patch_sha256": "ec9fecda2ca4208a0c4da99ebc86d04d3df45bc2745ff1b39e4eedbf1c436d75",
+    "run_record": "build-session:subagents/workflows/wf_9632d58c-40e/agent-a8542f79747376b5f.jsonl",
+    "audit": {
+      "profile": "fresh-attempt:v1",
+      "passed": true,
+      "findings": [
+        "fresh-attempt audit: 1 hit, 2 exposures; read in the transcript",
+        "the hit: a stray command created a file in /tmp, the container's temporary directory (a system location under §18.1), which the attempt removed and never read",
+        "the exposures: a harness notice that this command was moved to the background, naming its output file in the session directory and the shell's start directory; the attempt opened neither and stopped its own background command with TaskStop, whose result only repeated that command",
+        "file tools (Read, Edit) named only workspace paths; every shell command began with a cd into the workspace",
+        "verdict: passed, nothing outside the workspace was read"
+      ],
+      "audited_at": "2026-11-21T10:39:02Z",
+      "record": "data/fresh/fresh-v1/audit_CS-02.json"
+    }
+  }
+}

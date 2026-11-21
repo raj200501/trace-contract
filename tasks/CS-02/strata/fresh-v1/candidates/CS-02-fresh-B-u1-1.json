@@ -1,0 +1,38 @@
+{
+  "schema_version": "0.1.0",
+  "candidate_id": "CS-02-fresh-B-u1-1",
+  "task_id": "CS-02",
+  "origin": "fresh_attempt",
+  "split": "eval",
+  "patch": "diff --git a/tinydb/storages.py b/tinydb/storages.py\nindex 59337a1c15ca931e33a2822994dea314b5cc8ad9..147a9c3c6f651fa0bd6cba6c36b6b66a9613cbd0 100644\n--- a/tinydb/storages.py\n+++ b/tinydb/storages.py\n@@ -6,6 +6,8 @@ implementations.\n import io\n import json\n import os\n+import stat\n+import tempfile\n import warnings\n from abc import ABC, abstractmethod\n from typing import Any, Optional\n@@ -116,8 +118,26 @@ class JSONStorage(Storage):\n         if any([character in self._mode for character in ('+', 'w', 'a')]):  # any of the writing modes\n             touch(path, create_dirs=create_dirs)\n \n+        self._path = os.path.abspath(path)\n+        self._encoding = encoding\n+\n         # Open the file for reading/writing\n-        self._handle = open(path, mode=self._mode, encoding=encoding)\n+        self._handle = self._open_handle()\n+\n+    def _open_handle(self):\n+        \"\"\"\n+        Open the storage file with the configured access mode.\n+\n+        Modes that create or truncate the file on open are mapped to their\n+        in-place counterparts (``r+``), so that reopening the file after an\n+        atomic replacement does not wipe the freshly written data.\n+        \"\"\"\n+\n+        mode = self._mode\n+        if any(character in mode for character in ('w', 'a', 'x')):\n+            mode = 'rb+' if 'b' in mode else 'r+'\n+\n+        return open(self._path, mode=mode, encoding=self._encoding)\n \n     def close(self) -> None:\n         self._handle.close()\n@@ -140,25 +160,64 @@ class JSONStorage(Storage):\n             return json.load(self._handle)\n \n     def write(self, data: dict[str, dict[str, Any]]):\n-        # Move the cursor to the beginning of the file just in case\n-        self._handle.seek(0)\n+        if not self._handle.writable():\n+            raise IOError('Cannot write to the database. Access mode is \"{0}\"'.format(self._mode))\n \n-        # Serialize the database state using the user-provided arguments\n+        # Serialize the database state using the user-provided arguments.\n+        # This happens before touching the file, so a serialization error\n+        # leaves the stored data unchanged.\n         serialized = json.dumps(data, **self.kwargs)\n \n-        # Write the serialized data to the file\n-        try:\n-            self._handle.write(serialized)\n-        except io.UnsupportedOperation:\n-            raise IOError('Cannot write to the database. Access mode is \"{0}\"'.format(self._mode))\n+        directory = os.path.dirname(self._path)\n+        fd, tmp_path = tempfile.mkstemp(\n+            dir=directory, prefix=os.path.basename(self._path) + '.', suffix='.tmp'\n+        )\n \n-        # Ensure the file has been written\n-        self._handle.flush()\n-        os.fsync(self._handle.fileno())\n+        try:\n+            # Write the new contents to a temporary file next to the database\n+            # so that the final rename stays on the same filesystem\n+            with os.fdopen(fd, 'w', encoding=self._encoding) as tmp_handle:\n+                tmp_handle.write(serialized)\n+                tmp_handle.flush()\n+                os.fsync(tmp_handle.fileno())\n+\n+            # Keep the permissions of the existing database file\n+            try:\n+                os.chmod(tmp_path, stat.S_IMODE(os.stat(self._path).st_mode))\n+            except FileNotFoundError:\n+                pass\n+\n+            # Atomically swap the new contents into place. The current handle\n+            # refers to the old inode, so it is closed around the replacement\n+            # and reopened afterwards.\n+            self._handle.close()\n+            try:\n+                os.replace(tmp_path, self._path)\n+            finally:\n+                self._handle = self._open_handle()\n+        except BaseException:\n+            try:\n+                os.unlink(tmp_path)\n+            except FileNotFoundError:\n+                pass\n+            raise\n+\n+        # Make the rename itself durable where the platform supports it\n+        self._fsync_directory(directory)\n+\n+    @staticmethod\n+    def _fsync_directory(directory: str) -> None:\n+        try:\n+            dir_fd = os.open(directory, os.O_RDONLY)\n+        except OSError:\n+            return\n \n-        # Remove data that is behind the new cursor in case the file has\n-        # gotten shorter\n-        self._handle.truncate()\n+        try:\n+            os.fsync(dir_fd)\n+        except OSError:\n+            pass\n+        finally:\n+            os.close(dir_fd)\n \n \n class MemoryStorage(Storage):\n",
+  "patch_sha256": "0ef14e5eff83af842788f258e5aab659c94f5cb110a55bc4234d509d59ecd358",
+  "produced_by": "fresh-attempt:config-B",
+  "description": "",
+  "labels": [],
+  "attempt": {
+    "attempt_id": "CS-02-fresh-B-u1-1",
+    "configuration": "config-B",
+    "variant": "u1",
+    "instruction_sha256": "409c9c082f406734468c683e4e73070f74e18bc34ef1a82c395274ec4984b975",
+    "started_at": "2026-11-21T08:58:32.220Z",
+    "ended_at": "2026-11-21T08:59:12.331Z",
+    "wall_s": 40.111,
+    "turns": 8,
+    "tool_calls": 8,
+    "tokens": 687057,
+    "ended": "finished",
+    "patch_sha256": "0ef14e5eff83af842788f258e5aab659c94f5cb110a55bc4234d509d59ecd358",
+    "run_record": "build-session:subagents/workflows/wf_9632d58c-40e/agent-a0c314d1787a715af.jsonl",
+    "audit": {
+      "profile": "fresh-attempt:v1",
+      "passed": true,
+      "findings": [
+        "fresh-attempt audit: no hit, no exposure",
+        "file tools (Read) named only workspace paths; every shell command began with a cd into the workspace",
+        "verdict: passed, nothing outside the workspace was read"
+      ],
+      "audited_at": "2026-11-21T10:39:02Z",
+      "record": "data/fresh/fresh-v1/audit_CS-02.json"
+    }
+  }
+}

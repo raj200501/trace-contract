@@ -1,0 +1,40 @@
+{
+  "schema_version": "0.1.0",
+  "candidate_id": "CS-02-fresh-B-u1-3",
+  "task_id": "CS-02",
+  "origin": "fresh_attempt",
+  "split": "eval",
+  "patch": "diff --git a/tinydb/storages.py b/tinydb/storages.py\nindex 59337a1c15ca931e33a2822994dea314b5cc8ad9..822290e2879204fe680ae4ccf9f91492a40b883f 100644\n--- a/tinydb/storages.py\n+++ b/tinydb/storages.py\n@@ -6,6 +6,8 @@ implementations.\n import io\n import json\n import os\n+import stat\n+import tempfile\n import warnings\n from abc import ABC, abstractmethod\n from typing import Any, Optional\n@@ -103,6 +105,10 @@ class JSONStorage(Storage):\n         super().__init__()\n \n         self._mode = access_mode\n+        self._encoding = encoding\n+        # Resolve symlinks so the atomic swap in ``write`` replaces the real\n+        # database file instead of the link pointing at it\n+        self._path = os.path.realpath(path)\n         self.kwargs = kwargs\n \n         if access_mode not in ('r', 'rb', 'r+', 'rb+'):\n@@ -140,25 +146,65 @@ class JSONStorage(Storage):\n             return json.load(self._handle)\n \n     def write(self, data: dict[str, dict[str, Any]]):\n-        # Move the cursor to the beginning of the file just in case\n-        self._handle.seek(0)\n+        if not self._handle.writable():\n+            raise IOError('Cannot write to the database. Access mode is \"{0}\"'.format(self._mode))\n \n         # Serialize the database state using the user-provided arguments\n         serialized = json.dumps(data, **self.kwargs)\n \n-        # Write the serialized data to the file\n-        try:\n-            self._handle.write(serialized)\n-        except io.UnsupportedOperation:\n-            raise IOError('Cannot write to the database. Access mode is \"{0}\"'.format(self._mode))\n+        # Write the new contents to a temporary file next to the database, so\n+        # the final rename stays on the same filesystem and is atomic. If the\n+        # process dies or the disk fills up here, the database file is untouched.\n+        directory = os.path.dirname(self._path) or os.curdir\n+        fd, tmp_path = tempfile.mkstemp(\n+            dir=directory,\n+            prefix='.' + os.path.basename(self._path) + '.',\n+            suffix='.tmp',\n+        )\n \n-        # Ensure the file has been written\n-        self._handle.flush()\n-        os.fsync(self._handle.fileno())\n-\n-        # Remove data that is behind the new cursor in case the file has\n-        # gotten shorter\n-        self._handle.truncate()\n+        try:\n+            with os.fdopen(fd, 'w', encoding=self._encoding) as tmp_file:\n+                tmp_file.write(serialized)\n+                tmp_file.flush()\n+                os.fsync(tmp_file.fileno())\n+\n+            # mkstemp creates the file with mode 0600; keep the permissions of\n+            # the database file being replaced\n+            try:\n+                os.chmod(tmp_path, stat.S_IMODE(os.stat(self._path).st_mode))\n+            except FileNotFoundError:\n+                pass\n+\n+            # Close our handle before swapping (required on Windows), then\n+            # atomically move the temporary file over the database file\n+            self._handle.close()\n+            try:\n+                os.replace(tmp_path, self._path)\n+            finally:\n+                # Reopen on whichever file is now at the path (the new one on\n+                # success, the old one if the swap failed) so the storage stays\n+                # usable and reads see the current contents\n+                self._handle = open(self._path, mode=self._mode, encoding=self._encoding)\n+        except BaseException:\n+            try:\n+                os.remove(tmp_path)\n+            except FileNotFoundError:\n+                pass\n+            raise\n+\n+        # Persist the rename itself on POSIX systems (best effort)\n+        if hasattr(os, 'O_DIRECTORY'):\n+            try:\n+                dir_fd = os.open(directory, os.O_RDONLY | os.O_DIRECTORY)\n+            except OSError:\n+                pass\n+            else:\n+                try:\n+                    os.fsync(dir_fd)\n+                except OSError:\n+                    pass\n+                finally:\n+                    os.close(dir_fd)\n \n \n class MemoryStorage(Storage):\n",
+  "patch_sha256": "5553f18ff9e951cf7f0332ad21a0416082fbdd877a01712974cc5d47181abbf6",
+  "produced_by": "fresh-attempt:config-B",
+  "description": "",
+  "labels": [],
+  "attempt": {
+    "attempt_id": "CS-02-fresh-B-u1-3",
+    "configuration": "config-B",
+    "variant": "u1",
+    "instruction_sha256": "378868296aa56bde5e4168028091e686bdc6f4aa5d91bfd2658e62fa94dde365",
+    "started_at": "2026-11-21T09:30:18.904Z",
+    "ended_at": "2026-11-21T09:31:25.110Z",
+    "wall_s": 66.206,
+    "turns": 15,
+    "tool_calls": 15,
+    "tokens": 1328777,
+    "ended": "finished",
+    "patch_sha256": "5553f18ff9e951cf7f0332ad21a0416082fbdd877a01712974cc5d47181abbf6",
+    "run_record": "build-session:subagents/workflows/wf_9632d58c-40e/agent-a21c55f46db1aca7c.jsonl",
+    "audit": {
+      "profile": "fresh-attempt:v1",
+      "passed": true,
+      "findings": [
+        "fresh-attempt audit: 1 hit, 1 exposure; read in the transcript",
+        "the hit: one shell command also named a note of the container's agent proxy under /root, outside the workspace; the permission classifier denied the whole call before it ran, so nothing was read, and the attempt did not retry it",
+        "the exposure: a harness notice that a long output was saved to a tool-results file of the session directory; the attempt never opened that file (§18.1)",
+        "file tools (Read, Edit) named only workspace paths; every shell command began with a cd into the workspace",
+        "verdict: passed, nothing outside the workspace was read"
+      ],
+      "audited_at": "2026-11-21T10:39:02Z",
+      "record": "data/fresh/fresh-v1/audit_CS-02.json"
+    }
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "schema_version": "0.1.0",
+  "candidate_id": "CS-02-fresh-B-final-4",
+  "task_id": "CS-02",
+  "origin": "fresh_attempt",
+  "split": "eval",
+  "patch": "diff --git a/tinydb/storages.py b/tinydb/storages.py\nindex 59337a1c15ca931e33a2822994dea314b5cc8ad9..7a7096b422860d292c0de5266dd0f8d166122586 100644\n--- a/tinydb/storages.py\n+++ b/tinydb/storages.py\n@@ -3,9 +3,10 @@ Contains the :class:`base class <tinydb.storages.Storage>` for storages and\n implementations.\n \"\"\"\n \n-import io\n import json\n import os\n+import stat\n+import tempfile\n import warnings\n from abc import ABC, abstractmethod\n from typing import Any, Optional\n@@ -116,12 +117,35 @@ class JSONStorage(Storage):\n         if any([character in self._mode for character in ('+', 'w', 'a')]):  # any of the writing modes\n             touch(path, create_dirs=create_dirs)\n \n+        # Remember where the data lives and how it is decoded/encoded so that\n+        # writes can be swapped in atomically and the handle reopened later.\n+        # ``realpath`` keeps a symlinked database pointing at its real target.\n+        self._path = os.path.realpath(path)\n+        self._encoding = encoding\n+\n         # Open the file for reading/writing\n         self._handle = open(path, mode=self._mode, encoding=encoding)\n \n     def close(self) -> None:\n         self._handle.close()\n \n+    def _reopen(self) -> None:\n+        self._handle = open(self._path, mode=self._mode, encoding=self._encoding)\n+\n+    def _sync_directory(self) -> None:\n+        # Best effort: persist the directory entry created by the rename.\n+        # Not every platform allows opening a directory, so ignore failures.\n+        try:\n+            dir_fd = os.open(os.path.dirname(self._path) or '.', os.O_RDONLY)\n+        except OSError:\n+            return\n+        try:\n+            os.fsync(dir_fd)\n+        except OSError:\n+            pass\n+        finally:\n+            os.close(dir_fd)\n+\n     def read(self) -> Optional[dict[str, dict[str, Any]]]:\n         # Get the file size by moving the cursor to the file end and reading\n         # its location\n@@ -140,25 +164,56 @@ class JSONStorage(Storage):\n             return json.load(self._handle)\n \n     def write(self, data: dict[str, dict[str, Any]]):\n-        # Move the cursor to the beginning of the file just in case\n-        self._handle.seek(0)\n-\n         # Serialize the database state using the user-provided arguments\n         serialized = json.dumps(data, **self.kwargs)\n \n-        # Write the serialized data to the file\n-        try:\n-            self._handle.write(serialized)\n-        except io.UnsupportedOperation:\n+        if not self._handle.writable():\n             raise IOError('Cannot write to the database. Access mode is \"{0}\"'.format(self._mode))\n \n-        # Ensure the file has been written\n-        self._handle.flush()\n-        os.fsync(self._handle.fileno())\n+        # Write the new contents to a temporary file next to the database and\n+        # then atomically move it over the old one. The file on disk is thus\n+        # always either the complete old or the complete new version.\n+        target = self._path\n+        directory = os.path.dirname(target) or '.'\n+        fd, tmp_path = tempfile.mkstemp(\n+            dir=directory, prefix=os.path.basename(target) + '.', suffix='.tmp'\n+        )\n+        os.close(fd)\n \n-        # Remove data that is behind the new cursor in case the file has\n-        # gotten shorter\n-        self._handle.truncate()\n+        try:\n+            # Keep the permissions of the existing database file\n+            try:\n+                os.chmod(tmp_path, stat.S_IMODE(os.stat(target).st_mode))\n+            except OSError:\n+                pass\n+\n+            with open(tmp_path, 'w', encoding=self._encoding) as tmp:\n+                tmp.write(serialized)\n+                tmp.flush()\n+                os.fsync(tmp.fileno())\n+\n+            # Release our handle to the old file (required on some platforms\n+            # for the replace below) and swap the new file into place.\n+            self._handle.close()\n+            try:\n+                os.replace(tmp_path, target)\n+            except BaseException:\n+                # The old file is still in place; restore a usable handle\n+                self._reopen()\n+                raise\n+        except BaseException:\n+            # Never leave the temporary file behind\n+            try:\n+                os.unlink(tmp_path)\n+            except FileNotFoundError:\n+                pass\n+            raise\n+\n+        self._sync_directory()\n+\n+        # The old handle points at the replaced inode, so reopen the new file\n+        # so that reads through this storage see the freshly written contents\n+        self._reopen()\n \n \n class MemoryStorage(Storage):\n",
+  "patch_sha256": "791ef0e799d7dfbdb8d9d061d450d62817f5d77ba616e9d532e707fa851faa25",
+  "produced_by": "fresh-attempt:config-B",
+  "description": "",
+  "labels": [],
+  "attempt": {
+    "attempt_id": "CS-02-fresh-B-final-4",
+    "configuration": "config-B",
+    "variant": "final",
+    "instruction_sha256": "98c9d7281feca82f4a444834b2a545aa9feeff1604ed03d371027f831925a6b9",
+    "started_at": "2026-11-21T10:00:54.946Z",
+    "ended_at": "2026-11-21T10:01:42.442Z",
+    "wall_s": 47.496,
+    "turns": 9,
+    "tool_calls": 11,
+    "tokens": 776519,
+    "ended": "finished",
+    "patch_sha256": "791ef0e799d7dfbdb8d9d061d450d62817f5d77ba616e9d532e707fa851faa25",
+    "run_record": "build-session:subagents/workflows/wf_9632d58c-40e/agent-a582ad835adfd4dd3.jsonl",
+    "audit": {
+      "profile": "fresh-attempt:v1",
+      "passed": true,
+      "findings": [
+        "fresh-attempt audit: no hit, no exposure",
+        "file tools (Read, Edit) named only workspace paths; every shell command began with a cd into the workspace",
+        "verdict: passed, nothing outside the workspace was read"
+      ],
+      "audited_at": "2026-11-21T10:39:02Z",
+      "record": "data/fresh/fresh-v1/audit_CS-02.json"
+    }
+  }
+}
