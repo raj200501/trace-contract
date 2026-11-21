@@ -2368,3 +2368,142 @@ after that is a deviation, logged before its use (D33, D41).
 `tests/test_preflight_natural.py` expects the pre-flight to cite no entry after D60 until this one is numbered. D61 is
 the fresh-v1 run. These citations are to name D64 before any natural label is proposed or any natural analysis is run;
 none exists yet.
+
+### D65. F2 for the six accepted families: rendered inputs and proposer prompts, logged before the first proposer; host coordinators, agent options and the order record
+This entry is F2 of D64 for NP-03, NP-04, NP-05, NP-18, NP-19 and NP-20, the six accepted families of the first sample.
+It is committed before any of their contract proposers starts. At this commit no natural agent has started: the build
+session's workflows have run host steps only (workspaces and rendering), and no natural contract, generated verifier,
+held-out candidate or label exists.
+
+**Rendered inputs.** The sha256 of the bytes of each family's `session.txt` (as the contract-full workspace holds it),
+`session_first_prompt.txt` (the contract-initial workspace's) and `reference.diff`. No workspace that holds
+`reference.diff` can be built before the contracts exist, since the testgen roles read one, so it was computed with
+`scripts/make_agent_workspace.py`'s own functions: the reference candidate's patch through `filter_patch` with the
+default protected set, written as UTF-8 text, as the tool writes it. Before the P2 prompts are rendered, the host checks
+every P2 workspace that holds a `reference.diff` against this table; a mismatch stops the family.
+
+| Family | `session.txt` | `session_first_prompt.txt` | `reference.diff` |
+| --- | --- | --- | --- |
+| NP-03 | `8d351bd47f121050ced92499d5247093ade676e11074c52c21851475c51b4f12` | `17f6fdd9dbfabaa032d436bac995b7767718631abd7acc50b3fb4a00ee180465` | `6e6ee6cf5f141c89700bcfac56f3149c08bbab353c2028ba58a93e14b1f8cba7` |
+| NP-04 | `a67d895cd9cbbf27e90b817f2e8242d006ce2c4f9b9f1d8c861dca0a4bc82c30` | `be0dcd5c618d1f28d3cd04c60eb834ccb9fc6f6335b5425df8662659c51fd752` | `f724cba41a738440c28cff5ee28fd235416013f1a6d4bf4677b4187d2aaee2e1` |
+| NP-05 | `1b09f4beea4c9bab2fa768040acdd9bd0c86b508270be477af5720792bea3f04` | `7680f5b2543972126f736cb3f302917cc5695888e82bdda25ae1c5b9908549e9` | `8941435653380e403f2833faffb8671dcbf2a8c9da3e213086760c4e6b6ff679` |
+| NP-18 | `735dc4d0de95b3445697055b55cddcbd00e27746021628edc4a6032b3f0e5ca8` | `50e6f80ca39e0ba12b1c8dfbf3bad13bf4aa44394623a377a13561c883ac8ddc` | `c31d5050f77af7a4d9cb60b894a0817a77b7d2ad589e05930d5fa74143441b0b` |
+| NP-19 | `052057237e7f6040614bbfd3182297e7b5bda1ff3245bc2e4932b06c6599a07a` | `1347bf4c406011e49ae9d8d2029e8444ef3182a3639e57e7f0a6f97693357911` | `ce8b36eaad377a444b09ffd50dcab5f9922803829ac3a1dac8818865e9b82316` |
+| NP-20 | `2a4cf8d2f695f08362ff9096114780a41481d361db5dc8b8a99c1edb37817e59` | `ebc1e861614074409c4a84752e3883fa7c97763bff66ba571e6ca5965561ba53` | `9f52df4a830579dae1171a9d6390980fbfeef6fbc398f0e8b3b4b1433eaea4a4` |
+
+Sizes in bytes, in the same order: NP-03 4,066, 645 and 14,826; NP-04 1,365, 434 and 1,471; NP-05 6,758, 1,800 and
+6,547; NP-18 3,170, 2,146 and 1,765; NP-19 3,166, 2,149 and 44,300; NP-20 1,920, 1,045 and 7,500. The hashes are of the
+bytes. NP-18's `session.txt` holds 3 CRLF line ends, all in the review comment, and NP-19's session texts hold 54
+(`session.txt`) and 52 (`session_first_prompt.txt`), so a read that normalises line ends does not reproduce them. A
+quote copied across such a line end is an exact substring only with its carriage return; check-proposals reports one
+that is not, and the proposer's fix loop covers it.
+
+**Proposer prompts.** contract:v1-natural (sha256 `7fae39f9...`, D64), rendered with its only host values: TASK, WS
+(the proposer's workspace) and SESSION_ID (the session id of `session.json`). The sha256 of each prompt as it will be
+sent:
+
+| Family | contract-initial (initial_only) | contract-full (full_session) |
+| --- | --- | --- |
+| NP-03 | `8e9d5ca09c4e797d5c4af5b1e7d01e3630c08ae47ed66827c013af13cfb34d17` | `3870fb21307daf7ac991a2f13ae8ec6b8ff3371d5a25e90668fa98ec8257b5bb` |
+| NP-04 | `3eecae0149b32a535e7d335e50297ec04135492fe0ddbcfef0d5158deebfdcb0` | `723226b015e0830bdc5da32a8cabe1d6c855227b30108a3761acefa38d7273d4` |
+| NP-05 | `5069a7c14c530d00a404fac53b5d89cd04dd8f7edd0c2913519006811de814dc` | `7e8f53fbe341bba5f131ded0975362b1dc9848879b0f655c2948a777ebc9ae7b` |
+| NP-18 | `d216e3b8ef6f817e560e3a3c129d91db80c12ec2c7be3e8593a54f9686196b5e` | `7fc926971932aa8aad41c66d0e677f8421991968226442925ae0323d98f85809` |
+| NP-19 | `f7a4a050e313a46de4bc2f355b50c325e2284b70f3f12320274d5bc82421b936` | `c2e8816b9d32d21b1b784c067adfd89c6a8af799c8fe8aceb2a4b67e1bd7dc1a` |
+| NP-20 | `fcde7b380645a1fe968e3d70f7f9f2fe16a59e93cd8d47373f3f177a26b9d916` | `6935adcfa5a71beecf4f8101af179342bee794b84554c52d6b10b31bc3e546c3` |
+
+The prompts are kept with the private run records.
+
+**Checked by the build session.** The coordinators' reports were not taken on trust. The build session recomputed the
+18 input hashes from the workspace files and the task data, with the tool's functions; ran `render --verify` on the 12
+saved prompts (all equal); and checked that the 12 workspaces hold only `manifest.json`, an empty `scratch/`, the
+session file and `session_events.json`.
+
+**P1 preparation.** One host coordinator per family (next paragraph; two for NP-19, below) built the two proposer
+workspaces, computed the inputs above and rendered the two prompts, finishing at 18:41Z.
+* Each host log has back-filled entries, marked as such: read-only inspection run before the log existed, and shell
+  pieces run outside the logging wrapper.
+* NP-19's first preparation was stopped by an interrupt of the build session's workflows. Its partial records were set
+  aside in the private run records and the step was redone from the start. NP-20's coordinator read the tail of that
+  set-aside host log to follow the same procedure, and says so in its own log.
+* One directory listing in NP-19's log caught a held-out candidate's file name (another family's pre-review state),
+  written by the S10 step of the S9 extension, which was running at the same time. The coordinator replaced the name
+  with a placeholder and logged the redaction.
+* None of this reaches a generator: the prompts and workspaces are as checked above.
+
+**Host coordinators.** D64 gives every host step to the build session (D24). They are run by host coordinators:
+subagents of the build session, in configuration A, one per step, inside one workflow per family and phase.
+* A coordinator runs only the repository's CLI and scripts, and shell commands on files. It writes no generated content
+  (requirement, test, contract, state or candidate), never repairs a generator's output, writes nothing under
+  `data/manifests/`, and never commits or pushes.
+* It logs each command as it runs to the family's host log in the private run records (time, command, exit code, short
+  output). An entry added afterwards is marked as such. It keeps its helper scripts with the family's run records, and
+  reads only its own family's task directory, workspaces and run records, besides the repository's code and documents.
+* Values taken from an agent's run, such as a review's issues, a near miss's description or a mapping file, are read
+  from the run's transcript or workspace by a script, never retyped.
+* The generators are separate agents, started by the workflow, not by a coordinator. A coordinator returns each prompt
+  as the renderer printed it, with its sha256. The workflow computes the sha256 of the text it is about to send (UTF-8
+  bytes; a plain implementation in the script, tested against a standard one) and sends it only if the two agree. On a
+  mismatch it asks the coordinator once more, then stops the step. The coordinator of the next step checks the first
+  message of the generator's transcript with `render --verify` before making its generation record. So no
+  coordinator's context reaches a generator, and every prompt is checked twice.
+* Coordinators can read the study repository and the private run records. Generators cannot (deviation c), and their
+  audits check it.
+
+**Agent options, as the source workflows set them.** D64 fixes the templates, not the agent options, which follow each
+template's source workflow.
+* Roles from the generate workflow run as the default workflow agent, with no output schema, as `wf_b796bb4f-1dd` ran
+  them: the contract proposers, the C1, C3, B2 and B3 generators, the attacks, the development alternatives, the
+  revisers and the reference-contract drafter (refcontract:v1 and b3:v1 are new templates from that workflow's
+  CONTRACT_PROMPT and TESTGEN).
+* Roles from the held-out workflow run with agent type general-purpose, as `wf_b428f318-391` ran them: the
+  reference-check writer, reviewers and fixers, the pool's alternatives and near misses, and the mappers.
+  * The reviewers have the source's review schema (verdict, issues, coverage, validation), which the review template's
+    header names. The workflow reads the verdict from it, and the coordinator takes ISSUES from the review's structured
+    output in the transcript.
+  * The source's generation schema asks for the candidates an agent registered. Under deviation (b) the host registers
+    them and the templates ask for a text answer, so those roles have no schema.
+* The labeler writer and its revision run as the default workflow agent in configuration B, as the labeler workflow
+  `wf_5db2f657-fdf` ran them.
+* Configuration B is the smallest model tier the workflow agent tool offers; configuration A is the session's default
+  model.
+* A workflow runs at most two agents at a time on this machine. The five pool agents of P6 are started together and run
+  at most two at once. None is given another's output, which is what D64's "in parallel" requires.
+
+**Harness context and tools (§18.3, D64).** The build session's task list was emptied before this commit, so no task
+title reaches a natural agent's context. The workflow agent tool offers no per-call tool restriction. A custom agent type
+would give the generators a system prompt the controlled generators did not have, so none is used. Each natural agent
+therefore has its agent type's tools, as the controlled agents of the same source had, and the natural-agent audit reads
+every network use and tool call (decision 11). An environment block naming the study repository as the working
+directory stays in every agent's context, as §18.2 discloses for fresh-v1.
+
+**Deviation (i) and the owner's review.** Three records disagreed on deviation (i):
+* D64 takes it as a builder decision, pending the owner's review (decision 17).
+* The templates' README, as committed in `a86c2a0`, said it holds only once the owner has accepted it, before the first
+  natural agent starts. `79a2335` brought the README in line with D64.
+* The headers of the six templates that carry (i) say it holds only once the owner has accepted it. The headers are
+  comments: they are hashed with the template, but no rendered prompt contains them.
+
+NP-04's coordinator read the README before `79a2335` and asked that the owner's acceptance be confirmed before the first
+proposer. It is not on record: the owner has not reviewed (i), or the other builder decisions of D64. D64 is the record,
+so its decision 17 holds, and this entry supersedes the six headers' sentence; the templates are not changed, so their
+D64 hashes stand. The proposers are not affected either way, since contract:v1-natural carries no deviation (i). The six
+templates that do carry it are first used at P5. If the owner restores the line before then, they become new versions,
+hashed in a new entry before their first use. After that, a change is a deviation logged before its use (D64,
+Decisions).
+
+**The order record.** D64 ends each phase with an index commit, and the commit times are the order record. The committed
+index (`data/manifests/natural_tasks_index.json`) is being rewritten, uncommitted, by the S10 step of the S9 extension,
+with code not yet committed either, so an index commit at a phase end would carry that work half done. Until that work
+is committed, the commit at a phase end is of a log instead.
+* `scripts/record_phase_end.py` appends one line per family and phase to `data/manifests/natural_phase_ends.jsonl`. The
+  line holds the family's task directory in the index's own form (`natural_pr.file_hashes`, which the S10 work does not
+  change), its verifiers with frozen and frozen_at, its contracts and its candidates: ids, hashes, counts and times only.
+* The builder commits that file alone after each phase of each family. The family's next phase starts only after that
+  commit.
+* Before P6 (F7), the commit recording P5's end is also pushed. So each family's frozen reference checks and labeler are
+  published before any held-out candidate of it exists.
+* The index itself is committed with the S10 work, and again after P7. Within a phase, the generation records
+  (started_at, ended_at), the verifiers' frozen_at and the host logs give the order.
+* Each phase is one workflow: preparation (the workspaces and prompts of the phase), the generators, then registration,
+  with the loops of P3 and P5 inside their phase. A re-run's workspace and label carry the suffix `-r2`, so that its run
+  id is unique.
