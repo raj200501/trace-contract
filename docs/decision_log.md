@@ -1566,3 +1566,37 @@ it was fixed.
   `scripts/verify_frozen_inputs.py` reports OK.
 * **Reliability re-grade.** The re-grade of `pilot-v0.3.3` under 0.3.5 (§15.3, §16.1)
   started at 2026-11-21T07:22Z as run `pilot-v0.3.5-regrade`, with three repeats.
+
+### D53. S10 feasibility scout; protocol v0.9 hashed
+**Scout (2026-11-21, 06:30-07:20).** Two model agents read the 20 provisional families
+of the natural PR-review arm. They worked read-only, with git plumbing on the bare
+clones and pip's resolver in dry-run mode against PyPI metadata (572 MB fetched), and
+they built and ran nothing. They rated 8 families likely to build, 9 possible and 3
+unlikely. The obstacles:
+* For several repositories, the tests that cover the changed code need live network or
+  API access.
+* Two PyTorch-based families would need wheelhouses of about 3.2 GB.
+* Several closures fail wheels-only on a single small pure-Python sdist.
+* One family is rejected under the merge rule of §15.6, because a merge of the default
+  branch touches the commented file.
+* One family's base is approximate (default-branch merges that do not touch the file),
+  and one has a rewritten default branch.
+
+The scouts also wrote bytecode caches into the git-ignored virtual environment, which
+is harmless. The scout's records are kept outside the repository.
+
+**Protocol v0.9** (`experiments/protocol.md` §17) was appended and hashed at
+2026-11-21T07:32:46Z, before any S10 build: sha256
+`9579cdf8a8d942dbb3ed8cbf3058e72d7c1649dcb0cee4886608e9ec44944750`. It sets:
+* the environments: pure-Python sdists may be built into wheels in the sandbox without
+  network; the wheelhouse is capped at 1.5 GB; the closure is date-bounded and adds the
+  packages a PR introduces;
+* the base-test subset and what "collect and run" means;
+* B1, reported as unavailable when it has no tests;
+* the replacement of a family rejected at S10 by the next PR of its repository, still
+  at most 2 per repository;
+* git-ignored storage for natural tasks, with an index committed.
+
+These rules were written after the scout had seen feasibility, but before any build,
+verifier or grading of a natural task. They can raise the yield; they cannot select on
+outcomes.

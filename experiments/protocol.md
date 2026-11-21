@@ -622,3 +622,47 @@ run. The vacuous leakage field is no longer recorded as a pass for new builds.
 * bootstrap intervals marked as not inferential below 10 families.
 
 The frozen pilot's analysis is unchanged.
+
+## 17. Amendments in v0.9 (stage S10 of the natural arm, D53; before any S10 build)
+
+This section makes the protocol v0.9. The version line at the top of the file is left as
+it was. These rules were written after a read-only feasibility scout of the 20
+provisional families (D53). The scout read base trees, dependency declarations and wheel
+availability, and built nothing. They were fixed before any S10 build, verifier or
+grading of a natural task.
+
+**17.1 Environments.**
+* Wheels-only, as in §15.6, with one exception. An sdist of a pure-Python package may be
+  built into a wheel inside the sandbox, with the network disabled. A pure-Python
+  package here is one whose source distribution contains no C, C++, Cython, Rust or
+  Fortran sources and declares no extension modules. Each such build is recorded with
+  the sdist's sha256 and the resulting wheel's.
+* A task whose wheelhouse would exceed 1.5 GB is rejected at S10, with the reason
+  "environment too large".
+* The closure is resolved from the dependencies declared at the base. Packages that the
+  PR adds and that the pre-review or reference state imports are added to it. Versions
+  are bounded by the base commit's date where the resolver allows. The closure is pinned
+  and recorded.
+
+**17.2 Base tests.**
+* The test subset is fixed from the base tree before any verifier generation. It holds
+  the test files that import a module the PR changes, together with the test files the
+  PR changes that exist at the base. If that set is empty, it holds the test directory
+  of the changed package.
+* "Collect and run" means: collection succeeds, and the subset runs to completion
+  offline in the sandbox within 10 minutes. Skipped tests count as run.
+* B1 consists of the tests of the subset at the addressing commit that pass on the
+  reference. If no such test exists, B1 is reported as unavailable for that family; this
+  is not a rejection.
+
+**17.3 Families.** "The earliest PRs by creation time" (§15.6) is read as the earliest
+among those that pass S10. If a family is rejected at S10, the next qualifying PR of the
+same repository by creation time takes its place, still with at most 2 per repository.
+Every rejection, and every replacement, is written to the ledger.
+
+**17.4 Storage.**
+* Natural tasks are built under `data/natural/`, which git ignores, because they hold
+  pseudonymised third-party text. The repository holds an index with ids, SHAs, licences
+  and file hashes, together with the run records and the analyses.
+* Whether generated tests, contracts or texts derived from the threads may be published
+  is the owner's decision (D47).
