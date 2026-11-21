@@ -8,7 +8,19 @@
   "patch_sha256": "9849833132579e19575df401b7076bd26eb72003a80dcc636e264a187bda3e73",
   "produced_by": "fresh-attempt:config-B",
   "description": "",
-  "labels": [],
+  "labels": [
+    {
+      "value": "invalid",
+      "violated_requirements": [
+        "R-zero-step"
+      ],
+      "labeler": "builder:refcheck+regression+construction:v1",
+      "labeler_kind": "model",
+      "adjudicated": false,
+      "timestamp": "2026-11-21T11:21:02+00:00",
+      "note": "natural candidate fails reference checks and/or regression norm | {\"refcheck_outcome\": \"task_failure\", \"refcheck_failed\": [\"test_consecutive_groups_step.py::test_zero_step_raises_value_error\", \"test_consecutive_groups_step.py::test_zero_step_with_positional_ordering_raises_value_error\"], \"regression_outcome\": \"pass\", \"regression_failed\": [], \"construction\": null}"
+    }
+  ],
   "attempt": {
     "attempt_id": "CS-04-fresh-B-u1-5",
     "configuration": "config-B",

@@ -8,7 +8,17 @@
   "patch_sha256": "9b55fa27e56041f6d7444a7dd5cbb5c0ae622465380626fa8d26ddf881c660fd",
   "produced_by": "fresh-attempt:config-B",
   "description": "",
-  "labels": [],
+  "labels": [
+    {
+      "value": "valid",
+      "violated_requirements": [],
+      "labeler": "builder:refcheck+regression+construction:v1",
+      "labeler_kind": "model",
+      "adjudicated": false,
+      "timestamp": "2026-11-21T11:15:27+00:00",
+      "note": "natural candidate passes reference checks and regression norm | {\"refcheck_outcome\": \"pass\", \"refcheck_failed\": [], \"regression_outcome\": \"pass\", \"regression_failed\": [], \"construction\": null}"
+    }
+  ],
   "attempt": {
     "attempt_id": "CS-04-fresh-B-final-2",
     "configuration": "config-B",
