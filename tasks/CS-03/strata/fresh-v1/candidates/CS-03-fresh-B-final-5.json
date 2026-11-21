@@ -1,0 +1,39 @@
+{
+  "schema_version": "0.1.0",
+  "candidate_id": "CS-03-fresh-B-final-5",
+  "task_id": "CS-03",
+  "origin": "fresh_attempt",
+  "split": "eval",
+  "patch": "diff --git a/inflection/__init__.py b/inflection/__init__.py\nindex ffac5ce22e60816f18267d742455e4936b6d1c1a..e6b0f31141fa4583f5adeadabd6204951434482e 100644\n--- a/inflection/__init__.py\n+++ b/inflection/__init__.py\n@@ -353,6 +353,10 @@ def tableize(word: str) -> str:\n     \"\"\"\n     return pluralize(underscore(word))\n \n+# A run of two or more capitals that is not followed by a lowercase letter,\n+# e.g. 'NASA' in 'NASA Rocket' or 'HTTP' in 'read the HTTP spec'.\n+_ACRONYM_RE = re.compile(r\"(?<![A-Za-z])[A-Z]{2,}(?![a-z])\")\n+\n \n def titleize(word: str) -> str:\n     \"\"\"\n@@ -372,12 +376,24 @@ def titleize(word: str) -> str:\n       'Raiders Of The Lost Ark'\n \n     \"\"\"\n-    return re.sub(\n+    result = re.sub(\n         r\"\\b('?\\w)\",\n         lambda match: match.group(1).capitalize(),\n         humanize(underscore(word)).title()\n     )\n \n+    # Keep all-caps acronyms (e.g. NASA, HTTP) as written, but only when the\n+    # input also contains lowercase letters; a fully uppercase input such as\n+    # 'HELLO WORLD' is still treated as a shouted title.\n+    if any(char.islower() for char in word):\n+        for acronym in set(_ACRONYM_RE.findall(word)):\n+            result = re.sub(\n+                r\"\\b\" + re.escape(acronym.capitalize()) + r\"\\b\",\n+                acronym,\n+                result,\n+            )\n+    return result\n+\n \n def transliterate(string: str) -> str:\n     \"\"\"\n",
+  "patch_sha256": "05a4201cce35ba5b16c3ce28cc7934923530351088e4563b41df7b6013b9dac5",
+  "produced_by": "fresh-attempt:config-B",
+  "description": "",
+  "labels": [],
+  "attempt": {
+    "attempt_id": "CS-03-fresh-B-final-5",
+    "configuration": "config-B",
+    "variant": "final",
+    "instruction_sha256": "7c847d25555a8ec359f2b51ff8bf01a7fea4651b358da8f71516aef0b6c8d5a5",
+    "started_at": "2026-11-21T10:12:54.850Z",
+    "ended_at": "2026-11-21T10:13:41.347Z",
+    "wall_s": 46.497,
+    "turns": 13,
+    "tool_calls": 13,
+    "tokens": 1111066,
+    "ended": "finished",
+    "patch_sha256": "05a4201cce35ba5b16c3ce28cc7934923530351088e4563b41df7b6013b9dac5",
+    "run_record": "build-session:subagents/workflows/wf_f1cebdf3-316/agent-a55ecc71adeda3190.jsonl",
+    "audit": {
+      "profile": "fresh-attempt:v1",
+      "passed": true,
+      "findings": [
+        "fresh-attempt audit: no hit, no exposure",
+        "file tools (Read, Edit) named only workspace paths; no Grep or Glob call; the first shell command printed the instruction file by its absolute workspace path, and every other began with a cd into the workspace",
+        "every listing and search covered only its own workspace",
+        "verdict: passed, nothing outside the workspace was read"
+      ],
+      "audited_at": "2026-11-21T10:38:22Z",
+      "record": "data/fresh/fresh-v1/audit_CS-03.json"
+    }
+  }
+}

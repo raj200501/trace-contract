@@ -1,0 +1,39 @@
+{
+  "schema_version": "0.1.0",
+  "candidate_id": "CS-03-fresh-A-u1-3",
+  "task_id": "CS-03",
+  "origin": "fresh_attempt",
+  "split": "eval",
+  "patch": "diff --git a/inflection/__init__.py b/inflection/__init__.py\nindex ffac5ce22e60816f18267d742455e4936b6d1c1a..3471e31976d8c025b6a32c7dd8c3eb791839f24c 100644\n--- a/inflection/__init__.py\n+++ b/inflection/__init__.py\n@@ -360,6 +360,10 @@ def titleize(word: str) -> str:\n     create a nicer looking title. :func:`titleize` is meant for creating pretty\n     output.\n \n+    Words written in capitals, such as acronyms, are kept as they are. When\n+    the whole string is in capitals, though, there is no telling acronyms\n+    from the other words, so every word is capitalized as usual.\n+\n     Examples::\n \n       >>> titleize(\"man from the boondocks\")\n@@ -370,13 +374,32 @@ def titleize(word: str) -> str:\n       'The Man Without A Past'\n       >>> titleize(\"raiders_of_the_lost_ark\")\n       'Raiders Of The Lost Ark'\n+      >>> titleize(\"NASA rocket launch\")\n+      'NASA Rocket Launch'\n+      >>> titleize(\"HTMLTidy\")\n+      'HTML Tidy'\n+      >>> titleize(\"NASA_ROCKET_LAUNCH\")\n+      'Nasa Rocket Launch'\n \n     \"\"\"\n-    return re.sub(\n+    title = re.sub(\n         r\"\\b('?\\w)\",\n         lambda match: match.group(1).capitalize(),\n         humanize(underscore(word)).title()\n     )\n+    if word.isupper():\n+        return title\n+    # ``title`` has the words of ``word`` in the same order, apart from a\n+    # trailing \"_id\" dropped by humanize(); put back those written in\n+    # capitals. Comparing each pair guards against case mappings that\n+    # split a word, like 'İ'.lower().\n+    title_parts = re.split(r\"([^\\W_]+)\", title)  # words at odd indices\n+    original_words = re.findall(r\"[^\\W_]+\", _separate_words(word))\n+    for i, original in zip(range(1, len(title_parts), 2), original_words):\n+        if (len(original) > 1 and original.isupper() and\n+                original.lower() == title_parts[i].lower()):\n+            title_parts[i] = original\n+    return ''.join(title_parts)\n \n \n def transliterate(string: str) -> str:\n@@ -412,11 +435,19 @@ def underscore(word: str) -> str:\n         >>> camelize(underscore(\"IOError\"))\n         'IoError'\n \n+    \"\"\"\n+    return _separate_words(word).lower()\n+\n+\n+def _separate_words(word: str) -> str:\n+    \"\"\"\n+    Insert underscores between CamelCase words and replace dashes with\n+    underscores, like :func:`underscore` does, but keep the case of the\n+    letters.\n     \"\"\"\n     word = re.sub(r\"([A-Z]+)([A-Z][a-z])\", r'\\1_\\2', word)\n     word = re.sub(r\"([a-z\\d])([A-Z])\", r'\\1_\\2', word)\n-    word = word.replace(\"-\", \"_\")\n-    return word.lower()\n+    return word.replace(\"-\", \"_\")\n \n \n _irregular('person', 'people')\n",
+  "patch_sha256": "d825ba43f6c56f58d9e906ad4b411de584f31f3746cd578b2c470a9c40f8bcd4",
+  "produced_by": "fresh-attempt:config-A",
+  "description": "",
+  "labels": [],
+  "attempt": {
+    "attempt_id": "CS-03-fresh-A-u1-3",
+    "configuration": "config-A",
+    "variant": "u1",
+    "instruction_sha256": "d3981d4ec575b55ce5a460eb0d720ec06bd7a5f565b2f9cea52ef0731e4b87f6",
+    "started_at": "2026-11-21T09:28:23.688Z",
+    "ended_at": "2026-11-21T09:43:01.092Z",
+    "wall_s": 877.404,
+    "turns": 18,
+    "tool_calls": 22,
+    "tokens": 2766910,
+    "ended": "finished",
+    "patch_sha256": "d825ba43f6c56f58d9e906ad4b411de584f31f3746cd578b2c470a9c40f8bcd4",
+    "run_record": "build-session:subagents/workflows/wf_f1cebdf3-316/agent-ac884a2aa43f10b8c.jsonl",
+    "audit": {
+      "profile": "fresh-attempt:v1",
+      "passed": true,
+      "findings": [
+        "fresh-attempt audit: no hit, no exposure",
+        "file tools (Read, Edit, Write) named only workspace paths; no Grep or Glob call; every shell command began with a cd into the workspace",
+        "every listing and search covered only its own workspace",
+        "verdict: passed, nothing outside the workspace was read"
+      ],
+      "audited_at": "2026-11-21T10:38:22Z",
+      "record": "data/fresh/fresh-v1/audit_CS-03.json"
+    }
+  }
+}

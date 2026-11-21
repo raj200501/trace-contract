@@ -1,0 +1,28 @@
+{
+  "schema_version": "0.1.0",
+  "stratum": "fresh-v1",
+  "task_id": "CS-03",
+  "description": "fresh-agent attempts (protocol §15.4, §16.2; D56)",
+  "candidates": [
+    "strata/fresh-v1/candidates/CS-03-fresh-A-u1-1.json",
+    "strata/fresh-v1/candidates/CS-03-fresh-A-u1-2.json",
+    "strata/fresh-v1/candidates/CS-03-fresh-A-u1-3.json",
+    "strata/fresh-v1/candidates/CS-03-fresh-A-u1-4.json",
+    "strata/fresh-v1/candidates/CS-03-fresh-A-u1-5.json",
+    "strata/fresh-v1/candidates/CS-03-fresh-A-final-1.json",
+    "strata/fresh-v1/candidates/CS-03-fresh-A-final-2.json",
+    "strata/fresh-v1/candidates/CS-03-fresh-A-final-3.json",
+    "strata/fresh-v1/candidates/CS-03-fresh-A-final-4.json",
+    "strata/fresh-v1/candidates/CS-03-fresh-A-final-5.json",
+    "strata/fresh-v1/candidates/CS-03-fresh-B-u1-1.json",
+    "strata/fresh-v1/candidates/CS-03-fresh-B-u1-2.json",
+    "strata/fresh-v1/candidates/CS-03-fresh-B-u1-3.json",
+    "strata/fresh-v1/candidates/CS-03-fresh-B-u1-4.json",
+    "strata/fresh-v1/candidates/CS-03-fresh-B-u1-5.json",
+    "strata/fresh-v1/candidates/CS-03-fresh-B-final-1.json",
+    "strata/fresh-v1/candidates/CS-03-fresh-B-final-2.json",
+    "strata/fresh-v1/candidates/CS-03-fresh-B-final-3.json",
+    "strata/fresh-v1/candidates/CS-03-fresh-B-final-4.json",
+    "strata/fresh-v1/candidates/CS-03-fresh-B-final-5.json"
+  ]
+}

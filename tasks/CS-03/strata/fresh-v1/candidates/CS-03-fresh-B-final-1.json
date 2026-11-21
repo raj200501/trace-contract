@@ -1,0 +1,39 @@
+{
+  "schema_version": "0.1.0",
+  "candidate_id": "CS-03-fresh-B-final-1",
+  "task_id": "CS-03",
+  "origin": "fresh_attempt",
+  "split": "eval",
+  "patch": "diff --git a/inflection/__init__.py b/inflection/__init__.py\nindex ffac5ce22e60816f18267d742455e4936b6d1c1a..fbb8a0743dbc9c300454fdd59e06315637304a51 100644\n--- a/inflection/__init__.py\n+++ b/inflection/__init__.py\n@@ -370,14 +370,41 @@ def titleize(word: str) -> str:\n       'The Man Without A Past'\n       >>> titleize(\"raiders_of_the_lost_ark\")\n       'Raiders Of The Lost Ark'\n+      >>> titleize(\"NASA rocket launch\")\n+      'NASA Rocket Launch'\n+      >>> titleize(\"read the HTTP spec\")\n+      'Read The HTTP Spec'\n+      >>> titleize(\"HELLO WORLD\")\n+      'Hello World'\n+\n+    All-caps words (acronyms such as ``NASA``) are kept as they are, but only\n+    when the input also contains lowercase letters.\n \n     \"\"\"\n-    return re.sub(\n+    acronyms = []\n+\n+    def protect(match):\n+        acronyms.append(match.group(0))\n+        return \"zzacronym{}zz\".format(len(acronyms) - 1)\n+\n+    if any(char.islower() for char in word):\n+        word = re.sub(r\"\\b[A-Z]{2,}\\b\", protect, word)\n+\n+    result = re.sub(\n         r\"\\b('?\\w)\",\n         lambda match: match.group(1).capitalize(),\n         humanize(underscore(word)).title()\n     )\n \n+    for index, acronym in enumerate(acronyms):\n+        result = re.sub(\n+            r\"zzacronym{}zz\".format(index),\n+            lambda match, acronym=acronym: acronym,\n+            result,\n+            flags=re.IGNORECASE,\n+        )\n+    return result\n+\n \n def transliterate(string: str) -> str:\n     \"\"\"\n",
+  "patch_sha256": "529007ee90ee2c1d535ea678298d884cd0eb6660c88710c8ccee3ff2db7e8850",
+  "produced_by": "fresh-attempt:config-B",
+  "description": "",
+  "labels": [],
+  "attempt": {
+    "attempt_id": "CS-03-fresh-B-final-1",
+    "configuration": "config-B",
+    "variant": "final",
+    "instruction_sha256": "be5044d4bb9ab4581228bcdb8c6217e96e742f0563bbb5566218bf27c6c69b62",
+    "started_at": "2026-11-21T09:09:13.460Z",
+    "ended_at": "2026-11-21T09:10:04.561Z",
+    "wall_s": 51.101,
+    "turns": 13,
+    "tool_calls": 13,
+    "tokens": 1125881,
+    "ended": "finished",
+    "patch_sha256": "529007ee90ee2c1d535ea678298d884cd0eb6660c88710c8ccee3ff2db7e8850",
+    "run_record": "build-session:subagents/workflows/wf_f1cebdf3-316/agent-accbe3c901250ab51.jsonl",
+    "audit": {
+      "profile": "fresh-attempt:v1",
+      "passed": true,
+      "findings": [
+        "fresh-attempt audit: no hit, no exposure",
+        "file tools (Read, Edit) named only workspace paths; no Grep or Glob call; every shell command began with a cd into the workspace",
+        "every listing and search covered only its own workspace",
+        "verdict: passed, nothing outside the workspace was read"
+      ],
+      "audited_at": "2026-11-21T10:38:22Z",
+      "record": "data/fresh/fresh-v1/audit_CS-03.json"
+    }
+  }
+}

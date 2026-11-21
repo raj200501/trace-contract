@@ -1,0 +1,40 @@
+{
+  "schema_version": "0.1.0",
+  "candidate_id": "CS-03-fresh-A-final-1",
+  "task_id": "CS-03",
+  "origin": "fresh_attempt",
+  "split": "eval",
+  "patch": "diff --git a/inflection/__init__.py b/inflection/__init__.py\nindex ffac5ce22e60816f18267d742455e4936b6d1c1a..2dbfbd6c8d35ffc5df172aa67b61e62d36bbd1f5 100644\n--- a/inflection/__init__.py\n+++ b/inflection/__init__.py\n@@ -354,6 +354,26 @@ def tableize(word: str) -> str:\n     return pluralize(underscore(word))\n \n \n+def _acronyms(word: str) -> typing.List[typing.Optional[str]]:\n+    \"\"\"\n+    Return the words that :func:`titleize` makes of ``word``, in order: each\n+    one as it was written if it is in all caps, or ``None`` if it is not.\n+    \"\"\"\n+    # Split the words like underscore() does, but without lowercasing them.\n+    split = re.sub(r\"([A-Z]+)([A-Z][a-z])\", r'\\1_\\2', word)\n+    split = re.sub(r\"([a-z\\d])([A-Z])\", r'\\1_\\2', split)\n+    acronyms: typing.List[typing.Optional[str]] = []\n+    # Words can be joined by apostrophes, as in \"NASA's\" or \"DON'T\". A part\n+    # after an apostrophe only counts if the part before it does, so that\n+    # \"Rock'N'Roll\" still becomes \"Rock'n'roll\".\n+    for joined in re.findall(r\"[^\\W_]+(?:'[^\\W_]+)*\", split):\n+        is_acronym = True\n+        for part in joined.split(\"'\"):\n+            is_acronym = is_acronym and part.isupper()\n+            acronyms.append(part if is_acronym else None)\n+    return acronyms\n+\n+\n def titleize(word: str) -> str:\n     \"\"\"\n     Capitalize all the words and replace some characters in the string to\n@@ -371,12 +391,32 @@ def titleize(word: str) -> str:\n       >>> titleize(\"raiders_of_the_lost_ark\")\n       'Raiders Of The Lost Ark'\n \n+    Words in all caps, such as the acronyms ``NASA`` and ``HTTP``, are kept as\n+    they are, unless the whole string is in uppercase::\n+\n+      >>> titleize(\"read the HTTP spec\")\n+      'Read The HTTP Spec'\n+      >>> titleize(\"HELLO WORLD\")\n+      'Hello World'\n+\n     \"\"\"\n-    return re.sub(\n+    title = re.sub(\n         r\"\\b('?\\w)\",\n         lambda match: match.group(1).capitalize(),\n         humanize(underscore(word)).title()\n     )\n+    if not any(char.islower() for char in word):\n+        return title\n+    # Put the acronyms back. With a capturing group, re.split() puts the words\n+    # at the odd indexes.\n+    pieces = re.split(r\"([^\\W_]+)\", title)\n+    for index, acronym in zip(range(1, len(pieces), 2), _acronyms(word)):\n+        # Comparing the letters guards against the rare characters whose\n+        # lowercase form is longer, like the Turkish dotted I, which would\n+        # shift the words.\n+        if acronym and acronym.lower() == pieces[index].lower():\n+            pieces[index] = acronym\n+    return ''.join(pieces)\n \n \n def transliterate(string: str) -> str:\n",
+  "patch_sha256": "204dce236c7cff2c8519e13197ef0869918cee6b269c3e39349e477b9eef0d09",
+  "produced_by": "fresh-attempt:config-A",
+  "description": "",
+  "labels": [],
+  "attempt": {
+    "attempt_id": "CS-03-fresh-A-final-1",
+    "configuration": "config-A",
+    "variant": "final",
+    "instruction_sha256": "0cce85e4e4a9d949ab67a6e8e80dc6f933791c56c3a618289ae7c8fe7fa9d9bc",
+    "started_at": "2026-11-21T08:59:28.284Z",
+    "ended_at": "2026-11-21T09:15:13.005Z",
+    "wall_s": 944.721,
+    "turns": 22,
+    "tool_calls": 28,
+    "tokens": 3661535,
+    "ended": "finished",
+    "patch_sha256": "204dce236c7cff2c8519e13197ef0869918cee6b269c3e39349e477b9eef0d09",
+    "run_record": "build-session:subagents/workflows/wf_f1cebdf3-316/agent-a35eb6022ed8e7bd2.jsonl",
+    "audit": {
+      "profile": "fresh-attempt:v1",
+      "passed": true,
+      "findings": [
+        "fresh-attempt audit: 4 exposures, no hit; read in the transcript",
+        "false positive (4 exposures): the attempt printed its own workspace's manifest by its absolute workspace path, with a shell command that began with a cd into the workspace's repo; the flagged paths are the four old workspace paths that the manifest records as substituted in U1, shown in its text only; no tool input named or opened them",
+        "file tools (Read, Edit, Write) named only workspace paths; no Grep or Glob call; every shell command began with a cd into the workspace",
+        "every listing and search covered only its own workspace",
+        "verdict: passed, nothing outside the workspace was read"
+      ],
+      "audited_at": "2026-11-21T10:38:22Z",
+      "record": "data/fresh/fresh-v1/audit_CS-03.json"
+    }
+  }
+}

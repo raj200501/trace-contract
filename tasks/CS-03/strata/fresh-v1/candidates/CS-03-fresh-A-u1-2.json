@@ -1,0 +1,41 @@
+{
+  "schema_version": "0.1.0",
+  "candidate_id": "CS-03-fresh-A-u1-2",
+  "task_id": "CS-03",
+  "origin": "fresh_attempt",
+  "split": "eval",
+  "patch": "diff --git a/inflection/__init__.py b/inflection/__init__.py\nindex ffac5ce22e60816f18267d742455e4936b6d1c1a..35828aaf8b00742f81efad23f9b0cf702eeb5386 100644\n--- a/inflection/__init__.py\n+++ b/inflection/__init__.py\n@@ -354,6 +354,33 @@ def tableize(word: str) -> str:\n     return pluralize(underscore(word))\n \n \n+def _is_acronym(word: str) -> bool:\n+    \"\"\"\n+    Return True if the word has two or more letters and they are all\n+    capitals, like \"NASA\" or \"MP3\".\n+    \"\"\"\n+    return word.isupper() and sum(char.isupper() for char in word) > 1\n+\n+\n+def _titleize_word(word: str) -> str:\n+    \"\"\"\n+    Capitalize a single word for :func:`titleize`, keeping it as it is when it\n+    is written in all capitals.\n+    \"\"\"\n+    if _is_acronym(word):\n+        return word\n+    title = re.sub(\n+        r\"\\b('?\\w)\",\n+        lambda match: match.group(1).capitalize(),\n+        word.lower().title()\n+    )\n+    # In a word like \"NASA's\", keep the acronym and capitalize the rest.\n+    return \"'\".join(\n+        part if _is_acronym(part) else title_part\n+        for part, title_part in zip(word.split(\"'\"), title.split(\"'\"))\n+    )\n+\n+\n def titleize(word: str) -> str:\n     \"\"\"\n     Capitalize all the words and replace some characters in the string to\n@@ -371,11 +398,24 @@ def titleize(word: str) -> str:\n       >>> titleize(\"raiders_of_the_lost_ark\")\n       'Raiders Of The Lost Ark'\n \n+    Words written in all capitals, such as acronyms, are kept as they are::\n+\n+      >>> titleize(\"NASA rocket launch\")\n+      'NASA Rocket Launch'\n+      >>> titleize(\"read the HTTP spec\")\n+      'Read The HTTP Spec'\n+\n     \"\"\"\n+    # Split the words the same way humanize(underscore(word)) does, including\n+    # dropping a trailing \"_id\", but without lowercasing them so that\n+    # acronyms can still be recognized.\n+    word = re.sub(r\"_[iI][dD]$\", \"\", _separate_words(word))\n+    word = word.replace('_', ' ')\n+    # A word may contain apostrophes, as in \"David's\".\n     return re.sub(\n-        r\"\\b('?\\w)\",\n-        lambda match: match.group(1).capitalize(),\n-        humanize(underscore(word)).title()\n+        r\"\\w+(?:'\\w+)*\",\n+        lambda match: _titleize_word(match.group()),\n+        word\n     )\n \n \n@@ -397,6 +437,16 @@ def transliterate(string: str) -> str:\n     return normalized.encode('ascii', 'ignore').decode('ascii')\n \n \n+def _separate_words(word: str) -> str:\n+    \"\"\"\n+    Separate the words of a CamelCase or dasherized string with underscores,\n+    keeping the case of the letters.\n+    \"\"\"\n+    word = re.sub(r\"([A-Z]+)([A-Z][a-z])\", r'\\1_\\2', word)\n+    word = re.sub(r\"([a-z\\d])([A-Z])\", r'\\1_\\2', word)\n+    return word.replace(\"-\", \"_\")\n+\n+\n def underscore(word: str) -> str:\n     \"\"\"\n     Make an underscored, lowercase form from the expression in the string.\n@@ -413,10 +463,7 @@ def underscore(word: str) -> str:\n         'IoError'\n \n     \"\"\"\n-    word = re.sub(r\"([A-Z]+)([A-Z][a-z])\", r'\\1_\\2', word)\n-    word = re.sub(r\"([a-z\\d])([A-Z])\", r'\\1_\\2', word)\n-    word = word.replace(\"-\", \"_\")\n-    return word.lower()\n+    return _separate_words(word).lower()\n \n \n _irregular('person', 'people')\n",
+  "patch_sha256": "5021c38b449b22238c07f3528a84256629abb284e575cc77687aaa5e4db2fa7e",
+  "produced_by": "fresh-attempt:config-A",
+  "description": "",
+  "labels": [],
+  "attempt": {
+    "attempt_id": "CS-03-fresh-A-u1-2",
+    "configuration": "config-A",
+    "variant": "u1",
+    "instruction_sha256": "5041dad28fe8acb2a9fabe3c6b4d814b4298d7278181f72cd8e26f70eb937ae9",
+    "started_at": "2026-11-21T09:10:04.573Z",
+    "ended_at": "2026-11-21T09:27:21.632Z",
+    "wall_s": 1037.059,
+    "turns": 24,
+    "tool_calls": 34,
+    "tokens": 4121569,
+    "ended": "finished",
+    "patch_sha256": "5021c38b449b22238c07f3528a84256629abb284e575cc77687aaa5e4db2fa7e",
+    "run_record": "build-session:subagents/workflows/wf_f1cebdf3-316/agent-a0647db65b4432859.jsonl",
+    "audit": {
+      "profile": "fresh-attempt:v1",
+      "passed": true,
+      "findings": [
+        "fresh-attempt audit: 5 exposures, no hit; read in the transcript",
+        "false positive (1 exposure): a reStructuredText include directive of the attempt's own repo/docs/index.rst, printed by a command that ended in the workspace root, was resolved beside the workspace; it names the repo's own LICENSE, and no tool input named the resolved path",
+        "false positive (4 exposures): the attempt printed its own workspace's manifest with a shell command that began with a cd into the workspace; the flagged paths are the four old workspace paths that the manifest records as substituted in U1, shown in its text only; no tool input named or opened them",
+        "file tools (Read, Edit, Write) named only workspace paths; no Grep or Glob call; every shell command began with a cd into the workspace",
+        "every listing and search covered only its own workspace",
+        "verdict: passed, nothing outside the workspace was read"
+      ],
+      "audited_at": "2026-11-21T10:38:22Z",
+      "record": "data/fresh/fresh-v1/audit_CS-03.json"
+    }
+  }
+}

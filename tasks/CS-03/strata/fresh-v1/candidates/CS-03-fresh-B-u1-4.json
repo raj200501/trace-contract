@@ -1,0 +1,39 @@
+{
+  "schema_version": "0.1.0",
+  "candidate_id": "CS-03-fresh-B-u1-4",
+  "task_id": "CS-03",
+  "origin": "fresh_attempt",
+  "split": "eval",
+  "patch": "diff --git a/inflection/__init__.py b/inflection/__init__.py\nindex ffac5ce22e60816f18267d742455e4936b6d1c1a..9299871e997dd12b642875e18b1f018dafd761d9 100644\n--- a/inflection/__init__.py\n+++ b/inflection/__init__.py\n@@ -372,11 +372,20 @@ def titleize(word: str) -> str:\n       'Raiders Of The Lost Ark'\n \n     \"\"\"\n-    return re.sub(\n+    titleized = re.sub(\n         r\"\\b('?\\w)\",\n         lambda match: match.group(1).capitalize(),\n         humanize(underscore(word)).title()\n     )\n+    # underscore() lowercases everything, so restore all-caps acronyms\n+    # (e.g. NASA, HTTP) from the original input.\n+    for acronym in set(re.findall(r\"\\b[A-Z][A-Z0-9]+\\b\", word)):\n+        titleized = re.sub(\n+            r\"\\b\" + re.escape(acronym.capitalize()) + r\"\\b\",\n+            acronym,\n+            titleized,\n+        )\n+    return titleized\n \n \n def transliterate(string: str) -> str:\n",
+  "patch_sha256": "dba4238788e797d6f98bdd4b71517be5c3c0ff87cfdde36f1d26783fb7070e67",
+  "produced_by": "fresh-attempt:config-B",
+  "description": "",
+  "labels": [],
+  "attempt": {
+    "attempt_id": "CS-03-fresh-B-u1-4",
+    "configuration": "config-B",
+    "variant": "u1",
+    "instruction_sha256": "002888bf947fde6125ea66e90316cf23bd304a7a71159bae996152cf023c1fa9",
+    "started_at": "2026-11-21T09:45:47.305Z",
+    "ended_at": "2026-11-21T09:46:33.944Z",
+    "wall_s": 46.639,
+    "turns": 14,
+    "tool_calls": 14,
+    "tokens": 1177476,
+    "ended": "finished",
+    "patch_sha256": "dba4238788e797d6f98bdd4b71517be5c3c0ff87cfdde36f1d26783fb7070e67",
+    "run_record": "build-session:subagents/workflows/wf_f1cebdf3-316/agent-a8cf9a35dab0fdd61.jsonl",
+    "audit": {
+      "profile": "fresh-attempt:v1",
+      "passed": true,
+      "findings": [
+        "fresh-attempt audit: no hit, no exposure",
+        "file tools (Read, Edit) named only workspace paths; no Grep or Glob call; every shell command began with a cd into the workspace",
+        "every listing and search covered only its own workspace",
+        "verdict: passed, nothing outside the workspace was read"
+      ],
+      "audited_at": "2026-11-21T10:38:22Z",
+      "record": "data/fresh/fresh-v1/audit_CS-03.json"
+    }
+  }
+}

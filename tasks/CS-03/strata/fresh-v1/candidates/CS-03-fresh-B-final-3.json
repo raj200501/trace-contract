@@ -1,0 +1,39 @@
+{
+  "schema_version": "0.1.0",
+  "candidate_id": "CS-03-fresh-B-final-3",
+  "task_id": "CS-03",
+  "origin": "fresh_attempt",
+  "split": "eval",
+  "patch": "diff --git a/inflection/__init__.py b/inflection/__init__.py\nindex ffac5ce22e60816f18267d742455e4936b6d1c1a..2bdd47eb07a69831592255349c3869b4e8aceed1 100644\n--- a/inflection/__init__.py\n+++ b/inflection/__init__.py\n@@ -360,6 +360,10 @@ def titleize(word: str) -> str:\n     create a nicer looking title. :func:`titleize` is meant for creating pretty\n     output.\n \n+    All-caps acronyms (such as ``NASA`` or ``HTTP``) are kept as they are, but\n+    only when the input also contains lowercase letters; a fully uppercase\n+    input is titleized as usual.\n+\n     Examples::\n \n       >>> titleize(\"man from the boondocks\")\n@@ -370,14 +374,58 @@ def titleize(word: str) -> str:\n       'The Man Without A Past'\n       >>> titleize(\"raiders_of_the_lost_ark\")\n       'Raiders Of The Lost Ark'\n+      >>> titleize(\"NASA rocket launch\")\n+      'NASA Rocket Launch'\n+      >>> titleize(\"read the HTTP spec\")\n+      'Read The HTTP Spec'\n+      >>> titleize(\"HELLO WORLD\")\n+      'Hello World'\n \n     \"\"\"\n-    return re.sub(\n+    acronyms: list = []\n+\n+    if re.search(r\"[a-z]\", word):\n+        def _protect(match: \"re.Match[str]\") -> str:\n+            acronyms.append(match.group(0))\n+            return _acronym_placeholder(len(acronyms) - 1)\n+\n+        word = _ACRONYM_RE.sub(_protect, word)\n+\n+    result = re.sub(\n         r\"\\b('?\\w)\",\n         lambda match: match.group(1).capitalize(),\n         humanize(underscore(word)).title()\n     )\n \n+    if acronyms:\n+        result = _ACRONYM_PLACEHOLDER_RE.sub(\n+            lambda match: acronyms[_decode_acronym_index(match.group(1))],\n+            result,\n+        )\n+\n+    return result\n+\n+\n+# An all-caps word: an uppercase letter followed by two or more uppercase\n+# letters or digits, ending at a word boundary or where a capitalized word\n+# begins (as in \"NASARocket\").\n+_ACRONYM_RE = re.compile(\n+    r\"(?<![A-Za-z\\d])[A-Z][A-Z\\d]+(?:(?![A-Za-z\\d])|(?=[A-Z][a-z]))\"\n+)\n+\n+# Placeholders use only lowercase letters so the title-casing steps leave\n+# them intact apart from their first letter.\n+_ACRONYM_PLACEHOLDER_RE = re.compile(r\"Qqacr([a-j]+)qq\")\n+\n+\n+def _acronym_placeholder(index: int) -> str:\n+    digits = \"\".join(chr(ord(\"a\") + int(d)) for d in str(index))\n+    return \"qqacr\" + digits + \"qq\"\n+\n+\n+def _decode_acronym_index(encoded: str) -> int:\n+    return int(\"\".join(str(ord(c) - ord(\"a\")) for c in encoded))\n+\n \n def transliterate(string: str) -> str:\n     \"\"\"\n",
+  "patch_sha256": "0902bb40920644aa0404711d6fb14f26acf9d57c526ffd76d653164234c1ec3f",
+  "produced_by": "fresh-attempt:config-B",
+  "description": "",
+  "labels": [],
+  "attempt": {
+    "attempt_id": "CS-03-fresh-B-final-3",
+    "configuration": "config-B",
+    "variant": "final",
+    "instruction_sha256": "264aacde6cb58573d93cd47aea72396117a6dec0cd8ad42395bddaa534f4dd90",
+    "started_at": "2026-11-21T09:43:01.108Z",
+    "ended_at": "2026-11-21T09:44:35.022Z",
+    "wall_s": 93.914,
+    "turns": 14,
+    "tool_calls": 15,
+    "tokens": 1289455,
+    "ended": "finished",
+    "patch_sha256": "0902bb40920644aa0404711d6fb14f26acf9d57c526ffd76d653164234c1ec3f",
+    "run_record": "build-session:subagents/workflows/wf_f1cebdf3-316/agent-a5c5ab7c68d68012f.jsonl",
+    "audit": {
+      "profile": "fresh-attempt:v1",
+      "passed": true,
+      "findings": [
+        "fresh-attempt audit: no hit, no exposure",
+        "file tools (Read, Edit) named only workspace paths; no Grep or Glob call; the first shell command printed the instruction file by its absolute workspace path, and every other began with a cd into the workspace",
+        "every listing and search covered only its own workspace",
+        "verdict: passed, nothing outside the workspace was read"
+      ],
+      "audited_at": "2026-11-21T10:38:22Z",
+      "record": "data/fresh/fresh-v1/audit_CS-03.json"
+    }
+  }
+}

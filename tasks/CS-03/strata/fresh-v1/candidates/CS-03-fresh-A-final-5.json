@@ -1,0 +1,40 @@
+{
+  "schema_version": "0.1.0",
+  "candidate_id": "CS-03-fresh-A-final-5",
+  "task_id": "CS-03",
+  "origin": "fresh_attempt",
+  "split": "eval",
+  "patch": "diff --git a/inflection/__init__.py b/inflection/__init__.py\nindex ffac5ce22e60816f18267d742455e4936b6d1c1a..b6e4ce5f4528a19987ba9f6b0ac61367c2d13ecf 100644\n--- a/inflection/__init__.py\n+++ b/inflection/__init__.py\n@@ -354,6 +354,43 @@ def tableize(word: str) -> str:\n     return pluralize(underscore(word))\n \n \n+def _restore_acronyms(title: str, word: str) -> str:\n+    \"\"\"\n+    Put the words of ``word`` that are written in capitals, such as acronyms,\n+    back into ``title``, the titleized form of ``word``.\n+\n+    ``title`` holds the letters and digits of ``word`` in the same order, with\n+    only their case changed (and a trailing ``\"_id\"`` dropped by\n+    :func:`humanize`), so each of its words is matched with the same number\n+    of letters and digits of ``word``.\n+    \"\"\"\n+    original_characters = ''.join(re.findall(r\"[^\\W_]+\", word))\n+    # The words are at the odd indexes, with the text around them in between:\n+    # 'Nasa Rocket' gives ['', 'Nasa', ' ', 'Rocket', ''].\n+    pieces = re.split(r\"([^\\W_]+)\", title)\n+    position = 0\n+    keep = False\n+    for index in range(1, len(pieces), 2):\n+        titled = pieces[index]\n+        original = original_characters[position:position + len(titled)]\n+        position += len(titled)\n+        if (len(original) != len(titled) or\n+                original.casefold() != titled.casefold()):\n+            # A case change did not map one character to one (for example\n+            # \"ß\" titleizes to \"Ss\"), so the words cannot be matched up.\n+            return title\n+        # titleize lowercases a letter after an apostrophe (\"David's\"), so a\n+        # lone capital there is only kept as part of a word written in\n+        # capitals (\"DON'T\").\n+        after_apostrophe = index > 1 and pieces[index - 1] == \"'\"\n+        keep = original.isupper() and (\n+            len(original) > 1 or not after_apostrophe or keep\n+        )\n+        if keep:\n+            pieces[index] = original\n+    return ''.join(pieces)\n+\n+\n def titleize(word: str) -> str:\n     \"\"\"\n     Capitalize all the words and replace some characters in the string to\n@@ -371,12 +408,26 @@ def titleize(word: str) -> str:\n       >>> titleize(\"raiders_of_the_lost_ark\")\n       'Raiders Of The Lost Ark'\n \n+    Words written in capitals, such as acronyms, are kept as they are when the\n+    string also contains lowercase letters. A string written entirely in\n+    capitals is titleized like any other::\n+\n+      >>> titleize(\"read the HTTP spec\")\n+      'Read The HTTP Spec'\n+      >>> titleize(\"NASARocket\")\n+      'NASA Rocket'\n+      >>> titleize(\"HELLO WORLD\")\n+      'Hello World'\n+\n     \"\"\"\n-    return re.sub(\n+    title = re.sub(\n         r\"\\b('?\\w)\",\n         lambda match: match.group(1).capitalize(),\n         humanize(underscore(word)).title()\n     )\n+    if any(character.islower() for character in word):\n+        title = _restore_acronyms(title, word)\n+    return title\n \n \n def transliterate(string: str) -> str:\n",
+  "patch_sha256": "7654ff7bca2b627d15657ed28408c7fe2cbbb23c06af8e875a411fc556d0be92",
+  "produced_by": "fresh-attempt:config-A",
+  "description": "",
+  "labels": [],
+  "attempt": {
+    "attempt_id": "CS-03-fresh-A-final-5",
+    "configuration": "config-A",
+    "variant": "final",
+    "instruction_sha256": "f1bad3a232eda601570f263751a1cbbe53f0d94d719a04b6326bb2e656d5ddc6",
+    "started_at": "2026-11-21T10:01:40.964Z",
+    "ended_at": "2026-11-21T10:17:11.062Z",
+    "wall_s": 930.098,
+    "turns": 21,
+    "tool_calls": 27,
+    "tokens": 3505323,
+    "ended": "finished",
+    "patch_sha256": "7654ff7bca2b627d15657ed28408c7fe2cbbb23c06af8e875a411fc556d0be92",
+    "run_record": "build-session:subagents/workflows/wf_f1cebdf3-316/agent-ab06b0b0e1d8060fa.jsonl",
+    "audit": {
+      "profile": "fresh-attempt:v1",
+      "passed": true,
+      "findings": [
+        "fresh-attempt audit: no hit, no exposure",
+        "file tools (Read, Edit, Write) named only workspace paths; no Grep or Glob call; every shell command began with a cd into the workspace",
+        "every listing and search covered only its own workspace",
+        "the host's python3 (a system location) was run on workspace files only",
+        "verdict: passed, nothing outside the workspace was read"
+      ],
+      "audited_at": "2026-11-21T10:38:22Z",
+      "record": "data/fresh/fresh-v1/audit_CS-03.json"
+    }
+  }
+}

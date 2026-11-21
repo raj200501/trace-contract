@@ -1,0 +1,40 @@
+{
+  "schema_version": "0.1.0",
+  "candidate_id": "CS-03-fresh-A-u1-5",
+  "task_id": "CS-03",
+  "origin": "fresh_attempt",
+  "split": "eval",
+  "patch": "diff --git a/inflection/__init__.py b/inflection/__init__.py\nindex ffac5ce22e60816f18267d742455e4936b6d1c1a..f206766f64d4c2a7ad4d8908c8e36b4dc6418d7a 100644\n--- a/inflection/__init__.py\n+++ b/inflection/__init__.py\n@@ -371,12 +371,55 @@ def titleize(word: str) -> str:\n       >>> titleize(\"raiders_of_the_lost_ark\")\n       'Raiders Of The Lost Ark'\n \n+    Words written in capitals, such as acronyms, are kept as they are::\n+\n+      >>> titleize(\"NASA rocket launch\")\n+      'NASA Rocket Launch'\n+      >>> titleize(\"read the HTTP spec\")\n+      'Read The HTTP Spec'\n+\n+    If the whole string is written in capitals, there is no telling the\n+    acronyms from the other words, so every word is capitalized::\n+\n+      >>> titleize(\"IN_PROGRESS\")\n+      'In Progress'\n+\n     \"\"\"\n+    word = _underscore_keeping_case(word)\n+    if word.isupper():\n+        word = word.lower()\n+    # Strip a trailing \"_id\" (or \"_ID\") and turn underscores into spaces, as\n+    # humanize() would, but without lower-casing the words.\n+    word = re.sub(r\"_[iI][dD]$\", \"\", word).replace(\"_\", \" \")\n     return re.sub(\n+        r\"\\w+(?:'\\w+)*\",\n+        lambda match: _titleize_word(match.group()),\n+        word\n+    )\n+\n+\n+def _titleize_word(word: str) -> str:\n+    \"\"\"Capitalize a word for :func:`titleize`, keeping acronyms as they are.\"\"\"\n+    if _is_acronym(word):  # e.g. NASA, or a whole word like DON'T\n+        return word\n+    title = re.sub(\n         r\"\\b('?\\w)\",\n         lambda match: match.group(1).capitalize(),\n-        humanize(underscore(word)).title()\n+        word.lower().title()\n     )\n+    # Keep an acronym that is only a part of the word, as in NASA's.\n+    return \"'\".join(\n+        part if _is_acronym(part) else title_part\n+        for part, title_part in zip(word.split(\"'\"), title.split(\"'\"))\n+    )\n+\n+\n+def _is_acronym(word: str) -> bool:\n+    \"\"\"\n+    Tell whether the word is written in capitals, like NASA or MP3. A single\n+    capital letter, like the A in \"TheManWithoutAPast\", is not an acronym.\n+    \"\"\"\n+    return len(word) > 1 and word.isupper()\n \n \n def transliterate(string: str) -> str:\n@@ -413,10 +456,14 @@ def underscore(word: str) -> str:\n         'IoError'\n \n     \"\"\"\n+    return _underscore_keeping_case(word).lower()\n+\n+\n+def _underscore_keeping_case(word: str) -> str:\n+    \"\"\"Do as :func:`underscore` does, but keep the case of the letters.\"\"\"\n     word = re.sub(r\"([A-Z]+)([A-Z][a-z])\", r'\\1_\\2', word)\n     word = re.sub(r\"([a-z\\d])([A-Z])\", r'\\1_\\2', word)\n-    word = word.replace(\"-\", \"_\")\n-    return word.lower()\n+    return word.replace(\"-\", \"_\")\n \n \n _irregular('person', 'people')\n",
+  "patch_sha256": "1140163d720b4d5d6d318ba98e8b06670137870aed215b1a423d549398a3e63c",
+  "produced_by": "fresh-attempt:config-A",
+  "description": "",
+  "labels": [],
+  "attempt": {
+    "attempt_id": "CS-03-fresh-A-u1-5",
+    "configuration": "config-A",
+    "variant": "u1",
+    "instruction_sha256": "e7241a916c6ea311fe4b633dac84662f2f8045239a8935ca06e88aed532393f6",
+    "started_at": "2026-11-21T09:54:57.564Z",
+    "ended_at": "2026-11-21T10:12:54.828Z",
+    "wall_s": 1077.264,
+    "turns": 30,
+    "tool_calls": 36,
+    "tokens": 5057945,
+    "ended": "finished",
+    "patch_sha256": "1140163d720b4d5d6d318ba98e8b06670137870aed215b1a423d549398a3e63c",
+    "run_record": "build-session:subagents/workflows/wf_f1cebdf3-316/agent-a25e1a1de4727c323.jsonl",
+    "audit": {
+      "profile": "fresh-attempt:v1",
+      "passed": true,
+      "findings": [
+        "fresh-attempt audit: 1 hit, no exposure; read in the transcript",
+        "false positive: the flagged token is a sed address range (regular expressions between slashes), taken for an absolute path; the command began with a cd into the workspace's repo, piped the base version of the repo's own module (git show) through sed and wrote only into the workspace's scratch",
+        "file tools (Read, Edit, Write) named only workspace paths; no Grep or Glob call; every shell command began with a cd into the workspace",
+        "every listing and search covered only its own workspace",
+        "verdict: passed, nothing outside the workspace was read"
+      ],
+      "audited_at": "2026-11-21T10:38:22Z",
+      "record": "data/fresh/fresh-v1/audit_CS-03.json"
+    }
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "schema_version": "0.1.0",
+  "candidate_id": "CS-03-fresh-B-final-4",
+  "task_id": "CS-03",
+  "origin": "fresh_attempt",
+  "split": "eval",
+  "patch": "diff --git a/inflection/__init__.py b/inflection/__init__.py\nindex ffac5ce22e60816f18267d742455e4936b6d1c1a..9d6f12bdcaeaccf4c60c9295aa6cbd608a4a8144 100644\n--- a/inflection/__init__.py\n+++ b/inflection/__init__.py\n@@ -370,14 +370,39 @@ def titleize(word: str) -> str:\n       'The Man Without A Past'\n       >>> titleize(\"raiders_of_the_lost_ark\")\n       'Raiders Of The Lost Ark'\n+      >>> titleize(\"NASA rocket launch\")\n+      'NASA Rocket Launch'\n+      >>> titleize(\"HELLO WORLD\")\n+      'Hello World'\n \n     \"\"\"\n-    return re.sub(\n+    # Acronyms such as \"NASA\" or \"HTTP\" are kept as they are, but only when the\n+    # input also contains lowercase letters; a fully uppercase input is titled\n+    # as before. Acronyms are swapped for placeholders so that underscore() and\n+    # humanize() see only lowercase text, then restored at the end.\n+    acronyms: typing.List[str] = []\n+    if re.search(r\"[a-z]\", word):\n+        def _protect(match: \"re.Match[str]\") -> str:\n+            acronyms.append(match.group(0))\n+            return f\"acronymplaceholder{len(acronyms) - 1}x\"\n+\n+        word = re.sub(r\"\\b[A-Z]{2,}\\b\", _protect, word)\n+\n+    result = re.sub(\n         r\"\\b('?\\w)\",\n         lambda match: match.group(1).capitalize(),\n         humanize(underscore(word)).title()\n     )\n \n+    if acronyms:\n+        result = re.sub(\n+            r\"acronymplaceholder(\\d+)x\",\n+            lambda match: acronyms[int(match.group(1))],\n+            result,\n+            flags=re.IGNORECASE,\n+        )\n+    return result\n+\n \n def transliterate(string: str) -> str:\n     \"\"\"\n",
+  "patch_sha256": "46965cf56c7c0ebb66f4d03fa68d8a27d651d985b820a050741997379ef08889",
+  "produced_by": "fresh-attempt:config-B",
+  "description": "",
+  "labels": [],
+  "attempt": {
+    "attempt_id": "CS-03-fresh-B-final-4",
+    "configuration": "config-B",
+    "variant": "final",
+    "instruction_sha256": "1a0ace95ddb8390676038fcf0c29185cbde42a56e75148a15adec783e0006a5a",
+    "started_at": "2026-11-21T09:54:08.559Z",
+    "ended_at": "2026-11-21T09:54:57.548Z",
+    "wall_s": 48.989,
+    "turns": 13,
+    "tool_calls": 13,
+    "tokens": 1107315,
+    "ended": "finished",
+    "patch_sha256": "46965cf56c7c0ebb66f4d03fa68d8a27d651d985b820a050741997379ef08889",
+    "run_record": "build-session:subagents/workflows/wf_f1cebdf3-316/agent-ab42f672c8cd5c612.jsonl",
+    "audit": {
+      "profile": "fresh-attempt:v1",
+      "passed": true,
+      "findings": [
+        "fresh-attempt audit: no hit, no exposure",
+        "file tools (Read, Edit) named only workspace paths; no Grep or Glob call; every shell command began with a cd into the workspace",
+        "every listing and search covered only its own workspace",
+        "verdict: passed, nothing outside the workspace was read"
+      ],
+      "audited_at": "2026-11-21T10:38:22Z",
+      "record": "data/fresh/fresh-v1/audit_CS-03.json"
+    }
+  }
+}

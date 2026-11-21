@@ -1,0 +1,39 @@
+{
+  "schema_version": "0.1.0",
+  "candidate_id": "CS-03-fresh-A-final-2",
+  "task_id": "CS-03",
+  "origin": "fresh_attempt",
+  "split": "eval",
+  "patch": "diff --git a/inflection/__init__.py b/inflection/__init__.py\nindex ffac5ce22e60816f18267d742455e4936b6d1c1a..01f915dd5984d40b3f561873a147638323f66a8b 100644\n--- a/inflection/__init__.py\n+++ b/inflection/__init__.py\n@@ -360,6 +360,9 @@ def titleize(word: str) -> str:\n     create a nicer looking title. :func:`titleize` is meant for creating pretty\n     output.\n \n+    Words written in capitals, such as acronyms, are kept as they are, unless\n+    the whole string is in capitals.\n+\n     Examples::\n \n       >>> titleize(\"man from the boondocks\")\n@@ -370,13 +373,67 @@ def titleize(word: str) -> str:\n       'The Man Without A Past'\n       >>> titleize(\"raiders_of_the_lost_ark\")\n       'Raiders Of The Lost Ark'\n+      >>> titleize(\"NASA rocket launch\")\n+      'NASA Rocket Launch'\n+      >>> titleize(\"HELLO WORLD\")\n+      'Hello World'\n \n     \"\"\"\n-    return re.sub(\n+    title = re.sub(\n         r\"\\b('?\\w)\",\n         lambda match: match.group(1).capitalize(),\n         humanize(underscore(word)).title()\n     )\n+    if not any(char.islower() for char in word):\n+        # In an all-caps string, such as the shouted heading 'HELLO WORLD',\n+        # capitals don't mark acronyms.\n+        return title\n+    return _restore_acronyms(title, _separate_words(word))\n+\n+\n+def _separate_words(word: str) -> str:\n+    \"\"\"\n+    Separate the words in `word` with spaces the same way\n+    ``humanize(underscore(word))`` does, but keep the case of the letters.\n+    \"\"\"\n+    word = re.sub(r\"([A-Z]+)([A-Z][a-z])\", r'\\1_\\2', word)\n+    word = re.sub(r\"([a-z\\d])([A-Z])\", r'\\1_\\2', word)\n+    word = word.replace(\"-\", \"_\")\n+    word = re.sub(r\"_[Ii][Dd]$\", \"\", word)\n+    return word.replace(\"_\", \" \")\n+\n+\n+def _restore_acronyms(title: str, words: str) -> str:\n+    \"\"\"\n+    Put the all-caps words of `words` back into `title`, which is `words` in\n+    title case.\n+    \"\"\"\n+    # Combining marks count as part of a word, because changing the case of\n+    # some letters adds one (a lowercase dotted capital I is an \"i\" followed\n+    # by a combining dot). That way case changes never move word boundaries.\n+    pattern = r\"[\\w\\u0300-\\u036f]+\"\n+    original_words = list(re.finditer(pattern, words))\n+    titled_words = list(re.finditer(pattern, title))\n+    if len(original_words) != len(titled_words):\n+        # Not expected, but never pair up the wrong words.\n+        return title\n+    result = ''\n+    end = 0\n+    keep = False\n+    for index, (original, titled) in enumerate(\n+        zip(original_words, titled_words)\n+    ):\n+        # A word that directly follows an apostrophe, like the \"s\" in\n+        # \"NASA's\", belongs to the word before it and only keeps its\n+        # capitals if that word does.\n+        is_suffix = index > 0 and (\n+            words[original_words[index - 1].end():original.start()] == \"'\"\n+        )\n+        keep = original.group().isupper() and (keep or not is_suffix)\n+        if keep:\n+            result += title[end:titled.start()] + original.group()\n+            end = titled.end()\n+    return result + title[end:]\n \n \n def transliterate(string: str) -> str:\n",
+  "patch_sha256": "69c050fe80cc6663cc13a81bd9f3278890ce6cc1999d1ec6ebcc6a26675bad49",
+  "produced_by": "fresh-attempt:config-A",
+  "description": "",
+  "labels": [],
+  "attempt": {
+    "attempt_id": "CS-03-fresh-A-final-2",
+    "configuration": "config-A",
+    "variant": "final",
+    "instruction_sha256": "b8b69aaf43ec6ac7afb877a38457d12a93fdd272adc8842c67599d97a5c9d1e0",
+    "started_at": "2026-11-21T09:15:53.944Z",
+    "ended_at": "2026-11-21T09:33:11.560Z",
+    "wall_s": 1037.616,
+    "turns": 22,
+    "tool_calls": 30,
+    "tokens": 3713685,
+    "ended": "finished",
+    "patch_sha256": "69c050fe80cc6663cc13a81bd9f3278890ce6cc1999d1ec6ebcc6a26675bad49",
+    "run_record": "build-session:subagents/workflows/wf_f1cebdf3-316/agent-ac7ef40d4944cd42c.jsonl",
+    "audit": {
+      "profile": "fresh-attempt:v1",
+      "passed": true,
+      "findings": [
+        "fresh-attempt audit: no hit, no exposure",
+        "file tools (Read, Edit, Write) named only workspace paths; no Grep or Glob call; every shell command began with a cd into the workspace",
+        "every listing and search covered only its own workspace",
+        "verdict: passed, nothing outside the workspace was read"
+      ],
+      "audited_at": "2026-11-21T10:38:22Z",
+      "record": "data/fresh/fresh-v1/audit_CS-03.json"
+    }
+  }
+}

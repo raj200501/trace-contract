@@ -1,0 +1,40 @@
+{
+  "schema_version": "0.1.0",
+  "candidate_id": "CS-03-fresh-A-u1-4",
+  "task_id": "CS-03",
+  "origin": "fresh_attempt",
+  "split": "eval",
+  "patch": "diff --git a/inflection/__init__.py b/inflection/__init__.py\nindex ffac5ce22e60816f18267d742455e4936b6d1c1a..f1f7d45468bd3e3e24830487934c24dce96830c1 100644\n--- a/inflection/__init__.py\n+++ b/inflection/__init__.py\n@@ -358,7 +358,8 @@ def titleize(word: str) -> str:\n     \"\"\"\n     Capitalize all the words and replace some characters in the string to\n     create a nicer looking title. :func:`titleize` is meant for creating pretty\n-    output.\n+    output. Words written in all capitals, such as acronyms, are kept as they\n+    are.\n \n     Examples::\n \n@@ -370,13 +371,30 @@ def titleize(word: str) -> str:\n       'The Man Without A Past'\n       >>> titleize(\"raiders_of_the_lost_ark\")\n       'Raiders Of The Lost Ark'\n+      >>> titleize(\"NASA rocket launch\")\n+      'NASA Rocket Launch'\n \n     \"\"\"\n-    return re.sub(\n+    words = _underscore_keep_case(word)\n+    title = re.sub(\n         r\"\\b('?\\w)\",\n         lambda match: match.group(1).capitalize(),\n-        humanize(underscore(word)).title()\n+        humanize(words.lower()).title()\n     )\n+    # The title has the words of ``words`` in the same order (humanize() may\n+    # drop a trailing \"id\"), so put back the ones written in all capitals.\n+    # Checking that the two words match guards against the rare Unicode case\n+    # mappings that split a word in two.\n+    originals: typing.Iterator[str] = iter(re.findall(r\"[^\\W_]+\", words))\n+\n+    def keep_capitals(match: typing.Match[str]) -> str:\n+        original = next(originals, '')\n+        titled = match.group()\n+        if original.isupper() and original.casefold() == titled.casefold():\n+            return original\n+        return titled\n+\n+    return re.sub(r\"[^\\W_]+\", keep_capitals, title)\n \n \n def transliterate(string: str) -> str:\n@@ -413,10 +431,14 @@ def underscore(word: str) -> str:\n         'IoError'\n \n     \"\"\"\n+    return _underscore_keep_case(word).lower()\n+\n+\n+def _underscore_keep_case(word: str) -> str:\n+    \"\"\"Like :func:`underscore`, but without lowercasing the result.\"\"\"\n     word = re.sub(r\"([A-Z]+)([A-Z][a-z])\", r'\\1_\\2', word)\n     word = re.sub(r\"([a-z\\d])([A-Z])\", r'\\1_\\2', word)\n-    word = word.replace(\"-\", \"_\")\n-    return word.lower()\n+    return word.replace(\"-\", \"_\")\n \n \n _irregular('person', 'people')\n",
+  "patch_sha256": "a4af2220c353e46edcfb2a862d1c1618d20ae0304bbf28a10c74138e8179e414",
+  "produced_by": "fresh-attempt:config-A",
+  "description": "",
+  "labels": [],
+  "attempt": {
+    "attempt_id": "CS-03-fresh-A-u1-4",
+    "configuration": "config-A",
+    "variant": "u1",
+    "instruction_sha256": "61ba5c652b5b02c92fd85290e478f04968403bdb449225a644ae5b9245ef5b6b",
+    "started_at": "2026-11-21T09:44:35.034Z",
+    "ended_at": "2026-11-21T09:54:08.537Z",
+    "wall_s": 573.503,
+    "turns": 15,
+    "tool_calls": 20,
+    "tokens": 1868557,
+    "ended": "finished",
+    "patch_sha256": "a4af2220c353e46edcfb2a862d1c1618d20ae0304bbf28a10c74138e8179e414",
+    "run_record": "build-session:subagents/workflows/wf_f1cebdf3-316/agent-a223fc31f35106df2.jsonl",
+    "audit": {
+      "profile": "fresh-attempt:v1",
+      "passed": true,
+      "findings": [
+        "fresh-attempt audit: 1 hit, no exposure; read in the transcript",
+        "false positive: the flagged token is a sed editing script (two substitutions), taken for a relative path and resolved from the shell's start directory, the study repository; the command's only file was the workspace's own scratch script, named by absolute path, and it read nothing else",
+        "file tools (Read, Edit) named only workspace paths; no Grep or Glob call; six shell commands did not begin with a cd and so ran in the shell's start directory: they called the workspace's wrappers by absolute path (their arguments are container paths) or edited and ran a scratch file by absolute path, used no relative path and read nothing there; every other shell command began with a cd into the workspace",
+        "every listing and search covered only its own workspace",
+        "verdict: passed, nothing outside the workspace was read"
+      ],
+      "audited_at": "2026-11-21T10:38:22Z",
+      "record": "data/fresh/fresh-v1/audit_CS-03.json"
+    }
+  }
+}

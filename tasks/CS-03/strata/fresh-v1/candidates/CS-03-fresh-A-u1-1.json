@@ -1,0 +1,42 @@
+{
+  "schema_version": "0.1.0",
+  "candidate_id": "CS-03-fresh-A-u1-1",
+  "task_id": "CS-03",
+  "origin": "fresh_attempt",
+  "split": "eval",
+  "patch": "diff --git a/inflection/__init__.py b/inflection/__init__.py\nindex ffac5ce22e60816f18267d742455e4936b6d1c1a..030c3a6f22e8f04e8b696594506fff472bf51e93 100644\n--- a/inflection/__init__.py\n+++ b/inflection/__init__.py\n@@ -371,12 +371,47 @@ def titleize(word: str) -> str:\n       >>> titleize(\"raiders_of_the_lost_ark\")\n       'Raiders Of The Lost Ark'\n \n+    Words in capitals, such as acronyms, are kept as they are, unless the\n+    whole string is in capitals::\n+\n+      >>> titleize(\"read the HTTP spec\")\n+      'Read The HTTP Spec'\n+      >>> titleize(\"NASA rocket launch\")\n+      'NASA Rocket Launch'\n+      >>> titleize(\"THE LORD OF THE RINGS\")\n+      'The Lord Of The Rings'\n+\n     \"\"\"\n-    return re.sub(\n+    title = re.sub(\n         r\"\\b('?\\w)\",\n         lambda match: match.group(1).capitalize(),\n         humanize(underscore(word)).title()\n     )\n+    return _restore_acronyms(word, title)\n+\n+\n+def _restore_acronyms(word: str, title: str) -> str:\n+    \"\"\"\n+    Put the acronyms of ``word`` back into ``title``, the titleized ``word``.\n+\n+    An acronym is a word of two or more characters in capitals, like ``NASA``\n+    or the ``HTML`` of ``HTMLTidy``. If ``word`` has no lowercase letters,\n+    acronyms can't be told from other words, so ``title`` is left as it is.\n+    \"\"\"\n+    if not any(char.islower() for char in word):\n+        return title\n+    words = re.findall(r\"[^\\W_]+\", _underscore_keeping_case(word))\n+    if re.search(r\"_id$\", underscore(word)):\n+        words.pop()  # humanize() drops the \"_id\" suffix\n+    parts = re.split(r\"([^\\W_]+)\", title)\n+    # A few Unicode case mappings split a word, e.g. \"İ\".lower() is \"i\" plus a\n+    # combining dot, and then the words of title can't be matched up.\n+    if len(parts) != 2 * len(words) + 1:\n+        return title\n+    for index, original in enumerate(words):\n+        if len(original) > 1 and original.isupper():\n+            parts[2 * index + 1] = original\n+    return ''.join(parts)\n \n \n def transliterate(string: str) -> str:\n@@ -413,10 +448,14 @@ def underscore(word: str) -> str:\n         'IoError'\n \n     \"\"\"\n+    return _underscore_keeping_case(word).lower()\n+\n+\n+def _underscore_keeping_case(word: str) -> str:\n+    \"\"\"Do what :func:`underscore` does, except lowercasing the result.\"\"\"\n     word = re.sub(r\"([A-Z]+)([A-Z][a-z])\", r'\\1_\\2', word)\n     word = re.sub(r\"([a-z\\d])([A-Z])\", r'\\1_\\2', word)\n-    word = word.replace(\"-\", \"_\")\n-    return word.lower()\n+    return word.replace(\"-\", \"_\")\n \n \n _irregular('person', 'people')\n",
+  "patch_sha256": "a436f6e03e4ce9bad064cfa5f45cfff8e2facdcac8d831a6f521bf291c64e9ef",
+  "produced_by": "fresh-attempt:config-A",
+  "description": "",
+  "labels": [],
+  "attempt": {
+    "attempt_id": "CS-03-fresh-A-u1-1",
+    "configuration": "config-A",
+    "variant": "u1",
+    "instruction_sha256": "362f18875274e7f52345b848f2a0c36167a95ee21777a22afe79e0bbc1d5232d",
+    "started_at": "2026-11-21T08:58:32.366Z",
+    "ended_at": "2026-11-21T09:09:13.441Z",
+    "wall_s": 641.075,
+    "turns": 16,
+    "tool_calls": 20,
+    "tokens": 2198217,
+    "ended": "finished",
+    "patch_sha256": "a436f6e03e4ce9bad064cfa5f45cfff8e2facdcac8d831a6f521bf291c64e9ef",
+    "run_record": "build-session:subagents/workflows/wf_f1cebdf3-316/agent-ac94f00685270b04f.jsonl",
+    "audit": {
+      "profile": "fresh-attempt:v1",
+      "passed": true,
+      "findings": [
+        "fresh-attempt audit: 5 exposures, no hit; read in the transcript",
+        "false positive (1 exposure): a reStructuredText include directive of the attempt's own repo/docs/index.rst, printed by a command that ended in the workspace root, was resolved beside the workspace; it names the repo's own LICENSE, and no tool input named the resolved path",
+        "false positive (4 exposures): the attempt printed its own workspace's manifest with a shell command that began with a cd into the workspace; the flagged paths are the four old workspace paths that the manifest records as substituted in U1, shown in its text only; no tool input named or opened them",
+        "file tools (Read, Edit) named only workspace paths; no Grep or Glob call; every shell command began with a cd into the workspace",
+        "every listing and search covered only its own workspace",
+        "the host's python3 (a system location) was run on workspace files only",
+        "verdict: passed, nothing outside the workspace was read"
+      ],
+      "audited_at": "2026-11-21T10:38:22Z",
+      "record": "data/fresh/fresh-v1/audit_CS-03.json"
+    }
+  }
+}

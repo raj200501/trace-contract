@@ -1,0 +1,39 @@
+{
+  "schema_version": "0.1.0",
+  "candidate_id": "CS-03-fresh-B-u1-1",
+  "task_id": "CS-03",
+  "origin": "fresh_attempt",
+  "split": "eval",
+  "patch": "diff --git a/inflection/__init__.py b/inflection/__init__.py\nindex ffac5ce22e60816f18267d742455e4936b6d1c1a..81138b6367113c7a169dd078e0dbec3ac3a43f92 100644\n--- a/inflection/__init__.py\n+++ b/inflection/__init__.py\n@@ -370,12 +370,38 @@ def titleize(word: str) -> str:\n       'The Man Without A Past'\n       >>> titleize(\"raiders_of_the_lost_ark\")\n       'Raiders Of The Lost Ark'\n+      >>> titleize(\"NASA rocket launch\")\n+      'NASA Rocket Launch'\n+      >>> titleize(\"read the HTTP spec\")\n+      'Read The HTTP Spec'\n+\n+    All-caps acronyms (two or more uppercase letters, optionally followed by\n+    digits, as a whole word) are kept exactly as written.\n \n     \"\"\"\n-    return re.sub(\n+    # Shield acronyms from the lowercasing done by underscore()/humanize()\n+    # using placeholders made only of control characters and digits, which\n+    # those functions leave untouched.\n+    acronyms: typing.List[str] = []\n+\n+    def _shield(match: typing.Match[str]) -> str:\n+        acronyms.append(match.group(0))\n+        return \"\\x00{}\\x00\".format(len(acronyms) - 1)\n+\n+    shielded = re.sub(\n+        r\"(?<![A-Za-z0-9])[A-Z]{2,}[A-Z0-9]*(?![A-Za-z0-9])\", _shield, word\n+    )\n+\n+    titleized = re.sub(\n         r\"\\b('?\\w)\",\n         lambda match: match.group(1).capitalize(),\n-        humanize(underscore(word)).title()\n+        humanize(underscore(shielded)).title()\n+    )\n+\n+    return re.sub(\n+        r\"\\x00(\\d+)\\x00\",\n+        lambda match: acronyms[int(match.group(1))],\n+        titleized\n     )\n \n \n",
+  "patch_sha256": "9251f88e5d01508128aca1af1e47441210d84d026a60d49c866ccf8a9161c2d5",
+  "produced_by": "fresh-attempt:config-B",
+  "description": "",
+  "labels": [],
+  "attempt": {
+    "attempt_id": "CS-03-fresh-B-u1-1",
+    "configuration": "config-B",
+    "variant": "u1",
+    "instruction_sha256": "ab931603b6d8f255978eacb15336280f380a89ea96d81a3d6f70e4b87ab039c3",
+    "started_at": "2026-11-21T08:58:32.371Z",
+    "ended_at": "2026-11-21T08:59:28.271Z",
+    "wall_s": 55.9,
+    "turns": 12,
+    "tool_calls": 15,
+    "tokens": 1022255,
+    "ended": "finished",
+    "patch_sha256": "9251f88e5d01508128aca1af1e47441210d84d026a60d49c866ccf8a9161c2d5",
+    "run_record": "build-session:subagents/workflows/wf_f1cebdf3-316/agent-a1dcb3a428b9ba657.jsonl",
+    "audit": {
+      "profile": "fresh-attempt:v1",
+      "passed": true,
+      "findings": [
+        "fresh-attempt audit: no hit, no exposure",
+        "file tools (Read, Edit) named only workspace paths; no Grep or Glob call; every shell command began with a cd into the workspace",
+        "every listing and search covered only its own workspace",
+        "verdict: passed, nothing outside the workspace was read"
+      ],
+      "audited_at": "2026-11-21T10:38:22Z",
+      "record": "data/fresh/fresh-v1/audit_CS-03.json"
+    }
+  }
+}
