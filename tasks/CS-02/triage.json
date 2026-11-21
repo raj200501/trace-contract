@@ -1,0 +1,25 @@
+{
+  "task_id": "CS-02",
+  "provenance_record_id": "prov-CS-02",
+  "generator": "scripts/triage_controlled.py",
+  "note": "A rule:v1 triage proposal, not ground truth. It is kept in this sidecar so that the frozen provenance record beside it is not edited (decision log D47, D50).",
+  "inputs": {
+    "transcript": "data/controlled/transcripts/CS-02.jsonl",
+    "transcript_sha256": "e99d0aeae64eab5759bd8f7ec92a12e77fb293b5376f2a0b1d6066c720383ea8",
+    "base_snapshot_manifest_sha256": "8f30c35e16795f234c71e7b6945a6355ca0b4d139feda3b36642ea01e3b8d64b",
+    "contract": "contracts/full_session.json",
+    "contract_sha256": "e7e68a29998bc2bb6d782f7bf5754937229c7f90685fc623b6c11f2bf1d27b59"
+  },
+  "triage": {
+    "category": "candidate",
+    "method": "rule:v1",
+    "confidence": "medium",
+    "reasons": [
+      "candidate: 1 correction candidate(s) under the cue rule",
+      "note: 1 unresolved, unscored contract requirement(s) (R11); the objective itself is resolved"
+    ],
+    "correction_event_ids": [
+      "CS-02-session/L000160.00"
+    ]
+  }
+}

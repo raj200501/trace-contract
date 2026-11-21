@@ -31,7 +31,7 @@ import time
 import traceback
 import xml.etree.ElementTree as ET
 
-HARNESS_VERSION = "tc-harness/0.3.4"
+HARNESS_VERSION = "tc-harness/0.3.5"
 HARNESS_DIR = os.path.dirname(os.path.abspath(__file__))
 
 

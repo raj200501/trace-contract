@@ -7,10 +7,16 @@
   ``evaluate --strata`` without changing ``task.json`` or the task's candidate files; the run
   manifest records each graded candidate's stratum and file, and the analysis reports each
   stratum separately.
+* The two natural sub-populations (``natural:pr-review``, ``natural:chat``) are populations of
+  their own: a run that mixes them is refused or pooled with each reported separately.
+* A symbolic link at ``strata/``, ``strata/<name>/`` or ``strata/<name>/candidates/`` is refused.
+* ``tracecontract add-stratum-candidate`` captures a candidate from a state directory with the
+  patch policy, writes the stratum's candidate file and manifest, keeps the attempt record of a
+  fresh attempt, and never touches ``task.json``.
 * A run with the default population (controlled) and no stratum keeps the earlier output format,
   so the frozen pilot regenerates byte for byte.
 
-Synthetic fixtures only: the "natural" task is hand-written and only declares that population (no
+Synthetic fixtures only: the "natural" tasks are hand-written and only declare that population (no
 natural data is read), and a stub replaces the Docker grader. One test regenerates the frozen
 pilot's analysis from a temporary copy of its run records, reading the repository's tasks only.
 These tests check code behaviour and are not research evidence.
@@ -29,9 +35,9 @@ import tracecontract.cli as cli
 import tracecontract.evaluate as evaluate
 from tracecontract.analysis import PILOT_LABELER, MixedPopulations, analyze
 from tracecontract.schemas import (
-    Candidate, CandidateOrigin, ContractVariant, EvidenceSpan, Fidelity, Label, LabelerKind, Outcome, Population,
-    Requirement, RequirementKind, RequirementStatus, Snapshot, SnapshotSource, Split, TaskContract, TaskManifest,
-    VerificationResult, VerifierCondition, sha256_text,
+    AttemptAudit, AttemptRecord, Candidate, CandidateOrigin, ContractVariant, EvidenceSpan, Fidelity, Label, LabelerKind,
+    Outcome, Population, Requirement, RequirementKind, RequirementStatus, Snapshot, SnapshotSource, Split, TaskContract,
+    TaskManifest, VerificationResult, VerifierCondition, sha256_text,
 )
 from tracecontract.snapshot import manifest, manifest_sha256
 from tracecontract.store import dump, load, read_jsonl
@@ -49,8 +55,18 @@ OWN = {"reference": (CandidateOrigin.reference, Split.dev, "valid", []),
        "alt": (CandidateOrigin.valid_alternative, Split.eval, "valid", []),
        "nm": (CandidateOrigin.constructed_near_miss, Split.eval, "invalid", ["R-init"]),
        "noop-eval": (CandidateOrigin.noop, Split.eval, "invalid", [])}
-FRESH = {"fresh-good": (CandidateOrigin.valid_alternative, Split.eval, "valid", []),
-         "fresh-bad": (CandidateOrigin.constructed_near_miss, Split.eval, "invalid", ["R-corr"])}
+FRESH = {"fresh-good": (CandidateOrigin.fresh_attempt, Split.eval, "valid", []),
+         "fresh-bad": (CandidateOrigin.fresh_attempt, Split.eval, "invalid", ["R-corr"])}
+SHA = "ab" * 32
+
+
+def _attempt(cid: str, patch: str, *, passed: bool | None = True) -> AttemptRecord:
+    """An attempt record of a fresh attempt; ``passed=None`` leaves it without an audit verdict."""
+    audit = None if passed is None else AttemptAudit(profile="fresh-attempt:v1", passed=passed, audited_at=T0,
+                                                     findings=[] if passed else ["read a file outside the workspace"])
+    return AttemptRecord(attempt_id=f"att-{cid}", configuration="config-A", variant="u1", instruction_sha256=SHA,
+                         started_at=T0, ended_at=T0, turns=3, tool_calls=7, ended="finished", patch_sha256=sha256_text(patch),
+                         run_record="private-runs/fresh-v1/x.json", audit=audit)
 
 
 def _passes(task_id: str, verifier_id: str, kind: str) -> bool:
@@ -66,7 +82,8 @@ def _cand(path: Path, cid: str, task_id: str, origin: CandidateOrigin, split: Sp
     patch = "" if origin == CandidateOrigin.noop else f"--- a/mod.py\n+++ b/mod.py\n@@ -1 +1 @@\n-X = 1\n+X = 2  # {cid}\n"
     c = Candidate(candidate_id=cid, task_id=task_id, origin=origin, split=split, patch=patch, patch_sha256=sha256_text(patch),
                   produced_by="fixture", labels=[Label(value=label, violated_requirements=violated, labeler=PILOT_LABELER,
-                                                       labeler_kind=LabelerKind.model, timestamp=T0)])
+                                                       labeler_kind=LabelerKind.model, timestamp=T0)],
+                  attempt=_attempt(cid, patch) if origin == CandidateOrigin.fresh_attempt else None)
     dump(c, path)
     return c
 
@@ -215,6 +232,16 @@ def test_a_single_population_is_never_refused(repo):
     assert f"Population: natural: {NAT}." in (run / "analysis.md").read_text()
 
 
+def test_the_natural_sub_populations_are_never_pooled_silently(repo):
+    """natural:pr-review (AIDev) and natural:chat (Trace Commons) are populations of their own (protocol v0.8 §16.3)."""
+    tasks = [_make_task(repo, "PR-1", Population.natural_pr_review), _make_task(repo, "CH-1", Population.natural_chat)]
+    run = _evaluate(repo, tasks, "r-subpops")
+    with pytest.raises(MixedPopulations, match=r"2 populations \(natural:chat: CH-1; natural:pr-review: PR-1\)"):
+        analyze(run, repo / "tasks", allow_proposed=True, n_boot=50)
+    a = analyze(run, repo / "tasks", allow_proposed=True, n_boot=50, pool_populations=True)
+    assert {p: g["tasks"] for p, g in a["by_population"].items()} == {"natural:chat": ["CH-1"], "natural:pr-review": ["PR-1"]}
+
+
 # ---------------------------------------------------------------------------
 # Candidate strata
 # ---------------------------------------------------------------------------
@@ -234,7 +261,7 @@ def test_a_stratum_grades_extra_candidates_and_never_changes_the_task(repo, grad
     entry = m["tasks"][0]
     assert entry["strata"] == {"fresh": {"manifest": "strata/fresh.json",
                                          "manifest_sha256": hashlib.sha256(stratum_file.read_bytes()).hexdigest()}}
-    assert entry["candidates"][f"{CTL}-fresh-bad"] == {"origin": "constructed_near_miss", "stratum": "fresh",
+    assert entry["candidates"][f"{CTL}-fresh-bad"] == {"origin": "fresh_attempt", "stratum": "fresh",
                                                         "path": f"strata/fresh/candidates/{CTL}-fresh-bad.json",
                                                         "patch_sha256": load(td / entry["candidates"][f"{CTL}-fresh-bad"]["path"],
                                                                              Candidate).patch_sha256}
@@ -256,8 +283,11 @@ def test_a_stratum_grades_extra_candidates_and_never_changes_the_task(repo, grad
     assert [x["candidate"] for x in a["labels"][CTL]["strata"]["fresh"]["candidates"]] == sorted(fresh)
     md = (run / "analysis.md").read_text()
     assert "## By candidate stratum" in md and "| Candidate | Stratum | Origin |" in md
-    assert f"| {CTL}-fresh-bad | fresh | constructed_near_miss | invalid | correction_violating | pass | task_failure |" in md
-    assert f"| {CTL} (stratum fresh) | 1 | 1 | 0 | 0 | - |" in md
+    assert f"| {CTL}-fresh-bad | fresh | fresh_attempt | invalid | correction_violating | pass | task_failure |" in md
+    # Every fresh attempt is queued for human review (protocol §15.4); their solve rates are reported.
+    assert f"| {CTL} (stratum fresh) | 1 | 1 | 0 | 0 | {CTL}-fresh-bad, {CTL}-fresh-good |" in md
+    assert a["fresh_attempts"]["by_configuration_variant"]["config-A/u1"]["solved"] == 1
+    assert a["fresh_attempts"]["n_excluded"] == 0
 
 
 def test_only_strata_grades_the_strata_and_the_reference(repo, graded):
@@ -328,7 +358,8 @@ def test_a_resumed_run_keeps_its_strata_and_refuses_a_changed_candidate(repo, gr
     path = td / "strata" / "fresh" / "candidates" / f"{CTL}-fresh-bad.json"
     c = load(path, Candidate)
     patch = c.patch + "+# changed\n"
-    dump(c.model_copy(update={"patch": patch, "patch_sha256": sha256_text(patch)}), path)
+    dump(c.model_copy(update={"patch": patch, "patch_sha256": sha256_text(patch),
+                              "attempt": c.attempt.model_copy(update={"patch_sha256": sha256_text(patch)})}), path)
     before = (run / "manifest.json").read_bytes()
     code = _exit_code(["evaluate", str(td), "--run-id", "r-resume", "--pilot", "--strata", "fresh"])
     assert code not in (0, None) and "is not the one this run recorded" in str(code)
@@ -337,6 +368,165 @@ def test_a_resumed_run_keeps_its_strata_and_refuses_a_changed_candidate(repo, gr
     assert code not in (0, None) and "no longer holds the candidate" in str(code)
     with pytest.raises(StratumError, match=f"no longer holds the candidate {CTL}-fresh-bad"):
         analyze(run, repo / "tasks", allow_proposed=True, n_boot=50)
+
+
+@pytest.mark.parametrize("level", ["strata", "strata/fresh", "strata/fresh/candidates", "strata/fresh.json"])
+def test_a_symlinked_stratum_directory_or_manifest_is_refused(repo, graded, level):
+    """A link at any level would let candidate files from outside the task directory load (verification of round 4)."""
+    td = _make_task(repo, CTL, Population.controlled)
+    _add_stratum(td)
+    real, elsewhere = td / level, repo / "elsewhere" / level
+    elsewhere.parent.mkdir(parents=True, exist_ok=True)
+    shutil.move(str(real), str(elsewhere))
+    real.symlink_to(elsewhere)
+    code = _exit_code(["evaluate", str(td), "--run-id", "r-link-dir", "--pilot", *STRATA])
+    assert code not in (0, None) and f"{level} is a symbolic link" in str(code)
+    assert not (repo / "results" / "runs" / "r-link-dir").exists() and not graded
+
+
+def _state(repo: Path, tid: str, name: str = "state", value: str = "3") -> Path:
+    """A final workspace state: the base snapshot with mod.py changed, plus git metadata, caches and a test file."""
+    st = repo / "attempts" / name
+    shutil.copytree(repo / "snapshots" / tid, st)
+    (st / "mod.py").write_text(f"X = {value}\n")
+    (st / ".git").mkdir()
+    (st / ".git" / "HEAD").write_text("ref: refs/heads/main\n")
+    (st / "__pycache__").mkdir()
+    (st / "__pycache__" / "mod.cpython-313.pyc").write_bytes(b"\x00\x01")
+    (st / "stray.pyc").write_bytes(b"\x00")
+    (st / ".pytest_cache").mkdir()
+    (st / ".pytest_cache" / "README.md").write_text("cache\n")
+    (st / "tests").mkdir()
+    (st / "tests" / "test_mod.py").write_text("def test_x():\n    assert True\n")
+    return st
+
+
+def _attempt_file(repo: Path, name: str = "attempt.json", **over) -> Path:
+    rec = {"attempt_id": "fresh-v1-CTL-1-A-u1-1", "configuration": "config-A", "variant": "u1", "instruction_sha256": SHA,
+           "started_at": T0, "ended_at": T0, "turns": 12, "tool_calls": 40, "tokens": 50000, "ended": "finished",
+           "run_record": "private-runs/fresh-v1/CTL-1-A-u1-1.json"}
+    path = repo / "attempts" / name
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps({**rec, **over}))
+    return path
+
+
+def _register(td: Path, st: Path, cid: str, *extra: str, stratum: str = "fresh-v1") -> int | str | None:
+    return _exit_code(["add-stratum-candidate", str(td), stratum, cid, "--state-dir", str(st), *extra])
+
+
+def test_add_stratum_candidate_captures_the_state_and_never_touches_task_json(repo, capsys):
+    td = _make_task(repo, CTL, Population.controlled)
+    before = _hashes(td)
+    st = _state(repo, CTL)
+    capsys.readouterr()
+    code = _register(td, st, f"{CTL}-fa-1", "--origin", "fresh_attempt", "--attempt-record", str(_attempt_file(repo)),
+                     "--stratum-description", "fresh-agent attempts (protocol §15.4)")
+    assert code == 0
+    out = json.loads(capsys.readouterr().out)
+    rel = f"strata/fresh-v1/candidates/{CTL}-fa-1.json"
+    assert (out["candidate"], out["registered"], out["attempt_id"]) == (rel, "created", "fresh-v1-CTL-1-A-u1-1")
+    assert out["removed_protected_paths"] == ["tests/test_mod.py"] and out["rejected_by_the_grader"] == []
+    assert _hashes(td) == before  # task.json and the task's own candidate files keep their hashes
+    c = load(td / rel, Candidate)
+    assert (c.origin, c.split, c.produced_by, c.labels) == (CandidateOrigin.fresh_attempt, Split.eval, "fresh-attempt:config-A", [])
+    assert c.patch.count("diff --git") == 1 and "+X = 3" in c.patch  # .git, caches and the protected test file left out
+    for left_out in (".git", "pyc", "pytest_cache", "test_mod"):
+        assert left_out not in c.patch
+    assert c.attempt.attempt_id == "fresh-v1-CTL-1-A-u1-1" and c.attempt.patch_sha256 == c.patch_sha256
+    sm = load(td / "strata" / "fresh-v1.json", StratumManifest)
+    assert (sm.stratum, sm.task_id, sm.description, sm.candidates) == ("fresh-v1", CTL, "fresh-agent attempts (protocol §15.4)", [rel])
+    # Registered again with the audit verdict: the record is replaced, the labels kept, the manifest unchanged.
+    labeled = c.model_copy(update={"labels": [Label(value="valid", labeler=PILOT_LABELER, labeler_kind=LabelerKind.model, timestamp=T0)]})
+    dump(labeled, td / rel)
+    manifest = (td / "strata" / "fresh-v1.json").read_bytes()
+    audit = {"profile": "fresh-attempt:v1", "passed": True, "audited_at": T0}
+    assert _register(td, st, f"{CTL}-fa-1", "--origin", "fresh_attempt",
+                     "--attempt-record", str(_attempt_file(repo, "audited.json", audit=audit))) == 0
+    assert json.loads(capsys.readouterr().out)["registered"] == "updated"
+    again = load(td / rel, Candidate)
+    assert again.attempt.audit.passed is True and again.labels == labeled.labels
+    assert (td / "strata" / "fresh-v1.json").read_bytes() == manifest and _hashes(td) == before
+    # A second attempt is appended; the stratum is graded like any other.
+    assert _register(td, _state(repo, CTL, "second", "4"), f"{CTL}-fa-2", "--origin", "fresh_attempt",
+                     "--attempt-record", str(_attempt_file(repo, "second.json", attempt_id="fresh-v1-CTL-1-A-u1-2", audit=audit))) == 0
+    assert json.loads(capsys.readouterr().out)["registered"] == "added"
+    assert load(td / "strata" / "fresh-v1.json", StratumManifest).candidates == [rel, f"strata/fresh-v1/candidates/{CTL}-fa-2.json"]
+    run = _evaluate(repo, [td], "r-registered", "--strata", "fresh-v1", "--only-strata")
+    a = analyze(run, repo / "tasks", allow_proposed=True, n_boot=50)
+    assert a["fresh_attempts"]["n_attempts"] == 2 and a["fresh_attempts"]["by_configuration_variant"]["config-A/u1"]["solved"] == 1
+
+
+REGISTER_REFUSALS = {  # case: (candidate id, arguments, attempt-record changes or None for no record, refusal)
+    "an attempt without a record": (f"{CTL}-fa-1", ["--origin", "fresh_attempt"], None, "needs --attempt-record"),
+    "a record for another origin": (f"{CTL}-pr-1", ["--origin", "natural_pre_review", "--produced-by", "x"], {},
+                                    "only a fresh attempt takes one"),
+    "no producer without a record": (f"{CTL}-pr-1", ["--origin", "natural_pre_review"], None, "--produced-by is needed"),
+    "a configuration label that is not config-A to config-Z": (f"{CTL}-fa-1", ["--origin", "fresh_attempt"],
+                                                                {"configuration": "config-vendor-model"}, "config-A to config-Z"),
+    "a session-local path": (f"{CTL}-fa-1", ["--origin", "fresh_attempt"], {"run_record": "/tmp/" + "claude-0/runs/x.json"},
+                             "session-local path"),
+    "a session id": (f"{CTL}-fa-1", ["--origin", "fresh_attempt"],
+                     {"audit": {"profile": "p", "passed": False, "audited_at": T0, "findings": ["0b6f3a2e-1c2d-4e5f-8a9b-0c1d2e3f4a5b"]}},
+                     "session id"),
+    "another patch in the record": (f"{CTL}-fa-1", ["--origin", "fresh_attempt"], {"patch_sha256": "0" * 64}, "another patch sha256"),
+    "the id of an own candidate": (f"{CTL}-pre", ["--origin", "fresh_attempt"], {}, "already used by the task's own candidates"),
+    "an id without the task prefix": ("fa-1", ["--origin", "fresh_attempt"], {}, f"does not start with '{CTL}-'"),
+    "a constructed origin": (f"{CTL}-nm-9", ["--origin", "constructed_near_miss", "--produced-by", "x"], None, "invalid choice"),
+}
+
+
+@pytest.mark.parametrize("case", list(REGISTER_REFUSALS))
+def test_add_stratum_candidate_refusals_write_nothing(repo, capsys, case):
+    td = _make_task(repo, CTL, Population.controlled)
+    before = _hashes(td)
+    cid, args, record, message = REGISTER_REFUSALS[case]
+    extra = [] if record is None else ["--attempt-record", str(_attempt_file(repo, **record))]
+    code = _register(td, _state(repo, CTL), cid, *args, *extra)
+    assert code not in (0, None) and (message in str(code) or message in capsys.readouterr().err)
+    assert not (td / "strata").exists() and _hashes(td) == before
+
+
+def test_add_stratum_candidate_keeps_a_registered_patch_and_refuses_links(repo):
+    td = _make_task(repo, CTL, Population.controlled)
+    record = ["--origin", "fresh_attempt", "--attempt-record", str(_attempt_file(repo))]
+    assert _register(td, _state(repo, CTL), f"{CTL}-fa-1", *record) == 0
+    files = {p: p.read_bytes() for p in (td / "strata").rglob("*") if p.is_file()}
+    code = _register(td, _state(repo, CTL, "changed", "5"), f"{CTL}-fa-1", *record)
+    assert code not in (0, None) and "a registered candidate's patch never changes" in str(code)
+    assert {p: p.read_bytes() for p in (td / "strata").rglob("*") if p.is_file()} == files
+    _add_stratum(td, "other", {f"{CTL}-o-1": (CTL, *GOOD)})
+    code = _register(td, _state(repo, CTL, "again"), f"{CTL}-o-1", *record)
+    assert code not in (0, None) and "already used by stratum 'other'" in str(code)
+    # A candidates directory that links out of the task: nothing is written through the link.
+    elsewhere = repo / "elsewhere"
+    elsewhere.mkdir()
+    (td / "strata" / "linked").mkdir()
+    (td / "strata" / "linked" / "candidates").symlink_to(elsewhere)
+    code = _register(td, _state(repo, CTL, "linked"), f"{CTL}-fa-9", *record, stratum="linked")
+    assert code not in (0, None) and "strata/linked/candidates is a symbolic link" in str(code)
+    assert not any(elsewhere.iterdir()) and not (td / "strata" / "linked.json").exists()
+
+
+def test_excluded_attempts_count_nowhere_but_are_reported(repo, graded):
+    td = _make_task(repo, CTL, Population.controlled)
+    cands = {f"{CTL}-{k}": (CTL, *v) for k, v in FRESH.items()}
+    path = _add_stratum(td, cands=cands)
+    for cid, passed in ((f"{CTL}-fresh-good", None), (f"{CTL}-fresh-bad", False)):  # not audited; audit failed
+        f = td / "strata" / "fresh" / "candidates" / f"{cid}.json"
+        c = load(f, Candidate)
+        dump(c.model_copy(update={"attempt": _attempt(cid, c.patch, passed=passed)}), f)
+    assert path.is_file()
+    run = _evaluate(repo, [td], "r-excluded", "--strata", "fresh")
+    a = analyze(run, repo / "tasks", allow_proposed=True, n_boot=50)
+    f = a["fresh_attempts"]
+    assert (f["n_attempts"], f["n_excluded"], f["by_configuration_variant"]) == (0, 2, {})
+    assert {x["candidate_id"]: x["reason"].split(":")[0] for x in f["excluded"]} == {
+        f"{CTL}-fresh-bad": "the fresh-attempt audit found a read of forbidden material", f"{CTL}-fresh-good": "not audited"}
+    listed = {r["candidate"] for rs in a["per_task"][CTL].values() for r in rs}
+    assert not listed & set(cands) and "fresh" not in a["by_stratum"] and "strata" not in a["labels"][CTL]
+    assert _rate(a, "initial_plain", "false_acceptance") == (1, 2)  # the task's own candidates only
+    assert f"{CTL}/strata/fresh/candidates/{CTL}-fresh-bad.json" in a["meta"]["inputs"]["files_sha256"]  # read, so hashed
 
 
 # ---------------------------------------------------------------------------

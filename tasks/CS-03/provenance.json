@@ -20,18 +20,7 @@
   "task_family_id": "CS-03",
   "eligibility": "pending_review",
   "rejection_reasons": [],
-  "triage": {
-    "category": "candidate",
-    "method": "rule:v1",
-    "confidence": "medium",
-    "reasons": [
-      "candidate: 1 correction candidate(s) under the cue rule",
-      "note: 1 unresolved, unscored contract requirement(s) (R3); the objective itself is resolved"
-    ],
-    "correction_event_ids": [
-      "CS-03-session/L000056.00"
-    ]
-  },
+  "triage": null,
   "accessed": "2026-11-13T02:20:55+00:00",
   "notes": "{\"access_findings\": [], \"scenario_sha256\": \"656b29202874bcde581cc0b5d47e49ac3108564fcf0d9ebcef8aaea2679fea0a\", \"workspace_snapshot_manifest\": \"7e61aca7b70ce1b5b5ba314144454dd0cbbfc26619e0ac5ca17e2ae03e29d80e\", \"transcript_sanitization\": {\"sanitizer\": \"sanitize:v2\", \"source_sha256\": \"20effeb33fc1213f0999de9a9c8f9289760cd40a4bcc4b1765fbce0b0228658e\", \"sanitized_sha256\": \"fa3824d00a50e82714935fa58e59d22bfc7e4e6047cd8b4e01a463e2e49380e7\", \"entries\": 98, \"dropped\": {\"attachment\": 19, \"meta_content\": 1}, \"redactions\": {\"emails\": 1}, \"previous\": {\"source_sha256\": \"20effeb33fc1213f0999de9a9c8f9289760cd40a4bcc4b1765fbce0b0228658e\", \"sanitized_sha256\": \"046e7d977468b0f3c6eb6c640e3cbb9e3e315e5e08f6cd7213092de2e8aaf667\", \"entries\": 98, \"dropped\": {\"attachment\": 19}, \"redactions\": {\"emails\": 1}}, \"note\": \"re-sanitised with sanitize:v2 (decision log D38)\", \"trace_sha256_note\": \"trace_sha256 updated to the sanitize:v2 file on 2026-11-18 (decision log D40); the superseded hash is in previous.sanitized_sha256\"}}"
 }

@@ -561,6 +561,138 @@
       "title": "Replaying the session's writes on the base reproduces the captured states (additional)"
     }
   ],
+  "files": [
+    {
+      "changed_by": [
+        "pre-correction patch",
+        "edited by the session"
+      ],
+      "evidence": [
+        {
+          "check": "b",
+          "event_id": "CS-01-session/L000085.00",
+          "reason": "old_string occurs as the Edit tool requires and new_string does not occur"
+        },
+        {
+          "check": "c",
+          "event_id": "CS-01-session/L000021.00",
+          "reason": "matches the base content"
+        },
+        {
+          "check": "c",
+          "event_id": "CS-01-session/L000081.00",
+          "reason": "matches the base content"
+        }
+      ],
+      "n_evidence": 3,
+      "path": "README.md",
+      "reason": "3 passed item(s) in check b or c attest its base content",
+      "status": "passed"
+    },
+    {
+      "changed_by": [
+        "reference patch",
+        "pre-correction patch",
+        "edited by the session"
+      ],
+      "evidence": [
+        {
+          "check": "b",
+          "event_id": "CS-01-session/L000055.00",
+          "reason": "old_string occurs as the Edit tool requires and new_string does not occur"
+        },
+        {
+          "check": "b",
+          "event_id": "CS-01-session/L000134.00",
+          "reason": "old_string occurs as the Edit tool requires and new_string does not occur"
+        },
+        {
+          "check": "c",
+          "event_id": "CS-01-session/L000010.00",
+          "reason": "matches the base content"
+        },
+        {
+          "check": "c",
+          "event_id": "CS-01-session/L000021.00",
+          "reason": "matches the base content"
+        },
+        {
+          "check": "c",
+          "event_id": "CS-01-session/L000036.00",
+          "reason": "matches the base content"
+        }
+      ],
+      "n_evidence": 7,
+      "path": "src/humanize/filesize.py",
+      "reason": "7 passed item(s) in check b or c attest its base content",
+      "status": "passed"
+    },
+    {
+      "changed_by": [
+        "reference patch",
+        "pre-correction patch",
+        "edited by the session"
+      ],
+      "evidence": [
+        {
+          "check": "b",
+          "event_id": "CS-01-session/L000150.00",
+          "reason": "old_string occurs as the Edit tool requires and new_string does not occur"
+        },
+        {
+          "check": "c",
+          "event_id": "CS-01-session/L000015.00",
+          "reason": "matches the base content"
+        },
+        {
+          "check": "c",
+          "event_id": "CS-01-session/L000021.00",
+          "reason": "matches the base content"
+        },
+        {
+          "check": "c",
+          "event_id": "CS-01-session/L000148.00",
+          "reason": "matches the base content"
+        }
+      ],
+      "n_evidence": 4,
+      "path": "tests/test_filesize.py",
+      "reason": "4 passed item(s) in check b or c attest its base content",
+      "status": "passed"
+    },
+    {
+      "changed_by": [
+        "pre-correction patch",
+        "edited by the session"
+      ],
+      "evidence": [
+        {
+          "check": "b",
+          "event_id": "CS-01-session/L000083.00",
+          "reason": "old_string occurs as the Edit tool requires and new_string does not occur"
+        },
+        {
+          "check": "c",
+          "event_id": "CS-01-session/L000021.00",
+          "reason": "matches the base content"
+        },
+        {
+          "check": "c",
+          "event_id": "CS-01-session/L000025.00",
+          "reason": "matches the base content"
+        },
+        {
+          "check": "c",
+          "event_id": "CS-01-session/L000079.00",
+          "reason": "matches the base content"
+        }
+      ],
+      "n_evidence": 4,
+      "path": "tests/test_i18n.py",
+      "reason": "4 passed item(s) in check b or c attest its base content",
+      "status": "passed"
+    }
+  ],
   "inputs": {
     "base_manifest_sha256": "0e87b6c1b51f5c87ce008d9a1145a9a38543fc92299a356f587a72ed8a229179",
     "base_n_files": 90,
@@ -585,7 +717,7 @@
       "passed": true
     }
   },
-  "method": "reconstruction:v1",
+  "method": "reconstruction:v2",
   "notes": [
     "snapshot.json gives n_files 89, but the rebuilt base it hashes has 90 files; n_files counts the tree before the overlays"
   ],

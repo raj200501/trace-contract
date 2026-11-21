@@ -6,6 +6,8 @@ import hashlib
 import json
 from pathlib import Path
 
+import pytest
+
 from tracecontract.controlled import audit_generator_transcript_strict
 
 REPO = "/home/user/trace-contract"
@@ -255,3 +257,76 @@ def test_reaudit_writes_output_exposures_apart_and_leaves_the_audit_record_uncha
         ("<scratchpad>/shared/a.txt", "agent-A")]  # redacted, attributed to its writer
     assert entry["output_scratch_own"] == 1  # b.txt, written by the agent itself
     assert SCRATCH not in report.read_text()
+
+
+# --------------------------------------------------------------------------- the fresh-attempt profile (protocol §16.2)
+
+WS = "/srv/tc-attempts/CS-01-fresh-A-u1-1"
+SIBLING = "/srv/tc-attempts/CS-01-fresh-A-u1-2"
+# (tool, input, output, flagged in the inputs, flagged in the outputs)
+FRESH = [
+    ("Bash", {"command": f"cd {WS}/repo && git status --short && grep -rn naturalsize src/"}, " M src/humanize/filesize.py\n",
+     False, False),
+    ("Read", {"file_path": f"{WS}/instruction.md"}, "     1\tPlease keep all your work inside the workspace.\n", False, False),
+    ("Bash", {"command": f"{WS}/run_tests.sh -q tests/test_filesize.py"},  # container output: /repo is the workspace's repo/
+     "tests/test_filesize.py ....F\n/repo/tests/test_filesize.py:12: AssertionError\n"
+     "/usr/local/lib/python3.12/site-packages/_pytest/x.py:3\n/tmp/pytest-of-sandbox/pytest-0/t0/db.json\n", False, False),
+    ("Bash", {"command": f"{WS}/run_python.sh -c 'import humanize; print(1)'"}, "1\n", False, False),
+    ("Bash", {"command": "ls /usr/lib/python3"}, "dist-packages\n", False, False),
+    ("Edit", {"file_path": f"{WS}/repo/src/humanize/filesize.py", "old_string": "a", "new_string": "b"}, "updated", False, False),
+    ("Bash", {"command": "cat README.md"}, "# TraceContract\n", True, False),  # the cwd of a subagent's Bash call is the repository
+    ("Bash", {"command": "git status --short"}, "?? notes.md\n", True, False),
+    ("Glob", {"pattern": "**/*.py"}, "", True, False),
+    ("Read", {"file_path": "/home/user/ext/aidev-v5/issue.parquet"}, "", True, False),
+    ("Bash", {"command": "ls /home/user/.tc_sealed/archive"}, "", True, False),
+    ("Bash", {"command": "cd /home/user/cs_workspaces/CS-01/humanize && git log -p"}, "", True, False),
+    ("Read", {"file_path": f"{SIBLING}/repo/src/humanize/filesize.py"}, "", True, False),  # another attempt's work
+    ("Bash", {"command": "cat /tmp/notes.txt"}, "", True, False),  # outside the workspace
+    ("Write", {"file_path": "/tmp/out.txt", "content": "x"}, "File created successfully at: /tmp/out.txt", True, False),
+    ("Bash", {"command": f"cd {WS}/repo && cat /root/.claude/settings.json"}, "", True, False),
+    ("Bash", {"command": f"cd {WS}/repo && ls"}, f"see {REPO}/tasks/CS-01/candidates/CS-01-eval-alt-1.json\n", False, True),
+    ("Bash", {"command": f"{WS}/run_tests.sh -q"}, "/tmp/claude-0/x/scratchpad/notes.md\n", False, True),
+]
+
+
+def test_fresh_attempt_profile_forbids_everything_outside_the_workspace(tmp_path):
+    from tracecontract.controlled import FRESH_OUTSIDE, audit_fresh_attempt_transcript
+
+    for i, (tool, ti, out, hit, exposed) in enumerate(FRESH):
+        t = tmp_path / f"f{i}.jsonl"
+        _session(t, [(tool, ti, out)])
+        hits, exposures = audit_fresh_attempt_transcript(t, task="CS-01", workspace=WS)
+        assert bool(hits) == hit and bool(exposures) == exposed, (ti, hits, exposures)
+    t = tmp_path / "outside.jsonl"
+    _session(t, [("Bash", {"command": "cat /tmp/notes.txt"}, "")])
+    assert [h["why"] for h in audit_fresh_attempt_transcript(t, task="CS-01", workspace=WS)[0]] == [FRESH_OUTSIDE]
+    # The generator audit of the same transcripts is unchanged: it never flags the repository root or /tmp.
+    t = tmp_path / "generator.jsonl"
+    _session(t, [("Bash", {"command": "cat README.md"}, ""), ("Bash", {"command": "cat /tmp/notes.txt"}, "")])
+    assert audit_generator_transcript_strict(t, task="CS-01", own=OWN) == []
+    with pytest.raises(ValueError, match="dedicated directory"):
+        audit_fresh_attempt_transcript(t, task="CS-01", workspace="/attempt")
+
+
+def test_reaudit_fresh_mode_reports_and_excludes_flagged_attempts(tmp_path):
+    sr = _load_strict_reaudit()
+    tdir = tmp_path / "transcripts"
+    tdir.mkdir()
+    clean, bad = tdir / "agent-clean.jsonl", tdir / "agent-bad.jsonl"
+    _session(clean, [FRESH[0][:3], FRESH[2][:3]])
+    _session(bad, [FRESH[0][:3], ("Bash", {"command": "cat README.md"}, "ok")])
+    sha = lambda p: hashlib.sha256(p.read_bytes()).hexdigest()  # noqa: E731
+    records = [{"attempt_id": "CS-01-fresh-A-u1-1", "task_id": "CS-01", "workspace": WS, "transcript_sha256": sha(clean)},
+               {"attempt_id": "CS-01-fresh-A-u1-3", "task_id": "CS-01", "workspace": WS, "transcript_sha256": sha(bad)},
+               {"attempt_id": "CS-01-fresh-A-u1-4", "task_id": "CS-01", "workspace": WS, "transcript_sha256": "0" * 64}]
+    attempts, report = tmp_path / "attempts.json", tmp_path / "fresh_audit.json"
+    attempts.write_text(json.dumps({"attempts": records}))
+    assert sr.main(["--fresh", str(attempts), "--transcripts", str(tdir), "--report", str(report), "--scratch", SCRATCH]) == 1
+    rep = json.loads(report.read_text())
+    assert rep["excluded"] == ["CS-01-fresh-A-u1-3", "CS-01-fresh-A-u1-4"] and rep["not_audited"] == ["CS-01-fresh-A-u1-4"]
+    assert rep["attempts"]["CS-01-fresh-A-u1-1"]["flagged"] is False and not rep["attempts"]["CS-01-fresh-A-u1-1"]["hits"]
+    assert [h["path"] for h in rep["attempts"]["CS-01-fresh-A-u1-3"]["hits"]] == [f"{REPO}/README.md"]
+    attempts.write_text(json.dumps(records[:1]))
+    assert sr.main(["--fresh", str(attempts), "--transcripts", str(tdir), "--report", str(report)]) == 0
+    with pytest.raises(SystemExit):
+        sr.main(["--fresh", str(attempts), "--transcripts", str(tdir)])  # no --report

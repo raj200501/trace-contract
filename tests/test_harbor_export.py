@@ -1,10 +1,12 @@
-"""Offline checks of the Harbor export (decision log D20, D40).
+"""Offline checks of the Harbor export (decision log D20, D40, D51).
 
 The wheelhouse download is replaced by an empty directory, so the export tests need
 neither network nor Docker; scripts/harbor_validate.sh runs the real Harbor trials.
 The grade-script tests run the exported ``tc_harbor_grade.py`` locally against a fake
 ``/logs`` layout, with a fake ``tc_runner.py`` that plants rewards, reports
-incomplete results or hangs. They need root, as the grade script does in Harbor.
+incomplete results or hangs. They need root, as the grade script does in Harbor. Two
+of them bind-mount the fake ``/logs/verifier`` as Harbor does, and plant reward entries
+that root cannot remove; they are skipped where bind mounts are not available.
 """
 
 from __future__ import annotations
@@ -22,6 +24,8 @@ import pytest
 import tracecontract.harbor_export as hx
 from tracecontract.patches import DEFAULT_PROTECTED
 from tracecontract.sandbox.docker_runner import HARNESS_VERSION
+from tracecontract.schemas import Eligibility, Population, ProvenanceRecord, RedactionStatus
+from tracecontract.store import dump
 
 FX = Path(__file__).parent / "fixtures" / "harbor_fx01"
 
@@ -45,6 +49,17 @@ def _fixture_copy(tmp_path: Path, **task_changes) -> Path:
 def _export(fx: Path, out: Path, **kw) -> Path:
     kw.setdefault("network", "local-validation")
     return hx.export_task(fx / "tasks" / "FX-01", "v1", out, snapshot_root=fx / "snapshots", cache_dir=out.parent / "cache", **kw)
+
+
+def _reject_source(fx: Path) -> None:
+    """Give the copied fixture task a provenance record whose source is rejected (its status stays as it is)."""
+    task = json.loads((fx / "tasks" / "FX-01" / "task.json").read_text())
+    dump(ProvenanceRecord(record_id="prov-FX-01", session_id="FX-01-session", population=Population(task["population"]),
+                          source_url="synthetic fixture", source_id="FX-01", permission_basis="synthetic fixture",
+                          capture_method="hand-written fixture", redaction_status=RedactionStatus.redacted_by_us,
+                          task_family_id="FX-01", eligibility=Eligibility.rejected, rejection_reasons=["licence"],
+                          accessed="2026-11-21T00:00:00+00:00"),
+         fx / "tasks" / "FX-01" / task["provenance"])
 
 
 def test_export_layout_from_committed_fixture(tmp_path, no_wheelhouse):
@@ -89,6 +104,33 @@ def test_rejected_task_is_refused(tmp_path, no_wheelhouse):
     ctl = _fixture_copy(tmp_path / "ctl", status="rejected", population="controlled")
     with pytest.raises(ValueError, match="only a fixture"):
         _export(ctl, tmp_path / "ctl_task", allow_rejected_fixture=True)
+
+
+def test_task_whose_source_is_rejected_is_refused(tmp_path, no_wheelhouse):
+    """The acceptance gate's refusals apply, not only the task's status: a draft task whose provenance is rejected is
+    refused, and a fixture is exported only with the override."""
+    ctl = _fixture_copy(tmp_path / "ctl", population="controlled")  # status stays "draft"
+    _reject_source(ctl)
+    out = tmp_path / "ctl_task"
+    with pytest.raises(ValueError, match="the source is rejected"):
+        _export(ctl, out)
+    with pytest.raises(ValueError, match="only a fixture"):
+        _export(ctl, out, allow_rejected_fixture=True)
+    assert not out.exists()  # refused before anything was written
+    fx = _fixture_copy(tmp_path / "fx")
+    _reject_source(fx)
+    with pytest.raises(ValueError, match="the source is rejected"):
+        _export(fx, tmp_path / "fx_task")
+    toml = (_export(fx, tmp_path / "fx_task", allow_rejected_fixture=True) / "task.toml").read_text()
+    assert 'tracecontract_status = "draft"' in toml
+
+
+def test_verifier_image_has_no_setuid_or_setgid_files(tmp_path, no_wheelhouse):
+    """Harbor sets neither no-new-privileges nor a capability drop for the verifier container, so the exported image
+    strips the base image's setuid and setgid bits (chage, passwd, su, mount, ...)."""
+    dockerfile = (_export(FX, tmp_path / "harbor_task") / "tests" / "Dockerfile").read_text()
+    # The last step, so that no file installed or copied in before it keeps such a bit.
+    assert dockerfile.endswith("\nRUN find / -xdev -perm /6000 -type f -exec chmod a-s {} +\n"), dockerfile
 
 
 def test_verifier_changed_after_freezing_is_refused(tmp_path, no_wheelhouse):
@@ -151,6 +193,18 @@ elif MODE == "collect":
     plant()
     os.symlink(os.path.join(BOX, "target.txt"), os.path.join(OUT, "reward.lnk"))
     os.mkdir(os.path.join(OUT, "reward.d"))
+    results([], [{"nodeid": "test_add.py", "longrepr": "RuntimeError: collection-time sandbox call failed"}])
+elif MODE in ("mount-file", "mount-dir"):
+    # Planted rewards that root cannot remove (unlink and rmdir fail with EBUSY): a file bind-mounted onto reward.txt,
+    # or a directory reward.json with a bind mount inside it.
+    plant()
+    if MODE == "mount-file":
+        subprocess.run(["mount", "--bind", os.path.join(BOX, "planted.txt"), os.path.join(OUT, "reward.txt")], check=True)
+    else:
+        os.remove(os.path.join(OUT, "reward.json"))
+        os.makedirs(os.path.join(OUT, "reward.json", "inner"))
+        subprocess.run(["mount", "--bind", os.path.join(BOX, "mnt_src"), os.path.join(OUT, "reward.json", "inner")],
+                       check=True)
     results([], [{"nodeid": "test_add.py", "longrepr": "RuntimeError: collection-time sandbox call failed"}])
 elif MODE == "timeout":
     uid = int(os.environ["TC_SANDBOX_UID"])
@@ -272,3 +326,57 @@ def test_grade_planted_reward_and_timeout(box):
     attempts = (box / "attempts" / "log").read_text().split()
     assert attempts and set(attempts) == {"denied"}  # the sandbox UID could not write /logs/verifier
     assert _live_pids(_seen(box)["sandbox_uid"]) == []  # nothing the sandbox UID started survived the grade script
+
+
+def _bind(src: Path, dst: Path) -> None:
+    """Bind-mount ``src`` at ``dst``, as Harbor bind-mounts the trial directory at /logs/verifier."""
+    if shutil.which("mount") is None or subprocess.run(["mount", "--bind", str(src), str(dst)],
+                                                       capture_output=True).returncode != 0:
+        pytest.skip("bind mounts are not available here")
+
+
+def _unmount(*paths: Path) -> None:
+    for p in paths:
+        subprocess.run(["umount", "-l", str(p)], capture_output=True)
+
+
+@pytest.fixture()
+def mounted_out(box):
+    """``box`` with /logs/verifier bind-mounted from a separate trial directory; every mount is undone afterwards."""
+    out = box / "logs" / "verifier"
+    trial = box / "trial_verifier"
+    trial.mkdir()
+    trial.chmod(0o777)  # as Harbor 0.25.0 leaves it before the test
+    (box / "planted.txt").write_text("1.0\n")
+    (box / "mnt_src").mkdir()
+    _bind(trial, out)
+    yield out
+    _unmount(out / "reward.txt", out / "reward.json" / "inner", out)
+
+
+def test_grade_unremovable_planted_reward_on_a_bind_mounted_out(box, mounted_out):
+    """Exporter 0.2.0's last resort renamed /logs/verifier away, which fails on Harbor's bind mount (EBUSY): the error
+    escaped before tc_detail.json was written and the directory released, and left the planted reward.txt for Harbor
+    to read. Now reward.json, which Harbor reads before reward.txt, is made unparseable instead."""
+    proc, out = _run_grade(box, "mount-file")
+    assert proc.returncode == 3, proc.stderr
+    assert (out / "reward.txt").read_text() == "1.0\n"  # still mounted: root cannot remove it
+    with pytest.raises(ValueError):
+        json.loads((out / "reward.json").read_text())  # Harbor: VerifierOutputParseError, never a reward
+    d = _detail(out)
+    assert d["removed_reward_files"] == ["reward.json"] and d["unremovable_reward_files"] == ["reward.txt"]
+    assert d["reward_invalidated"] is True and d["error"].startswith("incomplete grade")
+    assert out.stat().st_mode & 0o777 == 0o755  # released for the host side
+
+
+def test_grade_failed_invalidation_still_writes_the_detail_and_releases_out(box, mounted_out):
+    """When reward.json itself can be neither removed nor overwritten (a directory holding a mount point), the error
+    is recorded, and tc_detail.json is still written and /logs/verifier released. Harbor then fails to read reward.json
+    (a directory) and records no reward."""
+    proc, out = _run_grade(box, "mount-dir")
+    assert proc.returncode != 0
+    assert (out / "reward.json").is_dir() and not (out / "reward.txt").exists()
+    d = _detail(out)
+    assert d["removed_reward_files"] == ["reward.txt"] and d["unremovable_reward_files"] == ["reward.json"]
+    assert d["reward_invalidated"] is False and "reward_invalidation_error" in d
+    assert out.stat().st_mode & 0o777 == 0o755

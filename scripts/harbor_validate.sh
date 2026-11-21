@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Validate the Harbor export on the synthetic fixture task FX-01 (population `fixture`, not evidence).
-# Decision log D20, D35, D39, D40, D45. Requires Docker and a Harbor 0.25.0 CLI, given as $HARBOR (for example a
+# Decision log D20, D35, D39, D40, D45, D51. Requires Docker and a Harbor 0.25.0 CLI, given as $HARBOR (for example a
 # separate venv: `uv venv /tmp/harbor-venv && uv pip install --python /tmp/harbor-venv/bin/python harbor==0.25.0`,
 # then HARBOR=/tmp/harbor-venv/bin/harbor). Uses the `local-validation` network variant (D20). HARBOR_TELEMETRY=0
 # keeps Harbor from sending usage events.
@@ -23,9 +23,15 @@
 # control/ (for example CONTROL_REV=c5ede4c, the last exporter before tc-harbor-export/0.2.0, which shows that
 # the probes catch the defect fixed in 0.2.0; there they are expected to yield reward 1.0).
 #
+# Two further checks are recorded in summary.json: every grade that completed ran the harness the exporter
+# bundles (tc_detail.json's harness_version), and the exported verifier image, built from its Dockerfile as Harbor
+# builds it, holds no setuid or setgid file (exporter 0.3.0; Harbor sets neither no-new-privileges nor a
+# capability drop for the verifier container).
+#
 # The lint output, each trial's result.json and verifier/tc_detail.json, and summary.json are copied to
 # results/harbor_validation/<exporter version>/, with the temporary directory and the Harbor installation
-# replaced by placeholders, so the claim can be checked. Exit code 1 if any trial differs from its expected outcome.
+# replaced by placeholders, so the claim can be checked. Exit code 1 if any trial or check differs from what is
+# expected.
 set -euo pipefail
 : "${HARBOR:?set HARBOR to a Harbor 0.25.0 CLI}"
 export HARBOR_TELEMETRY=0 NO_COLOR=1
@@ -169,9 +175,18 @@ if [ -n "${CONTROL_REV:-}" ]; then
   run_trial control/probe_timeout_task control-probe-timeout -a oracle --ae CANDIDATE=FX-01-probe-timeout
   run_trial control/probe_collect_task control-probe-collect -a oracle --ae CANDIDATE=FX-01-probe-collect
 fi
+# The exported verifier image, built from its own Dockerfile (offline: the wheelhouse is part of the context).
+SETUID_TAG="tc-harbor-setuid-check:$$"
+set +e
+docker build -q --network none -t "$SETUID_TAG" harbor_task/tests > logs/setuid_check_build.log 2>&1 \
+  && docker run --rm --network none "$SETUID_TAG" find / -xdev -perm /6000 -type f > setuid_files.txt 2>> logs/setuid_check_build.log
+SETUID_RC=$?
+docker rmi "$SETUID_TAG" > /dev/null 2>&1
+set -e
+echo "setuid check rc=$SETUID_RC" | tee -a logs/setuid_check_build.log
 HARBOR_VENV="$(cd "$(dirname "$(readlink -f "$HARBOR")")/.." && pwd)"
 "$ROOT/.venv/bin/python" - "$ROOT" "$WORK" "$("$HARBOR" --version 2>/dev/null || echo unknown)" "$LINT_RC" \
-  "$HARBOR_VENV" "${CONTROL_REV:-}" <<'PY'
+  "$HARBOR_VENV" "${CONTROL_REV:-}" "$SETUID_RC" <<'PY'
 import json, shutil, subprocess, sys
 from pathlib import Path
 from tracecontract.harbor_export import EXPORTER_VERSION
@@ -179,6 +194,8 @@ from tracecontract.sandbox.docker_runner import HARNESS_VERSION
 
 root, work, harbor_version, lint_rc, harbor_venv, control_rev = Path(sys.argv[1]), Path(sys.argv[2]), sys.argv[3].strip(), \
     int(sys.argv[4]), sys.argv[5], sys.argv[6]
+setuid_rc = int(sys.argv[7])
+setuid_files = (work / "setuid_files.txt").read_text().split() if (work / "setuid_files.txt").exists() else None
 out = root / "results" / "harbor_validation" / EXPORTER_VERSION.replace("/", "-")
 if out.exists():
     shutil.rmtree(out)
@@ -212,20 +229,26 @@ def record(t: str, dest: Path) -> dict:
     dest.mkdir(parents=True)
     (dest / "result.json").write_text(json.dumps(res, indent=2) + "\n")
     det = work / "trials" / t / "verifier" / "tc_detail.json"
+    detail = json.loads(det.read_text()) if det.exists() else {}
     if det.exists():
-        (dest / "tc_detail.json").write_text(json.dumps(scrub(json.loads(det.read_text())), indent=2) + "\n")
+        (dest / "tc_detail.json").write_text(json.dumps(scrub(detail), indent=2) + "\n")
     exc = res.get("exception_info") or {}
-    return {"rewards": (res.get("verifier_result") or {}).get("rewards"), "exception": exc.get("exception_type")}
+    return {"rewards": (res.get("verifier_result") or {}).get("rewards"), "exception": exc.get("exception_type"),
+            "graded_with": detail.get("harness_version")}  # set only when the harness completed
 
 
 shutil.copyfile(work / "lint.txt", out / "lint.txt")
 summary = {"exporter_version": EXPORTER_VERSION, "harness_version": HARNESS_VERSION, "harbor_version": harbor_version,
-           "lint_rc": lint_rc, "trials": {}, "outcomes": {}, "expected": EXPECTED}
+           "lint_rc": lint_rc, "trials": {}, "outcomes": {}, "expected": EXPECTED,
+           "verifier_image_setuid_check": {"rc": setuid_rc, "setuid_or_setgid_files": setuid_files, "expected": []}}
 for t in EXPECTED:
     o = record(t, out / t)
     summary["trials"][t] = o["rewards"]
     summary["outcomes"][t] = o
-ok = lint_rc == 0 and all(summary["trials"][t] == e for t, e in EXPECTED.items())
+graded_with = {o["graded_with"] for o in summary["outcomes"].values() if o["graded_with"] is not None}
+summary["graded_with_bundled_harness"] = graded_with == {HARNESS_VERSION}
+ok = (lint_rc == 0 and all(summary["trials"][t] == e for t, e in EXPECTED.items()) and summary["graded_with_bundled_harness"]
+      and setuid_rc == 0 and setuid_files == [])
 if control_rev:
     rev = subprocess.run(["git", "-C", str(root), "rev-parse", "--short", control_rev], capture_output=True, text=True,
                          check=True).stdout.strip()

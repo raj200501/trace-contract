@@ -168,6 +168,48 @@ def cmd_add_candidate(a) -> None:
     _out({"candidate": rel, "patch_sha256": c.patch_sha256, "patch_lines": c.patch.count("\n")})
 
 
+def cmd_add_stratum_candidate(a) -> None:
+    """Register a candidate of a candidate stratum from a state directory; never writes task.json (protocol §15.4)."""
+    from .schemas import AttemptRecord
+    from .strata import StratumError, attempt_record_problems, capture_patch, register_candidate
+    from .tasks import verify_snapshot
+
+    def refuse(why: str) -> SystemExit:
+        return SystemExit(f"add-stratum-candidate refused, nothing written: {why}")
+
+    tdir, m = _task(a.task)
+    origin, state = CandidateOrigin(a.origin), Path(a.state_dir)
+    if not state.is_dir():
+        raise refuse(f"{state} is not a directory")
+    if not verify_snapshot(tdir, SNAPSHOTS):
+        raise refuse(f"the base snapshot of {m.task_id} is missing or modified; run `tracecontract snapshot {a.task}` first")
+    if (origin == CandidateOrigin.fresh_attempt) != bool(a.attempt_record):
+        raise refuse("a fresh_attempt candidate needs --attempt-record, and only a fresh attempt takes one")
+    if not (a.produced_by or a.attempt_record):
+        raise refuse("--produced-by is needed for a candidate without an attempt record")
+    patch, policy = capture_patch(SNAPSHOTS / m.task_id, state)
+    attempt = None
+    try:
+        if a.attempt_record:
+            raw = json.loads(Path(a.attempt_record).read_text(encoding="utf-8"))
+            if not isinstance(raw, dict):
+                raise refuse(f"{a.attempt_record} does not hold a JSON object")
+            attempt = AttemptRecord.model_validate({**raw, "patch_sha256": raw.get("patch_sha256", sha256_text(patch))})
+            problems = attempt_record_problems(attempt)
+            if problems:
+                raise refuse(f"attempt record {a.attempt_record}: " + "; ".join(problems))
+        c = Candidate(candidate_id=a.candidate_id, task_id=m.task_id, origin=origin, split=Split(a.split), patch=patch,
+                      patch_sha256=sha256_text(patch), description=a.description or "", attempt=attempt,
+                      produced_by=a.produced_by or f"fresh-attempt:{attempt.configuration}")
+        own = {load(tdir / p, Candidate).candidate_id for p in m.candidates}
+        rel, what = register_candidate(tdir, a.stratum, c, own_ids=own, description=a.stratum_description or "")
+    except (StratumError, ValueError, OSError) as exc:  # a pydantic ValidationError is a ValueError
+        raise refuse(str(exc)) from None
+    _out({"candidate": rel, "stratum_manifest": f"strata/{a.stratum}.json", "registered": what, "patch_sha256": c.patch_sha256,
+          "patch_lines": patch.count("\n"), "removed_protected_paths": policy.removed_protected,
+          "rejected_by_the_grader": policy.errors, "attempt_id": attempt.attempt_id if attempt else None})
+
+
 def cmd_freeze(a) -> None:
     from .verifier import freeze
 
@@ -442,13 +484,14 @@ def cmd_analyze(a) -> None:
 
     try:
         res = analyze(Path(a.run_dir), REPO / "tasks", allow_proposed=a.allow_proposed_labels, n_boot=a.n_boot,
-                      pool_populations=a.pool_populations)
+                      pool_populations=a.pool_populations, rules=None if a.reporting_rules == "auto" else a.reporting_rules)
     except (MixedPopulations, StratumError) as exc:  # nothing was written
         raise SystemExit(f"analyze refused: {exc}") from None
     pooled = {"population_pooling": res["meta"]["population_pooling"]} if "population_pooling" in res["meta"] else {}
+    rules = res["meta"].get("reporting_rules", {"rules": "pilot"})
     _out({"analysis": str(Path(a.run_dir) / "analysis.json"), "markdown": str(Path(a.run_dir) / "analysis.md"),
           "conditions": {c: {"fa": d["false_acceptance"]["rate"], "fr": d["false_rejection"]["rate"]} for c, d in res["conditions"].items()},
-          **pooled})
+          "reporting_rules": rules["rules"], **pooled})
 
 
 def cmd_report(a) -> None:
@@ -459,16 +502,21 @@ def cmd_report(a) -> None:
 
 
 def cmd_reconstruction_check(a) -> None:
-    """Check a task's base snapshot against its session (reconstruction:v1); exit 1 if a check fails."""
-    from .reconstruction import check_task
+    """Check a task's base snapshot against its session (reconstruction:v2).
+
+    Exit 1 if a check failed; else exit 2 if the report is incomplete (a check was unavailable or
+    not checkable, or a changed file has no passed item in check b or c); exit 0 only if it passed.
+    """
+    from .reconstruction import RECORD, check_task
     from .store import write_json
 
     tdir = Path(a.task).resolve()
     rep = check_task(tdir, REPO, SNAPSHOTS).to_dict()
     if a.write:
-        write_json(rep, tdir / "reconstruction_check.json")
+        write_json(rep, tdir / RECORD)
     _out(rep)
-    sys.exit(1 if rep["status"] == "failed" else 0)
+    unavailable = any(c["status"] == "unavailable" for c in rep["checks"])
+    sys.exit(1 if rep["status"] == "failed" else 2 if rep["status"] == "incomplete" or unavailable else 0)
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -508,6 +556,21 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--label", choices=["valid", "invalid", "ambiguous"]); p.add_argument("--violates", nargs="*")
     p.add_argument("--labeler"); p.add_argument("--labeler-kind", default="construction"); p.add_argument("--note")
     p.set_defaults(fn=cmd_add_candidate)
+    from .schemas import NATURAL_ORIGINS
+
+    p = sub.add_parser("add-stratum-candidate", help="register a candidate of a candidate stratum from a state directory "
+                       "(strata/<stratum>/candidates/ and strata/<stratum>.json); task.json is never changed")
+    p.add_argument("task"); p.add_argument("stratum"); p.add_argument("candidate_id")
+    p.add_argument("--state-dir", required=True, help="the final state to capture, e.g. an attempt workspace's repo/ "
+                   "(.git, caches and the paths the patch policy removes before grading are left out)")
+    p.add_argument("--origin", required=True, choices=sorted(o.value for o in NATURAL_ORIGINS),
+                   help="a natural origin: D19 labels these by its natural-candidate rule, so no construction label is needed")
+    p.add_argument("--attempt-record", metavar="FILE", help="JSON attempt record (schemas.AttemptRecord), required for and "
+                   "only for fresh_attempt; patch_sha256 may be left out, it is the captured patch's")
+    p.add_argument("--split", default="eval", choices=[x.value for x in Split])
+    p.add_argument("--produced-by", help="who produced the state (default for an attempt: fresh-attempt:<configuration>)")
+    p.add_argument("--description"); p.add_argument("--stratum-description", help="description of a new stratum manifest")
+    p.set_defaults(fn=cmd_add_stratum_candidate)
     p = sub.add_parser("freeze", help="freeze a verifier before final evaluation")
     p.add_argument("task"); p.add_argument("verifier_id"); p.set_defaults(fn=cmd_freeze)
     p = sub.add_parser("validate-task", help="validate a task directory (contracts, candidates, verifiers, snapshot)")
@@ -557,7 +620,9 @@ def main(argv: list[str] | None = None) -> None:
 
     p = sub.add_parser("evaluate", help="score every frozen verifier on every evaluation candidate (sandboxed)")
     p.add_argument("tasks", nargs="+"); p.add_argument("--run-id", required=True); p.add_argument("--split", default="eval")
-    p.add_argument("--conditions", nargs="*"); p.add_argument("--repeats", type=int, default=1)
+    p.add_argument("--conditions", nargs="*", metavar="CONDITION", choices=[c.value for c in VerifierCondition],
+                   help="only verifiers of these conditions, e.g. initial_plain ... repo_tests, diff_derived (B3)")
+    p.add_argument("--repeats", type=int, default=1)
     p.add_argument("--allow-unfrozen", action="store_true")
     p.add_argument("--pilot", action="store_true", help="automated pilot only: also evaluate tasks that have not passed the "
                    "acceptance gate (recorded in the run manifest); rejected tasks are always refused")
@@ -570,8 +635,12 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("run_dir"); p.add_argument("--allow-proposed-labels", action="store_true", help="automated pilot only")
     p.add_argument("--n-boot", type=int, default=2000)
     p.add_argument("--pool-populations", action="store_true", help="analyse a run whose tasks come from more than one "
-                   "population (natural, controlled, fixture): the pooled tables are marked and each population is also "
-                   "reported separately; without it such a run is refused")
+                   "population (controlled, natural:pr-review, natural:chat, natural, fixture): the pooled tables are marked "
+                   "and each population is also reported separately; without it such a run is refused")
+    p.add_argument("--reporting-rules", choices=["auto", "pilot", "v0.8"], default="auto",
+                   help="pilot: the pre-specified analysis of the recorded runs; v0.8: the reporting rules of new runs "
+                   "(protocol §15.7, §16.6: per-family table, exact sign-flip p-values, distinct patches, oracle-gated view, "
+                   "bootstrap appendix); auto (default): v0.8 for a run graded with tc-harness/0.3.4 or later")
     p.set_defaults(fn=cmd_analyze)
     p = sub.add_parser("report", help="static HTML report for a run (from recorded artifacts only)")
     p.add_argument("run_dir"); p.add_argument("--out", required=True); p.set_defaults(fn=cmd_report)

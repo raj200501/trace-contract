@@ -1,0 +1,8 @@
+{
+  "exporter": "tc-harbor-export/0.3.0",
+  "removed_protected": [
+    "tests/test_calc.py"
+  ],
+  "error": "grader timed out after 30 s",
+  "reaped_sandbox_processes": 2
+}

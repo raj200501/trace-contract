@@ -424,6 +424,153 @@
       "title": "Replaying the session's writes on the base reproduces the captured states (additional)"
     }
   ],
+  "files": [
+    {
+      "changed_by": [
+        "reference patch",
+        "pre-correction patch",
+        "edited by the session"
+      ],
+      "evidence": [
+        {
+          "check": "b",
+          "event_id": "CS-04-session/L000077.00",
+          "reason": "old_string occurs as the Edit tool requires and new_string does not occur"
+        },
+        {
+          "check": "c",
+          "event_id": "CS-04-session/L000011.00",
+          "reason": "matches the base content"
+        },
+        {
+          "check": "c",
+          "event_id": "CS-04-session/L000073.00",
+          "reason": "matches the base content"
+        }
+      ],
+      "n_evidence": 3,
+      "path": "docs/api.rst",
+      "reason": "3 passed item(s) in check b or c attest its base content",
+      "status": "passed"
+    },
+    {
+      "changed_by": [
+        "reference patch",
+        "pre-correction patch",
+        "edited by the session"
+      ],
+      "evidence": [
+        {
+          "check": "b",
+          "event_id": "CS-04-session/L000079.00",
+          "reason": "old_string occurs as the Edit tool requires and new_string does not occur"
+        },
+        {
+          "check": "c",
+          "event_id": "CS-04-session/L000011.00",
+          "reason": "matches the base content"
+        },
+        {
+          "check": "c",
+          "event_id": "CS-04-session/L000075.00",
+          "reason": "matches the base content"
+        }
+      ],
+      "n_evidence": 3,
+      "path": "docs/versions.rst",
+      "reason": "3 passed item(s) in check b or c attest its base content",
+      "status": "passed"
+    },
+    {
+      "changed_by": [
+        "reference patch",
+        "pre-correction patch",
+        "edited by the session"
+      ],
+      "evidence": [
+        {
+          "check": "b",
+          "event_id": "CS-04-session/L000056.00",
+          "reason": "old_string occurs as the Edit tool requires and new_string does not occur"
+        },
+        {
+          "check": "c",
+          "event_id": "CS-04-session/L000011.00",
+          "reason": "matches the base content"
+        },
+        {
+          "check": "c",
+          "event_id": "CS-04-session/L000014.00",
+          "reason": "matches the base content"
+        }
+      ],
+      "n_evidence": 3,
+      "path": "more_itertools/more.py",
+      "reason": "3 passed item(s) in check b or c attest its base content",
+      "status": "passed"
+    },
+    {
+      "changed_by": [
+        "reference patch",
+        "pre-correction patch",
+        "edited by the session"
+      ],
+      "evidence": [
+        {
+          "check": "b",
+          "event_id": "CS-04-session/L000063.00",
+          "reason": "old_string occurs as the Edit tool requires and new_string does not occur"
+        },
+        {
+          "check": "c",
+          "event_id": "CS-04-session/L000011.00",
+          "reason": "matches the base content"
+        },
+        {
+          "check": "c",
+          "event_id": "CS-04-session/L000016.00",
+          "reason": "matches the base content"
+        }
+      ],
+      "n_evidence": 3,
+      "path": "more_itertools/more.pyi",
+      "reason": "3 passed item(s) in check b or c attest its base content",
+      "status": "passed"
+    },
+    {
+      "changed_by": [
+        "reference patch",
+        "pre-correction patch",
+        "edited by the session"
+      ],
+      "evidence": [
+        {
+          "check": "b",
+          "event_id": "CS-04-session/L000069.00",
+          "reason": "old_string occurs as the Edit tool requires and new_string does not occur"
+        },
+        {
+          "check": "c",
+          "event_id": "CS-04-session/L000011.00",
+          "reason": "matches the base content"
+        },
+        {
+          "check": "c",
+          "event_id": "CS-04-session/L000018.00",
+          "reason": "matches the base content"
+        },
+        {
+          "check": "c",
+          "event_id": "CS-04-session/L000024.00",
+          "reason": "matches the base content"
+        }
+      ],
+      "n_evidence": 4,
+      "path": "tests/test_more.py",
+      "reason": "4 passed item(s) in check b or c attest its base content",
+      "status": "passed"
+    }
+  ],
   "inputs": {
     "base_manifest_sha256": "23d3be29cf4ba18308a6db7658382cdb9d20184d556646d7d854675531f92c2f",
     "base_n_files": 39,
@@ -451,7 +598,7 @@
       "passed": true
     }
   },
-  "method": "reconstruction:v1",
+  "method": "reconstruction:v2",
   "notes": [],
   "passed": true,
   "status": "passed",

@@ -1,8 +1,28 @@
-"""Stricter re-audit of the registered generator transcripts (decision log D44).
+"""Stricter re-audit of the registered generator transcripts (decision log D44), and of fresh attempts (§16.2).
 
 Usage: python scripts/strict_reaudit.py --transcripts <dir> [--transcripts <dir> ...]
                                         [--extra <transcript.jsonl> ...] --scratch <dir> [--write]
                                         [--outputs <report.json>]
+       python scripts/strict_reaudit.py --fresh <attempts.json> --transcripts <dir> [--transcripts <dir> ...]
+                                        --report <report.json> [--scratch <dir>]
+
+**Fresh attempts** (``--fresh``, protocol v0.8 §16.2). ``<attempts.json>`` holds the attempt
+records, a list (or ``{"attempts": [...]}``) of objects with ``attempt_id``, ``task_id``,
+``workspace`` (the attempt's workspace, as ``scripts/make_agent_workspace.py`` printed it) and
+``transcript_sha256``. Each attempt's transcript is found by its sha256 among the
+``agent-*.jsonl`` files under the ``--transcripts`` directories and audited with the fresh-attempt
+profile, :func:`tracecontract.controlled.audit_fresh_attempt_transcript`: everything outside the
+attempt's own workspace is forbidden (the repository, the study's home with the sealed directory,
+the third-party data under ``/home/user/ext`` and the old workspaces, the other workspaces beside
+it, ``/root`` and every Claude session directory; ``--scratch`` adds the builder's scratch
+directory), and tool inputs and tool outputs are both scanned. An attempt with any hit or exposure
+is flagged: per §16.2 it is excluded from every analysis, and the report lists it under
+``excluded``. An attempt whose transcript is not found cannot be audited; it is listed under
+``not_audited`` and is excluded too, and the exit status is then 1. The report (``--report``,
+outside ``tasks/``) holds per attempt its hits and exposures, with session ids, the scratch
+directory and e-mail addresses redacted.
+
+**Generator transcripts** (the default).
 
 For every record in ``tasks/*/labels/generator_audit.json`` it finds the transcript(s) the
 record names by sha256 among the ``agent-*.jsonl`` files under the ``--transcripts``
@@ -55,7 +75,9 @@ import shlex
 import sys
 from pathlib import Path
 
-from tracecontract.controlled import _VAR, _command_words, _shell_segments, audit_generator_transcript_strict
+from tracecontract.controlled import (
+    _VAR, _command_words, _shell_segments, audit_fresh_attempt_transcript, audit_generator_transcript_strict,
+)
 from tracecontract.ingest.claude_code import _redact_emails
 
 R = Path(__file__).resolve().parents[1]
@@ -193,9 +215,9 @@ def _prompt_text(path: Path) -> str:
     return "\n".join(out)
 
 
-def _redact(x, scratch: str):
+def _redact(x, scratch: str | None):
     if isinstance(x, str):
-        return _SESSION_ID.sub("<session>", x.replace(scratch, "<scratchpad>"))
+        return _SESSION_ID.sub("<session>", x.replace(scratch, "<scratchpad>") if scratch else x)
     if isinstance(x, list):
         return [_redact(v, scratch) for v in x]
     if isinstance(x, dict):
@@ -203,7 +225,7 @@ def _redact(x, scratch: str):
     return x
 
 
-def _redact_output(x, scratch: str):
+def _redact_output(x, scratch: str | None):
     """:func:`_redact`, and e-mail addresses too: tool outputs can show any text (e.g. ``git log``)."""
     x = _redact(x, scratch)
     if isinstance(x, str):
@@ -279,15 +301,72 @@ def classify_scratch_outputs(exposures: list[dict], agent: str, scratch: str, wr
     return outside, others, n_own
 
 
+def _attempt_records(path: Path) -> list[dict]:
+    data = json.loads(path.read_text(encoding="utf-8"))
+    records = data.get("attempts") if isinstance(data, dict) else data
+    if not isinstance(records, list):
+        raise SystemExit(f"{path}: expected a list of attempt records (or {{'attempts': [...]}})")
+    for r in records:
+        missing = [k for k in ("attempt_id", "task_id", "workspace", "transcript_sha256") if not (isinstance(r, dict) and r.get(k))]
+        if missing:
+            raise SystemExit(f"{path}: an attempt record lacks {missing}")
+    ids = [r["attempt_id"] for r in records]
+    if len(set(ids)) != len(ids):
+        raise SystemExit(f"{path}: attempt ids repeat")
+    return records
+
+
+def audit_fresh(records: list[dict], transcripts: list[Path], scratch: str | None) -> dict:
+    """The fresh-attempt report of protocol §16.2 (see the module docstring)."""
+    by_sha = {hashlib.sha256(p.read_bytes()).hexdigest(): p for p in transcripts}
+    out: dict = {"script": "scripts/strict_reaudit.py --fresh",
+                 "profile": "fresh attempt (protocol v0.8 §16.2): everything outside the attempt's own workspace is "
+                            "forbidden; tool inputs and tool outputs are scanned; an attempt with a hit or an exposure "
+                            "is excluded", "attempts": {}, "excluded": [], "not_audited": []}
+    for r in records:
+        p = by_sha.get(r["transcript_sha256"])
+        if p is None:
+            out["attempts"][r["attempt_id"]] = {"task_id": r["task_id"], "error": "transcript not found", "flagged": True}
+            out["not_audited"].append(r["attempt_id"])
+            out["excluded"].append(r["attempt_id"])
+            continue
+        hits, exposures = audit_fresh_attempt_transcript(p, task=r["task_id"], workspace=r["workspace"],
+                                                         extra_forbidden=(scratch,) if scratch else ())
+        flagged = bool(hits or exposures)
+        out["attempts"][r["attempt_id"]] = {"task_id": r["task_id"], "workspace": r["workspace"],
+                                            "transcript_sha256": r["transcript_sha256"], "flagged": flagged,
+                                            "hits": hits, "exposures": exposures}
+        if flagged:
+            out["excluded"].append(r["attempt_id"])
+    return _redact_output(out, scratch)
+
+
 def main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--transcripts", action="append", required=True)
     ap.add_argument("--extra", action="append", default=[])
-    ap.add_argument("--scratch", required=True)
+    ap.add_argument("--scratch", help="the builder's scratch directory (required for generator transcripts)")
     ap.add_argument("--write", action="store_true")
     ap.add_argument("--outputs", metavar="FILE", help="also scan tool outputs and write what they showed each agent to FILE "
                     "(JSON), apart from its reads; generator_audit.json never receives them")
+    ap.add_argument("--fresh", metavar="ATTEMPTS", help="audit fresh attempts (protocol §16.2) from these attempt records")
+    ap.add_argument("--report", metavar="FILE", help="with --fresh: where the report goes (JSON)")
     a = ap.parse_args(argv)
+    if a.fresh:
+        if not a.report or a.write or a.outputs or a.extra:
+            ap.error("--fresh takes --transcripts, --report and optionally --scratch")
+        files = sorted({p for d in a.transcripts for p in Path(d).rglob("agent-*.jsonl")})
+        fresh = audit_fresh(_attempt_records(Path(a.fresh)), files, os.path.normpath(a.scratch) if a.scratch else None)
+        Path(a.report).write_text(json.dumps(fresh, indent=2) + "\n", encoding="utf-8")
+        for aid, rec in fresh["attempts"].items():
+            print(f"{aid}: " + (rec["error"] if "error" in rec else
+                                f"{len(rec['hits'])} hit(s), {len(rec['exposures'])} exposure(s)"
+                                + ("; excluded" if rec["flagged"] else "")))
+        print(f"fresh attempts: {len(fresh['attempts'])} audited or listed, {len(fresh['excluded'])} excluded, "
+              f"{len(fresh['not_audited'])} not audited")
+        return 1 if fresh["not_audited"] else 0
+    if not a.scratch:
+        ap.error("--scratch is required for generator transcripts")
     scratch = os.path.normpath(a.scratch)
     report: dict = {}
     files = sorted({p for d in a.transcripts for p in Path(d).rglob("agent-*.jsonl")}) + [Path(x) for x in a.extra]

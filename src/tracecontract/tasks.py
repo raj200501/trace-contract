@@ -4,7 +4,9 @@ Task directory layout (``tasks/<task_id>/``)::
 
     task.json                    TaskManifest
     provenance.json              ProvenanceRecord
-    snapshot.json                Snapshot (manifest hash, fidelity, leakage check)
+    snapshot.json                Snapshot (manifest hash, fidelity; the pilot's records also hold the
+                                 vacuous leakage check, D47, which new builds no longer record)
+    reconstruction_check.json    the base checked against its own session (reconstruction.check_task)
     contracts/<variant>.json     TaskContract (reference, full_session, initial_only)
     candidates/<id>.json         Candidate (patch inline)
     verifiers/<id>/spec.json     VerifierSpec
@@ -47,8 +49,8 @@ from .schemas import (
     TaskManifest,
     sha256_text,
 )
-from .snapshot import build_snapshot, leakage_check, manifest, manifest_sha256
-from .store import dump, load
+from .snapshot import build_snapshot, manifest, manifest_sha256
+from .store import dump, load, write_json
 
 
 def now() -> str:
@@ -100,6 +102,12 @@ def compile_controlled_task(
 
     ``transcript`` must be the output of :func:`ingest.claude_code.sanitize_transcript` and
     ``sanitization`` the record it returned; it is kept in the provenance record.
+
+    ``snapshot.json`` records no leakage check: as this build called it, the check compared the
+    base with itself and passed even when the base held the solution (D47). Instead the build
+    checks the base against the session's own record (:func:`reconstruction.check_task`) and
+    writes ``reconstruction_check.json``; the acceptance gate and the pre-flight require it to
+    pass (protocol v0.8 §16.5).
     """
     if not sanitization or sanitization.get("sanitized_sha256") != hashlib.sha256(Path(transcript).read_bytes()).hexdigest():
         raise ValueError("pass the sanitize_transcript record of this transcript (controlled transcripts are sanitised too)")
@@ -151,9 +159,9 @@ def compile_controlled_task(
         dump(c, tdir / "candidates" / f"{c.candidate_id}.json")
     m = m.model_copy(update={"candidates": [f"candidates/{c.candidate_id}.json" for c in cands]})
 
-    # 4. Leakage check (base must not already contain the final solution).
-    leak = leakage_check(base, ref.patch)
-    snap = rec_snap.model_copy(update={"leakage_check": leak, "file_manifest_sha256": rebuilt_hash,
+    # 4. Snapshot record. No leakage check: snapshot.leakage_check compared the base with itself, a
+    # vacuous pass (D47). Step 8 checks the base against the session instead.
+    snap = rec_snap.model_copy(update={"leakage_check": None, "file_manifest_sha256": rebuilt_hash,
                                        "environment": {"image": workspace_record["image"],
                                                        "image_id": workspace_record["image_id"],
                                                        "pins": workspace_record["env_pins"]}})
@@ -185,8 +193,6 @@ def compile_controlled_task(
 
     # 6. Provenance.
     reasons = [f"contamination: {f.tool} {f.path}" for f in contaminated]
-    if not leak.passed:
-        reasons.append(f"leakage: {leak.leaked_paths}")
     prov = ProvenanceRecord(
         record_id=f"prov-{tid}", session_id=session.session_id, population=Population.controlled,
         source_url="controlled session (this study)", source_id=tid, source_revision=None,
@@ -211,6 +217,13 @@ def compile_controlled_task(
     tdest = tasks_root.parent / "data" / "controlled" / "transcripts" / f"{tid}.jsonl"
     tdest.parent.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(transcript, tdest)
+
+    # 8. Reconstruction check: the base against the session's own record (protocol v0.8 §16.5). The
+    # scenario is sealed outside the repository during the build, so its workspace is passed on.
+    from .reconstruction import RECORD, check_task  # reconstruction imports this module
+
+    rep = check_task(tdir, tasks_root.parent, snapshot_root, scenario_workspace=scenario.get("workspace"))
+    write_json(rep.to_dict(), tdir / RECORD)
     return tdir
 
 
@@ -218,10 +231,23 @@ _TRANSCRIPT_DIRS = {Population.controlled: "data/controlled/transcripts", Popula
                     Population.natural: "data/natural/transcripts"}
 
 
+def _transcript_rel(m: TaskManifest) -> str:
+    if m.population not in _TRANSCRIPT_DIRS:
+        raise FileNotFoundError(f"population {m.population.value!r} keeps no session transcript in the repository")
+    return f"{_TRANSCRIPT_DIRS[m.population]}/{m.task_id}.jsonl"
+
+
+def transcript_path(task_dir: Path, repo_root: Path) -> Path:
+    """Where a task's sanitised transcript is kept: ``data/<population>/transcripts/<id>.jsonl`` under ``repo_root``.
+
+    Raises :class:`FileNotFoundError` for a population that keeps no transcript there.
+    """
+    return repo_root / _transcript_rel(load(task_dir / "task.json", TaskManifest))
+
+
 def session_for_task(task_dir: Path, repo_root: Path) -> Session:
     m = load(task_dir / "task.json", TaskManifest)
-    pop = m.population
-    rel = f"{_TRANSCRIPT_DIRS[pop]}/{m.task_id}.jsonl"
+    pop, rel = m.population, _transcript_rel(m)
     return parse_claude_code_jsonl(repo_root / rel, population=pop, source=f"{pop.value}:tracecontract",
                                    relpath=rel, scripted_turns=m.scripted_turns)
 

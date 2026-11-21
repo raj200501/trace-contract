@@ -30,7 +30,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
-from .schemas import CheckSpec, GenerationRecord, Isolation, VerifierCondition, VerifierSpec
+from .schemas import CONFIG_LABEL, CheckSpec, GenerationRecord, Isolation, VerifierCondition, VerifierSpec
 
 ALLOWED_IMPORTS = {"pytest", "hypothesis", "tc_sandbox"} | set(sys.stdlib_module_names)
 FORBIDDEN_PATH_PREFIXES = ("/work", "/results", "/mnt/candidate")
@@ -142,10 +142,15 @@ def _only_ok_check(expr: ast.expr) -> bool:
 # What a generation record of a new run keeps in ``budget``: the run's times, its costs and
 # where its private record is kept (protocol v0.7 §15.4, §15.6; decision log D42).
 GENERATION_RUN_KEYS = ("started_at", "ended_at", "wall_s", "turns", "tokens", "tool_calls", "run_record")
-CONFIG_LABEL = re.compile(r"config-[A-Za-z0-9][A-Za-z0-9_-]{0,31}")
+# CONFIG_LABEL (from schemas): config-A to config-Z, one capital letter, so the label itself cannot spell a model name.
 _SHA256 = re.compile(r"[0-9a-f]{64}")
 _SESSION_ID = re.compile(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
 _SESSION_LOCAL = ("/tmp/claude-", "/.claude/")
+
+
+def holds_session_reference(text: str) -> bool:
+    """True if ``text`` holds a session id (a UUID) or a session-local path (``/tmp/claude-``, ``/.claude/``)."""
+    return bool(_SESSION_ID.search(text)) or any(m in text for m in _SESSION_LOCAL)
 
 
 def generation_record(*, run_id: str | None, config: str | None, prompt_sha256: str | None, started_at: str | None,
@@ -153,10 +158,13 @@ def generation_record(*, run_id: str | None, config: str | None, prompt_sha256: 
                       turns: int | None = None, tokens: int | None = None, notes: str = "") -> GenerationRecord:
     """The generation record of one agent run; ``ValueError`` unless it is complete (:func:`generation_record_problems`).
 
-    Model identifiers are never written into the repository. ``config`` is a configuration
-    label (``config-A``), stored as the record's ``generator``, and ``run_record`` points to
-    the private run record, which says which model the configuration was. The times and
-    costs of the run go into ``budget`` (``GENERATION_RUN_KEYS``); ``created_at`` is the end.
+    ``config`` must be a configuration label, ``config-A`` to ``config-Z``; it is stored as the
+    record's ``generator``. ``run_record`` points to the private run record, which is where the
+    model behind a configuration is written down. The times and costs of the run go into
+    ``budget`` (``GENERATION_RUN_KEYS``); ``created_at`` is the end. Only the label's form is
+    checked for model identifiers: the run id, the notes and the run-record pointer are checked
+    for session ids and session-local paths, not for model names, so the caller must keep model
+    identifiers out of them.
     """
     budget = {"started_at": started_at, "ended_at": ended_at, "wall_s": wall_s, "turns": turns, "tokens": tokens,
               "tool_calls": tool_calls, "run_record": run_record}
@@ -183,13 +191,14 @@ def _count(value) -> bool:
 def generation_record_problems(rec: GenerationRecord | None) -> list[str]:
     """What keeps ``rec`` from being a complete generation record of a new run (empty if it is complete).
 
-    A complete record holds a run id; a configuration label (``config-<id>``, so never a model
-    identifier); the prompt's sha256; start and end times (ISO 8601 with a time zone, the end
-    not before the start, ``created_at`` a time too); turns or tokens; tool calls; the wall time
-    (positive, and not longer than the time from start to end); and a pointer to the private
-    run record. ``budget`` holds nothing else, and no field holds a session id or a
-    session-local path. The pilot's records (run id "unrecorded", no hash, empty budget) are
-    not complete; they are kept as recorded.
+    A complete record holds a run id; a configuration label of the form ``config-A`` to
+    ``config-Z`` (one capital letter); the prompt's sha256; start and end times (ISO 8601 with a
+    time zone, the end not before the start, ``created_at`` a time too); turns or tokens; tool
+    calls; the wall time (positive, and not longer than the time from start to end); and a
+    pointer to the private run record. ``budget`` holds nothing else, and no field holds a
+    session id or a session-local path. Nothing else is checked: the run id, the notes and the
+    run-record pointer are not searched for model identifiers. The pilot's records (run id
+    "unrecorded", no hash, empty budget) are not complete; they are kept as recorded.
     """
     if rec is None:
         return ["no generation record"]
@@ -198,8 +207,7 @@ def generation_record_problems(rec: GenerationRecord | None) -> list[str]:
     if not rec.run_id.strip() or rec.run_id == "unrecorded" or any(c.isspace() for c in rec.run_id):
         out.append("run id missing (or 'unrecorded', or with whitespace)")
     if not CONFIG_LABEL.fullmatch(rec.generator):
-        out.append(f"configuration label must look like 'config-A' (got {rec.generator!r}); model identifiers stay "
-                   "in the private run record")
+        out.append(f"configuration label must be config-A to config-Z, one capital letter (got {rec.generator!r})")
     if not _SHA256.fullmatch(rec.prompt_sha256):
         out.append("prompt sha256 missing or not 64 lowercase hex digits")
     start, end = _time(b.get("started_at")), _time(b.get("ended_at"))
@@ -226,7 +234,7 @@ def generation_record_problems(rec: GenerationRecord | None) -> list[str]:
     if extra:
         out.append(f"budget holds unknown keys {extra}")
     texts = [rec.run_id, rec.generator, rec.notes, *(str(v) for v in b.values())]
-    if any(_SESSION_ID.search(t) or any(m in t for m in _SESSION_LOCAL) for t in texts):
+    if any(holds_session_reference(t) for t in texts):
         out.append("a field holds a session id or a session-local path")
     return out
 

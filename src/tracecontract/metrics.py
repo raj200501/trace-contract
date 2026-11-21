@@ -18,6 +18,10 @@ Each row carries its task's population and its candidate's stratum. The function
 here pool whatever rows they are given; the analysis refuses rows from more than one
 population unless pooling is asked for, and then also reports each population on its
 own rows (``analysis.MixedPopulations``).
+
+For new runs (protocol v0.7 §15.7, v0.8 §16.6), :func:`family_rates` gives the per-family
+table and :func:`paired_signflip` the exact sign-flip test of a paired comparison over
+families (:mod:`tracecontract.stats`).
 """
 
 from __future__ import annotations
@@ -26,7 +30,10 @@ import math
 import random
 from collections import defaultdict
 from dataclasses import dataclass, field
+from fractions import Fraction
 from typing import Iterable
+
+from .stats import signflip
 
 INFRA = {"environment_failure", "verifier_error", "timeout", "unresolved"}
 
@@ -41,7 +48,7 @@ class Row:
     label: str | None  # "valid" | "invalid" | "ambiguous" | None
     origin: str = ""
     negative_type: str = ""  # e.g. "correction_violating", "other_invalid"
-    population: str = ""  # the task's Population: "natural" | "controlled" | "fixture" ("" if not recorded)
+    population: str = ""  # the task's Population value, e.g. "controlled" or "natural:pr-review" ("" if not recorded)
     stratum: str = ""  # candidate stratum: "task" for the task's own candidates, else a stratum name ("" if not recorded)
 
 
@@ -234,3 +241,45 @@ def paired_difference(rows: list[Row], cond_a: str, cond_b: str, metric: str, *,
     return {"metric": metric, "a": cond_a, "b": cond_b, "n_common": len(common), "n_metric": n_metric, "n_families": len(keys),
             "difference": point, "ci95": ci, "ci95_degenerate": bool(ci) and (degenerate or ci[0] == ci[1]),
             "per_family_difference": per_family, "discordant": disc}
+
+
+def family_rates(rows: list[Row], *, condition: str) -> dict[str, dict[str, int]]:
+    """FA and FR counts of one condition per task family (the primary display of a new run, protocol §15.7)."""
+    fams: dict[str, list[Row]] = defaultdict(list)
+    for r in rows:
+        if r.condition == condition:
+            fams[r.family_id].append(r)
+    out = {}
+    for f, rs in sorted(fams.items()):
+        fa, fr, _, _ = _rates(rs)
+        out[f] = {"fa_num": fa.num, "fa_den": fa.den, "fr_num": fr.num, "fr_den": fr.den}
+    return out
+
+
+def paired_signflip(rows: list[Row], cond_a: str, cond_b: str, metric: str) -> dict:
+    """Exact sign-flip tests of A - B over task families, on candidates scored by both conditions (protocol §15.7).
+
+    Per family: the errors of A and of B (acceptances of invalid candidates for FA, rejections of
+    valid ones for FR) among the ``den`` candidates labeled for the metric. Two statistics are
+    tested (:func:`stats.signflip`): ``pooled``, the sum of the per-family count differences (each
+    candidate weighs the same), and ``family_mean``, the sum of the per-family rate differences
+    (each family weighs the same). A family with no labeled candidate carries no difference and is
+    left out of both. ``p_greater`` tests H1: A errs more than B.
+    """
+    want, accepted_is_error = ("invalid", True) if metric == "fa" else ("valid", False)
+    a = {(r.task_id, r.candidate_id): r for r in rows if r.condition == cond_a}
+    b = {(r.task_id, r.candidate_id): r for r in rows if r.condition == cond_b}
+    per: dict[str, dict[str, int]] = {}
+    for k in sorted(set(a) & set(b)):
+        ra, rb = a[k], b[k]
+        d = per.setdefault(ra.family_id, {"a_num": 0, "b_num": 0, "den": 0})
+        if ra.label != want:
+            continue
+        d["den"] += 1
+        d["a_num"] += (ra.outcome == "pass") == accepted_is_error
+        d["b_num"] += (rb.outcome == "pass") == accepted_is_error
+    used = [f for f in sorted(per) if per[f]["den"]]
+    pooled = [Fraction(per[f]["a_num"] - per[f]["b_num"]) for f in used]
+    mean = [Fraction(per[f]["a_num"] - per[f]["b_num"], per[f]["den"]) for f in used]
+    return {"per_family_counts": dict(sorted(per.items())), "n_families_labeled": len(used),
+            "signflip": {"pooled": signflip(pooled), "family_mean": signflip(mean)}}

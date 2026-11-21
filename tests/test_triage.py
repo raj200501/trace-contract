@@ -203,3 +203,61 @@ def test_correction_candidates_skip_ide_context(tmp_path):
                                 ("user", "<ide_selection>The user selected: don't touch this</ide_selection>")])
     s = parse_claude_code_jsonl(p, population=Population.fixture, source="fixture")
     assert correction_candidates(s) == []
+
+
+def _provenance(task_dir: Path, task_id: str = "FX-T") -> bytes:
+    rec = {"schema_version": "x", "record_id": f"prov-{task_id}", "session_id": "s", "population": "fixture", "source_url": "u",
+           "source_id": task_id, "permission_basis": "fixture", "capture_method": "fixture", "redaction_status": "none_needed",
+           "task_family_id": task_id, "eligibility": "pending_review", "rejection_reasons": [], "triage": None,
+           "accessed": "2026-11-21T00:00:00Z", "notes": ""}
+    task_dir.mkdir(parents=True, exist_ok=True)
+    data = (json.dumps(rec, indent=2) + "\n").encode()
+    (task_dir / "provenance.json").write_bytes(data)
+    return data
+
+
+def test_triage_sidecar_is_written_beside_the_frozen_provenance_record(tmp_path):
+    from tracecontract.schemas import TriageProposal
+    from tracecontract.triage import read_sidecar, render_sidecar, sidecar_record, write_sidecar
+
+    td = tmp_path / "FX-T"
+    frozen = _provenance(td)
+    p = TriageProposal(category=TriageCategory.candidate, method="rule:v1", confidence="medium", reasons=["r"],
+                       correction_event_ids=["s/L000003.00"])
+    rec = sidecar_record("FX-T", "prov-FX-T", p, generator="fixture", inputs={"transcript_sha256": "ab"})
+    assert write_sidecar(td, rec) is True
+    assert (td / "triage.json").read_text() == render_sidecar(rec) and read_sidecar(td) == p
+    mtime = (td / "triage.json").stat().st_mtime_ns
+    assert write_sidecar(td, rec) is False and (td / "triage.json").stat().st_mtime_ns == mtime  # compared in memory first
+    assert (td / "provenance.json").read_bytes() == frozen  # the frozen record is only read
+    assert sorted(x.name for x in td.iterdir()) == ["provenance.json", "triage.json"]  # no temporary file is left
+    # Refusals happen in memory, before anything is written.
+    other = tmp_path / "FX-U"
+    _provenance(other, "FX-U")
+    for bad, msg in [(rec, "names task"),  # the record of FX-T in FX-U's directory
+                     (sidecar_record("FX-U", "prov-other", p, generator="fixture", inputs={}), "provenance record"),
+                     ({**sidecar_record("FX-U", "prov-FX-U", p, generator="fixture", inputs={}),
+                       "triage": {**p.model_dump(mode="json"), "category": "not-a-category"}}, "category")]:
+        with pytest.raises(ValueError, match=msg):
+            write_sidecar(other, bad)
+        assert not (other / "triage.json").exists()
+    (other / "triage.json").write_text((td / "triage.json").read_text())  # FX-T's sidecar in FX-U's directory
+    with pytest.raises(ValueError, match="names task"):
+        read_sidecar(other)
+
+
+def test_triage_script_writes_only_sidecars(tmp_path, monkeypatch):
+    """scripts/triage_controlled.py --check writes nothing; a run writes triage.json and never the provenance record."""
+    from tracecontract.schemas import TriageProposal
+
+    mod = _script("triage_controlled")
+    td = tmp_path / "tasks" / "FX-T"
+    frozen = _provenance(td)
+    (td / "task.json").write_text(json.dumps({"provenance": "provenance.json"}))
+    p = TriageProposal(category=TriageCategory.candidate, method="rule:v1", confidence="low")
+    monkeypatch.setattr(mod, "task_sidecar", lambda d: mod.sidecar_record(d.name, f"prov-{d.name}", p, generator=mod.GENERATOR,
+                                                                         inputs={}))
+    assert mod.main(["--check", str(td)]) == 1 and not (td / "triage.json").exists()
+    assert mod.main([str(td)]) == 0 and (td / "triage.json").is_file()
+    assert mod.main(["--check", str(td)]) == 0
+    assert (td / "provenance.json").read_bytes() == frozen

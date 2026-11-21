@@ -1,6 +1,7 @@
 """Propose labels for evaluation candidates (automated pilot only).
 
-For each evaluation candidate of a task:
+For each evaluation candidate of a task, or with ``--stratum NAME`` of one of its candidate
+strata (``tasks/<id>/strata/<name>.json``):
 
 1. grade it with the independent ``reference_check`` verifier (written from the
    reference contract, validated only on the reference solution and the no-op);
@@ -8,34 +9,48 @@ For each evaluation candidate of a task:
    reference but fails on the candidate is a regression;
 3. combine with the construction intent recorded when the candidate was built.
 
-Decision rule (pre-specified, docs/decision_log.md D19):
+Decision rule (pre-specified, docs/decision_log.md D19; :func:`d19`):
 * construction says valid  + reference checks pass + no regression   -> valid
 * construction says invalid + reference checks fail a check mapped to a
   violated requirement (a failing regression check alone is not enough) -> invalid
-* naturally observed candidates (no construction label): invalid if any reference
-  check or regression fails (violated = requirements of failing checks), else valid
+* natural candidates (no construction label, or an origin in ``schemas.NATURAL_ORIGINS``:
+  observed states, fresh attempts and natural pre-review states, which are never labeled by
+  construction intent; protocol v0.7 §15.4, v0.8 §16.3): invalid if any reference check or
+  regression fails (violated = requirements of failing checks), else valid. A natural
+  pre-review state that passes the reference checks is ambiguous instead: the correction is
+  not observable by the checks (protocol §15.6)
 * any disagreement                                                    -> ambiguous
   (excluded from FA/FR, queued for human review)
 
 Proposed labels are appended with ``labeler_kind = model``; they never replace or
-hide human labels. Usage: python scripts/propose_labels.py tasks/CS-01 [base test paths...]
+hide human labels, and nothing here writes ``task.json``. A task's own candidates get
+their labels in their files under ``candidates/`` and the log in
+``labels/proposed_labels.json``; the base test paths rebuild ``labels/base_tests_overlay``.
+A stratum's candidates get their labels in their files under
+``strata/<name>/candidates/`` and the log in ``strata/<name>/proposed_labels.json``; their
+regression norm is the task's recorded overlay, read and never rewritten, so base test
+paths are refused with ``--stratum`` and nothing under ``labels/`` is written.
+
+Usage: python scripts/propose_labels.py tasks/CS-01 [base test paths...]
+       python scripts/propose_labels.py tasks/CS-01 --stratum fresh-v1
 """
 
 from __future__ import annotations
 
+import argparse
 import json
 import shutil
-import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
 from tracecontract.cli import CACHE, SNAPSHOTS
 from tracecontract.sandbox.docker_runner import aggregate, build_env_image, prepare_workspace, run_grader, verify_candidate
 from tracecontract.schemas import (
-    Candidate, CandidateOrigin, CheckSpec, Isolation, Label, LabelerKind, Outcome, Split, TaskManifest, VerifierCondition,
-    VerifierSpec,
+    NATURAL_ORIGINS, Candidate, CandidateOrigin, CheckSpec, Isolation, Label, LabelerKind, Outcome, Split, TaskManifest,
+    VerifierCondition, VerifierSpec,
 )
 from tracecontract.store import dump, load, write_json
+from tracecontract.strata import load_stratum
 
 LABELER = "builder:refcheck+regression+construction:v1"
 
@@ -59,29 +74,70 @@ def regression_spec(tdir: Path, m: TaskManifest, overlay: Path, tag: str, ref: C
                         checks=[CheckSpec(check_id=c) for c in passing], content_sha256="base-tests")
 
 
-def main(task_dir: str, *base_test_paths: str) -> None:
+def d19(origin: CandidateOrigin, construction: Label | None, *, infra: bool, rc_ok: bool, violated_rc: list[str],
+        reg_fail: list[str]) -> tuple[str, list[str], str]:
+    """D19's proposal for one candidate: ``(value, violated requirements, why)`` (rule in the module docstring).
+
+    ``infra``: the reference checks gave no decision; ``rc_ok``: they all passed; ``violated_rc``: the
+    requirements of the failing reference checks; ``reg_fail``: the failing regression-norm checks.
+    """
+    regression = ["REGRESSION"] if reg_fail else []
+    if infra:
+        return "ambiguous", [], "reference checks did not produce a decision"
+    if construction is None or origin in NATURAL_ORIGINS:  # a natural candidate: never by construction intent
+        if rc_ok and origin == CandidateOrigin.natural_pre_review:
+            return ("ambiguous", regression, "natural pre-review state passes the reference checks: the correction is not "
+                    "observable by the checks")
+        if rc_ok and not reg_fail:
+            return "valid", [], "natural candidate passes reference checks and regression norm"
+        return "invalid", violated_rc + regression, "natural candidate fails reference checks and/or regression norm"
+    if construction.value == "valid":
+        if rc_ok and not reg_fail:
+            return "valid", [], "construction valid, confirmed by reference checks and regression norm"
+        return "ambiguous", violated_rc + regression, "construction valid but checks fail"
+    target = set(construction.violated_requirements)
+    hit = bool(target & set(violated_rc)) or (bool(reg_fail) and "REGRESSION" in target)
+    if not rc_ok and hit:
+        return "invalid", sorted(target | set(violated_rc)), "construction invalid, confirmed on targeted requirement"
+    if not rc_ok or reg_fail:
+        return "ambiguous", violated_rc + regression, "construction invalid but failing checks map to other requirements"
+    return "ambiguous", [], "construction invalid but reference checks and regression norm pass"
+
+
+def main(task_dir: str, *base_test_paths: str, stratum: str | None = None) -> None:
     tdir = Path(task_dir).resolve()
     m = load(tdir / "task.json", TaskManifest)
+    if stratum is not None and base_test_paths:
+        raise SystemExit("with --stratum the regression norm is the task's recorded base-test overlay "
+                         "(labels/base_tests_overlay, read only); base test paths are not accepted")
+    own = {load(tdir / p, Candidate).candidate_id: (p, load(tdir / p, Candidate)) for p in m.candidates}
+    ref = next(c for _, c in own.values() if c.origin == CandidateOrigin.reference)
+    if stratum is not None:  # checked (paths, ids, no links) before anything is graded or written
+        cands = {c.candidate_id: (rel, c) for rel, c in load_stratum(tdir, stratum, m.task_id).candidates}
+    else:
+        cands = own
     tag, _ = build_env_image(m.env_requirements, CACHE / "images")
     base = SNAPSHOTS / m.task_id
-    cands = {load(tdir / p, Candidate).candidate_id: (p, load(tdir / p, Candidate)) for p in m.candidates}
-    ref = next(c for _, c in cands.values() if c.origin == CandidateOrigin.reference)
     refcheck = load(tdir / "verifiers" / "reference_check" / "spec.json", VerifierSpec)
     # Base-test overlay (the repository's own tests at the BASE commit).
     overlay = tdir / "labels" / "base_tests_overlay"
-    if overlay.exists():
-        shutil.rmtree(overlay)
-    for tp in base_test_paths:
-        src = base / tp
-        dst = overlay / tp
-        if src.is_dir():
-            shutil.copytree(src, dst, ignore=shutil.ignore_patterns("__pycache__"))
-        else:
-            dst.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copyfile(src, dst)
-    reg_spec = regression_spec(tdir, m, overlay, tag, ref) if base_test_paths else None
+    if stratum is None:
+        if overlay.exists():
+            shutil.rmtree(overlay)
+        for tp in base_test_paths:
+            src = base / tp
+            dst = overlay / tp
+            if src.is_dir():
+                shutil.copytree(src, dst, ignore=shutil.ignore_patterns("__pycache__"))
+            else:
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(src, dst)
+    use_overlay = bool(base_test_paths) if stratum is None else overlay.is_dir()
+    reg_spec = regression_spec(tdir, m, overlay, tag, ref) if use_overlay else None
     req_of = {c.check_id: c.requirement_ids for c in refcheck.checks}
     log = {"task_id": m.task_id, "labeler": LABELER, "created_at": now(), "candidates": {}}
+    if stratum is not None:
+        log.update(stratum=stratum, regression_overlay="labels/base_tests_overlay" if reg_spec else None)
     for cid, (rel, c) in sorted(cands.items()):
         if c.split != Split.eval or c.origin == CandidateOrigin.noop:
             continue
@@ -102,38 +158,27 @@ def main(task_dir: str, *base_test_paths: str) -> None:
         infra = rc.outcome not in (Outcome.passed, Outcome.task_failure)
         note = {"refcheck_outcome": rc.outcome.value, "refcheck_failed": failed_rc[:20], "regression_outcome": reg_outcome,
                 "regression_failed": reg_fail[:20], "construction": construction.model_dump(mode="json") if construction else None}
-        if infra:
-            value, violated, why = "ambiguous", [], "reference checks did not produce a decision"
-        elif construction is None:  # naturally observed
-            if rc_ok and not reg_fail:
-                value, violated, why = "valid", [], "natural candidate passes reference checks and regression norm"
-            else:
-                value = "invalid"
-                violated = violated_rc + (["REGRESSION"] if reg_fail else [])
-                why = "natural candidate fails reference checks and/or regression norm"
-        elif construction.value == "valid":
-            if rc_ok and not reg_fail:
-                value, violated, why = "valid", [], "construction valid, confirmed by reference checks and regression norm"
-            else:
-                value, violated, why = "ambiguous", violated_rc + (["REGRESSION"] if reg_fail else []), "construction valid but checks fail"
-        else:
-            target = set(construction.violated_requirements)
-            hit = bool(target & set(violated_rc)) or (bool(reg_fail) and "REGRESSION" in target)
-            if not rc_ok and hit:
-                value, violated, why = "invalid", sorted(target | set(violated_rc)), "construction invalid, confirmed on targeted requirement"
-            elif not rc_ok or reg_fail:
-                value, violated = "ambiguous", violated_rc + (["REGRESSION"] if reg_fail else [])
-                why = "construction invalid but failing checks map to other requirements"
-            else:
-                value, violated, why = "ambiguous", [], "construction invalid but reference checks and regression norm pass"
+        value, violated, why = d19(c.origin, construction, infra=infra, rc_ok=rc_ok, violated_rc=violated_rc, reg_fail=reg_fail)
         lab = Label(value=value, violated_requirements=violated, labeler=LABELER, labeler_kind=LabelerKind.model,
                     timestamp=now(), note=why + " | " + json.dumps(note)[:3000])
         c2 = c.model_copy(update={"labels": [lb for lb in c.labels if lb.labeler != LABELER] + [lab]})
-        dump(c2, tdir / rel)
+        dump(c2, tdir / rel)  # a stratum candidate stays in its stratum's file (rel is strata/<name>/candidates/...)
         log["candidates"][cid] = {"origin": c.origin.value, "proposed": value, "violated": violated, "why": why, **note}
         print(f"{cid:38s} {c.origin.value:24s} -> {value:9s} {violated} ({why})")
-    write_json(log, tdir / "labels" / "proposed_labels.json")
+    log_path = tdir / "labels" / "proposed_labels.json" if stratum is None else tdir / "strata" / stratum / "proposed_labels.json"
+    if log_path.is_symlink():
+        raise SystemExit(f"{log_path} is a symbolic link; the label log is not written through it")
+    write_json(log, log_path)
+
+
+def cli(argv: list[str] | None = None) -> None:
+    ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
+    ap.add_argument("task_dir")
+    ap.add_argument("base_test_paths", nargs="*", help="the base commit's test files or directories (the regression norm)")
+    ap.add_argument("--stratum", metavar="NAME", help="label the candidates of this candidate stratum instead of the task's own")
+    a = ap.parse_args(argv)
+    main(a.task_dir, *a.base_test_paths, stratum=a.stratum)
 
 
 if __name__ == "__main__":
-    main(*sys.argv[1:])
+    cli()

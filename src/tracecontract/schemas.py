@@ -6,11 +6,12 @@ that it can be validated, hashed, and stored as JSON.
 
 Design rules encoded in these schemas:
 
-* Three data populations are kept separate (``Population``) and never mixed silently.
+* The data populations (``Population``: controlled, natural and its two sub-populations, fixture)
+  are kept separate and never mixed silently.
 * Requirements carry evidence spans that point at stable event IDs and must match
   the event text exactly (checked in ``tracecontract.contract``).
-* Labels record who produced them (human / model / rule / construction) so that
-  model proposals are never mistaken for human ground truth.
+* Labels record who produced them (human / model / rule / construction / source evidence)
+  so that model proposals are never mistaken for human ground truth.
 * Verification outcomes are explicit; only ``Outcome.passed`` yields reward 1.0.
 """
 
@@ -18,12 +19,18 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
+from datetime import datetime
 from enum import Enum
 from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, SerializerFunctionWrapHandler, model_serializer, model_validator
 
 SCHEMA_VERSION = "0.1.0"
+# The configuration label of an agent run (a generation record's generator, an attempt record's
+# configuration): config-A to config-Z, one capital letter (protocol v0.7 §15.4, §15.5).
+CONFIG_LABEL = re.compile(r"config-[A-Z]")
+_SHA256 = re.compile(r"[0-9a-f]{64}")
 
 
 def canonical_json(obj: Any) -> str:
@@ -51,11 +58,23 @@ class _Model(BaseModel):
 
 
 class Population(str, Enum):
-    """Where a session came from. These are reported separately, always."""
+    """Where a session came from. These are reported separately, always.
+
+    The two ungated natural sources are sub-populations of their own (protocol v0.8 §16.3), so
+    a run that mixes them is refused or reported per population like any other mix
+    (``analysis.MixedPopulations``, ``by_population``).
+    """
 
     natural = "natural"  # naturally occurring sessions with real users (e.g. SWE-chat)
     controlled = "controlled"  # real agent runs with scripted user turns, made for this study
     fixture = "fixture"  # hand-written synthetic unit-test fixtures
+    natural_pr_review = "natural:pr-review"  # agent pull requests; a reviewer's comment takes the place of the correction (AIDev)
+    natural_chat = "natural:chat"  # agent sessions with real users from an ungated source (Trace Commons)
+
+    @property
+    def is_natural(self) -> bool:
+        """True for ``natural`` and its sub-populations (``natural:<source>``)."""
+        return self.value.split(":", 1)[0] == "natural"
 
 
 class EventKind(str, Enum):
@@ -337,6 +356,14 @@ class CandidateOrigin(str, Enum):
     incomplete = "incomplete"
     dev_attack = "dev_attack"  # audit-time attacks; development split only
     tamper_probe = "tamper_probe"  # grading-isolation probes
+    fresh_attempt = "fresh_attempt"  # final state of a fresh agent's attempt at the task (stratum fresh-v1; protocol §15.4)
+    natural_pre_review = "natural_pre_review"  # natural PR-review task: the tree the reviewer commented on (§15.6)
+
+
+# Candidates that D19 labels by its natural-candidate rule (reference checks and regression norm,
+# sources 1 and 2), never by construction intent (protocol v0.7 §15.4, v0.8 §16.3).
+NATURAL_ORIGINS = frozenset({CandidateOrigin.observed_pre_correction, CandidateOrigin.observed_other,
+                             CandidateOrigin.fresh_attempt, CandidateOrigin.natural_pre_review})
 
 
 class Split(str, Enum):
@@ -349,6 +376,9 @@ class LabelerKind(str, Enum):
     model = "model"
     rule = "rule"
     construction = "construction"  # label implied by how the candidate was built (a proposal)
+    # Natural PR-review task: the source's own evidence (the reviewer's request, the addressing commit and
+    # the S9 agreement) labels the pre-review state; reported apart from D19, never a human label (§15.6).
+    source_evidence = "source_evidence"
 
 
 class Label(_Model):
@@ -359,6 +389,80 @@ class Label(_Model):
     adjudicated: bool = False
     timestamp: str
     note: str = ""
+
+
+class AttemptEnd(str, Enum):
+    finished = "finished"
+    gave_up = "gave_up"
+    error = "error"
+
+
+class AttemptAudit(_Model):
+    """The fresh-attempt audit of one attempt's transcript, over tool inputs and tool outputs (protocol v0.8 §16.2)."""
+
+    profile: str  # the audit profile, e.g. "fresh-attempt:v1"
+    passed: bool  # False: the attempt read forbidden material, so it is excluded from every analysis
+    findings: list[str] = Field(default_factory=list)
+    audited_at: str
+    record: str = ""  # pointer to the full audit record
+
+
+class AttemptRecord(_Model):
+    """One fresh-agent attempt (protocol v0.7 §15.4), kept with the candidate that its final state became.
+
+    ``configuration`` is a configuration label, ``config-A`` to ``config-Z`` (``CONFIG_LABEL``); the
+    private run record that ``run_record`` points to says which model the configuration was. Times,
+    turns, tool calls, tokens and wall time are recorded where available. ``audit`` is the verdict of
+    the fresh-attempt audit; the analysis excludes an attempt that has none or whose audit failed
+    (``analysis.attempt_exclusion``).
+    """
+
+    attempt_id: str
+    configuration: str
+    variant: Literal["u1", "final"]  # the instruction variant: U1 alone, or U1 with U2 added
+    instruction_sha256: str | None = None
+    started_at: str | None = None
+    ended_at: str | None = None
+    wall_s: float | None = None
+    turns: int | None = None
+    tool_calls: int | None = None
+    tokens: int | None = None
+    ended: AttemptEnd  # how the attempt ended: finished, gave up or error
+    patch_sha256: str  # sha256 of the candidate patch its final state became
+    run_record: str = ""  # pointer to the private run record, kept outside the repository
+    audit: AttemptAudit | None = None
+
+    @model_validator(mode="after")
+    def _check(self) -> "AttemptRecord":
+        if not self.attempt_id.strip() or any(ch.isspace() for ch in self.attempt_id):
+            raise ValueError("attempt record: the attempt id is empty or holds whitespace")
+        if not CONFIG_LABEL.fullmatch(self.configuration):
+            raise ValueError(f"attempt record {self.attempt_id}: the configuration label must be config-A to config-Z "
+                             f"(got {self.configuration!r})")
+        for name in ("patch_sha256", "instruction_sha256"):
+            value = getattr(self, name)
+            if value is not None and not _SHA256.fullmatch(value):
+                raise ValueError(f"attempt record {self.attempt_id}: {name} is not 64 lowercase hex digits")
+        for name in ("turns", "tool_calls", "tokens"):
+            value = getattr(self, name)
+            if value is not None and value < 0:
+                raise ValueError(f"attempt record {self.attempt_id}: {name} is negative")
+        if self.wall_s is not None and self.wall_s <= 0:
+            raise ValueError(f"attempt record {self.attempt_id}: the wall time is not positive")
+        times = {}
+        for name in ("started_at", "ended_at"):
+            value = getattr(self, name)
+            if value is None:
+                continue
+            try:
+                times[name] = datetime.fromisoformat(value)
+            except ValueError:
+                times[name] = None
+            if times[name] is None or times[name].tzinfo is None:
+                raise ValueError(f"attempt record {self.attempt_id}: {name} is not an ISO 8601 time with a time zone")
+        if len(times) == 2 and times["ended_at"] < times["started_at"]:
+            raise ValueError(f"attempt record {self.attempt_id}: it ends before it starts")
+        return self
 
 
 class Candidate(_Model):
@@ -372,6 +476,16 @@ class Candidate(_Model):
     produced_by: str
     description: str = ""
     labels: list[Label] = Field(default_factory=list)
+    # The attempt record of a fresh attempt (origin fresh_attempt only; protocol §15.4). Omitted from the
+    # JSON while None, so records written before the field existed re-serialise byte for byte.
+    attempt: AttemptRecord | None = None
+
+    @model_serializer(mode="wrap")
+    def _omit_empty_records(self, handler: SerializerFunctionWrapHandler) -> dict[str, Any]:
+        data = handler(self)
+        if self.attempt is None:
+            data.pop("attempt", None)
+        return data
 
     @model_validator(mode="after")
     def _hash(self) -> "Candidate":
@@ -379,6 +493,11 @@ class Candidate(_Model):
             raise ValueError(f"{self.candidate_id}: patch_sha256 mismatch")
         if self.origin == CandidateOrigin.dev_attack and self.split != Split.dev:
             raise ValueError("dev_attack candidates must be in the dev split")
+        if self.attempt is not None:
+            if self.origin != CandidateOrigin.fresh_attempt:
+                raise ValueError(f"{self.candidate_id}: only a fresh_attempt candidate carries an attempt record")
+            if self.attempt.patch_sha256 != self.patch_sha256:
+                raise ValueError(f"{self.candidate_id}: its attempt record holds another patch sha256 than the candidate")
         return self
 
     def final_label(self) -> Label | None:
@@ -405,9 +524,14 @@ class Candidate(_Model):
             {(lb.value, tuple(sorted(lb.violated_requirements))) for lb in latest}) > 1
 
     def proposed_label(self) -> Label | None:
-        """The latest label that is not a human label (a model, rule or construction proposal)."""
-        proposals = [lb for lb in self.labels if lb.labeler_kind != LabelerKind.human]
+        """The latest model, rule or construction proposal (never a human or a source-evidence label)."""
+        proposals = [lb for lb in self.labels if lb.labeler_kind not in (LabelerKind.human, LabelerKind.source_evidence)]
         return proposals[-1] if proposals else None
+
+    def source_evidence_label(self) -> Label | None:
+        """The latest source-evidence label (natural PR-review tasks), which is reported apart from D19 (§15.6)."""
+        found = [lb for lb in self.labels if lb.labeler_kind == LabelerKind.source_evidence]
+        return found[-1] if found else None
 
 
 # ---------------------------------------------------------------------------
@@ -423,6 +547,7 @@ class VerifierCondition(str, Enum):
     repo_tests = "repo_tests"  # B1: the repository's own test suite
     llm_freeform = "llm_freeform"  # B2: full-session LLM reconstruction without contract machinery
     reference_check = "reference_check"  # independent model-written checks (label support only; not human-reviewed)
+    diff_derived = "diff_derived"  # B3: tests from the initial request and the reference diff, no contract (§15.6)
 
 
 class Isolation(str, Enum):
@@ -431,7 +556,7 @@ class Isolation(str, Enum):
 
 
 class GenerationRecord(_Model):
-    generator: str  # e.g. "model:claude-...-via-claude-code-subagent" or "human:R1"
+    generator: str  # a configuration label (config-A, verifier.generation_record) for a new run; pilot records: "model:..."
     run_id: str
     prompt_sha256: str
     created_at: str

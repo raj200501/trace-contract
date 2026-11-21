@@ -431,6 +431,27 @@ def _scan_command(cmd: str, start: str, norm) -> tuple[list, list, str]:
     return checks, unresolved, state["cwd"]
 
 
+@dataclass(frozen=True)
+class _AuditProfile:
+    """What one strict audit counts as forbidden (see :func:`audit_generator_transcript_strict`)."""
+
+    forbidden: tuple[str, ...]  # a path inside one of these roots is forbidden material
+    allowed: tuple[str, ...]  # checked first: never forbidden
+    markers: tuple[tuple[str, str], ...]  # (substring, why): a path holding it is forbidden, even inside an allowed root
+    v1_forbidden: tuple[str, ...]  # the first audit's substring rule
+    v1_allowed: tuple[str, ...]
+    outside: bool = False  # flag every host path a tool input reads that is outside `allowed` and the system locations
+    sandbox: str | None = None  # the repository the sandbox wrappers mount at /repo: their outputs' paths refer to it
+
+
+_SEALED_MARKERS = (("scratchpad/sealed", "sealed material"), ("scratchpad/scenarios", "sealed material"),
+                   ("scratchpad/reference", "sealed material"))
+# Generic system locations, which a fresh attempt may read; /repo is the sandbox's view of its own repository.
+_FRESH_SYSTEM = ("/usr", "/bin", "/sbin", "/lib", "/lib32", "/lib64", "/libx32", "/etc", "/dev", "/proc", "/sys", "/repo")
+_SANDBOX_WRAPPERS = ("run_tests.sh", "run_python.sh")
+FRESH_OUTSIDE = "outside the attempt's workspace"
+
+
 @overload
 def audit_generator_transcript_strict(path: Path, *, task: str, own: str, extra_allowed: tuple[str, ...] = ...,
                                       extra_forbidden: tuple[str, ...] = ..., repo_root: str = ..., home: str = ...,
@@ -497,14 +518,72 @@ def audit_generator_transcript_strict(path: Path, *, task: str, own: str, extra_
     """
     import os
 
+    profile = _AuditProfile(
+        forbidden=(f"{repo_root}/tasks/{task}/verifiers", f"{repo_root}/tasks/{task}/candidates", f"{repo_root}/results",
+                   f"{repo_root}/data", f"{repo_root}/docs", f"{home}/cs_workspaces", f"{home}/gen_workspaces/{task}",
+                   f"{home}/.tc_sealed", "/root", *[os.path.normpath(x) for x in extra_forbidden]),
+        allowed=(os.path.normpath(own), "/root/.local/bin", *[os.path.normpath(x) for x in extra_allowed]),
+        markers=_SEALED_MARKERS,
+        v1_forbidden=(f"tasks/{task}/verifiers", f"tasks/{task}/candidates", "trace-contract/results", "trace-contract/data",
+                      "trace-contract/docs", "cs_workspaces", f"gen_workspaces/{task}/", ".tc_sealed", "scratchpad/sealed",
+                      "scratchpad/scenarios", "scratchpad/reference", "/root/"),
+        v1_allowed=(own.rstrip("/") + "/", own, "/root/.local/bin/", *extra_allowed,
+                    *[os.path.relpath(x, repo_root) for x in extra_allowed]))
+    hits, exposures = _strict_audit(path, profile, task=task, repo_root=repo_root, home=home, outputs=outputs)
+    return (hits, exposures) if outputs else hits
+
+
+def audit_fresh_attempt_transcript(path: Path, *, task: str, workspace: str, extra_forbidden: tuple[str, ...] = (),
+                                   repo_root: str = "/home/user/trace-contract",
+                                   home: str = "/home/user") -> tuple[list[dict], list[dict]]:
+    """The fresh-attempt profile of the strict audit (protocol v0.8 §16.2): ``(hits, exposures)`` of one attempt.
+
+    Everything outside the attempt's own ``workspace`` is forbidden. Tool inputs and tool outputs are both
+    scanned with the machinery of :func:`audit_generator_transcript_strict` (resolved commands, literal paths,
+    the first audit's substring rule, held-out candidate ids), with these forbidden roots:
+
+    * the repository (``repo_root``), the cwd every Bash call of a subagent starts in: a relative path read
+      without a ``cd`` into the workspace, ``git status`` or a Grep without a path reads the repository;
+    * the study's home ``home``, which holds the sealed directory ``.tc_sealed``, the third-party data under
+      ``ext`` and the build session's old workspaces (``cs_workspaces``, ``gen_workspaces``);
+    * the other workspaces: everything in the directory that holds the attempt's workspace;
+    * ``/root`` (except tool binaries) and every Claude session directory (``/tmp/claude-*``);
+    * ``extra_forbidden``.
+
+    Beyond those, every other host path that a tool input reads, lists, searches, runs or writes outside the
+    workspace is flagged as ``outside the attempt's workspace``, except generic system locations (``/usr``,
+    ``/bin``, ``/lib``, ``/etc``, ``/dev``, ``/proc``, ``/sys``) and the sandbox's ``/repo``. In tool outputs
+    only forbidden roots count, as generic paths there come from the sandbox container; the outputs of the
+    attempt's own wrappers (``run_tests.sh``, ``run_python.sh``) are container output, so a relative path in
+    them refers to the workspace's ``repo/``, the container's ``/repo``. Per §16.2, an attempt with any hit or
+    exposure is flagged, excluded from every analysis and reported.
+    """
+    import os
+
+    ws = os.path.normpath(workspace)
+    parent = os.path.dirname(ws)
+    if parent.count("/") < 2:
+        raise ValueError(f"the attempt workspace {ws} must lie in a dedicated directory of workspaces, not in {parent}")
+    forbidden = (repo_root, home, parent, "/root", *[os.path.normpath(x) for x in extra_forbidden])
+    profile = _AuditProfile(
+        forbidden=tuple(dict.fromkeys(forbidden)), allowed=(ws, "/root/.local/bin"),
+        markers=(*_SEALED_MARKERS, ("/tmp/claude-", "a Claude session directory")),
+        v1_forbidden=(f"tasks/{task}/verifiers", f"tasks/{task}/candidates", "trace-contract/results", "trace-contract/data",
+                      "trace-contract/docs", "cs_workspaces", "gen_workspaces/", ".tc_sealed", "scratchpad/sealed",
+                      "scratchpad/scenarios", "scratchpad/reference", "/root/", repo_root, f"{home}/ext", "/tmp/claude-"),
+        v1_allowed=(ws + "/", ws, "/root/.local/bin/"), outside=True, sandbox=os.path.join(ws, "repo"))
+    return _strict_audit(path, profile, task=task, repo_root=repo_root, home=home, outputs=True)
+
+
+def _strict_audit(path: Path, profile: _AuditProfile, *, task: str, repo_root: str, home: str,
+                  outputs: bool) -> tuple[list[dict], list[dict]]:
+    """The strict audit of one transcript under ``profile``: (hits in tool inputs, exposures in tool outputs)."""
+    import os
+
     from .ingest.claude_code import parse_claude_code_jsonl
     from .schemas import Population
 
-    forbidden = [f"{repo_root}/tasks/{task}/verifiers", f"{repo_root}/tasks/{task}/candidates", f"{repo_root}/results",
-                 f"{repo_root}/data", f"{repo_root}/docs", f"{home}/cs_workspaces", f"{home}/gen_workspaces/{task}",
-                 f"{home}/.tc_sealed", "/root", *[os.path.normpath(x) for x in extra_forbidden]]
-    allowed = [os.path.normpath(own), "/root/.local/bin", *[os.path.normpath(x) for x in extra_allowed]]
-    sealed_markers = ("scratchpad/sealed", "scratchpad/scenarios", "scratchpad/reference")
+    forbidden, allowed = list(profile.forbidden), list(profile.allowed)
 
     def norm(p: str, cwd: str) -> str:
         if p.startswith("~"):
@@ -514,9 +593,10 @@ def audit_generator_transcript_strict(path: Path, *, task: str, own: str, extra_
     def inside(p: str, root: str) -> bool:
         return p == root or p.startswith(root.rstrip("/") + "/")
 
-    def classify(p: str, recursive: bool, pruned: tuple[str, ...] = ()) -> str | None:
-        if any(m in p for m in sealed_markers):
-            return "sealed material"
+    def classify(p: str, recursive: bool, pruned: tuple[str, ...] = (), host: bool = False) -> str | None:
+        for marker, why in profile.markers:
+            if marker in p:
+                return why
         if any(inside(p, a) for a in allowed):
             return None
         for root in forbidden:
@@ -525,6 +605,8 @@ def audit_generator_transcript_strict(path: Path, *, task: str, own: str, extra_
             if recursive and inside(root, p) and not any(inside(root, x) for x in pruned) \
                     and not any(inside(a, p) and inside(root, a) for a in allowed):
                 return "recursive search over forbidden material"
+        if host and profile.outside and not any(inside(p, s) for s in _FRESH_SYSTEM):
+            return FRESH_OUTSIDE
         return None
 
     s = parse_claude_code_jsonl(path, population=Population.controlled, source="audit", include_sidechains=True)
@@ -568,12 +650,16 @@ def audit_generator_transcript_strict(path: Path, *, task: str, own: str, extra_
             body = "\n".join(seg for seg in _split_unquoted(cmd) if not registers(seg))
             # A path given to an exclusion option names what the command avoids (find -path ... -prune).
             texts.append(_EXCLUSION_ARG.sub(" ", body))
-        # Directories the command may run in: the start, the carried one and every cd target.
+        # Directories the command may run in: the start, the carried one and every cd target, and for a call of
+        # the sandbox wrappers the repository they mount at /repo (their arguments are paths in the container).
         bases = [repo_root, carried]
-        for seg in _shell_segments(cmd) if cmd else []:
-            w = _command_words(seg, {})
+        words_by_seg = [_command_words(seg, {}) for seg in _shell_segments(cmd)] if cmd else []
+        for w in words_by_seg:
             if w and w[0] == "cd" and len(w) > 1 and "$" not in w[1]:
                 bases.append(norm(w[1], bases[-1]))
+        sandbox = profile.sandbox if any(w and os.path.basename(w[0]) in _SANDBOX_WRAPPERS for w in words_by_seg) else None
+        if sandbox is not None:
+            bases.append(sandbox)
         bases = list(dict.fromkeys(bases))
         literal = []
         for text in texts:
@@ -588,12 +674,15 @@ def audit_generator_transcript_strict(path: Path, *, task: str, own: str, extra_
                     resolved = [norm(tok, b) for b in bases]
                     if all(classify(r, False) for r in resolved):
                         literal.append((resolved[0], ctx))
-        calls[ev.tool_call_id] = (ev.tool_name, ev.event_id, list(dict.fromkeys([end, carried_next])) if cmd else [])
+        ends = list(dict.fromkeys([end, carried_next])) if cmd else []
+        if sandbox is not None:
+            ends = [sandbox]  # the output of the sandbox: its relative paths are under /repo, the workspace's repo/
+        calls[ev.tool_call_id] = (ev.tool_name, ev.event_id, ends)
         if cmd:
             carried = carried_next
         seen = set()
         for p, rec, text, pruned in checks:
-            why = classify(p, rec, pruned)
+            why = classify(p, rec, pruned, host=True)
             if why and (p, why) not in seen:
                 seen.add((p, why))
                 hits.append({"event_id": ev.event_id, "tool": ev.tool_name, "path": p, "why": why, "text": text})
@@ -615,18 +704,12 @@ def audit_generator_transcript_strict(path: Path, *, task: str, own: str, extra_
                 own_ids.update(r"[\w-]+".join(map(re.escape, _ANY_VAR.split(w))) for w in words[2:]
                                if re.fullmatch(rf"{re.escape(task)}-(?:eval-[\w-]+|pre-correction)", _ANY_VAR.sub("0", w)))
     # The first audit's substring rule, so that this audit flags everything that one does.
-    v1 = audit_generator_transcript(path, forbidden=(f"tasks/{task}/verifiers", f"tasks/{task}/candidates", "trace-contract/results",
-                                                     "trace-contract/data", "trace-contract/docs", "cs_workspaces",
-                                                     f"gen_workspaces/{task}/", ".tc_sealed", "scratchpad/sealed",
-                                                     "scratchpad/scenarios", "scratchpad/reference", "/root/"),
-                                    allowed=(own.rstrip("/") + "/", own, "/root/.local/bin/",
-                                             *extra_allowed, *[os.path.relpath(x, repo_root) for x in extra_allowed]))
-    for h in v1:
+    for h in audit_generator_transcript(path, forbidden=profile.v1_forbidden, allowed=profile.v1_allowed):
         if not any(x["event_id"] == h["event_id"] for x in hits):
             hits.append({"event_id": h["event_id"], "tool": h["tool"], "path": h["match"], "why": "substring match (first audit's rule)",
                          "text": h["text"]})
     if not outputs:
-        return hits
+        return hits, []
     # What the tool outputs showed the agent, reported apart from its reads.
     heldout = re.compile(rf"(?<![\w-]){re.escape(task)}-(?:eval-[\w-]+|pre-correction)")
     own_re = re.compile("|".join(sorted(own_ids)) or r"(?!)")

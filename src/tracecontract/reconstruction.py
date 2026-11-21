@@ -34,11 +34,24 @@ f. (additional) replaying the session's writes on the base reproduces the captur
    pre-correction and final states, the session's later reads and the Edit tool's own
    error messages, and every file those states change was written by the session.
 
-A Bash command that may write files the replay cannot follow makes those files
-``not_checkable`` from then on. Commands run through the study's sandbox wrappers
-(``run_tests.sh``, ``run_python.sh``) mount the repository read-only and write nothing in
-it. Transcripts were sanitised (``sanitize:v2`` replaced e-mail addresses), so every
-comparison applies the same redaction to the base and to the captured states.
+The result is also rolled up per changed file (``Report.files``): every file that the
+reference or pre-correction patch changes, or that the session edited through Edit, MultiEdit
+or Write, needs at least one passed item in check (b) or (c), that is, the session's own record
+attests its base content. Otherwise the report is ``incomplete`` and names the file, even when
+every check passed on other files: a leaked file can hide behind items that are only
+``not_checkable``.
+
+Edits are replayed with the Edit tool's semantics, through the same function as
+:mod:`tracecontract.ingest.replay` (:mod:`tracecontract.ingest.edit_tool`). A Bash command that
+may write files the replay cannot follow makes those files ``not_checkable`` from then on;
+``git checkout``/``restore`` of paths, ``git stash`` and ``git reset --hard`` reset only files
+present in the base, and keep the files the session created, as git does. Commands run through
+the study's sandbox wrappers (``run_tests.sh``, ``run_python.sh``) mount the repository read-only
+and write nothing in it. Transcripts were sanitised (``sanitize:v2`` replaced e-mail addresses),
+so every comparison applies the same redaction to the base and to the captured states.
+
+:func:`recorded_check` compares a task's ``reconstruction_check.json`` with the current files,
+for the acceptance gate and the pre-flight (protocol v0.8 §16.5).
 """
 
 from __future__ import annotations
@@ -51,12 +64,17 @@ import shlex
 from collections import Counter
 from dataclasses import asdict, dataclass, field
 from pathlib import Path, PurePosixPath
+from typing import Any
 
 from .ingest.claude_code import _redact_emails  # the sanitizer's own redaction (sanitize:v2)
-from .schemas import CandidateOrigin, EventKind, Session
+from .ingest.edit_tool import actual_old_string, apply_edits, edits_of, preserve_quote_style
+from .schemas import Candidate, CandidateOrigin, EventKind, Session, Snapshot, TaskManifest, sha256_bytes, sha256_text
 from .snapshot import manifest, manifest_sha256, post_images
 
-METHOD = "reconstruction:v1"
+# v2: the roll-up per changed file, the edit function shared with ingest/replay.py, restores
+# that keep the session's own files, here-strings (v1 records do not count for the gate)
+METHOD = "reconstruction:v2"
+RECORD = "reconstruction_check.json"  # tasks/<id>/reconstruction_check.json
 PASSED, FAILED, NOT_CHECKABLE, UNAVAILABLE, EXPLAINED = "passed", "failed", "not_checkable", "unavailable", "explained"
 TITLES = {
     "a_written_files_changed": "Files written through Edit/MultiEdit/Write differ between base and final state, or are explained",
@@ -94,13 +112,14 @@ class Check:
 class Report:
     task_id: str
     status: str  # passed | failed | incomplete
-    passed: bool | None  # None: no check failed, but not every check could run
+    passed: bool | None  # None: nothing failed, but not every check could run or not every changed file is attested
     checks: list[Check]
     inputs: dict = field(default_factory=dict)
     bash_effects: list[dict] = field(default_factory=list)
     legacy_leakage_check: dict | None = None
     notes: list[str] = field(default_factory=list)
     method: str = METHOD
+    files: list[dict] = field(default_factory=list)  # the roll-up per changed file (_file_rollup)
 
     def check(self, check_id: str) -> Check:
         return next(c for c in self.checks if c.check_id == check_id)
@@ -123,10 +142,18 @@ def _rollup(check_id: str, items: list[dict], empty: str, approximations: list[s
     return Check(check_id, status, reason, items, approximations or [])
 
 
-def _report(task_id: str, checks: list[Check], **kw) -> Report:
+def _report(task_id: str, checks: list[Check], files: list[dict] | None = None, notes: list[str] | None = None,
+            **kw) -> Report:
+    """``failed`` if a check failed; ``passed`` if every check passed and every changed file is attested; else ``incomplete``."""
+    files, notes = files or [], list(notes or [])
     states = {c.status for c in checks}
-    status = "failed" if FAILED in states else "passed" if states == {PASSED} else "incomplete"
-    return Report(task_id=task_id, status=status, passed={"failed": False, "passed": True}.get(status), checks=checks, **kw)
+    unattested = [f["path"] for f in files if f["status"] != PASSED]
+    status = "failed" if FAILED in states else "passed" if states == {PASSED} and not unattested else "incomplete"
+    if unattested and status != "failed":
+        notes.append(f"incomplete: {len(unattested)} changed file(s) have no passed item in check b or c, so the "
+                     f"session's record does not attest their base content: {', '.join(unattested)}")
+    return Report(task_id=task_id, status=status, passed={"failed": False, "passed": True}.get(status), checks=checks,
+                  files=files, notes=notes, **kw)
 
 
 def unavailable_report(task_id: str, reason: str, **kw) -> Report:
@@ -152,13 +179,18 @@ def _rel(path: str, ws: str) -> str | None:
     return p[len(ws) + 1:] if p.startswith(ws + "/") else None
 
 
-def _occurrences(text: str, sub: str) -> list[int]:
-    """Start offsets of every (also overlapping) occurrence of ``sub``."""
+def _occurrences(text: str, sub: str, *, overlapping: bool = True) -> list[int]:
+    """Start offsets of every occurrence of ``sub``; non-overlapping ones are those ``str.count`` counts."""
     out, i = [], text.find(sub) if sub else -1
     while i >= 0:
         out.append(i)
-        i = text.find(sub, i + 1)
+        i = text.find(sub, i + (1 if overlapping else len(sub)))
     return out
+
+
+def _tool_view(text: str, old: str) -> str:
+    """The content the Edit tool matches ``old`` against: a CRLF file read with LF line breaks (edit_tool.apply_edits)."""
+    return text.replace("\r\n", "\n") if "\r\n" in text and "\r" not in old else text
 
 
 def _compare_lines(expected: str | None, lines: dict[int, str]) -> list[dict]:
@@ -185,10 +217,11 @@ def _span(lines: dict[int, str]) -> str:
 class BashEffect:
     """What one Bash command may have done to workspace files.
 
-    ``action``: ``restore`` (paths reset to the base, e.g. ``git checkout -- p``), ``write``
-    (paths now unknown), ``write_any`` (targets unknown: every file becomes unknown) or
-    ``head_moved`` (``git add``/``commit``: later restores no longer give the base). Paths
-    are workspace-relative; ``.`` or a directory covers the files below it.
+    ``action``: ``restore`` (the base files under the paths reset to the base, e.g. ``git checkout
+    -- p``; files the session created are kept, as git keeps untracked files), ``write`` (paths now
+    unknown), ``write_any`` (targets unknown: every file becomes unknown) or ``head_moved``
+    (``git add``/``commit``: later restores no longer give the base). Paths are
+    workspace-relative; ``.`` or a directory covers the files below it.
     """
 
     event_id: str
@@ -207,7 +240,7 @@ class _Cmd:
 
 _PUNCT = set("();<>|&")
 _REDIRECTS = {">", ">>", ">|", "&>", "&>>", "<>", ">&", "<", "<<", "<<-", "<<<", "<&"}
-_HEREDOC_START = re.compile(r"<<(-?)\s*(['\"]?)([^\s'\";&|<>()]+)\2")
+_HEREDOC_START = re.compile(r"(?<!<)<<(?!<)(-?)\s*(['\"]?)([^\s'\";&|<>()]+)\2")  # not a here-string (<<<)
 _SANDBOX = {"run_tests.sh", "run_python.sh"}  # docker run ... -v <repo>:/repo:ro (controlled.RUN_TESTS_SH)
 _KEYWORDS = {"{", "}", "!", "do", "then", "else", "elif", "if", "while", "until", "time", "done", "fi", "esac", "function"}
 _LOOP_HEADERS = {"for", "case", "select"}
@@ -263,7 +296,8 @@ def _normalize(cmd: str) -> tuple[str, list[str]]:
         elif c == "#" and (i == 0 or cmd[i - 1] in " \t\n;&|("):
             while i < n and cmd[i] != "\n":
                 i += 1
-        elif cmd.startswith("<<", i) and not cmd.startswith("<<<", i) and _HEREDOC_START.match(cmd, i):
+        elif (cmd.startswith("<<", i) and not cmd.startswith("<<<", i) and (i == 0 or cmd[i - 1] != "<")
+              and _HEREDOC_START.match(cmd, i)):  # the second '<' of a here-string '<<<' starts no heredoc
             m = _HEREDOC_START.match(cmd, i)
             pending.append((m.group(3), bool(m.group(1))))
             out.append(f" << {m.group(3)} ")
@@ -717,18 +751,8 @@ def _under(paths: list[str], files) -> list[str]:
     return sorted({f for f in files for p in paths if p == "." or f == p or f.startswith(p.rstrip("/") + "/")})
 
 
-def _apply_edit(text: str | None, old: str, new: str, replace_all: bool) -> tuple[str | None, str | None]:
-    """Apply one edit the way the Edit tool does; returns ``(new text, problem)``."""
-    if text is None:
-        return (new, None) if old == "" else (None, "the file does not exist")
-    if old == "":
-        return (new, None) if text == "" else (None, "old_string is empty but the file is not")
-    n = text.count(old) if replace_all else len(_occurrences(text, old))
-    if n == 0:
-        return None, "old_string does not occur"
-    if n > 1 and not replace_all:
-        return None, f"old_string occurs {n} times (not unique)"
-    return (text.replace(old, new) if replace_all else text.replace(old, new, 1)), None
+_PROBLEMS = {"file_missing": "the file does not exist", "file_exists": "old_string is empty but the file is not",
+             "absent": "old_string does not occur", "not_unique": "old_string is not unique"}
 
 
 class _Replay:
@@ -748,6 +772,7 @@ class _Replay:
         self.seen_lines: dict[str, set[int]] = {}  # matched base lines of watched files
         self.listed_in: dict[str, list[str]] = {}  # tool results that list a watched file
         self.manifests_shown: list[tuple[str, str]] = []
+        self.approximations: list[str] = []  # edits that matched only with normalised quotes or line endings
         self._cache: dict[str, str | None] = {}
 
     def base_text(self, rel: str) -> str | None:
@@ -821,9 +846,7 @@ class _Replay:
                 self.first_write_item(s, rel, f)
             f.text, f.known, f.why, f.cause, f.base_state, f.restored_at = _redact(str(s.input.get("content", ""))), True, "", "", False, ""
         else:
-            raw = s.input.get("edits", []) if s.tool == "MultiEdit" else [s.input]
-            edits = [(str(e.get("old_string", "")), str(e.get("new_string", "")), bool(e.get("replace_all")))
-                     for e in raw if isinstance(e, dict)]
+            edits = edits_of(s.tool, s.input)
             if first and edits:
                 self.first_edit_item(s, rel, f, edits[0])
             self.apply_edits(s, rel, f, edits)
@@ -831,16 +854,19 @@ class _Replay:
     def apply_edits(self, s: _Step, rel: str, f: _File, edits: list[tuple[str, str, bool]]) -> None:
         if not f.known:
             return
-        text = f.text
-        for k, (old, new, replace_all) in enumerate(edits):
-            text, problem = _apply_edit(text, old, new, replace_all)
-            if problem:
-                where = f" (edit {k + 1} of {len(edits)})" if len(edits) > 1 else ""
-                self.replay_items.append({"kind": "edit", "event_id": s.event_id, "path": rel, "status": FAILED,
-                                          "reason": f"the tool applied this edit, but in the replayed content {problem}{where}"})
-                self.unknown(f, f"{s.event_id}: {problem}", "anomaly")
-                return
-        f.text, f.base_state, f.restored_at = text, False, ""
+        out = apply_edits(f.text, edits)  # the edit function ingest/replay.py uses
+        if out.notes:
+            self.approximations.append(f"{s.event_id}: {rel}: " + ", ".join(dict.fromkeys(out.notes))
+                                       + " (the replay follows the Edit tool; see tracecontract.ingest.edit_tool)")
+        if out.text is None:
+            k = out.failed_at or 0
+            problem = _PROBLEMS.get(str(out.problem), str(out.problem))
+            where = f" (edit {k + 1} of {len(edits)})" if len(edits) > 1 else ""
+            self.replay_items.append({"kind": "edit", "event_id": s.event_id, "path": rel, "status": FAILED,
+                                      "reason": f"the tool applied this edit, but in the replayed content {problem}{where}"})
+            self.unknown(f, f"{s.event_id}: {problem}", "anomaly")
+            return
+        f.text, f.base_state, f.restored_at = out.text, False, ""
 
     def failed_edit(self, s: _Step, rel: str) -> None:
         """A failed Edit whose error message describes the file must agree with the replayed content."""
@@ -848,7 +874,9 @@ class _Replay:
         if s.tool != "Edit" or not s.result or not f.known or f.text is None:
             return
         old = str(s.input.get("old_string", ""))
-        n = len(_occurrences(f.text, old))
+        view = _tool_view(f.text, old)
+        actual = actual_old_string(view, old) if old else None
+        n = view.count(actual) if actual else 0  # the tool counts matches as str.count does (its split count)
         m = re.search(r"Found (\d+) matches of the string to replace", s.result)
         claim = ("not found", n == 0) if "String to replace not found" in s.result else \
             (f"{m.group(1)} matches", n == int(m.group(1))) if m else None
@@ -868,21 +896,30 @@ class _Replay:
                         reason="the file is absent from the base" + ("; an edit with a non-empty old_string needs it" if old
                                                                      else "; an empty old_string creates it"))
         else:
-            olds = _occurrences(f.text, old) if old else []
-            spans = [(i, i + len(old)) for i in olds]
-            news = [i for i in _occurrences(f.text, new) if not any(a <= i and i + len(new) <= b for a, b in spans)] if new else []
+            # As the tool matches: a CRLF file read with LF breaks, quotes normalised if need be (edit_tool).
+            view = _tool_view(f.text, old)
+            actual = actual_old_string(view, old) if old else None
+            written = preserve_quote_style(old, actual, new) if actual is not None else new
+            olds = _occurrences(view, actual, overlapping=False) if actual else []  # as str.count counts them
+            spans = [(i, i + len(actual or "")) for i in olds]
+            news = [i for i in _occurrences(view, written)
+                    if not any(a <= i and i + len(written) <= b for a, b in spans)] if written else []
             item.update(old_occurrences=len(olds), new_occurrences_outside_old=len(news))
+            if actual is not None and actual != old:
+                item["quote_normalised"] = True
             problems = []
-            if not old:
+            if not old and view.strip():
                 problems.append("old_string is empty but the file exists in the base")
-            elif not olds:
+            elif old and actual is None:
                 problems.append("old_string does not occur in the base")
             elif len(olds) > 1 and not replace_all:
                 problems.append(f"old_string occurs {len(olds)} times in the base; the Edit tool refuses a non-unique "
                                 "old_string unless replace_all is set, so the session did not edit this base")
             if news:
                 problems.append(f"new_string already occurs {len(news)} time(s) in the base outside old_string")
-            ok = "old_string occurs as the Edit tool requires and new_string does not occur" + (" (deletion)" if not new else "")
+            ok = ("an empty old_string fills a file that holds only whitespace" if not old else
+                  "old_string occurs as the Edit tool requires and new_string does not occur" + (" (deletion)" if not new else "")
+                  + (" (quotes normalised, as the tool matches them)" if item.get("quote_normalised") else ""))
             item.update(status=FAILED if problems else PASSED, reason="; ".join(problems) or ok)
         self.first_writes.append(item)
 
@@ -918,6 +955,8 @@ class _Replay:
                     self.unknown(f, self.all_unknown, "bash")
             elif e.action == "restore" and self.head_is_base:
                 for rel in _under(e.paths, self.files):  # a file never written still has its base content
+                    if rel not in self.base_files:
+                        continue  # git resets tracked files only: a file the session created stays as it is
                     f = self.files[rel]
                     f.text, f.known, f.why, f.cause, f.base_state, f.restored_at = self.base_text(rel), True, "", "", True, s.event_id
             else:
@@ -1014,7 +1053,36 @@ def _check_states(rp: _Replay, states: list[tuple[str, dict[str, str | None] | N
                 item.update(status=PASSED if ok else FAILED,
                             reason=f"the replay {'reproduces' if ok else 'differs from'} the captured {label} content")
             items.append(item)
-    return _rollup("f_replay_matches_states", items, "nothing to replay")
+    return _rollup("f_replay_matches_states", items, "nothing to replay", list(rp.approximations))
+
+
+def _file_rollup(rp: _Replay, captured: dict[str, dict[str, str | None] | None]) -> list[dict]:
+    """Per changed file: the passed items of checks (b) and (c) that attest its base content.
+
+    A changed file is one that the reference (final) or pre-correction patch changes, or that the
+    session edited through Edit, MultiEdit or Write. Its status is ``passed`` if at least one item
+    of (b) or (c) on it passed, ``failed`` if one failed and none passed, else ``not_checkable``.
+    """
+    why: dict[str, list[str]] = {}
+    for label, key in (("reference patch", "final"), ("pre-correction patch", "pre-correction")):
+        for rel in captured.get(key) or {}:
+            why.setdefault(rel, []).append(label)
+    for rel in rp.tool_writers:
+        why.setdefault(rel, []).append("edited by the session")
+    out = []
+    for rel in sorted(why):
+        mine = [("b", i) for i in rp.first_writes if i.get("path") == rel]
+        mine += [("c", i) for i in rp.base_reads if i.get("path") == rel]
+        ok = [{"check": c, "event_id": i["event_id"], "reason": i["reason"]} for c, i in mine if i["status"] == PASSED]
+        bad = [i for _, i in mine if i["status"] == FAILED]
+        status = PASSED if ok else FAILED if bad else NOT_CHECKABLE
+        reason = (f"{len(ok)} passed item(s) in check b or c attest its base content" if ok else
+                  f"{len(bad)} item(s) in check b or c failed" if bad else
+                  "no item of check b or c on it passed: the session's record does not attest its base content"
+                  + (f" ({len(mine)} not checkable)" if mine else ""))
+        out.append({"path": rel, "changed_by": why[rel], "status": status, "reason": reason, "evidence": ok[:5],
+                    "n_evidence": len(ok)})
+    return out
 
 
 def _check_start_manifest(entries: list[tuple[str, str]], start: str | None, source: str, overlays: dict[str, str],
@@ -1108,7 +1176,7 @@ def check_reconstruction(*, task_id: str, session: Session, base: Path, workspac
     """
     overlays = overlays or {}
     ws = os.path.normpath(workspace_root)
-    kw = {"inputs": inputs or {}, "legacy_leakage_check": legacy_leakage_check}
+    kw: dict[str, Any] = {"inputs": inputs or {}, "legacy_leakage_check": legacy_leakage_check}
     try:
         entries = manifest(base)
     except OSError as exc:
@@ -1156,7 +1224,8 @@ def check_reconstruction(*, task_id: str, session: Session, base: Path, workspac
     if rp.all_unknown:
         notes.append(f"every file is unknown after {rp.all_unknown}")
     effects = [{**asdict(e), "reason": e.reason.replace(ws, "<workspace>")} for e in rp.effects]
-    return _report(task_id, checks, bash_effects=effects, notes=[n.replace(ws, "<workspace>") for n in notes], **kw)
+    return _report(task_id, checks, files=_file_rollup(rp, captured), bash_effects=effects,
+                   notes=[n.replace(ws, "<workspace>") for n in notes], **kw)
 
 
 # --------------------------------------------------------------------------- task directories
@@ -1174,9 +1243,14 @@ def _infer_workspace(session: Session, base_files: set[str]) -> str | None:
     return votes.most_common(1)[0][0] if votes else None
 
 
-def check_task(task_dir: Path, repo_root: Path, snapshot_root: Path) -> Report:
-    """Check a task directory with repository material only (see the module docstring)."""
-    from .schemas import Candidate, ProvenanceRecord, Snapshot, TaskManifest
+def check_task(task_dir: Path, repo_root: Path, snapshot_root: Path, *, scenario_workspace: str | None = None) -> Report:
+    """Check a task directory with repository material only (see the module docstring).
+
+    ``scenario_workspace`` is the scenario's workspace path, for a build that runs the check while
+    the scenario is sealed outside the repository; otherwise it is read from the scenario file, or
+    inferred from the session's tool paths.
+    """
+    from .schemas import ProvenanceRecord
     from .store import load
     from .tasks import find_turn, session_for_task
 
@@ -1219,11 +1293,12 @@ def check_task(task_dir: Path, repo_root: Path, snapshot_root: Path) -> Report:
             boundary = find_turn(session, m.scripted_turns[1])
         except KeyError:
             boundary = None
-    ws, ws_source = None, "inferred from tool paths"
+    ws, ws_source = scenario_workspace, "scenario" if scenario_workspace else "inferred from tool paths"
     scen = repo_root / "data" / m.population.value / "scenarios" / f"{tid}.json"
     try:
-        ws = json.loads(scen.read_text(encoding="utf-8")).get("workspace") if scen.is_file() else None
-        ws_source = "scenario" if ws else ws_source
+        if ws is None and scen.is_file():
+            ws = json.loads(scen.read_text(encoding="utf-8")).get("workspace")
+            ws_source = "scenario" if ws else ws_source
     except (OSError, ValueError, AttributeError):
         ws = None
     ws = ws or _infer_workspace(session, {p for p, _ in entries})
@@ -1238,9 +1313,7 @@ def check_task(task_dir: Path, repo_root: Path, snapshot_root: Path) -> Report:
         pass
     inputs = {"transcript_sha256": session.trace_sha256, "transcript_matches_provenance": trace_ok,
               "base_manifest_sha256": rebuilt, "base_n_files": len(entries), "workspace_root_from": ws_source,
-              "reference_candidate": ref.candidate_id if ref else None, "reference_patch_sha256": ref.patch_sha256 if ref else None,
-              "pre_correction_candidate": pre.candidate_id if pre else None,
-              "pre_correction_patch_sha256": pre.patch_sha256 if pre else None, "correction_turn_event": boundary}
+              **_candidate_inputs(ref, pre), "correction_turn_event": boundary}
     if ws is None:
         return unavailable_report(tid, "the workspace root is unknown (no scenario file, and no tool path names a base file)",
                                   inputs=inputs, legacy_leakage_check=legacy)
@@ -1253,3 +1326,98 @@ def check_task(task_dir: Path, repo_root: Path, snapshot_root: Path) -> Report:
                          + ("; n_files counts the tree before the overlays" if
                             snap.n_files == len([e for e in entries if e[0] not in m.snapshot_overlays]) else ""))
     return rep
+
+
+# --------------------------------------------------------------------------- the recorded check
+
+
+# Inputs of a record that must equal the current files for the record to count (recorded_check).
+COMPARED_INPUTS = ("transcript_sha256", "base_manifest_sha256", "reference_candidate", "reference_patch_sha256",
+                   "pre_correction_candidate", "pre_correction_patch_sha256")
+
+
+def _candidate_inputs(ref: Candidate | None, pre: Candidate | None) -> dict:
+    """Ids of the reference and pre-correction candidates, and the sha256 of each patch (recomputed from its text)."""
+    return {"reference_candidate": ref.candidate_id if ref else None,
+            "reference_patch_sha256": sha256_text(ref.patch) if ref else None,
+            "pre_correction_candidate": pre.candidate_id if pre else None,
+            "pre_correction_patch_sha256": sha256_text(pre.patch) if pre else None}
+
+
+def current_inputs(task_dir: Path, repo_root: Path) -> dict:
+    """The :data:`COMPARED_INPUTS` a check of the task would record now, from the current files (no snapshot needed).
+
+    The transcript's sha256 (None if it is missing), the base manifest that ``snapshot.json``
+    records (which :func:`check_task` requires the built base to have), and the reference and
+    pre-correction candidates of ``task.json``.
+    """
+    from .store import load
+    from .tasks import transcript_path  # as in check_task
+
+    m = load(Path(task_dir) / "task.json", TaskManifest)
+    snap = load(Path(task_dir) / (m.snapshot or "snapshot.json"), Snapshot)
+    cands = []
+    for p in m.candidates:
+        try:
+            cands.append(load(Path(task_dir) / p, Candidate))
+        except Exception:  # noqa: BLE001 - as in check_task: a candidate that does not load is not used
+            continue
+    ref = next((c for c in cands if c.origin == CandidateOrigin.reference), None)
+    pre = next((c for c in cands if c.origin == CandidateOrigin.observed_pre_correction), None)
+    try:
+        tp: Path | None = transcript_path(Path(task_dir), repo_root)
+    except FileNotFoundError:  # a population that keeps no transcript in the repository
+        tp = None
+    return {"task_id": m.task_id, "transcript_sha256": sha256_bytes(tp.read_bytes()) if tp and tp.is_file() else None,
+            "base_manifest_sha256": snap.file_manifest_sha256, **_candidate_inputs(ref, pre)}
+
+
+@dataclass
+class RecordCheck:
+    """A task's recorded reconstruction check, compared with the current files (:func:`recorded_check`)."""
+
+    status: str | None  # the record's status (passed | failed | incomplete); None without a readable record
+    problems: list[str] = field(default_factory=list)  # why the record does not count; empty if it does
+    failed: bool = False  # the record is current and failed: the base may already hold the solution
+
+    @property
+    def ok(self) -> bool:
+        return not self.problems
+
+
+def recorded_check(task_dir: Path, repo_root: Path) -> RecordCheck:
+    """Whether ``tasks/<id>/reconstruction_check.json`` counts (protocol v0.8 §16.5).
+
+    It counts only if it was made by this method (:data:`METHOD`), its status is ``passed``, and
+    its recorded inputs (:data:`COMPARED_INPUTS`: the transcript, the base manifest and the
+    candidate patches) equal the current ones. Nothing is re-run and no snapshot is needed;
+    ``tracecontract reconstruction-check <task> --write`` makes or refreshes the record.
+    """
+    task_dir = Path(task_dir)
+    path, hint = task_dir / RECORD, f"run `tracecontract reconstruction-check tasks/{task_dir.name} --write`"
+    if not path.is_file():
+        return RecordCheck(None, [f"no {RECORD}: the base has not been checked against its session ({hint})"])
+    try:
+        rec = json.loads(path.read_text(encoding="utf-8"))
+        now = current_inputs(task_dir, repo_root)
+        recorded = rec.get("inputs") if isinstance(rec.get("inputs"), dict) else {}
+    except Exception as exc:  # noqa: BLE001 - an unreadable record or task counts as no record
+        return RecordCheck(None, [f"{RECORD} or the task's records are unreadable ({type(exc).__name__}: {exc}); {hint}"])
+    status, problems = rec.get("status"), []
+    if rec.get("method") != METHOD:
+        problems.append(f"{RECORD} was made by {rec.get('method')!r}, not by {METHOD} ({hint})")
+    stale = (["task_id"] if rec.get("task_id") != now["task_id"] else []) + [
+        k for k in COMPARED_INPUTS if recorded.get(k) != now.get(k)]
+    if stale:
+        problems.append(f"{RECORD} was made from other files than the current ones ({', '.join(stale)} differ; {hint})")
+    current = not problems
+    if status != "passed" or rec.get("passed") is not True:
+        checks = rec.get("checks") if isinstance(rec.get("checks"), list) else []
+        bad = [f"{c.get('check_id')}: {c.get('status')}" for c in checks if isinstance(c, dict) and c.get("status") != PASSED]
+        files = rec.get("files") if isinstance(rec.get("files"), list) else []
+        unattested = [str(f.get("path")) for f in files if isinstance(f, dict) and f.get("status") != PASSED]
+        detail = "; ".join(bad + ([f"changed file(s) not attested: {', '.join(unattested)}"] if unattested else []))
+        what = ("failed: the base may not be the state the session started from, and may already hold the solution"
+                if status == "failed" else f"is {status!r}, not 'passed'")
+        problems.append(f"the recorded check {what}" + (f" ({detail})" if detail else ""))
+    return RecordCheck(status if isinstance(status, str) else None, problems, failed=current and status == "failed")

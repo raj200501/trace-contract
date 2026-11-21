@@ -33,6 +33,8 @@ TEST = textwrap.dedent('''
 
 
 def test_a_complete_record_holds_the_run_but_no_model_identifier():
+    for label in ("config-A", "config-B", "config-Z"):
+        assert generation_record(**{**RUN, "config": label}).generator == label
     rec = generation_record(**RUN)
     assert rec.generator == "config-A" and rec.run_id == RUN["run_id"] and rec.prompt_sha256 == SHA
     assert rec.created_at == RUN["ended_at"]
@@ -47,7 +49,9 @@ def test_a_complete_record_holds_the_run_but_no_model_identifier():
 def test_each_missing_or_invalid_field_is_refused():
     cases = {
         "run_id": [None, "", "unrecorded", "two words"],
-        "config": [None, "", "A", "model:x", "config-", "config A"],
+        # a configuration label is config-A to config-Z: one capital letter, so no name can be spelt in it
+        "config": [None, "", "A", "model:x", "config-", "config A", "config-a", "config-AB", "config-vendor-model-name-v9",
+                   "config-anything_goes-123", "config-A1"],
         "prompt_sha256": [None, "", "AB" * 32, "ab" * 31],
         "started_at": [None, "yesterday", "2026-11-22T10:00:00"],  # no time zone
         "ended_at": [None, "2026-11-22T09:00:00+00:00"],             # before the start

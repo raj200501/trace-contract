@@ -1,0 +1,13 @@
+{
+  "exporter": "tc-harbor-export/0.3.0",
+  "removed_protected": [
+    "tests/test_calc.py"
+  ],
+  "runner_exit_code": 0,
+  "harness_version": "tc-harness/0.3.5",
+  "checks": {
+    "test_add.py::test_add": "passed",
+    "test_add.py::test_negative": "passed"
+  },
+  "tamper_events": []
+}

@@ -451,12 +451,17 @@ def task_gate(task_dir: Path, repo_root: Path) -> TaskGate:
     * its provenance record exists and is ``eligible`` (a reviewer has checked the source's
       permission basis, licence and redaction; nothing here sets it);
     * it has a reference contract, and every contract it lists exists and passes
-      :func:`acceptance_gate` against the task's session (read from ``repo_root``).
+      :func:`acceptance_gate` against the task's session (read from ``repo_root``);
+    * its base passed the reconstruction check: ``tasks/<id>/reconstruction_check.json`` has
+      status ``passed`` and was recorded from the current transcript, base manifest and candidate
+      patches (:func:`reconstruction.recorded_check`; protocol v0.8 §16.5). A current record whose
+      check failed refuses the task: its base may already hold the solution.
 
     ``tracecontract accept-task`` sets the status to ``accepted`` only when the gate passes,
     and ``tracecontract evaluate`` runs it again, so a task whose records changed after it
     was accepted no longer counts as accepted.
     """
+    from .reconstruction import recorded_check  # reconstruction imports tasks, which imports this module
     from .tasks import session_for_task  # tasks imports this module
 
     m = load(task_dir / "task.json", TaskManifest)
@@ -486,6 +491,8 @@ def task_gate(task_dir: Path, repo_root: Path) -> TaskGate:
             reasons.append(f"contract {variant}: {rel} missing (sealed or not built)")
         elif session is not None:
             reasons += [f"contract {variant}: {w}" for w in acceptance_gate(load(task_dir / rel, TaskContract), session)[1]]
+    rc = recorded_check(task_dir, repo_root)
+    (refusals if rc.failed else reasons).extend(f"reconstruction: {p}" for p in rc.problems)
     return TaskGate(task_id=m.task_id, status=m.status, eligibility=eligibility, refusals=refusals,
                     reasons=refusals + reasons)
 

@@ -25,11 +25,18 @@ container as an unprivileged sandbox UID, so the grade script makes that directo
 root-owned with mode 0700 before any candidate code runs. On every exit path,
 including incomplete results, uncaught exceptions and a runner timeout, it kills
 what the sandbox UID left behind and removes every ``reward.*`` entry it did not
-write itself, so Harbor records a verifier error instead of a planted reward.
+write itself, so Harbor records a verifier error instead of a planted reward. Since
+0.3.0, an entry that cannot be removed makes ``reward.json``, which Harbor reads
+before ``reward.txt``, unparseable (0.2.0 renamed the directory away instead, which
+fails on the bind mount Harbor uses for it), and the verifier image has no setuid or
+setgid file, because Harbor sets neither ``no-new-privileges`` nor a capability drop
+for the verifier container.
 
-Tasks whose status is ``rejected`` are refused; ``allow_rejected_fixture`` exports
-one only if it is a fixture (population ``fixture``). The verifier's test files
-must still match the hashes recorded when it was frozen.
+A task that the acceptance gate refuses (the refusals of
+:func:`tracecontract.contract.task_gate`, for example a rejected status or a rejected
+source) is not exported; ``allow_rejected_fixture`` exports one only if it is a fixture
+(population ``fixture``). The verifier's test files must still match the hashes recorded
+when it was frozen.
 
 ``network`` = ``intended`` writes ``no-network`` for agent and verifier phases
 (an LLM agent run needs an allowlist override for its model endpoint).
@@ -46,7 +53,7 @@ import shutil
 import tempfile
 from pathlib import Path
 
-from .contract import render_instruction
+from .contract import render_instruction, task_gate
 from .patches import DEFAULT_PROTECTED, apply_patch, split_sections
 from .sandbox.docker_runner import BASE_IMAGE, HARNESS_SRC, HARNESS_VERSION, ensure_wheelhouse
 from .schemas import Candidate, CandidateOrigin, TaskContract, TaskManifest, VerifierSpec
@@ -56,7 +63,11 @@ from .verifier import checks_sha256, hash_test_dir
 # 0.1.0 was the unversioned exporter validated under harness 0.3.0-0.3.3 (decision log D20, D35, D39, D40,
 # D45). 0.2.0: the grade script keeps candidate code from writing /logs/verifier and never leaves a reward it
 # did not write; only the reference solution is packaged by default; rejected tasks are refused.
-EXPORTER_VERSION = "tc-harbor-export/0.2.0"
+# 0.3.0 (validated with harness 0.3.5): every task that the acceptance gate refuses is refused, a rejected source
+# included; a planted reward entry that cannot be removed makes reward.json unparseable, and tc_detail.json is
+# still written and /logs/verifier released; the verifier image has no setuid or setgid file.
+EXPORTER_VERSION = "tc-harbor-export/0.3.0"
+REPO = Path(__file__).resolve().parents[2]  # the repository whose transcripts task_gate reads (as cli.REPO)
 NETWORK_VARIANTS = ("intended", "local-validation")
 RUNNER_TIMEOUT_MARGIN_SEC = 30  # the grade script's runner timeout is the verifier timeout minus this margin
 _CANDIDATE_NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*")
@@ -67,8 +78,9 @@ Exporter __EXPORTER_VERSION__. Candidate code runs only in tc_runner's sandbox c
 unprivileged UID drawn per run. Harbor 0.25.0 makes /logs/verifier mode 0777 right before the test,
 so this script first makes it root-owned with mode 0700, before any candidate code runs. Whatever
 happens afterwards (incomplete results, an uncaught exception, a runner timeout), the finally block
-kills what the sandbox UID left behind and removes every reward.* entry this script did not write,
-so Harbor records a typed verifier error, never a planted reward.
+kills what the sandbox UID left behind and removes every reward.* entry this script did not write.
+If one cannot be removed, reward.json, which Harbor reads before reward.txt, is overwritten with text
+that is not JSON. Harbor then records a typed verifier error, never a planted reward.
 """
 import grp, json, os, pwd, secrets, shutil, signal, stat, subprocess, sys, tempfile, time
 
@@ -77,6 +89,7 @@ PROTECTED = __PROTECTED__
 CAND, TESTS, OUT = "/app", "/tests", "/logs/verifier"
 RUNNER_TIMEOUT = __TIMEOUT__
 OURS = {}  # name -> (st_dev, st_ino, bytes) of every reward file this script wrote
+INVALID_REWARD = b"no reward: a reward entry that the grade script did not write could not be removed\n"
 
 
 def is_protected(rel):
@@ -166,25 +179,48 @@ def is_ours(name):
         return False
 
 
-def remove_foreign_rewards():
-    """Remove every reward.* entry in OUT that this script did not write; return their names."""
+def invalidate_reward():
+    """Overwrite reward.json with text that is not JSON (Harbor reads it first: VerifierOutputParseError)."""
+    path = os.path.join(OUT, "reward.json")
+    try:
+        remove_entry(path)
+    except Exception:
+        pass  # a file that cannot be removed is truncated and overwritten below
+    OURS.pop("reward.json", None)
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | os.O_NOFOLLOW | os.O_NONBLOCK, 0o644)
+    with os.fdopen(fd, "wb") as fh:
+        fh.write(INVALID_REWARD)
+
+
+def remove_foreign_rewards(detail):
+    """Remove every reward.* entry in OUT that this script did not write, catching every error per entry.
+
+    Harbor bind-mounts /logs/verifier, so OUT cannot be renamed away (0.2.0 tried, and the error escaped). If an
+    entry cannot be removed, reward.json is invalidated instead; a failure to do so is recorded and raised.
+    """
     try:
         names = sorted(os.listdir(OUT))
     except FileNotFoundError:
-        return []
-    removed, failed = [], []
+        return
+    removed, kept = [], []
     for name in names:
-        if name.startswith("reward.") and not is_ours(name):
-            try:
+        try:
+            if name.startswith("reward.") and not is_ours(name):
                 remove_entry(os.path.join(OUT, name))
                 removed.append(name)
-            except OSError:
-                failed.append(name)
-    if failed:  # last resort: set OUT aside as a whole, so that Harbor finds no reward at all
-        os.rename(OUT, f"{OUT}.quarantine-{secrets.token_hex(4)}")
-        os.mkdir(OUT, 0o700)
-        removed += failed
-    return removed
+        except Exception:
+            kept.append(name)
+    if removed:
+        detail["removed_reward_files"] = removed
+    if kept:
+        detail["unremovable_reward_files"] = kept
+        try:
+            invalidate_reward()
+            detail["reward_invalidated"] = True
+        except Exception as exc:
+            detail["reward_invalidated"] = False
+            detail["reward_invalidation_error"] = f"{type(exc).__name__}: {exc}"
+            raise
 
 
 def pids_of(uid):
@@ -329,21 +365,22 @@ def grade(detail, uid):
 
 
 def finish(detail, uid, locked):
-    """Every exit path ends here: no sandbox process survives, no reward stays that this script did not write."""
+    """Every exit path ends here: no sandbox process survives, every reward.* entry this script did not write is
+    removed or shadowed by an unparseable reward.json, and tc_detail.json is written and OUT released regardless."""
     try:
         if uid is not None:
             n = reap(uid)
             if n:
                 detail["reaped_sandbox_processes"] = n
     finally:
-        removed = remove_foreign_rewards()
-        if removed:
-            detail["removed_reward_files"] = removed
-        if locked:
-            try:
-                write_out("tc_detail.json", detail)
-            finally:
-                release_out()
+        try:
+            remove_foreign_rewards(detail)
+        finally:
+            if locked:
+                try:
+                    write_out("tc_detail.json", detail)
+                finally:
+                    release_out()
 
 
 def main():
@@ -415,18 +452,21 @@ def _select_candidates(task_dir: Path, m: TaskManifest, candidates: list[str] | 
 
 def export_task(task_dir: Path, verifier_id: str, out: Path, *, snapshot_root: Path, cache_dir: Path,
                 candidates: list[str] | None = None, network: str = "intended", timeout_sec: float = 900.0,
-                allow_rejected_fixture: bool = False) -> Path:
+                allow_rejected_fixture: bool = False, repo_root: Path | None = None) -> Path:
     """Write the Harbor task package for one verifier of a task to ``out`` (replacing it).
 
     ``candidates`` names the candidates packaged besides the reference solution; ``None`` packages the
-    reference solution only. A task with status ``rejected`` is refused unless it is a fixture and
-    ``allow_rejected_fixture`` is set.
+    reference solution only. A task that the acceptance gate refuses (the refusals of :func:`task_gate`,
+    which reads the task's records under ``repo_root``, by default this repository; for example a rejected
+    status or a rejected source) is refused unless it is a fixture and ``allow_rejected_fixture`` is set.
+    The gate's other reasons (pending review, for example) do not keep a task from being exported.
     """
     task_dir = task_dir.resolve()
     m = load(task_dir / "task.json", TaskManifest)
-    if m.status == "rejected" and not (allow_rejected_fixture and m.population.value == "fixture"):
-        raise ValueError(f"task {m.task_id} has status 'rejected' and is not exported"
-                         + ("" if m.population.value == "fixture" else " (only a fixture can be exported when rejected)"))
+    refusals = task_gate(task_dir, repo_root or REPO).refusals
+    if refusals and not (allow_rejected_fixture and m.population.value == "fixture"):
+        raise ValueError(f"task {m.task_id} is refused by the acceptance gate and is not exported ({'; '.join(refusals)})"
+                         + ("" if m.population.value == "fixture" else "; only a fixture can be exported when rejected"))
     if network not in NETWORK_VARIANTS:
         raise ValueError(f"network must be one of {NETWORK_VARIANTS}, not {network!r}")
     if timeout_sec <= RUNNER_TIMEOUT_MARGIN_SEC:
@@ -466,9 +506,13 @@ def export_task(task_dir: Path, verifier_id: str, out: Path, *, snapshot_root: P
     grade = render_grade_script(DEFAULT_PROTECTED, m.candidate_pythonpath, int(timeout_sec - RUNNER_TIMEOUT_MARGIN_SEC))
     (out / "tests" / "tc_harbor_grade.py").write_text(grade)
     (out / "tests" / "test.sh").write_text("#!/bin/sh\nexec python3 -I /tests/tc_harbor_grade.py\n")
+    # Harbor sets neither no-new-privileges nor a capability drop for the verifier container, so the last step strips
+    # every setuid and setgid bit (the base image has chage, chfn, chsh, expiry, gpasswd, mount, newgrp, passwd, su,
+    # umount and unix_chkpwd), so the sandbox UID finds no such program through which to gain privileges.
     (out / "tests" / "Dockerfile").write_text(
         f"FROM {BASE_IMAGE}\n{install}RUN useradd --uid 1001 --user-group --no-create-home --shell /usr/sbin/nologin sandbox\n"
-        "COPY . /tests/\nRUN rm -rf /tests/wheelhouse && chmod -R go-rwx /tests && chmod 755 /tests/test.sh\n")
+        "COPY . /tests/\nRUN rm -rf /tests/wheelhouse && chmod -R go-rwx /tests && chmod 755 /tests/test.sh\n"
+        "RUN find / -xdev -perm /6000 -type f -exec chmod a-s {} +\n")
 
     # Oracle: candidate post-image overlays selected by $CANDIDATE.
     for name, c in chosen:

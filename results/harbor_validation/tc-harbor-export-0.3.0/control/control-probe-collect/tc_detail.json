@@ -1,0 +1,11 @@
+{
+  "removed_protected": [
+    "tests/test_calc.py"
+  ],
+  "checks": {
+    "test_add.py::test_add": "missing",
+    "test_add.py::test_negative": "missing",
+    "test_collect_probe.py::test_collection_time_call": "missing"
+  },
+  "tamper_events": []
+}

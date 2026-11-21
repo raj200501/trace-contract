@@ -247,3 +247,63 @@ def test_scan_flags_sampled_logins_and_manifest_handles(population, tmp_path, ca
     assert scan.scan_text('{"x": "cc @someone"}', "data/manifests/m.json", []) == 0  # the default scan is unchanged
     out = capsys.readouterr().out
     assert "aidev login #1" in out and "fx-rev" not in out and "someone" not in out
+
+
+def _write_population(d: Path, tables: dict) -> Path:
+    d.mkdir(parents=True)
+    for name, rows in tables.items():
+        schema = pa.schema(list(SCHEMAS[name].items()))
+        pq.write_table(pa.table({c: [r.get(c) for r in rows] for c in SCHEMAS[name]}, schema=schema), d / f"{name}.parquet")
+    return d
+
+
+def test_scan_covers_every_person_connected_to_the_sampled_prs(tmp_path, capsys):
+    """Issue authors, commit authors and committers, git author names and owners acting as accounts (D51)."""
+    t = {k: list(v) for k, v in TABLES.items()}
+    t["repository"] += [{**_repo(5, "tool"), "url": f"{API}fx-owner/tool"}, {**_repo(6, "lib"), "url": f"{API}fx-org/lib"}]
+    t["pull_request"] += [{**_pr(18, 8, "tool", 5, "Copilot", "Copilot"), "repo_url": f"{API}fx-owner/tool"},
+                          {**_pr(19, 9, "x", 4, "Devin", "fx-owner")},  # fx-owner acts as an account elsewhere
+                          {**_pr(20, 10, "lib", 6, "Copilot", "Copilot"), "repo_url": f"{API}fx-org/lib"}]
+    t["pr_review_comments"] += [{**_c(150, 8, "fx-rev-9"), "pull_request_url": f"{API}fx-owner/tool/pulls/8"},
+                                {**_c(151, 10, "fx-rev-8"), "pull_request_url": f"{API}fx-org/lib/pulls/10"}]
+    t["pr_commits"] += [{"sha": "f1", "pr_id": 10, "author": "Fx Name  Only", "committer": "fx-committer-only", "message": "m"}]
+    t["related_issue"] += [{"pr_id": 10, "issue_id": 503, "source": "timeline"}]
+    t["issue"] += [{"id": 503, "number": 4, "title": "Bug", "body": "it breaks", "user": "fx-issue-only"}]
+    data = _write_population(tmp_path / "aidev", t)
+    manifest = tmp_path / "screening.json"
+    manifest.write_text(json.dumps({"sample": {"rows": [{"comment_id": 100}, {"comment_id": 150}, {"comment_id": 151}]}}))
+    logins = scan.aidev_logins(data, manifest)
+    assert logins == ["Fx Name Only", "fx-committer-only", "fx-issue-only", "fx-owner", "fx-rev-1", "fx-rev-3", "fx-rev-8",
+                      "fx-rev-9"]  # no bot, agent, web committer or organisation (fx-org never acts as an account)
+    pats = scan.login_patterns(logins)
+    # The issue author of a sampled PR, who wrote no review comment, is reported.
+    assert scan.scan_text("the bug was reported by FX-ISSUE-ONLY", "f.md", [], pats) == 1
+    assert scan.scan_text("fx-issue-only-2 is another account; fx name\n only is cut by a line", "f.md", [], pats) == 0
+    assert scan.scan_text("thanks to fx  name\tonly and fx-owner", "f.md", [], pats) == 2
+    out = capsys.readouterr().out
+    assert "fx-" not in out.lower() and out.count("aidev login #") == 3
+
+
+def test_handles_are_checked_in_tasks_and_data_except_code(capsys):
+    assert scan.handle_scope("tasks/CS-01/candidates/x.json") == (True, frozenset())
+    assert scan.handle_scope("data/controlled/transcripts/CS-01.jsonl")[0] and not scan.handle_scope("docs/x.md")[0]
+    assert scan.handle_scope("tasks/CS-04/labels/base_tests_overlay/tests/test_more.py")[1] == frozenset({"consumer"})
+    code = ('@pytest.mark.parametrize("x", [1])\n@freeze_time("2020-02-02")\n@overload\n``@NAME@`` and @KILL_AT_SYNC@\n'
+            '"https://registry.npmjs.org/@scope/pkg"\n+@pytest.mark.slow')
+    assert scan.scan_text(code, "tasks/CS-01/x.json", [], handles=True) == 0
+    assert scan.scan_text("    @mydecorator\n    def f(): pass", "tasks/x/t.py", [], handles=True, decorators=True) == 0
+    assert scan.scan_text("    @mydecorator\n", "tasks/x/m.json", [], handles=True) == 1  # not a Python file
+    assert scan.scan_text("# without @consumer, it raises", "t.py", [], handles=True, decorators=True,
+                          allow=frozenset({"consumer"})) == 0
+    assert scan.scan_text("# without @consumer, it raises", "t.py", [], handles=True, decorators=True) == 1
+    assert scan.scan_text('{"note": "thanks @fx-someone"}', "data/x.json", [], handles=True) == 1
+    assert "fx-someone" not in capsys.readouterr().out
+
+
+def test_addresses_at_reserved_domains_are_not_findings(capsys):
+    at = "@"
+    for addr in (f"ann{at}example.org", f"x{at}mail.example.com", f"y{at}host.test", f"z{at}a.invalid"):
+        assert scan.scan_text(f"from {addr}", "t.py", []) == 0, addr
+    for addr in (f"ann{at}notexample.org", f"ann{at}example.org.evil.io"):  # an exact domain, not a suffix of a word
+        assert scan.scan_text(f"from {addr}", "t.py", []) == 1, addr
+    capsys.readouterr()

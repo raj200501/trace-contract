@@ -6,10 +6,15 @@
 * a scored requirement without an observable check, and an explicit requirement quoting a
   non-user event, are gate errors;
 * ``accept-task`` sets ``accepted`` only when the task gate passes; ``evaluate`` refuses
-  rejected tasks and needs ``--pilot`` for tasks that have not passed the gate.
+  rejected tasks and needs ``--pilot`` for tasks that have not passed the gate;
+* the gate needs a reconstruction check that passed and was recorded from the current files
+  (protocol v0.8 §16.5); a current record that failed refuses the task, even with ``--pilot``.
 
-Synthetic fixtures only (population = fixture), except one read-only check on copies of
-the pilot tasks' records; they test code behaviour and are not research evidence.
+Synthetic fixtures only (population = fixture), except read-only checks of the pilot tasks'
+records (on copies, or by reading them); they test code behaviour and are not research
+evidence. The fixture task's reconstruction record is a stand-in written from its current
+inputs: the gate compares a record with the files and never re-runs the check, which
+``tests/test_reconstruction_check.py`` tests.
 """
 
 from __future__ import annotations
@@ -24,13 +29,14 @@ import tracecontract.cli as cli
 import tracecontract.evaluate as evaluate
 from tracecontract.contract import acceptance_gate, align_quote, human_decision, task_gate, validate_contract
 from tracecontract.ingest.claude_code import parse_claude_code_jsonl
+from tracecontract.reconstruction import METHOD, RECORD, current_inputs, recorded_check
 from tracecontract.schemas import (
     Candidate, CandidateOrigin, ContractVariant, Eligibility, Fidelity, Population, ProvenanceRecord, RedactionStatus,
     Requirement, RequirementKind, RequirementStatus, Review, ReviewerKind, Session, Snapshot, SnapshotSource, Split,
     TaskContract, TaskManifest, sha256_text,
 )
 from tracecontract.snapshot import manifest, manifest_sha256
-from tracecontract.store import dump, load
+from tracecontract.store import dump, load, write_json
 
 FIX = Path(__file__).parent / "fixtures" / "claude_code_session.jsonl"
 REPO = Path(__file__).resolve().parents[1]
@@ -170,8 +176,14 @@ def test_non_user_evidence_is_a_gate_error(session):
 # ---------------------------------------------------------------------------
 
 
+def _record(td: Path, root: Path, status: str = "passed") -> None:
+    """A stand-in reconstruction record with ``status``, made from the task's current inputs (the gate only compares)."""
+    write_json({"task_id": TASK, "method": METHOD, "status": status, "passed": {"passed": True, "failed": False}.get(status),
+                "checks": [], "files": [], "inputs": current_inputs(td, root)}, td / RECORD)
+
+
 def _make_task(root: Path, session: Session, *, status: str = "pending_review", eligibility: str = "eligible",
-               reviews: list[Review] | None = None) -> Path:
+               reviews: list[Review] | None = None, reconstruction: str | None = "passed") -> Path:
     """A fixture task laid out like the repository under ``root``: tasks/, snapshots/ and its transcript in data/."""
     transcript = root / "data" / "fixtures" / "transcripts" / f"{TASK}.jsonl"
     transcript.parent.mkdir(parents=True, exist_ok=True)
@@ -200,6 +212,8 @@ def _make_task(root: Path, session: Session, *, status: str = "pending_review", 
                       snapshot="snapshot.json", env_requirements=[], contracts={"reference": "contracts/reference.json"},
                       candidates=[f"candidates/{noop.candidate_id}.json"]),
          td / "task.json")
+    if reconstruction is not None:
+        _record(td, root, reconstruction)
     return td
 
 
@@ -322,3 +336,58 @@ def test_resumed_run_recorded_before_the_gate_counts_as_pilot(repo, session):
     assert _exit_code(["evaluate", str(td), "--run-id", "r-old"]) == 0
     m = json.loads((run / "manifest.json").read_text())
     assert m["invocations"][-1]["pilot"] is False and m["pilot"] is True
+
+
+# ---------------------------------------------------------------------------
+# The reconstruction check in the gate (protocol v0.8 §16.5)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("record, reason", [
+    (None, "reconstruction: no reconstruction_check.json"),
+    ("incomplete", "reconstruction: the recorded check is 'incomplete', not 'passed'"),
+])
+def test_the_gate_needs_a_passing_reconstruction_check(repo, session, capsys, record, reason):
+    td = _make_task(repo, session, reconstruction=record)
+    assert _exit_code(["accept-task", str(td)]) == 1 and _status(td) == "pending_review"
+    out = json.loads(capsys.readouterr().out)
+    assert not out["refused"] and [r for r in out["reasons"] if r.startswith("reconstruction:")][0].startswith(reason)
+    # Not a refusal: an automated pilot may still evaluate it (the pre-flight does not let it run).
+    assert _exit_code(["evaluate", str(td), "--run-id", "r-unchecked", "--pilot"]) == 0
+    code = _exit_code(["evaluate", str(td), "--run-id", "r-unchecked-2"])
+    assert code not in (0, None) and "pass --pilot" in str(code)
+
+
+def test_a_stale_reconstruction_record_does_not_count(repo, session, capsys):
+    td = _make_task(repo, session)
+    assert task_gate(td, repo).passed
+    transcript = repo / "data" / "fixtures" / "transcripts" / f"{TASK}.jsonl"
+    transcript.write_bytes(transcript.read_bytes() + b"\n")  # the session record changed after the check
+    gate = task_gate(td, repo)
+    assert not gate.passed and not gate.refusals
+    assert any(r.startswith("reconstruction:") and "transcript_sha256" in r for r in gate.reasons)
+    _record(td, repo)  # re-checked against the current files
+    assert task_gate(td, repo).passed
+
+
+def test_a_failed_reconstruction_check_refuses_the_task(repo, session):
+    td = _make_task(repo, session, reconstruction="failed")
+    gate = task_gate(td, repo)
+    assert gate.refusals and gate.refusals[0].startswith("reconstruction: the recorded check failed")
+    for extra in ([], ["--pilot"]):
+        code = _exit_code(["evaluate", str(td), "--run-id", "r-leaked", *extra])
+        assert code not in (0, None) and "refused (reconstruction: the recorded check failed" in str(code)
+    assert not (repo / "results" / "runs" / "r-leaked").exists()
+    # A failed record made from other files is stale, not a refusal: the check must be re-run.
+    (td / "snapshot.json").write_text((td / "snapshot.json").read_text().replace(
+        load(td / "snapshot.json", Snapshot).file_manifest_sha256, "0" * 64))
+    stale = task_gate(td, repo)
+    assert not stale.refusals and any("base_manifest_sha256" in r for r in stale.reasons)
+
+
+@pytest.mark.parametrize("task", ["CS-01", "CS-02", "CS-03", "CS-04"])
+def test_the_pilot_tasks_reconstruction_records_count(task):
+    """Read-only: each pilot task's record passed and was made from its current files."""
+    rc = recorded_check(REPO / "tasks" / task, REPO)
+    assert rc.ok and rc.status == "passed", rc.problems
+    assert not [r for r in task_gate(REPO / "tasks" / task, REPO).reasons if r.startswith("reconstruction:")]

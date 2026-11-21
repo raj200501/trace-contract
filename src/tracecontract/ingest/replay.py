@@ -4,26 +4,33 @@
 order, to a base tree, and checks every step against what the transcript itself shows:
 
 * each ``old_string`` is present in the replayed file, and unique unless ``replace_all`` is set;
+  edits are applied with the tool's own semantics (:mod:`tracecontract.ingest.edit_tool`, the
+  same function :mod:`tracecontract.reconstruction` uses);
 * the replayed file equals the tool result's ``toolUseResult.originalFile`` where the harness
   recorded it (natural Claude Code sessions; sanitised controlled transcripts drop the field);
 * later ``Read`` results agree with the replayed state (``toolUseResult.file`` where present,
   else the numbered lines of the result text);
 * no shell command wrote a replayed file (:mod:`tracecontract.ingest.shell_writes`): a write
   onto a replayed file loses it, except a ``cat > f <<'EOF'`` heredoc, a deletion, or a copy or
-  move of a known file, which are replayed;
+  move of a known file, which are replayed. A write to a directory, to the workspace root or
+  to a glob loses every tracked and base file under it (a glob is expanded over those files);
 * a full replay equals a linked commit tree when one is given.
 
-A file whose content the replay cannot know is *recovered* from a full ``Read`` or an
-``originalFile`` when one follows. The verdict is a :class:`~tracecontract.schemas.Fidelity`:
+Each touched file has a status: ``exact``; ``recovered`` (its content was recovered from a
+full ``Read`` or an ``originalFile`` that followed content the replay could not know);
+``approximate`` (it rests on an edit matched only after quote normalisation or with converted
+line endings, an edit the user modified, or a heredoc the shell may expand); or ``unknown``.
+The verdict is a :class:`~tracecontract.schemas.Fidelity`:
 
 * ``exact``: a base tree was given, every edit applied cleanly, every check the transcript
   allows agreed, and no shell command or subagent may have written files unseen;
-* ``approximate``: every replayed file has a known post-image, but some of it rests on
-  recovered content, quote normalisation or converted line endings, or a shell command or
-  subagent may have written files whose paths could not be resolved;
+* ``approximate``: every replayed file has a known post-image, but some of it is recovered or
+  approximate, or a shell command or subagent may have written files whose paths could not be
+  placed at all;
 * ``unreconstructable``: no base tree (the initial repository state is not in the session), a
   replayed file whose post-image is unknown (an edit on unknown content, a missing or
-  ambiguous ``old_string``, a shell write onto it), or a difference from the commit tree.
+  ambiguous ``old_string``, a shell write onto it or onto its directory), or a difference from
+  the commit tree.
 
 Programs a command runs (build tools, test runners, scripts the session does not show) can
 still write files unseen; only the ``originalFile`` and ``Read`` checks or a commit tree catch
@@ -32,6 +39,7 @@ that. Nothing from the transcript is executed; its text is data, never instructi
 
 from __future__ import annotations
 
+import fnmatch
 import json
 import posixpath
 import re
@@ -43,9 +51,11 @@ from pathlib import Path
 from typing import Any
 
 from ..schemas import Event, EventKind, Fidelity, Session
+from .edit_tool import apply_edit as apply_edit  # re-exported: the one edit function of both replays
+from .edit_tool import apply_edits, edits_of
 from .shell_writes import COPIES, DELETIONS, ShellWrite, shell_writes
 
-METHOD = "replay:v1"
+METHOD = "replay:v2"  # v2: the edit function shared with reconstruction.py; directory, root and glob writes; 'approximate'
 EDIT_TOOLS = ("Edit", "MultiEdit", "Write")
 SHELL_TOOLS = ("Bash", "PowerShell")
 READ_ONLY_SUBAGENTS = ("Explore", "Plan")  # subagent types that cannot edit files
@@ -174,10 +184,14 @@ def infer_root(session: Session, *, base_files: Iterable[str] = ()) -> str | Non
 
 
 class BaseTree:
-    """Read access to a base tree: a directory, a mapping of relative paths to text, or nothing."""
+    """Read access to a base tree: a directory, a mapping of relative paths to text, or nothing.
 
-    def __init__(self, base: Path | Mapping[str, str] | None):
-        self.base = base
+    ``redact`` is applied to every text read, so that a base can be compared with a sanitised
+    transcript (``sanitize:v2`` replaced e-mail addresses in controlled transcripts).
+    """
+
+    def __init__(self, base: Path | Mapping[str, str] | None, redact: Callable[[str], str] | None = None):
+        self.base, self.redact = base, redact
         self._files: set[str] | None = None
 
     @property
@@ -188,14 +202,16 @@ class BaseTree:
         if self.base is None:
             return UNKNOWN
         if not isinstance(self.base, Path):
-            return self.base.get(rel)
-        f = self.base / rel
-        if not f.is_file():
-            return None
-        try:
-            return f.read_bytes().decode("utf-8")
-        except UnicodeDecodeError:
-            return UNKNOWN  # binary content is not replayed
+            text = self.base.get(rel)
+        else:
+            f = self.base / rel
+            if not f.is_file():
+                return None
+            try:
+                text = f.read_bytes().decode("utf-8")
+            except UnicodeDecodeError:
+                return UNKNOWN  # binary content is not replayed
+        return self.redact(text) if self.redact is not None and isinstance(text, str) else text
 
     def files(self) -> set[str]:
         """Relative paths of every file (computed once)."""
@@ -208,41 +224,6 @@ class BaseTree:
                 self._files = {p.relative_to(self.base).as_posix() for p in self.base.rglob("*")
                                if p.is_file() and ".git" not in p.relative_to(self.base).parts}
         return self._files
-
-
-_QUOTES = str.maketrans({"‘": "'", "’": "'", "“": '"', "”": '"'})
-
-
-def apply_edit(text: str | None, old: str, new: str, replace_all: bool = False) -> tuple[str | None, str | None]:
-    """Apply one ``Edit`` the way Claude Code does; returns ``(text, note)``.
-
-    On failure the text is None and the note is ``file_missing``, ``file_exists``, ``absent`` or
-    ``not_unique``. A match found only after curly quotes were normalised succeeds with the note
-    ``quote_normalised``. An empty ``new_string`` also removes the line break that follows
-    ``old_string``, as the tool does.
-    """
-    if text is None:
-        return (new, None) if old == "" else (None, "file_missing")
-    if old == "":
-        return (new, None) if text == "" else (None, "file_exists")
-    note = None
-    if old not in text:
-        k = text.translate(_QUOTES).find(old.translate(_QUOTES))
-        if k < 0:
-            return None, "absent"
-        old, note = text[k:k + len(old)], "quote_normalised"
-    if text.count(old) > 1 and not replace_all:
-        return None, "not_unique"
-    if new == "" and not old.endswith("\n") and old + "\n" in text:
-        old += "\n"
-    return (text.replace(old, new) if replace_all else text.replace(old, new, 1)), note
-
-
-def _edits_of(ev: Event) -> list[tuple[str, str, bool]]:
-    ti = ev.tool_input or {}
-    items = ti.get("edits") if ev.tool_name == "MultiEdit" else [ti]
-    return [(str(e.get("old_string", "")), str(e.get("new_string", "")), bool(e.get("replace_all")))
-            for e in (items if isinstance(items, list) else []) if isinstance(e, dict)]
 
 
 # ---------------------------------------------------------------------------
@@ -265,7 +246,7 @@ class ReplayResult:
     reasons: list[str]
     root: str | None
     files: dict[str, str | None]  # final content of every touched path (None: absent)
-    status: dict[str, str]  # per touched path (changed or recovered): exact | recovered | unknown
+    status: dict[str, str]  # per touched path (changed or recovered): exact | recovered | approximate | unknown
     findings: list[Finding]
     counts: Counter
     stop_ref: str | None = None
@@ -277,9 +258,8 @@ class ReplayResult:
         st = Counter(self.status.values())
         return {"method": self.method, "fidelity": self.fidelity.value, "reasons": list(self.reasons),
                 "base_tree": self.base_known, "files_touched": len(self.status), "files_changed": len(self.changed),
-                "files_exact": st["exact"],
-                "files_recovered": st["recovered"], "files_unknown": st["unknown"],
-                "counts": dict(sorted(self.counts.items()))}
+                "files_exact": st["exact"], "files_recovered": st["recovered"], "files_approximate": st["approximate"],
+                "files_unknown": st["unknown"], "counts": dict(sorted(self.counts.items()))}
 
 
 def _outcome(res: Event | None) -> str:
@@ -321,8 +301,33 @@ def _cd_target(cmd: str, cwd: str | None, paths: PathMap) -> str | None:
     return paths.absolute(target, cwd)
 
 
-_VAR_OR_GLOB = re.compile(r"[$%*?`]|^~")
+_VARIABLE = re.compile(r"[$%`]|^~")  # a target the shell expands from its environment: never placed
+_GLOB = re.compile(r"[*?\[]")  # a target the shell expands over existing files: placed over the known ones
 _TEMP_VARS = re.compile(r"^(?:\$(?:env:)?\{?(?:TEMP|TMP|TMPDIR)\b|%(?:TEMP|TMP)%)", re.I)
+# Git commands that rewrite the work tree (shell_writes gives them no target): placed at the root.
+_WORK_TREE = ("git reset", "git stash", "git checkout", "git apply", "git merge", "git pull", "git rebase",
+              "git cherry-pick", "git revert", "git switch", "git am", "git clean")
+
+
+@dataclass(frozen=True)
+class _Target:
+    """Where a shell write lands, relative to the workspace root."""
+
+    kind: str  # file | dir (a directory or the root) | glob
+    rel: str | None  # the file or directory; None for the root and for a glob
+    files: tuple[str, ...]  # the tracked and base files it may cover
+    certain: tuple[str, ...]  # those the shell certainly expands it to (all of them, unless a glob)
+
+
+def _glob_pattern(pattern: str) -> str:
+    return pattern.replace("[^", "[!")  # the shell's negated class, in fnmatch's spelling
+
+
+def _shell_glob(path: str, pattern: str) -> bool:
+    """Whether the shell (no globstar, no dotglob) expands ``pattern`` to ``path``: per path segment, no leading dot."""
+    ps, qs = path.split("/"), _glob_pattern(pattern).split("/")
+    return len(ps) == len(qs) and all(fnmatch.fnmatchcase(p, q) and (q.startswith(".") or not p.startswith("."))
+                                      for p, q in zip(ps, qs, strict=True))
 
 
 class _Replay:
@@ -364,10 +369,14 @@ class _Replay:
         p = (ev.tool_input or {}).get(key)
         return self.paths.rel(p, self._extra(ev).cwd) if self.paths and isinstance(p, str) else None
 
+    def known_files(self) -> set[str]:
+        """Every tracked path (written, deleted, recovered or lost) and every base file."""
+        return set(self.files) | set(self.status) | self.base.files()
+
     def under(self, rel: str) -> list[str]:
         """Tracked and base files below ``rel`` when it names a directory."""
         pre = rel.rstrip("/") + "/"
-        return sorted(p for p in set(self.files) | self.base.files() if p.startswith(pre))
+        return sorted(p for p in self.known_files() if p.startswith(pre))
 
     # -- steps -------------------------------------------------------------
     def edit(self, ev: Event, res: Event | None) -> None:
@@ -404,30 +413,22 @@ class _Replay:
                 self.lose(rel)
                 return
             self.counts["writes_applied"] += 1
-            self.put(rel, content, "recovered" if approx else "exact")
+            self.put(rel, content, "approximate" if approx else "exact")
             return
         if cur is UNKNOWN:
             self.note("unknown_base", ev, rel)
             self.lose(rel)
             return
-        text, crlf = cur, isinstance(cur, str) and "\r\n" in cur
-        for old, new, replace_all in _edits_of(ev):
-            if crlf and isinstance(text, str) and "\r" not in old:
-                text = text.replace("\r\n", "\n")
-            text, why = apply_edit(text, old, new, replace_all)
-            if text is None:
-                self.note(f"old_string_{why}" if why in ("absent", "not_unique") else f"edit_{why}", ev, rel)
-                self.lose(rel)
-                return
-            if why:
-                self.note(why, ev, rel)
-                approx = True
-        if crlf and "\r\n" not in text:
-            text = text.replace("\n", "\r\n")
-            self.note("line_endings_converted", ev, rel)
-            approx = True
+        out = apply_edits(cur, edits_of(str(ev.tool_name), ev.tool_input))  # the edit function reconstruction.py uses
+        for note in out.notes:  # quote_normalised, line_endings_converted
+            self.note(note, ev, rel)
+        if out.text is None:
+            why = out.problem
+            self.note(f"old_string_{why}" if why in ("absent", "not_unique") else f"edit_{why}", ev, rel)
+            self.lose(rel)
+            return
         self.counts["edits_applied"] += 1
-        self.put(rel, text, "recovered" if approx else None)
+        self.put(rel, out.text, "approximate" if approx or out.notes else None)
 
     def read(self, ev: Event, res: Event | None) -> None:
         rel = self.rel(ev)
@@ -485,33 +486,92 @@ class _Replay:
             return r is not None and isinstance(self.get(r), str)
 
         for w in shell_writes(cmd, shell=str(ev.tool_name), sandboxed=self.sandboxed, script=content, known=known):
-            if w.target is None or (_VAR_OR_GLOB.search(w.target) and not self._outside(w.target, cwd)):
+            placed = self.place(w, cwd)
+            if placed is None:
                 self.note("shell_write_unresolved", ev, None, w.kind)
-                continue
-            if _VAR_OR_GLOB.search(w.target):
+            elif isinstance(placed, _Target):
+                self.apply_shell(ev, placed, w, cwd)
+            else:  # "outside"
                 self.counts["shell_write_outside_root"] += 1
-                continue
-            rel = pm.rel(w.target, cwd)
-            if rel is None:
-                inside = pm.absolute(w.target, cwd).lower().rstrip("/") == pm.root.lower().rstrip("/")
-                if inside:
-                    self.note("shell_write_unresolved", ev, None, w.kind)
-                else:
-                    self.counts["shell_write_outside_root"] += 1
-                continue
-            self.apply_shell(ev, rel, w, content)
 
-    def apply_shell(self, ev: Event, rel: str, w: ShellWrite, content: Callable[[str], str | None]) -> None:
-        below = self.under(rel)
+    def place(self, w: ShellWrite, cwd: str | None) -> _Target | str | None:
+        """Where a shell write lands, ``"outside"`` the root, or None if it cannot be placed at all.
+
+        A target with a variable or ``~`` cannot be placed unless it certainly lies outside. A glob
+        may cover every tracked and base file that ``fnmatch`` matches against the whole path (its
+        ``*`` also matches ``/``); the shell certainly expands it to those it matches segment by
+        segment, without a leading dot, or else leaves it as its literal path. A directory, or the
+        root, covers every tracked and base file under it. A work-tree git command without a path
+        (``reset --hard``, ``stash``, a branch switch, ...) covers the root.
+        """
+        pm, target = self.paths, w.target
+        if pm is None:
+            return None
+        root = pm.root.rstrip("/")
+        everything = tuple(sorted(self.known_files()))
+        if target is None:
+            if w.kind not in _WORK_TREE:
+                return None
+            outside = cwd is not None and pm.rel(cwd) is None and not self._same(cwd, root)
+            return "outside" if outside else _Target("dir", None, everything, everything)
+        if _VARIABLE.search(target):
+            return "outside" if self._outside(target, cwd) else None
+        if _GLOB.search(target):
+            if self._outside(target, cwd):
+                return "outside"
+            fold = str.lower if pm.windows else str
+            pat = fold(_glob_pattern(pm.absolute(target, cwd)))
+            loose = tuple(p for p in everything if fnmatch.fnmatchcase(fold(f"{root}/{p}"), pat))
+            certain = tuple(p for p in loose if _shell_glob(fold(f"{root}/{p}"), pat))
+            literal = pm.rel(target, cwd)
+            if not certain and literal in everything:
+                certain = (literal,)
+            return _Target("glob", None, tuple(sorted({*loose, *certain})), certain)
+        rel = pm.rel(target, cwd)
+        if rel is None:
+            return _Target("dir", None, everything, everything) if self._same(pm.absolute(target, cwd), root) else "outside"
+        below = tuple(self.under(rel))
+        return _Target("dir", rel, below, below) if below else _Target("file", rel, (rel,), (rel,))
+
+    def _same(self, a: str, b: str) -> bool:
+        a, b = norm_path(a).rstrip("/"), norm_path(b).rstrip("/")
+        return a.lower() == b.lower() if self.paths is not None and self.paths.windows else a == b
+
+    def apply_shell(self, ev: Event, t: _Target, w: ShellWrite, cwd: str | None) -> None:
+        if w.kind == "rmdir":
+            return  # rmdir removes only empty directories (and fails on a file): no known file changes
+        covered = t.files
         if w.kind in DELETIONS:
-            for p in below or [rel]:
+            for p in t.certain:
                 if p in self.files or self.base.get(p) is not None or self.status.get(p):
                     self.counts["shell_deletes_replayed"] += 1
                     self.put(p, None)
+            covered = tuple(p for p in t.files if p not in t.certain)  # a glob may also reach these: lost below
+        elif t.kind == "file" and t.rel is not None:
+            self.write_file(ev, t.rel, w, cwd)
             return
-        if below:  # a directory: which of its files changed is not known
-            self.note("shell_write_unresolved", ev, None, w.kind)
-            return
+        elif t.kind == "dir" and w.kind in COPIES and w.source:  # cp or mv of one source into a directory
+            dst = posixpath.join(t.rel or "", posixpath.basename(norm_path(w.source).rstrip("/")))
+            if not self.under(dst):
+                self.write_file(ev, dst, w, cwd)
+                return
+            covered = tuple(self.under(dst))  # a directory copied over a directory: any file under it may change
+        if t.kind == "glob" and not t.files:
+            self.counts["shell_write_glob_no_match"] += 1  # a glob that matches no known file: none of them changes
+        for p in covered:  # a directory, the root or a glob: any file under it may have changed
+            self.note("shell_write", ev, p, w.kind)
+            self.lose(p)
+
+    def _source(self, w: ShellWrite, cwd: str | None) -> tuple[str, str] | None:
+        """``(rel, content)`` of the one known source file of a copy or move."""
+        if w.kind not in COPIES or not w.source or self.paths is None:
+            return None
+        r = self.paths.rel(w.source, cwd)
+        v = self.get(r) if r else None
+        return (r, v) if r is not None and isinstance(v, str) else None
+
+    def write_file(self, ev: Event, rel: str, w: ShellWrite, cwd: str | None) -> None:
+        """A shell write onto one file: a heredoc and a copy of a known file are replayed, anything else loses it."""
         if w.content is not None:  # cat > f <<'EOF'
             prev = self.get(rel)
             if w.append and prev is UNKNOWN:
@@ -519,13 +579,16 @@ class _Replay:
                 self.lose(rel)
                 return
             self.counts["heredoc_writes_replayed"] += 1
-            exact = w.exact and not (w.append and self.status.get(rel) == "recovered")
-            self.put(rel, ((prev or "") + w.content) if w.append else w.content, "exact" if exact else "recovered")
+            if not w.exact:
+                self.note("heredoc_may_expand", ev, rel)
+            status = "approximate" if not w.exact else None if w.append else "exact"  # an append keeps the status
+            self.put(rel, ((prev if isinstance(prev, str) else "") + w.content) if w.append else w.content, status)
             return
-        src = content(w.source) if w.kind in COPIES and w.source else None
+        src = self._source(w, cwd)
         if src is not None:
             self.counts["shell_copies_replayed"] += 1
-            self.put(rel, src)
+            st = self.status.get(src[0])
+            self.put(rel, src[1], st if st in ("recovered", "approximate") else "exact")
             return
         self.note("shell_write", ev, rel, w.kind)
         self.lose(rel)
@@ -534,7 +597,7 @@ class _Replay:
         """Whether a target with a variable or glob certainly lies outside the root."""
         if _TEMP_VARS.match(target):
             return True
-        head = re.split(r"[$%*?`]", target, maxsplit=1)[0]
+        head = re.split(r"[$%*?`\[]", target, maxsplit=1)[0]
         if not head or head.startswith("~") or not _is_abs(norm_path(head)) or self.paths is None:
             return False
         q, root = self.paths.absolute(head, cwd).lower().rstrip("/"), self.paths.root.lower().rstrip("/")
@@ -557,15 +620,16 @@ def second_user_prompt(session: Session) -> str | None:
 def replay_session(session: Session, *, base: Path | Mapping[str, str] | None = None, root: str | None = None,
                    extras: Mapping[int, RawExtra] | None = None, stop_before: str | None = None,
                    commit_tree: Path | Mapping[str, str] | None = None,
-                   sandboxed_commands: tuple[str, ...] = ()) -> ReplayResult:
+                   sandboxed_commands: tuple[str, ...] = (), redact: Callable[[str], str] | None = None) -> ReplayResult:
     """Replay the main agent's file edits onto ``base`` and check them against the transcript.
 
     ``extras`` are the raw fields from :func:`load_raw_extras`; ``stop_before`` is the event id at
     which to stop (e.g. :func:`second_user_prompt`); ``commit_tree`` is the tree that the full
-    replay should equal; ``sandboxed_commands`` names commands that cannot write the workspace.
+    replay should equal; ``sandboxed_commands`` names commands that cannot write the workspace;
+    ``redact`` is the sanitiser's redaction, applied to every base text (:class:`BaseTree`).
     Sidechain (subagent) events are skipped: only the main agent's calls are replayed.
     """
-    tree = BaseTree(base)
+    tree = BaseTree(base, redact)
     root = root or infer_root(session, base_files=tree.files())
     paths = PathMap(norm_path(root)) if root else None
     r = _Replay(tree, paths, extras or {}, sandboxed_commands)
@@ -628,6 +692,7 @@ _REASONS = (
     ("quote_normalised", "edit(s) matched only after quote normalisation", False),
     ("line_endings_converted", "edit(s) with converted line endings", False),
     ("user_modified", "edit(s) the user modified before accepting", False),
+    ("heredoc_may_expand", "heredoc write(s) whose content the shell may expand", False),
     ("commit_tree_mismatches", "file(s) that differ from the linked commit tree", True),
 )
 
@@ -645,19 +710,23 @@ def _verdict(r: _Replay, paths: PathMap | None) -> tuple[Fidelity, list[str]]:
     hard += [f"{r.counts[k]} {text}" for k, text, fatal in _REASONS if fatal and r.counts.get(k)]
     if st["recovered"]:
         soft.append(f"{st['recovered']} file(s) rest on content recovered from originalFile or a full Read")
+    if st["approximate"]:
+        soft.append(f"{st['approximate']} file(s) rest on an edit matched only after normalisation (quotes, line "
+                    "endings), an edit the user modified, or a heredoc the shell may expand")
     if hard:
         return Fidelity.unreconstructable, list(dict.fromkeys(hard + soft))
     return (Fidelity.approximate, soft) if soft else (Fidelity.exact, [])
 
 
-def compare_files(result: ReplayResult, expected: Mapping[str, str | None], base: Path | Mapping[str, str] | None = None
-                  ) -> dict[str, dict[str, str]]:
+def compare_files(result: ReplayResult, expected: Mapping[str, str | None], base: Path | Mapping[str, str] | None = None,
+                  redact: Callable[[str], str] | None = None) -> dict[str, dict[str, str]]:
     """Compare replayed post-images with expected ones (a captured state, a candidate's post-images).
 
     One entry per path in either set: ``verdict`` (match or differs), the replay ``status`` and,
-    for a difference, a ``reason`` that names the findings on that path.
+    for a difference, a ``reason`` that names the findings on that path. ``redact`` is applied to
+    the base texts, as in :func:`replay_session`; ``expected`` must already be redacted the same way.
     """
-    tree = BaseTree(base)
+    tree = BaseTree(base, redact)
     out: dict[str, dict[str, str]] = {}
     for p in sorted(set(expected) | set(result.status)):
         want = expected[p] if p in expected else tree.get(p)
@@ -679,11 +748,20 @@ def compare_files(result: ReplayResult, expected: Mapping[str, str | None], base
     return out
 
 
+def sanitized(text: str) -> str:
+    """The ``sanitize:v2`` redaction of a controlled transcript (e-mail addresses replaced), for base and captured texts."""
+    from .claude_code import _redact_emails  # the sanitiser's own function
+
+    return _redact_emails(text, {})
+
+
 def replay_controlled(task_dir: Path, repo_root: Path, snapshot_root: Path) -> dict[str, Any]:
     """Replay a controlled session up to its second user prompt and compare the result with the
     post-images of the task's pre-correction candidate (decision log D47).
 
-    Returns the replay summary and one :func:`compare_files` entry per file.
+    The transcript was sanitised (``sanitize:v2``), so the base and the post-images get the same
+    redaction (:func:`sanitized`), as in :mod:`tracecontract.reconstruction`. Returns the replay
+    summary and one :func:`compare_files` entry per file.
     """
     from ..schemas import Candidate, Population, TaskManifest
     from ..snapshot import post_images
@@ -696,10 +774,11 @@ def replay_controlled(task_dir: Path, repo_root: Path, snapshot_root: Path) -> d
                                       relpath=rel, scripted_turns=m.scripted_turns)
     base = snapshot_root / m.task_id
     res = replay_session(session, base=base, stop_before=second_user_prompt(session),
-                         sandboxed_commands=CONTROLLED_SANDBOXED)
+                         sandboxed_commands=CONTROLLED_SANDBOXED, redact=sanitized)
     cand = load(task_dir / "candidates" / f"{m.task_id}-pre-correction.json", Candidate)
-    expected = {p: (b.decode("utf-8") if b is not None else None) for p, b in post_images(cand.patch, base).items()}
-    files = compare_files(res, expected, base)
+    expected = {p: (None if b is None else sanitized(b.decode("utf-8", errors="surrogateescape")))
+                for p, b in post_images(cand.patch, base).items()}
+    files = compare_files(res, expected, base, sanitized)
     return {"task_id": m.task_id, "candidate_id": cand.candidate_id, "stop_ref": res.stop_ref, "replay": res.summary(),
             "files": files, "matches": sorted(p for p, v in files.items() if v["verdict"] == "match"),
             "differs": sorted(p for p, v in files.items() if v["verdict"] == "differs")}

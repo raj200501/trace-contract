@@ -336,6 +336,100 @@
       "title": "Replaying the session's writes on the base reproduces the captured states (additional)"
     }
   ],
+  "files": [
+    {
+      "changed_by": [
+        "reference patch",
+        "pre-correction patch",
+        "edited by the session"
+      ],
+      "evidence": [
+        {
+          "check": "b",
+          "event_id": "CS-02-session/L000142.00",
+          "reason": "old_string occurs as the Edit tool requires and new_string does not occur"
+        },
+        {
+          "check": "c",
+          "event_id": "CS-02-session/L000138.00",
+          "reason": "matches the base content"
+        }
+      ],
+      "n_evidence": 2,
+      "path": "docs/changelog.rst",
+      "reason": "2 passed item(s) in check b or c attest its base content",
+      "status": "passed"
+    },
+    {
+      "changed_by": [
+        "reference patch",
+        "pre-correction patch",
+        "edited by the session"
+      ],
+      "evidence": [
+        {
+          "check": "b",
+          "event_id": "CS-02-session/L000144.00",
+          "reason": "old_string occurs as the Edit tool requires and new_string does not occur"
+        },
+        {
+          "check": "c",
+          "event_id": "CS-02-session/L000139.00",
+          "reason": "matches the base content"
+        }
+      ],
+      "n_evidence": 2,
+      "path": "docs/usage.rst",
+      "reason": "2 passed item(s) in check b or c attest its base content",
+      "status": "passed"
+    },
+    {
+      "changed_by": [
+        "reference patch",
+        "pre-correction patch",
+        "edited by the session"
+      ],
+      "evidence": [
+        {
+          "check": "b",
+          "event_id": "CS-02-session/L000094.00",
+          "reason": "old_string occurs as the Edit tool requires and new_string does not occur"
+        }
+      ],
+      "n_evidence": 1,
+      "path": "tests/test_storages.py",
+      "reason": "1 passed item(s) in check b or c attest its base content",
+      "status": "passed"
+    },
+    {
+      "changed_by": [
+        "reference patch",
+        "pre-correction patch",
+        "edited by the session"
+      ],
+      "evidence": [
+        {
+          "check": "b",
+          "event_id": "CS-02-session/L000059.00",
+          "reason": "old_string occurs as the Edit tool requires and new_string does not occur"
+        },
+        {
+          "check": "c",
+          "event_id": "CS-02-session/L000010.00",
+          "reason": "matches the base content"
+        },
+        {
+          "check": "c",
+          "event_id": "CS-02-session/L000057.00",
+          "reason": "matches the base content"
+        }
+      ],
+      "n_evidence": 3,
+      "path": "tinydb/storages.py",
+      "reason": "3 passed item(s) in check b or c attest its base content",
+      "status": "passed"
+    }
+  ],
   "inputs": {
     "base_manifest_sha256": "8f30c35e16795f234c71e7b6945a6355ca0b4d139feda3b36642ea01e3b8d64b",
     "base_n_files": 65,
@@ -362,7 +456,7 @@
       "passed": true
     }
   },
-  "method": "reconstruction:v1",
+  "method": "reconstruction:v2",
   "notes": [],
   "passed": true,
   "status": "passed",

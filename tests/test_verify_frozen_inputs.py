@@ -66,12 +66,29 @@ def test_append_only_files_and_analysis_comparison(tmp_path, monkeypatch):
     assert vfi._input_path("CS-02/contracts/reference.json", "results/runs/x") == "tasks/CS-02/contracts/reference.json"
 
 
-def test_provenance_triage_only_change_is_not_a_frozen_change(tmp_path, monkeypatch):
-    rel = "tasks/CS-01/provenance.json"
-    (tmp_path / "tasks/CS-01").mkdir(parents=True)
-    monkeypatch.setattr(vfi, "REPO", tmp_path)
-    monkeypatch.setattr(vfi, "_at_rev", lambda rev, r: b'{"source_id": "x", "triage": null}\n')
-    (tmp_path / rel).write_bytes(b'{"source_id": "x", "triage": {"category": "candidate"}}\n')
-    assert vfi._only_triage_changed("REV", rel)
-    (tmp_path / rel).write_bytes(b'{"source_id": "y", "triage": null}\n')
-    assert not vfi._only_triage_changed("REV", rel)
+def test_a_triage_only_change_to_a_provenance_record_is_a_frozen_change(monkeypatch):
+    """(e) has no triage exemption: the proposals live in tasks/<id>/triage.json, not in the frozen record."""
+    assert not hasattr(vfi, "_only_triage_changed")
+    listing = {("ls-tree", "--name-only"): b"tasks/CS-01\ntasks/FX-01\n", ("ls-tree", "-d"): b"results/runs/pilot-v0.3.3\n",
+               ("diff", "--name-status"): b"M\ttasks/CS-01/provenance.json\nA\ttasks/CS-01/labels/new.json\n",
+               ("ls-files", "--others"): b"tasks/CS-01/candidates/untracked.json\n"}
+    calls = []
+
+    def fake_git(*args: str) -> bytes:
+        calls.append(args)
+        return listing[args[:2]]
+
+    monkeypatch.setattr(vfi, "_git", fake_git)
+    f = vfi.Findings()
+    vfi.check_frozen_files(f, "REV")
+    assert f.new == ["(e) tasks/CS-01/provenance.json: modified since REV"] and not f.info
+    assert f.summary["e"] == "1 frozen file(s) changed, 2 new file(s) beside them"
+    specs = calls[2][5:]
+    assert "tasks/CS-01/provenance.json" in specs and not any(x.startswith("tasks/FX-01") for x in specs)
+    assert not any("triage.json" in x for x in specs)  # the sidecar is not a frozen file
+
+
+def test_docstring_states_the_code_change_exemption():
+    doc = vfi.__doc__
+    assert "exemption" in doc and "analysis code" in doc and "triage.json" in doc
+    assert "code/schemas.py" not in doc  # analysis code is never counted as pre-existing

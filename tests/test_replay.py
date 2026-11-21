@@ -66,7 +66,9 @@ def test_apply_edit_matches_the_edit_tool():
     assert apply_edit("abc", "zzz", "y") == (None, "absent")
     assert apply_edit(None, "", "new file\n") == ("new file\n", None)
     assert apply_edit("keep\ndrop\nkeep2\n", "drop", "") == ("keep\nkeep2\n", None)  # the line break goes too
-    assert apply_edit("say \u201chi\u201d", 'say "hi"', 'say "yo"') == ('say "yo"', "quote_normalised")
+    # Matched with quotes normalised; new_string takes the file's curly style, as the tool writes it.
+    assert apply_edit("say \u201chi\u201d", 'say "hi"', 'say "yo"') == ("say \u201cyo\u201d", "quote_normalised")
+    assert apply_edit("aaa", "aa", "b") == ("ba", None)  # occurrences counted as str.count counts them
 
 
 def test_exact_replay_with_checks(tmp_path):
@@ -127,6 +129,57 @@ def test_heredoc_copy_and_delete_are_replayed(tmp_path):
     r = replay_session(s, base={"old.py": "gone\n"}, extras=ex)
     assert r.files == {"gen.py": "X = 1\n", "copy.py": "X = 1\n", "old.py": None}
     assert r.fidelity == Fidelity.exact and r.counts["shell_write_outside_root"] == 1
+
+
+@pytest.mark.parametrize("cmd", [
+    "git checkout -- src/",  # a directory
+    "git checkout -- .",  # the workspace root
+    "sed -i 's/2/3/' src/*.py",  # a glob, expanded over the known files
+    "black src",  # a formatter on a directory
+    "git stash",  # a work-tree git command with no path: the root
+    "git reset --hard",
+])
+def test_a_shell_write_to_a_directory_root_or_glob_loses_the_files_under_it(tmp_path, cmd):
+    t = Transcript().user("x").edit("src/a.py", "A = 1", "A = 2").call("Bash", {"command": f"cd {ROOT} && {cmd}"})
+    s, ex, _ = t.write(tmp_path)
+    r = replay_session(s, base={"src/a.py": "A = 1\n", "src/b.py": "B = 1\n", "README.md": "r\n"}, extras=ex)
+    whole_tree = cmd in ("git checkout -- .", "git stash", "git reset --hard")
+    assert r.status == ({"src/a.py": "unknown", "src/b.py": "unknown", "README.md": "unknown"} if whole_tree
+                        else {"src/a.py": "unknown", "src/b.py": "unknown"})
+    assert r.fidelity == Fidelity.unreconstructable and r.files == {}  # no stale content claimed as exact
+    assert "shell write(s) whose target could not be resolved" not in " ".join(r.reasons)
+    out = compare_files(r, {"src/a.py": "A = 1\n"}, {"src/a.py": "A = 1\n"})
+    assert out["src/a.py"]["verdict"] == "differs" and "post-image unknown" in out["src/a.py"]["reason"]
+
+
+def test_shell_globs_deletions_and_copies_into_directories(tmp_path):
+    base = {"src/a.py": "A\n", "src/sub/b.py": "B\n", "src/.hidden.py": "H\n", "src/c.txt": "C\n", "keep.py": "K\n"}
+    cmd = f"cd {ROOT} && rm src/*.py && cp keep.py src/ && rmdir src/sub && sed -i 's/x/y/' docs/*.md"
+    s, ex, _ = Transcript().user("x").call("Bash", {"command": cmd}).write(tmp_path)
+    r = replay_session(s, base=base, extras=ex)
+    # rm src/*.py deletes what the shell expands it to (not src/sub/b.py, not the dot file); fnmatch also
+    # reaches those two, so they are lost rather than claimed. cp into a directory writes src/keep.py.
+    assert r.files["src/a.py"] is None and r.files["src/keep.py"] == "K\n"
+    assert r.status["src/sub/b.py"] == "unknown" and r.status["src/.hidden.py"] == "unknown"
+    assert "src/c.txt" not in r.status and "keep.py" not in r.status  # rmdir changes no file
+    assert r.counts["shell_write_glob_no_match"] == 1  # docs/*.md matches no known file
+
+
+def test_a_heredoc_the_shell_may_expand_is_approximate(tmp_path):
+    cmd = f"cd {ROOT} && cat > gen.py <<EOF\nX = '$HOME'\nEOF"
+    s, ex, _ = Transcript().user("x").call("Bash", {"command": cmd}).write(tmp_path)
+    r = replay_session(s, base={}, extras=ex)
+    assert r.status == {"gen.py": "approximate"} and r.fidelity == Fidelity.approximate
+    assert "1 heredoc write(s) whose content the shell may expand" in r.reasons
+    assert not any("recovered from originalFile" in x for x in r.reasons)
+    assert r.summary()["files_approximate"] == 1 and r.summary()["method"] == "replay:v2"
+
+
+def test_here_strings_are_not_heredocs():
+    cmd = "cd /ws/r && grep -c x <<< hello > out.py\necho done > other.py"
+    assert [(w.kind, w.target) for w in shell_writes(cmd)] == [("redirect", "out.py"), ("redirect", "other.py")]
+    assert [(w.kind, w.target) for w in shell_writes("python3 - <<< 'x' && cat > f.py <<'EOF'\nA = 1\nEOF\ntouch g.py")] == [
+        ("heredoc", "f.py"), ("touch", "g.py")]
 
 
 def test_original_file_is_checked_and_recovered(tmp_path):

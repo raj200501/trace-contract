@@ -47,7 +47,7 @@ class ShellWrite:
 Lookup = Callable[[str], str | None]  # content of a file the session wrote, by path as written
 Known = Callable[[str], bool]  # whether a path as written names a tracked file
 
-_HEREDOC = re.compile(r"<<(-?)[ \t]*(['\"]?)([A-Za-z_][A-Za-z0-9_]*)\2")
+_HEREDOC = re.compile(r"(?<!<)<<(?!<)(-?)[ \t]*(['\"]?)([A-Za-z_][A-Za-z0-9_]*)\2")  # not a here-string (<<< word)
 _SEPARATORS = {"&&", "||", ";", "|", "&", "|&", ";;", "(", ")", "{", "}"}
 _NULL = ("/dev/null", "/dev/stdout", "/dev/stderr", "/dev/tty", "$null", "nul")
 _INTERPRETER = re.compile(r"^(?:python[\d.]*|py|pypy3?|node|nodejs|bun|deno|perl|ruby|php)(?:\.exe)?$", re.I)
@@ -106,7 +106,8 @@ def logical_lines(cmd: str) -> list[tuple[str, list[str], bool]]:
     """Command lines with their heredoc bodies set aside: ``(line, bodies, delimiters all quoted)``.
 
     A newline inside quotes or after a backslash continues the line; ``#`` at the start of a
-    word starts a comment.
+    word starts a comment. A here-string (``<<< word``) has no body: the lines after it are
+    commands.
     """
     out: list[tuple[str, list[str], bool]] = []
     lines = cmd.split("\n")

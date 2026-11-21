@@ -1,0 +1,21 @@
+{
+  "exporter": "tc-harbor-export/0.3.0",
+  "removed_protected": [
+    "tests/test_calc.py"
+  ],
+  "runner_exit_code": 0,
+  "harness_version": "tc-harness/0.3.5",
+  "checks": {
+    "test_add.py::test_add": "missing",
+    "test_add.py::test_negative": "missing",
+    "test_collect_probe.py::test_collection_time_call": "missing"
+  },
+  "tamper_events": [],
+  "collect_errors": [
+    {
+      "nodeid": "test_collect_probe.py",
+      "longrepr": "tests/verifier_tests/test_collect_probe.py:9: in <module>\n    raise RuntimeError(f\"collection-time sandbox call failed: {CALL!r}\")\nE   RuntimeError: collection-time sandbox call failed: CallResult(ok=False, error_type='RuntimeError', error='probe: fail the collection-time sandbox call', timed_out=False, tampered=False, stderr_tail=\"probe: could not plant reward.json: PermissionError(13, 'Permission denied')\\nprobe: could not plant reward.txt: PermissionError(13, 'Permission denied')\\n\")"
+    }
+  ],
+  "error": "incomplete grade: missing checks, collection errors"
+}

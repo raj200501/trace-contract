@@ -204,6 +204,54 @@
       "title": "Replaying the session's writes on the base reproduces the captured states (additional)"
     }
   ],
+  "files": [
+    {
+      "changed_by": [
+        "reference patch",
+        "pre-correction patch",
+        "edited by the session"
+      ],
+      "evidence": [
+        {
+          "check": "b",
+          "event_id": "CS-03-session/L000029.00",
+          "reason": "old_string occurs as the Edit tool requires and new_string does not occur"
+        },
+        {
+          "check": "c",
+          "event_id": "CS-03-session/L000009.00",
+          "reason": "matches the base content"
+        }
+      ],
+      "n_evidence": 2,
+      "path": "inflection/__init__.py",
+      "reason": "2 passed item(s) in check b or c attest its base content",
+      "status": "passed"
+    },
+    {
+      "changed_by": [
+        "reference patch",
+        "pre-correction patch",
+        "edited by the session"
+      ],
+      "evidence": [
+        {
+          "check": "b",
+          "event_id": "CS-03-session/L000037.00",
+          "reason": "old_string occurs as the Edit tool requires and new_string does not occur"
+        },
+        {
+          "check": "c",
+          "event_id": "CS-03-session/L000011.00",
+          "reason": "matches the base content"
+        }
+      ],
+      "n_evidence": 2,
+      "path": "test_inflection.py",
+      "reason": "2 passed item(s) in check b or c attest its base content",
+      "status": "passed"
+    }
+  ],
   "inputs": {
     "base_manifest_sha256": "7e61aca7b70ce1b5b5ba314144454dd0cbbfc26619e0ac5ca17e2ae03e29d80e",
     "base_n_files": 17,
@@ -228,7 +276,7 @@
       "passed": true
     }
   },
-  "method": "reconstruction:v1",
+  "method": "reconstruction:v2",
   "notes": [],
   "passed": true,
   "status": "passed",

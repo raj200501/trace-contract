@@ -1,0 +1,124 @@
+{
+  "id": "5f52ff18-2107-4624-8daf-112291903f06",
+  "task_name": "tracecontract/fx-01",
+  "trial_name": "probe-collect",
+  "trial_uri": "trials/probe-collect",
+  "task_id": {
+    "path": "probe_collect_task"
+  },
+  "source": null,
+  "task_checksum": "3b5584602f7eb88ccf5b0506240ace8cd3e9b3f588f21c0edaae98d2c22b6d85",
+  "config": {
+    "task": {
+      "path": "probe_collect_task",
+      "git_url": null,
+      "git_commit_id": null,
+      "name": null,
+      "ref": null,
+      "overwrite": false,
+      "download_dir": null,
+      "source": null
+    },
+    "trial_name": "probe-collect",
+    "trials_dir": "trials",
+    "install_only": false,
+    "timeout_multiplier": 1.0,
+    "agent_timeout_multiplier": null,
+    "verifier_timeout_multiplier": null,
+    "agent_setup_timeout_multiplier": null,
+    "environment_build_timeout_multiplier": null,
+    "agent": {
+      "name": "oracle",
+      "import_path": null,
+      "model_name": null,
+      "base_url": null,
+      "model_api_key_name": null,
+      "model_api_format": null,
+      "skip_model_parsing": false,
+      "n_concurrent": null,
+      "concurrency_group": null,
+      "skills": [],
+      "override_timeout_sec": null,
+      "override_setup_timeout_sec": null,
+      "max_timeout_sec": null,
+      "resume_trajectory": false,
+      "load_trajectory": null,
+      "extra_allowed_hosts": [],
+      "kwargs": {},
+      "env": {
+        "CANDIDATE": "FX-01-probe-collect"
+      },
+      "mcp_servers": []
+    },
+    "user_agent": null,
+    "environment": {
+      "type": "docker",
+      "import_path": null,
+      "force_build": false,
+      "delete": true,
+      "stream": false,
+      "cpu_enforcement_policy": "auto",
+      "memory_enforcement_policy": "auto",
+      "override_cpus": null,
+      "override_memory_mb": null,
+      "override_storage_mb": null,
+      "override_gpus": null,
+      "override_tpu": null,
+      "mounts": null,
+      "extra_docker_compose": [],
+      "kwargs": {},
+      "extra_allowed_hosts": []
+    },
+    "verifier": {
+      "override_timeout_sec": null,
+      "max_timeout_sec": null,
+      "disable": false
+    },
+    "artifacts": [],
+    "extra_instruction_paths": [],
+    "extra_instructions": [],
+    "job_id": null,
+    "source_trial": null
+  },
+  "agent_info": {
+    "name": "oracle",
+    "version": "1.0.0",
+    "model_info": null
+  },
+  "agent_result": {
+    "n_input_tokens": null,
+    "n_cache_tokens": null,
+    "n_output_tokens": null,
+    "cost_usd": null,
+    "model_usage": null,
+    "rollout_details": null,
+    "metadata": null
+  },
+  "verifier_result": null,
+  "verifier_environment_mode": "separate",
+  "exception_info": {
+    "exception_type": "RewardFileNotFoundError",
+    "exception_message": "No reward file found at trials/probe-collect/verifier/reward.txt or trials/probe-collect/verifier/reward.json",
+    "exception_traceback": "Traceback (most recent call last):\n  File \"<harbor-venv>/lib/python3.13/site-packages/harbor/trial/trial.py\", line 609, in run\n    await self._run()\n  File \"<harbor-venv>/lib/python3.13/site-packages/harbor/trial/single_step.py\", line 51, in _run\n    await self._run_verifier()\n  File \"<harbor-venv>/lib/python3.13/site-packages/harbor/trial/single_step.py\", line 98, in _run_verifier\n    self.result.verifier_result = await self._run_separate_verifier(\n                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    ...<4 lines>...\n    )\n    ^\n  File \"<harbor-venv>/lib/python3.13/site-packages/harbor/trial/trial.py\", line 1081, in _run_separate_verifier\n    return await self._verify_with_timeout(verifier, timeout_sec)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<harbor-venv>/lib/python3.13/site-packages/harbor/trial/trial.py\", line 974, in _verify_with_timeout\n    return await asyncio.wait_for(verifier.verify(), timeout=timeout_sec)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.13/asyncio/tasks.py\", line 514, in wait_for\n    return await fut\n           ^^^^^^^^^\n  File \"<harbor-venv>/lib/python3.13/site-packages/harbor/verifier/verifier.py\", line 304, in verify\n    raise RewardFileNotFoundError(\n    ...<3 lines>...\n    )\nharbor.verifier.verifier.RewardFileNotFoundError: No reward file found at trials/probe-collect/verifier/reward.txt or trials/probe-collect/verifier/reward.json\n",
+    "occurred_at": "2026-11-21T07:03:48.718518Z"
+  },
+  "started_at": "2026-11-21T07:03:16.223845Z",
+  "finished_at": "2026-11-21T07:03:48.719545Z",
+  "environment_setup": {
+    "started_at": "2026-11-21T07:03:16.266727Z",
+    "finished_at": "2026-11-21T07:03:19.452466Z"
+  },
+  "agent_setup": {
+    "started_at": "2026-11-21T07:03:19.452536Z",
+    "finished_at": "2026-11-21T07:03:19.452638Z"
+  },
+  "agent_execution": {
+    "started_at": "2026-11-21T07:03:19.452722Z",
+    "finished_at": "2026-11-21T07:03:20.017250Z"
+  },
+  "verifier": {
+    "started_at": "2026-11-21T07:03:31.778740Z",
+    "finished_at": "2026-11-21T07:03:48.716551Z"
+  },
+  "step_results": null
+}

@@ -43,6 +43,11 @@ FSIZE_LIMIT = int(os.environ.get("TC_SANDBOX_FSIZE_BYTES", str(64 * 1024 * 1024)
 NPROC_LIMIT = int(os.environ.get("TC_SANDBOX_NPROC", "256"))  # per container UID (D29); below --pids-limit 512
 OUTPUT_TAIL = 200_000
 MARKER = "<<TC_RESULT>>"
+# The trusted conversion of a result that json.dumps cannot encode keeps this many levels of nesting (0.3.5).
+ENCODE_MAX_DEPTH = 100
+# The longest result message that run_python can read back: its marker line, MARKER + message + "|" + MAC + "\n",
+# must fit in the last OUTPUT_TAIL bytes of the child's output (run_python finds the marker even at their start).
+MAX_PAYLOAD = OUTPUT_TAIL - len(MARKER + "|" + "0" * 64 + "\n")
 
 # Calls that detected tampering are recorded here and reported by the runner.
 TAMPER_EVENTS: list[dict[str, Any]] = []
@@ -64,15 +69,40 @@ TAMPER_EVENTS: list[dict[str, Any]] = []
 # import path back (sys.path, sys.meta_path, importer cache) before it formats, serialises
 # or signs anything, so the wrapper itself does not import from a candidate directory
 # (decision log D44; harness 0.3.2 did). Methods that candidate objects define still run
-# while the result is formatted (``__repr__`` of the value, ``__str__`` of an exception,
-# a module's ``__getattr__`` or ``__dir__`` for traceback suggestions); they run without
-# the candidate directories on ``sys.path``, so one that imports a candidate module
-# fails, and a package-relative import inside one can still load candidate code
-# (decision log D46). Since harness 0.3.4 such a failure is caught and replaced by a
-# placeholder naming the type, so formatting never changes whether a call succeeded
-# (protocol v0.7 §15.3). Code that the snippet runs, directly or through candidate modules
-# it imports, runs in the same process and can still change what that call reports (the
-# documented residual risk).
+# while the result is formatted and encoded: ``__repr__`` of a value that JSON cannot
+# represent, ``__str__`` of an exception, a metaclass's ``__name__`` for ``error_type``,
+# ``items()`` or ``__iter__`` of a dict or list subclass and the keys' comparisons while
+# ``json.dumps`` encodes and sorts, and a module's ``__getattr__`` or ``__dir__`` for
+# traceback suggestions. They run without the candidate directories on ``sys.path``, so
+# one that imports a candidate module fails, and a package-relative import inside one can
+# still load candidate code (decision log D46).
+#
+# What harness 0.3.5 guarantees (protocol v0.8 §16.1; 0.3.4 claimed this but caught only
+# failures of repr(), str() and traceback formatting, D51): an exception raised while the
+# result is formatted or encoded never turns a successful call into a failed one, never
+# changes ``error_type`` and never leaves the call without a result.
+# * A failing ``__repr__`` or ``__str__`` becomes a placeholder naming the type (since
+#   0.3.4). Placeholders read the type's name as an exact str, with type's own
+#   ``__name__`` descriptor and ``str.__str__``, so formatting one runs no candidate code.
+# * A result that ``json.dumps`` cannot encode (keys of mixed or non-string types, a cycle,
+#   deep nesting, a subclass whose methods raise, an int beyond the digit limit) is
+#   converted by ``_tc_plain``. It reads only exact built-in types, with unbound methods,
+#   and so calls no candidate method. Keys become strings, and a dict whose keys collide as
+#   strings becomes a list of [key, value] pairs. A cycle, a container nested more than
+#   ENCODE_MAX_DEPTH levels deep and every other value become placeholders naming the type.
+# * If that fails too, or the message would be longer than MAX_PAYLOAD (the output that
+#   run_python reads back), a last-resort message keeps ``ok`` and ``error_type`` and
+#   replaces the value or the error message by a placeholder.
+# * A ``sys.stdout`` that the snippet closed or replaced is flushed inside a try, so it
+#   cannot keep the signed message from being written to file descriptor 1.
+# Limits: candidate code that runs while the result is formatted or written, or a thread or
+# process the snippet started, can still end the call (no result) or stall it (a timeout);
+# encoding a very large result counts towards the call's timeout; a process that has
+# exhausted its memory limit may report a MemoryError or no result; and a failed call
+# whose type name alone is longer than MAX_PAYLOAD loses its result, a failure either way.
+# Code that the snippet runs, directly or through candidate modules it imports, runs in
+# the same process and can still change what that call reports (the documented residual
+# risk).
 _WRAPPER = r'''
 import sys as _tc_sys
 _tc_cand = %(cand_paths)r
@@ -93,11 +123,20 @@ def _tc_trust():
     _tc_sys.path = list(_tc_trusted_path)
     _tc_sys.meta_path = list(_tc_trusted_meta_path)
     _tc_sys.path_importer_cache.clear()
+_tc_type_name = type.__dict__["__name__"].__get__
 def _tc_tname(o):
+    # The name of o's type as an exact str: type's own descriptor, and str.__str__, which copies
+    # a str subclass without calling its methods. No candidate method runs (0.3.5).
     try:
-        return str(type(o).__name__)
+        return str.__str__(_tc_type_name(type(o)))
     except BaseException:  # noqa: BLE001
         return "object"
+def _tc_ename(e):
+    # error_type as 0.3.3 reports it (a metaclass may define __name__), as an exact str (0.3.5).
+    try:
+        return str.__str__(type(e).__name__)
+    except BaseException:  # noqa: BLE001
+        return _tc_tname(e)
 def _tc_default(o):
     # Formatting can run candidate code (a __repr__) after the trusted path is restored;
     # a failure there becomes a placeholder and never changes the outcome (0.3.4).
@@ -110,6 +149,56 @@ def _tc_text(fn, fallback):
         return fn()
     except BaseException:  # noqa: BLE001
         return fallback
+def _tc_plain(o, depth, path):
+    # Trusted conversion of a result that json.dumps cannot encode (0.3.5): only exact built-in
+    # types are read, with unbound methods, so no candidate method runs. Anything else, a cycle
+    # (path holds the ids of the containers above o) or a container too deeply nested becomes a
+    # placeholder naming the type.
+    t = type(o)
+    if o is None or t is bool or t is str or t is float:
+        return o
+    if t is int:
+        try:
+            int.__repr__(o)  # beyond the interpreter's digit limit an int cannot be written
+            return o
+        except BaseException:  # noqa: BLE001
+            return "<unformattable int>"
+    if t is not list and t is not tuple and t is not dict:
+        return "<unformattable %%s>" %% _tc_tname(o)
+    if depth >= %(max_depth)d:
+        return "<too deep %%s>" %% _tc_tname(o)
+    if id(o) in path:
+        return "<cycle %%s>" %% _tc_tname(o)
+    path.add(id(o))
+    try:
+        if t is not dict:
+            return [_tc_plain(x, depth + 1, path) for x in o]
+        pairs = [[_tc_plain(k, depth + 1, path), _tc_plain(v, depth + 1, path)] for k, v in dict.items(o)]
+        keys = [k if type(k) is str else _tc_json.dumps(k) for k, _ in pairs]
+        if len(set(keys)) < len(keys):
+            return pairs  # keys that are equal as strings: [key, value] pairs, in the dict's order
+        return dict(zip(keys, [v for _, v in pairs]))
+    finally:
+        path.discard(id(o))
+def _tc_last(res, why):
+    # Last resort (0.3.5): ok and error_type exactly as they are, the rest a short placeholder.
+    if res["ok"] is True:
+        return _tc_json.dumps({"ok": True, "value": "<%%s %%s>" %% (why, _tc_tname(res["value"])[:200])})
+    return _tc_json.dumps({"error": "<%%s error message>" %% why, "error_type": res["error_type"], "ok": False},
+                          sort_keys=True)
+def _tc_payload(res):
+    # As in 0.3.3 when json.dumps can encode res; otherwise res converted by _tc_plain; otherwise,
+    # or when the message would not fit in the output run_python reads back, the last resort.
+    try:
+        text = _tc_json.dumps(res, default=_tc_default, sort_keys=True)
+    except BaseException:  # noqa: BLE001
+        try:
+            text = _tc_json.dumps({k: _tc_plain(v, 0, set()) for k, v in res.items()}, sort_keys=True)
+        except BaseException:  # noqa: BLE001
+            return _tc_last(res, "unencodable")
+    if len(text) > %(max_payload)d:
+        return _tc_last(res, "too large")
+    return text
 def _tc_main():
     key = _tc_os.read(%(keyfd)d, 64)
     _tc_os.close(%(keyfd)d)
@@ -122,15 +211,13 @@ def _tc_main():
         res = {"ok": True, "value": ns.get("result")}
     except BaseException as e:  # noqa: BLE001 - report every failure as data
         _tc_trust()
-        res = {"ok": False, "error_type": _tc_tname(e),
-               "error": _tc_text(lambda: str(e)[:4000], "<unformattable %%s>" %% _tc_tname(e)),
+        et = _tc_ename(e)
+        res = {"ok": False, "error_type": et,
+               "error": _tc_text(lambda: str(e)[:4000], "<unformattable %%s>" %% et),
                "traceback": _tc_text(lambda: _tc_traceback.format_exc()[-4000:], "<traceback unavailable>")}
-    try:
-        payload = _tc_json.dumps(res, default=_tc_default, sort_keys=True)
-    except Exception as e:  # noqa: BLE001
-        payload = _tc_json.dumps({"ok": False, "error_type": "SerializationError", "error": repr(e)})
+    payload = _tc_payload(res)
     mac = _tc_hmac.new(key, payload.encode("utf-8"), _tc_hashlib.sha256).hexdigest()
-    _tc_sys.stdout.flush()
+    _tc_text(lambda: _tc_sys.stdout.flush(), None)  # a stdout that the snippet closed or replaced
     _tc_os.write(1, ("\n" + marker + payload + "|" + mac + "\n").encode("utf-8"))
 _tc_main()
 '''
@@ -288,9 +375,11 @@ def _in_workdir(entry: str) -> str:
 def run_python(snippet: str, *, timeout: float = 20.0, env: dict[str, str] | None = None) -> CallResult:
     """Execute ``snippet`` as the sandbox user; the snippet should assign ``result``.
 
-    The value of ``result`` (JSON-serialised, falling back to ``repr``) is returned
-    in :attr:`CallResult.value`. Exceptions inside the snippet are returned as
-    ``ok=False`` with the exception type and message.
+    The value of ``result`` is returned in :attr:`CallResult.value`, JSON-serialised as in
+    0.3.3 (a value that JSON cannot represent is given as its ``repr``). A result that
+    cannot be encoded that way is converted by trusted code or replaced by a placeholder
+    naming the type (see the comment above ``_WRAPPER``). Exceptions inside the snippet are
+    returned as ``ok=False`` with the exception type and message.
     """
     key = secrets.token_bytes(32)
     r, w = os.pipe()
@@ -306,7 +395,8 @@ def run_python(snippet: str, *, timeout: float = 20.0, env: dict[str, str] | Non
     pp_entries = [_in_workdir(x) for x in pythonpath.split(os.pathsep)] if pythonpath else []
     late_paths = cand_paths + [x for x in pp_entries if x not in cand_paths]
     code = _WRAPPER % {"marker": MARKER, "snippet": snippet, "keyfd": r, "cand_paths": cand_paths,
-                       "late_paths": late_paths, "pythonpath": pythonpath}
+                       "late_paths": late_paths, "pythonpath": pythonpath, "max_depth": ENCODE_MAX_DEPTH,
+                       "max_payload": MAX_PAYLOAD}
     fd, path = tempfile.mkstemp(prefix="tc_call_", suffix=".py", dir="/tmp")
     with os.fdopen(fd, "w", encoding="utf-8") as fh:
         fh.write(code)

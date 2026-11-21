@@ -19,6 +19,18 @@
       "task_family_id": "CS-01",
       "eligibility": "pending_review",
       "rejection_reasons": [],
+      "triage": {
+        "category": "candidate",
+        "method": "rule:v1",
+        "confidence": "medium",
+        "reasons": [
+          "candidate: 1 correction candidate(s) under the cue rule",
+          "note: 1 unresolved, unscored contract requirement(s) (R7); the objective itself is resolved"
+        ],
+        "correction_event_ids": [
+          "CS-01-session/L000125.00"
+        ]
+      },
       "accessed": "2026-11-13T02:00:13+00:00",
       "task_status": "pending_review"
     },
@@ -41,6 +53,18 @@
       "task_family_id": "CS-02",
       "eligibility": "pending_review",
       "rejection_reasons": [],
+      "triage": {
+        "category": "candidate",
+        "method": "rule:v1",
+        "confidence": "medium",
+        "reasons": [
+          "candidate: 1 correction candidate(s) under the cue rule",
+          "note: 1 unresolved, unscored contract requirement(s) (R11); the objective itself is resolved"
+        ],
+        "correction_event_ids": [
+          "CS-02-session/L000160.00"
+        ]
+      },
       "accessed": "2026-11-13T02:30:24+00:00",
       "task_status": "pending_review"
     },
@@ -63,6 +87,18 @@
       "task_family_id": "CS-03",
       "eligibility": "pending_review",
       "rejection_reasons": [],
+      "triage": {
+        "category": "candidate",
+        "method": "rule:v1",
+        "confidence": "medium",
+        "reasons": [
+          "candidate: 1 correction candidate(s) under the cue rule",
+          "note: 1 unresolved, unscored contract requirement(s) (R3); the objective itself is resolved"
+        ],
+        "correction_event_ids": [
+          "CS-03-session/L000056.00"
+        ]
+      },
       "accessed": "2026-11-13T02:20:55+00:00",
       "task_status": "pending_review"
     },
@@ -85,6 +121,17 @@
       "task_family_id": "CS-04",
       "eligibility": "pending_review",
       "rejection_reasons": [],
+      "triage": {
+        "category": "candidate",
+        "method": "rule:v1",
+        "confidence": "medium",
+        "reasons": [
+          "candidate: 1 correction candidate(s) under the cue rule"
+        ],
+        "correction_event_ids": [
+          "CS-04-session/L000107.00"
+        ]
+      },
       "accessed": "2026-11-13T02:12:58+00:00",
       "task_status": "pending_review"
     },

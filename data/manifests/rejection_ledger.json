@@ -290,7 +290,1295 @@
         "no correction candidate under the correction-cue rule",
         "no code licence identified"
       ]
+    },
+    {
+      "source_id": "comment:1904732964",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 1904732964,
+      "pr_id": 2771599553,
+      "repo_id": 879473096
+    },
+    {
+      "source_id": "comment:1904733243",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 1904733243,
+      "pr_id": 2771599553,
+      "repo_id": 879473096
+    },
+    {
+      "source_id": "comment:2103779608",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2103779608,
+      "pr_id": 3084794817,
+      "repo_id": 174629277
+    },
+    {
+      "source_id": "comment:2103968133",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2103968133,
+      "pr_id": 3085398469,
+      "repo_id": 136202695
+    },
+    {
+      "source_id": "comment:2107050515",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2107050515,
+      "pr_id": 3090570894,
+      "repo_id": 172703996
+    },
+    {
+      "source_id": "comment:2107724486",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2107724486,
+      "pr_id": 3090570894,
+      "repo_id": 172703996
+    },
+    {
+      "source_id": "comment:2110888713",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2110888713,
+      "pr_id": 3090570894,
+      "repo_id": 172703996
+    },
+    {
+      "source_id": "comment:2110894936",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_addressed"
+      ],
+      "comment_id": 2110894936,
+      "pr_id": 3090570894,
+      "repo_id": 172703996
+    },
+    {
+      "source_id": "comment:2110930786",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2110930786,
+      "pr_id": 3090570894,
+      "repo_id": 172703996
+    },
+    {
+      "source_id": "comment:2110935514",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_addressed"
+      ],
+      "comment_id": 2110935514,
+      "pr_id": 3090570894,
+      "repo_id": 172703996
+    },
+    {
+      "source_id": "comment:2110941229",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_addressed"
+      ],
+      "comment_id": 2110941229,
+      "pr_id": 3090570894,
+      "repo_id": 172703996
+    },
+    {
+      "source_id": "comment:2110945045",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2110945045,
+      "pr_id": 3090570894,
+      "repo_id": 172703996
+    },
+    {
+      "source_id": "comment:2125344495",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2125344495,
+      "pr_id": 3085398469,
+      "repo_id": 136202695
+    },
+    {
+      "source_id": "comment:2132969579",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2132969579,
+      "pr_id": 3125531606,
+      "repo_id": 4127088
+    },
+    {
+      "source_id": "comment:2132969684",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2132969684,
+      "pr_id": 3125531606,
+      "repo_id": 4127088
+    },
+    {
+      "source_id": "comment:2134826679",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2134826679,
+      "pr_id": 3128687723,
+      "repo_id": 136202695
+    },
+    {
+      "source_id": "comment:2146961131",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "commits_not_fetchable"
+      ],
+      "comment_id": 2146961131,
+      "pr_id": 3145372553,
+      "repo_id": 464577591
+    },
+    {
+      "source_id": "comment:2147011985",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "commits_not_fetchable"
+      ],
+      "comment_id": 2147011985,
+      "pr_id": 3146305288,
+      "repo_id": 201991558
+    },
+    {
+      "source_id": "comment:2150362939",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2150362939,
+      "pr_id": 3147153408,
+      "repo_id": 679017521
+    },
+    {
+      "source_id": "comment:2157441300",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "commits_not_fetchable"
+      ],
+      "comment_id": 2157441300,
+      "pr_id": 3160949988,
+      "repo_id": 464577591
+    },
+    {
+      "source_id": "comment:2157441911",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "commits_not_fetchable"
+      ],
+      "comment_id": 2157441911,
+      "pr_id": 3160949988,
+      "repo_id": 464577591
+    },
+    {
+      "source_id": "comment:2157459507",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "commits_not_fetchable"
+      ],
+      "comment_id": 2157459507,
+      "pr_id": 3160949988,
+      "repo_id": 464577591
+    },
+    {
+      "source_id": "comment:2166103518",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2166103518,
+      "pr_id": 3174604777,
+      "repo_id": 174629277
+    },
+    {
+      "source_id": "comment:2173530542",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2173530542,
+      "pr_id": 3185333353,
+      "repo_id": 224148738
+    },
+    {
+      "source_id": "comment:2179835220",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2179835220,
+      "pr_id": 3195573803,
+      "repo_id": 60844169
+    },
+    {
+      "source_id": "comment:2179884594",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2179884594,
+      "pr_id": 3195573803,
+      "repo_id": 60844169
+    },
+    {
+      "source_id": "comment:2180011139",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "no later commit changes the commented file",
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2180011139,
+      "pr_id": 3195788503,
+      "repo_id": 60844169
+    },
+    {
+      "source_id": "comment:2180446598",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2180446598,
+      "pr_id": 3193524394,
+      "repo_id": 60844169
+    },
+    {
+      "source_id": "comment:2180489055",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2180489055,
+      "pr_id": 3196295632,
+      "repo_id": 898171798
+    },
+    {
+      "source_id": "comment:2180489628",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2180489628,
+      "pr_id": 3196295632,
+      "repo_id": 898171798
+    },
+    {
+      "source_id": "comment:2180492928",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2180492928,
+      "pr_id": 3193524394,
+      "repo_id": 60844169
+    },
+    {
+      "source_id": "comment:2182619523",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2182619523,
+      "pr_id": 3199112507,
+      "repo_id": 60844169
+    },
+    {
+      "source_id": "comment:2183958883",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2183958883,
+      "pr_id": 3200874762,
+      "repo_id": 205439527
+    },
+    {
+      "source_id": "comment:2188085388",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2188085388,
+      "pr_id": 3206231176,
+      "repo_id": 172733314
+    },
+    {
+      "source_id": "comment:2201256959",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "commits_not_fetchable"
+      ],
+      "comment_id": 2201256959,
+      "pr_id": 3223461985,
+      "repo_id": 464577591
+    },
+    {
+      "source_id": "comment:2202317717",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "commits_not_fetchable"
+      ],
+      "comment_id": 2202317717,
+      "pr_id": 3223461985,
+      "repo_id": 464577591
+    },
+    {
+      "source_id": "comment:2202736609",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2202736609,
+      "pr_id": 3225037054,
+      "repo_id": 60844169
+    },
+    {
+      "source_id": "comment:2202747627",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2202747627,
+      "pr_id": 3225037054,
+      "repo_id": 60844169
+    },
+    {
+      "source_id": "comment:2202777769",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_addressed"
+      ],
+      "comment_id": 2202777769,
+      "pr_id": 3225486077,
+      "repo_id": 60844169
+    },
+    {
+      "source_id": "comment:2202784976",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2202784976,
+      "pr_id": 3225037054,
+      "repo_id": 60844169
+    },
+    {
+      "source_id": "comment:2203059156",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_addressed"
+      ],
+      "comment_id": 2203059156,
+      "pr_id": 3225037054,
+      "repo_id": 60844169
+    },
+    {
+      "source_id": "comment:2203212538",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2203212538,
+      "pr_id": 3226175596,
+      "repo_id": 60844169
+    },
+    {
+      "source_id": "comment:2203217709",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2203217709,
+      "pr_id": 3226175596,
+      "repo_id": 60844169
+    },
+    {
+      "source_id": "comment:2203224834",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2203224834,
+      "pr_id": 3226175596,
+      "repo_id": 60844169
+    },
+    {
+      "source_id": "comment:2206402641",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "commits_not_fetchable"
+      ],
+      "comment_id": 2206402641,
+      "pr_id": 3230759504,
+      "repo_id": 464577591
+    },
+    {
+      "source_id": "comment:2206418067",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "commits_not_fetchable"
+      ],
+      "comment_id": 2206418067,
+      "pr_id": 3230759504,
+      "repo_id": 464577591
+    },
+    {
+      "source_id": "comment:2206456310",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "commits_not_fetchable"
+      ],
+      "comment_id": 2206456310,
+      "pr_id": 3230759504,
+      "repo_id": 464577591
+    },
+    {
+      "source_id": "comment:2210039632",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2210039632,
+      "pr_id": 3235347485,
+      "repo_id": 60844169
+    },
+    {
+      "source_id": "comment:2210110813",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2210110813,
+      "pr_id": 3235347485,
+      "repo_id": 60844169
+    },
+    {
+      "source_id": "comment:2210142881",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2210142881,
+      "pr_id": 3235347485,
+      "repo_id": 60844169
+    },
+    {
+      "source_id": "comment:2210147596",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2210147596,
+      "pr_id": 3235347485,
+      "repo_id": 60844169
+    },
+    {
+      "source_id": "comment:2210150383",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2210150383,
+      "pr_id": 3235347485,
+      "repo_id": 60844169
+    },
+    {
+      "source_id": "comment:2210194155",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2210194155,
+      "pr_id": 3235347485,
+      "repo_id": 60844169
+    },
+    {
+      "source_id": "comment:2210230251",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2210230251,
+      "pr_id": 3235347485,
+      "repo_id": 60844169
+    },
+    {
+      "source_id": "comment:2210238358",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2210238358,
+      "pr_id": 3235347485,
+      "repo_id": 60844169
+    },
+    {
+      "source_id": "comment:2214277783",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "commits_not_fetchable"
+      ],
+      "comment_id": 2214277783,
+      "pr_id": 3240066109,
+      "repo_id": 464577591
+    },
+    {
+      "source_id": "comment:2214774126",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2214774126,
+      "pr_id": 3241598089,
+      "repo_id": 60844169
+    },
+    {
+      "source_id": "comment:2215696512",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_addressed"
+      ],
+      "comment_id": 2215696512,
+      "pr_id": 3241734959,
+      "repo_id": 60844169
+    },
+    {
+      "source_id": "comment:2215701118",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2215701118,
+      "pr_id": 3241734959,
+      "repo_id": 60844169
+    },
+    {
+      "source_id": "comment:2217286054",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2217286054,
+      "pr_id": 3244901827,
+      "repo_id": 60844169
+    },
+    {
+      "source_id": "comment:2217299540",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2217299540,
+      "pr_id": 3244901827,
+      "repo_id": 60844169
+    },
+    {
+      "source_id": "comment:2218983090",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2218983090,
+      "pr_id": 3246587900,
+      "repo_id": 60844169
+    },
+    {
+      "source_id": "comment:2220018704",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2220018704,
+      "pr_id": 3214122373,
+      "repo_id": 172703996
+    },
+    {
+      "source_id": "comment:2226952312",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "commits_not_fetchable"
+      ],
+      "comment_id": 2226952312,
+      "pr_id": 3250546916,
+      "repo_id": 201991558
+    },
+    {
+      "source_id": "comment:2228632901",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2228632901,
+      "pr_id": 3257741269,
+      "repo_id": 4127088
+    },
+    {
+      "source_id": "comment:2228648714",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2228648714,
+      "pr_id": 3257632101,
+      "repo_id": 4127088
+    },
+    {
+      "source_id": "comment:2229250252",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "commits_not_fetchable"
+      ],
+      "comment_id": 2229250252,
+      "pr_id": 3260530232,
+      "repo_id": 464577591
+    },
+    {
+      "source_id": "comment:2229869738",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2229869738,
+      "pr_id": 3261572196,
+      "repo_id": 136202695
+    },
+    {
+      "source_id": "comment:2241170862",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2241170862,
+      "pr_id": 3257741269,
+      "repo_id": 4127088
+    },
+    {
+      "source_id": "comment:2243466254",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "commits_not_fetchable"
+      ],
+      "comment_id": 2243466254,
+      "pr_id": 3277927878,
+      "repo_id": 12888993
+    },
+    {
+      "source_id": "comment:2258613125",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2258613125,
+      "pr_id": 3298481835,
+      "repo_id": 948169755
+    },
+    {
+      "source_id": "comment:2258621018",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2258621018,
+      "pr_id": 3298481835,
+      "repo_id": 948169755
+    },
+    {
+      "source_id": "comment:2258637033",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2258637033,
+      "pr_id": 3298481835,
+      "repo_id": 948169755
+    },
+    {
+      "source_id": "comment:2275609809",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2275609809,
+      "pr_id": 3312673456,
+      "repo_id": 8941695
+    },
+    {
+      "source_id": "comment:2276358935",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2276358935,
+      "pr_id": 3321819058,
+      "repo_id": 60844169
+    },
+    {
+      "source_id": "comment:2277957986",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2277957986,
+      "pr_id": 3237622389,
+      "repo_id": 992876953
+    },
+    {
+      "source_id": "comment:2279614274",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "commits_not_fetchable"
+      ],
+      "comment_id": 2279614274,
+      "pr_id": 3323769162,
+      "repo_id": 201991558
+    },
+    {
+      "source_id": "comment:2279617881",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "commits_not_fetchable"
+      ],
+      "comment_id": 2279617881,
+      "pr_id": 3323770528,
+      "repo_id": 201991558
+    },
+    {
+      "source_id": "comment:2282900309",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2282900309,
+      "pr_id": 3331243871,
+      "repo_id": 917852255
+    },
+    {
+      "source_id": "comment:2282901584",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2282901584,
+      "pr_id": 3331243871,
+      "repo_id": 917852255
+    },
+    {
+      "source_id": "comment:2285797080",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2285797080,
+      "pr_id": 3334924512,
+      "repo_id": 156401841
+    },
+    {
+      "source_id": "comment:2288127486",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2288127486,
+      "pr_id": 3336975392,
+      "repo_id": 918224983
+    },
+    {
+      "source_id": "comment:2288923303",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2288923303,
+      "pr_id": 3335197686,
+      "repo_id": 917852255
+    },
+    {
+      "source_id": "comment:2289129011",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2289129011,
+      "pr_id": 3339114394,
+      "repo_id": 917852255
+    },
+    {
+      "source_id": "comment:2311786626",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2311786626,
+      "pr_id": 3298481835,
+      "repo_id": 948169755
+    },
+    {
+      "source_id": "comment:2311789718",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2311789718,
+      "pr_id": 3298481835,
+      "repo_id": 948169755
+    },
+    {
+      "source_id": "comment:2312205243",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2312205243,
+      "pr_id": 3369544533,
+      "repo_id": 948169755
+    },
+    {
+      "source_id": "comment:2320071825",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2320071825,
+      "pr_id": 3377250259,
+      "repo_id": 898171798
+    },
+    {
+      "source_id": "comment:2331431679",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2331431679,
+      "pr_id": 3392393778,
+      "repo_id": 369428935
+    },
+    {
+      "source_id": "comment:2338280918",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2338280918,
+      "pr_id": 3404386266,
+      "repo_id": 136202695
+    },
+    {
+      "source_id": "comment:2339584267",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2339584267,
+      "pr_id": 3405228167,
+      "repo_id": 100315955
+    },
+    {
+      "source_id": "comment:2353959643",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2353959643,
+      "pr_id": 3424154725,
+      "repo_id": 136202695
+    },
+    {
+      "source_id": "comment:2357403579",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2357403579,
+      "pr_id": 3428441045,
+      "repo_id": 136202695
+    },
+    {
+      "source_id": "comment:2361947652",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2361947652,
+      "pr_id": 3433057940,
+      "repo_id": 136202695
+    },
+    {
+      "source_id": "comment:2365393909",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "commits_not_fetchable"
+      ],
+      "comment_id": 2365393909,
+      "pr_id": 3436799116,
+      "repo_id": 974445592
+    },
+    {
+      "source_id": "comment:2375253177",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2375253177,
+      "pr_id": 3448564799,
+      "repo_id": 987744903
+    },
+    {
+      "source_id": "comment:2396290882",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "commits_not_fetchable"
+      ],
+      "comment_id": 2396290882,
+      "pr_id": 3475441504,
+      "repo_id": 974445592
+    },
+    {
+      "source_id": "comment:2415893643",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2415893643,
+      "pr_id": 3497926869,
+      "repo_id": 184555939
+    },
+    {
+      "source_id": "comment:2438453364",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2438453364,
+      "pr_id": 3524575578,
+      "repo_id": 948169755
+    },
+    {
+      "source_id": "comment:2504524300",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2504524300,
+      "pr_id": 3575054853,
+      "repo_id": 182067506
+    },
+    {
+      "source_id": "comment:2513276195",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2513276195,
+      "pr_id": 3600457266,
+      "repo_id": 66776276
+    },
+    {
+      "source_id": "comment:2513344996",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2513344996,
+      "pr_id": 3600457266,
+      "repo_id": 66776276
+    },
+    {
+      "source_id": "comment:2573329874",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "commits_not_fetchable"
+      ],
+      "comment_id": 2573329874,
+      "pr_id": 3677083241,
+      "repo_id": 12888993
+    },
+    {
+      "source_id": "comment:2577219382",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2577219382,
+      "pr_id": 3626906682,
+      "repo_id": 148077512
+    },
+    {
+      "source_id": "comment:2651335907",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2651335907,
+      "pr_id": 3767792571,
+      "repo_id": 139199684
+    },
+    {
+      "source_id": "comment:2666115515",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2666115515,
+      "pr_id": 3786070623,
+      "repo_id": 139199684
+    },
+    {
+      "source_id": "comment:2666116325",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2666116325,
+      "pr_id": 3786070623,
+      "repo_id": 139199684
+    },
+    {
+      "source_id": "comment:2713012806",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2713012806,
+      "pr_id": 3838546999,
+      "repo_id": 139199684
+    },
+    {
+      "source_id": "comment:2790329439",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2790329439,
+      "pr_id": 3914019120,
+      "repo_id": 35178170
+    },
+    {
+      "source_id": "comment:2799907135",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2799907135,
+      "pr_id": 3932480484,
+      "repo_id": 139199684
+    },
+    {
+      "source_id": "comment:2879970487",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2879970487,
+      "pr_id": 4017319060,
+      "repo_id": 139199684
+    },
+    {
+      "source_id": "comment:2880014194",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2880014194,
+      "pr_id": 3980680252,
+      "repo_id": 1101139767
+    },
+    {
+      "source_id": "comment:2880019224",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2880019224,
+      "pr_id": 3980680252,
+      "repo_id": 1101139767
+    },
+    {
+      "source_id": "comment:2927487935",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2927487935,
+      "pr_id": 4067244689,
+      "repo_id": 33884891
+    },
+    {
+      "source_id": "comment:2928001989",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2928001989,
+      "pr_id": 4066972680,
+      "repo_id": 33884891
+    },
+    {
+      "source_id": "comment:2953438785",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 2953438785,
+      "pr_id": 4095008687,
+      "repo_id": 133100880
+    },
+    {
+      "source_id": "comment:3072702941",
+      "population": "natural:pr-review",
+      "stage": "S9",
+      "reasons": [
+        "not_behaviour_change_or_defect"
+      ],
+      "comment_id": 3072702941,
+      "pr_id": 4124128098,
+      "repo_id": 1085158702
     }
   ],
-  "note": "Natural-data screening (decision log D47): natural:chat (screen-trace-commons:v1; source revision 112ebd4d): 30 screened, 30 rejected, 0 pending review, 0 eligible; natural:pr-review (scripts/screen_aidev.py; source revision b37f9fd1): a funnel, not per-candidate rows; 684 review_comments on 190 PRs survive stage S8a, sample S9 of 150, none in this ledger yet; SWE-chat: not screened (its dataset terms await the owner, D4)."
+  "note": "Natural-data screening (decision log D47): natural:chat (screen-trace-commons:v1; source revision 112ebd4d): 30 screened, 30 rejected, 0 pending review, 0 eligible; natural:pr-review (scripts/screen_aidev.py, screening_natural_aidev_s9.json; source revision b37f9fd1): 684 review_comments on 190 PRs survive stage S8a (a funnel, not per-candidate rows), and of the 150 sampled for S9, 31 qualify, 117 fail (in this ledger with stage S9 and their reasons) and 2 are excluded because the judges disagree; SWE-chat: not screened (its dataset terms await the owner, D4)."
 }

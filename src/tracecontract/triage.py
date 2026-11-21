@@ -27,14 +27,21 @@ every reason that applies, when its format cannot be replayed, it is unsuitable 
 its environment, it has no recoverable base commit (and its replay is then unreconstructable),
 no correction candidate or no identified code licence; a session whose base commit is a lead
 that needs a network check is ``pending_review``; ``eligible`` needs a verified public base.
+
+A task's proposal is kept in a sidecar, ``tasks/<id>/triage.json`` (:func:`write_sidecar`), beside
+the frozen provenance record, which is never written (decision log D47, D50).
 """
 
 from __future__ import annotations
 
+import json
+import os
 import posixpath
 import re
+import tempfile
 from collections import Counter
 from dataclasses import asdict, dataclass, field
+from pathlib import Path
 from typing import Any
 
 from .contract import propose_correction_events
@@ -330,3 +337,66 @@ def screen_eligibility(s: TriageSignals, proposal: TriageProposal, *, replay_fid
         return Eligibility.rejected, reasons
     return Eligibility.pending_review, ["pending: the base commit and the repository's publicness need a network check"
                                         if lead else "pending: human review"]
+
+
+# ---------------------------------------------------------------- the task sidecar (tasks/<id>/triage.json)
+
+SIDECAR = "triage.json"
+SIDECAR_NOTE = ("A rule:v1 triage proposal, not ground truth. It is kept in this sidecar so that the frozen provenance "
+                "record beside it is not edited (decision log D47, D50).")
+
+
+def sidecar_record(task_id: str, record_id: str, proposal: TriageProposal, *, generator: str,
+                   inputs: dict[str, str]) -> dict[str, Any]:
+    """The sidecar of one task: its ids, what produced the proposal from which inputs (paths and sha256), and the proposal."""
+    return {"task_id": task_id, "provenance_record_id": record_id, "generator": generator, "note": SIDECAR_NOTE,
+            "inputs": dict(inputs), "triage": proposal.model_dump(mode="json")}
+
+
+def render_sidecar(record: dict[str, Any]) -> str:
+    """The sidecar's text; the proposal must validate as a :class:`TriageProposal`."""
+    TriageProposal.model_validate(record["triage"])
+    return json.dumps(record, indent=2, ensure_ascii=False) + "\n"
+
+
+def write_sidecar(task_dir: Path, record: dict[str, Any], provenance: str = "provenance.json") -> bool:
+    """Write ``task_dir/triage.json`` unless it already holds exactly this record; return whether it was written.
+
+    Everything is checked in memory before anything is written: the record names this task (its directory and
+    the ``source_id`` of its provenance record ``provenance``) and that record's id, the proposal validates, and the
+    new text is compared with the file's current text. The file is then replaced atomically. The provenance record
+    itself is only read, never written.
+    """
+    task_dir = Path(task_dir)
+    prov = json.loads((task_dir / provenance).read_text(encoding="utf-8"))
+    if record.get("task_id") != task_dir.name or prov.get("source_id") != task_dir.name:
+        raise ValueError(f"{task_dir}: the sidecar names task {record.get('task_id')!r}, the directory and its provenance "
+                         f"record {task_dir.name!r} and {prov.get('source_id')!r}")
+    if record.get("provenance_record_id") != prov.get("record_id"):
+        raise ValueError(f"{task_dir}: the sidecar names provenance record {record.get('provenance_record_id')!r}, "
+                         f"the task's is {prov.get('record_id')!r}")
+    text = render_sidecar(record)
+    path = task_dir / SIDECAR
+    if path.is_file() and path.read_text(encoding="utf-8") == text:
+        return False
+    fd, tmp = tempfile.mkstemp(prefix=".triage.", suffix=".json", dir=task_dir)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            fh.write(text)
+        os.chmod(tmp, 0o644)
+        os.replace(tmp, path)
+    except BaseException:
+        Path(tmp).unlink(missing_ok=True)
+        raise
+    return True
+
+
+def read_sidecar(task_dir: Path) -> TriageProposal | None:
+    """The proposal in ``task_dir/triage.json``, or None without a sidecar; a sidecar of another task is refused."""
+    path = Path(task_dir) / SIDECAR
+    if not path.is_file():
+        return None
+    record = json.loads(path.read_text(encoding="utf-8"))
+    if record.get("task_id") != Path(task_dir).name:
+        raise ValueError(f"{path}: the sidecar names task {record.get('task_id')!r}")
+    return TriageProposal.model_validate(record["triage"])

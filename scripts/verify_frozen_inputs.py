@@ -5,7 +5,10 @@ Usage: .venv/bin/python scripts/verify_frozen_inputs.py [--rev c5ede4c] [--run r
 Checks against the frozen commit ``--rev``:
 
 a. every file listed in the run's ``analysis.json`` under ``meta.inputs.files_sha256`` (135 for
-   ``pilot-v0.3.3``) still has the recorded hash;
+   ``pilot-v0.3.3``) still has the recorded hash, with one exemption, for analysis code: a ``code/``
+   key (a file under ``src/tracecontract/``) whose file changed since the run is reported as info
+   and not counted as a difference. Analysis code may change after the run only as long as the
+   outputs regenerate identically, which (d) checks; a code file that is missing is a difference;
 b. git shows no difference between the commit and the working tree in the run directory, and
    no untracked file there;
 c. ``experiments/protocol.md`` and ``docs/decision_log.md`` at the commit are byte prefixes of
@@ -13,17 +16,22 @@ c. ``experiments/protocol.md`` and ``docs/decision_log.md`` at the commit are by
 d. ``tracecontract analyze <run> --allow-proposed-labels`` and ``tracecontract report`` regenerate
    ``analysis.md``, ``report.html`` and ``analysis.json`` in a temporary copy of the run directory
    (``manifest.json`` and ``results.jsonl`` only; never in place), byte for byte;
-   ``analysis.json`` may differ only in the recorded git revision;
+   ``analysis.json`` may differ only in the recorded git revision and, under the exemption of (a),
+   in the recorded hashes of analysis code that changed since the run (reported as info);
 e. (additional) no tracked frozen file is modified or deleted: every run directory under
    ``results/runs/`` at the commit, ``tasks/CS-0*/{task,provenance,snapshot}.json``, ``candidates/``, ``contracts/``,
    ``verifiers/``, ``labels/``, ``data/controlled/``, ``experiments/prompts/``,
-   ``paper/evidence_ledger.md`` and ``paper/generated/*.tex``; new files are counted, not refused;
+   ``paper/evidence_ledger.md`` and ``paper/generated/*.tex``; new files are counted, not refused.
+   There is no exemption here: a provenance record that differs only in its ``triage`` field is a
+   modified frozen file. Triage proposals are kept in the sidecars ``tasks/<id>/triage.json``
+   (decision log D47, D50);
 f. (additional) every base snapshot ``snapshots/<id>`` has the manifest in ``tasks/<id>/snapshot.json``.
 
-A difference that already exists at the frozen commit is reported as pre-existing: a hashed file
-whose content at the commit already differs from the recorded hash and that has not changed since
-(``code/schemas.py``, decision log D46). Exit status 1 on any difference; ``--allow-preexisting``
-accepts the pre-existing ones. One summary line goes to stdout, the details to stderr.
+A difference that already exists at the frozen commit is reported as pre-existing: a hashed data
+file (not analysis code, which falls under the exemption of (a)) whose content at the commit
+already differs from the recorded hash and that has not changed since. Exit status 1 on any
+difference; ``--allow-preexisting`` accepts the pre-existing ones. One summary line goes to stdout,
+the details (the info lines first) to stderr.
 """
 
 from __future__ import annotations
@@ -196,18 +204,6 @@ def check_regeneration(f: Findings, run: str, input_status: dict[str, str]) -> N
         shutil.rmtree(tmp, ignore_errors=True)
 
 
-def _only_triage_changed(rev: str, rel: str) -> bool:
-    """True if a provenance record differs from ``rev`` only in its ``triage`` field."""
-    try:
-        old = json.loads(_at_rev(rev, rel) or b"null")
-        new = json.loads((REPO / rel).read_bytes())
-    except (OSError, ValueError):
-        return False
-    if not isinstance(old, dict) or not isinstance(new, dict):
-        return False
-    return {k: v for k, v in old.items() if k != "triage"} == {k: v for k, v in new.items() if k != "triage"}
-
-
 def check_frozen_files(f: Findings, rev: str) -> None:
     """(e) tracked frozen files: modifications and deletions since ``rev``."""
     tasks = [t for t in _git("ls-tree", "--name-only", rev, "tasks/").decode().split() if fnmatch.fnmatch(t, "tasks/CS-0*")]
@@ -218,10 +214,6 @@ def check_frozen_files(f: Findings, rev: str) -> None:
     added = [p for s, p in rows if s == "A"]
     added += _git("ls-files", "--others", "--exclude-standard", "--", *specs).decode().splitlines()
     changed = [(s, p) for s, p in rows if s != "A"]
-    triage_only = [p for s, p in changed if s == "M" and p.endswith("/provenance.json") and _only_triage_changed(rev, p)]
-    for p in triage_only:
-        f.info.append(f"(e) {p}: only the triage field (rule:v1 proposals, not a hashed input) changed since {rev}")
-    changed = [(s, p) for s, p in changed if p not in triage_only]
     for s, p in changed:
         f.add("e", f"{p}: {'deleted' if s == 'D' else 'modified'} since {rev}")
     f.summary["e"] = f"{len(changed)} frozen file(s) changed, {len(added)} new file(s) beside them"

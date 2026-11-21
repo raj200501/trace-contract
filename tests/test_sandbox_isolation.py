@@ -576,11 +576,11 @@ class Boom(Exception):
 '''
 
 
-def test_formatting_failure_never_changes_the_outcome(image, tmp_path):
-    """Harness 0.3.4 (protocol v0.7 §15.3, D46): formatting runs after the trusted path is
-    restored, so a candidate __repr__ or __str__ that imports a candidate module fails.
-    The failure must become a placeholder; under 0.3.3 the successful call was reported
-    as a SerializationError."""
+def test_failing_repr_or_str_becomes_a_placeholder(image, tmp_path):
+    """Since harness 0.3.4 (D46): formatting runs after the trusted path is restored, so a
+    candidate __repr__ or __str__ that imports a candidate module fails. The failure must
+    become a placeholder naming the type; under 0.3.3 the successful call was reported as
+    a SerializationError."""
     base = tmp_path / "base"
     base.mkdir()
     (base / "calc.py").write_text("x = 1\n")
@@ -593,3 +593,237 @@ def test_formatting_failure_never_changes_the_outcome(image, tmp_path):
     cand = _candidate(base, tmp_path, "fmt", {"fmtmod.py": FMT_MODULE, "fmthelper.py": "def label(o):\n    return 'ok'\n"})
     res = verify_candidate(image=image, base_dir=base, spec=spec, task_dir=tdir, candidate=cand, run_id="iso")
     assert res.outcome == Outcome.passed, [c.message[-500:] for c in res.checks]
+
+
+ENCODING_MODULE = '''"""Results that json.dumps cannot encode, and exceptions whose formatting fails (harness 0.3.5)."""
+import sys
+
+
+def mixed_keys():
+    return {1: "a", "b": 2}
+
+
+def tuple_keys():
+    return {(1, 2): "a", (3,): "b"}
+
+
+def colliding_keys():
+    return {1: "a", "1": "b"}
+
+
+def self_referencing():
+    x = [1]
+    x.append(x)
+    return x
+
+
+def deep():
+    x = []
+    for _ in range(100_000):
+        x = [x]
+    return x
+
+
+def nested_mixed(depth):
+    x = {1: "a", "b": 2}
+    for _ in range(depth):
+        x = [x]
+    return x
+
+
+class BadItems(dict):
+    def items(self):
+        raise RuntimeError("items() failed")
+
+
+class BadRepr(Exception):
+    def __repr__(self):
+        raise RuntimeError("repr() failed")
+
+
+class BadItemsBadRepr(dict):
+    def items(self):
+        raise BadRepr("items() failed")
+
+
+class Name(str):
+    """A type name that cooperates only with harness 0.3.4's _tc_tname, as in the verification probe (D51)."""
+
+    def __str__(self):
+        if sys._getframe(1).f_code.co_name == "_tc_tname":
+            return self
+        raise RuntimeError("str() of the type name failed")
+
+
+class Meta(type):
+    @property
+    def __name__(cls):
+        return Name("Weird")
+
+
+class WeirdValue(metaclass=Meta):
+    def __repr__(self):
+        raise RuntimeError("repr() failed")
+
+
+class WeirdError(Exception, metaclass=Meta):
+    pass
+
+
+class Message(str):
+    """An exception message whose slice is an object that json.dumps cannot encode."""
+
+    def __getitem__(self, index):
+        return self.payload
+
+
+class Boom(Exception):
+    def __init__(self, payload):
+        super().__init__("boom")
+        self.payload = payload
+
+    def __str__(self):
+        m = Message("boom")
+        m.payload = self.payload
+        return m
+'''
+
+ENCODING_PROBE = '''import tc_sandbox
+from tc_sandbox import run_python
+
+
+def call(code):
+    return run_python("from encprobe import *\\n" + code, timeout=20)
+
+
+def test_encodable_results_are_unchanged():
+    r = call("result = {'b': [1, 2.5, None, True], 'a': (1, 2), 's': {3}}")
+    assert r.ok, r
+    assert r.value == {"a": [1, 2], "b": [1, 2.5, None, True], "s": "{3}"}, r
+
+
+def test_mixed_key_types():
+    r = call("result = mixed_keys()")
+    assert r.ok, r
+    assert r.value == {"1": "a", "b": 2}, r
+
+
+def test_tuple_keys():
+    r = call("result = tuple_keys()")
+    assert r.ok, r
+    assert r.value == {"[1, 2]": "a", "[3]": "b"}, r
+
+
+def test_keys_that_collide_as_strings_become_pairs():
+    r = call("result = colliding_keys()")
+    assert r.ok, r
+    assert r.value == [[1, "a"], ["1", "b"]], r
+
+
+def test_self_referencing_list():
+    r = call("result = self_referencing()")
+    assert r.ok, r
+    assert r.value == [1, "<cycle list>"], r
+
+
+def test_list_nested_100000_deep():
+    r = call("result = deep()")
+    assert r.ok, r
+    v, n = r.value, 0
+    while isinstance(v, list) and len(v) == 1:
+        v, n = v[0], n + 1
+    assert (n, v) == (tc_sandbox.ENCODE_MAX_DEPTH, "<too deep list>"), (n, v)
+
+
+def test_dict_subclass_whose_items_raises():
+    r = call("result = BadItems(a=1)")
+    assert r.ok, r
+    assert r.value == "<unformattable BadItems>", r
+
+
+def test_encoding_error_whose_repr_raises():
+    r = call("result = BadItemsBadRepr(a=1)")
+    assert r.ok, r
+    assert r.value == "<unformattable BadItemsBadRepr>", r
+
+
+def test_int_above_the_digit_limit():
+    r = call("result = 10 ** 5000")
+    assert r.ok, r
+    assert r.value == "<unformattable int>", r
+
+
+def test_type_name_that_fails_to_format():
+    r = call("result = WeirdValue()")
+    assert r.ok, r
+    assert r.value == "<unformattable WeirdValue>", r
+
+
+def test_result_longer_than_the_output_read_back():
+    r = call("result = 'x' * 300_000")
+    assert r.ok, r
+    assert r.value == "<too large str>", r
+
+
+def test_result_that_just_fits_is_returned_whole():
+    n = tc_sandbox.MAX_PAYLOAD - len('{"ok": true, "value": ""}')
+    r = call("result = 'x' * %d" % n)
+    assert r.ok and r.value == "x" * n, (r.ok, r.error_type, len(r.value or ""))
+    r = call("result = 'x' * %d" % (n + 1))
+    assert r.ok and r.value == "<too large str>", r
+
+
+def test_last_resort_when_the_conversion_fails():
+    r = call("result = nested_mixed(80)\\nsys.setrecursionlimit(50)")
+    assert r.ok, r
+    assert r.value == "<unencodable list>", r
+
+
+def test_stdout_closed_by_the_snippet():
+    r = call("sys.stdout.close()\\nresult = 1")
+    assert r.ok, r
+    assert r.value == 1, r
+
+
+def test_error_type_name_that_fails_to_format():
+    r = call("raise WeirdError('boom')")
+    assert not r.ok, r
+    assert (r.error_type, r.error) == ("Weird", "boom"), r
+
+
+def test_error_message_that_cannot_be_encoded():
+    r = call("raise Boom({1: 'a', 'b': 2})")
+    assert not r.ok, r
+    assert (r.error_type, r.error) == ("Boom", {"1": "a", "b": 2}), r
+
+
+def test_error_message_whose_encoding_error_has_a_raising_repr():
+    r = call("raise Boom(BadItemsBadRepr(a=1))")
+    assert not r.ok, r
+    assert (r.error_type, r.error) == ("Boom", "<unformattable BadItemsBadRepr>"), r
+'''
+
+
+def test_encoding_failure_never_changes_the_outcome(image, tmp_path):
+    """Harness 0.3.5 (protocol v0.8 §16.1, D51): a result that json.dumps cannot encode, or
+    whose formatting fails, keeps the call's ``ok`` and ``error_type`` and always yields a
+    result. Values are converted by trusted code, or replaced by a placeholder naming the type.
+
+    Under 0.3.4 every probe here except the first failed: the successful calls were reported
+    as a SerializationError, or produced no result (NoResult: an encoding error whose
+    ``__repr__`` raises, a type name formatted outside any try, a result longer than the
+    output the grader reads back, a stdout the snippet closed); the raising snippets lost
+    their error type or their result."""
+    base = tmp_path / "base"
+    base.mkdir()
+    (base / "calc.py").write_text("x = 1\n")
+    tdir = tmp_path / "task"
+    (tdir / "tests").mkdir(parents=True)
+    (tdir / "tests" / "test_encoding.py").write_text(ENCODING_PROBE)
+    spec = VerifierSpec(verifier_id="enc", task_id="t", condition=VerifierCondition.reference_check,
+                        isolation=Isolation.process_separated, test_dir="tests",
+                        checks=[CheckSpec(check_id=c) for c in discover_checks(tdir / "tests")], content_sha256="x")
+    cand = _candidate(base, tmp_path, "enc", {"encprobe.py": ENCODING_MODULE})
+    res = verify_candidate(image=image, base_dir=base, spec=spec, task_dir=tdir, candidate=cand, run_id="iso")
+    failed = {c.check_id.split("::")[-1]: c.message[-700:] for c in res.checks if c.status != "passed"}
+    assert res.outcome == Outcome.passed and len(res.checks) == 17, failed

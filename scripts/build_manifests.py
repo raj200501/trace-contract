@@ -1,51 +1,139 @@
-"""Build data/manifests/{provenance_index,rejection_ledger}.json from task provenance records
-and the natural-data screening rows (data/manifests/screening_natural.json). Screening funnels
-(data/manifests/screening_natural_*.json, no per-candidate rows) are summarised in the note.
+"""Build data/manifests/{provenance_index,rejection_ledger}.json (decision log D47, D51; protocol v0.8 §16.4).
 
-Every screened session appears in the index (accepted, pending, or rejected), so that
-valid-task yield is always reported over ALL screened sessions, by population. The ledger's
-note describes the screening state that the rows record (decision log D47).
+Inputs:
+
+* the task provenance records, ``tasks/<id>/provenance.json`` (frozen: only read), each with the
+  task's triage proposal from its sidecar ``tasks/<id>/triage.json`` (the record's own ``triage``
+  field where a task has no sidecar);
+* the natural-data screening rows, ``data/manifests/screening_natural.json``, one per screened
+  session;
+* screening funnels: the files ``data/manifests/screening_natural_*.json`` that have a ``stages``
+  list (deterministic stages, counts only, no per-candidate rows);
+* stage results: the files ``data/manifests/screening_natural_*.json`` that have a ``stage`` and
+  per-candidate ``rows`` (``screening_natural_aidev_s9.json``). Every failure of such a stage
+  becomes one ledger row with the stage and its reason, keyed by ids only (comment, PR and
+  repository ids). A comment the judges disagree on is excluded and counted, not a failure. A
+  comment whose PR has no later commit that changes the commented file also gets the reason
+  "no later commit changes the commented file" (§16.4).
+
+Any other ``screening_natural_*.json`` file is refused, so that no file is summarised as what it
+is not. Every screened session appears in the index (accepted, pending, or rejected), so that
+valid-task yield is always reported over ALL screened sessions, by population. The ledger's note
+has one clause per population, describing the screening state that these files record.
 """
 
 from __future__ import annotations
 
 import json
 from collections import Counter
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
 R = Path(__file__).resolve().parents[1]
 _FIELDS = ("record_id", "session_id", "population", "source_id", "repo_url", "base_commit", "licenses", "permission_basis",
            "trace_sha256", "snapshot_manifest_sha256", "capture_method", "redaction_status", "task_family_id", "eligibility",
-           "rejection_reasons", "accessed")
+           "rejection_reasons", "triage", "accessed")
+NO_LATER_COMMIT = "no later commit changes the commented file"  # protocol v0.8 §16.4
+_EXCLUDED = "judges_disagree"  # excluded and counted, not a failure (protocol §15.6)
 
 
-def _funnel_note(funnel: dict[str, Any]) -> str:
-    """One clause for a deterministic screening funnel (e.g. screening_natural_aidev.json): no per-session rows."""
-    stages = {st.get("id"): st for st in funnel.get("stages", [])}
-    last = stages.get("S8a") or (funnel.get("stages") or [{}])[-1]
-    sample = funnel.get("sample") or {}
-    return (f"{funnel.get('population')} ({funnel.get('generator')}; source revision "
-            f"{str((funnel.get('source') or {}).get('revision'))[:8]}): a funnel, not per-candidate rows; "
-            f"{last.get('count')} {last.get('unit')}s on {last.get('prs')} PRs survive stage {last.get('id')}, "
-            f"sample {sample.get('stage')} of {sample.get('size')}, none in this ledger yet")
+def _triage(task_dir: Path, record: dict[str, Any]) -> Any:
+    """The task's triage proposal: its sidecar's, else the provenance record's own field."""
+    path = task_dir / "triage.json"
+    if not path.is_file():
+        return record.get("triage")
+    side = json.loads(path.read_text(encoding="utf-8"))
+    if side.get("task_id") != task_dir.name or side.get("provenance_record_id") != record.get("record_id"):
+        raise ValueError(f"{path}: the sidecar names task {side.get('task_id')!r} and record "
+                         f"{side.get('provenance_record_id')!r}, not {task_dir.name!r} and {record.get('record_id')!r}")
+    return side["triage"]
 
 
-def ledger_note(screened: list[dict[str, Any]], funnels: list[dict[str, Any]] = ()) -> str:
-    """What the natural screening rows say: per population, how many were screened and their eligibility."""
-    by_pop: dict[str, Counter] = {}
-    methods: dict[str, set[str]] = {}
-    revisions: dict[str, set[str]] = {}
-    for row in screened:
-        pop = str(row.get("population"))
-        by_pop.setdefault(pop, Counter())[str(row.get("eligibility"))] += 1
-        methods.setdefault(pop, set()).add(str((row.get("screening") or {}).get("method", "unrecorded")))
-        revisions.setdefault(pop, set()).add(str(row.get("source_revision") or "unrecorded")[:8])
-    parts = [f"{pop} ({', '.join(sorted(methods[pop]))}; source revision {', '.join(sorted(revisions[pop]))}): "
-             f"{sum(c.values())} screened, {c['rejected']} rejected, {c['pending_review']} pending review, "
-             f"{c['eligible']} eligible" for pop, c in sorted(by_pop.items())]
-    parts += [_funnel_note(f) for f in funnels if f.get("population") not in by_pop]
-    if "natural:pr-review" not in by_pop and not any(f.get("population") == "natural:pr-review" for f in funnels):
+def screening_files(manifests: Path) -> tuple[list[tuple[str, dict]], list[tuple[str, dict]]]:
+    """(funnels, stage results) among ``screening_natural_*.json``, each as (file name, content)."""
+    funnels, stages = [], []
+    for f in sorted(manifests.glob("screening_natural_*.json")):
+        d = json.loads(f.read_text(encoding="utf-8"))
+        if isinstance(d, dict) and isinstance(d.get("stages"), list):
+            funnels.append((f.name, d))
+        elif isinstance(d, dict) and isinstance(d.get("stage"), str) and isinstance(d.get("rows"), list):
+            stages.append((f.name, d))
+        else:
+            raise ValueError(f"{f}: neither a screening funnel (a 'stages' list) nor a stage result ('stage' and 'rows')")
+    return funnels, stages
+
+
+def stage_rejections(result: dict[str, Any]) -> list[dict[str, Any]]:
+    """One ledger row per candidate that fails the stage, keyed by its ids, with the stage and its reason."""
+    out = []
+    for r in result["rows"]:
+        reason = r.get("failure_reason")
+        if r.get("qualifies") or reason in (None, _EXCLUDED):
+            continue
+        reasons = [reason]
+        if "diff_commit" in r and r["diff_commit"] is None and r.get("commits_reachable"):
+            reasons.insert(0, NO_LATER_COMMIT)
+        out.append({"source_id": f"comment:{r['comment_id']}", "population": result["population"], "stage": result["stage"],
+                    "reasons": reasons, "comment_id": r["comment_id"], "pr_id": r["pr_id"], "repo_id": r["repo_id"]})
+    return out
+
+
+def _funnel_part(funnel: dict[str, Any]) -> str:
+    stages = {st.get("id"): st for st in funnel["stages"]}
+    last = stages.get("S8a") or funnel["stages"][-1]
+    return (f"{last.get('count')} {last.get('unit')}s on {last.get('prs')} PRs survive stage {last.get('id')} "
+            f"(a funnel, not per-candidate rows)")
+
+
+def _stage_part(result: dict[str, Any], failed: int) -> str:
+    rows = result["rows"]
+    qualify = sum(bool(r.get("qualifies")) for r in rows)
+    excluded = sum(r.get("failure_reason") == _EXCLUDED for r in rows)
+    summary = result.get("summary") or {}
+    for key, n in (("comments", len(rows)), ("qualifying", qualify), ("failed", failed), ("excluded_judges_disagree", excluded)):
+        if key in summary and summary[key] != n:
+            raise ValueError(f"{result['stage']} result: its summary says {key} = {summary[key]}, its rows give {n}")
+    st = result["stage"]
+    return (f"of the {len(rows)} sampled for {st}, {qualify} qualify, {failed} fail (in this ledger with stage {st} and "
+            f"their reasons) and {excluded} are excluded because the judges disagree")
+
+
+def ledger_note(screened: list[dict[str, Any]], funnels: Sequence[tuple[str, dict]] = (),
+                stages: Sequence[tuple[str, dict]] = (), failed: dict[tuple[str, str], int] | None = None) -> str:
+    """One clause per population: what its screening rows, funnels and stage results record."""
+    failed = failed or {}
+    pops: dict[str, dict[str, Any]] = {}
+
+    def pop(name: str) -> dict[str, Any]:
+        return pops.setdefault(name, {"sources": [], "revisions": set(), "parts": [], "rows": Counter()})
+
+    for row in sorted(screened, key=lambda r: str((r.get("screening") or {}).get("method", "unrecorded"))):
+        p = pop(str(row.get("population")))
+        p["rows"][str(row.get("eligibility"))] += 1
+        p["sources"].append(str((row.get("screening") or {}).get("method", "unrecorded")))
+        p["revisions"].add(str(row.get("source_revision") or "unrecorded")[:8])
+    judged = {(str(s.get("population")), s["stage"]) for _, s in stages}
+    for _, f in funnels:
+        p = pop(str(f.get("population")))
+        p["sources"].append(str(f.get("generator")))
+        p["revisions"].add(str((f.get("source") or {}).get("revision"))[:8])
+        p["parts"].append(_funnel_part(f))
+        sample = f.get("sample") or {}
+        if sample.get("stage") and (str(f.get("population")), sample["stage"]) not in judged:
+            p["parts"].append(f"its {sample['stage']} sample of {sample.get('size')} has no result in this ledger yet")
+    for name, s in stages:
+        p = pop(str(s.get("population")))
+        p["sources"].append(name)
+        p["parts"].append(_stage_part(s, failed.get((str(s.get("population")), s["stage"]), 0)))
+    parts = []
+    for name, p in sorted(pops.items()):
+        c = p["rows"]
+        said = [f"{sum(c.values())} screened, {c['rejected']} rejected, {c['pending_review']} pending review, "
+                f"{c['eligible']} eligible"] if c else []
+        parts.append(f"{name} ({', '.join(dict.fromkeys(p['sources']))}; source revision "
+                     f"{', '.join(sorted(p['revisions'] - {'None'}) or ['unrecorded'])}): " + ", and ".join(said + p["parts"]))
+    if "natural:pr-review" not in pops:
         parts.append("natural:pr-review (AIDev v5): not screened yet")
     parts.append("SWE-chat: not screened (its dataset terms await the owner, D4)")
     return "Natural-data screening (decision log D47): " + "; ".join(parts) + "."
@@ -57,20 +145,26 @@ def build(root: Path) -> tuple[dict[str, Any], dict[str, Any]]:
     for p in sorted((root / "tasks").glob("*/provenance.json")):
         d = json.loads(p.read_text())
         task = json.loads((p.parent / "task.json").read_text())
-        row = {k: d.get(k) for k in _FIELDS}
+        row = {k: (_triage(p.parent, d) if k == "triage" else d.get(k)) for k in _FIELDS}
         row["task_status"] = task["status"]
         index.append(row)
         if d["eligibility"] == "rejected":
             ledger.append({"source_id": d["source_id"], "population": d["population"], "reasons": d["rejection_reasons"]})
     # Sessions screened outside tasks/ (natural-data screening), one row each.
-    extra = root / "data" / "manifests" / "screening_natural.json"
+    manifests = root / "data" / "manifests"
+    extra = manifests / "screening_natural.json"
     screened = json.loads(extra.read_text()) if extra.exists() else []
-    funnels = [json.loads(f.read_text()) for f in sorted((root / "data" / "manifests").glob("screening_natural_*.json"))]
+    funnels, stages = screening_files(manifests) if manifests.is_dir() else ([], [])
     for row in screened:
         index.append(row)
         if row.get("eligibility") == "rejected":
             ledger.append({"source_id": row.get("source_id"), "population": row.get("population"),
                            "reasons": row.get("rejection_reasons")})
+    failed: dict[tuple[str, str], int] = {}
+    for _, s in stages:
+        rows = stage_rejections(s)
+        failed[(str(s.get("population")), s["stage"])] = len(rows)
+        ledger += rows
     by_pop: dict[str, Counter] = {}
     for row in index:
         c = by_pop.setdefault(row["population"], Counter())
@@ -78,7 +172,7 @@ def build(root: Path) -> tuple[dict[str, Any], dict[str, Any]]:
         c[row["eligibility"]] += 1
         c["accepted" if row.get("task_status") == "accepted" else "not_accepted"] += 1
     return ({"records": index, "yield_by_population": {k: dict(v) for k, v in by_pop.items()}},
-            {"rejections": ledger, "note": ledger_note(screened, funnels)})
+            {"rejections": ledger, "note": ledger_note(screened, funnels, stages, failed)})
 
 
 def main() -> None:
