@@ -10,6 +10,7 @@ dist/
 # Raw or sensitive inputs never committed (see docs/data_card.md)
 data/raw/
 data/gated/
+data/natural/
 *.parquet
 
 # Large or regenerable artifacts

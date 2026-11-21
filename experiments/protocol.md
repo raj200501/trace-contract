@@ -340,3 +340,218 @@ Corrections to the wording of earlier sections, which are kept as written:
   its findings. The audit's completeness critic finished after the hash and after
   `pilot-v0.3.2` had started; its findings (D43) changed no analysis, label rule or
   graded input.
+
+## 15. Amendments in v0.7 (after the re-audit of 2026-11-21, D47; before any generation for the new strata)
+
+This section makes the protocol v0.7. The version line at the top of the file is left as
+it was, so that the earlier text stays a byte prefix of this file.
+
+**15.1 Standing of the pilot.** `pilot-v0.3.3` remains the record of the original pilot,
+and nothing in it is edited. Its four families (CS-01 to CS-04) are the development
+families for the phases below. Re-analyses of it made after this date are post hoc and
+exploratory. They are reported separately, in `results/analyses/pilot-v0.3.3-exploratory/`,
+and never replace its pre-specified results.
+
+**15.2 New strata and populations.** Each gets its own run id, manifest and analysis,
+and none is pooled with another without saying so.
+* `fresh-v1`: fresh-agent attempts on CS-01 to CS-04 (controlled population, a new
+  candidate stratum; §15.4).
+* `natural-pr-v1`: natural PR-review tasks from AIDev v5 (population `natural:pr-review`;
+  §15.6).
+* Trace Commons: screening only (population `natural:chat`). Tasks are built only if a
+  session proves reconstructable, and then only under a later amendment.
+* A controlled expansion is not part of this amendment. It needs its own amendment,
+  hashed before any new scenario runs.
+
+**15.3 Harness and grading for new runs.**
+* New runs use `tc-harness/0.3.4`. It differs from 0.3.3 only in one respect: a failure
+  while formatting a value or an exception for a result message is caught and replaced by
+  the type name, so formatting can never change an outcome (D46).
+* Before `fresh-v1` is graded, the 240 pairs of `pilot-v0.3.3` are re-graded under 0.3.4
+  as a reliability run. Every outcome difference is reported. The run is not a new
+  pilot result.
+* Every new pair is graded three times. A pair whose repeats disagree is `unresolved`,
+  which counts as a rejection, as in §6. The number of unresolved pairs is reported.
+
+**15.4 Fresh-agent stratum (`fresh-v1`).**
+* **Instructions.** Two variants per family are fixed before any attempt:
+  * `u1`: the session's first user prompt U1, verbatim;
+  * `final`: U1 verbatim, then the line `Later in the session the user added:`, then U2
+    verbatim.
+
+  Nothing else is given: no reference, no session transcript, no verifier, no candidate
+  and no label. The instruction files and their sha256 values are logged in the
+  decision log before the first attempt starts.
+* **Workspace.** Each attempt gets its own isolated workspace, made by
+  `scripts/make_agent_workspace.py`. It holds a copy of the task's base snapshot (a fresh
+  git repository with one base commit), the instruction, and the same sandbox wrappers
+  the controlled sessions used. It holds nothing from `tasks/`, `results/`, `docs/`,
+  `data/`, `paper/`, another workspace or the build session's scratch directory.
+* **Agents.** Claude Code general-purpose subagents of the build session, in two
+  configurations:
+  * configuration A: the session's default model;
+  * configuration B: the smallest model tier the agent tool offers.
+
+  Both get the same prompt template, tools and instruction, and the same budget of 35
+  minutes of wall time. Model identifiers are kept in the private run records only.
+* **Number of attempts.** k = 5 per family, variant and configuration, which makes 80
+  attempts. Any reduction is recorded in an appended amendment before the attempts
+  start.
+* **Capture.** The attempt's final workspace state becomes a candidate, without `.git`,
+  caches and the files the patch policy excludes, with origin `fresh_attempt` and split
+  `eval`. It is registered in a stratum manifest `tasks/<id>/strata/fresh-v1.json`, so
+  `task.json` is not edited. Each attempt record holds:
+  * the attempt id, configuration label and variant;
+  * start and end times, turns, tool calls and tokens where available;
+  * how the attempt ended (finished, gave up or error);
+  * the patch sha256.
+* **Audit.** Each attempt's transcript gets the strict re-audit over tool inputs and
+  tool outputs. An attempt that read forbidden material is excluded from every analysis,
+  and the exclusion is reported.
+* **Deduplication.** Attempts with identical graded patches count once in FA and FR.
+  All attempts count in solve rates.
+* **Grading.** Each attempt is graded under the task's six frozen conditions, the
+  reference checks and the independent labeler (§15.5).
+* **Labels.** D19 applies unchanged, with fresh attempts treated as natural candidates
+  (sources 1 and 2). The independent labeler's verdict is reported as a second labeling.
+  No human labels exist; every attempt is queued for the review packet.
+* **Estimands.** All are descriptive, since there are four families:
+  1. the solve rate per configuration and variant, by the reference checks and the
+     regression norm;
+  2. FA and FR per condition on this stratum, under each labeling;
+  3. the share of `u1` attempts that violate a correction requirement (natural
+     correction-violating negatives no generator saw), and how C1 and C3 grade them;
+  4. agreement between D19 and the independent labeler.
+
+**15.5 Independent labeler.** One per family, for CS-01 to CS-04 and for every natural
+task.
+* **Author and inputs.** A configuration-B agent writes it, so its author differs from
+  the reference-check writers, who were configuration A. Its inputs are the reference
+  contract and the base snapshot. It may not read the reference diff, the reference
+  checks, any generated verifier, any candidate or any label.
+* **Form.** Per-requirement checks: properties of the specified behaviour, invariants
+  checked differentially against the base, and examples quoted in the contract.
+* **Validation.** It may run its tests in the sandbox against the base and, without
+  reading its files, against the materialised reference state. It must pass on the
+  reference and fail on the no-op for every requirement the task changes. One revision
+  is allowed, after which the agent sees only the names of failing checks. A labeler
+  that still fails on the reference is reported as unusable for that family.
+* **Freezing.** It is frozen before any fresh attempt or natural held-out candidate
+  exists. Its agreement with D19 on the 32 existing candidates of `pilot-v0.3.3` is
+  reported as exploratory, since those candidates existed before it was written.
+
+**15.6 Natural PR-review arm (`natural-pr-v1`).**
+* **Sampling frame.** AIDev v5 at `b37f9fd1`, with stages S1 to S8a exactly as
+  implemented in `scripts/screen_aidev.py` at the commit that adds this amendment, and
+  recorded in `data/manifests/screening_natural_aidev.json`:
+  * S2: Python repositories under MIT, Apache-2.0 or BSD licences, not forks;
+  * S4: human, thread-starting comments not written by the PR's author;
+  * S5: on a `.py` file, with a diff hunk;
+  * S6: the commented code changed afterwards;
+  * S7: the reviewed commit is in the PR's commit list, and a later commit exists;
+  * S8: a linked issue written by a person;
+  * S8a: the first later commit is attributed to an agent.
+
+  The S9 sample is the one fixed in D47: 150 of the 684 comments that survive S8a,
+  drawn with `random.Random(20261121)` over the survivors sorted by comment id. No
+  top-up was needed.
+* **Diffs for S9.** Each sampled comment's repository is fetched as a partial clone
+  (blobs on demand), together with the PR head ref (`refs/pull/<n>/head`). The diff of
+  the reviewed commit against the first later commit, for the commented file, is
+  computed outside the repository. Fetches are capped at 300 MB per repository and 5 GB
+  in all, and every fetch is recorded. A comment whose commits cannot be fetched fails
+  S9 with that reason.
+* **S9 (model proposal).** A comment qualifies only if all three hold:
+  1. it requests a change of behaviour or reports a defect, rather than style, naming,
+     documentation, refactoring, tests only or a question;
+  2. the first later commit of the PR that touches the commented file changes the
+     commented region in a way that addresses the request;
+  3. the requested behaviour can be checked by an offline Python test.
+
+  Two independent configuration-A agents judge each comment from pseudonymised text and
+  from diffs fetched from the public repository. A comment qualifies only if both say
+  yes. Disagreements are excluded and counted. These judgments are proposals and are
+  queued for human coding.
+* **S10 (replayability).**
+  * The S9 fetches are reused: the PR head ref from the public repository, as a partial
+    clone within the same caps, with every fetch recorded.
+  * The reviewed and the addressing commits must be reachable.
+  * The base is the merge-base of the PR's first commit's parent with the default
+    branch. If that cannot be determined, the base is the parent of the first commit,
+    and the task is recorded as approximate.
+  * A merge commit between the base and the addressing commit makes the task approximate
+    when the merge does not touch the commented file. Otherwise the task is rejected.
+  * The environment is Python 3.12 with a wheels-only, pinned dependency closure,
+    resolved from the repository's declared dependencies at the base in a separate,
+    network-enabled build step. Grading is offline.
+  * The repository's tests at the base must collect and run in the sandbox within 10
+    minutes.
+
+  Every rejection is written to the ledger with its stage and reason.
+* **Families and stopping.**
+  * A family is one PR. If a PR has several qualifying comments, the earliest becomes
+    the task's correction, and the others are recorded.
+  * At most 2 families come from one repository: the earliest PRs by creation time.
+  * Building stops at 30 accepted tasks, or when the whole S9 sample has been screened.
+  * If fewer than 10 tasks reach S10, the arm is reported as a screening study only.
+* **Task definition.**
+  * The initial request is the linked issue's title and body, sanitised.
+  * The correction is the review comment, together with any later replies in the same
+    thread by the same reviewer before the addressing commit, sanitised, plus its diff
+    hunk as context.
+  * The pre-review state is the tree at `original_commit_id`. It becomes a held-out
+    candidate with origin `natural_pre_review`.
+  * The reference solution is the tree at the addressing commit, relative to the base.
+* **Contracts and verifiers.**
+  * The contracts follow §4: `initial_only` from the issue alone, and `full_session`
+    from the issue and the review thread, using the contract:v1 template on a rendered
+    PR thread.
+  * C1 to C4 and B2 use the existing templates.
+  * B1 uses the repository's tests at the addressing commit that pass on it.
+  * A secondary arm B3 (diff-derived) gets the initial request and the reference diff,
+    with no contract; its tests must fail on the base and pass on the reference.
+  * Every generated artifact carries a generation record.
+* **Reference contract and checks.**
+  * A configuration-A agent drafts the reference contract from the issue, the thread and
+    the addressing diff. It is a model proposal.
+  * The reference checks are written from it by a separate agent. They must pass on the
+    reference and fail on the no-op.
+  * Their verdict on the pre-review state is recorded but not required. If they pass the
+    pre-review state, that candidate is labelled ambiguous for D19 (the correction is
+    not observable by the checks).
+* **Held-out pool, generated after freezing.** The pool holds the pre-review state, two
+  valid alternatives and three near misses, at least two of which target the
+  correction. Each is generated in its own isolated workspace.
+* **Labels.** Two labelings are reported:
+  1. A source-evidence label for the pre-review state: invalid with respect to the
+     correction, on the strength of the reviewer's request, the addressing commit and
+     the S9 agreement. Its labeler kind is `source_evidence`, and it is reported
+     separately.
+  2. D19 for every candidate (reference checks, regression norm and construction
+     intent), together with the independent labeler (§15.5).
+
+  None of these is a human label.
+* **Estimands.** All are descriptive:
+  * acceptance of the pre-review states by condition (C1, C2, C3, C4, B1, B2, B3) under
+    the source-evidence label;
+  * FA and FR per condition over the whole pool under D19, as per-family tables;
+  * the funnel S1 to S11 with reasons;
+  * build and replay reliability;
+  * cost and time per accepted task.
+* **Contamination and privacy.** AIDev v5 PRs and their repositories predate the
+  generators' training data, and public merged fixes may be memorised. This is
+  disclosed. Privacy follows D47.
+
+**15.7 Reporting rules for every new run.**
+* The per-family table is the primary display.
+* Each paired comparison carries an exact sign-flip randomization p-value over families,
+  with its attainable floor.
+* Bootstrap intervals go to an appendix and are marked as not inferential below 10
+  families.
+* Each distinct graded patch counts once.
+* The oracle-gated view, which drops verifiers that fail their own reference and reports
+  the drop as lost yield, is secondary.
+* Null results are stated with the main results.
+
+**What this amendment does not change.** D19, the freezing rules and §8 still apply; the
+frozen pilot, its verifiers and the harness it used are not changed.

@@ -1,6 +1,6 @@
 """Scan what a push would publish for credentials, session-local paths and e-mail addresses.
 
-Usage: python scripts/scan_tracked_files.py [--private-markers <file.json>] [--all-history]
+Usage: python scripts/scan_tracked_files.py [--private-markers <file.json>] [--all-history] [--aidev-logins <dir>]
 
 Scans (1) the working tree: tracked files plus untracked files that are not git-ignored
 (what the next commit could add), and (2) every file version in the commits that a push
@@ -17,6 +17,15 @@ adds case-insensitive regexes from a JSON file kept outside the repository
 (``{"forbidden": [...]}``, the format of the prompt export's private redactions, which
 also lists the build session id); their matches are reported by location and marker
 number only, so the output repeats nothing private. Exit code 1 if anything is found.
+
+``--aidev-logins <dir>`` adds the checks of the natural PR-review screening (decision log
+D47). It reads the comment ids of the stage-S9 sample from
+``data/manifests/screening_natural_aidev.json`` and loads their comment authors' logins
+from ``<dir>/pr_review_comments.parquet`` at scan time, in memory only (needs DuckDB, the
+``data`` extra; run the scan with ``python -I`` then, as the parquet files are third-party
+data). Any of these logins, as a whole word in any case, is reported by location and login
+number only. It also reports @handle patterns in files under ``data/manifests/``, except an
+npm package scope in a registry URL.
 
 This is a manual step, not a git hook: the builder runs it with the private markers
 before each push (decision log D44).
@@ -53,6 +62,12 @@ ALLOW = {
 }
 # Allowed by domain: the git author's GitHub no-reply address in commit metadata.
 ALLOW_DOMAINS = ("users.noreply.github.com",)
+# --aidev-logins: the screening manifest with the sampled comment ids, the files whose @handles are
+# reported, and the one public form of @name allowed there (an npm package scope in a registry URL).
+AIDEV_MANIFEST = R / "data" / "manifests" / "screening_natural_aidev.json"
+HANDLE_SCOPE = "data/manifests/"
+HANDLE = re.compile(r"(?<![A-Za-z0-9._%+-])@[A-Za-z0-9](?:[A-Za-z0-9]|-(?=[A-Za-z0-9])){0,38}(?:\[bot\])?")
+NPM_SCOPE = re.compile(r"(?:registry\.npmjs\.org|npmjs\.com/package)/$")
 
 
 def _emails(line: str):
@@ -67,8 +82,10 @@ def _emails(line: str):
         yield addr
 
 
-def scan_text(text: str, where: str, private: list[re.Pattern]) -> int:
+def scan_text(text: str, where: str, private: list[re.Pattern], logins: list[tuple[str, re.Pattern]] | None = None,
+              handles: bool = False) -> int:
     hits = 0
+    logins = logins or []
     for n, line in enumerate(text.splitlines(), 1):
         for name, pat in RULES:
             if pat.search(line):
@@ -82,7 +99,34 @@ def scan_text(text: str, where: str, private: list[re.Pattern]) -> int:
             if pat.search(line):
                 print(f"{where}:{n}: private marker #{i}")
                 hits += 1
+        low = line.lower() if logins else ""
+        for i, (login, pat) in enumerate(logins):
+            if login in low and pat.search(line):
+                print(f"{where}:{n}: aidev login #{i}")
+                hits += 1
+        if handles:
+            for m in HANDLE.finditer(line):
+                if not NPM_SCOPE.search(line, 0, m.start()):
+                    print(f"{where}:{n}: @handle")  # the handle itself is not repeated
+                    hits += 1
     return hits
+
+
+def login_patterns(logins: list[str]) -> list[tuple[str, re.Pattern]]:
+    """(lower-case login, whole-word pattern in any case) per login; a login inside a longer login or identifier
+    does not count. The plain substring test runs first, as it is much faster than the pattern."""
+    return [(x.lower(), re.compile(r"(?<![A-Za-z0-9_-])" + re.escape(x) + r"(?![A-Za-z0-9_-])", re.I)) for x in logins]
+
+
+def aidev_logins(data_dir: str | Path, manifest: Path = AIDEV_MANIFEST) -> list[str]:
+    """Comment-author logins of the sampled comments, read from the parquet file now and kept in memory only."""
+    import duckdb  # the data extra; needed only with --aidev-logins
+
+    ids = [r["comment_id"] for r in json.loads(manifest.read_text(encoding="utf-8"))["sample"]["rows"]]
+    src = (Path(data_dir) / "pr_review_comments.parquet").as_posix().replace("'", "''")
+    rows = duckdb.connect().execute(f"""SELECT DISTINCT "user" FROM read_parquet('{src}')
+        WHERE id IN (SELECT unnest(?::BIGINT[])) AND "user" IS NOT NULL""", [ids]).fetchall()
+    return sorted(u for (u,) in rows)
 
 
 def _git(*args: str) -> bytes:
@@ -142,18 +186,23 @@ def main(*args: str) -> int:
     if "--private-markers" in args:
         f = args[args.index("--private-markers") + 1]
         private = [re.compile(x, re.I) for x in json.loads(Path(f).read_text(encoding="utf-8")).get("forbidden", [])]
+    aidev = "--aidev-logins" in args
+    logins = login_patterns(aidev_logins(args[args.index("--aidev-logins") + 1])) if aidev else []
     hits = 0
     files = working_tree() + pushed_blobs("--all-history" in args)
     for where, data in files:
-        hits += scan_text(where.split(" (blob ")[0], f"{where} [path]", private)
+        path = where.split(" (blob ")[0]
+        hits += scan_text(path, f"{where} [path]", private, logins)
         if b"\0" in data:
             continue
-        hits += scan_text(data.decode("utf-8", errors="replace"), where, private)
+        hits += scan_text(data.decode("utf-8", errors="replace"), where, private, logins,
+                          handles=aidev and path.startswith(HANDLE_SCOPE))
     for where, text in pushed_metadata("--all-history" in args):
-        hits += scan_text(text, where, private)
+        hits += scan_text(text, where, private, logins)
     scope = "the working tree and " + ("the whole history" if "--all-history" in args else "the commits a push would send") \
         + " (contents, paths, commit messages and author fields, tags)"
-    print(f"scan: {hits} finding(s) in {scope}" + ("" if private else " (no private markers given)"))
+    extra = f"; {len(logins)} sampled AIDev comment-author login(s), @handles in {HANDLE_SCOPE}" if aidev else ""
+    print(f"scan: {hits} finding(s) in {scope}" + ("" if private else " (no private markers given)") + extra)
     return 1 if hits else 0
 
 

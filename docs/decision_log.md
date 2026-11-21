@@ -1289,3 +1289,56 @@ entry records the correction.
 **Frozen pilot.** `results/runs/pilot-v0.3.3`, the hashed protocol text and the frozen
 task files are not edited. New candidates, populations and analyses go into new runs,
 strata and sidecar files, and a frozen-input check runs at the end of every phase.
+
+### D48. Protocol v0.7 hashed; the AIDev screening funnel (stages S1 to S8a) and the S9 sample
+**Protocol v0.7** (`experiments/protocol.md` §15) was appended and hashed at
+2026-11-21T03:21:41Z, before any generation for the new strata: sha256
+`46bfa7a3468976b1a24d5e8dcc39421d20e2aa28389e4cd47b629c87508ea5fe`. It defines:
+* the standing of `pilot-v0.3.3`: its four families become development families, and
+  later re-analyses of it are exploratory;
+* the new strata `fresh-v1` (fresh-agent attempts, two configurations, two instruction
+  variants, k = 5) and `natural-pr-v1` (natural PR-review tasks from AIDev v5);
+* harness 0.3.4 for new runs, three repeats per pair, and a re-grade of `pilot-v0.3.3`
+  as a reliability run;
+* an independent labeler per family, written by a different agent configuration;
+* the S9 and S10 rules, families, caps and stopping rule of the natural arm;
+* the reporting rules: per-family tables, exact randomization p-values, and each
+  distinct patch counted once.
+
+No amendment section before §15 was changed. The earlier text is a byte prefix of the
+new file.
+
+**AIDev funnel, stages S1 to S8a** (`scripts/screen_aidev.py`, DuckDB over the six
+verified files; `data/manifests/screening_natural_aidev.json`). Counts are
+comments / PRs / repositories:
+
+| Stage | Rule | Count |
+| --- | --- | --- |
+| S1 | AIDev-pop agent PRs | 361,296 PRs; 25,402 repositories |
+| S2 | Python; MIT, Apache-2.0 or BSD licence; not a fork | 44,914 PRs; 3,333 repositories |
+| S3 | inline review comments on S2 PRs | 28,732 / 5,030 / 757 |
+| S4 | human, thread-starting, not by the PR's author | 6,751 / 2,070 / 427 |
+| S5 | `.py` file with a diff hunk | 3,895 / 1,241 / 306 |
+| S6 | commented code changed afterwards | 3,540 / 1,085 / 268 |
+| S7 | reviewed commit in the PR's list, later commit exists | 3,126 / 987 / 246 |
+| S8 | linked issue written by a person | 926 / 255 / 92 |
+| S8a | first later commit attributed to an agent | 684 / 190 / 63 |
+
+* **By agent at S8a:** Copilot 614, Devin 58, Claude Code 11, Cursor 1, Codex 0, Jules
+  0.
+* **Attribution:** agent work committed under a person's own account, without an agent
+  co-author trailer, cannot be attributed. That excludes almost all Codex and Cursor
+  work.
+* **Join and ordering checks:** the comment-to-PR key matched 99.73% of comments. "Later"
+  means later in the commit list's row order, because `pr_commits` has no dates. The
+  order agreed in 1,739 of 1,739 checkable pairs. The reviewed commit is missing from
+  the PR's list for 11.7% of S6 comments, so every pre-review state is still verified
+  by fetching it.
+* **S9 sample:** 150 of the 684 comments, drawn with `random.Random(20261121)`; no
+  top-up. It holds 94 PRs in 36 repositories: Copilot 132, Devin 12, Claude Code 6.
+* **Texts:** pseudonymised texts for the sample, with logins and @handles replaced by
+  role labels and e-mail addresses removed, are kept outside the repository. The
+  manifest holds only ids, SHAs, paths and sha256 hashes of texts.
+* **Scan:** `scripts/scan_tracked_files.py` gained `--aidev-logins`, which checks tracked
+  files against the sampled reviewers' logins in memory and flags @handles under
+  `data/manifests/`.
