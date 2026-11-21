@@ -1,0 +1,3242 @@
+{
+  "schema": "tracecontract.fresh_v1_instructions/v1",
+  "protocol": "v0.9 (§15.4, §16.2)",
+  "decision_log": "D56",
+  "note": "Instructions of the fresh-v1 attempts, fixed before the first attempt. Each attempt's instruction is its template with {WORKSPACE} replaced by the attempt's workspace path. u1 = U1 verbatim; final = U1, the line 'Later in the session the user added:', then U2; old workspace paths substituted as recorded (§16.2). Configurations: config-A (the build session's default agent model) and config-B (the smallest model tier the agent tool offers); model identifiers are kept in the private run records only.",
+  "templates": {
+    "CS-01/final": {
+      "text": "Hey - in humanize, `naturalsize` always prints one decimal place, so 3,000,000 bytes shows as \"3.0 MB\" and 1024 bytes with binary=True shows as \"1.0 KiB\". I'd like it to drop a trailing \".0\" so those read \"3 MB\" and \"1 KiB\", but keep the decimal when it's meaningful (e.g. \"2.9 KiB\" should stay as it is). Can you implement that?\n\nThe repo is checked out (as a git working copy) at {WORKSPACE}/repo. Code from the repo can't be run directly on this machine; use the two wrapper scripts, which run it in an isolated container: {WORKSPACE}/run_tests.sh [pytest args] (e.g. run_tests.sh -q tests/test_filesize.py) and {WORKSPACE}/run_python.sh -c '...'. Please keep all your work inside {WORKSPACE}.\n\nLater in the session the user added:\n\nThanks. Actually, I just realized that changing the default output is going to break a bunch of our templates and snapshot tests that expect \"3.0 MB\", and naturalsize is supposed to stay compatible with jinja2's filesizeformat. Please keep the default output exactly as it was before, and make the trailing-\".0\" trimming opt-in through a new keyword argument `strip_trailing_zero` (default False). Existing calls that pass a custom `format` string, including positional ones like naturalsize(3000, False, True, \"%.3f\"), must keep producing exactly what they produced before.\n",
+      "sha256": "c36dbce54960d10bc76262b13ff83f8442a42f37ea92e7ee22bcef698cfe3789"
+    },
+    "CS-01/u1": {
+      "text": "Hey - in humanize, `naturalsize` always prints one decimal place, so 3,000,000 bytes shows as \"3.0 MB\" and 1024 bytes with binary=True shows as \"1.0 KiB\". I'd like it to drop a trailing \".0\" so those read \"3 MB\" and \"1 KiB\", but keep the decimal when it's meaningful (e.g. \"2.9 KiB\" should stay as it is). Can you implement that?\n\nThe repo is checked out (as a git working copy) at {WORKSPACE}/repo. Code from the repo can't be run directly on this machine; use the two wrapper scripts, which run it in an isolated container: {WORKSPACE}/run_tests.sh [pytest args] (e.g. run_tests.sh -q tests/test_filesize.py) and {WORKSPACE}/run_python.sh -c '...'. Please keep all your work inside {WORKSPACE}.\n",
+      "sha256": "046f88a5925d66d5ea3deaf1ac35333c5c1b6412792b33d90198a31402f62037"
+    },
+    "CS-02/final": {
+      "text": "TinyDB's JSONStorage rewrites the database file in place (seek to 0, write, truncate), so if the process dies or the disk fills up in the middle of a write, the JSON file is left half-written and the whole database becomes unreadable. Can you make JSONStorage writes atomic - write the new contents to a temporary file and then swap it into place - so the file on disk is always either the old version or the new one?\n\nThe repo is checked out (as a git working copy) at {WORKSPACE}/repo. Code from the repo can't be run directly on this machine; use the two wrapper scripts, which run it in an isolated container: {WORKSPACE}/run_tests.sh [pytest args] (e.g. run_tests.sh -q tests) and {WORKSPACE}/run_python.sh -c '...'. Please keep all your work inside {WORKSPACE}.\n\nLater in the session the user added:\n\nThanks! A few things I should have said up front: our app keeps a single TinyDB instance open for its whole lifetime and reads right after writing, so reads through the same instance (and the same storage object) must always see what was just written. Please also keep honoring the `encoding` argument and the extra json kwargs (like indent=4 or sort_keys=True) exactly as before, so the bytes written are the same as today. And don't leave temporary files lying around next to the database file - not after a normal write, and not when a write fails halfway (in that case the original file must stay exactly as it was).\n",
+      "sha256": "6ba70d18ac91cbf4877596d7af2fc2383c86862d4a5d724b2130f943c7f319d6"
+    },
+    "CS-02/u1": {
+      "text": "TinyDB's JSONStorage rewrites the database file in place (seek to 0, write, truncate), so if the process dies or the disk fills up in the middle of a write, the JSON file is left half-written and the whole database becomes unreadable. Can you make JSONStorage writes atomic - write the new contents to a temporary file and then swap it into place - so the file on disk is always either the old version or the new one?\n\nThe repo is checked out (as a git working copy) at {WORKSPACE}/repo. Code from the repo can't be run directly on this machine; use the two wrapper scripts, which run it in an isolated container: {WORKSPACE}/run_tests.sh [pytest args] (e.g. run_tests.sh -q tests) and {WORKSPACE}/run_python.sh -c '...'. Please keep all your work inside {WORKSPACE}.\n",
+      "sha256": "6d1998f1fd351a2d4d9c34b8092e8ff15426262771cacadede565c8cb9e3e425"
+    },
+    "CS-03/final": {
+      "text": "In inflection, titleize mangles acronyms: titleize('NASA rocket launch') returns 'Nasa Rocket Launch' and titleize('read the HTTP spec') returns 'Read The Http Spec'. Can you make titleize keep all-caps acronyms like NASA and HTTP as they are?\n\nThe repo is checked out (as a git working copy) at {WORKSPACE}/repo. Code from the repo can't be run directly on this machine; use the two wrapper scripts, which run it in an isolated container: {WORKSPACE}/run_tests.sh [pytest args] (e.g. run_tests.sh -q tests) and {WORKSPACE}/run_python.sh -c '...'. Please keep all your work inside {WORKSPACE}.\n\nLater in the session the user added:\n\nThanks. Two refinements: if the whole input is already in uppercase (like a shouted heading 'HELLO WORLD'), titleize should still produce 'Hello World' like it does today - only treat an all-caps word as an acronym when the input also contains lowercase letters. And please don't change the behaviour of humanize() or underscore() themselves; other code relies on them (for example humanize('employee_salary') must stay 'Employee salary', and underscore('NASARocket') must stay exactly what it returns now).\n",
+      "sha256": "8c650c4fca6b0690c9b131ce9e9f1b30ff3b50b01df67a86836e825857f5041e"
+    },
+    "CS-03/u1": {
+      "text": "In inflection, titleize mangles acronyms: titleize('NASA rocket launch') returns 'Nasa Rocket Launch' and titleize('read the HTTP spec') returns 'Read The Http Spec'. Can you make titleize keep all-caps acronyms like NASA and HTTP as they are?\n\nThe repo is checked out (as a git working copy) at {WORKSPACE}/repo. Code from the repo can't be run directly on this machine; use the two wrapper scripts, which run it in an isolated container: {WORKSPACE}/run_tests.sh [pytest args] (e.g. run_tests.sh -q tests) and {WORKSPACE}/run_python.sh -c '...'. Please keep all your work inside {WORKSPACE}.\n",
+      "sha256": "ff07da615bdae96d691e2b06264a642eea56b5d5f561909aaa12acfd38edc49d"
+    },
+    "CS-04/final": {
+      "text": "Could you add a `step` option to more_itertools.consecutive_groups? I want to find runs where items go up by a fixed amount, e.g. consecutive_groups([2, 4, 6, 10, 12], step=2) should give [2, 4, 6] and [10, 12].\n\nThe repo is checked out (as a git working copy) at {WORKSPACE}/repo. Code from the repo can't be run directly on this machine; use the two wrapper scripts, which run it in an isolated container: {WORKSPACE}/run_tests.sh [pytest args] (e.g. run_tests.sh -q tests) and {WORKSPACE}/run_python.sh -c '...'. Please keep all your work inside {WORKSPACE}.\n\nLater in the session the user added:\n\nNice. A couple of cases I need too: descending runs with a negative step should work (consecutive_groups([9, 8, 7, 3, 2], step=-1) -> [9, 8, 7], [3, 2]), and step=0 should raise a ValueError rather than doing something weird. Also, existing code calls consecutive_groups(iterable, ordering) with ordering as the second positional argument - that has to keep working, and the groups should still be lazy iterators like before.\n",
+      "sha256": "024488956f2b422d01954361c98ab92eeb47f5630c11714bd9bda9fe84da1ea4"
+    },
+    "CS-04/u1": {
+      "text": "Could you add a `step` option to more_itertools.consecutive_groups? I want to find runs where items go up by a fixed amount, e.g. consecutive_groups([2, 4, 6, 10, 12], step=2) should give [2, 4, 6] and [10, 12].\n\nThe repo is checked out (as a git working copy) at {WORKSPACE}/repo. Code from the repo can't be run directly on this machine; use the two wrapper scripts, which run it in an isolated container: {WORKSPACE}/run_tests.sh [pytest args] (e.g. run_tests.sh -q tests) and {WORKSPACE}/run_python.sh -c '...'. Please keep all your work inside {WORKSPACE}.\n",
+      "sha256": "96d87ce0c411320b6e366c5e223ef94f1a9f145d12d93cabb997702f64d3860a"
+    }
+  },
+  "attempts": [
+    {
+      "attempt_id": "CS-01-fresh-A-final-1",
+      "task_id": "CS-01",
+      "variant": "final",
+      "config": "config-A",
+      "repeat": 1,
+      "workspace": "/home/user/fresh_ws/CS-01-fresh-A-final-1",
+      "instruction_sha256": "f155d3f5850996739d10061e9b7cd374758d604a8da7d421a41b0d27b542f7ef",
+      "template_sha256": "c36dbce54960d10bc76262b13ff83f8442a42f37ea92e7ee22bcef698cfe3789",
+      "base_commit": "5697716f6a109829ff89617d35ed2e5fb8021ae7",
+      "snapshot_manifest_sha256": "0e87b6c1b51f5c87ce008d9a1145a9a38543fc92299a356f587a72ed8a229179",
+      "wrapper_image": "tc-env:0b1591bd588d585e",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/humanize",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-01-fresh-A-final-2",
+      "task_id": "CS-01",
+      "variant": "final",
+      "config": "config-A",
+      "repeat": 2,
+      "workspace": "/home/user/fresh_ws/CS-01-fresh-A-final-2",
+      "instruction_sha256": "54bf41a40978605dae0fa1f8878c90db42c42f7b1743d541d8be96355bd8630c",
+      "template_sha256": "c36dbce54960d10bc76262b13ff83f8442a42f37ea92e7ee22bcef698cfe3789",
+      "base_commit": "5697716f6a109829ff89617d35ed2e5fb8021ae7",
+      "snapshot_manifest_sha256": "0e87b6c1b51f5c87ce008d9a1145a9a38543fc92299a356f587a72ed8a229179",
+      "wrapper_image": "tc-env:0b1591bd588d585e",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/humanize",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-01-fresh-A-final-3",
+      "task_id": "CS-01",
+      "variant": "final",
+      "config": "config-A",
+      "repeat": 3,
+      "workspace": "/home/user/fresh_ws/CS-01-fresh-A-final-3",
+      "instruction_sha256": "94c1b7d6134bca17e19be041311e2c95c0053f46381c17cc79931e67220c615e",
+      "template_sha256": "c36dbce54960d10bc76262b13ff83f8442a42f37ea92e7ee22bcef698cfe3789",
+      "base_commit": "5697716f6a109829ff89617d35ed2e5fb8021ae7",
+      "snapshot_manifest_sha256": "0e87b6c1b51f5c87ce008d9a1145a9a38543fc92299a356f587a72ed8a229179",
+      "wrapper_image": "tc-env:0b1591bd588d585e",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/humanize",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-01-fresh-A-final-4",
+      "task_id": "CS-01",
+      "variant": "final",
+      "config": "config-A",
+      "repeat": 4,
+      "workspace": "/home/user/fresh_ws/CS-01-fresh-A-final-4",
+      "instruction_sha256": "4b71bb9e8edc607699dc6b3b875c4dc96340d574497e22a21124ff2a9ff727e8",
+      "template_sha256": "c36dbce54960d10bc76262b13ff83f8442a42f37ea92e7ee22bcef698cfe3789",
+      "base_commit": "5697716f6a109829ff89617d35ed2e5fb8021ae7",
+      "snapshot_manifest_sha256": "0e87b6c1b51f5c87ce008d9a1145a9a38543fc92299a356f587a72ed8a229179",
+      "wrapper_image": "tc-env:0b1591bd588d585e",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/humanize",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-01-fresh-A-final-5",
+      "task_id": "CS-01",
+      "variant": "final",
+      "config": "config-A",
+      "repeat": 5,
+      "workspace": "/home/user/fresh_ws/CS-01-fresh-A-final-5",
+      "instruction_sha256": "32d36190c49d87a9a49704834cdceb071f63f981ea68ffd0c4bde500d5fa132e",
+      "template_sha256": "c36dbce54960d10bc76262b13ff83f8442a42f37ea92e7ee22bcef698cfe3789",
+      "base_commit": "5697716f6a109829ff89617d35ed2e5fb8021ae7",
+      "snapshot_manifest_sha256": "0e87b6c1b51f5c87ce008d9a1145a9a38543fc92299a356f587a72ed8a229179",
+      "wrapper_image": "tc-env:0b1591bd588d585e",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/humanize",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-01-fresh-A-u1-1",
+      "task_id": "CS-01",
+      "variant": "u1",
+      "config": "config-A",
+      "repeat": 1,
+      "workspace": "/home/user/fresh_ws/CS-01-fresh-A-u1-1",
+      "instruction_sha256": "e00cc93561275e8bee38d96c8f6b8a7e754e2da30e38880966f6e0b2e89c4dda",
+      "template_sha256": "046f88a5925d66d5ea3deaf1ac35333c5c1b6412792b33d90198a31402f62037",
+      "base_commit": "5697716f6a109829ff89617d35ed2e5fb8021ae7",
+      "snapshot_manifest_sha256": "0e87b6c1b51f5c87ce008d9a1145a9a38543fc92299a356f587a72ed8a229179",
+      "wrapper_image": "tc-env:0b1591bd588d585e",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/humanize",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-01-fresh-A-u1-2",
+      "task_id": "CS-01",
+      "variant": "u1",
+      "config": "config-A",
+      "repeat": 2,
+      "workspace": "/home/user/fresh_ws/CS-01-fresh-A-u1-2",
+      "instruction_sha256": "181a84bb8c61dd642e5bbb2a32ec20a67f8d4a029cfb88dd73b97973d7e8c323",
+      "template_sha256": "046f88a5925d66d5ea3deaf1ac35333c5c1b6412792b33d90198a31402f62037",
+      "base_commit": "5697716f6a109829ff89617d35ed2e5fb8021ae7",
+      "snapshot_manifest_sha256": "0e87b6c1b51f5c87ce008d9a1145a9a38543fc92299a356f587a72ed8a229179",
+      "wrapper_image": "tc-env:0b1591bd588d585e",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/humanize",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-01-fresh-A-u1-3",
+      "task_id": "CS-01",
+      "variant": "u1",
+      "config": "config-A",
+      "repeat": 3,
+      "workspace": "/home/user/fresh_ws/CS-01-fresh-A-u1-3",
+      "instruction_sha256": "fb878d3078d560eb43b7ba0a7e90ded0e7b2dc6cdc608fc7517884422f9aae9b",
+      "template_sha256": "046f88a5925d66d5ea3deaf1ac35333c5c1b6412792b33d90198a31402f62037",
+      "base_commit": "5697716f6a109829ff89617d35ed2e5fb8021ae7",
+      "snapshot_manifest_sha256": "0e87b6c1b51f5c87ce008d9a1145a9a38543fc92299a356f587a72ed8a229179",
+      "wrapper_image": "tc-env:0b1591bd588d585e",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/humanize",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-01-fresh-A-u1-4",
+      "task_id": "CS-01",
+      "variant": "u1",
+      "config": "config-A",
+      "repeat": 4,
+      "workspace": "/home/user/fresh_ws/CS-01-fresh-A-u1-4",
+      "instruction_sha256": "33152afe4532fb8c985a0f4899e72644e24c3aa3ae8441c04365f5a3e5df25f9",
+      "template_sha256": "046f88a5925d66d5ea3deaf1ac35333c5c1b6412792b33d90198a31402f62037",
+      "base_commit": "5697716f6a109829ff89617d35ed2e5fb8021ae7",
+      "snapshot_manifest_sha256": "0e87b6c1b51f5c87ce008d9a1145a9a38543fc92299a356f587a72ed8a229179",
+      "wrapper_image": "tc-env:0b1591bd588d585e",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/humanize",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-01-fresh-A-u1-5",
+      "task_id": "CS-01",
+      "variant": "u1",
+      "config": "config-A",
+      "repeat": 5,
+      "workspace": "/home/user/fresh_ws/CS-01-fresh-A-u1-5",
+      "instruction_sha256": "e63166fa4496f70bc56deddca3f483c459b01302073b350a83e444c6218caafa",
+      "template_sha256": "046f88a5925d66d5ea3deaf1ac35333c5c1b6412792b33d90198a31402f62037",
+      "base_commit": "5697716f6a109829ff89617d35ed2e5fb8021ae7",
+      "snapshot_manifest_sha256": "0e87b6c1b51f5c87ce008d9a1145a9a38543fc92299a356f587a72ed8a229179",
+      "wrapper_image": "tc-env:0b1591bd588d585e",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/humanize",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-01-fresh-B-final-1",
+      "task_id": "CS-01",
+      "variant": "final",
+      "config": "config-B",
+      "repeat": 1,
+      "workspace": "/home/user/fresh_ws/CS-01-fresh-B-final-1",
+      "instruction_sha256": "46f8c3e76c0d92e3aca9680bdaad6b560552282bde7c60704502ebf11625881d",
+      "template_sha256": "c36dbce54960d10bc76262b13ff83f8442a42f37ea92e7ee22bcef698cfe3789",
+      "base_commit": "5697716f6a109829ff89617d35ed2e5fb8021ae7",
+      "snapshot_manifest_sha256": "0e87b6c1b51f5c87ce008d9a1145a9a38543fc92299a356f587a72ed8a229179",
+      "wrapper_image": "tc-env:0b1591bd588d585e",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/humanize",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-01-fresh-B-final-2",
+      "task_id": "CS-01",
+      "variant": "final",
+      "config": "config-B",
+      "repeat": 2,
+      "workspace": "/home/user/fresh_ws/CS-01-fresh-B-final-2",
+      "instruction_sha256": "52d17c45ca085d76de1f941a09bb21f4b3f884929634a8512a844ac31eb6ae91",
+      "template_sha256": "c36dbce54960d10bc76262b13ff83f8442a42f37ea92e7ee22bcef698cfe3789",
+      "base_commit": "5697716f6a109829ff89617d35ed2e5fb8021ae7",
+      "snapshot_manifest_sha256": "0e87b6c1b51f5c87ce008d9a1145a9a38543fc92299a356f587a72ed8a229179",
+      "wrapper_image": "tc-env:0b1591bd588d585e",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/humanize",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-01-fresh-B-final-3",
+      "task_id": "CS-01",
+      "variant": "final",
+      "config": "config-B",
+      "repeat": 3,
+      "workspace": "/home/user/fresh_ws/CS-01-fresh-B-final-3",
+      "instruction_sha256": "d7ee27b2fd22aa20ba16613600bc9b9ce6987c8a292c6f6d221af94f60ee1d83",
+      "template_sha256": "c36dbce54960d10bc76262b13ff83f8442a42f37ea92e7ee22bcef698cfe3789",
+      "base_commit": "5697716f6a109829ff89617d35ed2e5fb8021ae7",
+      "snapshot_manifest_sha256": "0e87b6c1b51f5c87ce008d9a1145a9a38543fc92299a356f587a72ed8a229179",
+      "wrapper_image": "tc-env:0b1591bd588d585e",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/humanize",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-01-fresh-B-final-4",
+      "task_id": "CS-01",
+      "variant": "final",
+      "config": "config-B",
+      "repeat": 4,
+      "workspace": "/home/user/fresh_ws/CS-01-fresh-B-final-4",
+      "instruction_sha256": "2be701c086f3665c107f71b5aae14e69b5a5b63b754560c917a6c8308aa6d28a",
+      "template_sha256": "c36dbce54960d10bc76262b13ff83f8442a42f37ea92e7ee22bcef698cfe3789",
+      "base_commit": "5697716f6a109829ff89617d35ed2e5fb8021ae7",
+      "snapshot_manifest_sha256": "0e87b6c1b51f5c87ce008d9a1145a9a38543fc92299a356f587a72ed8a229179",
+      "wrapper_image": "tc-env:0b1591bd588d585e",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/humanize",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-01-fresh-B-final-5",
+      "task_id": "CS-01",
+      "variant": "final",
+      "config": "config-B",
+      "repeat": 5,
+      "workspace": "/home/user/fresh_ws/CS-01-fresh-B-final-5",
+      "instruction_sha256": "9ef4e7bac1fc64114ed3cbbfd9951d9ba5fe033cb837b93f41a18cff8adac143",
+      "template_sha256": "c36dbce54960d10bc76262b13ff83f8442a42f37ea92e7ee22bcef698cfe3789",
+      "base_commit": "5697716f6a109829ff89617d35ed2e5fb8021ae7",
+      "snapshot_manifest_sha256": "0e87b6c1b51f5c87ce008d9a1145a9a38543fc92299a356f587a72ed8a229179",
+      "wrapper_image": "tc-env:0b1591bd588d585e",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/humanize",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-01-fresh-B-u1-1",
+      "task_id": "CS-01",
+      "variant": "u1",
+      "config": "config-B",
+      "repeat": 1,
+      "workspace": "/home/user/fresh_ws/CS-01-fresh-B-u1-1",
+      "instruction_sha256": "168a28a680c9a3d7e7f8fadc776c7700c6007f4aea127fba12da144af376ea64",
+      "template_sha256": "046f88a5925d66d5ea3deaf1ac35333c5c1b6412792b33d90198a31402f62037",
+      "base_commit": "5697716f6a109829ff89617d35ed2e5fb8021ae7",
+      "snapshot_manifest_sha256": "0e87b6c1b51f5c87ce008d9a1145a9a38543fc92299a356f587a72ed8a229179",
+      "wrapper_image": "tc-env:0b1591bd588d585e",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/humanize",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-01-fresh-B-u1-2",
+      "task_id": "CS-01",
+      "variant": "u1",
+      "config": "config-B",
+      "repeat": 2,
+      "workspace": "/home/user/fresh_ws/CS-01-fresh-B-u1-2",
+      "instruction_sha256": "a429ba640b69a013fc41227daa345b6ff45694fcf5b2b828e83d523937db6866",
+      "template_sha256": "046f88a5925d66d5ea3deaf1ac35333c5c1b6412792b33d90198a31402f62037",
+      "base_commit": "5697716f6a109829ff89617d35ed2e5fb8021ae7",
+      "snapshot_manifest_sha256": "0e87b6c1b51f5c87ce008d9a1145a9a38543fc92299a356f587a72ed8a229179",
+      "wrapper_image": "tc-env:0b1591bd588d585e",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/humanize",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-01-fresh-B-u1-3",
+      "task_id": "CS-01",
+      "variant": "u1",
+      "config": "config-B",
+      "repeat": 3,
+      "workspace": "/home/user/fresh_ws/CS-01-fresh-B-u1-3",
+      "instruction_sha256": "94c1efd4f7032369995526b264ee210c6b80f620267e6e0fdf4bdc18b7dd2568",
+      "template_sha256": "046f88a5925d66d5ea3deaf1ac35333c5c1b6412792b33d90198a31402f62037",
+      "base_commit": "5697716f6a109829ff89617d35ed2e5fb8021ae7",
+      "snapshot_manifest_sha256": "0e87b6c1b51f5c87ce008d9a1145a9a38543fc92299a356f587a72ed8a229179",
+      "wrapper_image": "tc-env:0b1591bd588d585e",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/humanize",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-01-fresh-B-u1-4",
+      "task_id": "CS-01",
+      "variant": "u1",
+      "config": "config-B",
+      "repeat": 4,
+      "workspace": "/home/user/fresh_ws/CS-01-fresh-B-u1-4",
+      "instruction_sha256": "bce671873edfa49859973ae6665183ae3bce06ad13b71e6a1989b3bd516429d1",
+      "template_sha256": "046f88a5925d66d5ea3deaf1ac35333c5c1b6412792b33d90198a31402f62037",
+      "base_commit": "5697716f6a109829ff89617d35ed2e5fb8021ae7",
+      "snapshot_manifest_sha256": "0e87b6c1b51f5c87ce008d9a1145a9a38543fc92299a356f587a72ed8a229179",
+      "wrapper_image": "tc-env:0b1591bd588d585e",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/humanize",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-01-fresh-B-u1-5",
+      "task_id": "CS-01",
+      "variant": "u1",
+      "config": "config-B",
+      "repeat": 5,
+      "workspace": "/home/user/fresh_ws/CS-01-fresh-B-u1-5",
+      "instruction_sha256": "348b45554bd8d8024ec3e805ff220980b700cddf00e59f322a89b86aa52600a0",
+      "template_sha256": "046f88a5925d66d5ea3deaf1ac35333c5c1b6412792b33d90198a31402f62037",
+      "base_commit": "5697716f6a109829ff89617d35ed2e5fb8021ae7",
+      "snapshot_manifest_sha256": "0e87b6c1b51f5c87ce008d9a1145a9a38543fc92299a356f587a72ed8a229179",
+      "wrapper_image": "tc-env:0b1591bd588d585e",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/humanize",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-01",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-02-fresh-A-final-1",
+      "task_id": "CS-02",
+      "variant": "final",
+      "config": "config-A",
+      "repeat": 1,
+      "workspace": "/home/user/fresh_ws/CS-02-fresh-A-final-1",
+      "instruction_sha256": "db9973aa9dba37e3c2cda344462e76454ad5776b701ba6fc4c4f121fcf41229f",
+      "template_sha256": "6ba70d18ac91cbf4877596d7af2fc2383c86862d4a5d724b2130f943c7f319d6",
+      "base_commit": "3d2cf12064c661b0b2615916f4d01af08fe22dee",
+      "snapshot_manifest_sha256": "8f30c35e16795f234c71e7b6945a6355ca0b4d139feda3b36642ea01e3b8d64b",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/tinydb",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-02-fresh-A-final-2",
+      "task_id": "CS-02",
+      "variant": "final",
+      "config": "config-A",
+      "repeat": 2,
+      "workspace": "/home/user/fresh_ws/CS-02-fresh-A-final-2",
+      "instruction_sha256": "3bbda567e80c7f67065c4c51dec35353855c9bcc6c9911f49ca39d66301fb09a",
+      "template_sha256": "6ba70d18ac91cbf4877596d7af2fc2383c86862d4a5d724b2130f943c7f319d6",
+      "base_commit": "3d2cf12064c661b0b2615916f4d01af08fe22dee",
+      "snapshot_manifest_sha256": "8f30c35e16795f234c71e7b6945a6355ca0b4d139feda3b36642ea01e3b8d64b",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/tinydb",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-02-fresh-A-final-3",
+      "task_id": "CS-02",
+      "variant": "final",
+      "config": "config-A",
+      "repeat": 3,
+      "workspace": "/home/user/fresh_ws/CS-02-fresh-A-final-3",
+      "instruction_sha256": "ab06f3ff9dfe6919111741a0ca8ced6b4a16b2e29263d92d517f200467677b88",
+      "template_sha256": "6ba70d18ac91cbf4877596d7af2fc2383c86862d4a5d724b2130f943c7f319d6",
+      "base_commit": "3d2cf12064c661b0b2615916f4d01af08fe22dee",
+      "snapshot_manifest_sha256": "8f30c35e16795f234c71e7b6945a6355ca0b4d139feda3b36642ea01e3b8d64b",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/tinydb",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-02-fresh-A-final-4",
+      "task_id": "CS-02",
+      "variant": "final",
+      "config": "config-A",
+      "repeat": 4,
+      "workspace": "/home/user/fresh_ws/CS-02-fresh-A-final-4",
+      "instruction_sha256": "05db788e518d0f295eee32e98c2001453a9a644f16ce8e04d879c6748a670375",
+      "template_sha256": "6ba70d18ac91cbf4877596d7af2fc2383c86862d4a5d724b2130f943c7f319d6",
+      "base_commit": "3d2cf12064c661b0b2615916f4d01af08fe22dee",
+      "snapshot_manifest_sha256": "8f30c35e16795f234c71e7b6945a6355ca0b4d139feda3b36642ea01e3b8d64b",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/tinydb",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-02-fresh-A-final-5",
+      "task_id": "CS-02",
+      "variant": "final",
+      "config": "config-A",
+      "repeat": 5,
+      "workspace": "/home/user/fresh_ws/CS-02-fresh-A-final-5",
+      "instruction_sha256": "453edc45e7cd14b5f763b056d07ac64ed189b1a356815e4cd0d5b81341de83a0",
+      "template_sha256": "6ba70d18ac91cbf4877596d7af2fc2383c86862d4a5d724b2130f943c7f319d6",
+      "base_commit": "3d2cf12064c661b0b2615916f4d01af08fe22dee",
+      "snapshot_manifest_sha256": "8f30c35e16795f234c71e7b6945a6355ca0b4d139feda3b36642ea01e3b8d64b",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/tinydb",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-02-fresh-A-u1-1",
+      "task_id": "CS-02",
+      "variant": "u1",
+      "config": "config-A",
+      "repeat": 1,
+      "workspace": "/home/user/fresh_ws/CS-02-fresh-A-u1-1",
+      "instruction_sha256": "66e15eeba4fc896250a249163d7f41a842f42bc6e58ab56263cb36ded3b19082",
+      "template_sha256": "6d1998f1fd351a2d4d9c34b8092e8ff15426262771cacadede565c8cb9e3e425",
+      "base_commit": "3d2cf12064c661b0b2615916f4d01af08fe22dee",
+      "snapshot_manifest_sha256": "8f30c35e16795f234c71e7b6945a6355ca0b4d139feda3b36642ea01e3b8d64b",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/tinydb",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-02-fresh-A-u1-2",
+      "task_id": "CS-02",
+      "variant": "u1",
+      "config": "config-A",
+      "repeat": 2,
+      "workspace": "/home/user/fresh_ws/CS-02-fresh-A-u1-2",
+      "instruction_sha256": "9fc1c7b2a297aa4746e42505448618d9a8344c4db6b273f51acc2915e14a11a2",
+      "template_sha256": "6d1998f1fd351a2d4d9c34b8092e8ff15426262771cacadede565c8cb9e3e425",
+      "base_commit": "3d2cf12064c661b0b2615916f4d01af08fe22dee",
+      "snapshot_manifest_sha256": "8f30c35e16795f234c71e7b6945a6355ca0b4d139feda3b36642ea01e3b8d64b",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/tinydb",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-02-fresh-A-u1-3",
+      "task_id": "CS-02",
+      "variant": "u1",
+      "config": "config-A",
+      "repeat": 3,
+      "workspace": "/home/user/fresh_ws/CS-02-fresh-A-u1-3",
+      "instruction_sha256": "84cf8551bce9d0bf096a750781d80c77b91bf1d86bea2a847a0b9789c6ff4932",
+      "template_sha256": "6d1998f1fd351a2d4d9c34b8092e8ff15426262771cacadede565c8cb9e3e425",
+      "base_commit": "3d2cf12064c661b0b2615916f4d01af08fe22dee",
+      "snapshot_manifest_sha256": "8f30c35e16795f234c71e7b6945a6355ca0b4d139feda3b36642ea01e3b8d64b",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/tinydb",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-02-fresh-A-u1-4",
+      "task_id": "CS-02",
+      "variant": "u1",
+      "config": "config-A",
+      "repeat": 4,
+      "workspace": "/home/user/fresh_ws/CS-02-fresh-A-u1-4",
+      "instruction_sha256": "e242ff2ba8cb359c75638136c04206f950ef013943bb6bee52f3461a87d22032",
+      "template_sha256": "6d1998f1fd351a2d4d9c34b8092e8ff15426262771cacadede565c8cb9e3e425",
+      "base_commit": "3d2cf12064c661b0b2615916f4d01af08fe22dee",
+      "snapshot_manifest_sha256": "8f30c35e16795f234c71e7b6945a6355ca0b4d139feda3b36642ea01e3b8d64b",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/tinydb",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-02-fresh-A-u1-5",
+      "task_id": "CS-02",
+      "variant": "u1",
+      "config": "config-A",
+      "repeat": 5,
+      "workspace": "/home/user/fresh_ws/CS-02-fresh-A-u1-5",
+      "instruction_sha256": "bbce78ec7ab3941f963f66ddc72be167539123ea0f2463576c83292ed838eb9d",
+      "template_sha256": "6d1998f1fd351a2d4d9c34b8092e8ff15426262771cacadede565c8cb9e3e425",
+      "base_commit": "3d2cf12064c661b0b2615916f4d01af08fe22dee",
+      "snapshot_manifest_sha256": "8f30c35e16795f234c71e7b6945a6355ca0b4d139feda3b36642ea01e3b8d64b",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/tinydb",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-02-fresh-B-final-1",
+      "task_id": "CS-02",
+      "variant": "final",
+      "config": "config-B",
+      "repeat": 1,
+      "workspace": "/home/user/fresh_ws/CS-02-fresh-B-final-1",
+      "instruction_sha256": "5aab99704f52066b6c7183d1c198609114803c4bb8f1c4be25f5e4ae772e2bdc",
+      "template_sha256": "6ba70d18ac91cbf4877596d7af2fc2383c86862d4a5d724b2130f943c7f319d6",
+      "base_commit": "3d2cf12064c661b0b2615916f4d01af08fe22dee",
+      "snapshot_manifest_sha256": "8f30c35e16795f234c71e7b6945a6355ca0b4d139feda3b36642ea01e3b8d64b",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/tinydb",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-02-fresh-B-final-2",
+      "task_id": "CS-02",
+      "variant": "final",
+      "config": "config-B",
+      "repeat": 2,
+      "workspace": "/home/user/fresh_ws/CS-02-fresh-B-final-2",
+      "instruction_sha256": "eb28ef831deae21b20e48698f0c33f29a1c99eed16b58f71937454e52f0af95c",
+      "template_sha256": "6ba70d18ac91cbf4877596d7af2fc2383c86862d4a5d724b2130f943c7f319d6",
+      "base_commit": "3d2cf12064c661b0b2615916f4d01af08fe22dee",
+      "snapshot_manifest_sha256": "8f30c35e16795f234c71e7b6945a6355ca0b4d139feda3b36642ea01e3b8d64b",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/tinydb",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-02-fresh-B-final-3",
+      "task_id": "CS-02",
+      "variant": "final",
+      "config": "config-B",
+      "repeat": 3,
+      "workspace": "/home/user/fresh_ws/CS-02-fresh-B-final-3",
+      "instruction_sha256": "65f692f08ef2364b9b472feba2b60aea6c3219715c3aad56756c10632939e7ad",
+      "template_sha256": "6ba70d18ac91cbf4877596d7af2fc2383c86862d4a5d724b2130f943c7f319d6",
+      "base_commit": "3d2cf12064c661b0b2615916f4d01af08fe22dee",
+      "snapshot_manifest_sha256": "8f30c35e16795f234c71e7b6945a6355ca0b4d139feda3b36642ea01e3b8d64b",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/tinydb",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-02-fresh-B-final-4",
+      "task_id": "CS-02",
+      "variant": "final",
+      "config": "config-B",
+      "repeat": 4,
+      "workspace": "/home/user/fresh_ws/CS-02-fresh-B-final-4",
+      "instruction_sha256": "98c9d7281feca82f4a444834b2a545aa9feeff1604ed03d371027f831925a6b9",
+      "template_sha256": "6ba70d18ac91cbf4877596d7af2fc2383c86862d4a5d724b2130f943c7f319d6",
+      "base_commit": "3d2cf12064c661b0b2615916f4d01af08fe22dee",
+      "snapshot_manifest_sha256": "8f30c35e16795f234c71e7b6945a6355ca0b4d139feda3b36642ea01e3b8d64b",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/tinydb",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-02-fresh-B-final-5",
+      "task_id": "CS-02",
+      "variant": "final",
+      "config": "config-B",
+      "repeat": 5,
+      "workspace": "/home/user/fresh_ws/CS-02-fresh-B-final-5",
+      "instruction_sha256": "81503478e41774e3fcb76d86b91b461f29d893448c4e4c1e7018901ea85828a2",
+      "template_sha256": "6ba70d18ac91cbf4877596d7af2fc2383c86862d4a5d724b2130f943c7f319d6",
+      "base_commit": "3d2cf12064c661b0b2615916f4d01af08fe22dee",
+      "snapshot_manifest_sha256": "8f30c35e16795f234c71e7b6945a6355ca0b4d139feda3b36642ea01e3b8d64b",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/tinydb",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-02-fresh-B-u1-1",
+      "task_id": "CS-02",
+      "variant": "u1",
+      "config": "config-B",
+      "repeat": 1,
+      "workspace": "/home/user/fresh_ws/CS-02-fresh-B-u1-1",
+      "instruction_sha256": "409c9c082f406734468c683e4e73070f74e18bc34ef1a82c395274ec4984b975",
+      "template_sha256": "6d1998f1fd351a2d4d9c34b8092e8ff15426262771cacadede565c8cb9e3e425",
+      "base_commit": "3d2cf12064c661b0b2615916f4d01af08fe22dee",
+      "snapshot_manifest_sha256": "8f30c35e16795f234c71e7b6945a6355ca0b4d139feda3b36642ea01e3b8d64b",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/tinydb",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-02-fresh-B-u1-2",
+      "task_id": "CS-02",
+      "variant": "u1",
+      "config": "config-B",
+      "repeat": 2,
+      "workspace": "/home/user/fresh_ws/CS-02-fresh-B-u1-2",
+      "instruction_sha256": "59e6af35c20e5866188af4d3132909a9ff1104f3eb1f90dd6a51ca2f732786da",
+      "template_sha256": "6d1998f1fd351a2d4d9c34b8092e8ff15426262771cacadede565c8cb9e3e425",
+      "base_commit": "3d2cf12064c661b0b2615916f4d01af08fe22dee",
+      "snapshot_manifest_sha256": "8f30c35e16795f234c71e7b6945a6355ca0b4d139feda3b36642ea01e3b8d64b",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/tinydb",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-02-fresh-B-u1-3",
+      "task_id": "CS-02",
+      "variant": "u1",
+      "config": "config-B",
+      "repeat": 3,
+      "workspace": "/home/user/fresh_ws/CS-02-fresh-B-u1-3",
+      "instruction_sha256": "378868296aa56bde5e4168028091e686bdc6f4aa5d91bfd2658e62fa94dde365",
+      "template_sha256": "6d1998f1fd351a2d4d9c34b8092e8ff15426262771cacadede565c8cb9e3e425",
+      "base_commit": "3d2cf12064c661b0b2615916f4d01af08fe22dee",
+      "snapshot_manifest_sha256": "8f30c35e16795f234c71e7b6945a6355ca0b4d139feda3b36642ea01e3b8d64b",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/tinydb",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-02-fresh-B-u1-4",
+      "task_id": "CS-02",
+      "variant": "u1",
+      "config": "config-B",
+      "repeat": 4,
+      "workspace": "/home/user/fresh_ws/CS-02-fresh-B-u1-4",
+      "instruction_sha256": "a187ace7b0a690aaa9bb9aaf7e929b3b43740bcfa21dd6116cf3a55da97d6ba4",
+      "template_sha256": "6d1998f1fd351a2d4d9c34b8092e8ff15426262771cacadede565c8cb9e3e425",
+      "base_commit": "3d2cf12064c661b0b2615916f4d01af08fe22dee",
+      "snapshot_manifest_sha256": "8f30c35e16795f234c71e7b6945a6355ca0b4d139feda3b36642ea01e3b8d64b",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/tinydb",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-02-fresh-B-u1-5",
+      "task_id": "CS-02",
+      "variant": "u1",
+      "config": "config-B",
+      "repeat": 5,
+      "workspace": "/home/user/fresh_ws/CS-02-fresh-B-u1-5",
+      "instruction_sha256": "03f9abb8d9654234f7aea8c5b82c572f2d06df8b546d80b663d57a4d6e3d49d5",
+      "template_sha256": "6d1998f1fd351a2d4d9c34b8092e8ff15426262771cacadede565c8cb9e3e425",
+      "base_commit": "3d2cf12064c661b0b2615916f4d01af08fe22dee",
+      "snapshot_manifest_sha256": "8f30c35e16795f234c71e7b6945a6355ca0b4d139feda3b36642ea01e3b8d64b",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/tinydb",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-02",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-03-fresh-A-final-1",
+      "task_id": "CS-03",
+      "variant": "final",
+      "config": "config-A",
+      "repeat": 1,
+      "workspace": "/home/user/fresh_ws/CS-03-fresh-A-final-1",
+      "instruction_sha256": "0cce85e4e4a9d949ab67a6e8e80dc6f933791c56c3a618289ae7c8fe7fa9d9bc",
+      "template_sha256": "8c650c4fca6b0690c9b131ce9e9f1b30ff3b50b01df67a86836e825857f5041e",
+      "base_commit": "c8454a1eb3f0dffa18425ef759e631a9883d2fa9",
+      "snapshot_manifest_sha256": "7e61aca7b70ce1b5b5ba314144454dd0cbbfc26619e0ac5ca17e2ae03e29d80e",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/inflection",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-03-fresh-A-final-2",
+      "task_id": "CS-03",
+      "variant": "final",
+      "config": "config-A",
+      "repeat": 2,
+      "workspace": "/home/user/fresh_ws/CS-03-fresh-A-final-2",
+      "instruction_sha256": "b8b69aaf43ec6ac7afb877a38457d12a93fdd272adc8842c67599d97a5c9d1e0",
+      "template_sha256": "8c650c4fca6b0690c9b131ce9e9f1b30ff3b50b01df67a86836e825857f5041e",
+      "base_commit": "c8454a1eb3f0dffa18425ef759e631a9883d2fa9",
+      "snapshot_manifest_sha256": "7e61aca7b70ce1b5b5ba314144454dd0cbbfc26619e0ac5ca17e2ae03e29d80e",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/inflection",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-03-fresh-A-final-3",
+      "task_id": "CS-03",
+      "variant": "final",
+      "config": "config-A",
+      "repeat": 3,
+      "workspace": "/home/user/fresh_ws/CS-03-fresh-A-final-3",
+      "instruction_sha256": "4a9a862593a38c4a48315c8eaae3c2544b1dc70c49f63278d73bdc602de2a021",
+      "template_sha256": "8c650c4fca6b0690c9b131ce9e9f1b30ff3b50b01df67a86836e825857f5041e",
+      "base_commit": "c8454a1eb3f0dffa18425ef759e631a9883d2fa9",
+      "snapshot_manifest_sha256": "7e61aca7b70ce1b5b5ba314144454dd0cbbfc26619e0ac5ca17e2ae03e29d80e",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/inflection",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-03-fresh-A-final-4",
+      "task_id": "CS-03",
+      "variant": "final",
+      "config": "config-A",
+      "repeat": 4,
+      "workspace": "/home/user/fresh_ws/CS-03-fresh-A-final-4",
+      "instruction_sha256": "a7b48ab02fb5417f7ba48d4a4cb9326798ab57d00ff9c0c348cfb12f17b9fd11",
+      "template_sha256": "8c650c4fca6b0690c9b131ce9e9f1b30ff3b50b01df67a86836e825857f5041e",
+      "base_commit": "c8454a1eb3f0dffa18425ef759e631a9883d2fa9",
+      "snapshot_manifest_sha256": "7e61aca7b70ce1b5b5ba314144454dd0cbbfc26619e0ac5ca17e2ae03e29d80e",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/inflection",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-03-fresh-A-final-5",
+      "task_id": "CS-03",
+      "variant": "final",
+      "config": "config-A",
+      "repeat": 5,
+      "workspace": "/home/user/fresh_ws/CS-03-fresh-A-final-5",
+      "instruction_sha256": "f1bad3a232eda601570f263751a1cbbe53f0d94d719a04b6326bb2e656d5ddc6",
+      "template_sha256": "8c650c4fca6b0690c9b131ce9e9f1b30ff3b50b01df67a86836e825857f5041e",
+      "base_commit": "c8454a1eb3f0dffa18425ef759e631a9883d2fa9",
+      "snapshot_manifest_sha256": "7e61aca7b70ce1b5b5ba314144454dd0cbbfc26619e0ac5ca17e2ae03e29d80e",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/inflection",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-03-fresh-A-u1-1",
+      "task_id": "CS-03",
+      "variant": "u1",
+      "config": "config-A",
+      "repeat": 1,
+      "workspace": "/home/user/fresh_ws/CS-03-fresh-A-u1-1",
+      "instruction_sha256": "362f18875274e7f52345b848f2a0c36167a95ee21777a22afe79e0bbc1d5232d",
+      "template_sha256": "ff07da615bdae96d691e2b06264a642eea56b5d5f561909aaa12acfd38edc49d",
+      "base_commit": "c8454a1eb3f0dffa18425ef759e631a9883d2fa9",
+      "snapshot_manifest_sha256": "7e61aca7b70ce1b5b5ba314144454dd0cbbfc26619e0ac5ca17e2ae03e29d80e",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/inflection",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-03-fresh-A-u1-2",
+      "task_id": "CS-03",
+      "variant": "u1",
+      "config": "config-A",
+      "repeat": 2,
+      "workspace": "/home/user/fresh_ws/CS-03-fresh-A-u1-2",
+      "instruction_sha256": "5041dad28fe8acb2a9fabe3c6b4d814b4298d7278181f72cd8e26f70eb937ae9",
+      "template_sha256": "ff07da615bdae96d691e2b06264a642eea56b5d5f561909aaa12acfd38edc49d",
+      "base_commit": "c8454a1eb3f0dffa18425ef759e631a9883d2fa9",
+      "snapshot_manifest_sha256": "7e61aca7b70ce1b5b5ba314144454dd0cbbfc26619e0ac5ca17e2ae03e29d80e",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/inflection",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-03-fresh-A-u1-3",
+      "task_id": "CS-03",
+      "variant": "u1",
+      "config": "config-A",
+      "repeat": 3,
+      "workspace": "/home/user/fresh_ws/CS-03-fresh-A-u1-3",
+      "instruction_sha256": "d3981d4ec575b55ce5a460eb0d720ec06bd7a5f565b2f9cea52ef0731e4b87f6",
+      "template_sha256": "ff07da615bdae96d691e2b06264a642eea56b5d5f561909aaa12acfd38edc49d",
+      "base_commit": "c8454a1eb3f0dffa18425ef759e631a9883d2fa9",
+      "snapshot_manifest_sha256": "7e61aca7b70ce1b5b5ba314144454dd0cbbfc26619e0ac5ca17e2ae03e29d80e",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/inflection",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-03-fresh-A-u1-4",
+      "task_id": "CS-03",
+      "variant": "u1",
+      "config": "config-A",
+      "repeat": 4,
+      "workspace": "/home/user/fresh_ws/CS-03-fresh-A-u1-4",
+      "instruction_sha256": "61ba5c652b5b02c92fd85290e478f04968403bdb449225a644ae5b9245ef5b6b",
+      "template_sha256": "ff07da615bdae96d691e2b06264a642eea56b5d5f561909aaa12acfd38edc49d",
+      "base_commit": "c8454a1eb3f0dffa18425ef759e631a9883d2fa9",
+      "snapshot_manifest_sha256": "7e61aca7b70ce1b5b5ba314144454dd0cbbfc26619e0ac5ca17e2ae03e29d80e",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/inflection",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-03-fresh-A-u1-5",
+      "task_id": "CS-03",
+      "variant": "u1",
+      "config": "config-A",
+      "repeat": 5,
+      "workspace": "/home/user/fresh_ws/CS-03-fresh-A-u1-5",
+      "instruction_sha256": "e7241a916c6ea311fe4b633dac84662f2f8045239a8935ca06e88aed532393f6",
+      "template_sha256": "ff07da615bdae96d691e2b06264a642eea56b5d5f561909aaa12acfd38edc49d",
+      "base_commit": "c8454a1eb3f0dffa18425ef759e631a9883d2fa9",
+      "snapshot_manifest_sha256": "7e61aca7b70ce1b5b5ba314144454dd0cbbfc26619e0ac5ca17e2ae03e29d80e",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/inflection",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-03-fresh-B-final-1",
+      "task_id": "CS-03",
+      "variant": "final",
+      "config": "config-B",
+      "repeat": 1,
+      "workspace": "/home/user/fresh_ws/CS-03-fresh-B-final-1",
+      "instruction_sha256": "be5044d4bb9ab4581228bcdb8c6217e96e742f0563bbb5566218bf27c6c69b62",
+      "template_sha256": "8c650c4fca6b0690c9b131ce9e9f1b30ff3b50b01df67a86836e825857f5041e",
+      "base_commit": "c8454a1eb3f0dffa18425ef759e631a9883d2fa9",
+      "snapshot_manifest_sha256": "7e61aca7b70ce1b5b5ba314144454dd0cbbfc26619e0ac5ca17e2ae03e29d80e",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/inflection",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-03-fresh-B-final-2",
+      "task_id": "CS-03",
+      "variant": "final",
+      "config": "config-B",
+      "repeat": 2,
+      "workspace": "/home/user/fresh_ws/CS-03-fresh-B-final-2",
+      "instruction_sha256": "17a33dc2f13a010305b9ad5f9a0cc192d0897ca8259d73707ba45fd8d6d5aa9a",
+      "template_sha256": "8c650c4fca6b0690c9b131ce9e9f1b30ff3b50b01df67a86836e825857f5041e",
+      "base_commit": "c8454a1eb3f0dffa18425ef759e631a9883d2fa9",
+      "snapshot_manifest_sha256": "7e61aca7b70ce1b5b5ba314144454dd0cbbfc26619e0ac5ca17e2ae03e29d80e",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/inflection",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-03-fresh-B-final-3",
+      "task_id": "CS-03",
+      "variant": "final",
+      "config": "config-B",
+      "repeat": 3,
+      "workspace": "/home/user/fresh_ws/CS-03-fresh-B-final-3",
+      "instruction_sha256": "264aacde6cb58573d93cd47aea72396117a6dec0cd8ad42395bddaa534f4dd90",
+      "template_sha256": "8c650c4fca6b0690c9b131ce9e9f1b30ff3b50b01df67a86836e825857f5041e",
+      "base_commit": "c8454a1eb3f0dffa18425ef759e631a9883d2fa9",
+      "snapshot_manifest_sha256": "7e61aca7b70ce1b5b5ba314144454dd0cbbfc26619e0ac5ca17e2ae03e29d80e",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/inflection",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-03-fresh-B-final-4",
+      "task_id": "CS-03",
+      "variant": "final",
+      "config": "config-B",
+      "repeat": 4,
+      "workspace": "/home/user/fresh_ws/CS-03-fresh-B-final-4",
+      "instruction_sha256": "1a0ace95ddb8390676038fcf0c29185cbde42a56e75148a15adec783e0006a5a",
+      "template_sha256": "8c650c4fca6b0690c9b131ce9e9f1b30ff3b50b01df67a86836e825857f5041e",
+      "base_commit": "c8454a1eb3f0dffa18425ef759e631a9883d2fa9",
+      "snapshot_manifest_sha256": "7e61aca7b70ce1b5b5ba314144454dd0cbbfc26619e0ac5ca17e2ae03e29d80e",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/inflection",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-03-fresh-B-final-5",
+      "task_id": "CS-03",
+      "variant": "final",
+      "config": "config-B",
+      "repeat": 5,
+      "workspace": "/home/user/fresh_ws/CS-03-fresh-B-final-5",
+      "instruction_sha256": "7c847d25555a8ec359f2b51ff8bf01a7fea4651b358da8f71516aef0b6c8d5a5",
+      "template_sha256": "8c650c4fca6b0690c9b131ce9e9f1b30ff3b50b01df67a86836e825857f5041e",
+      "base_commit": "c8454a1eb3f0dffa18425ef759e631a9883d2fa9",
+      "snapshot_manifest_sha256": "7e61aca7b70ce1b5b5ba314144454dd0cbbfc26619e0ac5ca17e2ae03e29d80e",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/inflection",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-03-fresh-B-u1-1",
+      "task_id": "CS-03",
+      "variant": "u1",
+      "config": "config-B",
+      "repeat": 1,
+      "workspace": "/home/user/fresh_ws/CS-03-fresh-B-u1-1",
+      "instruction_sha256": "ab931603b6d8f255978eacb15336280f380a89ea96d81a3d6f70e4b87ab039c3",
+      "template_sha256": "ff07da615bdae96d691e2b06264a642eea56b5d5f561909aaa12acfd38edc49d",
+      "base_commit": "c8454a1eb3f0dffa18425ef759e631a9883d2fa9",
+      "snapshot_manifest_sha256": "7e61aca7b70ce1b5b5ba314144454dd0cbbfc26619e0ac5ca17e2ae03e29d80e",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/inflection",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-03-fresh-B-u1-2",
+      "task_id": "CS-03",
+      "variant": "u1",
+      "config": "config-B",
+      "repeat": 2,
+      "workspace": "/home/user/fresh_ws/CS-03-fresh-B-u1-2",
+      "instruction_sha256": "ce6e6eea93c4e629c7fde37a511b3b6eef1ee72dfddd31d69bd2bac677b87d36",
+      "template_sha256": "ff07da615bdae96d691e2b06264a642eea56b5d5f561909aaa12acfd38edc49d",
+      "base_commit": "c8454a1eb3f0dffa18425ef759e631a9883d2fa9",
+      "snapshot_manifest_sha256": "7e61aca7b70ce1b5b5ba314144454dd0cbbfc26619e0ac5ca17e2ae03e29d80e",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/inflection",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-03-fresh-B-u1-3",
+      "task_id": "CS-03",
+      "variant": "u1",
+      "config": "config-B",
+      "repeat": 3,
+      "workspace": "/home/user/fresh_ws/CS-03-fresh-B-u1-3",
+      "instruction_sha256": "2c84c9b6f8393cad02872988a543ff87b3dcc67af7fbdb75057ce0c302941485",
+      "template_sha256": "ff07da615bdae96d691e2b06264a642eea56b5d5f561909aaa12acfd38edc49d",
+      "base_commit": "c8454a1eb3f0dffa18425ef759e631a9883d2fa9",
+      "snapshot_manifest_sha256": "7e61aca7b70ce1b5b5ba314144454dd0cbbfc26619e0ac5ca17e2ae03e29d80e",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/inflection",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-03-fresh-B-u1-4",
+      "task_id": "CS-03",
+      "variant": "u1",
+      "config": "config-B",
+      "repeat": 4,
+      "workspace": "/home/user/fresh_ws/CS-03-fresh-B-u1-4",
+      "instruction_sha256": "002888bf947fde6125ea66e90316cf23bd304a7a71159bae996152cf023c1fa9",
+      "template_sha256": "ff07da615bdae96d691e2b06264a642eea56b5d5f561909aaa12acfd38edc49d",
+      "base_commit": "c8454a1eb3f0dffa18425ef759e631a9883d2fa9",
+      "snapshot_manifest_sha256": "7e61aca7b70ce1b5b5ba314144454dd0cbbfc26619e0ac5ca17e2ae03e29d80e",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/inflection",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-03-fresh-B-u1-5",
+      "task_id": "CS-03",
+      "variant": "u1",
+      "config": "config-B",
+      "repeat": 5,
+      "workspace": "/home/user/fresh_ws/CS-03-fresh-B-u1-5",
+      "instruction_sha256": "3fb36084e9763ff1c98c7150854800c097dcee42dd4286cceb23c30eae923dc5",
+      "template_sha256": "ff07da615bdae96d691e2b06264a642eea56b5d5f561909aaa12acfd38edc49d",
+      "base_commit": "c8454a1eb3f0dffa18425ef759e631a9883d2fa9",
+      "snapshot_manifest_sha256": "7e61aca7b70ce1b5b5ba314144454dd0cbbfc26619e0ac5ca17e2ae03e29d80e",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/inflection",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-03",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-04-fresh-A-final-1",
+      "task_id": "CS-04",
+      "variant": "final",
+      "config": "config-A",
+      "repeat": 1,
+      "workspace": "/home/user/fresh_ws/CS-04-fresh-A-final-1",
+      "instruction_sha256": "dcc1e0bb07fd26db1531384665d305fc87d43515f04b6e2b76ce88fe4db22ad0",
+      "template_sha256": "024488956f2b422d01954361c98ab92eeb47f5630c11714bd9bda9fe84da1ea4",
+      "base_commit": "89310b8f75b66e22fd6e7a39292b4d08880f3a14",
+      "snapshot_manifest_sha256": "23d3be29cf4ba18308a6db7658382cdb9d20184d556646d7d854675531f92c2f",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/more-itertools",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-04-fresh-A-final-2",
+      "task_id": "CS-04",
+      "variant": "final",
+      "config": "config-A",
+      "repeat": 2,
+      "workspace": "/home/user/fresh_ws/CS-04-fresh-A-final-2",
+      "instruction_sha256": "6a855f6c05ea84a99cdad32f106f678a8856ccb8e604a9c5f1f6f694f40a5140",
+      "template_sha256": "024488956f2b422d01954361c98ab92eeb47f5630c11714bd9bda9fe84da1ea4",
+      "base_commit": "89310b8f75b66e22fd6e7a39292b4d08880f3a14",
+      "snapshot_manifest_sha256": "23d3be29cf4ba18308a6db7658382cdb9d20184d556646d7d854675531f92c2f",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/more-itertools",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-04-fresh-A-final-3",
+      "task_id": "CS-04",
+      "variant": "final",
+      "config": "config-A",
+      "repeat": 3,
+      "workspace": "/home/user/fresh_ws/CS-04-fresh-A-final-3",
+      "instruction_sha256": "90ecb6238fd0eb794592496e5c381668f8ab17582dafdb80b99669f5a214ce8c",
+      "template_sha256": "024488956f2b422d01954361c98ab92eeb47f5630c11714bd9bda9fe84da1ea4",
+      "base_commit": "89310b8f75b66e22fd6e7a39292b4d08880f3a14",
+      "snapshot_manifest_sha256": "23d3be29cf4ba18308a6db7658382cdb9d20184d556646d7d854675531f92c2f",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/more-itertools",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-04-fresh-A-final-4",
+      "task_id": "CS-04",
+      "variant": "final",
+      "config": "config-A",
+      "repeat": 4,
+      "workspace": "/home/user/fresh_ws/CS-04-fresh-A-final-4",
+      "instruction_sha256": "fc3f3ad6d3b345f24e6e1a1c28453d647c73ddebb33613289ac06096a0d97262",
+      "template_sha256": "024488956f2b422d01954361c98ab92eeb47f5630c11714bd9bda9fe84da1ea4",
+      "base_commit": "89310b8f75b66e22fd6e7a39292b4d08880f3a14",
+      "snapshot_manifest_sha256": "23d3be29cf4ba18308a6db7658382cdb9d20184d556646d7d854675531f92c2f",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/more-itertools",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-04-fresh-A-final-5",
+      "task_id": "CS-04",
+      "variant": "final",
+      "config": "config-A",
+      "repeat": 5,
+      "workspace": "/home/user/fresh_ws/CS-04-fresh-A-final-5",
+      "instruction_sha256": "4fb8258d608064aff44c5b2e997f583c9f8d34efc7b41ab2b0abb8cb52c4d941",
+      "template_sha256": "024488956f2b422d01954361c98ab92eeb47f5630c11714bd9bda9fe84da1ea4",
+      "base_commit": "89310b8f75b66e22fd6e7a39292b4d08880f3a14",
+      "snapshot_manifest_sha256": "23d3be29cf4ba18308a6db7658382cdb9d20184d556646d7d854675531f92c2f",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/more-itertools",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-04-fresh-A-u1-1",
+      "task_id": "CS-04",
+      "variant": "u1",
+      "config": "config-A",
+      "repeat": 1,
+      "workspace": "/home/user/fresh_ws/CS-04-fresh-A-u1-1",
+      "instruction_sha256": "96366b90a86d4cb47d041625f9f256fd470d58661cc4eb4dc1e15e99fe11f629",
+      "template_sha256": "96d87ce0c411320b6e366c5e223ef94f1a9f145d12d93cabb997702f64d3860a",
+      "base_commit": "89310b8f75b66e22fd6e7a39292b4d08880f3a14",
+      "snapshot_manifest_sha256": "23d3be29cf4ba18308a6db7658382cdb9d20184d556646d7d854675531f92c2f",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/more-itertools",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-04-fresh-A-u1-2",
+      "task_id": "CS-04",
+      "variant": "u1",
+      "config": "config-A",
+      "repeat": 2,
+      "workspace": "/home/user/fresh_ws/CS-04-fresh-A-u1-2",
+      "instruction_sha256": "92aff882aa030df082a7773cde891382f84f63650ab867d01fb34e1d16dc1119",
+      "template_sha256": "96d87ce0c411320b6e366c5e223ef94f1a9f145d12d93cabb997702f64d3860a",
+      "base_commit": "89310b8f75b66e22fd6e7a39292b4d08880f3a14",
+      "snapshot_manifest_sha256": "23d3be29cf4ba18308a6db7658382cdb9d20184d556646d7d854675531f92c2f",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/more-itertools",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-04-fresh-A-u1-3",
+      "task_id": "CS-04",
+      "variant": "u1",
+      "config": "config-A",
+      "repeat": 3,
+      "workspace": "/home/user/fresh_ws/CS-04-fresh-A-u1-3",
+      "instruction_sha256": "6170c3b3ab8de00f5844a54c2d722a13312987af86adbba301765c5c3b0481d7",
+      "template_sha256": "96d87ce0c411320b6e366c5e223ef94f1a9f145d12d93cabb997702f64d3860a",
+      "base_commit": "89310b8f75b66e22fd6e7a39292b4d08880f3a14",
+      "snapshot_manifest_sha256": "23d3be29cf4ba18308a6db7658382cdb9d20184d556646d7d854675531f92c2f",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/more-itertools",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-04-fresh-A-u1-4",
+      "task_id": "CS-04",
+      "variant": "u1",
+      "config": "config-A",
+      "repeat": 4,
+      "workspace": "/home/user/fresh_ws/CS-04-fresh-A-u1-4",
+      "instruction_sha256": "94ea6be5f21e49e16086c3cfb7f5be9160bfb520f9d9da40f63d19ab2f2f9461",
+      "template_sha256": "96d87ce0c411320b6e366c5e223ef94f1a9f145d12d93cabb997702f64d3860a",
+      "base_commit": "89310b8f75b66e22fd6e7a39292b4d08880f3a14",
+      "snapshot_manifest_sha256": "23d3be29cf4ba18308a6db7658382cdb9d20184d556646d7d854675531f92c2f",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/more-itertools",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-04-fresh-A-u1-5",
+      "task_id": "CS-04",
+      "variant": "u1",
+      "config": "config-A",
+      "repeat": 5,
+      "workspace": "/home/user/fresh_ws/CS-04-fresh-A-u1-5",
+      "instruction_sha256": "6ed474d32bb3fdea3a32c2a291e0a7400be2354aed0d1defcace97b80ecee894",
+      "template_sha256": "96d87ce0c411320b6e366c5e223ef94f1a9f145d12d93cabb997702f64d3860a",
+      "base_commit": "89310b8f75b66e22fd6e7a39292b4d08880f3a14",
+      "snapshot_manifest_sha256": "23d3be29cf4ba18308a6db7658382cdb9d20184d556646d7d854675531f92c2f",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/more-itertools",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-04-fresh-B-final-1",
+      "task_id": "CS-04",
+      "variant": "final",
+      "config": "config-B",
+      "repeat": 1,
+      "workspace": "/home/user/fresh_ws/CS-04-fresh-B-final-1",
+      "instruction_sha256": "8a990e5c80ba2fee5c5a4f0d61322c5a027d96622913add64b3931ba230ed8d3",
+      "template_sha256": "024488956f2b422d01954361c98ab92eeb47f5630c11714bd9bda9fe84da1ea4",
+      "base_commit": "89310b8f75b66e22fd6e7a39292b4d08880f3a14",
+      "snapshot_manifest_sha256": "23d3be29cf4ba18308a6db7658382cdb9d20184d556646d7d854675531f92c2f",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/more-itertools",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-04-fresh-B-final-2",
+      "task_id": "CS-04",
+      "variant": "final",
+      "config": "config-B",
+      "repeat": 2,
+      "workspace": "/home/user/fresh_ws/CS-04-fresh-B-final-2",
+      "instruction_sha256": "bdbe0b4787232f6ad36fe97f405c1b1ddb5e62839f6b335b23d7295f151979a1",
+      "template_sha256": "024488956f2b422d01954361c98ab92eeb47f5630c11714bd9bda9fe84da1ea4",
+      "base_commit": "89310b8f75b66e22fd6e7a39292b4d08880f3a14",
+      "snapshot_manifest_sha256": "23d3be29cf4ba18308a6db7658382cdb9d20184d556646d7d854675531f92c2f",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/more-itertools",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-04-fresh-B-final-3",
+      "task_id": "CS-04",
+      "variant": "final",
+      "config": "config-B",
+      "repeat": 3,
+      "workspace": "/home/user/fresh_ws/CS-04-fresh-B-final-3",
+      "instruction_sha256": "d3630f3d4c2e0fe71c4f03e6429f09d0dc42ea934ddc2d67458853e7751e01cd",
+      "template_sha256": "024488956f2b422d01954361c98ab92eeb47f5630c11714bd9bda9fe84da1ea4",
+      "base_commit": "89310b8f75b66e22fd6e7a39292b4d08880f3a14",
+      "snapshot_manifest_sha256": "23d3be29cf4ba18308a6db7658382cdb9d20184d556646d7d854675531f92c2f",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/more-itertools",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-04-fresh-B-final-4",
+      "task_id": "CS-04",
+      "variant": "final",
+      "config": "config-B",
+      "repeat": 4,
+      "workspace": "/home/user/fresh_ws/CS-04-fresh-B-final-4",
+      "instruction_sha256": "9bce0d5f01ba9d95161a7f3bcedb06cd2d8c2b0e5adca1045043785078341df2",
+      "template_sha256": "024488956f2b422d01954361c98ab92eeb47f5630c11714bd9bda9fe84da1ea4",
+      "base_commit": "89310b8f75b66e22fd6e7a39292b4d08880f3a14",
+      "snapshot_manifest_sha256": "23d3be29cf4ba18308a6db7658382cdb9d20184d556646d7d854675531f92c2f",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/more-itertools",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-04-fresh-B-final-5",
+      "task_id": "CS-04",
+      "variant": "final",
+      "config": "config-B",
+      "repeat": 5,
+      "workspace": "/home/user/fresh_ws/CS-04-fresh-B-final-5",
+      "instruction_sha256": "517969456184aef8d2d40322ff75c12b48cc1e4e8d16768f598d65910f0b306e",
+      "template_sha256": "024488956f2b422d01954361c98ab92eeb47f5630c11714bd9bda9fe84da1ea4",
+      "base_commit": "89310b8f75b66e22fd6e7a39292b4d08880f3a14",
+      "snapshot_manifest_sha256": "23d3be29cf4ba18308a6db7658382cdb9d20184d556646d7d854675531f92c2f",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/more-itertools",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-04-fresh-B-u1-1",
+      "task_id": "CS-04",
+      "variant": "u1",
+      "config": "config-B",
+      "repeat": 1,
+      "workspace": "/home/user/fresh_ws/CS-04-fresh-B-u1-1",
+      "instruction_sha256": "ad270df1a1228490fc68f98d873200d5b766d7e5878560bfcca425f3e6bb3b49",
+      "template_sha256": "96d87ce0c411320b6e366c5e223ef94f1a9f145d12d93cabb997702f64d3860a",
+      "base_commit": "89310b8f75b66e22fd6e7a39292b4d08880f3a14",
+      "snapshot_manifest_sha256": "23d3be29cf4ba18308a6db7658382cdb9d20184d556646d7d854675531f92c2f",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/more-itertools",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-04-fresh-B-u1-2",
+      "task_id": "CS-04",
+      "variant": "u1",
+      "config": "config-B",
+      "repeat": 2,
+      "workspace": "/home/user/fresh_ws/CS-04-fresh-B-u1-2",
+      "instruction_sha256": "dc9280382227d99ad940100b01e6e06a1c12320ffafbe10b7e6904c49ce9ad77",
+      "template_sha256": "96d87ce0c411320b6e366c5e223ef94f1a9f145d12d93cabb997702f64d3860a",
+      "base_commit": "89310b8f75b66e22fd6e7a39292b4d08880f3a14",
+      "snapshot_manifest_sha256": "23d3be29cf4ba18308a6db7658382cdb9d20184d556646d7d854675531f92c2f",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/more-itertools",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-04-fresh-B-u1-3",
+      "task_id": "CS-04",
+      "variant": "u1",
+      "config": "config-B",
+      "repeat": 3,
+      "workspace": "/home/user/fresh_ws/CS-04-fresh-B-u1-3",
+      "instruction_sha256": "692df6413adfca205cfb6d03d31ed6a208ff27c4ad8abf591bdfdf7ae10cfb82",
+      "template_sha256": "96d87ce0c411320b6e366c5e223ef94f1a9f145d12d93cabb997702f64d3860a",
+      "base_commit": "89310b8f75b66e22fd6e7a39292b4d08880f3a14",
+      "snapshot_manifest_sha256": "23d3be29cf4ba18308a6db7658382cdb9d20184d556646d7d854675531f92c2f",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/more-itertools",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-04-fresh-B-u1-4",
+      "task_id": "CS-04",
+      "variant": "u1",
+      "config": "config-B",
+      "repeat": 4,
+      "workspace": "/home/user/fresh_ws/CS-04-fresh-B-u1-4",
+      "instruction_sha256": "be8be559aef224c6c424b2983a4370c70269db0376c7c6ec494475a85af3c2bc",
+      "template_sha256": "96d87ce0c411320b6e366c5e223ef94f1a9f145d12d93cabb997702f64d3860a",
+      "base_commit": "89310b8f75b66e22fd6e7a39292b4d08880f3a14",
+      "snapshot_manifest_sha256": "23d3be29cf4ba18308a6db7658382cdb9d20184d556646d7d854675531f92c2f",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/more-itertools",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "attempt_id": "CS-04-fresh-B-u1-5",
+      "task_id": "CS-04",
+      "variant": "u1",
+      "config": "config-B",
+      "repeat": 5,
+      "workspace": "/home/user/fresh_ws/CS-04-fresh-B-u1-5",
+      "instruction_sha256": "50af9695ce1e84a266569c2791fb9a7d31bfa6c61e1e787ae2d6fe7d6ce4f3e5",
+      "template_sha256": "96d87ce0c411320b6e366c5e223ef94f1a9f145d12d93cabb997702f64d3860a",
+      "base_commit": "89310b8f75b66e22fd6e7a39292b4d08880f3a14",
+      "snapshot_manifest_sha256": "23d3be29cf4ba18308a6db7658382cdb9d20184d556646d7d854675531f92c2f",
+      "wrapper_image": "tc-env:801a26fad4c5e101",
+      "wrapper_smoke": "passed",
+      "path_substitutions": [
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/more-itertools",
+          "to": "repo",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/run_tests.sh",
+          "to": "run_tests.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04/run_python.sh",
+          "to": "run_python.sh",
+          "count": 1
+        },
+        {
+          "turn": "U1",
+          "from": "/home/user/cs_workspaces/CS-04",
+          "to": ".",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

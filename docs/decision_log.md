@@ -1656,3 +1656,25 @@ now registered in a sidecar, `tasks/<id>/verifiers_extra.json`:
 
 No run used the modified files. The frozen pilot regenerates identically, and 414
 tests pass.
+
+### D56. fresh-v1 instructions fixed before the first attempt
+The 80 attempt workspaces of stratum `fresh-v1` (protocol §15.4, §16.2) were built at
+2026-11-21T08:55-09:05Z under `/home/user/fresh_ws/`, outside the repository, with
+`scripts/make_agent_workspace.py --role fresh`: 4 families, 2 variants (`u1` and
+`final`), 2 configurations and k = 5. Each workspace holds:
+* a fresh git copy of the base snapshot;
+* the instruction;
+* sandbox wrappers, each smoke-tested in Docker (80 of 80 passed);
+* a manifest recording the old workspace paths substituted in U1 and U2, with their
+  counts.
+
+Each attempt's instruction is one of 8 templates (family by variant), with the
+attempt's workspace path inserted. `data/fresh/fresh-v1/instructions.json` lists every
+template, its sha256, and each attempt's instruction sha256, configuration label and
+base. Its sha256 `1996bbfee67675e42b8c41fafb6d1b5ce79f6b9d664afa1b36e8001e8a4cecae` is logged here at 2026-11-21T08:57:32Z, before any attempt was started.
+Configuration A is the build session's default agent model, and configuration B the
+smallest model tier the agent tool offers. Their identifiers stay in the private run
+records. Attempts run as subagents of the build session. Their shell starts in the
+study repository, so the instructions and the fresh-attempt audit (§16.2) require
+absolute paths inside the workspace, and the audit excludes any attempt that reads
+outside it.
