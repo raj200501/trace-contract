@@ -1600,3 +1600,16 @@ is harmless. The scout's records are kept outside the repository.
 These rules were written after the scout had seen feasibility, but before any build,
 verifier or grading of a natural task. They can raise the yield; they cannot select on
 outcomes.
+
+### D54. Reliability re-grade under harness 0.3.5
+Run `pilot-v0.3.5-regrade` re-graded all 240 pairs of `pilot-v0.3.3` under
+`tc-harness/0.3.5`, with three repeats per pair. It ran from 2026-11-21T07:21:53Z to
+08:18:38Z, at code revision `a0542bb`, as an automated pilot (`--pilot`), from a clean
+working tree on an otherwise quiet host. It agrees with `pilot-v0.3.3` on all 240 pairs,
+in reward and in exact outcome (112 pass, 128 task failure;
+`compare_pilot-v0.3.3.json`). No pair's repeats disagreed, so there is no unresolved
+outcome. Under §15.3 this is a reliability run, not a new pilot result. Its analysis uses
+the new reporting rules (§16.6), because it was graded with harness 0.3.4 or later.
+
+**Correction to D52.** D52 says that a changed file needs "a passed or explained"
+first-edit or base-read item. The code counts only passed items of checks b and c.

@@ -1,0 +1,501 @@
+{
+  "code_revision": "a0542bb9e889c829fc2208f0143dbf8523ffda91",
+  "conditions": [
+    "initial_plain",
+    "initial_audited",
+    "full_plain",
+    "full_audited",
+    "llm_freeform",
+    "repo_tests"
+  ],
+  "finished_at": "2026-11-21T08:18:38+00:00",
+  "invocations": [
+    {
+      "at": "2026-11-21T07:21:53+00:00",
+      "code_revision": "a0542bb9e889c829fc2208f0143dbf8523ffda91",
+      "pilot": true,
+      "tasks": [
+        "CS-01",
+        "CS-02",
+        "CS-03",
+        "CS-04"
+      ]
+    }
+  ],
+  "limits": {
+    "cpus": 2.0,
+    "memory": "4g",
+    "pids": 512,
+    "tmp_size": "512m",
+    "wall_s": 900.0,
+    "work_size": "1g"
+  },
+  "pilot": true,
+  "repeats": 3,
+  "run_id": "pilot-v0.3.5-regrade",
+  "split": "eval",
+  "started_at": "2026-11-21T07:21:53+00:00",
+  "tasks": [
+    {
+      "acceptance_gate": {
+        "accepted": false,
+        "passed": false,
+        "provenance_eligibility": "pending_review",
+        "reasons": [
+          "provenance: eligibility is 'pending_review'; a reviewer must find the source eligible",
+          "contract reference: needs_human_review: reference requirement R-keep-meaningful (no human review)",
+          "contract reference: needs_human_review: reference requirement R-opt-in (no human review)",
+          "contract reference: needs_human_review: reference requirement R-default-unchanged (no human review)",
+          "contract reference: needs_human_review: reference requirement R-custom-format-unchanged (no human review)",
+          "contract initial_only: needs_human_review: inferred R5 (no human review)",
+          "contract initial_only: unresolved: R6 must be resolved or removed",
+          "contract initial_only: unresolved: R7 must be resolved or removed",
+          "contract full_session: unresolved: R7 must be resolved or removed",
+          "contract full_session: needs_human_review: inferred R8 (no human review)",
+          "contract full_session: needs_human_review: inferred R9 (no human review)"
+        ],
+        "refused": false,
+        "status": "pending_review",
+        "task_id": "CS-01"
+      },
+      "candidates": {
+        "CS-01-eval-alt-1": {
+          "origin": "valid_alternative",
+          "patch_sha256": "4c00829cc66e64d1a266b21f4e313bb5980238554e290eb50f4e3f4727da1deb"
+        },
+        "CS-01-eval-alt-2": {
+          "origin": "valid_alternative",
+          "patch_sha256": "e8f061c53745769b65b7e5d7af1aa695f632c29ec17a3724a12d43b76d12ed4c"
+        },
+        "CS-01-eval-nm-1": {
+          "origin": "constructed_near_miss",
+          "patch_sha256": "6df89bce59cc109e05016687864d44b32e44bfa0aad6355e7c2912fbbc6e609c"
+        },
+        "CS-01-eval-nm-2": {
+          "origin": "constructed_near_miss",
+          "patch_sha256": "96852e77cd7bba2318eaf26e52b3f7c38c274722bccd65378db560ae64450ed9"
+        },
+        "CS-01-eval-nm-3": {
+          "origin": "constructed_near_miss",
+          "patch_sha256": "5432e970d7101c1cc84183c7b65b6c1cbc1db7218943f1a47613ef80d5c317ff"
+        },
+        "CS-01-eval-nm-4": {
+          "origin": "constructed_near_miss",
+          "patch_sha256": "aa3a574f27aafd5957ff03918f78130206f5a8b84d20a385c9ef318fbd56fc4c"
+        },
+        "CS-01-eval-nm-5": {
+          "origin": "constructed_near_miss",
+          "patch_sha256": "d3fc89b92557f6dd60c9df52d5547464b37ad777b26d815de644d7e432c70d4e"
+        },
+        "CS-01-noop-eval": {
+          "origin": "noop",
+          "patch_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "CS-01-pre-correction": {
+          "origin": "observed_pre_correction",
+          "patch_sha256": "d0d74c86e5a29202635fe9f76217794ba8c0e9a3c3d316e8fd1e2b7bca37bf0e"
+        },
+        "CS-01-reference": {
+          "origin": "reference",
+          "patch_sha256": "2f917455ac18afcdb63b6015fbec947fb1fb30cd044031e291ca170fa3da4465"
+        }
+      },
+      "family_id": "CS-01",
+      "image": "tc-env:0b1591bd588d585e",
+      "image_id": "sha256:d6a5a665cc60790d839560fb6792d81401f1274d0c2be3ba0cab0479054945aa",
+      "snapshot_manifest_sha256": "0e87b6c1b51f5c87ce008d9a1145a9a38543fc92299a356f587a72ed8a229179",
+      "task_id": "CS-01",
+      "verifiers": {
+        "full_audited": {
+          "checks_sha256": "663d06fb52efcb90a1685dcfa35bb024eb809f3fcc8c95a4796919a71633baa8",
+          "condition": "full_audited",
+          "content_sha256": "490bcf4e6191152e9c33097eb8a0f54452c0dc129136980a685169807ccf05c1",
+          "n_checks": 14,
+          "version": 1
+        },
+        "full_plain": {
+          "checks_sha256": "663d06fb52efcb90a1685dcfa35bb024eb809f3fcc8c95a4796919a71633baa8",
+          "condition": "full_plain",
+          "content_sha256": "490bcf4e6191152e9c33097eb8a0f54452c0dc129136980a685169807ccf05c1",
+          "n_checks": 14,
+          "version": 1
+        },
+        "initial_audited": {
+          "checks_sha256": "73904c2858fa72e9da5a8df40cdbfe92eba1b5a80eb950747ca547d268088926",
+          "condition": "initial_audited",
+          "content_sha256": "b92ec8804226c4d465fdb035aa966e3b8c2ff481d2c1c4e29463896ccdefe895",
+          "n_checks": 14,
+          "version": 1
+        },
+        "initial_plain": {
+          "checks_sha256": "73904c2858fa72e9da5a8df40cdbfe92eba1b5a80eb950747ca547d268088926",
+          "condition": "initial_plain",
+          "content_sha256": "d61532ca2e51ff1f1285c0745d0139e5db42a136413b0bb038efa726c5f13dde",
+          "n_checks": 14,
+          "version": 1
+        },
+        "llm_freeform": {
+          "checks_sha256": "5e67ad6486c0f76e64526d5c654c0f2650ed5c79dda9e12c64b638e2679c0291",
+          "condition": "llm_freeform",
+          "content_sha256": "3911f5e5059502cf52863f348f4985e6703ea464b59fdfc4a6f028feeb1fa982",
+          "n_checks": 14,
+          "version": 1
+        },
+        "repo_tests": {
+          "checks_sha256": "f7768b9e71dc08b8c37309734f46708606c85acbecbcdb00a2a397f8efb36569",
+          "condition": "repo_tests",
+          "content_sha256": "af477e8e205e8abc16cee5b9f558bb3bd70dc6f90fdb5d7360d2e338e7106c39",
+          "n_checks": 737,
+          "version": 1
+        }
+      }
+    },
+    {
+      "acceptance_gate": {
+        "accepted": false,
+        "passed": false,
+        "provenance_eligibility": "pending_review",
+        "reasons": [
+          "provenance: eligibility is 'pending_review'; a reviewer must find the source eligible",
+          "contract reference: needs_human_review: reference requirement R-atomic (no human review)",
+          "contract reference: needs_human_review: reference requirement R-new-content (no human review)",
+          "contract reference: needs_human_review: reference requirement R-read-after-write (no human review)",
+          "contract reference: needs_human_review: reference requirement R-bytes-unchanged (no human review)",
+          "contract reference: needs_human_review: reference requirement R-no-temp-files (no human review)",
+          "contract reference: needs_human_review: reference requirement R-original-intact (no human review)",
+          "contract full_session: needs_human_review: inferred R9 (no human review)",
+          "contract full_session: needs_human_review: inferred R10 (no human review)",
+          "contract full_session: unresolved: R11 must be resolved or removed",
+          "contract initial_only: needs_human_review: inferred R3 (no human review)",
+          "contract initial_only: needs_human_review: inferred R4 (no human review)",
+          "contract initial_only: needs_human_review: inferred R5 (no human review)",
+          "contract initial_only: needs_human_review: inferred R6 (no human review)",
+          "contract initial_only: needs_human_review: inferred R7 (no human review)",
+          "contract initial_only: needs_human_review: inferred R8 (no human review)"
+        ],
+        "refused": false,
+        "status": "pending_review",
+        "task_id": "CS-02"
+      },
+      "candidates": {
+        "CS-02-eval-alt-1": {
+          "origin": "valid_alternative",
+          "patch_sha256": "5184e84a5f403ec13716c2fb3d612dec505f0ef90ad712073dbeff8d9a438f16"
+        },
+        "CS-02-eval-alt-2": {
+          "origin": "valid_alternative",
+          "patch_sha256": "0b420b1b0dd51c717a0fe3cb374515217f15698e686d87a0be806b5b545339aa"
+        },
+        "CS-02-eval-nm-1": {
+          "origin": "constructed_near_miss",
+          "patch_sha256": "6aed12b94d07e0dddbe69565cef8e93e99946fb1aa319f9d3700eb4dfa937693"
+        },
+        "CS-02-eval-nm-2": {
+          "origin": "constructed_near_miss",
+          "patch_sha256": "78ef0b4bf25b9a6a7c420dcaede567dfcaefe2692f401fe16dc8824fdda0b601"
+        },
+        "CS-02-eval-nm-3": {
+          "origin": "constructed_near_miss",
+          "patch_sha256": "edb6321535c260fc94274835043d6133cb3acd9dafa790ddbc5020c06103d02e"
+        },
+        "CS-02-eval-nm-4": {
+          "origin": "constructed_near_miss",
+          "patch_sha256": "7e459bb3ea89b9ee2e6df775cc1ace5ddca90e6f44515cf24f3e34e28c02b997"
+        },
+        "CS-02-eval-nm-5": {
+          "origin": "constructed_near_miss",
+          "patch_sha256": "5f1b11e812dcec1568255615bf49b41a33fce8760e4cecce5988b8b9ffd8071e"
+        },
+        "CS-02-noop-eval": {
+          "origin": "noop",
+          "patch_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "CS-02-pre-correction": {
+          "origin": "observed_pre_correction",
+          "patch_sha256": "13f070f6e873fbab7bcde2bd7aebc5df6b4a85037729672dc8c5e63e084a778d"
+        },
+        "CS-02-reference": {
+          "origin": "reference",
+          "patch_sha256": "18317acd6aa9e4379bf3e7f6a2dca2299bce1fab255fa58eaf840da6aeaa93ba"
+        }
+      },
+      "family_id": "CS-02",
+      "image": "tc-env:801a26fad4c5e101",
+      "image_id": "sha256:035acd7634f10312c8ef4d6e206cfe978165ebd11bcf5ab9d17e097d794edc21",
+      "snapshot_manifest_sha256": "8f30c35e16795f234c71e7b6945a6355ca0b4d139feda3b36642ea01e3b8d64b",
+      "task_id": "CS-02",
+      "verifiers": {
+        "full_audited": {
+          "checks_sha256": "e9d7c4757acdb42a43719f8f6e7fb3d9112d65aa106c082cbd948c59ea21244c",
+          "condition": "full_audited",
+          "content_sha256": "da14dc888713c66f4f908a07a8a1e295e3ba36705b6cb670221a5ae89505cd7c",
+          "n_checks": 13,
+          "version": 1
+        },
+        "full_plain": {
+          "checks_sha256": "e9d7c4757acdb42a43719f8f6e7fb3d9112d65aa106c082cbd948c59ea21244c",
+          "condition": "full_plain",
+          "content_sha256": "306e08df3c1e297d8eeeca45999d194f97960fe276c9db1e6b65558b0ff1b633",
+          "n_checks": 13,
+          "version": 1
+        },
+        "initial_audited": {
+          "checks_sha256": "2bb8c5bd7ad79626e70d0e437096cfd1fcfb97faeabf0185fe249dde9aa4602b",
+          "condition": "initial_audited",
+          "content_sha256": "0692c34269f91151b97caafb58894e2a9d7d0c56d6a539c07da3b6df6f91a2b3",
+          "n_checks": 14,
+          "version": 1
+        },
+        "initial_plain": {
+          "checks_sha256": "2bb8c5bd7ad79626e70d0e437096cfd1fcfb97faeabf0185fe249dde9aa4602b",
+          "condition": "initial_plain",
+          "content_sha256": "0692c34269f91151b97caafb58894e2a9d7d0c56d6a539c07da3b6df6f91a2b3",
+          "n_checks": 14,
+          "version": 1
+        },
+        "llm_freeform": {
+          "checks_sha256": "44449bca5427e380a3d2ff4afc9f12b859751befc90748bd260b7203ea1897b3",
+          "condition": "llm_freeform",
+          "content_sha256": "ab50e0f5b60e25ee58aaf098650d1b958e3d356d79869a4ec6f77ba241e542e9",
+          "n_checks": 13,
+          "version": 1
+        },
+        "repo_tests": {
+          "checks_sha256": "aeb0543cde8d7cd45dabdde0794e48d8c469dd22df6555ea669b0c288bf1fe44",
+          "condition": "repo_tests",
+          "content_sha256": "4f2bb625af70507913737dd3f06007482b548d720870d9f2cf812f0c366a9b24",
+          "n_checks": 239,
+          "version": 1
+        }
+      }
+    },
+    {
+      "acceptance_gate": {
+        "accepted": false,
+        "passed": false,
+        "provenance_eligibility": "pending_review",
+        "reasons": [
+          "provenance: eligibility is 'pending_review'; a reviewer must find the source eligible",
+          "contract reference: needs_human_review: reference requirement R-acronym (no human review)",
+          "contract reference: needs_human_review: reference requirement R-all-caps-input (no human review)",
+          "contract reference: needs_human_review: reference requirement R-humanize-unchanged (no human review)",
+          "contract reference: needs_human_review: reference requirement R-underscore-unchanged (no human review)",
+          "contract initial_only: needs_human_review: inferred R4 (no human review)",
+          "contract initial_only: needs_human_review: inferred R5 (no human review)",
+          "contract initial_only: unresolved: R6 must be resolved or removed",
+          "contract initial_only: unresolved: R7 must be resolved or removed",
+          "contract full_session: needs_human_review: inferred R2 (no human review)",
+          "contract full_session: unresolved: R3 must be resolved or removed"
+        ],
+        "refused": false,
+        "status": "pending_review",
+        "task_id": "CS-03"
+      },
+      "candidates": {
+        "CS-03-eval-alt-1": {
+          "origin": "valid_alternative",
+          "patch_sha256": "2c0f4ea5440635c1512e2d37c83d37a8ea2548f564e9965261a462d4ca540136"
+        },
+        "CS-03-eval-alt-2": {
+          "origin": "valid_alternative",
+          "patch_sha256": "d5572b424c9b861ff6ed24206a2487560ae824a94219c912694be5a6dc081b6c"
+        },
+        "CS-03-eval-nm-1": {
+          "origin": "constructed_near_miss",
+          "patch_sha256": "0b2190da40956dc285e73ad5d1f1a04fcf5a40394dedcc9cabcd73fcb421f490"
+        },
+        "CS-03-eval-nm-2": {
+          "origin": "constructed_near_miss",
+          "patch_sha256": "44eb24a5d1b27a84f24fa26f522a9acc0cebcd0f6c50036f82dafe875ba58f3c"
+        },
+        "CS-03-eval-nm-3": {
+          "origin": "constructed_near_miss",
+          "patch_sha256": "3971b88d1beb222ee6a27121b61228267246f3132e11be32458873ca068f50b5"
+        },
+        "CS-03-eval-nm-4": {
+          "origin": "constructed_near_miss",
+          "patch_sha256": "deb6030d3ec3809d42148366b9c8d0996b37c6f018488928626b97bba7952060"
+        },
+        "CS-03-eval-nm-5": {
+          "origin": "constructed_near_miss",
+          "patch_sha256": "348926b200896a515df34fe14b8058e70d1462f2086a975b825c722558aec722"
+        },
+        "CS-03-noop-eval": {
+          "origin": "noop",
+          "patch_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "CS-03-pre-correction": {
+          "origin": "observed_pre_correction",
+          "patch_sha256": "77b76ab362c0dd432caf1ba87bc500edf741fbb8a6e738ac6d84baf668f752a4"
+        },
+        "CS-03-reference": {
+          "origin": "reference",
+          "patch_sha256": "24d6f7d5057674e4e466d326420b4f2215d01a47c63af799928f7fed069b3d13"
+        }
+      },
+      "family_id": "CS-03",
+      "image": "tc-env:801a26fad4c5e101",
+      "image_id": "sha256:035acd7634f10312c8ef4d6e206cfe978165ebd11bcf5ab9d17e097d794edc21",
+      "snapshot_manifest_sha256": "7e61aca7b70ce1b5b5ba314144454dd0cbbfc26619e0ac5ca17e2ae03e29d80e",
+      "task_id": "CS-03",
+      "verifiers": {
+        "full_audited": {
+          "checks_sha256": "e8baacd654e3a6501210194cab69f932ef693e156586b91379610c1a09de9c1f",
+          "condition": "full_audited",
+          "content_sha256": "0dff1fb9382ce7f34a11715b0dfe662b9b3a3b15b50547837ea093c046a4f0d2",
+          "n_checks": 14,
+          "version": 1
+        },
+        "full_plain": {
+          "checks_sha256": "c5067d4a788ec370f7a400e121fed3e24391fc9c2e41f9e27faa33381477c92c",
+          "condition": "full_plain",
+          "content_sha256": "21f7af73e24351e8c26f09fa5f17427d90baf849ed2cf900d5052934dcd8522e",
+          "n_checks": 12,
+          "version": 1
+        },
+        "initial_audited": {
+          "checks_sha256": "3f4da76f501f5c75a830e392c25221c6355d80a9f985c73f8e83698ee432bfbe",
+          "condition": "initial_audited",
+          "content_sha256": "e57368e3106c2151dabecc17ecbcf92070cae0dccc00dcdb69c6343edc075d40",
+          "n_checks": 15,
+          "version": 1
+        },
+        "initial_plain": {
+          "checks_sha256": "f881f78c849229559900cf5c6041e89b32c4a0c72684a176c6c6be6c40a8033a",
+          "condition": "initial_plain",
+          "content_sha256": "8931e33066a1999166b43ae5631d87eabacf2f021dc1425ebc961a68c7425d6f",
+          "n_checks": 14,
+          "version": 1
+        },
+        "llm_freeform": {
+          "checks_sha256": "3d97175bce1cd1494a2391b70a55b32ac99688474d02975d76ab800b0c22578d",
+          "condition": "llm_freeform",
+          "content_sha256": "9dd525bd888fe357f9c01df53c0cf6859b1bdf98a9fe709399d8264490307b2c",
+          "n_checks": 13,
+          "version": 1
+        },
+        "repo_tests": {
+          "checks_sha256": "e3af208226302ed4f0ac89e4b0a2de4b29a1549a8085d726cd06d47a8d440dc0",
+          "condition": "repo_tests",
+          "content_sha256": "f7bca4feac5cca75cccdd7835c75f7df83b948a3f880c7ccef1237a7d266962f",
+          "n_checks": 466,
+          "version": 1
+        }
+      }
+    },
+    {
+      "acceptance_gate": {
+        "accepted": false,
+        "passed": false,
+        "provenance_eligibility": "pending_review",
+        "reasons": [
+          "provenance: eligibility is 'pending_review'; a reviewer must find the source eligible",
+          "contract reference: needs_human_review: reference requirement R-step (no human review)",
+          "contract reference: needs_human_review: reference requirement R-negative-step (no human review)",
+          "contract reference: needs_human_review: reference requirement R-zero-step (no human review)",
+          "contract reference: needs_human_review: reference requirement R-positional-ordering (no human review)",
+          "contract reference: needs_human_review: reference requirement R-lazy (no human review)",
+          "contract reference: needs_human_review: inferred R-default-unchanged (no human review)",
+          "contract initial_only: needs_human_review: inferred R3 (no human review)",
+          "contract initial_only: unresolved: R5 must be resolved or removed",
+          "contract full_session: needs_human_review: inferred R6 (no human review)",
+          "contract full_session: needs_human_review: inferred R7 (no human review)"
+        ],
+        "refused": false,
+        "status": "pending_review",
+        "task_id": "CS-04"
+      },
+      "candidates": {
+        "CS-04-eval-alt-1": {
+          "origin": "valid_alternative",
+          "patch_sha256": "7bf06fb378cc72831128f5aa772aedc2bc6552a52fb13bb96af9482807ebb926"
+        },
+        "CS-04-eval-alt-2": {
+          "origin": "valid_alternative",
+          "patch_sha256": "0771e7d35f9ec281ef8d066398a1a88fa583e275c6c541d8a143a4be461c993c"
+        },
+        "CS-04-eval-nm-1": {
+          "origin": "constructed_near_miss",
+          "patch_sha256": "b3d742635d8fac939ac609e1e97c4c2bce3360cdd91187ef3a3b0a8972d3880a"
+        },
+        "CS-04-eval-nm-2": {
+          "origin": "constructed_near_miss",
+          "patch_sha256": "f7eeb8fb7df409ca4af681df6e10485df39aad6edea305414eaa99807781ca0d"
+        },
+        "CS-04-eval-nm-3": {
+          "origin": "constructed_near_miss",
+          "patch_sha256": "dbd60f0b165ed23afd0119e904aef68d98638e707cfc651deaef5e601f7a4b0d"
+        },
+        "CS-04-eval-nm-4": {
+          "origin": "constructed_near_miss",
+          "patch_sha256": "bc3bc5f6a3dc92ae59e77bafebf29df2fd5ae7e7dc982e96a367006a9af4ee46"
+        },
+        "CS-04-eval-nm-5": {
+          "origin": "constructed_near_miss",
+          "patch_sha256": "6f3fea0e1a6061478f2dab6150a4533cea06308291eb8c876e2a6a116fda28cf"
+        },
+        "CS-04-noop-eval": {
+          "origin": "noop",
+          "patch_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "CS-04-pre-correction": {
+          "origin": "observed_pre_correction",
+          "patch_sha256": "c3b478ab4d71cdf82312ebc88d879e3a042acffb4bd0874e39312c87d1fa88d4"
+        },
+        "CS-04-reference": {
+          "origin": "reference",
+          "patch_sha256": "7b5c874389eff6d0c4f6ce3d1d3655bbc427ac5577f84f4e645fb855a286ef96"
+        }
+      },
+      "family_id": "CS-04",
+      "image": "tc-env:801a26fad4c5e101",
+      "image_id": "sha256:035acd7634f10312c8ef4d6e206cfe978165ebd11bcf5ab9d17e097d794edc21",
+      "snapshot_manifest_sha256": "23d3be29cf4ba18308a6db7658382cdb9d20184d556646d7d854675531f92c2f",
+      "task_id": "CS-04",
+      "verifiers": {
+        "full_audited": {
+          "checks_sha256": "d548824b4ae744a75e36b01ad9b311ecb42cf2a318e0e4677c661360f95b7403",
+          "condition": "full_audited",
+          "content_sha256": "0b26cede9d6ba4638baacb2c3bd3400e911efa762e533d6448f781a3e6dc77c9",
+          "n_checks": 13,
+          "version": 1
+        },
+        "full_plain": {
+          "checks_sha256": "d548824b4ae744a75e36b01ad9b311ecb42cf2a318e0e4677c661360f95b7403",
+          "condition": "full_plain",
+          "content_sha256": "0b26cede9d6ba4638baacb2c3bd3400e911efa762e533d6448f781a3e6dc77c9",
+          "n_checks": 13,
+          "version": 1
+        },
+        "initial_audited": {
+          "checks_sha256": "16d30dc5b5ea5b20efd4efc91b272724fc2a778154af154b6a965147e24e7ea2",
+          "condition": "initial_audited",
+          "content_sha256": "200e5e425c85b32f6affe4071dd83f2915dee71dc1469443157e54052721c8d1",
+          "n_checks": 12,
+          "version": 1
+        },
+        "initial_plain": {
+          "checks_sha256": "16d30dc5b5ea5b20efd4efc91b272724fc2a778154af154b6a965147e24e7ea2",
+          "condition": "initial_plain",
+          "content_sha256": "200e5e425c85b32f6affe4071dd83f2915dee71dc1469443157e54052721c8d1",
+          "n_checks": 12,
+          "version": 1
+        },
+        "llm_freeform": {
+          "checks_sha256": "a74646dfab45c296292bd464c00a46ce12618349a9e25f56ab6eb0fe69a2f05f",
+          "condition": "llm_freeform",
+          "content_sha256": "45b77c731e8ecca692309f8c4f7377a3a3271cbeb1a36d9c527207edd8cb9c63",
+          "n_checks": 14,
+          "version": 1
+        },
+        "repo_tests": {
+          "checks_sha256": "b33939d63beda1ba9875815d81c274f43b95bb9dcc32f470ae81abbc920eb8cc",
+          "condition": "repo_tests",
+          "content_sha256": "41002085ee793a6cd77c9df354a3a0abc1b513fa48da58b8b0d8d82b0f3c38fa",
+          "n_checks": 777,
+          "version": 2
+        }
+      }
+    }
+  ]
+}
