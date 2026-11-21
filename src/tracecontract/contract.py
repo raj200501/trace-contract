@@ -8,6 +8,8 @@ module never treats a proposal as ground truth. It provides:
 * :func:`align_quote` - turn a proposed quote into an exact, checkable span;
 * :func:`requirements_from_proposals` - validate proposed requirements against
   the session and build :class:`Requirement` objects (rejecting unsupported ones);
+* :func:`check_proposals` - the same with the natural PR-review rules, as ``tracecontract
+  make-contract`` applies it and ``check-proposals`` repeats it without writing;
 * :func:`derive_initial_only` - the information-loss baseline: keep only what the
   first user request supports;
 * :func:`validate_contract` - structural / temporal / evidence checks;
@@ -24,7 +26,10 @@ module never treats a proposal as ground truth. It provides:
 
 from __future__ import annotations
 
+import json
+import os
 import re
+import subprocess
 import unicodedata
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -35,6 +40,7 @@ from .schemas import (
     Eligibility,
     EventKind,
     EvidenceSpan,
+    Population,
     ProvenanceRecord,
     Requirement,
     RequirementKind,
@@ -134,7 +140,15 @@ class ProposalOutcome:
     warnings: list[str] = field(default_factory=list)
 
 
-def requirements_from_proposals(session: Session, proposals: Iterable[dict[str, Any]], *, proposer: str) -> ProposalOutcome:
+# Why a natural PR-review proposal is rejected when ``introduced_at`` names no user turn (``user_turns_only``). One
+# reason for an unknown event and for an event that is not a user turn, so that check-proposals, which sees only the
+# rendered events, rejects such a proposal as make-contract does on the whole session.
+NOT_A_USER_TURN = ("introduced_at is not a user turn of this session (a natural PR-review requirement is introduced at "
+                   "the linked issue, the review comment or one of the reviewer's replies)")
+
+
+def requirements_from_proposals(session: Session, proposals: Iterable[dict[str, Any]], *, proposer: str,
+                                user_turns_only: bool = False) -> ProposalOutcome:
     """Validate proposed requirements (e.g. recorded model output) against a session.
 
     Each proposal is a dict with keys ``req_id, statement, kind, status,
@@ -142,11 +156,16 @@ def requirements_from_proposals(session: Session, proposals: Iterable[dict[str, 
     ``rationale, supersedes, conflicts_with, observable, scored, subjective``.
     Proposals whose evidence cannot be aligned to user-prompt text are rejected
     (explicit) or downgraded to ``inferred`` only if they carry a rationale.
+
+    ``user_turns_only`` (natural PR-review tasks, :func:`check_proposals`): a proposal whose
+    ``introduced_at`` is not a user-prompt event (the issue, the review comment or a reply) is
+    rejected (:data:`NOT_A_USER_TURN`); otherwise any event of the session is accepted there.
     """
     reqs: list[Requirement] = []
     rejected: list[dict[str, Any]] = []
     warnings: list[str] = []
     ids = {e.event_id for e in session.events}
+    user_turns = {e.event_id for e in session.events if e.kind == EventKind.user_prompt}
     seen: set[str] = set()
     for p in proposals:
         p = dict(p)
@@ -163,6 +182,9 @@ def requirements_from_proposals(session: Session, proposals: Iterable[dict[str, 
             rejected.append({"proposal": p, "reason": f"duplicate req_id {rid}"})
             continue
         seen.add(rid)
+        if user_turns_only and p.get("introduced_at") not in user_turns:
+            rejected.append({"proposal": p, "reason": NOT_A_USER_TURN})
+            continue
         if p.get("introduced_at") not in ids:
             rejected.append({"proposal": p, "reason": "introduced_at is not an event of this session"})
             continue
@@ -212,6 +234,39 @@ def requirements_from_proposals(session: Session, proposals: Iterable[dict[str, 
         reqs.append(req)
     reqs = link_supersession(reqs)
     return ProposalOutcome(reqs, rejected, warnings)
+
+
+def correction_event_ids(session: Session) -> list[str]:
+    """A natural PR-review session's correction events: the review comment and the reviewer's later replies
+    (``session.metadata["events"]["correction"]`` and ``["replies"]``, as ``ingest.github_pr.build_session`` records
+    them); empty for any other session."""
+    raw = session.metadata.get("events")
+    ids: dict[str, Any] = raw if isinstance(raw, dict) else {}
+    found = [ids.get("correction"), *(ids.get("replies") or [])]
+    known = {e.event_id for e in session.events}
+    return [e for e in found if isinstance(e, str) and e in known]
+
+
+def check_proposals(session: Session, proposals: Iterable[dict[str, Any]], *, proposer: str,
+                    variant: ContractVariant | None, natural: bool) -> ProposalOutcome:
+    """The proposal check of ``tracecontract make-contract``, which ``check-proposals`` repeats without writing.
+
+    :func:`requirements_from_proposals`, and for a natural PR-review task (``natural``):
+
+    * a proposal whose ``introduced_at`` is not a user turn (the issue, the review comment or a reply)
+      is rejected (:data:`NOT_A_USER_TURN`);
+    * for the ``reference`` variant, a warning when no scored active requirement is introduced at a
+      correction event (:func:`correction_event_ids`), since the reference contract would then not
+      observe the correction (protocol §15.6).
+    """
+    out = requirements_from_proposals(session, proposals, proposer=proposer, user_turns_only=natural)
+    if natural and variant == ContractVariant.reference:
+        corrections = correction_event_ids(session)
+        if not any(r.active and r.scored and r.introduced_at in corrections for r in out.requirements):
+            out.warnings.append("reference: no scored active requirement is introduced at a correction event (the review "
+                                f"comment or a reply: {', '.join(corrections) or 'none in this session'}), so the "
+                                "reference contract does not observe the correction")
+    return out
 
 
 def link_supersession(reqs: list[Requirement]) -> list[Requirement]:
@@ -455,7 +510,10 @@ def task_gate(task_dir: Path, repo_root: Path) -> TaskGate:
     * its base passed the reconstruction check: ``tasks/<id>/reconstruction_check.json`` has
       status ``passed`` and was recorded from the current transcript, base manifest and candidate
       patches (:func:`reconstruction.recorded_check`; protocol v0.8 §16.5). A current record whose
-      check failed refuses the task: its base may already hold the solution.
+      check failed refuses the task: its base may already hold the solution;
+    * a natural PR-review task (:func:`natural_gate_problems`) is refused unless its ``s10.json``
+      records the S10 outcome ``passed``, and its row in the committed index
+      (:data:`NATURAL_INDEX` in the HEAD commit) must say S11 (§16.4).
 
     ``tracecontract accept-task`` sets the status to ``accepted`` only when the gate passes,
     and ``tracecontract evaluate`` runs it again, so a task whose records changed after it
@@ -493,8 +551,94 @@ def task_gate(task_dir: Path, repo_root: Path) -> TaskGate:
             reasons += [f"contract {variant}: {w}" for w in acceptance_gate(load(task_dir / rel, TaskContract), session)[1]]
     rc = recorded_check(task_dir, repo_root)
     (refusals if rc.failed else reasons).extend(f"reconstruction: {p}" for p in rc.problems)
+    if m.population == Population.natural_pr_review:
+        nat_refusals, nat_reasons = natural_gate_problems(task_dir, repo_root, m.task_id)
+        refusals += nat_refusals
+        reasons += nat_reasons
     return TaskGate(task_id=m.task_id, status=m.status, eligibility=eligibility, refusals=refusals,
                     reasons=refusals + reasons)
+
+
+# A natural PR-review task's S10 record, in its task directory (natural_pr.S10_RECORD), and the committed index of
+# the natural PR-review tasks, relative to the repository root (natural_pr.INDEX).
+S10_RECORD = "s10.json"
+NATURAL_INDEX = "data/manifests/natural_tasks_index.json"
+
+
+def committed_text(repo_root: Path, rel: str) -> str | None:
+    """The text of the file ``rel`` (relative to ``repo_root``) as the HEAD commit of the repository at ``repo_root`` holds
+    it (``git show HEAD:./<rel>``); ``None`` when git cannot say (no repository, no commit, or the file is not in it).
+
+    No ``GIT_*`` variable of the caller (a hook's ``GIT_DIR``, for example) redirects the command."""
+    env = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
+    try:
+        p = subprocess.run(["git", "-C", str(repo_root), "show", f"HEAD:./{rel}"], capture_output=True, env=env, timeout=60,
+                           check=False)
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    if p.returncode != 0:
+        return None
+    try:
+        return p.stdout.decode("utf-8")
+    except UnicodeDecodeError:
+        return None
+
+
+def _index_rows(text: str | None) -> dict[str, dict[str, Any]] | None:
+    """The index's rows by task id; ``None`` for no text or a text that is not an index."""
+    try:
+        index = json.loads(text) if text is not None else None
+    except ValueError:
+        return None
+    rows = index.get("tasks") if isinstance(index, dict) else None
+    if not isinstance(rows, list):
+        return None
+    return {r["task_id"]: r for r in rows if isinstance(r, dict) and isinstance(r.get("task_id"), str)}
+
+
+def natural_gate_problems(task_dir: Path, repo_root: Path, task_id: str) -> tuple[list[str], list[str]]:
+    """``(refusals, reasons)`` that :func:`task_gate` adds for a natural PR-review task.
+
+    * Refused unless ``s10.json`` records the S10 outcome ``passed``: a family that was only built,
+      or that S10 rejected, is never evaluated (§15.6, §16.4).
+    * A reason unless the task's row in the committed index is S11: it passes S10 and is within the
+      family cap (§16.4). The committed index is ``data/manifests/natural_tasks_index.json`` as the
+      repository's HEAD commit holds it (:func:`committed_text`), not the file in the working tree,
+      which ``tracecontract natural-index`` rewrites before it is committed.
+    * A reason too when the working tree's index gives the task another S11 value than the committed
+      one: the index was changed and not committed, and the gate follows the committed one.
+    """
+    refusals: list[str] = []
+    reasons: list[str] = []
+    try:
+        s10 = json.loads((task_dir / S10_RECORD).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        refusals.append(f"s10: no readable {S10_RECORD}, so the family has not passed S10 (§15.6, §16.4)")
+    else:
+        outcome = s10.get("outcome") if isinstance(s10, dict) else None
+        if outcome != "passed":
+            refusals.append(f"s10: the S10 outcome recorded in {S10_RECORD} is {outcome!r}, not 'passed'; only a family "
+                            "that passes S10 is built and evaluated (§16.4)")
+    committed = _index_rows(committed_text(repo_root, NATURAL_INDEX))
+    if committed is None:
+        reasons.append(f"index: no readable committed index ({NATURAL_INDEX} in the HEAD commit), so S11 cannot be checked")
+        return refusals, reasons
+    row = committed.get(task_id)
+    if row is None:
+        reasons.append(f"index: {task_id} has no row in the committed index ({NATURAL_INDEX})")
+    elif row.get("s11") is not True:
+        reasons.append(f"index: {task_id} is not S11 in the committed index ({NATURAL_INDEX}); S11 means passing S10 "
+                       "within the family cap (§16.4)")
+    try:
+        working = _index_rows((repo_root / NATURAL_INDEX).read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError):
+        working = None
+    if working is not None:
+        now, then = (working.get(task_id) or {}).get("s11") is True, (row or {}).get("s11") is True
+        if now != then:
+            reasons.append(f"index: the working tree's {NATURAL_INDEX} gives {task_id} s11 {now}, the committed one {then}; "
+                           "commit the index or restore it (the gate follows the committed one)")
+    return refusals, reasons
 
 
 # ---------------------------------------------------------------------------

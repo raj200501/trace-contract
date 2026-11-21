@@ -5,9 +5,12 @@
   ``natural:pr-review`` and ``natural:chat``.
 * A fresh attempt's attempt record on its candidate, checked against the candidate and omitted
   from the JSON while empty.
-* Every record of the four pilot tasks re-serialises byte for byte.
+* The generation record of a contract (``TaskContract.generation``) and of a constructed candidate
+  (``Candidate.generation``), kept when given and omitted from the JSON while empty (§15.6).
+* Every record of the four pilot tasks re-serialises byte for byte, and so does every recorded
+  contract and candidate file: the tasks' own, their strata's and the accepted natural tasks'.
 
-Synthetic records apart from the read-only pass over tasks/CS-0*; not research evidence.
+Synthetic records apart from the read-only passes over tasks/CS-0* and data/natural/tasks; not research evidence.
 """
 
 from __future__ import annotations
@@ -17,8 +20,9 @@ from pathlib import Path
 import pytest
 
 from tracecontract.schemas import (
-    CONFIG_LABEL, NATURAL_ORIGINS, AttemptAudit, AttemptRecord, Candidate, CandidateOrigin, Label, LabelerKind, Population,
-    ProvenanceRecord, Snapshot, Split, TaskContract, TaskManifest, VerifierCondition, VerifierSpec, sha256_text,
+    CONFIG_LABEL, CONSTRUCTED_ORIGINS, NATURAL_ORIGINS, AttemptAudit, AttemptRecord, Candidate, CandidateOrigin, ContractVariant,
+    GenerationRecord, Label, LabelerKind, Population, ProvenanceRecord, Snapshot, Split, TaskContract, TaskManifest,
+    VerifierCondition, VerifierSpec, sha256_text,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -103,3 +107,53 @@ def test_the_pilot_records_reserialise_byte_for_byte():
         assert cls.model_validate_json(raw).model_dump_json(indent=2) + "\n" == raw, f
         n += 1
     assert n >= 130  # 4 tasks: manifests, provenance, snapshots, candidates, contracts and verifier specs
+
+
+GEN = GenerationRecord(generator="config-A", run_id="natural-test/eval-nm-1", prompt_sha256="ab" * 32, created_at=T0,
+                       budget={"started_at": "2026-11-22T09:40:00+00:00", "ended_at": T0, "wall_s": 1200.0, "turns": 30,
+                               "tool_calls": 50, "run_record": "private-runs/natural-test/eval-nm-1.json"})
+
+
+def test_generation_records_of_contracts_and_constructed_candidates():
+    assert CONSTRUCTED_ORIGINS == {CandidateOrigin.dev_attack, CandidateOrigin.valid_alternative,
+                                   CandidateOrigin.constructed_near_miss}
+    assert not CONSTRUCTED_ORIGINS & NATURAL_ORIGINS
+    c = TaskContract(contract_id="NAT-1-reference", task_id="NAT-1", session_id="s", variant=ContractVariant.reference,
+                     requirements=[], created_by="model:config-A:refcontract:v1", created_at=T0)
+    assert "generation" not in c.model_dump_json() and "generation" not in c.model_dump(mode="json")
+    kept = TaskContract.model_validate_json(c.model_copy(update={"generation": GEN}).model_dump_json())
+    assert kept.generation == GEN and kept.model_dump(mode="json")["generation"]["generator"] == "config-A"
+    nm = Candidate(candidate_id="NAT-1-eval-nm-1", task_id="NAT-1", origin=CandidateOrigin.constructed_near_miss, split=Split.eval,
+                   patch=PATCH, patch_sha256=sha256_text(PATCH), produced_by="nearmiss:v1:reference:eval")
+    assert "generation" not in nm.model_dump_json() and "attempt" not in nm.model_dump_json()
+    kept_c = Candidate.model_validate_json(nm.model_copy(update={"generation": GEN}).model_dump_json())
+    assert kept_c.generation == GEN and kept_c.attempt is None
+    # A fresh attempt keeps its attempt record and no generation record; both are omitted only while empty.
+    fresh = _candidate()
+    assert "attempt" in fresh.model_dump(mode="json") and "generation" not in fresh.model_dump(mode="json")
+
+
+def _recorded_contract_and_candidate_files() -> list[tuple[type, Path]]:
+    """Every recorded contract and candidate file: the tasks' own and their strata's, and the natural tasks' (read-only)."""
+    found: list[tuple[type, Path]] = []
+    for td in sorted(ROOT.glob("tasks/*")) + sorted((ROOT / "data" / "natural" / "tasks").glob("NP-*")):
+        found += [(TaskContract, p) for p in sorted(td.glob("contracts/*.json")) if not p.name.startswith("mapping")]
+        found += [(Candidate, p) for p in sorted(td.glob("candidates/*.json"))]
+        found += [(Candidate, p) for p in sorted(td.glob("strata/*/candidates/*.json"))]
+    return found
+
+
+@pytest.mark.skipif(not (ROOT / "tasks" / "CS-01" / "task.json").is_file(), reason="the pilot tasks are not in this checkout")
+def test_every_recorded_contract_and_candidate_reserialises_byte_for_byte():
+    """The generation fields (TaskContract.generation, Candidate.generation) change no recorded file: each re-serialises
+    exactly, and none holds the new key."""
+    files = _recorded_contract_and_candidate_files()
+    for cls, f in files:
+        raw = f.read_text(encoding="utf-8")
+        model = cls.model_validate_json(raw)
+        assert model.model_dump_json(indent=2) + "\n" == raw, f
+        assert model.generation is None, f
+    kinds = {(cls.__name__, "strata" in f.parts) for cls, f in files}
+    assert {("TaskContract", False), ("Candidate", False), ("Candidate", True)} <= kinds
+    assert sum(cls is Candidate and "strata" in f.parts for cls, f in files) >= 80  # the fresh-v1 stratum
+    assert sum(cls is TaskContract for cls, f in files) >= 12  # three variants for each of the four pilot tasks

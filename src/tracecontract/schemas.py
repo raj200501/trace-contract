@@ -280,6 +280,21 @@ class ContractVariant(str, Enum):
     reference = "reference"  # reference contract used for labels (human review required before acceptance)
 
 
+class GenerationRecord(_Model):
+    """The record of the agent run that wrote a generated artifact: a verifier's tests (``VerifierSpec.generation``),
+    a contract's proposals (``TaskContract.generation``) or a constructed candidate (``Candidate.generation``).
+
+    ``verifier.generation_record`` builds a complete one and ``verifier.generation_record_problems`` says what an
+    incomplete one lacks (protocol v0.7 §15.4, §15.6: every generated artifact carries one)."""
+
+    generator: str  # a configuration label (config-A, verifier.generation_record) for a new run; pilot records: "model:..."
+    run_id: str
+    prompt_sha256: str
+    created_at: str
+    budget: dict[str, Any] = Field(default_factory=dict)
+    notes: str = ""
+
+
 class TaskContract(_Model):
     schema_version: str = SCHEMA_VERSION
     contract_id: str
@@ -291,6 +306,17 @@ class TaskContract(_Model):
     created_by: str
     created_at: str
     notes: str = ""
+    # The record of the agent run that proposed the requirements (``make-contract --generation-record``; required for a
+    # natural PR-review task, §15.6). Omitted from the JSON while None, so records written before the field existed
+    # re-serialise byte for byte.
+    generation: GenerationRecord | None = None
+
+    @model_serializer(mode="wrap")
+    def _omit_empty_generation(self, handler: SerializerFunctionWrapHandler) -> dict[str, Any]:
+        data = handler(self)
+        if self.generation is None:
+            data.pop("generation", None)
+        return data
 
     def active(self) -> list[Requirement]:
         return [r for r in self.requirements if r.active]
@@ -364,6 +390,10 @@ class CandidateOrigin(str, Enum):
 # sources 1 and 2), never by construction intent (protocol v0.7 §15.4, v0.8 §16.3).
 NATURAL_ORIGINS = frozenset({CandidateOrigin.observed_pre_correction, CandidateOrigin.observed_other,
                              CandidateOrigin.fresh_attempt, CandidateOrigin.natural_pre_review})
+# Candidates an agent constructs for the pool or the audit (dev attacks, valid alternatives, near misses): the ones whose
+# generation record ``add-candidate --generation-record`` keeps (protocol §15.6: every generated artifact carries one).
+CONSTRUCTED_ORIGINS = frozenset({CandidateOrigin.dev_attack, CandidateOrigin.valid_alternative,
+                                 CandidateOrigin.constructed_near_miss})
 
 
 class Split(str, Enum):
@@ -479,12 +509,18 @@ class Candidate(_Model):
     # The attempt record of a fresh attempt (origin fresh_attempt only; protocol §15.4). Omitted from the
     # JSON while None, so records written before the field existed re-serialise byte for byte.
     attempt: AttemptRecord | None = None
+    # The record of the agent run that constructed the candidate (``add-candidate --generation-record``; origins in
+    # CONSTRUCTED_ORIGINS only, as an attempt record is a fresh attempt's only; required for them on a natural PR-review
+    # task, §15.6). Omitted from the JSON while None.
+    generation: GenerationRecord | None = None
 
     @model_serializer(mode="wrap")
     def _omit_empty_records(self, handler: SerializerFunctionWrapHandler) -> dict[str, Any]:
         data = handler(self)
         if self.attempt is None:
             data.pop("attempt", None)
+        if self.generation is None:
+            data.pop("generation", None)
         return data
 
     @model_validator(mode="after")
@@ -498,6 +534,10 @@ class Candidate(_Model):
                 raise ValueError(f"{self.candidate_id}: only a fresh_attempt candidate carries an attempt record")
             if self.attempt.patch_sha256 != self.patch_sha256:
                 raise ValueError(f"{self.candidate_id}: its attempt record holds another patch sha256 than the candidate")
+        if self.generation is not None and self.origin not in CONSTRUCTED_ORIGINS:
+            raise ValueError(f"{self.candidate_id}: only a constructed candidate "
+                             f"({', '.join(sorted(o.value for o in CONSTRUCTED_ORIGINS))}) carries a generation record, "
+                             f"not one of origin {self.origin.value}")
         return self
 
     def final_label(self) -> Label | None:
@@ -553,15 +593,6 @@ class VerifierCondition(str, Enum):
 class Isolation(str, Enum):
     process_separated = "process_separated"  # candidate code never runs in the grader process
     in_process = "in_process"  # candidate code imported by the test runner (tamperable)
-
-
-class GenerationRecord(_Model):
-    generator: str  # a configuration label (config-A, verifier.generation_record) for a new run; pilot records: "model:..."
-    run_id: str
-    prompt_sha256: str
-    created_at: str
-    budget: dict[str, Any] = Field(default_factory=dict)
-    notes: str = ""
 
 
 class CheckSpec(_Model):

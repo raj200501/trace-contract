@@ -232,10 +232,25 @@ def test_a_single_population_is_never_refused(repo):
     assert f"Population: natural: {NAT}." in (run / "analysis.md").read_text()
 
 
-def test_the_natural_sub_populations_are_never_pooled_silently(repo):
+def test_the_natural_sub_populations_are_never_pooled_silently(repo, monkeypatch):
     """natural:pr-review (AIDev) and natural:chat (Trace Commons) are populations of their own (protocol v0.8 §16.3)."""
     tasks = [_make_task(repo, "PR-1", Population.natural_pr_review), _make_task(repo, "CH-1", Population.natural_chat)]
-    run = _evaluate(repo, tasks, "r-subpops")
+    # A natural:pr-review task enters a run only once its family has passed S10 (the acceptance gate refuses it otherwise),
+    # and its run records go only to a git-ignored directory of the repository (§17.4): data/natural/runs here.
+    from natural_task_layout import init_git
+
+    (tasks[0] / "s10.json").write_text(json.dumps({"schema": "tracecontract/natural-s10/v1", "task_id": "PR-1", "stage": "S10",
+                                                   "outcome": "passed"}), encoding="utf-8")
+    init_git(repo)
+    # ... and is graded only in the image its S10 step recorded (never rebuilt): record one, and let this host have it.
+    image_id = "sha256:" + "1" * 64
+    snap = json.loads((tasks[0] / "snapshot.json").read_text())
+    snap["environment"] = {"image": evaluate.env_image_tag([]), "image_id": image_id}
+    (tasks[0] / "snapshot.json").write_text(json.dumps(snap), encoding="utf-8")
+    monkeypatch.setattr(evaluate, "local_image_id", lambda tag: image_id)
+    out_root = repo / "data" / "natural" / "runs"
+    assert _exit_code(["evaluate", *map(str, tasks), "--run-id", "r-subpops", "--pilot", "--out-root", str(out_root)]) == 0
+    run = out_root / "r-subpops"
     with pytest.raises(MixedPopulations, match=r"2 populations \(natural:chat: CH-1; natural:pr-review: PR-1\)"):
         analyze(run, repo / "tasks", allow_proposed=True, n_boot=50)
     a = analyze(run, repo / "tasks", allow_proposed=True, n_boot=50, pool_populations=True)
