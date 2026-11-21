@@ -1723,6 +1723,673 @@
       "third_party_personal_data": "yes: donated agent-session transcripts (may contain personal data); parsed only with isolated interpreters and treated as data",
       "retention": "kept outside the repository; only counts, ids and hashes are committed; deletion is an owner decision",
       "in_repo": false
+    },
+    {
+      "id": "aidev-v5-s9-repo-fetches",
+      "kind": "git_partial_fetch",
+      "source": "public GitHub repositories of the 150 sampled AIDev v5 review comments (36 repositories; listed in repositories)",
+      "version": "the sampled PRs' head refs (refs/pull/<n>/head) at fetch time, SHAs listed per ref, with all branches and tags of each bare clone",
+      "license": "NOASSERTION",
+      "license_note": "each repository keeps its own licence; SPDX values from AIDev v5 repository.parquet: MIT 23, Apache-2.0 9, BSD-3-Clause 3, BSD-2-Clause 1; per repository below",
+      "size_bytes": 485757910,
+      "fetched_utc": "2026-11-21T03:45:57Z to 2026-11-21T03:52:06Z",
+      "local_path": "/home/user/ext/aidev-v5-repos/<AIDev repo id>.git",
+      "documented_in": [
+        "docs/decision_log.md D47, D48",
+        "experiments/protocol.md §15.6",
+        "/home/user/ext/aidev-v5-work/s9_fetch_record.json (outside the repository)"
+      ],
+      "purpose": "stage S9 of the natural PR-review screen (D47, protocol §15.6)",
+      "contents_note": "bare partial clones (git clone --bare --filter=blob:none: commits and trees of all branches and tags; blobs fetched on demand only for the diffed files) plus each sampled PR's head ref; caps 300,000,000 bytes per repository and 5,000,000,000 in all (du -sb). 32 fetched, 1 over the cap, 3 not fetched; 80 of 94 PR head refs. The per-file diffs and the pseudonymised judgment batches made from them are in /home/user/ext/aidev-v5-work/ (s9_diffs/, s9_batches/), also outside the repository. An owner that acts as an account in AIDev is written as {owner} (4 repositories); the full URLs are in the fetch record outside the repository",
+      "repositories": [
+        {
+          "aidev_repo_id": 879473096,
+          "url": "https://github.com/bespokelabsai/curator",
+          "license": "Apache-2.0",
+          "status": "fetched",
+          "size_bytes": 1492242,
+          "fetched_refs": [
+            {
+              "ref": "refs/pull/305/head",
+              "sha": "bfb1cb6585b36966caa8be499478fb2a40165268"
+            },
+            {
+              "ref": "refs/pull/308/head",
+              "sha": "03ea38d08245dc2e2c077447d0de41eaa11bec4e"
+            }
+          ]
+        },
+        {
+          "aidev_repo_id": 4127088,
+          "url": "https://github.com/Azure/azure-sdk-for-python",
+          "license": "MIT",
+          "status": "fetched",
+          "size_bytes": 104784940,
+          "fetched_refs": [
+            {
+              "ref": "refs/pull/41228/head",
+              "sha": "50481c2ec12237818bc7ae5eaf2a671b99c5a607"
+            },
+            {
+              "ref": "refs/pull/41463/head",
+              "sha": "a75172db2f1c003c76887a305c3125f2ba425025"
+            },
+            {
+              "ref": "refs/pull/41663/head",
+              "sha": "021101749cc7ddeda3a6e589b0f0587574f00e11"
+            },
+            {
+              "ref": "refs/pull/41852/head",
+              "sha": "93ca5ca0ae492d1a71f700c2b11d5d03a4c53ac0"
+            },
+            {
+              "ref": "refs/pull/42190/head",
+              "sha": "44e69cb919a5d53a756a5be96dc8925478514c33"
+            },
+            {
+              "ref": "refs/pull/42195/head",
+              "sha": "30832b6b09535a98333c1a818aebbd2b85438836"
+            }
+          ]
+        },
+        {
+          "aidev_repo_id": 174629277,
+          "url": "https://github.com/microsoft/lisa",
+          "license": "MIT",
+          "status": "fetched",
+          "size_bytes": 11056144,
+          "fetched_refs": [
+            {
+              "ref": "refs/pull/3822/head",
+              "sha": "2241e93bd6a08b45dc789b0f6a06c66af2e30c5e"
+            },
+            {
+              "ref": "refs/pull/3839/head",
+              "sha": "f00ab6fe8c9813cbcb0edf8ffdd0afbef669b994"
+            },
+            {
+              "ref": "refs/pull/3888/head",
+              "sha": "8cceb87a7ca879680768d8ab28c1ab0898f0b410"
+            },
+            {
+              "ref": "refs/pull/3898/head",
+              "sha": "ceedd34d2fbe52554cea0484c4eafe6768595036"
+            }
+          ]
+        },
+        {
+          "aidev_repo_id": 136202695,
+          "url": "https://github.com/mlflow/mlflow",
+          "license": "Apache-2.0",
+          "status": "fetched",
+          "size_bytes": 34380309,
+          "fetched_refs": [
+            {
+              "ref": "refs/pull/15856/head",
+              "sha": "6338d0bb0a6b501d23242bc4ef96a4da0bbc0a8b"
+            },
+            {
+              "ref": "refs/pull/16009/head",
+              "sha": "e81c4be6b71741af8e84a6dc012bf443f7288c18"
+            },
+            {
+              "ref": "refs/pull/16140/head",
+              "sha": "a3f28ee37504da00d8c14d8c95b6afb12dd6b8c5"
+            },
+            {
+              "ref": "refs/pull/16141/head",
+              "sha": "5006e8edfe3fb753dd9b94d7e7ee3c529f7d0461"
+            },
+            {
+              "ref": "refs/pull/16878/head",
+              "sha": "78ae5e833ebefaa29d3635178e7f36d6c4c71f04"
+            },
+            {
+              "ref": "refs/pull/17653/head",
+              "sha": "d1eae1e11b60c76bb97b8aeed60c785aadd197f3"
+            },
+            {
+              "ref": "refs/pull/17779/head",
+              "sha": "032fdbc91b0765ebcc788f343f8db396f7db8860"
+            },
+            {
+              "ref": "refs/pull/17803/head",
+              "sha": "6c2d9f5b4cfbf5ba05521203a48780a56880e36b"
+            },
+            {
+              "ref": "refs/pull/17828/head",
+              "sha": "8c28a604b41ced94f677481e5dd53eb6d78bdc8a"
+            }
+          ]
+        },
+        {
+          "aidev_repo_id": 172703996,
+          "url": "https://github.com/spcl/dace",
+          "license": "BSD-3-Clause",
+          "status": "fetched",
+          "size_bytes": 26889327,
+          "fetched_refs": [
+            {
+              "ref": "refs/pull/2019/head",
+              "sha": "ad5670eff4e165ef35a6f07b3199cf5b7b3ad998"
+            },
+            {
+              "ref": "refs/pull/2077/head",
+              "sha": "1ca938ba0ccf300ba9e6b894339dc0ef4c2453bf"
+            }
+          ]
+        },
+        {
+          "aidev_repo_id": 464577591,
+          "url": "https://github.com/microsoft/onnxscript",
+          "license": "MIT",
+          "status": "clone_failed",
+          "size_bytes": 0,
+          "fetched_refs": [],
+          "note": "not fetched: GitHub answered the anonymous clone through the session's git proxy with an authentication request (HTTP 401; the proxy reports that access to this repository is not enabled for the session); a request to attach it to the session for reading was not permitted"
+        },
+        {
+          "aidev_repo_id": 201991558,
+          "url": "https://github.com/microsoft/Olive",
+          "license": "MIT",
+          "status": "clone_failed",
+          "size_bytes": 0,
+          "fetched_refs": [],
+          "note": "not fetched: GitHub answered the anonymous clone through the session's git proxy with an authentication request (HTTP 401; the proxy reports that access to this repository is not enabled for the session); a request to attach it for reading answered that the session's GitHub credential has no access to it (or that it does not exist under this name)"
+        },
+        {
+          "aidev_repo_id": 679017521,
+          "url": "https://github.com/AgentOps-AI/agentops",
+          "license": "MIT",
+          "status": "fetched",
+          "size_bytes": 2421559,
+          "fetched_refs": [
+            {
+              "ref": "refs/pull/1077/head",
+              "sha": "ec9385ea8ab3860dfda5736320cc0e566083db08"
+            }
+          ]
+        },
+        {
+          "aidev_repo_id": 224148738,
+          "url": "https://github.com/TorchIO-project/torchio",
+          "license": "Apache-2.0",
+          "status": "fetched",
+          "size_bytes": 2568792,
+          "fetched_refs": [
+            {
+              "ref": "refs/pull/1330/head",
+              "sha": "878c804651f9ec97b129f6d4c7a271a2969a66d6"
+            }
+          ]
+        },
+        {
+          "aidev_repo_id": 60844169,
+          "url": "https://github.com/{owner}/DDNS",
+          "license": "MIT",
+          "status": "fetched",
+          "size_bytes": 1196233,
+          "fetched_refs": [
+            {
+              "ref": "refs/pull/498/head",
+              "sha": "e903e3563b5904f9cafe643d24456f1724fad920"
+            },
+            {
+              "ref": "refs/pull/500/head",
+              "sha": "f071e11ce5d71c912bb2b8509dfcc56504acc8b6"
+            },
+            {
+              "ref": "refs/pull/501/head",
+              "sha": "a2f25fbad4a5bb1dc319bd9f26f6d08066059c3b"
+            },
+            {
+              "ref": "refs/pull/505/head",
+              "sha": "11b43029bdff3a4f203f6d7401aa775ac54a9a60"
+            },
+            {
+              "ref": "refs/pull/512/head",
+              "sha": "1aa2bb680da5917ac5144ae4d0ff0d1ea551d2ae"
+            },
+            {
+              "ref": "refs/pull/514/head",
+              "sha": "a0fea71809a495627cb686db1abee53d227d2424"
+            },
+            {
+              "ref": "refs/pull/515/head",
+              "sha": "e466936ba6279bf0df4bf88e330bf31d994bf401"
+            },
+            {
+              "ref": "refs/pull/519/head",
+              "sha": "b9b1f19a4ed121529ce7cb701653d328d2dc9b10"
+            },
+            {
+              "ref": "refs/pull/521/head",
+              "sha": "bbc3815c46996ff1190f68123c5faa4dab9fa56a"
+            },
+            {
+              "ref": "refs/pull/524/head",
+              "sha": "4c5f4c8ea40d22c3a68b811ac7e2df416dca733a"
+            },
+            {
+              "ref": "refs/pull/528/head",
+              "sha": "1fee02b555bca687b55ea798d898f92a0696f2a3"
+            },
+            {
+              "ref": "refs/pull/535/head",
+              "sha": "50cca31fb7e9cc90ace799f7473082245f40a750"
+            },
+            {
+              "ref": "refs/pull/536/head",
+              "sha": "5273e6edcbff988edfe17c63333fc4da9716116d"
+            },
+            {
+              "ref": "refs/pull/537/head",
+              "sha": "46e0ca8359a7fc81d1cbaa8a0b40fce2df86fd50"
+            },
+            {
+              "ref": "refs/pull/539/head",
+              "sha": "2060174cb05dd8eb8faa48214950f4b020d4c576"
+            },
+            {
+              "ref": "refs/pull/541/head",
+              "sha": "75e09c3ba3f11a1c8b6155f8dec3a3b5cd004506"
+            },
+            {
+              "ref": "refs/pull/549/head",
+              "sha": "2afc50789857c06ba4b613bedeb5b7106e4cf029"
+            }
+          ]
+        },
+        {
+          "aidev_repo_id": 898171798,
+          "url": "https://github.com/microsoft/fabric-cicd",
+          "license": "MIT",
+          "status": "fetched",
+          "size_bytes": 1414905,
+          "fetched_refs": [
+            {
+              "ref": "refs/pull/386/head",
+              "sha": "ee2aa64748c23b5b577bf6f0e08dbd261e989ffb"
+            },
+            {
+              "ref": "refs/pull/532/head",
+              "sha": "51063b7dfaf2410f42ebb11c7abf15882e1cd13d"
+            },
+            {
+              "ref": "refs/pull/550/head",
+              "sha": "9236cee017480a1bcf39fc1ba4e928ce53e0207a"
+            }
+          ]
+        },
+        {
+          "aidev_repo_id": 205439527,
+          "url": "https://github.com/pwncollege/dojo",
+          "license": "BSD-2-Clause",
+          "status": "fetched",
+          "size_bytes": 2282104,
+          "fetched_refs": [
+            {
+              "ref": "refs/pull/730/head",
+              "sha": "4e9031a56b18b0a8a67e38f688604d38b33c4c47"
+            }
+          ]
+        },
+        {
+          "aidev_repo_id": 172733314,
+          "url": "https://github.com/hacs/integration",
+          "license": "MIT",
+          "status": "fetched",
+          "size_bytes": 2973983,
+          "fetched_refs": [
+            {
+              "ref": "refs/pull/4694/head",
+              "sha": "a018177a2296215937ae687d73603fa642d1d2d9"
+            }
+          ]
+        },
+        {
+          "aidev_repo_id": 12888993,
+          "url": "https://github.com/home-assistant/core",
+          "license": "Apache-2.0",
+          "status": "over_cap",
+          "size_bytes": 0,
+          "fetched_refs": [],
+          "note": "clone stopped at 310,698,251 bytes (cap 300,000,000); git removed the interrupted clone, nothing kept"
+        },
+        {
+          "aidev_repo_id": 948169755,
+          "url": "https://github.com/ROCm/iris",
+          "license": "MIT",
+          "status": "fetched",
+          "size_bytes": 2364298,
+          "fetched_refs": [
+            {
+              "ref": "refs/pull/84/head",
+              "sha": "c319d9673ad72d541345f9ad8ae4ac56d949f2ca"
+            },
+            {
+              "ref": "refs/pull/125/head",
+              "sha": "f3a224de75af37e27b4799aa691cb5683ae8ed95"
+            },
+            {
+              "ref": "refs/pull/252/head",
+              "sha": "9b1677b464f3a4361d845784f9109c45a8872d60"
+            }
+          ]
+        },
+        {
+          "aidev_repo_id": 8941695,
+          "url": "https://github.com/QuantEcon/QuantEcon.py",
+          "license": "MIT",
+          "status": "fetched",
+          "size_bytes": 1389966,
+          "fetched_refs": [
+            {
+              "ref": "refs/pull/789/head",
+              "sha": "80025729dfd98448e452d4807414c00f15821abe"
+            }
+          ]
+        },
+        {
+          "aidev_repo_id": 992876953,
+          "url": "https://github.com/microsoft/fabric-rti-mcp",
+          "license": "MIT",
+          "status": "fetched",
+          "size_bytes": 274086,
+          "fetched_refs": [
+            {
+              "ref": "refs/pull/30/head",
+              "sha": "3de1bf0017fd4545e412b8ae33ad1ebaac0de533"
+            }
+          ]
+        },
+        {
+          "aidev_repo_id": 917852255,
+          "url": "https://github.com/RailtownAI/railtracks",
+          "license": "MIT",
+          "status": "fetched",
+          "size_bytes": 3248589,
+          "fetched_refs": [
+            {
+              "ref": "refs/pull/559/head",
+              "sha": "abf37818c5279a5eb0b88d239465641fa9915705"
+            },
+            {
+              "ref": "refs/pull/574/head",
+              "sha": "b4ffbc75ab335f94605963470608831b2e2118c8"
+            },
+            {
+              "ref": "refs/pull/582/head",
+              "sha": "fef745bf5d920d1cf925d9ef35751db909bbddd0"
+            }
+          ]
+        },
+        {
+          "aidev_repo_id": 156401841,
+          "url": "https://github.com/sktime/sktime",
+          "license": "BSD-3-Clause",
+          "status": "fetched",
+          "size_bytes": 12859070,
+          "fetched_refs": [
+            {
+              "ref": "refs/pull/8716/head",
+              "sha": "fc531cb1946f65d93f6cdaec501b70ee7a19571c"
+            }
+          ]
+        },
+        {
+          "aidev_repo_id": 918224983,
+          "url": "https://github.com/{owner}/elegoo-homeassistant",
+          "license": "MIT",
+          "status": "fetched",
+          "size_bytes": 910577,
+          "fetched_refs": [
+            {
+              "ref": "refs/pull/214/head",
+              "sha": "4c6b61b2b923501feaa965c052b42b08b9183088"
+            }
+          ]
+        },
+        {
+          "aidev_repo_id": 369428935,
+          "url": "https://github.com/torchgeo/torchgeo",
+          "license": "MIT",
+          "status": "fetched",
+          "size_bytes": 5594185,
+          "fetched_refs": [
+            {
+              "ref": "refs/pull/2973/head",
+              "sha": "fc1930fae650c9885493591c8e58c145f1c64acf"
+            },
+            {
+              "ref": "refs/pull/2974/head",
+              "sha": "ede98ceeed0db0e0a4819e638f35410d37b16167"
+            }
+          ]
+        },
+        {
+          "aidev_repo_id": 100315955,
+          "url": "https://github.com/Azure/autorest.python",
+          "license": "MIT",
+          "status": "fetched",
+          "size_bytes": 27547702,
+          "fetched_refs": [
+            {
+              "ref": "refs/pull/3205/head",
+              "sha": "62ad18622d0846bb5682e9cc5d208992c2d0f4a2"
+            }
+          ]
+        },
+        {
+          "aidev_repo_id": 974445592,
+          "url": "https://github.com/microsoft/agent-framework",
+          "license": "MIT",
+          "status": "clone_failed",
+          "size_bytes": 0,
+          "fetched_refs": [],
+          "note": "not fetched: GitHub answered the anonymous clone through the session's git proxy with an authentication request (HTTP 401; the proxy reports that access to this repository is not enabled for the session); a request to attach it for reading answered that the session's GitHub credential has no access to it (or that it does not exist under this name)"
+        },
+        {
+          "aidev_repo_id": 987744903,
+          "url": "https://github.com/{owner}/rovr",
+          "license": "MIT",
+          "status": "fetched",
+          "size_bytes": 1468279,
+          "fetched_refs": [
+            {
+              "ref": "refs/pull/80/head",
+              "sha": "00a491939f27d223af4c532c0e362c0837f8a775"
+            }
+          ]
+        },
+        {
+          "aidev_repo_id": 12830126,
+          "url": "https://github.com/{owner}/python-pinyin",
+          "license": "MIT",
+          "status": "fetched",
+          "size_bytes": 690448,
+          "fetched_refs": [
+            {
+              "ref": "refs/pull/357/head",
+              "sha": "c435f7685806fd3ceb0e28e1dad214dbaf924b90"
+            }
+          ]
+        },
+        {
+          "aidev_repo_id": 184555939,
+          "url": "https://github.com/scikit-hep/mplhep",
+          "license": "MIT",
+          "status": "fetched",
+          "size_bytes": 959160,
+          "fetched_refs": [
+            {
+              "ref": "refs/pull/601/head",
+              "sha": "69ff0b638b57d3fa677a0c30c125f7bc06dff448"
+            }
+          ]
+        },
+        {
+          "aidev_repo_id": 587050620,
+          "url": "https://github.com/stanfordnlp/dspy",
+          "license": "MIT",
+          "status": "fetched",
+          "size_bytes": 8669642,
+          "fetched_refs": [
+            {
+              "ref": "refs/pull/8993/head",
+              "sha": "0055def1ede151b07946214682cf56abdb97294c"
+            }
+          ]
+        },
+        {
+          "aidev_repo_id": 182067506,
+          "url": "https://github.com/kedro-org/kedro",
+          "license": "Apache-2.0",
+          "status": "fetched",
+          "size_bytes": 6304266,
+          "fetched_refs": [
+            {
+              "ref": "refs/pull/5187/head",
+              "sha": "98765dbb1a60b64c955c427de2ed0eb427135529"
+            }
+          ]
+        },
+        {
+          "aidev_repo_id": 66776276,
+          "url": "https://github.com/python-social-auth/social-core",
+          "license": "BSD-3-Clause",
+          "status": "fetched",
+          "size_bytes": 3272777,
+          "fetched_refs": [
+            {
+              "ref": "refs/pull/1403/head",
+              "sha": "a5bc84d2eb43788385b812a227aba88a71a11aca"
+            }
+          ]
+        },
+        {
+          "aidev_repo_id": 148077512,
+          "url": "https://github.com/RocketPy-Team/RocketPy",
+          "license": "MIT",
+          "status": "fetched",
+          "size_bytes": 4288991,
+          "fetched_refs": [
+            {
+              "ref": "refs/pull/875/head",
+              "sha": "9805868ec3f67660e90b3ddd56b9e064a2df343b"
+            }
+          ]
+        },
+        {
+          "aidev_repo_id": 139199684,
+          "url": "https://github.com/PrefectHQ/prefect",
+          "license": "Apache-2.0",
+          "status": "fetched",
+          "size_bytes": 45740218,
+          "fetched_refs": [
+            {
+              "ref": "refs/pull/19707/head",
+              "sha": "73c653bfb7d602f5cd625bcacff607fdd41db6a0"
+            },
+            {
+              "ref": "refs/pull/20004/head",
+              "sha": "b8a86d1bd89300195744b617ed5cf3d01a51d411"
+            },
+            {
+              "ref": "refs/pull/20118/head",
+              "sha": "43a58fa5ae820bfa4259f65d92e0924dc4e133c6"
+            },
+            {
+              "ref": "refs/pull/20323/head",
+              "sha": "aa3c4757f6e85469b04310db2f8a919b57554538"
+            },
+            {
+              "ref": "refs/pull/20372/head",
+              "sha": "e880098de9415752d74517993123c8c747ccee9a"
+            },
+            {
+              "ref": "refs/pull/20650/head",
+              "sha": "0780b2235a416104b5bdf571006de3f2d96ba34a"
+            },
+            {
+              "ref": "refs/pull/20941/head",
+              "sha": "8bf074dc64544145a15da7812363d9155a7999be"
+            }
+          ]
+        },
+        {
+          "aidev_repo_id": 35178170,
+          "url": "https://github.com/learningequality/studio",
+          "license": "MIT",
+          "status": "fetched",
+          "size_bytes": 15944900,
+          "fetched_refs": [
+            {
+              "ref": "refs/pull/5695/head",
+              "sha": "4c5e587ed665ef913250656e41ad7a3f08c9a9ba"
+            }
+          ]
+        },
+        {
+          "aidev_repo_id": 1101139767,
+          "url": "https://github.com/ambient-code/agentready",
+          "license": "MIT",
+          "status": "fetched",
+          "size_bytes": 1079459,
+          "fetched_refs": [
+            {
+              "ref": "refs/pull/322/head",
+              "sha": "7b80f7807b1c4077e448c4c6e79866bec0752f8f"
+            }
+          ]
+        },
+        {
+          "aidev_repo_id": 33884891,
+          "url": "https://github.com/apache/airflow",
+          "license": "Apache-2.0",
+          "status": "fetched",
+          "size_bytes": 132528702,
+          "fetched_refs": [
+            {
+              "ref": "refs/pull/63476/head",
+              "sha": "85432c79afba0b43b0961d4936424723fd900d0c"
+            },
+            {
+              "ref": "refs/pull/63478/head",
+              "sha": "83910f385b6eeac8d71c29f5949bdc1e318a8ff6"
+            }
+          ]
+        },
+        {
+          "aidev_repo_id": 133100880,
+          "url": "https://github.com/kubeflow/pipelines",
+          "license": "Apache-2.0",
+          "status": "fetched",
+          "size_bytes": 19020988,
+          "fetched_refs": [
+            {
+              "ref": "refs/pull/13064/head",
+              "sha": "04e2c2d5062761f3dd8f1d59386080396994f7e8"
+            }
+          ]
+        },
+        {
+          "aidev_repo_id": 1085158702,
+          "url": "https://github.com/trailofbits/dropkit",
+          "license": "Apache-2.0",
+          "status": "fetched",
+          "size_bytes": 141069,
+          "fetched_refs": [
+            {
+              "ref": "refs/pull/53/head",
+              "sha": "b9fe81b0d90bf660f7c4db9d28689d59b536d80a"
+            }
+          ]
+        }
+      ],
+      "third_party_personal_data": "yes: commit author and committer names and e-mail addresses in git metadata (every commit of the cloned branches, tags and PR heads); fetched source files may also name their authors",
+      "retention": "kept outside the repository (/home/user/ext/aidev-v5-repos); never committed; deletion is an owner decision",
+      "in_repo": false
     }
   ]
 }
