@@ -1,0 +1,45 @@
+# Natural-arm prompt template labeler:v1-natural (decision log D64; protocol §15.5, §19.8).
+#
+# Source template: WRITE of the labeler workflow wf_5db2f657-fdf (tracecontract-fresh-v1-labelers, the workflow of
+# D55), with its list of allowed inputs ALLOWED. The workflow script lies outside the repository (it is not exported;
+# a byte copy is kept with the private run records); the comparison looks it up by file name with
+# check_natural_prompts.py summary --source-dir and checks its sha256.
+# Used for: the independent labeler of each family (P5), written from the reference contract and the base only;
+# agent labeler:<task>; configuration B; workspace role labeler (contract.json and instruction.md of the reference
+# contract, repo/, and the harness docs under harness/: the harness API, the lint rules and the FX-01 example tests;
+# no reference diff, no sandbox wrapper). The host is the coordinator: it builds the checks, grades them three times on
+# the reference and on the development no-op, and asks for at most one revision (labeler-revise:v1-natural).
+#
+# Deviations applied (letters as in decision log D64); every word outside them is the source's:
+#   (a) paths: the reference contract, the base snapshot, the harness module, the verifier module and the FX-01
+#       example become the copies in the agent's own workspace {WS} (/home/user/nat_ws/<task>/labeler): contract.json
+#       and instruction.md, repo/, harness/tc_sandbox_api.py and harness/lint_rules.py, and harness/example_tests/.
+#       The two harness files are excerpts of the modules, copied verbatim: their docstrings, the harness module's
+#       public API and the verifier module's lint code (the controlled labelers read the whole modules). The tests go
+#       to {WS}/tests/ instead of the task's verifier directory. The source's "Commands run from <repository>" becomes
+#       "Work only in {WS}": the repository (R) is the agent's own workspace here, and the prompt names no starting
+#       directory of the agent's shell, whose paths are all absolute.
+#   (c) do-not-read list: the source's items in the study repository are replaced by the repository named whole (with
+#       its worktree /home/user/tc_analysis_wt and any reference diff); every other workspace under /home/user/nat_ws/,
+#       the private run records under /home/user/nat_runrec, /tmp/claude-0 and the network are added.
+#
+# Placeholders: {TASK} the task id; {WS} the agent's workspace.
+
+name: labeler:v1-natural
+format: natural-template/1
+source-file: tracecontract-fresh-v1-labelers-wf_5db2f657-fdf.js
+source-sha256: 68599d2fdd40be1ccafdb28df7d8f1fc9e923b80b26a243babd7c10fa018deb9
+source-expand: REPO=L11 ALLOWED=L13
+source-map: t=TASK
+deviations: a c
+placeholders: TASK WS
+
+@@ body <- L14-L21
+You are the independent labeler for task {TASK} of a research study (protocol §15.5). You write per-requirement checks that will be used to label candidate solutions, so they must test the requirements of the reference contract faithfully, neither more strictly nor more loosely.
+You may read ONLY: {{a}}{WS}/contract.json and {WS}/instruction.md{{/}} (the reference contract); {{a}}{WS}/repo/{{/}} (the base snapshot of the repository at the pinned commit); {{a}}{WS}/harness/tc_sandbox_api.py{{/}} and {{a}}{WS}/harness/lint_rules.py{{/}} (the harness API and the lint rules for tests); and {{a}}{WS}/harness/example_tests/{{/}} (a synthetic example of the test format). You write ONLY under {{a}}{WS}/tests/.{{/}} You must NOT read, list or search anything else: in particular not {{c}}the study repository /home/user/trace-contract (its tasks, verifiers, candidates, labels, contracts, mappings, results/, data/, docs/, paper/ and experiments/ among it) or its worktree /home/user/tc_analysis_wt, any reference diff, any other workspace under /home/user/nat_ws/, the private run records under /home/user/nat_runrec,{{/}} other tasks, /home/user/.tc_sealed, /home/user/ext, {{c}}/tmp/claude-0, the network,{{/}} or /root/.claude. Use absolute paths. {{a}}Work only in {WS};{{/}} never run git commands and never list directories outside the allowed ones.
+Write a pytest module (or a few) under {{a}}{WS}/tests/,{{/}} in the process-separated format of the example: each test calls the candidate's code only through the harness (tc_sandbox.run_python, with a snippet that sets 'result') and asserts on the returned value; a module-level CHECK_REQUIREMENTS maps each test name to the reference requirement ids it checks; no pytest parametrize; no network; deterministic. Cover every active requirement of the reference contract with at least one check:
+- properties of the specified behaviour;
+- invariants checked differentially against the base behaviour (copy the needed base code into the test as an oracle, from the snapshot);
+- the examples quoted in the contract.
+Prefer several small, focused checks to a few large ones, and do not over-restrict implementation choices the contract leaves open. Then run '/home/user/trace-contract/.venv/bin/tracecontract lint-tests {{a}}{WS}/tests'{{/}} until it is clean. You cannot grade your tests yourself; a coordinator will run them once against the reference solution and the unchanged base, and you will get one chance to revise from the names of the failing checks.
+At the start and at the end, run 'date -u +%Y-%m-%dT%H:%M:%SZ' and report both times. Reply with the list of tests and the requirement ids each covers.

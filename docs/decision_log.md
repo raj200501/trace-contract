@@ -2036,3 +2036,335 @@ with no difference).
 * A repository whose first-sample clone had already been stopped at the cap was cloned
   again in the extension (about 312 MB, then removed). It made no difference to any
   outcome; it is disclosed here.
+
+### D64. The natural-arm recipe, fixed before the first natural agent
+This entry fixes the recipe of the natural arm (`natural-pr-v1`; protocol §15.5, §15.6, §19) for every family of
+both samples. The templates were hashed at 2026-11-21T17:42:36Z (`check_natural_prompts.py summary`). At that time
+`/home/user/nat_ws` did not exist, no natural agent had started, and no natural contract, generated verifier, held-out
+candidate or label existed. The recipe was planned as D61; D61 to D63 were written first, so it is D64, and the tools
+that cite it as D61 are listed at the end.
+
+**Before the first natural agent.** Deviation (i), which the recipe did not plan, is taken as a builder decision
+(decision 17), pending the owner's review: every deviation is logged before its use (D33, D41), and this one changes
+six frozen templates. A byte copy of the labeler workflow script was kept under `/home/user/nat_runrec/` before the
+first natural agent (sha256 `68599d2f...`, equal to the build session's copy).
+
+**Templates.** Fifteen files under `experiments/prompts/natural/`, in the format `natural-template/1` of
+`scripts/check_natural_prompts.py`. Each names its source template in its header and describes every deviation applied.
+
+| Template | Source | Agents | Config | Words kept / source | sha256 |
+| --- | --- | --- | --- | --- | --- |
+| contract:v1-natural | CONTRACT_PROMPT (generate) | contract:initial_only, contract:full_session | A | 387 / 446 | `7fae39f9d922d6f8790c485042c91ff67eb0dd7fb8213d3feb3ff0f4b6712a2a` |
+| testgen:v1-natural | TESTGEN (generate) | C1, C3 and B2 generators | A | 645 / 724 | `9e0ceb0045f98c7c030d1541c46fe691790714f80a2c77f1078c8bd33f53c01f` |
+| b3:v1 (new) | TESTGEN (generate) | B3 generator | A | 596 / 675 | `59e4a8a1fe8d437140d73c59575e43b9f42d8968a1248c263cf8ce959dea939a` |
+| attack:v1-natural | ATTACK (generate) | development attacks | A | 250 / 348 | `967bb21b0f2ea9b771946f5c755852e3eebea6a54b6bf8eeb1d7a2d9b2cdaa25` |
+| alt:v1-natural | ALT (generate) | development alternatives | A | 183 / 284 | `c63d70e0f9d4d3590a9efa81f2c90bcb9b246b01c2425198a76ed9b100a5f678` |
+| revise:v1-natural | REVISE (generate) | revisers of C2 and C4 | A | 542 / 629 | `a11f7ed8b9462b2867378f74406d9a6c7671ba0d3b8c30827fd85c8a16ec634e` |
+| refcontract:v1 (new) | CONTRACT_PROMPT (generate) | reference-contract drafter | A | 373 / 446 | `18ec756f310046febf591b7cfaf7b98dc6827d756335c182be963be60c56e7ba` |
+| refcheck:v1-natural | genPrompt refcheck (held-out) | reference-check writer | A | 383 / 549 | `a6e4a3a3f5fea270cf5f7cd173ef3b4d877cc07081341a7a6c14dfec442bd185` |
+| review:v1-natural | reviewPrompt (held-out) | reference-check reviewers | A | 236 / 349 | `74b6f96d03558dd3474ff188887c1498e8ec4f2fbea39b66fc2c8f75538cfeb1` |
+| fix:v1-natural | fixPrompt (held-out) | reference-check fixers | A | 346 / 476 | `406ba6bd1b8b8d06a839346ee0336fca682de12ec9185b3d5963756f9f3c665e` |
+| labeler:v1-natural | WRITE (labelers) | independent labeler | B | 311 / 344 | `8337564fb8e17b5343cb64bfb54c87151dab60c482dbca5bcd74f89318c187fc` |
+| labeler-revise:v1-natural | REVISE (labelers) | its single revision | B | 190 / 231 | `01879af9c4df54cef1e58ae15ba70c63a74398c3adda2d576e385fd54911999e` |
+| altimpl:v1-natural | genPrompt alt (held-out) | eval-alt-1, eval-alt-2 | A | 218 / 341 | `b846b9a0ef111df83150626595f71cf2951448c6c725c34b8ed47f4aa7e73f39` |
+| nearmiss:v1-natural | genPrompt nm (held-out) | eval-nm-1 to eval-nm-3 | A | 186 / 376 | `691dc52291c286ccc4f36196dedd236879a59cc43c712692982a94280a52d311` |
+| mapper:v1-natural | genPrompt mapper (held-out) | mapper:v1, mapper:v1#2 | A | 225 / 265 | `df42bd5bd714516471959b77dac07d4d93edbdb7a5bce5eca0be712d82cd719d` |
+
+The sources are the generate workflow `wf_b796bb4f-1dd` and the held-out workflow `wf_b428f318-391`, exported under
+`experiments/prompts/workflows/` (file sha256 `caa60629...` and `9f8d3d64...`; the "sha256 of this export" on each
+file's first line is that of the script without that line), and the labeler workflow `wf_5db2f657-fdf` of D55 (file
+sha256 `68599d2f...`), which is not exported and lies outside the repository. `check_natural_prompts.py summary`
+compares each template with its source word by word: every word outside a marked deviation must be the source's. All
+fifteen pass. The two labeler templates were compared against the build session's copy of their source, checked by its
+sha256. Over the fifteen, 5,071 of the 6,483 source words are kept; the rest lie in the marked deviations.
+
+**Deviations** (the letters used in the files):
+* (a) Paths. The source's task directory, workspaces and working directory (TD, WS, G, R; `base/`) become the agent's
+  own workspace under `/home/user/nat_ws/<task>/` (named as in the table of workspaces below), with `repo/` for `base/`.
+  The agent writes only there. The CLI is named by its absolute path. Code runs through the workspace's `run_python.sh`
+  and `run_tests.sh`, whose container mounts the state at `/repo`. Where the source had the agent copy `base/` and work
+  in the copy (ALT's `solution/` with "copy it; do not edit it in place", the attacks' `attacks/a<k>`, the pool's
+  `solution/` and `nm<k>`), the agent works in its own `repo/`, the copy the wrappers run, one workspace per state. The
+  labelers' "Commands run from <repository>" becomes "Work only in <workspace>".
+* (b) Host-run steps. Workspace creation, render-session, make-contract, build-verifier, grade, audit, add-candidate
+  and freeze are removed from the prompts; the host runs them (D24). An agent runs only `check-proposals` or
+  `lint-tests`, on its own files, and returns what the host records (target ids, one-line descriptions). Steps are
+  renumbered. A proposer runs `check-proposals` once and then at most 3 more times. Its fix loop also covers the
+  warning that a quote comes from a non-user event (in a thread, the diff hunk): make-contract's acceptance gate counts
+  such a quote in an explicit requirement against the contract (`non_user_evidence`), and `check-proposals`, unlike
+  make-contract, does not print the gate's verdict. The mappers' files carry the host's configuration label
+  (`model:config-A:mapper:v1` and its `#2` form) for the source's `model:claude-code-subagent:mapper:v1`.
+* (c) Do-not-read list. The source's items lie in the study repository, which is named whole, with its worktree
+  `/home/user/tc_analysis_wt`. Added: `/home/user/ext`, the private run records `/home/user/nat_runrec`, every other
+  workspace under `/home/user/nat_ws/`, the Claude session directories (`/tmp/claude-0` and `/root`, where the source
+  did not name them) and the network.
+* (d) contract:v1's event-id example becomes the rendered format, `[<session id>/issue]`.
+* (e) The reviser of C2 and C4 reads the development candidates' graded patches in `devcands/`, does not grade, and
+  gets the findings of the host's audit run.
+* (f) The host validates the reference checks, three times on the reference and once on the development no-op. Every
+  natural family then goes through the review loop of D33 (at most 2 fix rounds), whatever the validation shows. The
+  writer, the reviewers and the fixers do not grade. The reviewers get the host's validation (VALIDATION, below).
+* (g) The labeler's single revision is told bare names only (§19.8): the check ids of the checks named below, one per
+  line, distinct and sorted, with no kind, message or requirement id. The source's revision prompt also named the
+  uncovered requirements. That clause goes, and a fixed sentence asks the revision to keep every active requirement
+  covered by a check. The renderer refuses any other form.
+* (h) Held-out pool. One agent and one workspace per candidate. Three near misses, each given its target requirement by
+  the host (decision 14). A near miss whose target an earlier near miss of the family already has is rendered as the
+  variant shared-target: one fixed sentence says that another near miss violates the same requirement and asks for a
+  less obvious mistake. No pool agent is given another's output, and the five run in parallel. There is no
+  repository-test step for near misses and no sentence about doing them one at a time; instead a sentence forbids
+  running the repository's tests, which `run_python.sh` could run.
+* (i) The owner-context line of the held-out workflow's preambles (PRE's and the mapper's) is left out of the six
+  templates that use them. It states the owner's standing instruction and that nothing needs the owner's approval;
+  the mapper's also says that the owner's latest message asks for the work to continue. A template fixed now cannot
+  vouch for these when its agents run, and no natural prompt states the owner's instructions. PRE's exported line is
+  also redacted; the mapper's is not. (i) is a builder decision, pending the owner's review (decision 17).
+* (j) b3:v1 (new): TESTGEN with the B3 inputs (`session_first_prompt.txt` and `reference.diff`, no contract), the
+  labels D1, D2, ... and the sentence "Tests that pass on the unchanged base or fail on the reference are removed."
+* (k) refcontract:v1 (new): the drafter reads the rendered thread, `reference.diff` and `addressing.diff`.
+  * `reference.diff` goes beyond the inputs that §15.6 names (the issue, the thread and the addressing diff). It adds
+    the part of the change made before the review, which the issue's requirements concern.
+  * `introduced_at` is the issue, the review comment or a reply, and quotes come only from those events.
+  * A requirement that only the diffs support is inferred, with a rationale that names what in the diffs supports it,
+    and it is introduced at the issue, never at the comment or a reply. So no requirement introduced at the correction
+    rests on the diffs alone.
+  * At least one scored change requirement is introduced at the correction, with a quote from it, or the drafter says
+    why not.
+
+Under (a), the labeler revision's "run lint-tests" names the CLI by its absolute path. The source's revision prompt
+named no path, and the natural-agent audit allows the CLI only by its absolute path.
+
+**Prompts as sent.** The host renders each prompt with `check_natural_prompts.py render` (template, variant, values)
+and passes it unchanged. Its sha256 is the run's `prompt_sha256`: `scripts/agent_run_record.py` hashes the computed
+task the same way. `render --verify` checks a sent prompt against the rendering, and `--record` a generation record.
+* The host's values: TASK; WS; SESSION_ID; PYTHONPATH (the task's candidate path in the grader, under `/work`); PYPATH
+  (the wrappers' path, under `/repo`); TESTS (the base-test subset of `s10.json`, as pytest arguments); TARGET (near
+  misses); ITER and FINDINGS (revisers); VALIDATION (reviewers); ISSUES (fixers); FAILING (the labeler revision).
+* Their forms, each checked by the renderer. A check id is the grader's, the pytest node id
+  (`test_<module>.py::test_<name>`).
+  * FINDINGS: the audit's findings, each as its code and message only (the source's audit schema), serialised as
+    `json.dumps(..., indent=1, ensure_ascii=False)`, the form of the source's `JSON.stringify(findings, null, 1)`.
+  * ISSUES: the review's issues with the review schema's five keys in its order, as compact JSON, the form of the
+    source's `JSON.stringify(review.issues)`.
+  * VALIDATION: three lines, `reference, 3 repeats: <outcome>, <outcome>, <outcome>`, `dev no-op: <outcome>` and
+    `checks failing on the reference: ...`, the check ids of the checks failed or in error in any repeat, sorted and
+    joined by ", ", or `none`.
+  * FAILING: check ids, one per line, sorted and distinct.
+* The renderer refuses a value that does not fit its placeholder, a workspace outside `/home/user/nat_ws/<task>/`, and
+  a value that names a path under `/home/user/nat_runrec` or a held-out candidate (`eval-alt-<k>`, `eval-nm-<k>`,
+  `pre-review`; the workspace itself is exempt). It also refuses a prompt that names a path under `data/natural/`, a
+  session-local path, a held-out candidate id, a model identifier or tier name, or a CLI call outside the audit's
+  allowlist. A host value is data, never template text.
+* A template changed after this entry is a new version, logged before its first use (D33, D41).
+
+**Rendering.** The PR-thread renderer of WP-B (`41210e5`) is fixed: banner sha256
+`8b6b4cb4de25d09e6d66c5789af95b04a5cb2e19eb23b4e0d4f1ff13f93dd055`, block headers sha256
+`90706f6ab08c8ad8b93ff18536c776a8555d914530169cbbb6e21a6cf9db871d` (the canonical JSON of the five headers;
+`check_natural_prompts.py rendering`), session-events format `tracecontract/session-events/v1`. The review comment
+and the replies are labelled USER, so contract:v1's "as stated by the USER" applies to them. For each family, the
+sha256 of its `session.txt`, `session_first_prompt.txt` and `reference.diff` is logged before its proposers start, as
+D56 did for the instructions.
+
+**Workspaces and audit entries.** `scripts/make_agent_workspace.py` (`31f32d6`) makes every workspace as
+`/home/user/nat_ws/<task>/<name>`, from `--role` and `--name`. Each agent's entry in `labels/generator_audit.json` is
+named after its workspace, so these are also the entries the pre-flight requires (`NATURAL_AUDIT_ROLES` in
+`scripts/preflight_final_run.py`).
+
+| Agent | Template (variant) | `--role` | Workspace and audit entry | Required |
+| --- | --- | --- | --- | --- |
+| contract:initial_only, contract:full_session | contract:v1-natural (initial_only, full_session) | contract-initial, contract-full | contract-initial, contract-full | yes |
+| testgen:initial_plain, :full_plain, :llm_freeform | testgen:v1-natural | testgen-initial, testgen-full, freeform | testgen-initial, testgen-full, freeform | yes |
+| testgen:diff_derived | b3:v1 | diff-derived | diff-derived | yes |
+| attack:initial_only, attack:full_session | attack:v1-natural | attack-initial, attack-full | attack-initial, attack-full (each a group of workspaces a1 to a4) | yes |
+| alt:initial_only, alt:full_session | alt:v1-natural | alt-initial, alt-full | alt-initial, alt-full | yes |
+| revise:initial_audited:<i>, revise:full_audited:<i> | revise:v1-natural (initial_audited, full_audited) | reviser-initial, reviser-full | revise-initial-<i>, revise-full-<i> | one per revision the audit record counts |
+| refcontract:<task> | refcontract:v1 | refcontract | refcontract | yes |
+| refcheck:<task> | refcheck:v1-natural | refcheck | refcheck | yes |
+| review:<task>:<r> | review:v1-natural | refcheck-review | refcheck-review-<r> | at least one |
+| fix:<task>:<r> | fix:v1-natural | refcheck-review | refcheck-fix-<r> | checked when present |
+| labeler:<task> | labeler:v1-natural | labeler | labeler | yes |
+| labeler-revise:<task> | labeler-revise:v1-natural | labeler, with `--tests-from` | labeler-revision | when `status.json` records round 2 |
+| eval-alt-1, eval-alt-2 | altimpl:v1-natural (eval-alt-1, eval-alt-2) | alternative | eval-alt-1, eval-alt-2 | yes |
+| eval-nm-1 to eval-nm-3 | nearmiss:v1-natural (own-target, shared-target) | near-miss | eval-nm-1, eval-nm-2, eval-nm-3 | yes |
+| mapper:v1, mapper:v1#2 | mapper:v1-natural (mapper-1, mapper-2) | mapper | mapper-1, mapper-2 | yes |
+
+A natural near miss gets `run_python.sh` only, and the labeler workspaces are made without `--image`, so they hold no
+wrapper. The templates name only files that these roles write.
+
+**Order per family and freeze points.** The build session runs every host step (D24). Each phase ends with an index
+commit, and the commit times are the order record.
+* F0 (S10): base manifest, pins, image id and PR record. F2: this entry, and the family's rendered-input hashes.
+* P0: validate-task, the PR record, the image id, and B1 frozen (F1; done for the six accepted families in `7f0501f`).
+* P1: the two contract proposers; make-contract by the host (F3).
+* P2: the C1, C3 and B2 generators, the B3 generator, four development attacks and one development alternative per
+  variant. C1, C3 and B2 are built and frozen at once (F4).
+* P3: C2 and C4 start as copies of C1 and C3. The host runs audit:v1, with 0 to 3 revisers per verifier, and freezes
+  them, also when the audit still fails after 3 revisions (D27). B3: per-test selection (three single grades on the
+  reference, one on the development no-op), rebuild, confirmation and freeze, or "B3 unavailable" (F4).
+* P4: the reference contract, drafted after P3, so no generator saw it (F5).
+* P5: the reference checks with the review loop, and the independent labeler with at most one revision (next
+  paragraph). Both are frozen, with their status records (F6).
+* P6: the near-miss targets (decision 14), then the held-out pool, only after P3 and P5: two alternatives and three
+  near misses, one agent and workspace each, in parallel (F7: each candidate's generation `started_at` is later than
+  every F4 and F6 `frozen_at`).
+* P7: two mappers, duplicates and audits.
+* F8, after building stops (§19.5): D19 labels, the protocol hash and the pre-flight; then the one run
+  `natural-pr-v1` (§19.7).
+
+**Validation of the reference checks and of the labeler (P5).** Each grade here is a single grade (`tracecontract grade`
+without `--repeats`: a grade with repeats keeps only its last run's per-check statuses). A check fails in a grade when
+its status is failed or error.
+* Reference checks.
+  * After the writer, and after each fix round, the host rebuilds them and grades them three times on the reference and
+    once on the development no-op.
+  * The review loop runs as in D33: a review, then, while its verdict is needs_fix and fewer than 2 fix rounds have
+    run, a fix round and a new review. After the loop the checks are frozen, whatever the last verdict.
+  * They are usable when, in the last validation, the reference passes in all three repeats and the no-op's outcome is
+    a task failure. Otherwise they are unusable: D19 then has no first source for the family, so each of its D19
+    proposals is ambiguous (a missing decision, D19).
+  * The host writes `verifiers/reference_check/status.json`: status (usable or unusable), fix rounds and reasons.
+    `scripts/propose_labels.py` and the pre-flight are to read it before any natural label is proposed; neither does
+    yet. The family stays in `natural-pr-v1`: its source-evidence estimand and its second labeling do not depend on
+    the reference checks.
+* Labeler. The host builds it and grades it three times on the reference and three times on the development no-op.
+  * A check misses the change when CHECK_REQUIREMENTS maps it to a change requirement of the reference contract and it
+    passes on the no-op in some repeat. A change requirement is detected when a check mapped to it fails on the no-op
+    in all three repeats.
+  * The labeler is usable when the reference passes in all three repeats and every change requirement is detected:
+    §15.5 says it "must pass on the reference and fail on the no-op for every requirement the task changes". This is
+    stricter than D55's coordinator, which marked unusable only a labeler that failed on the reference; D55's four
+    labelers met both conditions.
+  * A labeler that is not usable as written gets its one revision if at least one check can be named. FAILING then
+    holds the checks that failed on the reference in some repeat and the checks that miss the change. A change
+    requirement with no check mapped to it cannot be named (§19.8), so when it is the only problem, no revision runs.
+  * After a revision the host grades the labeler again in the same way. `status.json` records the status, the round (1
+    as written, 2 after the revision) and the reasons, and the labeler is frozen. An unusable labeler is left out of the
+    second labeling and reported (§15.5).
+
+**Agents.**
+* Configuration A (the session's default model) for every role except the labeler writer and its revision, which are
+  configuration B (the smallest tier the agent tool offers). Model identifiers stay in the private run records.
+* Tools: Read, Write, Edit, Glob, Grep and Bash. No WebFetch, WebSearch, task tools or agent spawning, where the agent
+  tool allows the restriction; where it does not, the run's tool set is disclosed.
+* Harness context: no task list of the build session in an agent's context, where the agent tool allows it (§18.3);
+  otherwise it is disclosed as in §18.2.
+* Absolute paths only, and one new workspace per run.
+* Budgets as the templates set them: 6 to 14 tests per generator, 6 to 16 per reviser, 8 to 20 reference checks, 4
+  attacks per variant, up to 4 runs of `check-proposals` per proposer (a first run and at most 3 more), 3 revisions
+  per audited verifier, 2 fix rounds of the reference checks and 1 labeler revision. There is no wall-time limit;
+  turns, tool calls and wall time are recorded for every run.
+* Re-run rule: a generator run that registers nothing (no proposals, no test file, an unchanged state) is re-run once,
+  in a new workspace, with the same template and the same values except WS (so its prompt has another sha256), and the
+  re-run is recorded. Nothing is regenerated because of a check or grade outcome.
+* A contract whose explicit requirement still quotes a non-user event after its proposer's runs is recorded as it is.
+  The acceptance gate's reason (`non_user_evidence`) is reported for the family, and the run, an automated pilot,
+  grades the family as it is.
+
+**Generation records.** Every contract, verifier and constructed candidate carries one, made by
+`scripts/agent_run_record.py` from the run's transcript: the configuration label, the prompt sha256, start and end,
+turns, tool calls, wall time and a session-relative pointer to the private run record. No model identifier. An
+audited verifier's record combines its generator and its revisers (`--combine`). A pool candidate's `started_at` is
+the evidence of the freeze order.
+
+**Audits.** Every natural agent's transcript gets the natural-agent:v1 profile: the fresh-attempt profile over tool
+inputs and tool outputs, with the CLI allowlist (`<repo>/.venv/bin/tracecontract lint-tests|check-proposals` on the
+agent's own files), the network rule and the tool set. The labeler writers and their revisions also get the D58
+labeler profile, parametrised by task directory and snapshot root. Every flag is read in the transcript and assessed
+in writing, with the categories of §18.1 applied by analogy. The records go to
+`data/natural/tasks/<id>/labels/generator_audit.json`, one entry per workspace of the table above; only counts and
+verdicts go into the index. A near-miss generator whose transcript shows a run of the repository's tests on its state
+(through `run_python.sh -m pytest` or otherwise) is not excluded, since it read nothing outside its workspace. The run
+is assessed in writing in its entry and disclosed with the family's B1 results, since the near miss could then have
+been fitted to B1's tests.
+
+**Retention.** Private run records go to `/home/user/nat_runrec/<task>/`. A byte copy of the labeler workflow script,
+the source of the two labeler templates (sha256 `68599d2f...`), was kept under `/home/user/nat_runrec/` before the
+first natural agent. Its only other copy lies in the build session's directory, and an export of it would be redacted
+(it names a session-local path and the agents' model option), so the export would not hash to the templates'
+`source-sha256`. `check_natural_prompts.py summary --source-dir` with that directory compares the two templates with
+it. `/home/user/nat_ws` and `/home/user/nat_runrec` are archived into the sealed directory after the run, as in D50,
+and before any later fresh-agent round.
+
+**Decisions.** These are builder defaults. The owner may change any of them before the first natural agent; a change
+after that is a deviation, logged before its use (D33, D41).
+1. Construct. A PR reviewer's comment is treated as the correction, and the reviewer is usually not the requester.
+   The paper reports this as a construct difference from in-session user corrections.
+2. Publication. Thread-derived material (contracts, generated tests, candidates, rendered sessions, raw results,
+   reports) stays under `data/natural/`. Only ids, outcomes, counts and hashes are committed.
+3. B1. §17.2 is kept as hashed, with no amendment. Disclosed: B1 equals the D19 regression norm in NP-03, NP-05 and
+   NP-20, and in part in NP-19. The held-out alternatives run the base-test subset (TESTS) with `run_tests.sh`; in
+   NP-03, NP-05 and NP-20 its files are B1's own, so these alternatives are developed against B1's tests, as the
+   controlled alternatives ran the repository's tests. TESTS can name the repository's package (NP-03). The prompts
+   stay in the private run records, and the natural export of prompts withholds one that names a natural repository
+   (`export_prompts.py --natural`).
+4. Second labeling. A labeler pass on a `natural_pre_review` state counts as ambiguous, which mirrors D19's natural
+   rule.
+5. Freezing. §15.5's rule for natural tasks reads "before any generated held-out candidate exists". The pre-review
+   state has existed since S10, and no labeler writer can access it.
+6. B3. Per-test selection: a kept test passes on the reference in three single grades and fails (failed or error) on
+   the development no-op (`scripts/select_b3_tests.py`). §19.7 lists what is graded before building stops: the audit
+   loops (development candidates), and the reference checks and the labeler (reference and no-op). This entry reads it
+   as allowing B3's selection grades too: they grade only the reference and the development no-op, and §15.6 needs
+   them (B3's tests must fail on the base and pass on the reference). A family left with no test has B3 unavailable.
+7. D19 for natural families uses 3 repeats. Repeats that disagree are a missing decision, so the label is ambiguous.
+8. There are no human labels, and no review packet is prepared now.
+9. Provenance eligibility stays `pending_review`, so every natural evaluation is an automated pilot (`--pilot`).
+10. No sensitivity view clustered by repository while the arm is in case-study mode (below 10 tasks). With 10 or more
+    tasks, one exploratory view clustered by repository is reported.
+11. Network. It is enforced by the tool set where the agent tool allows it, and by the natural-agent audit's network
+    rule with a written reading of every flag.
+12. Harness. The image smoke test passed in all six images (2026-11-21T15:21:27-15:24:25Z, `tc-harness/0.3.5`; record
+    sha256 `333c2671...`, kept with the private run records): FX-01's reference passed and FX-01-wrong was a task
+    failure, three repeats each, under the FX-01 verifier and a probe verifier. So the harness is not changed.
+13. Retention: as above.
+14. Near-miss targets, fixed by the host from the frozen reference contract before P6. A correction requirement is a
+    scored, active requirement introduced at the review comment or a reply (as `contract.correction_event_ids` and the
+    pre-flight read them); under (k), none rests on the diffs alone. Requirements are taken in the contract's order,
+    change requirements first.
+    * nm-1 and nm-2 take the first two correction requirements; if there is only one, both take it.
+    * nm-3 takes the first other scored active requirement (each is introduced at the issue). If there is none, it
+      takes the next correction requirement not yet taken, and failing that nm-1's.
+    * A near miss whose target an earlier near miss already has is the variant shared-target (deviation h).
+    * If the reference contract has no correction requirement (the drafter says why), §15.6's "at least two of which
+      target the correction" cannot hold. nm-1 to nm-3 then take the scored active requirements by the same order and
+      reuse rule. The family still enters `natural-pr-v1` (§19.7): the first estimand of §15.6, the pre-review
+      acceptance under the source-evidence label, rests on the reviewer's request, the addressing commit and the S9
+      agreement, not on the reference contract. Its tables say that the reference contract does not observe the
+      correction and that no near miss targets it; its pre-review state is ambiguous for D19 if the reference checks
+      pass it (§15.6). The pre-flight fails such a family as it stands (fewer than 2 near misses on a correction
+      requirement); before the run it is to report the case as a note citing this entry.
+    * A reference contract with no scored active requirement stops the family at P4, and the owner decides.
+15. Advisory construction checks are not run for natural families; §15.6 does not require them.
+16. Owner masking through the GitHub account type is deferred, since nothing thread-derived is published.
+17. Deviation (i). The owner-context line is left out of the six templates that carry it. It asserts the owner's
+    standing instruction and approval, which a template fixed now cannot vouch for when its agents run. Leaving it out
+    changes no task instruction, input or output. If the owner restores it, the six templates are new versions,
+    hashed in a new entry before their next use.
+
+**Differences from the controlled recipe, disclosed.**
+* The natural labeler reads the workspace's rendering of the reference contract (`contract.json`, with the active
+  scored requirements: id, kind, statement, observable and the user turn that introduced each; and `instruction.md`).
+  The controlled labelers read the stored contract file. The natural labeler sees no evidence quotes and no unscored
+  requirement.
+* The natural labeler reads excerpts of the harness module and of the verifier module (their docstrings, the harness's
+  public API and the lint code, copied verbatim), where the controlled labelers read the whole files.
+* The labeler revision is told check ids only, without the kinds and the uncovered requirements that D55's coordinator
+  gave (§19.8, D58); a labeler that does not detect every change requirement on the no-op is unusable.
+* The reference checks are validated by the host and reviewed for every family (D33 did so for CS-02 only), and get a
+  status record.
+* The two mappers' prompts differ only in the workspace and the mapper label. Both carry D41's sentence on
+  contradiction claims, which the frozen held-out template already holds.
+* Near misses: one agent each, with targets given by the host, and one fixed sentence for a near miss that shares its
+  target (deviation h).
+* The owner-context line is left out (deviation i).
+
+**References to this entry.** The recipe was planned as D61, and these files cite it so:
+* `src/tracecontract/analysis.py`: `NATURAL_DECISION`, which the natural analysis writes into its rule texts;
+* `scripts/propose_labels.py`: its docstring, its refusals and the rule it writes into `labels/proposed_labels.json`
+  ("repeats: D61");
+* the docstrings of `scripts/select_b3_tests.py` and `scripts/agent_run_record.py`;
+* `tests/test_natural_labels.py`, which expects "(D61)" in a refusal.
+
+`tests/test_preflight_natural.py` expects the pre-flight to cite no entry after D60 until this one is numbered. D61 is
+the fresh-v1 run. These citations are to name D64 before any natural label is proposed or any natural analysis is run;
+none exists yet.

@@ -1,0 +1,41 @@
+# Natural-arm prompt template labeler-revise:v1-natural (decision log D64; protocol §15.5, §19.8).
+#
+# Source template: REVISE of the labeler workflow wf_5db2f657-fdf (tracecontract-fresh-v1-labelers, the workflow of
+# D55), with its list of allowed inputs ALLOWED. The workflow script lies outside the repository (it is not exported;
+# a byte copy is kept with the private run records); the comparison looks it up by file name with
+# check_natural_prompts.py summary --source-dir and checks its sha256.
+# Used for: the single revision of an independent labeler (P5), when, after the host's grades, a check failed on the
+# reference or a change requirement has no check that fails on the development no-op, and at least one check can be
+# named; agent labeler-revise:<task>; configuration B; a fresh workspace of role labeler named labeler-revision,
+# holding a copy of the labeler's tests (--tests-from the task's independent_label tests).
+#
+# Deviations applied (letters as in decision log D64); every word outside them is the source's:
+#   (a) paths: as in labeler:v1-natural, with "Work only in {WS}" for "Commands run from <repository>"; the tests to
+#       revise are the copy in {WS}/tests/ (/home/user/nat_ws/<task>/labeler-revision); "run lint-tests" names the
+#       command in full, by the CLI's absolute path, as the writer's prompt does (the source's revision prompt named
+#       no path, and the natural-agent audit allows the CLI only by its absolute path).
+#   (c) do-not-read list: as in labeler:v1-natural.
+#   (g) the revision is told the bare names only (§19.8, D58): {FAILING} holds one check per line, by its check id as
+#       the grader reports it (the pytest node id, test_<module>.py::test_<name>), sorted and distinct: the checks
+#       that failed on the reference in some repeat, and the checks mapped to a change requirement that passed on the
+#       no-op in some repeat (decision log D64), with no kind, message or requirement id (source-map failing). The
+#       source's coordinator prefixed each name with its kind and also listed the uncovered requirements, so "and of
+#       the requirements left uncovered" goes; instead the revision is asked to keep every active requirement covered
+#       by a check, a fixed sentence that holds no grading result.
+#
+# Placeholders: {TASK} the task id; {WS} the agent's workspace; {FAILING} the bare names.
+
+name: labeler-revise:v1-natural
+format: natural-template/1
+source-file: tracecontract-fresh-v1-labelers-wf_5db2f657-fdf.js
+source-sha256: 68599d2fdd40be1ccafdb28df7d8f1fc9e923b80b26a243babd7c10fa018deb9
+source-expand: REPO=L11 ALLOWED=L13
+source-map: t=TASK failing=FAILING@g
+deviations: a c g
+placeholders: TASK WS FAILING
+
+@@ body <- L39-L42
+You are revising the independent labeler for task {TASK} (protocol §15.5); this is your single revision. You may read ONLY: {{a}}{WS}/contract.json and {WS}/instruction.md{{/}} (the reference contract); {{a}}{WS}/repo/{{/}} (the base snapshot of the repository at the pinned commit); {{a}}{WS}/harness/tc_sandbox_api.py{{/}} and {{a}}{WS}/harness/lint_rules.py{{/}} (the harness API and the lint rules for tests); and {{a}}{WS}/harness/example_tests/{{/}} (a synthetic example of the test format). You write ONLY under {{a}}{WS}/tests/.{{/}} You must NOT read, list or search anything else: in particular not {{c}}the study repository /home/user/trace-contract (its tasks, verifiers, candidates, labels, contracts, mappings, results/, data/, docs/, paper/ and experiments/ among it) or its worktree /home/user/tc_analysis_wt, any reference diff, any other workspace under /home/user/nat_ws/, the private run records under /home/user/nat_runrec,{{/}} other tasks, /home/user/.tc_sealed, /home/user/ext, {{c}}/tmp/claude-0, the network,{{/}} or /root/.claude. Use absolute paths. {{a}}Work only in {WS};{{/}} never run git commands and never list directories outside the allowed ones.
+The coordinator ran your tests once. These are the names of the checks that failed on the reference solution, or that did not detect the missing change on the unchanged {{g}}base.{{/}} You get names only, no messages:
+{FAILING}
+Revise {{a}}{WS}/tests/{{/}} so that the checks test the reference contract faithfully. A check may be wrong because it over-restricts an implementation choice, misreads the contract, or misuses the harness. Do not weaken a check just to make it pass: it must still test its requirement. Keep CHECK_REQUIREMENTS {{g}}accurate and every active requirement of the reference contract covered by a check{{/}}, and run {{a}}'/home/user/trace-contract/.venv/bin/tracecontract lint-tests {WS}/tests'{{/}} until clean. Run 'date -u +%Y-%m-%dT%H:%M:%SZ' at the start and at the end and report both times.
