@@ -87,6 +87,4422 @@
       "rejection_reasons": [],
       "accessed": "2026-11-13T02:12:58+00:00",
       "task_status": "pending_review"
+    },
+    {
+      "schema_version": "0.1.0",
+      "record_id": "tc-f0f3711cd1cd",
+      "session_id": "07b57159-218e-4330-a64e-0ec4b4355056",
+      "population": "natural:chat",
+      "source_url": "https://huggingface.co/datasets/trace-commons/agent-traces",
+      "source_id": "07b57159-218e-4330-a64e-0ec4b4355056",
+      "source_revision": "112ebd4d03ce852b00e935d523107c3d0c9a65bf",
+      "repo_url": null,
+      "base_commit": null,
+      "licenses": {
+        "dataset": "CC-BY-4.0",
+        "code": "ISC"
+      },
+      "permission_basis": "CC-BY-4.0 compilation; contributor certification; embedded code keeps its own licence",
+      "trace_sha256": "f0f3711cd1cd6b683007b70ac071b18a64c158956d3863631b834bee8471fa70",
+      "snapshot_manifest_sha256": null,
+      "capture_method": "Trace Commons donation (donate-trace skill), raw claude_code session file",
+      "redaction_status": "source_redacted",
+      "task_family_id": "tc-f0f3711cd1cd",
+      "eligibility": "rejected",
+      "rejection_reasons": [
+        "no recoverable base commit (none)",
+        "replay: unreconstructable without a base tree",
+        "no correction candidate under the correction-cue rule"
+      ],
+      "triage": {
+        "category": "incomplete_evidence",
+        "method": "rule:v1",
+        "confidence": "high",
+        "reasons": [
+          "incomplete_evidence: no recoverable base commit (none)"
+        ],
+        "correction_event_ids": []
+      },
+      "accessed": "2026-11-21T02:44:07Z",
+      "notes": "",
+      "screening": {
+        "method": "screen-trace-commons:v1",
+        "triage_method": "rule:v1",
+        "harness": "claude_code",
+        "file_id": "07b57159-218e-4330-a64e-0ec4b4355056",
+        "file_sha256": "f0f3711cd1cd6b683007b70ac071b18a64c158956d3863631b834bee8471fa70",
+        "download_record_match": true,
+        "events": 479,
+        "donation_tail_events": 0,
+        "user_prompts": 15,
+        "ide_context_blocks": 0,
+        "correction_candidates": 0,
+        "correction_refs": [],
+        "user_prompts_in_file": 15,
+        "correction_candidates_in_file": 0,
+        "original_file_present": true,
+        "original_file_values": 36,
+        "fidelity": "unreconstructable",
+        "replay": {
+          "method": "replay:v1",
+          "fidelity": "unreconstructable",
+          "reasons": [
+            "no base tree: the initial repository state is not in the session",
+            "2 replayed file(s) with an unknown post-image",
+            "2 shell write(s) onto replayed or base files",
+            "4 shell write(s) whose target could not be resolved"
+          ],
+          "base_tree": false,
+          "files_touched": 41,
+          "files_changed": 41,
+          "files_exact": 39,
+          "files_recovered": 0,
+          "files_unknown": 2,
+          "counts": {
+            "edit_calls": 81,
+            "edit_error": 1,
+            "edit_outside_root": 2,
+            "edits_applied": 45,
+            "original_file_checks": 36,
+            "original_file_matches": 36,
+            "read_checks": 16,
+            "read_matches": 16,
+            "read_unchecked": 2,
+            "shell_calls": 56,
+            "shell_copies_replayed": 4,
+            "shell_deletes_replayed": 8,
+            "shell_write": 2,
+            "shell_write_unresolved": 4,
+            "subagents_read_only": 1,
+            "writes_applied": 33
+          }
+        },
+        "base_commit": {
+          "status": "none",
+          "head_shas_before_change": [],
+          "head_full_sha": false,
+          "head_seen_after_change": 0,
+          "clean_tree_before_change": null,
+          "commits_made": [],
+          "pr_links": 0,
+          "repository_identified": false,
+          "repository_sha256": null,
+          "cwd_matches_repository": false,
+          "branch_named": false,
+          "public_in_transcript": false,
+          "public_verified": false
+        },
+        "licence": {
+          "spdx": "ISC",
+          "evidence": "licence written in session",
+          "claimed": "ISC"
+        },
+        "test_environment": {
+          "runner": null,
+          "runs": 0,
+          "last_outcome": null
+        },
+        "signals": {
+          "shell_calls": 56,
+          "tool_results": 178,
+          "tool_errors": 13,
+          "environment_errors": 1,
+          "environment_markers": [
+            "command_not_found"
+          ],
+          "sandbox_messages": 0,
+          "user_rejections": 0,
+          "rejected_edits": 0,
+          "final_prompt_reports_failure": false,
+          "file_changes": 41,
+          "code_files_changed": 28,
+          "presentation_files_changed": 0,
+          "other_files_changed": 6,
+          "test_runs": 0,
+          "test_runner": null,
+          "last_test": null,
+          "absent_reads": 0,
+          "base_commit": "none",
+          "unresolved_requirements": [],
+          "active_requirements": 0,
+          "active_changes": 0,
+          "short_first_prompt": false,
+          "operational_objective": false,
+          "continued_session": false,
+          "tool_results_recorded": true
+        },
+        "agent_text_sanitizer": "sanitize-natural:v1",
+        "redactions": {
+          "handles": 236
+        }
+      }
+    },
+    {
+      "schema_version": "0.1.0",
+      "record_id": "tc-b6e6e542f351",
+      "session_id": "09d9abe9-0a02-4bd1-8129-3b864695079d",
+      "population": "natural:chat",
+      "source_url": "https://huggingface.co/datasets/trace-commons/agent-traces",
+      "source_id": "09d9abe9-0a02-4bd1-8129-3b864695079d",
+      "source_revision": "112ebd4d03ce852b00e935d523107c3d0c9a65bf",
+      "repo_url": null,
+      "base_commit": null,
+      "licenses": {
+        "dataset": "CC-BY-4.0",
+        "code": "ISC"
+      },
+      "permission_basis": "CC-BY-4.0 compilation; contributor certification; embedded code keeps its own licence",
+      "trace_sha256": "b6e6e542f351c4889c692304bd3819b4df7ac936c5b54ddc99fd00708c934eb0",
+      "snapshot_manifest_sha256": null,
+      "capture_method": "Trace Commons donation (donate-trace skill), raw claude_code session file",
+      "redaction_status": "source_redacted",
+      "task_family_id": "tc-b6e6e542f351",
+      "eligibility": "rejected",
+      "rejection_reasons": [
+        "no recoverable base commit (none)",
+        "replay: unreconstructable without a base tree"
+      ],
+      "triage": {
+        "category": "incomplete_evidence",
+        "method": "rule:v1",
+        "confidence": "high",
+        "reasons": [
+          "incomplete_evidence: no recoverable base commit (none)"
+        ],
+        "correction_event_ids": [
+          "L000616.00"
+        ]
+      },
+      "accessed": "2026-11-21T02:44:07Z",
+      "notes": "",
+      "screening": {
+        "method": "screen-trace-commons:v1",
+        "triage_method": "rule:v1",
+        "harness": "claude_code",
+        "file_id": "09d9abe9-0a02-4bd1-8129-3b864695079d",
+        "file_sha256": "b6e6e542f351c4889c692304bd3819b4df7ac936c5b54ddc99fd00708c934eb0",
+        "download_record_match": true,
+        "events": 432,
+        "donation_tail_events": 0,
+        "user_prompts": 19,
+        "ide_context_blocks": 0,
+        "correction_candidates": 1,
+        "correction_refs": [
+          "L000616.00"
+        ],
+        "user_prompts_in_file": 19,
+        "correction_candidates_in_file": 1,
+        "original_file_present": true,
+        "original_file_values": 63,
+        "fidelity": "unreconstructable",
+        "replay": {
+          "method": "replay:v1",
+          "fidelity": "unreconstructable",
+          "reasons": [
+            "no base tree: the initial repository state is not in the session",
+            "9 file(s) rest on content recovered from originalFile or a full Read"
+          ],
+          "base_tree": false,
+          "files_touched": 24,
+          "files_changed": 17,
+          "files_exact": 15,
+          "files_recovered": 9,
+          "files_unknown": 0,
+          "counts": {
+            "edit_calls": 69,
+            "edit_error": 1,
+            "edits_applied": 44,
+            "original_file_checks": 63,
+            "original_file_matches": 63,
+            "read_checks": 15,
+            "read_matches": 15,
+            "read_unchecked": 4,
+            "recovered_from_read": 19,
+            "shell_calls": 4,
+            "writes_applied": 24
+          }
+        },
+        "base_commit": {
+          "status": "none",
+          "head_shas_before_change": [],
+          "head_full_sha": false,
+          "head_seen_after_change": 0,
+          "clean_tree_before_change": null,
+          "commits_made": [],
+          "pr_links": 0,
+          "repository_identified": false,
+          "repository_sha256": null,
+          "cwd_matches_repository": false,
+          "branch_named": true,
+          "public_in_transcript": false,
+          "public_verified": false
+        },
+        "licence": {
+          "spdx": "ISC",
+          "evidence": "manifest file read",
+          "claimed": null
+        },
+        "test_environment": {
+          "runner": null,
+          "runs": 0,
+          "last_outcome": null
+        },
+        "signals": {
+          "shell_calls": 4,
+          "tool_results": 151,
+          "tool_errors": 2,
+          "environment_errors": 1,
+          "environment_markers": [
+            "command_not_found"
+          ],
+          "sandbox_messages": 0,
+          "user_rejections": 0,
+          "rejected_edits": 0,
+          "final_prompt_reports_failure": false,
+          "file_changes": 17,
+          "code_files_changed": 11,
+          "presentation_files_changed": 3,
+          "other_files_changed": 3,
+          "test_runs": 0,
+          "test_runner": null,
+          "last_test": null,
+          "absent_reads": 0,
+          "base_commit": "none",
+          "unresolved_requirements": [],
+          "active_requirements": 0,
+          "active_changes": 0,
+          "short_first_prompt": false,
+          "operational_objective": false,
+          "continued_session": false,
+          "tool_results_recorded": true
+        },
+        "agent_text_sanitizer": "sanitize-natural:v1",
+        "redactions": {
+          "handles": 3
+        }
+      }
+    },
+    {
+      "schema_version": "0.1.0",
+      "record_id": "tc-5780bf4aaa8a",
+      "session_id": "0ca72c0c-ac42-400a-8ca6-cc31a787225f",
+      "population": "natural:chat",
+      "source_url": "https://huggingface.co/datasets/trace-commons/agent-traces",
+      "source_id": "0ca72c0c-ac42-400a-8ca6-cc31a787225f",
+      "source_revision": "112ebd4d03ce852b00e935d523107c3d0c9a65bf",
+      "repo_url": null,
+      "base_commit": null,
+      "licenses": {
+        "dataset": "CC-BY-4.0",
+        "code": "NOASSERTION"
+      },
+      "permission_basis": "CC-BY-4.0 compilation; contributor certification; embedded code keeps its own licence",
+      "trace_sha256": "5780bf4aaa8af2af35e58e1f25360c669cc07af751a16b8c6bdb1cdd23c40dee",
+      "snapshot_manifest_sha256": null,
+      "capture_method": "Trace Commons donation (donate-trace skill), raw claude_code session file",
+      "redaction_status": "source_redacted",
+      "task_family_id": "tc-5780bf4aaa8a",
+      "eligibility": "rejected",
+      "rejection_reasons": [
+        "unsuitable_task: only documentation, configuration or data files changed (non-testable objective)",
+        "no recoverable base commit (none)",
+        "replay: unreconstructable without a base tree",
+        "no correction candidate under the correction-cue rule",
+        "no code licence identified"
+      ],
+      "triage": {
+        "category": "unsuitable_task",
+        "method": "rule:v1",
+        "confidence": "medium",
+        "reasons": [
+          "unsuitable_task: only documentation, configuration or data files changed (non-testable objective)",
+          "incomplete_evidence: no recoverable base commit (none)",
+          "ambiguous_objective: the first request has at most three words"
+        ],
+        "correction_event_ids": []
+      },
+      "accessed": "2026-11-21T02:44:07Z",
+      "notes": "",
+      "screening": {
+        "method": "screen-trace-commons:v1",
+        "triage_method": "rule:v1",
+        "harness": "claude_code",
+        "file_id": "0ca72c0c-ac42-400a-8ca6-cc31a787225f",
+        "file_sha256": "5780bf4aaa8af2af35e58e1f25360c669cc07af751a16b8c6bdb1cdd23c40dee",
+        "download_record_match": true,
+        "events": 66,
+        "donation_tail_events": 0,
+        "user_prompts": 2,
+        "ide_context_blocks": 0,
+        "correction_candidates": 0,
+        "correction_refs": [],
+        "user_prompts_in_file": 2,
+        "correction_candidates_in_file": 0,
+        "original_file_present": false,
+        "original_file_values": 0,
+        "fidelity": "unreconstructable",
+        "replay": {
+          "method": "replay:v1",
+          "fidelity": "unreconstructable",
+          "reasons": [
+            "no base tree: the initial repository state is not in the session"
+          ],
+          "base_tree": false,
+          "files_touched": 2,
+          "files_changed": 2,
+          "files_exact": 2,
+          "files_recovered": 0,
+          "files_unknown": 0,
+          "counts": {
+            "edit_calls": 8,
+            "edit_outside_root": 2,
+            "edits_applied": 4,
+            "read_checks": 3,
+            "read_matches": 3,
+            "shell_calls": 9,
+            "writes_applied": 2
+          }
+        },
+        "base_commit": {
+          "status": "none",
+          "head_shas_before_change": [],
+          "head_full_sha": false,
+          "head_seen_after_change": 0,
+          "clean_tree_before_change": null,
+          "commits_made": [],
+          "pr_links": 0,
+          "repository_identified": false,
+          "repository_sha256": null,
+          "cwd_matches_repository": false,
+          "branch_named": false,
+          "public_in_transcript": false,
+          "public_verified": false
+        },
+        "licence": {
+          "spdx": null,
+          "evidence": null,
+          "claimed": null
+        },
+        "test_environment": {
+          "runner": null,
+          "runs": 0,
+          "last_outcome": null
+        },
+        "signals": {
+          "shell_calls": 9,
+          "tool_results": 24,
+          "tool_errors": 6,
+          "environment_errors": 0,
+          "environment_markers": [],
+          "sandbox_messages": 0,
+          "user_rejections": 0,
+          "rejected_edits": 0,
+          "final_prompt_reports_failure": false,
+          "file_changes": 2,
+          "code_files_changed": 0,
+          "presentation_files_changed": 2,
+          "other_files_changed": 2,
+          "test_runs": 0,
+          "test_runner": null,
+          "last_test": null,
+          "absent_reads": 0,
+          "base_commit": "none",
+          "unresolved_requirements": [],
+          "active_requirements": 0,
+          "active_changes": 0,
+          "short_first_prompt": true,
+          "operational_objective": false,
+          "continued_session": false,
+          "tool_results_recorded": true
+        },
+        "agent_text_sanitizer": "sanitize-natural:v1",
+        "redactions": {}
+      }
+    },
+    {
+      "schema_version": "0.1.0",
+      "record_id": "tc-98a1ff2f95f8",
+      "session_id": "11ef2190-67e2-4707-8212-ab12ebffdbc2",
+      "population": "natural:chat",
+      "source_url": "https://huggingface.co/datasets/trace-commons/agent-traces",
+      "source_id": "11ef2190-67e2-4707-8212-ab12ebffdbc2",
+      "source_revision": "112ebd4d03ce852b00e935d523107c3d0c9a65bf",
+      "repo_url": null,
+      "base_commit": null,
+      "licenses": {
+        "dataset": "CC-BY-4.0",
+        "code": "NOASSERTION"
+      },
+      "permission_basis": "CC-BY-4.0 compilation; contributor certification; embedded code keeps its own licence",
+      "trace_sha256": "98a1ff2f95f84fac563e6e55689a7fbb7eb9a6e1e19598dd8dffa54f3332d1b1",
+      "snapshot_manifest_sha256": null,
+      "capture_method": "Trace Commons donation (donate-trace skill), raw claude_code session file",
+      "redaction_status": "source_redacted",
+      "task_family_id": "tc-98a1ff2f95f8",
+      "eligibility": "rejected",
+      "rejection_reasons": [
+        "unsuitable_task: only documentation, configuration or data files changed (non-testable objective)",
+        "unsuitable_task: the first request is an operation (install, deploy, commit)",
+        "no recoverable base commit (none)",
+        "replay: unreconstructable without a base tree",
+        "no correction candidate under the correction-cue rule",
+        "no code licence identified"
+      ],
+      "triage": {
+        "category": "unsuitable_task",
+        "method": "rule:v1",
+        "confidence": "medium",
+        "reasons": [
+          "unsuitable_task: only documentation, configuration or data files changed (non-testable objective)",
+          "unsuitable_task: the first request is an operation (install, deploy, commit)",
+          "incomplete_evidence: no recoverable base commit (none)"
+        ],
+        "correction_event_ids": []
+      },
+      "accessed": "2026-11-21T02:44:07Z",
+      "notes": "",
+      "screening": {
+        "method": "screen-trace-commons:v1",
+        "triage_method": "rule:v1",
+        "harness": "claude_code",
+        "file_id": "11ef2190-67e2-4707-8212-ab12ebffdbc2",
+        "file_sha256": "98a1ff2f95f84fac563e6e55689a7fbb7eb9a6e1e19598dd8dffa54f3332d1b1",
+        "download_record_match": true,
+        "events": 40,
+        "donation_tail_events": 0,
+        "user_prompts": 3,
+        "ide_context_blocks": 0,
+        "correction_candidates": 0,
+        "correction_refs": [],
+        "user_prompts_in_file": 3,
+        "correction_candidates_in_file": 0,
+        "original_file_present": true,
+        "original_file_values": 1,
+        "fidelity": "unreconstructable",
+        "replay": {
+          "method": "replay:v1",
+          "fidelity": "unreconstructable",
+          "reasons": [
+            "no base tree: the initial repository state is not in the session",
+            "5 file(s) rest on content recovered from originalFile or a full Read"
+          ],
+          "base_tree": false,
+          "files_touched": 5,
+          "files_changed": 1,
+          "files_exact": 0,
+          "files_recovered": 5,
+          "files_unknown": 0,
+          "counts": {
+            "edit_calls": 1,
+            "edits_applied": 1,
+            "original_file_checks": 1,
+            "original_file_matches": 1,
+            "recovered_from_read": 5,
+            "shell_calls": 2
+          }
+        },
+        "base_commit": {
+          "status": "none",
+          "head_shas_before_change": [],
+          "head_full_sha": false,
+          "head_seen_after_change": 0,
+          "clean_tree_before_change": null,
+          "commits_made": [],
+          "pr_links": 0,
+          "repository_identified": false,
+          "repository_sha256": null,
+          "cwd_matches_repository": false,
+          "branch_named": false,
+          "public_in_transcript": false,
+          "public_verified": false
+        },
+        "licence": {
+          "spdx": null,
+          "evidence": null,
+          "claimed": null
+        },
+        "test_environment": {
+          "runner": null,
+          "runs": 0,
+          "last_outcome": null
+        },
+        "signals": {
+          "shell_calls": 2,
+          "tool_results": 10,
+          "tool_errors": 1,
+          "environment_errors": 0,
+          "environment_markers": [],
+          "sandbox_messages": 0,
+          "user_rejections": 0,
+          "rejected_edits": 0,
+          "final_prompt_reports_failure": false,
+          "file_changes": 1,
+          "code_files_changed": 0,
+          "presentation_files_changed": 0,
+          "other_files_changed": 1,
+          "test_runs": 0,
+          "test_runner": null,
+          "last_test": null,
+          "absent_reads": 0,
+          "base_commit": "none",
+          "unresolved_requirements": [],
+          "active_requirements": 0,
+          "active_changes": 0,
+          "short_first_prompt": false,
+          "operational_objective": true,
+          "continued_session": false,
+          "tool_results_recorded": true
+        },
+        "agent_text_sanitizer": "sanitize-natural:v1",
+        "redactions": {
+          "handles": 1,
+          "ips": 3
+        }
+      }
+    },
+    {
+      "schema_version": "0.1.0",
+      "record_id": "tc-8e0e53bff192",
+      "session_id": "17c2cf98-e64a-43c6-932e-fa7efcade358",
+      "population": "natural:chat",
+      "source_url": "https://huggingface.co/datasets/trace-commons/agent-traces",
+      "source_id": "17c2cf98-e64a-43c6-932e-fa7efcade358",
+      "source_revision": "112ebd4d03ce852b00e935d523107c3d0c9a65bf",
+      "repo_url": null,
+      "base_commit": null,
+      "licenses": {
+        "dataset": "CC-BY-4.0",
+        "code": "NOASSERTION"
+      },
+      "permission_basis": "CC-BY-4.0 compilation; contributor certification; embedded code keeps its own licence",
+      "trace_sha256": "8e0e53bff1924520fba62fb6b34c66bfea877c6690d718d1997ac8ecd27834a2",
+      "snapshot_manifest_sha256": null,
+      "capture_method": "Trace Commons donation (donate-trace skill), raw claude_code session file",
+      "redaction_status": "source_redacted",
+      "task_family_id": "tc-8e0e53bff192",
+      "eligibility": "rejected",
+      "rejection_reasons": [
+        "environment_failure: 5 sandbox message(s)",
+        "no recoverable base commit (none)",
+        "replay: unreconstructable without a base tree",
+        "no code licence identified"
+      ],
+      "triage": {
+        "category": "environment_failure",
+        "method": "rule:v1",
+        "confidence": "medium",
+        "reasons": [
+          "environment_failure: 5 sandbox message(s)",
+          "incomplete_evidence: no recoverable base commit (none)"
+        ],
+        "correction_event_ids": [
+          "L000216.00",
+          "L000229.00",
+          "L000247.00",
+          "L000409.00"
+        ]
+      },
+      "accessed": "2026-11-21T02:44:07Z",
+      "notes": "",
+      "screening": {
+        "method": "screen-trace-commons:v1",
+        "triage_method": "rule:v1",
+        "harness": "claude_code",
+        "file_id": "17c2cf98-e64a-43c6-932e-fa7efcade358",
+        "file_sha256": "8e0e53bff1924520fba62fb6b34c66bfea877c6690d718d1997ac8ecd27834a2",
+        "download_record_match": true,
+        "events": 574,
+        "donation_tail_events": 0,
+        "user_prompts": 21,
+        "ide_context_blocks": 0,
+        "correction_candidates": 4,
+        "correction_refs": [
+          "L000216.00",
+          "L000229.00",
+          "L000247.00",
+          "L000409.00"
+        ],
+        "user_prompts_in_file": 21,
+        "correction_candidates_in_file": 4,
+        "original_file_present": true,
+        "original_file_values": 41,
+        "fidelity": "unreconstructable",
+        "replay": {
+          "method": "replay:v1",
+          "fidelity": "unreconstructable",
+          "reasons": [
+            "no base tree: the initial repository state is not in the session",
+            "17 file(s) rest on content recovered from originalFile or a full Read"
+          ],
+          "base_tree": false,
+          "files_touched": 33,
+          "files_changed": 23,
+          "files_exact": 16,
+          "files_recovered": 17,
+          "files_unknown": 0,
+          "counts": {
+            "edit_calls": 91,
+            "edit_error": 1,
+            "edits_applied": 72,
+            "original_file_checks": 41,
+            "original_file_matches": 39,
+            "read_checks": 24,
+            "read_matches": 24,
+            "read_unchecked": 14,
+            "recovered_from_original_file": 2,
+            "recovered_from_read": 25,
+            "shell_calls": 21,
+            "shell_deletes_replayed": 1,
+            "writes_applied": 18
+          }
+        },
+        "base_commit": {
+          "status": "none",
+          "head_shas_before_change": [],
+          "head_full_sha": false,
+          "head_seen_after_change": 0,
+          "clean_tree_before_change": null,
+          "commits_made": [],
+          "pr_links": 0,
+          "repository_identified": false,
+          "repository_sha256": null,
+          "cwd_matches_repository": false,
+          "branch_named": true,
+          "public_in_transcript": false,
+          "public_verified": false
+        },
+        "licence": {
+          "spdx": null,
+          "evidence": null,
+          "claimed": null
+        },
+        "test_environment": {
+          "runner": null,
+          "runs": 0,
+          "last_outcome": null
+        },
+        "signals": {
+          "shell_calls": 20,
+          "tool_results": 200,
+          "tool_errors": 7,
+          "environment_errors": 1,
+          "environment_markers": [
+            "command_not_found"
+          ],
+          "sandbox_messages": 5,
+          "user_rejections": 1,
+          "rejected_edits": 0,
+          "final_prompt_reports_failure": false,
+          "file_changes": 23,
+          "code_files_changed": 19,
+          "presentation_files_changed": 0,
+          "other_files_changed": 4,
+          "test_runs": 0,
+          "test_runner": null,
+          "last_test": null,
+          "absent_reads": 0,
+          "base_commit": "none",
+          "unresolved_requirements": [],
+          "active_requirements": 0,
+          "active_changes": 0,
+          "short_first_prompt": false,
+          "operational_objective": false,
+          "continued_session": false,
+          "tool_results_recorded": true
+        },
+        "agent_text_sanitizer": "sanitize-natural:v1",
+        "redactions": {
+          "hosts": 33,
+          "usernames": 33
+        }
+      }
+    },
+    {
+      "schema_version": "0.1.0",
+      "record_id": "tc-b20e95e3cce2",
+      "session_id": "2965219c-42ad-45af-889c-4581ecbe0103",
+      "population": "natural:chat",
+      "source_url": "https://huggingface.co/datasets/trace-commons/agent-traces",
+      "source_id": "2965219c-42ad-45af-889c-4581ecbe0103",
+      "source_revision": "112ebd4d03ce852b00e935d523107c3d0c9a65bf",
+      "repo_url": null,
+      "base_commit": null,
+      "licenses": {
+        "dataset": "CC-BY-4.0",
+        "code": "Apache-2.0"
+      },
+      "permission_basis": "CC-BY-4.0 compilation; contributor certification; embedded code keeps its own licence",
+      "trace_sha256": "b20e95e3cce26a940f2b6d77d087aacf8a97227d5bde68bd772c8d6196296db2",
+      "snapshot_manifest_sha256": null,
+      "capture_method": "Trace Commons donation (donate-trace skill), raw claude_code session file",
+      "redaction_status": "source_redacted",
+      "task_family_id": "tc-b20e95e3cce2",
+      "eligibility": "rejected",
+      "rejection_reasons": [
+        "unsuitable_task: only documentation, configuration or data files changed (non-testable objective)",
+        "no correction candidate under the correction-cue rule"
+      ],
+      "triage": {
+        "category": "unsuitable_task",
+        "method": "rule:v1",
+        "confidence": "medium",
+        "reasons": [
+          "unsuitable_task: only documentation, configuration or data files changed (non-testable objective)",
+          "incomplete_evidence: base commit not verified offline (linked_commit_unverified)"
+        ],
+        "correction_event_ids": []
+      },
+      "accessed": "2026-11-21T02:44:07Z",
+      "notes": "",
+      "screening": {
+        "method": "screen-trace-commons:v1",
+        "triage_method": "rule:v1",
+        "harness": "claude_code",
+        "file_id": "2965219c-42ad-45af-889c-4581ecbe0103",
+        "file_sha256": "b20e95e3cce26a940f2b6d77d087aacf8a97227d5bde68bd772c8d6196296db2",
+        "download_record_match": true,
+        "events": 184,
+        "donation_tail_events": 15,
+        "user_prompts": 4,
+        "ide_context_blocks": 0,
+        "correction_candidates": 0,
+        "correction_refs": [],
+        "user_prompts_in_file": 5,
+        "correction_candidates_in_file": 0,
+        "original_file_present": true,
+        "original_file_values": 2,
+        "fidelity": "unreconstructable",
+        "replay": {
+          "method": "replay:v1",
+          "fidelity": "unreconstructable",
+          "reasons": [
+            "no base tree: the initial repository state is not in the session",
+            "4 replayed file(s) with an unknown post-image",
+            "3 edit(s) on content the transcript does not show",
+            "7 shell write(s) onto replayed or base files",
+            "3 shell write(s) whose target could not be resolved",
+            "3 file(s) rest on content recovered from originalFile or a full Read"
+          ],
+          "base_tree": false,
+          "files_touched": 7,
+          "files_changed": 5,
+          "files_exact": 0,
+          "files_recovered": 3,
+          "files_unknown": 4,
+          "counts": {
+            "edit_calls": 5,
+            "edits_applied": 2,
+            "original_file_checks": 2,
+            "original_file_matches": 1,
+            "read_unchecked": 5,
+            "recovered_from_original_file": 1,
+            "recovered_from_read": 2,
+            "shell_calls": 27,
+            "shell_write": 7,
+            "shell_write_outside_root": 1,
+            "shell_write_unresolved": 3,
+            "unknown_base": 3
+          }
+        },
+        "base_commit": {
+          "status": "linked_commit_unverified",
+          "head_shas_before_change": [],
+          "head_full_sha": false,
+          "head_seen_after_change": 0,
+          "clean_tree_before_change": null,
+          "commits_made": [
+            "74f5e324"
+          ],
+          "pr_links": 1,
+          "repository_identified": true,
+          "repository_sha256": "ad92690428d2456e09dbf4a019a872e613c8c11d21354034647a0f3c240781e2",
+          "cwd_matches_repository": true,
+          "branch_named": true,
+          "public_in_transcript": true,
+          "public_verified": false
+        },
+        "licence": {
+          "spdx": "Apache-2.0",
+          "evidence": "licence printed by a shell command",
+          "claimed": null
+        },
+        "test_environment": {
+          "runner": null,
+          "runs": 0,
+          "last_outcome": null
+        },
+        "signals": {
+          "shell_calls": 27,
+          "tool_results": 50,
+          "tool_errors": 0,
+          "environment_errors": 0,
+          "environment_markers": [],
+          "sandbox_messages": 0,
+          "user_rejections": 0,
+          "rejected_edits": 0,
+          "final_prompt_reports_failure": false,
+          "file_changes": 5,
+          "code_files_changed": 0,
+          "presentation_files_changed": 0,
+          "other_files_changed": 2,
+          "test_runs": 0,
+          "test_runner": null,
+          "last_test": null,
+          "absent_reads": 0,
+          "base_commit": "linked_commit_unverified",
+          "unresolved_requirements": [],
+          "active_requirements": 0,
+          "active_changes": 0,
+          "short_first_prompt": false,
+          "operational_objective": false,
+          "continued_session": false,
+          "tool_results_recorded": true
+        },
+        "agent_text_sanitizer": "sanitize-natural:v1",
+        "redactions": {
+          "usernames": 3
+        }
+      }
+    },
+    {
+      "schema_version": "0.1.0",
+      "record_id": "tc-3f6126a16ab3",
+      "session_id": "39082932-131c-40a9-872d-1d3ac8ed1fd6",
+      "population": "natural:chat",
+      "source_url": "https://huggingface.co/datasets/trace-commons/agent-traces",
+      "source_id": "39082932-131c-40a9-872d-1d3ac8ed1fd6",
+      "source_revision": "112ebd4d03ce852b00e935d523107c3d0c9a65bf",
+      "repo_url": null,
+      "base_commit": null,
+      "licenses": {
+        "dataset": "CC-BY-4.0",
+        "code": "MIT"
+      },
+      "permission_basis": "CC-BY-4.0 compilation; contributor certification; embedded code keeps its own licence",
+      "trace_sha256": "3f6126a16ab30d0ed5a28682dc60c4ac08141dc5c2fd76216170e72faac910c1",
+      "snapshot_manifest_sha256": null,
+      "capture_method": "Trace Commons donation (donate-trace skill), raw claude_code session file",
+      "redaction_status": "source_redacted",
+      "task_family_id": "tc-3f6126a16ab3",
+      "eligibility": "rejected",
+      "rejection_reasons": [
+        "no recoverable base commit (none)",
+        "replay: unreconstructable without a base tree"
+      ],
+      "triage": {
+        "category": "incomplete_evidence",
+        "method": "rule:v1",
+        "confidence": "high",
+        "reasons": [
+          "incomplete_evidence: no recoverable base commit (none)"
+        ],
+        "correction_event_ids": [
+          "L000028.00",
+          "L000795.00"
+        ]
+      },
+      "accessed": "2026-11-21T02:44:07Z",
+      "notes": "",
+      "screening": {
+        "method": "screen-trace-commons:v1",
+        "triage_method": "rule:v1",
+        "harness": "claude_code",
+        "file_id": "39082932-131c-40a9-872d-1d3ac8ed1fd6",
+        "file_sha256": "3f6126a16ab30d0ed5a28682dc60c4ac08141dc5c2fd76216170e72faac910c1",
+        "download_record_match": true,
+        "events": 936,
+        "donation_tail_events": 0,
+        "user_prompts": 9,
+        "ide_context_blocks": 0,
+        "correction_candidates": 2,
+        "correction_refs": [
+          "L000028.00",
+          "L000795.00"
+        ],
+        "user_prompts_in_file": 9,
+        "correction_candidates_in_file": 2,
+        "original_file_present": true,
+        "original_file_values": 31,
+        "fidelity": "unreconstructable",
+        "replay": {
+          "method": "replay:v1",
+          "fidelity": "unreconstructable",
+          "reasons": [
+            "no base tree: the initial repository state is not in the session",
+            "3 Read result(s) that disagree with the replayed state",
+            "1 shell write(s) whose target could not be resolved",
+            "2 file(s) rest on content recovered from originalFile or a full Read"
+          ],
+          "base_tree": false,
+          "files_touched": 137,
+          "files_changed": 137,
+          "files_exact": 135,
+          "files_recovered": 2,
+          "files_unknown": 0,
+          "counts": {
+            "edit_calls": 208,
+            "edit_error": 1,
+            "edits_applied": 62,
+            "original_file_checks": 31,
+            "original_file_matches": 31,
+            "read_checks": 49,
+            "read_matches": 46,
+            "read_mismatch": 3,
+            "shell_calls": 92,
+            "shell_deletes_replayed": 4,
+            "shell_write_outside_root": 2,
+            "shell_write_unresolved": 1,
+            "subagents_read_only": 1,
+            "writes_applied": 145
+          }
+        },
+        "base_commit": {
+          "status": "none",
+          "head_shas_before_change": [],
+          "head_full_sha": false,
+          "head_seen_after_change": 0,
+          "clean_tree_before_change": null,
+          "commits_made": [],
+          "pr_links": 0,
+          "repository_identified": false,
+          "repository_sha256": null,
+          "cwd_matches_repository": false,
+          "branch_named": false,
+          "public_in_transcript": false,
+          "public_verified": false
+        },
+        "licence": {
+          "spdx": "MIT",
+          "evidence": "licence written in session",
+          "claimed": null
+        },
+        "test_environment": {
+          "runner": "test script",
+          "runs": 18,
+          "last_outcome": "passed"
+        },
+        "signals": {
+          "shell_calls": 92,
+          "tool_results": 377,
+          "tool_errors": 25,
+          "environment_errors": 2,
+          "environment_markers": [
+            "command_not_found"
+          ],
+          "sandbox_messages": 0,
+          "user_rejections": 0,
+          "rejected_edits": 0,
+          "final_prompt_reports_failure": false,
+          "file_changes": 137,
+          "code_files_changed": 123,
+          "presentation_files_changed": 0,
+          "other_files_changed": 12,
+          "test_runs": 18,
+          "test_runner": "test script",
+          "last_test": "passed",
+          "absent_reads": 0,
+          "base_commit": "none",
+          "unresolved_requirements": [],
+          "active_requirements": 0,
+          "active_changes": 0,
+          "short_first_prompt": false,
+          "operational_objective": false,
+          "continued_session": false,
+          "tool_results_recorded": true
+        },
+        "agent_text_sanitizer": "sanitize-natural:v1",
+        "redactions": {
+          "handles": 4
+        }
+      }
+    },
+    {
+      "schema_version": "0.1.0",
+      "record_id": "tc-ce767846c255",
+      "session_id": "3be5ba0c-62b2-4645-8589-9216be0c10d8",
+      "population": "natural:chat",
+      "source_url": "https://huggingface.co/datasets/trace-commons/agent-traces",
+      "source_id": "3be5ba0c-62b2-4645-8589-9216be0c10d8",
+      "source_revision": "112ebd4d03ce852b00e935d523107c3d0c9a65bf",
+      "repo_url": null,
+      "base_commit": null,
+      "licenses": {
+        "dataset": "CC-BY-4.0",
+        "code": "NOASSERTION"
+      },
+      "permission_basis": "CC-BY-4.0 compilation; contributor certification; embedded code keeps its own licence",
+      "trace_sha256": "ce767846c255c90d3c1a98984cf0fc1064eee65e735727dc5f1dd49aec0e935e",
+      "snapshot_manifest_sha256": null,
+      "capture_method": "Trace Commons donation (donate-trace skill), raw claude_code session file",
+      "redaction_status": "source_redacted",
+      "task_family_id": "tc-ce767846c255",
+      "eligibility": "rejected",
+      "rejection_reasons": [
+        "no recoverable base commit (none)",
+        "replay: unreconstructable without a base tree",
+        "no code licence identified"
+      ],
+      "triage": {
+        "category": "incomplete_evidence",
+        "method": "rule:v1",
+        "confidence": "high",
+        "reasons": [
+          "incomplete_evidence: no recoverable base commit (none)",
+          "apparent_model_failure: the last test run (gradle test) failed"
+        ],
+        "correction_event_ids": [
+          "L000188.00",
+          "L000411.00",
+          "L000940.00"
+        ]
+      },
+      "accessed": "2026-11-21T02:44:07Z",
+      "notes": "",
+      "screening": {
+        "method": "screen-trace-commons:v1",
+        "triage_method": "rule:v1",
+        "harness": "claude_code",
+        "file_id": "3be5ba0c-62b2-4645-8589-9216be0c10d8",
+        "file_sha256": "ce767846c255c90d3c1a98984cf0fc1064eee65e735727dc5f1dd49aec0e935e",
+        "download_record_match": true,
+        "events": 919,
+        "donation_tail_events": 71,
+        "user_prompts": 11,
+        "ide_context_blocks": 0,
+        "correction_candidates": 3,
+        "correction_refs": [
+          "L000188.00",
+          "L000411.00",
+          "L000940.00"
+        ],
+        "user_prompts_in_file": 15,
+        "correction_candidates_in_file": 3,
+        "original_file_present": true,
+        "original_file_values": 23,
+        "fidelity": "unreconstructable",
+        "replay": {
+          "method": "replay:v1",
+          "fidelity": "unreconstructable",
+          "reasons": [
+            "no base tree: the initial repository state is not in the session",
+            "15 replayed file(s) with an unknown post-image",
+            "26 edit(s) on content the transcript does not show",
+            "20 shell write(s) onto replayed or base files",
+            "1 Read result(s) that disagree with the replayed state",
+            "13 shell write(s) whose target could not be resolved",
+            "19 file(s) rest on content recovered from originalFile or a full Read"
+          ],
+          "base_tree": false,
+          "files_touched": 85,
+          "files_changed": 76,
+          "files_exact": 51,
+          "files_recovered": 19,
+          "files_unknown": 15,
+          "counts": {
+            "edit_calls": 86,
+            "edit_error": 4,
+            "edit_outside_root": 6,
+            "edits_applied": 29,
+            "heredoc_writes_replayed": 31,
+            "original_file_checks": 18,
+            "original_file_matches": 15,
+            "read_checks": 4,
+            "read_matches": 3,
+            "read_mismatch": 1,
+            "read_unchecked": 18,
+            "recovered_from_original_file": 3,
+            "recovered_from_read": 19,
+            "shell_calls": 126,
+            "shell_deletes_replayed": 8,
+            "shell_write": 20,
+            "shell_write_outside_root": 5,
+            "shell_write_unresolved": 13,
+            "unknown_base": 26,
+            "writes_applied": 21
+          }
+        },
+        "base_commit": {
+          "status": "none",
+          "head_shas_before_change": [],
+          "head_full_sha": false,
+          "head_seen_after_change": 0,
+          "clean_tree_before_change": null,
+          "commits_made": [],
+          "pr_links": 0,
+          "repository_identified": false,
+          "repository_sha256": null,
+          "cwd_matches_repository": false,
+          "branch_named": true,
+          "public_in_transcript": false,
+          "public_verified": false
+        },
+        "licence": {
+          "spdx": null,
+          "evidence": null,
+          "claimed": "MIT"
+        },
+        "test_environment": {
+          "runner": "gradle test",
+          "runs": 30,
+          "last_outcome": "failed"
+        },
+        "signals": {
+          "shell_calls": 126,
+          "tool_results": 259,
+          "tool_errors": 6,
+          "environment_errors": 0,
+          "environment_markers": [],
+          "sandbox_messages": 0,
+          "user_rejections": 0,
+          "rejected_edits": 0,
+          "final_prompt_reports_failure": false,
+          "file_changes": 76,
+          "code_files_changed": 29,
+          "presentation_files_changed": 0,
+          "other_files_changed": 6,
+          "test_runs": 30,
+          "test_runner": "gradle test",
+          "last_test": "failed",
+          "absent_reads": 0,
+          "base_commit": "none",
+          "unresolved_requirements": [],
+          "active_requirements": 0,
+          "active_changes": 0,
+          "short_first_prompt": false,
+          "operational_objective": false,
+          "continued_session": false,
+          "tool_results_recorded": true
+        },
+        "agent_text_sanitizer": "sanitize-natural:v1",
+        "redactions": {
+          "handles": 1,
+          "ips": 1,
+          "usernames": 18
+        }
+      }
+    },
+    {
+      "schema_version": "0.1.0",
+      "record_id": "tc-121df6bb227c",
+      "session_id": "4130c9a7-ee88-443a-91b5-224accd13629",
+      "population": "natural:chat",
+      "source_url": "https://huggingface.co/datasets/trace-commons/agent-traces",
+      "source_id": "4130c9a7-ee88-443a-91b5-224accd13629",
+      "source_revision": "112ebd4d03ce852b00e935d523107c3d0c9a65bf",
+      "repo_url": null,
+      "base_commit": null,
+      "licenses": {
+        "dataset": "CC-BY-4.0",
+        "code": "NOASSERTION"
+      },
+      "permission_basis": "CC-BY-4.0 compilation; contributor certification; embedded code keeps its own licence",
+      "trace_sha256": "121df6bb227cc659adc8af758b4a3d70c55dea0885a700b96b721c2db5ceb61c",
+      "snapshot_manifest_sha256": null,
+      "capture_method": "Trace Commons donation (donate-trace skill), raw claude_code session file",
+      "redaction_status": "source_redacted",
+      "task_family_id": "tc-121df6bb227c",
+      "eligibility": "rejected",
+      "rejection_reasons": [
+        "no recoverable base commit (none)",
+        "replay: unreconstructable without a base tree",
+        "no correction candidate under the correction-cue rule",
+        "no code licence identified"
+      ],
+      "triage": {
+        "category": "incomplete_evidence",
+        "method": "rule:v1",
+        "confidence": "high",
+        "reasons": [
+          "incomplete_evidence: no recoverable base commit (none)"
+        ],
+        "correction_event_ids": []
+      },
+      "accessed": "2026-11-21T02:44:07Z",
+      "notes": "",
+      "screening": {
+        "method": "screen-trace-commons:v1",
+        "triage_method": "rule:v1",
+        "harness": "claude_code",
+        "file_id": "4130c9a7-ee88-443a-91b5-224accd13629",
+        "file_sha256": "121df6bb227cc659adc8af758b4a3d70c55dea0885a700b96b721c2db5ceb61c",
+        "download_record_match": true,
+        "events": 173,
+        "donation_tail_events": 0,
+        "user_prompts": 1,
+        "ide_context_blocks": 0,
+        "correction_candidates": 0,
+        "correction_refs": [],
+        "user_prompts_in_file": 1,
+        "correction_candidates_in_file": 0,
+        "original_file_present": true,
+        "original_file_values": 8,
+        "fidelity": "unreconstructable",
+        "replay": {
+          "method": "replay:v1",
+          "fidelity": "unreconstructable",
+          "reasons": [
+            "no base tree: the initial repository state is not in the session"
+          ],
+          "base_tree": false,
+          "files_touched": 34,
+          "files_changed": 34,
+          "files_exact": 34,
+          "files_recovered": 0,
+          "files_unknown": 0,
+          "counts": {
+            "edit_calls": 46,
+            "edits_applied": 12,
+            "original_file_checks": 8,
+            "original_file_matches": 5,
+            "read_checks": 2,
+            "read_matches": 2,
+            "recovered_from_original_file": 3,
+            "shell_calls": 17,
+            "shell_copies_replayed": 1,
+            "writes_applied": 34
+          }
+        },
+        "base_commit": {
+          "status": "none",
+          "head_shas_before_change": [],
+          "head_full_sha": false,
+          "head_seen_after_change": 0,
+          "clean_tree_before_change": null,
+          "commits_made": [],
+          "pr_links": 0,
+          "repository_identified": false,
+          "repository_sha256": null,
+          "cwd_matches_repository": false,
+          "branch_named": false,
+          "public_in_transcript": false,
+          "public_verified": false
+        },
+        "licence": {
+          "spdx": null,
+          "evidence": null,
+          "claimed": null
+        },
+        "test_environment": {
+          "runner": null,
+          "runs": 0,
+          "last_outcome": null
+        },
+        "signals": {
+          "shell_calls": 17,
+          "tool_results": 75,
+          "tool_errors": 1,
+          "environment_errors": 0,
+          "environment_markers": [],
+          "sandbox_messages": 0,
+          "user_rejections": 0,
+          "rejected_edits": 0,
+          "final_prompt_reports_failure": false,
+          "file_changes": 34,
+          "code_files_changed": 29,
+          "presentation_files_changed": 1,
+          "other_files_changed": 4,
+          "test_runs": 0,
+          "test_runner": null,
+          "last_test": null,
+          "absent_reads": 0,
+          "base_commit": "none",
+          "unresolved_requirements": [],
+          "active_requirements": 0,
+          "active_changes": 0,
+          "short_first_prompt": false,
+          "operational_objective": false,
+          "continued_session": false,
+          "tool_results_recorded": true
+        },
+        "agent_text_sanitizer": "sanitize-natural:v1",
+        "redactions": {
+          "handles": 1
+        }
+      }
+    },
+    {
+      "schema_version": "0.1.0",
+      "record_id": "tc-851d25e9b9f7",
+      "session_id": "4222016d-1932-4abb-94b3-463203bd8876",
+      "population": "natural:chat",
+      "source_url": "https://huggingface.co/datasets/trace-commons/agent-traces",
+      "source_id": "4222016d-1932-4abb-94b3-463203bd8876",
+      "source_revision": "112ebd4d03ce852b00e935d523107c3d0c9a65bf",
+      "repo_url": null,
+      "base_commit": null,
+      "licenses": {
+        "dataset": "CC-BY-4.0",
+        "code": "NOASSERTION"
+      },
+      "permission_basis": "CC-BY-4.0 compilation; contributor certification; embedded code keeps its own licence",
+      "trace_sha256": "851d25e9b9f75252a1b7f2b71dc77ed2e74d38148e0a912483f0bedd36a7cff5",
+      "snapshot_manifest_sha256": null,
+      "capture_method": "Trace Commons donation (donate-trace skill), raw claude_code session file",
+      "redaction_status": "source_redacted",
+      "task_family_id": "tc-851d25e9b9f7",
+      "eligibility": "rejected",
+      "rejection_reasons": [
+        "no recoverable base commit (none)",
+        "replay: unreconstructable without a base tree",
+        "no code licence identified"
+      ],
+      "triage": {
+        "category": "incomplete_evidence",
+        "method": "rule:v1",
+        "confidence": "high",
+        "reasons": [
+          "incomplete_evidence: no recoverable base commit (none)"
+        ],
+        "correction_event_ids": [
+          "L001052.00",
+          "L001057.00",
+          "L001140.00"
+        ]
+      },
+      "accessed": "2026-11-21T02:44:07Z",
+      "notes": "",
+      "screening": {
+        "method": "screen-trace-commons:v1",
+        "triage_method": "rule:v1",
+        "harness": "claude_code",
+        "file_id": "4222016d-1932-4abb-94b3-463203bd8876",
+        "file_sha256": "851d25e9b9f75252a1b7f2b71dc77ed2e74d38148e0a912483f0bedd36a7cff5",
+        "download_record_match": true,
+        "events": 862,
+        "donation_tail_events": 0,
+        "user_prompts": 11,
+        "ide_context_blocks": 0,
+        "correction_candidates": 3,
+        "correction_refs": [
+          "L001052.00",
+          "L001057.00",
+          "L001140.00"
+        ],
+        "user_prompts_in_file": 11,
+        "correction_candidates_in_file": 3,
+        "original_file_present": true,
+        "original_file_values": 26,
+        "fidelity": "unreconstructable",
+        "replay": {
+          "method": "replay:v1",
+          "fidelity": "unreconstructable",
+          "reasons": [
+            "no base tree: the initial repository state is not in the session",
+            "8 replayed file(s) with an unknown post-image",
+            "17 shell write(s) onto replayed or base files",
+            "1 Read result(s) that disagree with the replayed state",
+            "8 shell write(s) whose target could not be resolved",
+            "9 file(s) rest on content recovered from originalFile or a full Read"
+          ],
+          "base_tree": false,
+          "files_touched": 51,
+          "files_changed": 49,
+          "files_exact": 34,
+          "files_recovered": 9,
+          "files_unknown": 8,
+          "counts": {
+            "edit_calls": 108,
+            "edit_error": 3,
+            "edits_applied": 79,
+            "heredoc_writes_replayed": 6,
+            "original_file_checks": 26,
+            "original_file_matches": 26,
+            "read_checks": 80,
+            "read_matches": 79,
+            "read_mismatch": 1,
+            "read_unchecked": 3,
+            "recovered_from_read": 9,
+            "shell_calls": 106,
+            "shell_copies_replayed": 7,
+            "shell_deletes_replayed": 37,
+            "shell_write": 17,
+            "shell_write_outside_root": 3,
+            "shell_write_unresolved": 8,
+            "writes_applied": 26
+          }
+        },
+        "base_commit": {
+          "status": "none",
+          "head_shas_before_change": [],
+          "head_full_sha": false,
+          "head_seen_after_change": 0,
+          "clean_tree_before_change": null,
+          "commits_made": [],
+          "pr_links": 0,
+          "repository_identified": false,
+          "repository_sha256": null,
+          "cwd_matches_repository": false,
+          "branch_named": false,
+          "public_in_transcript": false,
+          "public_verified": false
+        },
+        "licence": {
+          "spdx": null,
+          "evidence": null,
+          "claimed": null
+        },
+        "test_environment": {
+          "runner": "make test",
+          "runs": 4,
+          "last_outcome": "unknown"
+        },
+        "signals": {
+          "shell_calls": 105,
+          "tool_results": 333,
+          "tool_errors": 28,
+          "environment_errors": 3,
+          "environment_markers": [
+            "command_not_found"
+          ],
+          "sandbox_messages": 0,
+          "user_rejections": 0,
+          "rejected_edits": 0,
+          "final_prompt_reports_failure": false,
+          "file_changes": 49,
+          "code_files_changed": 25,
+          "presentation_files_changed": 0,
+          "other_files_changed": 1,
+          "test_runs": 4,
+          "test_runner": "make test",
+          "last_test": "unknown",
+          "absent_reads": 0,
+          "base_commit": "none",
+          "unresolved_requirements": [],
+          "active_requirements": 0,
+          "active_changes": 0,
+          "short_first_prompt": false,
+          "operational_objective": false,
+          "continued_session": false,
+          "tool_results_recorded": true
+        },
+        "agent_text_sanitizer": "sanitize-natural:v1",
+        "redactions": {
+          "handles": 2
+        }
+      }
+    },
+    {
+      "schema_version": "0.1.0",
+      "record_id": "tc-8efd5bceea8a",
+      "session_id": "479c5e9f-a299-457f-8459-5948adf8aa8e",
+      "population": "natural:chat",
+      "source_url": "https://huggingface.co/datasets/trace-commons/agent-traces",
+      "source_id": "479c5e9f-a299-457f-8459-5948adf8aa8e",
+      "source_revision": "112ebd4d03ce852b00e935d523107c3d0c9a65bf",
+      "repo_url": null,
+      "base_commit": null,
+      "licenses": {
+        "dataset": "CC-BY-4.0",
+        "code": "NOASSERTION"
+      },
+      "permission_basis": "CC-BY-4.0 compilation; contributor certification; embedded code keeps its own licence",
+      "trace_sha256": "8efd5bceea8a840fd7a528e18d62251946b0c883c04883f2515b90b9133d05a9",
+      "snapshot_manifest_sha256": null,
+      "capture_method": "Trace Commons donation (donate-trace skill), raw claude_code session file",
+      "redaction_status": "source_redacted",
+      "task_family_id": "tc-8efd5bceea8a",
+      "eligibility": "rejected",
+      "rejection_reasons": [
+        "no recoverable base commit (none)",
+        "replay: unreconstructable without a base tree",
+        "no correction candidate under the correction-cue rule",
+        "no code licence identified"
+      ],
+      "triage": {
+        "category": "incomplete_evidence",
+        "method": "rule:v1",
+        "confidence": "high",
+        "reasons": [
+          "incomplete_evidence: no recoverable base commit (none)",
+          "apparent_model_failure: the last test run (make test) failed"
+        ],
+        "correction_event_ids": []
+      },
+      "accessed": "2026-11-21T02:44:07Z",
+      "notes": "",
+      "screening": {
+        "method": "screen-trace-commons:v1",
+        "triage_method": "rule:v1",
+        "harness": "claude_code",
+        "file_id": "479c5e9f-a299-457f-8459-5948adf8aa8e",
+        "file_sha256": "8efd5bceea8a840fd7a528e18d62251946b0c883c04883f2515b90b9133d05a9",
+        "download_record_match": true,
+        "events": 275,
+        "donation_tail_events": 0,
+        "user_prompts": 2,
+        "ide_context_blocks": 0,
+        "correction_candidates": 0,
+        "correction_refs": [],
+        "user_prompts_in_file": 2,
+        "correction_candidates_in_file": 0,
+        "original_file_present": true,
+        "original_file_values": 12,
+        "fidelity": "unreconstructable",
+        "replay": {
+          "method": "replay:v1",
+          "fidelity": "unreconstructable",
+          "reasons": [
+            "no base tree: the initial repository state is not in the session",
+            "3 replayed file(s) with an unknown post-image",
+            "3 shell write(s) onto replayed or base files",
+            "1 shell write(s) whose target could not be resolved",
+            "11 file(s) rest on content recovered from originalFile or a full Read"
+          ],
+          "base_tree": false,
+          "files_touched": 30,
+          "files_changed": 20,
+          "files_exact": 16,
+          "files_recovered": 11,
+          "files_unknown": 3,
+          "counts": {
+            "edit_calls": 31,
+            "edit_outside_root": 2,
+            "edits_applied": 13,
+            "original_file_checks": 10,
+            "original_file_matches": 10,
+            "read_checks": 7,
+            "read_matches": 7,
+            "read_unchecked": 3,
+            "recovered_from_read": 17,
+            "shell_calls": 31,
+            "shell_write": 3,
+            "shell_write_unresolved": 1,
+            "writes_applied": 16
+          }
+        },
+        "base_commit": {
+          "status": "none",
+          "head_shas_before_change": [],
+          "head_full_sha": false,
+          "head_seen_after_change": 0,
+          "clean_tree_before_change": null,
+          "commits_made": [],
+          "pr_links": 0,
+          "repository_identified": false,
+          "repository_sha256": null,
+          "cwd_matches_repository": false,
+          "branch_named": false,
+          "public_in_transcript": false,
+          "public_verified": false
+        },
+        "licence": {
+          "spdx": null,
+          "evidence": null,
+          "claimed": null
+        },
+        "test_environment": {
+          "runner": "make test",
+          "runs": 1,
+          "last_outcome": "failed"
+        },
+        "signals": {
+          "shell_calls": 31,
+          "tool_results": 106,
+          "tool_errors": 12,
+          "environment_errors": 1,
+          "environment_markers": [
+            "command_not_found"
+          ],
+          "sandbox_messages": 0,
+          "user_rejections": 0,
+          "rejected_edits": 0,
+          "final_prompt_reports_failure": false,
+          "file_changes": 20,
+          "code_files_changed": 14,
+          "presentation_files_changed": 0,
+          "other_files_changed": 4,
+          "test_runs": 1,
+          "test_runner": "make test",
+          "last_test": "failed",
+          "absent_reads": 0,
+          "base_commit": "none",
+          "unresolved_requirements": [],
+          "active_requirements": 0,
+          "active_changes": 0,
+          "short_first_prompt": false,
+          "operational_objective": false,
+          "continued_session": false,
+          "tool_results_recorded": true
+        },
+        "agent_text_sanitizer": "sanitize-natural:v1",
+        "redactions": {
+          "handles": 1
+        }
+      }
+    },
+    {
+      "schema_version": "0.1.0",
+      "record_id": "tc-3c5f5c167249",
+      "session_id": "47d9fc04-420c-47bb-8ac0-85780af22632",
+      "population": "natural:chat",
+      "source_url": "https://huggingface.co/datasets/trace-commons/agent-traces",
+      "source_id": "47d9fc04-420c-47bb-8ac0-85780af22632",
+      "source_revision": "112ebd4d03ce852b00e935d523107c3d0c9a65bf",
+      "repo_url": null,
+      "base_commit": null,
+      "licenses": {
+        "dataset": "CC-BY-4.0",
+        "code": "NOASSERTION"
+      },
+      "permission_basis": "CC-BY-4.0 compilation; contributor certification; embedded code keeps its own licence",
+      "trace_sha256": "3c5f5c167249e3ec502ef0e068490ddeb49472cd3d5a05a1e646e43e43b73dc7",
+      "snapshot_manifest_sha256": null,
+      "capture_method": "Trace Commons donation (donate-trace skill), raw claude_code session file",
+      "redaction_status": "source_redacted",
+      "task_family_id": "tc-3c5f5c167249",
+      "eligibility": "rejected",
+      "rejection_reasons": [
+        "no recoverable base commit (none)",
+        "replay: unreconstructable without a base tree",
+        "no code licence identified"
+      ],
+      "triage": {
+        "category": "incomplete_evidence",
+        "method": "rule:v1",
+        "confidence": "high",
+        "reasons": [
+          "incomplete_evidence: no recoverable base commit (none)"
+        ],
+        "correction_event_ids": [
+          "L000063.00",
+          "L000341.00",
+          "L000485.00",
+          "L000501.00",
+          "L000564.00",
+          "L000576.00",
+          "L000763.00",
+          "L000980.00",
+          "L001375.00"
+        ]
+      },
+      "accessed": "2026-11-21T02:44:07Z",
+      "notes": "",
+      "screening": {
+        "method": "screen-trace-commons:v1",
+        "triage_method": "rule:v1",
+        "harness": "claude_code",
+        "file_id": "47d9fc04-420c-47bb-8ac0-85780af22632",
+        "file_sha256": "3c5f5c167249e3ec502ef0e068490ddeb49472cd3d5a05a1e646e43e43b73dc7",
+        "download_record_match": true,
+        "events": 850,
+        "donation_tail_events": 0,
+        "user_prompts": 63,
+        "ide_context_blocks": 0,
+        "correction_candidates": 9,
+        "correction_refs": [
+          "L000063.00",
+          "L000341.00",
+          "L000485.00",
+          "L000501.00",
+          "L000564.00",
+          "L000576.00",
+          "L000763.00",
+          "L000980.00",
+          "L001375.00"
+        ],
+        "user_prompts_in_file": 63,
+        "correction_candidates_in_file": 9,
+        "original_file_present": true,
+        "original_file_values": 70,
+        "fidelity": "unreconstructable",
+        "replay": {
+          "method": "replay:v1",
+          "fidelity": "unreconstructable",
+          "reasons": [
+            "no base tree: the initial repository state is not in the session",
+            "1 replayed file(s) with an unknown post-image",
+            "1 shell write(s) onto replayed or base files",
+            "4 file(s) rest on content recovered from originalFile or a full Read"
+          ],
+          "base_tree": false,
+          "files_touched": 48,
+          "files_changed": 44,
+          "files_exact": 43,
+          "files_recovered": 4,
+          "files_unknown": 1,
+          "counts": {
+            "edit_calls": 114,
+            "edit_error": 2,
+            "edits_applied": 53,
+            "original_file_checks": 70,
+            "original_file_matches": 70,
+            "read_checks": 23,
+            "read_matches": 23,
+            "read_unchecked": 4,
+            "recovered_from_read": 4,
+            "shell_calls": 69,
+            "shell_deletes_replayed": 1,
+            "shell_write": 1,
+            "writes_applied": 59
+          }
+        },
+        "base_commit": {
+          "status": "none",
+          "head_shas_before_change": [],
+          "head_full_sha": false,
+          "head_seen_after_change": 0,
+          "clean_tree_before_change": null,
+          "commits_made": [],
+          "pr_links": 0,
+          "repository_identified": false,
+          "repository_sha256": null,
+          "cwd_matches_repository": false,
+          "branch_named": false,
+          "public_in_transcript": false,
+          "public_verified": false
+        },
+        "licence": {
+          "spdx": null,
+          "evidence": null,
+          "claimed": null
+        },
+        "test_environment": {
+          "runner": null,
+          "runs": 0,
+          "last_outcome": null
+        },
+        "signals": {
+          "shell_calls": 65,
+          "tool_results": 251,
+          "tool_errors": 12,
+          "environment_errors": 5,
+          "environment_markers": [
+            "command_not_found",
+            "wsl"
+          ],
+          "sandbox_messages": 0,
+          "user_rejections": 4,
+          "rejected_edits": 0,
+          "final_prompt_reports_failure": false,
+          "file_changes": 44,
+          "code_files_changed": 34,
+          "presentation_files_changed": 0,
+          "other_files_changed": 8,
+          "test_runs": 0,
+          "test_runner": null,
+          "last_test": null,
+          "absent_reads": 0,
+          "base_commit": "none",
+          "unresolved_requirements": [],
+          "active_requirements": 0,
+          "active_changes": 0,
+          "short_first_prompt": false,
+          "operational_objective": false,
+          "continued_session": false,
+          "tool_results_recorded": true
+        },
+        "agent_text_sanitizer": "sanitize-natural:v1",
+        "redactions": {
+          "handles": 12,
+          "hosts": 29,
+          "ips": 3,
+          "usernames": 44
+        }
+      }
+    },
+    {
+      "schema_version": "0.1.0",
+      "record_id": "tc-137dd4872992",
+      "session_id": "4c09dfa9-ff25-4b4c-a2d0-d2fd702c64ee",
+      "population": "natural:chat",
+      "source_url": "https://huggingface.co/datasets/trace-commons/agent-traces",
+      "source_id": "4c09dfa9-ff25-4b4c-a2d0-d2fd702c64ee",
+      "source_revision": "112ebd4d03ce852b00e935d523107c3d0c9a65bf",
+      "repo_url": null,
+      "base_commit": null,
+      "licenses": {
+        "dataset": "CC-BY-4.0",
+        "code": "NOASSERTION"
+      },
+      "permission_basis": "CC-BY-4.0 compilation; contributor certification; embedded code keeps its own licence",
+      "trace_sha256": "137dd4872992c3a1b4d6460962a6d5b2578141511af97bc291039dd6e3b5ea6f",
+      "snapshot_manifest_sha256": null,
+      "capture_method": "Trace Commons donation (donate-trace skill), raw claude_code session file",
+      "redaction_status": "source_redacted",
+      "task_family_id": "tc-137dd4872992",
+      "eligibility": "rejected",
+      "rejection_reasons": [
+        "unsuitable_task: no file changed by the main agent",
+        "no recoverable base commit (none)",
+        "replay: unreconstructable without a base tree",
+        "no correction candidate under the correction-cue rule",
+        "no code licence identified"
+      ],
+      "triage": {
+        "category": "unsuitable_task",
+        "method": "rule:v1",
+        "confidence": "high",
+        "reasons": [
+          "unsuitable_task: no file changed by the main agent",
+          "incomplete_evidence: no recoverable base commit (none)"
+        ],
+        "correction_event_ids": []
+      },
+      "accessed": "2026-11-21T02:44:07Z",
+      "notes": "",
+      "screening": {
+        "method": "screen-trace-commons:v1",
+        "triage_method": "rule:v1",
+        "harness": "claude_code",
+        "file_id": "4c09dfa9-ff25-4b4c-a2d0-d2fd702c64ee",
+        "file_sha256": "137dd4872992c3a1b4d6460962a6d5b2578141511af97bc291039dd6e3b5ea6f",
+        "download_record_match": true,
+        "events": 2,
+        "donation_tail_events": 0,
+        "user_prompts": 1,
+        "ide_context_blocks": 0,
+        "correction_candidates": 0,
+        "correction_refs": [],
+        "user_prompts_in_file": 1,
+        "correction_candidates_in_file": 0,
+        "original_file_present": false,
+        "original_file_values": 0,
+        "fidelity": "unreconstructable",
+        "replay": {
+          "method": "replay:v1",
+          "fidelity": "unreconstructable",
+          "reasons": [
+            "no base tree: the initial repository state is not in the session"
+          ],
+          "base_tree": false,
+          "files_touched": 0,
+          "files_changed": 0,
+          "files_exact": 0,
+          "files_recovered": 0,
+          "files_unknown": 0,
+          "counts": {}
+        },
+        "base_commit": {
+          "status": "none",
+          "head_shas_before_change": [],
+          "head_full_sha": false,
+          "head_seen_after_change": 0,
+          "clean_tree_before_change": null,
+          "commits_made": [],
+          "pr_links": 0,
+          "repository_identified": false,
+          "repository_sha256": null,
+          "cwd_matches_repository": false,
+          "branch_named": false,
+          "public_in_transcript": false,
+          "public_verified": false
+        },
+        "licence": {
+          "spdx": null,
+          "evidence": null,
+          "claimed": null
+        },
+        "test_environment": {
+          "runner": null,
+          "runs": 0,
+          "last_outcome": null
+        },
+        "signals": {
+          "shell_calls": 0,
+          "tool_results": 0,
+          "tool_errors": 0,
+          "environment_errors": 0,
+          "environment_markers": [],
+          "sandbox_messages": 0,
+          "user_rejections": 0,
+          "rejected_edits": 0,
+          "final_prompt_reports_failure": false,
+          "file_changes": 0,
+          "code_files_changed": 0,
+          "presentation_files_changed": 0,
+          "other_files_changed": 0,
+          "test_runs": 0,
+          "test_runner": null,
+          "last_test": null,
+          "absent_reads": 0,
+          "base_commit": "none",
+          "unresolved_requirements": [],
+          "active_requirements": 0,
+          "active_changes": 0,
+          "short_first_prompt": false,
+          "operational_objective": false,
+          "continued_session": false,
+          "tool_results_recorded": true
+        },
+        "agent_text_sanitizer": "sanitize-natural:v1",
+        "redactions": {}
+      }
+    },
+    {
+      "schema_version": "0.1.0",
+      "record_id": "tc-a75a42565e26",
+      "session_id": "674e0f5c-c481-4830-b2ef-3e1e069a2b7f",
+      "population": "natural:chat",
+      "source_url": "https://huggingface.co/datasets/trace-commons/agent-traces",
+      "source_id": "674e0f5c-c481-4830-b2ef-3e1e069a2b7f",
+      "source_revision": "112ebd4d03ce852b00e935d523107c3d0c9a65bf",
+      "repo_url": null,
+      "base_commit": null,
+      "licenses": {
+        "dataset": "CC-BY-4.0",
+        "code": "NOASSERTION"
+      },
+      "permission_basis": "CC-BY-4.0 compilation; contributor certification; embedded code keeps its own licence",
+      "trace_sha256": "a75a42565e266910d87aa637001b2ac0a523c22db09811865a849ab2da7f9197",
+      "snapshot_manifest_sha256": null,
+      "capture_method": "Trace Commons donation (donate-trace skill), raw claude_code session file",
+      "redaction_status": "source_redacted",
+      "task_family_id": "tc-a75a42565e26",
+      "eligibility": "rejected",
+      "rejection_reasons": [
+        "no recoverable base commit (none)",
+        "replay: unreconstructable without a base tree",
+        "no correction candidate under the correction-cue rule",
+        "no code licence identified"
+      ],
+      "triage": {
+        "category": "incomplete_evidence",
+        "method": "rule:v1",
+        "confidence": "high",
+        "reasons": [
+          "incomplete_evidence: no recoverable base commit (none)"
+        ],
+        "correction_event_ids": []
+      },
+      "accessed": "2026-11-21T02:44:07Z",
+      "notes": "",
+      "screening": {
+        "method": "screen-trace-commons:v1",
+        "triage_method": "rule:v1",
+        "harness": "claude_code",
+        "file_id": "674e0f5c-c481-4830-b2ef-3e1e069a2b7f",
+        "file_sha256": "a75a42565e266910d87aa637001b2ac0a523c22db09811865a849ab2da7f9197",
+        "download_record_match": true,
+        "events": 31,
+        "donation_tail_events": 0,
+        "user_prompts": 3,
+        "ide_context_blocks": 2,
+        "correction_candidates": 0,
+        "correction_refs": [],
+        "user_prompts_in_file": 5,
+        "correction_candidates_in_file": 0,
+        "original_file_present": false,
+        "original_file_values": 0,
+        "fidelity": "unreconstructable",
+        "replay": {
+          "method": "replay:v1",
+          "fidelity": "unreconstructable",
+          "reasons": [
+            "no base tree: the initial repository state is not in the session",
+            "1 replayed file(s) with an unknown post-image",
+            "1 shell write(s) onto replayed or base files"
+          ],
+          "base_tree": false,
+          "files_touched": 3,
+          "files_changed": 3,
+          "files_exact": 2,
+          "files_recovered": 0,
+          "files_unknown": 1,
+          "counts": {
+            "edit_calls": 2,
+            "read_checks": 2,
+            "read_matches": 2,
+            "shell_calls": 5,
+            "shell_write": 1,
+            "shell_write_outside_root": 1,
+            "writes_applied": 2
+          }
+        },
+        "base_commit": {
+          "status": "none",
+          "head_shas_before_change": [],
+          "head_full_sha": false,
+          "head_seen_after_change": 0,
+          "clean_tree_before_change": null,
+          "commits_made": [],
+          "pr_links": 0,
+          "repository_identified": false,
+          "repository_sha256": null,
+          "cwd_matches_repository": false,
+          "branch_named": false,
+          "public_in_transcript": false,
+          "public_verified": false
+        },
+        "licence": {
+          "spdx": null,
+          "evidence": null,
+          "claimed": null
+        },
+        "test_environment": {
+          "runner": null,
+          "runs": 0,
+          "last_outcome": null
+        },
+        "signals": {
+          "shell_calls": 3,
+          "tool_results": 9,
+          "tool_errors": 0,
+          "environment_errors": 0,
+          "environment_markers": [],
+          "sandbox_messages": 0,
+          "user_rejections": 2,
+          "rejected_edits": 0,
+          "final_prompt_reports_failure": false,
+          "file_changes": 3,
+          "code_files_changed": 2,
+          "presentation_files_changed": 0,
+          "other_files_changed": 0,
+          "test_runs": 0,
+          "test_runner": null,
+          "last_test": null,
+          "absent_reads": 0,
+          "base_commit": "none",
+          "unresolved_requirements": [],
+          "active_requirements": 0,
+          "active_changes": 0,
+          "short_first_prompt": false,
+          "operational_objective": false,
+          "continued_session": false,
+          "tool_results_recorded": true
+        },
+        "agent_text_sanitizer": "sanitize-natural:v1",
+        "redactions": {}
+      }
+    },
+    {
+      "schema_version": "0.1.0",
+      "record_id": "tc-900dc7c921ee",
+      "session_id": "6a7964ed-6f92-4eee-ae5e-3f91a6445833",
+      "population": "natural:chat",
+      "source_url": "https://huggingface.co/datasets/trace-commons/agent-traces",
+      "source_id": "6a7964ed-6f92-4eee-ae5e-3f91a6445833",
+      "source_revision": "112ebd4d03ce852b00e935d523107c3d0c9a65bf",
+      "repo_url": null,
+      "base_commit": null,
+      "licenses": {
+        "dataset": "CC-BY-4.0",
+        "code": "NOASSERTION"
+      },
+      "permission_basis": "CC-BY-4.0 compilation; contributor certification; embedded code keeps its own licence",
+      "trace_sha256": "900dc7c921ee9ec588d61f109e24eba780e240a6fc22056372676a6710bf98e4",
+      "snapshot_manifest_sha256": null,
+      "capture_method": "Trace Commons donation (donate-trace skill), raw claude_code session file",
+      "redaction_status": "source_redacted",
+      "task_family_id": "tc-900dc7c921ee",
+      "eligibility": "rejected",
+      "rejection_reasons": [
+        "no recoverable base commit (commit_seen_repository_unidentified)",
+        "replay: unreconstructable without a base tree",
+        "no code licence identified"
+      ],
+      "triage": {
+        "category": "incomplete_evidence",
+        "method": "rule:v1",
+        "confidence": "high",
+        "reasons": [
+          "incomplete_evidence: no recoverable base commit (commit_seen_repository_unidentified)"
+        ],
+        "correction_event_ids": [
+          "L000215.00",
+          "L000434.00"
+        ]
+      },
+      "accessed": "2026-11-21T02:44:07Z",
+      "notes": "",
+      "screening": {
+        "method": "screen-trace-commons:v1",
+        "triage_method": "rule:v1",
+        "harness": "claude_code",
+        "file_id": "6a7964ed-6f92-4eee-ae5e-3f91a6445833",
+        "file_sha256": "900dc7c921ee9ec588d61f109e24eba780e240a6fc22056372676a6710bf98e4",
+        "download_record_match": true,
+        "events": 415,
+        "donation_tail_events": 0,
+        "user_prompts": 6,
+        "ide_context_blocks": 0,
+        "correction_candidates": 2,
+        "correction_refs": [
+          "L000215.00",
+          "L000434.00"
+        ],
+        "user_prompts_in_file": 6,
+        "correction_candidates_in_file": 2,
+        "original_file_present": true,
+        "original_file_values": 25,
+        "fidelity": "unreconstructable",
+        "replay": {
+          "method": "replay:v1",
+          "fidelity": "unreconstructable",
+          "reasons": [
+            "no base tree: the initial repository state is not in the session",
+            "6 replayed file(s) with an unknown post-image",
+            "10 shell write(s) onto replayed or base files",
+            "5 file(s) rest on content recovered from originalFile or a full Read"
+          ],
+          "base_tree": false,
+          "files_touched": 20,
+          "files_changed": 17,
+          "files_exact": 9,
+          "files_recovered": 5,
+          "files_unknown": 6,
+          "counts": {
+            "edit_calls": 47,
+            "edit_outside_root": 5,
+            "edits_applied": 21,
+            "original_file_checks": 24,
+            "original_file_matches": 24,
+            "read_checks": 2,
+            "read_matches": 2,
+            "read_unchecked": 11,
+            "recovered_from_read": 8,
+            "shell_calls": 46,
+            "shell_copies_replayed": 1,
+            "shell_deletes_replayed": 6,
+            "shell_write": 10,
+            "shell_write_outside_root": 3,
+            "subagents_read_only": 1,
+            "writes_applied": 21
+          }
+        },
+        "base_commit": {
+          "status": "commit_seen_repository_unidentified",
+          "head_shas_before_change": [
+            "3adc8c9"
+          ],
+          "head_full_sha": false,
+          "head_seen_after_change": 0,
+          "clean_tree_before_change": null,
+          "commits_made": [],
+          "pr_links": 0,
+          "repository_identified": false,
+          "repository_sha256": null,
+          "cwd_matches_repository": false,
+          "branch_named": true,
+          "public_in_transcript": false,
+          "public_verified": false
+        },
+        "licence": {
+          "spdx": null,
+          "evidence": null,
+          "claimed": null
+        },
+        "test_environment": {
+          "runner": null,
+          "runs": 0,
+          "last_outcome": null
+        },
+        "signals": {
+          "shell_calls": 45,
+          "tool_results": 164,
+          "tool_errors": 17,
+          "environment_errors": 1,
+          "environment_markers": [
+            "git_safety"
+          ],
+          "sandbox_messages": 0,
+          "user_rejections": 1,
+          "rejected_edits": 0,
+          "final_prompt_reports_failure": false,
+          "file_changes": 17,
+          "code_files_changed": 17,
+          "presentation_files_changed": 0,
+          "other_files_changed": 6,
+          "test_runs": 0,
+          "test_runner": null,
+          "last_test": null,
+          "absent_reads": 0,
+          "base_commit": "commit_seen_repository_unidentified",
+          "unresolved_requirements": [],
+          "active_requirements": 0,
+          "active_changes": 0,
+          "short_first_prompt": false,
+          "operational_objective": false,
+          "continued_session": false,
+          "tool_results_recorded": true
+        },
+        "agent_text_sanitizer": "sanitize-natural:v1",
+        "redactions": {
+          "handles": 5
+        }
+      }
+    },
+    {
+      "schema_version": "0.1.0",
+      "record_id": "tc-113f92342fbb",
+      "session_id": "7563bddf-c1a0-4c3e-86ee-062bf288e6d3",
+      "population": "natural:chat",
+      "source_url": "https://huggingface.co/datasets/trace-commons/agent-traces",
+      "source_id": "7563bddf-c1a0-4c3e-86ee-062bf288e6d3",
+      "source_revision": "112ebd4d03ce852b00e935d523107c3d0c9a65bf",
+      "repo_url": null,
+      "base_commit": null,
+      "licenses": {
+        "dataset": "CC-BY-4.0",
+        "code": "NOASSERTION"
+      },
+      "permission_basis": "CC-BY-4.0 compilation; contributor certification; embedded code keeps its own licence",
+      "trace_sha256": "113f92342fbb0cea1dafe2660d3cfeff24129f8d4c8c7257b5a6836a2820f666",
+      "snapshot_manifest_sha256": null,
+      "capture_method": "Trace Commons donation (donate-trace skill), raw claude_code session file",
+      "redaction_status": "source_redacted",
+      "task_family_id": "tc-113f92342fbb",
+      "eligibility": "rejected",
+      "rejection_reasons": [
+        "no recoverable base commit (none)",
+        "replay: unreconstructable without a base tree",
+        "no code licence identified"
+      ],
+      "triage": {
+        "category": "incomplete_evidence",
+        "method": "rule:v1",
+        "confidence": "high",
+        "reasons": [
+          "incomplete_evidence: no recoverable base commit (none)"
+        ],
+        "correction_event_ids": [
+          "L000512.00",
+          "L000555.00",
+          "L000721.00"
+        ]
+      },
+      "accessed": "2026-11-21T02:44:07Z",
+      "notes": "",
+      "screening": {
+        "method": "screen-trace-commons:v1",
+        "triage_method": "rule:v1",
+        "harness": "claude_code",
+        "file_id": "7563bddf-c1a0-4c3e-86ee-062bf288e6d3",
+        "file_sha256": "113f92342fbb0cea1dafe2660d3cfeff24129f8d4c8c7257b5a6836a2820f666",
+        "download_record_match": true,
+        "events": 622,
+        "donation_tail_events": 0,
+        "user_prompts": 10,
+        "ide_context_blocks": 0,
+        "correction_candidates": 3,
+        "correction_refs": [
+          "L000512.00",
+          "L000555.00",
+          "L000721.00"
+        ],
+        "user_prompts_in_file": 10,
+        "correction_candidates_in_file": 3,
+        "original_file_present": true,
+        "original_file_values": 26,
+        "fidelity": "unreconstructable",
+        "replay": {
+          "method": "replay:v1",
+          "fidelity": "unreconstructable",
+          "reasons": [
+            "no base tree: the initial repository state is not in the session",
+            "2 replayed file(s) with an unknown post-image",
+            "27 edit(s) on content the transcript does not show",
+            "7 Read result(s) that disagree with the replayed state",
+            "4 originalFile value(s) that disagree with the replayed file",
+            "14 file(s) rest on content recovered from originalFile or a full Read"
+          ],
+          "base_tree": false,
+          "files_touched": 26,
+          "files_changed": 15,
+          "files_exact": 10,
+          "files_recovered": 14,
+          "files_unknown": 2,
+          "counts": {
+            "edit_calls": 70,
+            "edit_error": 3,
+            "edit_outside_root": 2,
+            "edits_applied": 16,
+            "original_file_checks": 26,
+            "original_file_matches": 22,
+            "original_file_mismatch": 4,
+            "read_checks": 20,
+            "read_matches": 13,
+            "read_mismatch": 7,
+            "read_unchecked": 40,
+            "recovered_from_read": 16,
+            "shell_calls": 62,
+            "shell_deletes_replayed": 6,
+            "unknown_base": 27,
+            "writes_applied": 22
+          }
+        },
+        "base_commit": {
+          "status": "none",
+          "head_shas_before_change": [],
+          "head_full_sha": false,
+          "head_seen_after_change": 0,
+          "clean_tree_before_change": null,
+          "commits_made": [],
+          "pr_links": 0,
+          "repository_identified": false,
+          "repository_sha256": null,
+          "cwd_matches_repository": false,
+          "branch_named": false,
+          "public_in_transcript": false,
+          "public_verified": false
+        },
+        "licence": {
+          "spdx": null,
+          "evidence": null,
+          "claimed": null
+        },
+        "test_environment": {
+          "runner": null,
+          "runs": 0,
+          "last_outcome": null
+        },
+        "signals": {
+          "shell_calls": 61,
+          "tool_results": 239,
+          "tool_errors": 17,
+          "environment_errors": 1,
+          "environment_markers": [
+            "command_not_found"
+          ],
+          "sandbox_messages": 0,
+          "user_rejections": 1,
+          "rejected_edits": 0,
+          "final_prompt_reports_failure": false,
+          "file_changes": 15,
+          "code_files_changed": 10,
+          "presentation_files_changed": 1,
+          "other_files_changed": 6,
+          "test_runs": 0,
+          "test_runner": null,
+          "last_test": null,
+          "absent_reads": 0,
+          "base_commit": "none",
+          "unresolved_requirements": [],
+          "active_requirements": 0,
+          "active_changes": 0,
+          "short_first_prompt": false,
+          "operational_objective": false,
+          "continued_session": false,
+          "tool_results_recorded": true
+        },
+        "agent_text_sanitizer": "sanitize-natural:v1",
+        "redactions": {
+          "handles": 1,
+          "ips": 14,
+          "secrets": 1
+        }
+      }
+    },
+    {
+      "schema_version": "0.1.0",
+      "record_id": "tc-905ddb1d8d7f",
+      "session_id": "860618e1-0cf6-43c6-81cf-fe67123082ba",
+      "population": "natural:chat",
+      "source_url": "https://huggingface.co/datasets/trace-commons/agent-traces",
+      "source_id": "860618e1-0cf6-43c6-81cf-fe67123082ba",
+      "source_revision": "112ebd4d03ce852b00e935d523107c3d0c9a65bf",
+      "repo_url": null,
+      "base_commit": null,
+      "licenses": {
+        "dataset": "CC-BY-4.0",
+        "code": "NOASSERTION"
+      },
+      "permission_basis": "CC-BY-4.0 compilation; contributor certification; embedded code keeps its own licence",
+      "trace_sha256": "905ddb1d8d7f6ada5898a5085d0a190fbcb491bb66600c1561f64ad26164ce47",
+      "snapshot_manifest_sha256": null,
+      "capture_method": "Trace Commons donation (donate-trace skill), raw claude_code session file",
+      "redaction_status": "source_redacted",
+      "task_family_id": "tc-905ddb1d8d7f",
+      "eligibility": "rejected",
+      "rejection_reasons": [
+        "no recoverable base commit (none)",
+        "replay: unreconstructable without a base tree",
+        "no code licence identified"
+      ],
+      "triage": {
+        "category": "incomplete_evidence",
+        "method": "rule:v1",
+        "confidence": "high",
+        "reasons": [
+          "incomplete_evidence: no recoverable base commit (none)",
+          "ambiguous_objective: the first request has at most three words"
+        ],
+        "correction_event_ids": [
+          "L000034.00",
+          "L000310.00",
+          "L000375.00",
+          "L000404.00",
+          "L000564.00",
+          "L000684.00"
+        ]
+      },
+      "accessed": "2026-11-21T02:44:07Z",
+      "notes": "",
+      "screening": {
+        "method": "screen-trace-commons:v1",
+        "triage_method": "rule:v1",
+        "harness": "claude_code",
+        "file_id": "860618e1-0cf6-43c6-81cf-fe67123082ba",
+        "file_sha256": "905ddb1d8d7f6ada5898a5085d0a190fbcb491bb66600c1561f64ad26164ce47",
+        "download_record_match": true,
+        "events": 700,
+        "donation_tail_events": 0,
+        "user_prompts": 38,
+        "ide_context_blocks": 0,
+        "correction_candidates": 6,
+        "correction_refs": [
+          "L000034.00",
+          "L000310.00",
+          "L000375.00",
+          "L000404.00",
+          "L000564.00",
+          "L000684.00"
+        ],
+        "user_prompts_in_file": 38,
+        "correction_candidates_in_file": 6,
+        "original_file_present": true,
+        "original_file_values": 68,
+        "fidelity": "unreconstructable",
+        "replay": {
+          "method": "replay:v1",
+          "fidelity": "unreconstructable",
+          "reasons": [
+            "no base tree: the initial repository state is not in the session",
+            "3 replayed file(s) with an unknown post-image",
+            "3 edit(s) on content the transcript does not show",
+            "2 shell write(s) onto replayed or base files",
+            "1 shell write(s) whose target could not be resolved",
+            "5 file(s) rest on content recovered from originalFile or a full Read"
+          ],
+          "base_tree": false,
+          "files_touched": 40,
+          "files_changed": 39,
+          "files_exact": 32,
+          "files_recovered": 5,
+          "files_unknown": 3,
+          "counts": {
+            "edit_calls": 114,
+            "edit_error": 1,
+            "edit_outside_root": 14,
+            "edits_applied": 68,
+            "original_file_checks": 58,
+            "original_file_matches": 58,
+            "read_checks": 25,
+            "read_matches": 25,
+            "read_unchecked": 6,
+            "recovered_from_read": 7,
+            "shell_calls": 59,
+            "shell_deletes_replayed": 22,
+            "shell_write": 2,
+            "shell_write_unresolved": 1,
+            "subagents_read_only": 1,
+            "unknown_base": 3,
+            "writes_applied": 28
+          }
+        },
+        "base_commit": {
+          "status": "none",
+          "head_shas_before_change": [],
+          "head_full_sha": false,
+          "head_seen_after_change": 0,
+          "clean_tree_before_change": null,
+          "commits_made": [],
+          "pr_links": 0,
+          "repository_identified": false,
+          "repository_sha256": null,
+          "cwd_matches_repository": false,
+          "branch_named": false,
+          "public_in_transcript": false,
+          "public_verified": false
+        },
+        "licence": {
+          "spdx": null,
+          "evidence": null,
+          "claimed": null
+        },
+        "test_environment": {
+          "runner": null,
+          "runs": 0,
+          "last_outcome": null
+        },
+        "signals": {
+          "shell_calls": 58,
+          "tool_results": 259,
+          "tool_errors": 15,
+          "environment_errors": 5,
+          "environment_markers": [
+            "command_not_found",
+            "permission"
+          ],
+          "sandbox_messages": 0,
+          "user_rejections": 1,
+          "rejected_edits": 0,
+          "final_prompt_reports_failure": false,
+          "file_changes": 39,
+          "code_files_changed": 13,
+          "presentation_files_changed": 9,
+          "other_files_changed": 9,
+          "test_runs": 0,
+          "test_runner": null,
+          "last_test": null,
+          "absent_reads": 0,
+          "base_commit": "none",
+          "unresolved_requirements": [],
+          "active_requirements": 0,
+          "active_changes": 0,
+          "short_first_prompt": true,
+          "operational_objective": false,
+          "continued_session": false,
+          "tool_results_recorded": true
+        },
+        "agent_text_sanitizer": "sanitize-natural:v1",
+        "redactions": {}
+      }
+    },
+    {
+      "schema_version": "0.1.0",
+      "record_id": "tc-05f2c2f7f567",
+      "session_id": "89cf9e13-a4bd-4cf9-9486-7c89737bec1b",
+      "population": "natural:chat",
+      "source_url": "https://huggingface.co/datasets/trace-commons/agent-traces",
+      "source_id": "89cf9e13-a4bd-4cf9-9486-7c89737bec1b",
+      "source_revision": "112ebd4d03ce852b00e935d523107c3d0c9a65bf",
+      "repo_url": null,
+      "base_commit": null,
+      "licenses": {
+        "dataset": "CC-BY-4.0",
+        "code": "Apache-2.0"
+      },
+      "permission_basis": "CC-BY-4.0 compilation; contributor certification; embedded code keeps its own licence",
+      "trace_sha256": "05f2c2f7f5677998414b7cfc357afa650fd67c8b837911e29022eecfc98ec3d6",
+      "snapshot_manifest_sha256": null,
+      "capture_method": "Trace Commons donation (donate-trace skill), raw claude_code session file",
+      "redaction_status": "source_redacted",
+      "task_family_id": "tc-05f2c2f7f567",
+      "eligibility": "rejected",
+      "rejection_reasons": [
+        "no recoverable base commit (repository_identified_no_commit)",
+        "replay: unreconstructable without a base tree",
+        "no correction candidate under the correction-cue rule"
+      ],
+      "triage": {
+        "category": "incomplete_evidence",
+        "method": "rule:v1",
+        "confidence": "high",
+        "reasons": [
+          "incomplete_evidence: no recoverable base commit (repository_identified_no_commit)"
+        ],
+        "correction_event_ids": []
+      },
+      "accessed": "2026-11-21T02:44:07Z",
+      "notes": "",
+      "screening": {
+        "method": "screen-trace-commons:v1",
+        "triage_method": "rule:v1",
+        "harness": "claude_code",
+        "file_id": "89cf9e13-a4bd-4cf9-9486-7c89737bec1b",
+        "file_sha256": "05f2c2f7f5677998414b7cfc357afa650fd67c8b837911e29022eecfc98ec3d6",
+        "download_record_match": true,
+        "events": 162,
+        "donation_tail_events": 14,
+        "user_prompts": 5,
+        "ide_context_blocks": 0,
+        "correction_candidates": 0,
+        "correction_refs": [],
+        "user_prompts_in_file": 6,
+        "correction_candidates_in_file": 0,
+        "original_file_present": true,
+        "original_file_values": 3,
+        "fidelity": "unreconstructable",
+        "replay": {
+          "method": "replay:v1",
+          "fidelity": "unreconstructable",
+          "reasons": [
+            "no base tree: the initial repository state is not in the session",
+            "1 shell write(s) whose target could not be resolved",
+            "3 file(s) rest on content recovered from originalFile or a full Read"
+          ],
+          "base_tree": false,
+          "files_touched": 3,
+          "files_changed": 2,
+          "files_exact": 0,
+          "files_recovered": 3,
+          "files_unknown": 0,
+          "counts": {
+            "edit_calls": 3,
+            "edits_applied": 3,
+            "original_file_checks": 3,
+            "original_file_matches": 3,
+            "read_unchecked": 1,
+            "recovered_from_read": 3,
+            "shell_calls": 37,
+            "shell_write_outside_root": 4,
+            "shell_write_unresolved": 1,
+            "subagents_read_only": 1
+          }
+        },
+        "base_commit": {
+          "status": "repository_identified_no_commit",
+          "head_shas_before_change": [],
+          "head_full_sha": false,
+          "head_seen_after_change": 0,
+          "clean_tree_before_change": null,
+          "commits_made": [],
+          "pr_links": 0,
+          "repository_identified": true,
+          "repository_sha256": "ad92690428d2456e09dbf4a019a872e613c8c11d21354034647a0f3c240781e2",
+          "cwd_matches_repository": true,
+          "branch_named": true,
+          "public_in_transcript": false,
+          "public_verified": false
+        },
+        "licence": {
+          "spdx": "Apache-2.0",
+          "evidence": "licence printed by a shell command",
+          "claimed": null
+        },
+        "test_environment": {
+          "runner": null,
+          "runs": 0,
+          "last_outcome": null
+        },
+        "signals": {
+          "shell_calls": 37,
+          "tool_results": 45,
+          "tool_errors": 0,
+          "environment_errors": 0,
+          "environment_markers": [],
+          "sandbox_messages": 0,
+          "user_rejections": 0,
+          "rejected_edits": 0,
+          "final_prompt_reports_failure": false,
+          "file_changes": 2,
+          "code_files_changed": 2,
+          "presentation_files_changed": 0,
+          "other_files_changed": 0,
+          "test_runs": 0,
+          "test_runner": null,
+          "last_test": null,
+          "absent_reads": 0,
+          "base_commit": "repository_identified_no_commit",
+          "unresolved_requirements": [],
+          "active_requirements": 0,
+          "active_changes": 0,
+          "short_first_prompt": false,
+          "operational_objective": false,
+          "continued_session": false,
+          "tool_results_recorded": true
+        },
+        "agent_text_sanitizer": "sanitize-natural:v1",
+        "redactions": {
+          "ips": 4
+        }
+      }
+    },
+    {
+      "schema_version": "0.1.0",
+      "record_id": "tc-1b1fcf6f8931",
+      "session_id": "92833a43-c30d-4b44-8447-c32ee17d6e6e",
+      "population": "natural:chat",
+      "source_url": "https://huggingface.co/datasets/trace-commons/agent-traces",
+      "source_id": "92833a43-c30d-4b44-8447-c32ee17d6e6e",
+      "source_revision": "112ebd4d03ce852b00e935d523107c3d0c9a65bf",
+      "repo_url": null,
+      "base_commit": null,
+      "licenses": {
+        "dataset": "CC-BY-4.0",
+        "code": "NOASSERTION"
+      },
+      "permission_basis": "CC-BY-4.0 compilation; contributor certification; embedded code keeps its own licence",
+      "trace_sha256": "1b1fcf6f893134237d1a0f6a2150c0e3d998e61fe1d670f532fd66c549b1690d",
+      "snapshot_manifest_sha256": null,
+      "capture_method": "Trace Commons donation (donate-trace skill), raw claude_code session file",
+      "redaction_status": "source_redacted",
+      "task_family_id": "tc-1b1fcf6f8931",
+      "eligibility": "rejected",
+      "rejection_reasons": [
+        "no recoverable base commit (none)",
+        "replay: unreconstructable without a base tree",
+        "no correction candidate under the correction-cue rule",
+        "no code licence identified"
+      ],
+      "triage": {
+        "category": "incomplete_evidence",
+        "method": "rule:v1",
+        "confidence": "high",
+        "reasons": [
+          "incomplete_evidence: no recoverable base commit (none)"
+        ],
+        "correction_event_ids": []
+      },
+      "accessed": "2026-11-21T02:44:07Z",
+      "notes": "",
+      "screening": {
+        "method": "screen-trace-commons:v1",
+        "triage_method": "rule:v1",
+        "harness": "claude_code",
+        "file_id": "92833a43-c30d-4b44-8447-c32ee17d6e6e",
+        "file_sha256": "1b1fcf6f893134237d1a0f6a2150c0e3d998e61fe1d670f532fd66c549b1690d",
+        "download_record_match": true,
+        "events": 163,
+        "donation_tail_events": 0,
+        "user_prompts": 2,
+        "ide_context_blocks": 0,
+        "correction_candidates": 0,
+        "correction_refs": [],
+        "user_prompts_in_file": 2,
+        "correction_candidates_in_file": 0,
+        "original_file_present": true,
+        "original_file_values": 4,
+        "fidelity": "unreconstructable",
+        "replay": {
+          "method": "replay:v1",
+          "fidelity": "unreconstructable",
+          "reasons": [
+            "no base tree: the initial repository state is not in the session",
+            "5 file(s) rest on content recovered from originalFile or a full Read"
+          ],
+          "base_tree": false,
+          "files_touched": 15,
+          "files_changed": 11,
+          "files_exact": 10,
+          "files_recovered": 5,
+          "files_unknown": 0,
+          "counts": {
+            "edit_calls": 21,
+            "edit_error": 1,
+            "edits_applied": 11,
+            "original_file_checks": 4,
+            "original_file_matches": 4,
+            "read_checks": 3,
+            "read_matches": 3,
+            "read_unchecked": 1,
+            "recovered_from_read": 8,
+            "shell_calls": 16,
+            "shell_deletes_replayed": 2,
+            "writes_applied": 9
+          }
+        },
+        "base_commit": {
+          "status": "none",
+          "head_shas_before_change": [],
+          "head_full_sha": false,
+          "head_seen_after_change": 0,
+          "clean_tree_before_change": null,
+          "commits_made": [],
+          "pr_links": 0,
+          "repository_identified": false,
+          "repository_sha256": null,
+          "cwd_matches_repository": false,
+          "branch_named": false,
+          "public_in_transcript": false,
+          "public_verified": false
+        },
+        "licence": {
+          "spdx": null,
+          "evidence": null,
+          "claimed": null
+        },
+        "test_environment": {
+          "runner": "test script",
+          "runs": 2,
+          "last_outcome": "passed"
+        },
+        "signals": {
+          "shell_calls": 16,
+          "tool_results": 64,
+          "tool_errors": 3,
+          "environment_errors": 0,
+          "environment_markers": [],
+          "sandbox_messages": 0,
+          "user_rejections": 0,
+          "rejected_edits": 0,
+          "final_prompt_reports_failure": false,
+          "file_changes": 11,
+          "code_files_changed": 8,
+          "presentation_files_changed": 0,
+          "other_files_changed": 2,
+          "test_runs": 2,
+          "test_runner": "test script",
+          "last_test": "passed",
+          "absent_reads": 0,
+          "base_commit": "none",
+          "unresolved_requirements": [],
+          "active_requirements": 0,
+          "active_changes": 0,
+          "short_first_prompt": false,
+          "operational_objective": false,
+          "continued_session": false,
+          "tool_results_recorded": true
+        },
+        "agent_text_sanitizer": "sanitize-natural:v1",
+        "redactions": {
+          "handles": 3
+        }
+      }
+    },
+    {
+      "schema_version": "0.1.0",
+      "record_id": "tc-04e26ca61648",
+      "session_id": "a20a4070-6246-4e9e-adf6-f38b0c1dc3fa",
+      "population": "natural:chat",
+      "source_url": "https://huggingface.co/datasets/trace-commons/agent-traces",
+      "source_id": "a20a4070-6246-4e9e-adf6-f38b0c1dc3fa",
+      "source_revision": "112ebd4d03ce852b00e935d523107c3d0c9a65bf",
+      "repo_url": null,
+      "base_commit": null,
+      "licenses": {
+        "dataset": "CC-BY-4.0",
+        "code": "NOASSERTION"
+      },
+      "permission_basis": "CC-BY-4.0 compilation; contributor certification; embedded code keeps its own licence",
+      "trace_sha256": "04e26ca61648f0020270366e726124de1fd955bb00d0b1409702f84df12c6e53",
+      "snapshot_manifest_sha256": null,
+      "capture_method": "Trace Commons donation (donate-trace skill), raw claude_code session file",
+      "redaction_status": "source_redacted",
+      "task_family_id": "tc-04e26ca61648",
+      "eligibility": "rejected",
+      "rejection_reasons": [
+        "no recoverable base commit (none)",
+        "replay: unreconstructable without a base tree",
+        "no code licence identified"
+      ],
+      "triage": {
+        "category": "incomplete_evidence",
+        "method": "rule:v1",
+        "confidence": "high",
+        "reasons": [
+          "incomplete_evidence: no recoverable base commit (none)",
+          "apparent_model_failure: the last user prompt reports that the result does not work"
+        ],
+        "correction_event_ids": [
+          "L000392.00",
+          "L000896.00"
+        ]
+      },
+      "accessed": "2026-11-21T02:44:07Z",
+      "notes": "",
+      "screening": {
+        "method": "screen-trace-commons:v1",
+        "triage_method": "rule:v1",
+        "harness": "claude_code",
+        "file_id": "a20a4070-6246-4e9e-adf6-f38b0c1dc3fa",
+        "file_sha256": "04e26ca61648f0020270366e726124de1fd955bb00d0b1409702f84df12c6e53",
+        "download_record_match": true,
+        "events": 743,
+        "donation_tail_events": 0,
+        "user_prompts": 7,
+        "ide_context_blocks": 0,
+        "correction_candidates": 2,
+        "correction_refs": [
+          "L000392.00",
+          "L000896.00"
+        ],
+        "user_prompts_in_file": 7,
+        "correction_candidates_in_file": 2,
+        "original_file_present": true,
+        "original_file_values": 32,
+        "fidelity": "unreconstructable",
+        "replay": {
+          "method": "replay:v1",
+          "fidelity": "unreconstructable",
+          "reasons": [
+            "no base tree: the initial repository state is not in the session",
+            "1 replayed file(s) with an unknown post-image",
+            "1 shell write(s) onto replayed or base files",
+            "1 originalFile value(s) that disagree with the replayed file",
+            "15 file(s) rest on content recovered from originalFile or a full Read"
+          ],
+          "base_tree": false,
+          "files_touched": 25,
+          "files_changed": 18,
+          "files_exact": 9,
+          "files_recovered": 15,
+          "files_unknown": 1,
+          "counts": {
+            "edit_calls": 112,
+            "edits_applied": 102,
+            "original_file_checks": 32,
+            "original_file_matches": 31,
+            "original_file_mismatch": 1,
+            "read_checks": 35,
+            "read_matches": 35,
+            "read_unchecked": 1,
+            "recovered_from_read": 14,
+            "shell_calls": 76,
+            "shell_deletes_replayed": 1,
+            "shell_write": 1,
+            "subagents_read_only": 1,
+            "writes_applied": 10
+          }
+        },
+        "base_commit": {
+          "status": "none",
+          "head_shas_before_change": [],
+          "head_full_sha": false,
+          "head_seen_after_change": 0,
+          "clean_tree_before_change": null,
+          "commits_made": [],
+          "pr_links": 0,
+          "repository_identified": false,
+          "repository_sha256": null,
+          "cwd_matches_repository": false,
+          "branch_named": false,
+          "public_in_transcript": false,
+          "public_verified": false
+        },
+        "licence": {
+          "spdx": null,
+          "evidence": null,
+          "claimed": null
+        },
+        "test_environment": {
+          "runner": null,
+          "runs": 0,
+          "last_outcome": null
+        },
+        "signals": {
+          "shell_calls": 75,
+          "tool_results": 275,
+          "tool_errors": 28,
+          "environment_errors": 5,
+          "environment_markers": [
+            "command_not_found"
+          ],
+          "sandbox_messages": 0,
+          "user_rejections": 1,
+          "rejected_edits": 0,
+          "final_prompt_reports_failure": true,
+          "file_changes": 18,
+          "code_files_changed": 15,
+          "presentation_files_changed": 1,
+          "other_files_changed": 0,
+          "test_runs": 0,
+          "test_runner": null,
+          "last_test": null,
+          "absent_reads": 0,
+          "base_commit": "none",
+          "unresolved_requirements": [],
+          "active_requirements": 0,
+          "active_changes": 0,
+          "short_first_prompt": false,
+          "operational_objective": false,
+          "continued_session": false,
+          "tool_results_recorded": true
+        },
+        "agent_text_sanitizer": "sanitize-natural:v1",
+        "redactions": {
+          "secrets": 2
+        }
+      }
+    },
+    {
+      "schema_version": "0.1.0",
+      "record_id": "tc-3d5971c8fc3b",
+      "session_id": "ba1b4916-b581-4e05-9a5c-c1d8ffc9b50a",
+      "population": "natural:chat",
+      "source_url": "https://huggingface.co/datasets/trace-commons/agent-traces",
+      "source_id": "ba1b4916-b581-4e05-9a5c-c1d8ffc9b50a",
+      "source_revision": "112ebd4d03ce852b00e935d523107c3d0c9a65bf",
+      "repo_url": null,
+      "base_commit": null,
+      "licenses": {
+        "dataset": "CC-BY-4.0",
+        "code": "NOASSERTION"
+      },
+      "permission_basis": "CC-BY-4.0 compilation; contributor certification; embedded code keeps its own licence",
+      "trace_sha256": "3d5971c8fc3b07fffcd7a23a350c74d576d5052ded23b2d8686a07cb0c93073b",
+      "snapshot_manifest_sha256": null,
+      "capture_method": "Trace Commons donation (donate-trace skill), raw claude_code session file",
+      "redaction_status": "source_redacted",
+      "task_family_id": "tc-3d5971c8fc3b",
+      "eligibility": "rejected",
+      "rejection_reasons": [
+        "no recoverable base commit (none)",
+        "replay: unreconstructable without a base tree",
+        "no code licence identified"
+      ],
+      "triage": {
+        "category": "incomplete_evidence",
+        "method": "rule:v1",
+        "confidence": "high",
+        "reasons": [
+          "incomplete_evidence: no recoverable base commit (none)"
+        ],
+        "correction_event_ids": [
+          "L000038.00",
+          "L000184.00",
+          "L000194.00"
+        ]
+      },
+      "accessed": "2026-11-21T02:44:07Z",
+      "notes": "",
+      "screening": {
+        "method": "screen-trace-commons:v1",
+        "triage_method": "rule:v1",
+        "harness": "claude_code",
+        "file_id": "ba1b4916-b581-4e05-9a5c-c1d8ffc9b50a",
+        "file_sha256": "3d5971c8fc3b07fffcd7a23a350c74d576d5052ded23b2d8686a07cb0c93073b",
+        "download_record_match": true,
+        "events": 123,
+        "donation_tail_events": 0,
+        "user_prompts": 16,
+        "ide_context_blocks": 0,
+        "correction_candidates": 3,
+        "correction_refs": [
+          "L000038.00",
+          "L000184.00",
+          "L000194.00"
+        ],
+        "user_prompts_in_file": 16,
+        "correction_candidates_in_file": 3,
+        "original_file_present": true,
+        "original_file_values": 4,
+        "fidelity": "unreconstructable",
+        "replay": {
+          "method": "replay:v1",
+          "fidelity": "unreconstructable",
+          "reasons": [
+            "no base tree: the initial repository state is not in the session",
+            "2 file(s) rest on content recovered from originalFile or a full Read"
+          ],
+          "base_tree": false,
+          "files_touched": 9,
+          "files_changed": 7,
+          "files_exact": 7,
+          "files_recovered": 2,
+          "files_unknown": 0,
+          "counts": {
+            "edit_calls": 15,
+            "edits_applied": 5,
+            "original_file_checks": 4,
+            "original_file_matches": 4,
+            "read_checks": 5,
+            "read_matches": 5,
+            "read_unchecked": 1,
+            "recovered_from_read": 2,
+            "shell_calls": 10,
+            "writes_applied": 10
+          }
+        },
+        "base_commit": {
+          "status": "none",
+          "head_shas_before_change": [],
+          "head_full_sha": false,
+          "head_seen_after_change": 0,
+          "clean_tree_before_change": null,
+          "commits_made": [],
+          "pr_links": 0,
+          "repository_identified": false,
+          "repository_sha256": null,
+          "cwd_matches_repository": false,
+          "branch_named": false,
+          "public_in_transcript": false,
+          "public_verified": false
+        },
+        "licence": {
+          "spdx": null,
+          "evidence": null,
+          "claimed": null
+        },
+        "test_environment": {
+          "runner": null,
+          "runs": 0,
+          "last_outcome": null
+        },
+        "signals": {
+          "shell_calls": 8,
+          "tool_results": 37,
+          "tool_errors": 2,
+          "environment_errors": 0,
+          "environment_markers": [],
+          "sandbox_messages": 0,
+          "user_rejections": 2,
+          "rejected_edits": 0,
+          "final_prompt_reports_failure": false,
+          "file_changes": 7,
+          "code_files_changed": 6,
+          "presentation_files_changed": 0,
+          "other_files_changed": 1,
+          "test_runs": 0,
+          "test_runner": null,
+          "last_test": null,
+          "absent_reads": 0,
+          "base_commit": "none",
+          "unresolved_requirements": [],
+          "active_requirements": 0,
+          "active_changes": 0,
+          "short_first_prompt": false,
+          "operational_objective": false,
+          "continued_session": false,
+          "tool_results_recorded": true
+        },
+        "agent_text_sanitizer": "sanitize-natural:v1",
+        "redactions": {}
+      }
+    },
+    {
+      "schema_version": "0.1.0",
+      "record_id": "tc-893ec7fdb53b",
+      "session_id": "c84c0ad3-c368-40df-87b1-5ef9effe237a",
+      "population": "natural:chat",
+      "source_url": "https://huggingface.co/datasets/trace-commons/agent-traces",
+      "source_id": "c84c0ad3-c368-40df-87b1-5ef9effe237a",
+      "source_revision": "112ebd4d03ce852b00e935d523107c3d0c9a65bf",
+      "repo_url": null,
+      "base_commit": null,
+      "licenses": {
+        "dataset": "CC-BY-4.0",
+        "code": "NOASSERTION"
+      },
+      "permission_basis": "CC-BY-4.0 compilation; contributor certification; embedded code keeps its own licence",
+      "trace_sha256": "893ec7fdb53b50796262d1d12d5695cf17acab70fbc0821a9dfdef3d7d21e423",
+      "snapshot_manifest_sha256": null,
+      "capture_method": "Trace Commons donation (donate-trace skill), raw claude_code session file",
+      "redaction_status": "source_redacted",
+      "task_family_id": "tc-893ec7fdb53b",
+      "eligibility": "rejected",
+      "rejection_reasons": [
+        "no recoverable base commit (none)",
+        "replay: unreconstructable without a base tree",
+        "no code licence identified"
+      ],
+      "triage": {
+        "category": "incomplete_evidence",
+        "method": "rule:v1",
+        "confidence": "high",
+        "reasons": [
+          "incomplete_evidence: no recoverable base commit (none)"
+        ],
+        "correction_event_ids": [
+          "L000106.01",
+          "L000490.00"
+        ]
+      },
+      "accessed": "2026-11-21T02:44:07Z",
+      "notes": "",
+      "screening": {
+        "method": "screen-trace-commons:v1",
+        "triage_method": "rule:v1",
+        "harness": "claude_code",
+        "file_id": "c84c0ad3-c368-40df-87b1-5ef9effe237a",
+        "file_sha256": "893ec7fdb53b50796262d1d12d5695cf17acab70fbc0821a9dfdef3d7d21e423",
+        "download_record_match": true,
+        "events": 343,
+        "donation_tail_events": 0,
+        "user_prompts": 9,
+        "ide_context_blocks": 0,
+        "correction_candidates": 2,
+        "correction_refs": [
+          "L000106.01",
+          "L000490.00"
+        ],
+        "user_prompts_in_file": 9,
+        "correction_candidates_in_file": 2,
+        "original_file_present": true,
+        "original_file_values": 28,
+        "fidelity": "unreconstructable",
+        "replay": {
+          "method": "replay:v1",
+          "fidelity": "unreconstructable",
+          "reasons": [
+            "no base tree: the initial repository state is not in the session",
+            "1 replayed file(s) with an unknown post-image",
+            "1 shell write(s) onto replayed or base files",
+            "1 file(s) rest on content recovered from originalFile or a full Read"
+          ],
+          "base_tree": false,
+          "files_touched": 23,
+          "files_changed": 23,
+          "files_exact": 21,
+          "files_recovered": 1,
+          "files_unknown": 1,
+          "counts": {
+            "edit_calls": 45,
+            "edit_error": 1,
+            "edits_applied": 18,
+            "original_file_checks": 28,
+            "original_file_matches": 28,
+            "read_checks": 11,
+            "read_matches": 11,
+            "recovered_from_read": 6,
+            "shell_calls": 56,
+            "shell_deletes_replayed": 1,
+            "shell_write": 1,
+            "writes_applied": 26
+          }
+        },
+        "base_commit": {
+          "status": "none",
+          "head_shas_before_change": [],
+          "head_full_sha": false,
+          "head_seen_after_change": 0,
+          "clean_tree_before_change": null,
+          "commits_made": [],
+          "pr_links": 0,
+          "repository_identified": false,
+          "repository_sha256": null,
+          "cwd_matches_repository": false,
+          "branch_named": false,
+          "public_in_transcript": false,
+          "public_verified": false
+        },
+        "licence": {
+          "spdx": null,
+          "evidence": null,
+          "claimed": null
+        },
+        "test_environment": {
+          "runner": null,
+          "runs": 0,
+          "last_outcome": null
+        },
+        "signals": {
+          "shell_calls": 55,
+          "tool_results": 131,
+          "tool_errors": 10,
+          "environment_errors": 0,
+          "environment_markers": [],
+          "sandbox_messages": 0,
+          "user_rejections": 1,
+          "rejected_edits": 0,
+          "final_prompt_reports_failure": false,
+          "file_changes": 23,
+          "code_files_changed": 17,
+          "presentation_files_changed": 3,
+          "other_files_changed": 1,
+          "test_runs": 0,
+          "test_runner": null,
+          "last_test": null,
+          "absent_reads": 0,
+          "base_commit": "none",
+          "unresolved_requirements": [],
+          "active_requirements": 0,
+          "active_changes": 0,
+          "short_first_prompt": false,
+          "operational_objective": false,
+          "continued_session": false,
+          "tool_results_recorded": true
+        },
+        "agent_text_sanitizer": "sanitize-natural:v1",
+        "redactions": {
+          "handles": 10
+        }
+      }
+    },
+    {
+      "schema_version": "0.1.0",
+      "record_id": "tc-d320ab80b06a",
+      "session_id": "c99032e9-377b-4ae9-a9a9-ec7752b059cd",
+      "population": "natural:chat",
+      "source_url": "https://huggingface.co/datasets/trace-commons/agent-traces",
+      "source_id": "c99032e9-377b-4ae9-a9a9-ec7752b059cd",
+      "source_revision": "112ebd4d03ce852b00e935d523107c3d0c9a65bf",
+      "repo_url": null,
+      "base_commit": null,
+      "licenses": {
+        "dataset": "CC-BY-4.0",
+        "code": "NOASSERTION"
+      },
+      "permission_basis": "CC-BY-4.0 compilation; contributor certification; embedded code keeps its own licence",
+      "trace_sha256": "d320ab80b06a019d279df1f3f3f70fad0ee12b08d1eea2339e7633acbcc80f4d",
+      "snapshot_manifest_sha256": null,
+      "capture_method": "Trace Commons donation (donate-trace skill), raw claude_code session file",
+      "redaction_status": "source_redacted",
+      "task_family_id": "tc-d320ab80b06a",
+      "eligibility": "rejected",
+      "rejection_reasons": [
+        "no recoverable base commit (none)",
+        "replay: unreconstructable without a base tree",
+        "no code licence identified"
+      ],
+      "triage": {
+        "category": "incomplete_evidence",
+        "method": "rule:v1",
+        "confidence": "high",
+        "reasons": [
+          "incomplete_evidence: no recoverable base commit (none)"
+        ],
+        "correction_event_ids": [
+          "L000131.00"
+        ]
+      },
+      "accessed": "2026-11-21T02:44:07Z",
+      "notes": "",
+      "screening": {
+        "method": "screen-trace-commons:v1",
+        "triage_method": "rule:v1",
+        "harness": "claude_code",
+        "file_id": "c99032e9-377b-4ae9-a9a9-ec7752b059cd",
+        "file_sha256": "d320ab80b06a019d279df1f3f3f70fad0ee12b08d1eea2339e7633acbcc80f4d",
+        "download_record_match": true,
+        "events": 890,
+        "donation_tail_events": 0,
+        "user_prompts": 8,
+        "ide_context_blocks": 0,
+        "correction_candidates": 1,
+        "correction_refs": [
+          "L000131.00"
+        ],
+        "user_prompts_in_file": 8,
+        "correction_candidates_in_file": 1,
+        "original_file_present": true,
+        "original_file_values": 72,
+        "fidelity": "unreconstructable",
+        "replay": {
+          "method": "replay:v1",
+          "fidelity": "unreconstructable",
+          "reasons": [
+            "no base tree: the initial repository state is not in the session",
+            "4 replayed file(s) with an unknown post-image",
+            "4 shell write(s) onto replayed or base files"
+          ],
+          "base_tree": false,
+          "files_touched": 71,
+          "files_changed": 71,
+          "files_exact": 67,
+          "files_recovered": 0,
+          "files_unknown": 4,
+          "counts": {
+            "edit_calls": 156,
+            "edit_error": 1,
+            "edit_outside_root": 2,
+            "edits_applied": 83,
+            "original_file_checks": 72,
+            "original_file_matches": 72,
+            "read_checks": 87,
+            "read_matches": 87,
+            "shell_calls": 76,
+            "shell_copies_replayed": 2,
+            "shell_deletes_replayed": 9,
+            "shell_write": 4,
+            "subagents_read_only": 1,
+            "writes_applied": 70
+          }
+        },
+        "base_commit": {
+          "status": "none",
+          "head_shas_before_change": [],
+          "head_full_sha": false,
+          "head_seen_after_change": 0,
+          "clean_tree_before_change": null,
+          "commits_made": [],
+          "pr_links": 0,
+          "repository_identified": false,
+          "repository_sha256": null,
+          "cwd_matches_repository": false,
+          "branch_named": false,
+          "public_in_transcript": false,
+          "public_verified": false
+        },
+        "licence": {
+          "spdx": null,
+          "evidence": null,
+          "claimed": null
+        },
+        "test_environment": {
+          "runner": null,
+          "runs": 0,
+          "last_outcome": null
+        },
+        "signals": {
+          "shell_calls": 74,
+          "tool_results": 353,
+          "tool_errors": 24,
+          "environment_errors": 0,
+          "environment_markers": [],
+          "sandbox_messages": 0,
+          "user_rejections": 1,
+          "rejected_edits": 0,
+          "final_prompt_reports_failure": false,
+          "file_changes": 71,
+          "code_files_changed": 58,
+          "presentation_files_changed": 0,
+          "other_files_changed": 5,
+          "test_runs": 0,
+          "test_runner": null,
+          "last_test": null,
+          "absent_reads": 0,
+          "base_commit": "none",
+          "unresolved_requirements": [],
+          "active_requirements": 0,
+          "active_changes": 0,
+          "short_first_prompt": false,
+          "operational_objective": false,
+          "continued_session": false,
+          "tool_results_recorded": true
+        },
+        "agent_text_sanitizer": "sanitize-natural:v1",
+        "redactions": {
+          "handles": 8
+        }
+      }
+    },
+    {
+      "schema_version": "0.1.0",
+      "record_id": "tc-abb8c2299775",
+      "session_id": "af5c09fc-1011-4f39-b0f5-980abacbabfc",
+      "population": "natural:chat",
+      "source_url": "https://huggingface.co/datasets/trace-commons/agent-traces",
+      "source_id": "comparia-voting-fields-anon",
+      "source_revision": "112ebd4d03ce852b00e935d523107c3d0c9a65bf",
+      "repo_url": null,
+      "base_commit": null,
+      "licenses": {
+        "dataset": "CC-BY-4.0",
+        "code": "NOASSERTION"
+      },
+      "permission_basis": "CC-BY-4.0 compilation; contributor certification; embedded code keeps its own licence",
+      "trace_sha256": "abb8c2299775633c0d53dbe8218c276594f324bb71d3bfba65944a865107daf4",
+      "snapshot_manifest_sha256": null,
+      "capture_method": "Trace Commons donation (donate-trace skill), raw claude_code session file",
+      "redaction_status": "source_redacted",
+      "task_family_id": "tc-abb8c2299775",
+      "eligibility": "rejected",
+      "rejection_reasons": [
+        "unsuitable_task: no file changed by the main agent",
+        "no recoverable base commit (none)",
+        "replay: unreconstructable without a base tree",
+        "no correction candidate under the correction-cue rule",
+        "no code licence identified"
+      ],
+      "triage": {
+        "category": "unsuitable_task",
+        "method": "rule:v1",
+        "confidence": "high",
+        "reasons": [
+          "unsuitable_task: no file changed by the main agent",
+          "incomplete_evidence: no recoverable base commit (none)"
+        ],
+        "correction_event_ids": []
+      },
+      "accessed": "2026-11-21T02:44:07Z",
+      "notes": "",
+      "screening": {
+        "method": "screen-trace-commons:v1",
+        "triage_method": "rule:v1",
+        "harness": "claude_code",
+        "file_id": "comparia-voting-fields-anon",
+        "file_sha256": "abb8c2299775633c0d53dbe8218c276594f324bb71d3bfba65944a865107daf4",
+        "download_record_match": true,
+        "events": 15,
+        "donation_tail_events": 0,
+        "user_prompts": 1,
+        "ide_context_blocks": 0,
+        "correction_candidates": 0,
+        "correction_refs": [],
+        "user_prompts_in_file": 1,
+        "correction_candidates_in_file": 0,
+        "original_file_present": false,
+        "original_file_values": 0,
+        "fidelity": "unreconstructable",
+        "replay": {
+          "method": "replay:v1",
+          "fidelity": "unreconstructable",
+          "reasons": [
+            "no base tree: the initial repository state is not in the session",
+            "1 file(s) rest on content recovered from originalFile or a full Read"
+          ],
+          "base_tree": false,
+          "files_touched": 1,
+          "files_changed": 0,
+          "files_exact": 0,
+          "files_recovered": 1,
+          "files_unknown": 0,
+          "counts": {
+            "recovered_from_read": 1,
+            "subagents_read_only": 2
+          }
+        },
+        "base_commit": {
+          "status": "none",
+          "head_shas_before_change": [],
+          "head_full_sha": false,
+          "head_seen_after_change": 0,
+          "clean_tree_before_change": null,
+          "commits_made": [],
+          "pr_links": 0,
+          "repository_identified": false,
+          "repository_sha256": null,
+          "cwd_matches_repository": false,
+          "branch_named": true,
+          "public_in_transcript": false,
+          "public_verified": false
+        },
+        "licence": {
+          "spdx": null,
+          "evidence": null,
+          "claimed": null
+        },
+        "test_environment": {
+          "runner": null,
+          "runs": 0,
+          "last_outcome": null
+        },
+        "signals": {
+          "shell_calls": 0,
+          "tool_results": 3,
+          "tool_errors": 0,
+          "environment_errors": 0,
+          "environment_markers": [],
+          "sandbox_messages": 0,
+          "user_rejections": 0,
+          "rejected_edits": 0,
+          "final_prompt_reports_failure": false,
+          "file_changes": 0,
+          "code_files_changed": 0,
+          "presentation_files_changed": 0,
+          "other_files_changed": 0,
+          "test_runs": 0,
+          "test_runner": null,
+          "last_test": null,
+          "absent_reads": 0,
+          "base_commit": "none",
+          "unresolved_requirements": [],
+          "active_requirements": 0,
+          "active_changes": 0,
+          "short_first_prompt": false,
+          "operational_objective": false,
+          "continued_session": false,
+          "tool_results_recorded": true
+        },
+        "agent_text_sanitizer": "sanitize-natural:v1",
+        "redactions": {}
+      }
+    },
+    {
+      "schema_version": "0.1.0",
+      "record_id": "tc-74cfbf8b46d1",
+      "session_id": "d4c4d47d-642c-4c26-a866-51ab85587896",
+      "population": "natural:chat",
+      "source_url": "https://huggingface.co/datasets/trace-commons/agent-traces",
+      "source_id": "d4c4d47d-642c-4c26-a866-51ab85587896",
+      "source_revision": "112ebd4d03ce852b00e935d523107c3d0c9a65bf",
+      "repo_url": null,
+      "base_commit": null,
+      "licenses": {
+        "dataset": "CC-BY-4.0",
+        "code": "NOASSERTION"
+      },
+      "permission_basis": "CC-BY-4.0 compilation; contributor certification; embedded code keeps its own licence",
+      "trace_sha256": "74cfbf8b46d125aaecb04a2023cde8c927867cb441e2e87ed4269e27c886f7d5",
+      "snapshot_manifest_sha256": null,
+      "capture_method": "Trace Commons donation (donate-trace skill), raw claude_code session file",
+      "redaction_status": "source_redacted",
+      "task_family_id": "tc-74cfbf8b46d1",
+      "eligibility": "rejected",
+      "rejection_reasons": [
+        "no recoverable base commit (none)",
+        "replay: unreconstructable without a base tree",
+        "no code licence identified"
+      ],
+      "triage": {
+        "category": "incomplete_evidence",
+        "method": "rule:v1",
+        "confidence": "high",
+        "reasons": [
+          "incomplete_evidence: no recoverable base commit (none)"
+        ],
+        "correction_event_ids": [
+          "L000096.01",
+          "L000263.00",
+          "L000401.00",
+          "L000415.00",
+          "L000426.00",
+          "L000609.00"
+        ]
+      },
+      "accessed": "2026-11-21T02:44:07Z",
+      "notes": "",
+      "screening": {
+        "method": "screen-trace-commons:v1",
+        "triage_method": "rule:v1",
+        "harness": "claude_code",
+        "file_id": "d4c4d47d-642c-4c26-a866-51ab85587896",
+        "file_sha256": "74cfbf8b46d125aaecb04a2023cde8c927867cb441e2e87ed4269e27c886f7d5",
+        "download_record_match": true,
+        "events": 413,
+        "donation_tail_events": 0,
+        "user_prompts": 30,
+        "ide_context_blocks": 0,
+        "correction_candidates": 6,
+        "correction_refs": [
+          "L000096.01",
+          "L000263.00",
+          "L000401.00",
+          "L000415.00",
+          "L000426.00",
+          "L000609.00"
+        ],
+        "user_prompts_in_file": 30,
+        "correction_candidates_in_file": 6,
+        "original_file_present": true,
+        "original_file_values": 14,
+        "fidelity": "unreconstructable",
+        "replay": {
+          "method": "replay:v1",
+          "fidelity": "unreconstructable",
+          "reasons": [
+            "no base tree: the initial repository state is not in the session",
+            "1 originalFile value(s) that disagree with the replayed file"
+          ],
+          "base_tree": false,
+          "files_touched": 7,
+          "files_changed": 7,
+          "files_exact": 7,
+          "files_recovered": 0,
+          "files_unknown": 0,
+          "counts": {
+            "edit_calls": 72,
+            "edit_error": 2,
+            "edits_applied": 60,
+            "original_file_checks": 14,
+            "original_file_matches": 13,
+            "original_file_mismatch": 1,
+            "read_checks": 36,
+            "read_matches": 36,
+            "recovered_from_read": 1,
+            "shell_calls": 5,
+            "writes_applied": 10
+          }
+        },
+        "base_commit": {
+          "status": "none",
+          "head_shas_before_change": [],
+          "head_full_sha": false,
+          "head_seen_after_change": 0,
+          "clean_tree_before_change": null,
+          "commits_made": [],
+          "pr_links": 0,
+          "repository_identified": false,
+          "repository_sha256": null,
+          "cwd_matches_repository": false,
+          "branch_named": false,
+          "public_in_transcript": false,
+          "public_verified": false
+        },
+        "licence": {
+          "spdx": null,
+          "evidence": null,
+          "claimed": null
+        },
+        "test_environment": {
+          "runner": null,
+          "runs": 0,
+          "last_outcome": null
+        },
+        "signals": {
+          "shell_calls": 5,
+          "tool_results": 135,
+          "tool_errors": 4,
+          "environment_errors": 0,
+          "environment_markers": [],
+          "sandbox_messages": 0,
+          "user_rejections": 0,
+          "rejected_edits": 0,
+          "final_prompt_reports_failure": false,
+          "file_changes": 7,
+          "code_files_changed": 1,
+          "presentation_files_changed": 3,
+          "other_files_changed": 3,
+          "test_runs": 0,
+          "test_runner": null,
+          "last_test": null,
+          "absent_reads": 0,
+          "base_commit": "none",
+          "unresolved_requirements": [],
+          "active_requirements": 0,
+          "active_changes": 0,
+          "short_first_prompt": false,
+          "operational_objective": false,
+          "continued_session": false,
+          "tool_results_recorded": true
+        },
+        "agent_text_sanitizer": "sanitize-natural:v1",
+        "redactions": {
+          "handles": 1,
+          "ips": 3
+        }
+      }
+    },
+    {
+      "schema_version": "0.1.0",
+      "record_id": "tc-5765ca688f35",
+      "session_id": "da5d32d6-547f-45ae-a5b5-4747ed06542f",
+      "population": "natural:chat",
+      "source_url": "https://huggingface.co/datasets/trace-commons/agent-traces",
+      "source_id": "da5d32d6-547f-45ae-a5b5-4747ed06542f",
+      "source_revision": "112ebd4d03ce852b00e935d523107c3d0c9a65bf",
+      "repo_url": null,
+      "base_commit": null,
+      "licenses": {
+        "dataset": "CC-BY-4.0",
+        "code": "NOASSERTION"
+      },
+      "permission_basis": "CC-BY-4.0 compilation; contributor certification; embedded code keeps its own licence",
+      "trace_sha256": "5765ca688f358d66235f3ac97f7df8eabca23a7c3ea393fd9f877ed82f1533f0",
+      "snapshot_manifest_sha256": null,
+      "capture_method": "Trace Commons donation (donate-trace skill), raw claude_code session file",
+      "redaction_status": "source_redacted",
+      "task_family_id": "tc-5765ca688f35",
+      "eligibility": "rejected",
+      "rejection_reasons": [
+        "no recoverable base commit (commit_seen_repository_unidentified)",
+        "replay: unreconstructable without a base tree",
+        "no code licence identified"
+      ],
+      "triage": {
+        "category": "incomplete_evidence",
+        "method": "rule:v1",
+        "confidence": "high",
+        "reasons": [
+          "incomplete_evidence: no recoverable base commit (commit_seen_repository_unidentified)"
+        ],
+        "correction_event_ids": [
+          "L001183.00",
+          "L002176.00",
+          "L002319.00"
+        ]
+      },
+      "accessed": "2026-11-21T02:44:07Z",
+      "notes": "",
+      "screening": {
+        "method": "screen-trace-commons:v1",
+        "triage_method": "rule:v1",
+        "harness": "claude_code",
+        "file_id": "da5d32d6-547f-45ae-a5b5-4747ed06542f",
+        "file_sha256": "5765ca688f358d66235f3ac97f7df8eabca23a7c3ea393fd9f877ed82f1533f0",
+        "download_record_match": true,
+        "events": 1625,
+        "donation_tail_events": 17,
+        "user_prompts": 35,
+        "ide_context_blocks": 0,
+        "correction_candidates": 3,
+        "correction_refs": [
+          "L001183.00",
+          "L002176.00",
+          "L002319.00"
+        ],
+        "user_prompts_in_file": 35,
+        "correction_candidates_in_file": 3,
+        "original_file_present": true,
+        "original_file_values": 59,
+        "fidelity": "unreconstructable",
+        "replay": {
+          "method": "replay:v1",
+          "fidelity": "unreconstructable",
+          "reasons": [
+            "no base tree: the initial repository state is not in the session",
+            "3 replayed file(s) with an unknown post-image",
+            "4 edit(s) on content the transcript does not show",
+            "13 shell write(s) onto replayed or base files",
+            "17 shell write(s) whose target could not be resolved",
+            "11 file(s) rest on content recovered from originalFile or a full Read"
+          ],
+          "base_tree": false,
+          "files_touched": 40,
+          "files_changed": 36,
+          "files_exact": 26,
+          "files_recovered": 11,
+          "files_unknown": 3,
+          "counts": {
+            "edit_calls": 89,
+            "edit_error": 4,
+            "edit_outside_root": 1,
+            "edits_applied": 55,
+            "heredoc_writes_replayed": 3,
+            "original_file_checks": 59,
+            "original_file_matches": 53,
+            "read_checks": 10,
+            "read_matches": 10,
+            "read_unchecked": 7,
+            "recovered_from_original_file": 6,
+            "recovered_from_read": 7,
+            "shell_calls": 270,
+            "shell_deletes_replayed": 6,
+            "shell_write": 13,
+            "shell_write_outside_root": 138,
+            "shell_write_unresolved": 17,
+            "unknown_base": 4,
+            "writes_applied": 25
+          }
+        },
+        "base_commit": {
+          "status": "commit_seen_repository_unidentified",
+          "head_shas_before_change": [
+            "6bd01ef"
+          ],
+          "head_full_sha": false,
+          "head_seen_after_change": 23,
+          "clean_tree_before_change": null,
+          "commits_made": [],
+          "pr_links": 0,
+          "repository_identified": false,
+          "repository_sha256": null,
+          "cwd_matches_repository": false,
+          "branch_named": true,
+          "public_in_transcript": false,
+          "public_verified": false
+        },
+        "licence": {
+          "spdx": null,
+          "evidence": null,
+          "claimed": null
+        },
+        "test_environment": {
+          "runner": "gradle test",
+          "runs": 8,
+          "last_outcome": "unknown"
+        },
+        "signals": {
+          "shell_calls": 270,
+          "tool_results": 443,
+          "tool_errors": 15,
+          "environment_errors": 0,
+          "environment_markers": [],
+          "sandbox_messages": 0,
+          "user_rejections": 0,
+          "rejected_edits": 0,
+          "final_prompt_reports_failure": false,
+          "file_changes": 36,
+          "code_files_changed": 17,
+          "presentation_files_changed": 0,
+          "other_files_changed": 13,
+          "test_runs": 8,
+          "test_runner": "gradle test",
+          "last_test": "unknown",
+          "absent_reads": 0,
+          "base_commit": "commit_seen_repository_unidentified",
+          "unresolved_requirements": [],
+          "active_requirements": 0,
+          "active_changes": 0,
+          "short_first_prompt": false,
+          "operational_objective": false,
+          "continued_session": false,
+          "tool_results_recorded": true
+        },
+        "agent_text_sanitizer": "sanitize-natural:v1",
+        "redactions": {
+          "handles": 1,
+          "secrets": 2,
+          "usernames": 94
+        }
+      }
+    },
+    {
+      "schema_version": "0.1.0",
+      "record_id": "tc-78a3becc8ffc",
+      "session_id": "da6566ff-0116-4424-bb59-660623f9eb31",
+      "population": "natural:chat",
+      "source_url": "https://huggingface.co/datasets/trace-commons/agent-traces",
+      "source_id": "da6566ff-0116-4424-bb59-660623f9eb31",
+      "source_revision": "112ebd4d03ce852b00e935d523107c3d0c9a65bf",
+      "repo_url": null,
+      "base_commit": null,
+      "licenses": {
+        "dataset": "CC-BY-4.0",
+        "code": "NOASSERTION"
+      },
+      "permission_basis": "CC-BY-4.0 compilation; contributor certification; embedded code keeps its own licence",
+      "trace_sha256": "78a3becc8ffcd5a655f7c48cd4ba62d104cea1693e075f2b2685a0661dbb9955",
+      "snapshot_manifest_sha256": null,
+      "capture_method": "Trace Commons donation (donate-trace skill), raw claude_code session file",
+      "redaction_status": "source_redacted",
+      "task_family_id": "tc-78a3becc8ffc",
+      "eligibility": "rejected",
+      "rejection_reasons": [
+        "unsuitable_task: no file changed by the main agent",
+        "unsuitable_task: the first request is an operation (install, deploy, commit)",
+        "no recoverable base commit (none)",
+        "replay: unreconstructable without a base tree",
+        "no correction candidate under the correction-cue rule",
+        "no code licence identified"
+      ],
+      "triage": {
+        "category": "unsuitable_task",
+        "method": "rule:v1",
+        "confidence": "high",
+        "reasons": [
+          "unsuitable_task: no file changed by the main agent",
+          "unsuitable_task: the first request is an operation (install, deploy, commit)",
+          "incomplete_evidence: no recoverable base commit (none)"
+        ],
+        "correction_event_ids": []
+      },
+      "accessed": "2026-11-21T02:44:07Z",
+      "notes": "",
+      "screening": {
+        "method": "screen-trace-commons:v1",
+        "triage_method": "rule:v1",
+        "harness": "claude_code",
+        "file_id": "da6566ff-0116-4424-bb59-660623f9eb31",
+        "file_sha256": "78a3becc8ffcd5a655f7c48cd4ba62d104cea1693e075f2b2685a0661dbb9955",
+        "download_record_match": true,
+        "events": 36,
+        "donation_tail_events": 0,
+        "user_prompts": 1,
+        "ide_context_blocks": 0,
+        "correction_candidates": 0,
+        "correction_refs": [],
+        "user_prompts_in_file": 1,
+        "correction_candidates_in_file": 0,
+        "original_file_present": false,
+        "original_file_values": 0,
+        "fidelity": "unreconstructable",
+        "replay": {
+          "method": "replay:v1",
+          "fidelity": "unreconstructable",
+          "reasons": [
+            "no base tree: the initial repository state is not in the session",
+            "1 shell write(s) whose target could not be resolved"
+          ],
+          "base_tree": false,
+          "files_touched": 0,
+          "files_changed": 0,
+          "files_exact": 0,
+          "files_recovered": 0,
+          "files_unknown": 0,
+          "counts": {
+            "shell_calls": 9,
+            "shell_write_unresolved": 1
+          }
+        },
+        "base_commit": {
+          "status": "none",
+          "head_shas_before_change": [],
+          "head_full_sha": false,
+          "head_seen_after_change": 0,
+          "clean_tree_before_change": null,
+          "commits_made": [],
+          "pr_links": 0,
+          "repository_identified": false,
+          "repository_sha256": null,
+          "cwd_matches_repository": false,
+          "branch_named": false,
+          "public_in_transcript": false,
+          "public_verified": false
+        },
+        "licence": {
+          "spdx": null,
+          "evidence": null,
+          "claimed": null
+        },
+        "test_environment": {
+          "runner": null,
+          "runs": 0,
+          "last_outcome": null
+        },
+        "signals": {
+          "shell_calls": 9,
+          "tool_results": 11,
+          "tool_errors": 2,
+          "environment_errors": 0,
+          "environment_markers": [],
+          "sandbox_messages": 0,
+          "user_rejections": 0,
+          "rejected_edits": 0,
+          "final_prompt_reports_failure": false,
+          "file_changes": 0,
+          "code_files_changed": 0,
+          "presentation_files_changed": 0,
+          "other_files_changed": 0,
+          "test_runs": 0,
+          "test_runner": null,
+          "last_test": null,
+          "absent_reads": 0,
+          "base_commit": "none",
+          "unresolved_requirements": [],
+          "active_requirements": 0,
+          "active_changes": 0,
+          "short_first_prompt": false,
+          "operational_objective": true,
+          "continued_session": false,
+          "tool_results_recorded": true
+        },
+        "agent_text_sanitizer": "sanitize-natural:v1",
+        "redactions": {
+          "handles": 1
+        }
+      }
+    },
+    {
+      "schema_version": "0.1.0",
+      "record_id": "tc-b52d6e9b7384",
+      "session_id": "f93127ef-dec9-4d58-964b-ee660964ec4d",
+      "population": "natural:chat",
+      "source_url": "https://huggingface.co/datasets/trace-commons/agent-traces",
+      "source_id": "f93127ef-dec9-4d58-964b-ee660964ec4d",
+      "source_revision": "112ebd4d03ce852b00e935d523107c3d0c9a65bf",
+      "repo_url": null,
+      "base_commit": null,
+      "licenses": {
+        "dataset": "CC-BY-4.0",
+        "code": "NOASSERTION"
+      },
+      "permission_basis": "CC-BY-4.0 compilation; contributor certification; embedded code keeps its own licence",
+      "trace_sha256": "b52d6e9b7384b68e0ff2d1d6a43a2effeb17f98c313787da1c191cedc5fda05a",
+      "snapshot_manifest_sha256": null,
+      "capture_method": "Trace Commons donation (donate-trace skill), raw claude_code session file",
+      "redaction_status": "source_redacted",
+      "task_family_id": "tc-b52d6e9b7384",
+      "eligibility": "rejected",
+      "rejection_reasons": [
+        "no recoverable base commit (none)",
+        "replay: unreconstructable without a base tree",
+        "no correction candidate under the correction-cue rule",
+        "no code licence identified"
+      ],
+      "triage": {
+        "category": "incomplete_evidence",
+        "method": "rule:v1",
+        "confidence": "high",
+        "reasons": [
+          "incomplete_evidence: no recoverable base commit (none)"
+        ],
+        "correction_event_ids": []
+      },
+      "accessed": "2026-11-21T02:44:07Z",
+      "notes": "",
+      "screening": {
+        "method": "screen-trace-commons:v1",
+        "triage_method": "rule:v1",
+        "harness": "claude_code",
+        "file_id": "f93127ef-dec9-4d58-964b-ee660964ec4d",
+        "file_sha256": "b52d6e9b7384b68e0ff2d1d6a43a2effeb17f98c313787da1c191cedc5fda05a",
+        "download_record_match": true,
+        "events": 145,
+        "donation_tail_events": 0,
+        "user_prompts": 4,
+        "ide_context_blocks": 0,
+        "correction_candidates": 0,
+        "correction_refs": [],
+        "user_prompts_in_file": 4,
+        "correction_candidates_in_file": 0,
+        "original_file_present": true,
+        "original_file_values": 7,
+        "fidelity": "unreconstructable",
+        "replay": {
+          "method": "replay:v1",
+          "fidelity": "unreconstructable",
+          "reasons": [
+            "no base tree: the initial repository state is not in the session",
+            "12 file(s) rest on content recovered from originalFile or a full Read"
+          ],
+          "base_tree": false,
+          "files_touched": 13,
+          "files_changed": 5,
+          "files_exact": 1,
+          "files_recovered": 12,
+          "files_unknown": 0,
+          "counts": {
+            "edit_calls": 19,
+            "edits_applied": 17,
+            "original_file_checks": 7,
+            "original_file_matches": 7,
+            "read_checks": 5,
+            "read_matches": 5,
+            "read_unchecked": 3,
+            "recovered_from_read": 12,
+            "shell_calls": 5,
+            "writes_applied": 2
+          }
+        },
+        "base_commit": {
+          "status": "none",
+          "head_shas_before_change": [],
+          "head_full_sha": false,
+          "head_seen_after_change": 0,
+          "clean_tree_before_change": null,
+          "commits_made": [],
+          "pr_links": 0,
+          "repository_identified": false,
+          "repository_sha256": null,
+          "cwd_matches_repository": false,
+          "branch_named": true,
+          "public_in_transcript": false,
+          "public_verified": false
+        },
+        "licence": {
+          "spdx": null,
+          "evidence": null,
+          "claimed": null
+        },
+        "test_environment": {
+          "runner": null,
+          "runs": 0,
+          "last_outcome": null
+        },
+        "signals": {
+          "shell_calls": 5,
+          "tool_results": 54,
+          "tool_errors": 2,
+          "environment_errors": 1,
+          "environment_markers": [
+            "permission"
+          ],
+          "sandbox_messages": 0,
+          "user_rejections": 0,
+          "rejected_edits": 0,
+          "final_prompt_reports_failure": false,
+          "file_changes": 5,
+          "code_files_changed": 5,
+          "presentation_files_changed": 0,
+          "other_files_changed": 0,
+          "test_runs": 0,
+          "test_runner": null,
+          "last_test": null,
+          "absent_reads": 0,
+          "base_commit": "none",
+          "unresolved_requirements": [],
+          "active_requirements": 0,
+          "active_changes": 0,
+          "short_first_prompt": false,
+          "operational_objective": false,
+          "continued_session": false,
+          "tool_results_recorded": true
+        },
+        "agent_text_sanitizer": "sanitize-natural:v1",
+        "redactions": {
+          "hosts": 3,
+          "usernames": 3
+        }
+      }
+    },
+    {
+      "schema_version": "0.1.0",
+      "record_id": "tc-b492fc7adec7",
+      "session_id": "debaa898-grafana-loki-monitoring",
+      "population": "natural:chat",
+      "source_url": "https://huggingface.co/datasets/trace-commons/agent-traces",
+      "source_id": "debaa898-grafana-loki-monitoring",
+      "source_revision": "112ebd4d03ce852b00e935d523107c3d0c9a65bf",
+      "repo_url": null,
+      "base_commit": null,
+      "licenses": {
+        "dataset": "CC-BY-4.0",
+        "code": "NOASSERTION"
+      },
+      "permission_basis": "CC-BY-4.0 compilation; contributor certification; embedded code keeps its own licence",
+      "trace_sha256": "b492fc7adec7151291c64cdabf0868749c7c144ca3de48be7d7f5787544e6876",
+      "snapshot_manifest_sha256": null,
+      "capture_method": "Trace Commons donation (donate-trace skill), raw cursor session file",
+      "redaction_status": "source_redacted",
+      "task_family_id": "tc-b492fc7adec7",
+      "eligibility": "rejected",
+      "rejection_reasons": [
+        "format: transcript replay supports Claude Code sessions only",
+        "unsuitable_task: no file changed by the main agent",
+        "no recoverable base commit (none)",
+        "replay: unreconstructable without a base tree",
+        "no correction candidate under the correction-cue rule",
+        "no code licence identified"
+      ],
+      "triage": {
+        "category": "unsuitable_task",
+        "method": "rule:v1",
+        "confidence": "high",
+        "reasons": [
+          "unsuitable_task: no file changed by the main agent",
+          "incomplete_evidence: no recoverable base commit (none)",
+          "incomplete_evidence: no tool results recorded"
+        ],
+        "correction_event_ids": []
+      },
+      "accessed": "2026-11-21T02:44:07Z",
+      "notes": "",
+      "screening": {
+        "method": "screen-trace-commons:v1",
+        "triage_method": "rule:v1",
+        "harness": "cursor",
+        "file_id": "debaa898-grafana-loki-monitoring",
+        "file_sha256": "b492fc7adec7151291c64cdabf0868749c7c144ca3de48be7d7f5787544e6876",
+        "download_record_match": true,
+        "events": 51,
+        "donation_tail_events": 1,
+        "user_prompts": 3,
+        "ide_context_blocks": 0,
+        "correction_candidates": 0,
+        "correction_refs": [],
+        "user_prompts_in_file": 4,
+        "correction_candidates_in_file": 1,
+        "original_file_present": false,
+        "original_file_values": 0,
+        "fidelity": "unreconstructable",
+        "replay": {
+          "method": "replay:v1",
+          "fidelity": "unreconstructable",
+          "base_tree": false,
+          "reasons": [
+            "format: cursor sessions record no Edit or Write tool results to replay"
+          ]
+        },
+        "base_commit": {
+          "status": "none",
+          "head_shas_before_change": [],
+          "head_full_sha": false,
+          "head_seen_after_change": 0,
+          "clean_tree_before_change": null,
+          "commits_made": [],
+          "pr_links": 0,
+          "repository_identified": false,
+          "repository_sha256": null,
+          "cwd_matches_repository": false,
+          "branch_named": false,
+          "public_in_transcript": false,
+          "public_verified": false
+        },
+        "licence": {
+          "spdx": null,
+          "evidence": null,
+          "claimed": null
+        },
+        "test_environment": {
+          "runner": null,
+          "runs": 0,
+          "last_outcome": null
+        },
+        "signals": {
+          "shell_calls": 0,
+          "tool_results": 0,
+          "tool_errors": 0,
+          "environment_errors": 0,
+          "environment_markers": [],
+          "sandbox_messages": 0,
+          "user_rejections": 0,
+          "rejected_edits": 0,
+          "final_prompt_reports_failure": false,
+          "file_changes": 0,
+          "code_files_changed": 0,
+          "presentation_files_changed": 0,
+          "other_files_changed": 0,
+          "test_runs": 0,
+          "test_runner": null,
+          "last_test": null,
+          "absent_reads": 0,
+          "base_commit": "none",
+          "unresolved_requirements": [],
+          "active_requirements": 0,
+          "active_changes": 0,
+          "short_first_prompt": false,
+          "operational_objective": false,
+          "continued_session": false,
+          "tool_results_recorded": false
+        },
+        "agent_text_sanitizer": "sanitize-natural:v1",
+        "redactions": {}
+      }
+    },
+    {
+      "schema_version": "0.1.0",
+      "record_id": "tc-ed7632840a53",
+      "session_id": "ses_129b55f7effeSKRtimLg9wxpXa",
+      "population": "natural:chat",
+      "source_url": "https://huggingface.co/datasets/trace-commons/agent-traces",
+      "source_id": "ses_129b55f7effeSKRtimLg9wxpXa",
+      "source_revision": "112ebd4d03ce852b00e935d523107c3d0c9a65bf",
+      "repo_url": null,
+      "base_commit": null,
+      "licenses": {
+        "dataset": "CC-BY-4.0",
+        "code": "NOASSERTION"
+      },
+      "permission_basis": "CC-BY-4.0 compilation; contributor certification; embedded code keeps its own licence",
+      "trace_sha256": "ed7632840a5316a0f9bea90d4411aea103b8938775f76cc4b652fd4f19acb744",
+      "snapshot_manifest_sha256": null,
+      "capture_method": "Trace Commons donation (donate-trace skill), raw opencode session file",
+      "redaction_status": "source_redacted",
+      "task_family_id": "tc-ed7632840a53",
+      "eligibility": "rejected",
+      "rejection_reasons": [
+        "format: transcript replay supports Claude Code sessions only",
+        "unsuitable_task: no file changed by the main agent",
+        "no recoverable base commit (none)",
+        "replay: unreconstructable without a base tree",
+        "no correction candidate under the correction-cue rule",
+        "no code licence identified"
+      ],
+      "triage": {
+        "category": "unsuitable_task",
+        "method": "rule:v1",
+        "confidence": "high",
+        "reasons": [
+          "unsuitable_task: no file changed by the main agent",
+          "incomplete_evidence: no recoverable base commit (none)"
+        ],
+        "correction_event_ids": []
+      },
+      "accessed": "2026-11-21T02:44:07Z",
+      "notes": "",
+      "screening": {
+        "method": "screen-trace-commons:v1",
+        "triage_method": "rule:v1",
+        "harness": "opencode",
+        "file_id": "ses_129b55f7effeSKRtimLg9wxpXa",
+        "file_sha256": "ed7632840a5316a0f9bea90d4411aea103b8938775f76cc4b652fd4f19acb744",
+        "download_record_match": true,
+        "events": 8,
+        "donation_tail_events": 0,
+        "user_prompts": 1,
+        "ide_context_blocks": 0,
+        "correction_candidates": 0,
+        "correction_refs": [],
+        "user_prompts_in_file": 1,
+        "correction_candidates_in_file": 0,
+        "original_file_present": false,
+        "original_file_values": 0,
+        "fidelity": "unreconstructable",
+        "replay": {
+          "method": "replay:v1",
+          "fidelity": "unreconstructable",
+          "base_tree": false,
+          "reasons": [
+            "format: opencode sessions record no Edit or Write tool results to replay"
+          ]
+        },
+        "base_commit": {
+          "status": "none",
+          "head_shas_before_change": [],
+          "head_full_sha": false,
+          "head_seen_after_change": 0,
+          "clean_tree_before_change": null,
+          "commits_made": [],
+          "pr_links": 0,
+          "repository_identified": false,
+          "repository_sha256": null,
+          "cwd_matches_repository": false,
+          "branch_named": false,
+          "public_in_transcript": false,
+          "public_verified": false
+        },
+        "licence": {
+          "spdx": null,
+          "evidence": null,
+          "claimed": null
+        },
+        "test_environment": {
+          "runner": null,
+          "runs": 0,
+          "last_outcome": null
+        },
+        "signals": {
+          "shell_calls": 0,
+          "tool_results": 3,
+          "tool_errors": 0,
+          "environment_errors": 0,
+          "environment_markers": [],
+          "sandbox_messages": 0,
+          "user_rejections": 0,
+          "rejected_edits": 0,
+          "final_prompt_reports_failure": false,
+          "file_changes": 0,
+          "code_files_changed": 0,
+          "presentation_files_changed": 0,
+          "other_files_changed": 0,
+          "test_runs": 0,
+          "test_runner": null,
+          "last_test": null,
+          "absent_reads": 0,
+          "base_commit": "none",
+          "unresolved_requirements": [],
+          "active_requirements": 0,
+          "active_changes": 0,
+          "short_first_prompt": false,
+          "operational_objective": false,
+          "continued_session": false,
+          "tool_results_recorded": true
+        },
+        "agent_text_sanitizer": "sanitize-natural:v1",
+        "redactions": {}
+      }
     }
   ],
   "yield_by_population": {
@@ -94,6 +4510,11 @@
       "screened": 4,
       "pending_review": 4,
       "not_accepted": 4
+    },
+    "natural:chat": {
+      "screened": 30,
+      "rejected": 30,
+      "not_accepted": 30
     }
   }
 }

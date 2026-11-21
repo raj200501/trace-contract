@@ -20,7 +20,17 @@
   "task_family_id": "CS-04",
   "eligibility": "pending_review",
   "rejection_reasons": [],
-  "triage": null,
+  "triage": {
+    "category": "candidate",
+    "method": "rule:v1",
+    "confidence": "medium",
+    "reasons": [
+      "candidate: 1 correction candidate(s) under the cue rule"
+    ],
+    "correction_event_ids": [
+      "CS-04-session/L000107.00"
+    ]
+  },
   "accessed": "2026-11-13T02:12:58+00:00",
   "notes": "{\"access_findings\": [], \"scenario_sha256\": \"fa160de3c75774a2f4dbbc7f70b7bf1a92674a6e106e3253f46a3720e471f2d6\", \"workspace_snapshot_manifest\": \"23d3be29cf4ba18308a6db7658382cdb9d20184d556646d7d854675531f92c2f\", \"transcript_sanitization\": {\"sanitizer\": \"sanitize:v2\", \"source_sha256\": \"7174d9c5404a84e8c510ff63d916be71c34ad3bc8e35e7b4a6ed9f38ca2bc83e\", \"sanitized_sha256\": \"6700812096e3ae6063d0c03a705fad7acbca69d72acbfc00f24c423cfaea8ba1\", \"entries\": 156, \"dropped\": {\"attachment\": 19, \"meta_content\": 1}, \"redactions\": {\"emails\": 1}, \"previous\": {\"source_sha256\": \"7174d9c5404a84e8c510ff63d916be71c34ad3bc8e35e7b4a6ed9f38ca2bc83e\", \"sanitized_sha256\": \"b84a1eff6e7c7b4687418dc391e20c9da274af82d173fbb6f97d1c2447d396cb\", \"entries\": 156, \"dropped\": {\"attachment\": 19}, \"redactions\": {\"emails\": 1}}, \"note\": \"re-sanitised with sanitize:v2 (decision log D38)\", \"trace_sha256_note\": \"trace_sha256 updated to the sanitize:v2 file on 2026-11-18 (decision log D40); the superseded hash is in previous.sanitized_sha256\"}}"
 }

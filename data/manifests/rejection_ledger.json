@@ -1,4 +1,296 @@
 {
-  "rejections": [],
-  "note": "Natural-data screening has not started (SWE-chat access blocked)."
+  "rejections": [
+    {
+      "source_id": "07b57159-218e-4330-a64e-0ec4b4355056",
+      "population": "natural:chat",
+      "reasons": [
+        "no recoverable base commit (none)",
+        "replay: unreconstructable without a base tree",
+        "no correction candidate under the correction-cue rule"
+      ]
+    },
+    {
+      "source_id": "09d9abe9-0a02-4bd1-8129-3b864695079d",
+      "population": "natural:chat",
+      "reasons": [
+        "no recoverable base commit (none)",
+        "replay: unreconstructable without a base tree"
+      ]
+    },
+    {
+      "source_id": "0ca72c0c-ac42-400a-8ca6-cc31a787225f",
+      "population": "natural:chat",
+      "reasons": [
+        "unsuitable_task: only documentation, configuration or data files changed (non-testable objective)",
+        "no recoverable base commit (none)",
+        "replay: unreconstructable without a base tree",
+        "no correction candidate under the correction-cue rule",
+        "no code licence identified"
+      ]
+    },
+    {
+      "source_id": "11ef2190-67e2-4707-8212-ab12ebffdbc2",
+      "population": "natural:chat",
+      "reasons": [
+        "unsuitable_task: only documentation, configuration or data files changed (non-testable objective)",
+        "unsuitable_task: the first request is an operation (install, deploy, commit)",
+        "no recoverable base commit (none)",
+        "replay: unreconstructable without a base tree",
+        "no correction candidate under the correction-cue rule",
+        "no code licence identified"
+      ]
+    },
+    {
+      "source_id": "17c2cf98-e64a-43c6-932e-fa7efcade358",
+      "population": "natural:chat",
+      "reasons": [
+        "environment_failure: 5 sandbox message(s)",
+        "no recoverable base commit (none)",
+        "replay: unreconstructable without a base tree",
+        "no code licence identified"
+      ]
+    },
+    {
+      "source_id": "2965219c-42ad-45af-889c-4581ecbe0103",
+      "population": "natural:chat",
+      "reasons": [
+        "unsuitable_task: only documentation, configuration or data files changed (non-testable objective)",
+        "no correction candidate under the correction-cue rule"
+      ]
+    },
+    {
+      "source_id": "39082932-131c-40a9-872d-1d3ac8ed1fd6",
+      "population": "natural:chat",
+      "reasons": [
+        "no recoverable base commit (none)",
+        "replay: unreconstructable without a base tree"
+      ]
+    },
+    {
+      "source_id": "3be5ba0c-62b2-4645-8589-9216be0c10d8",
+      "population": "natural:chat",
+      "reasons": [
+        "no recoverable base commit (none)",
+        "replay: unreconstructable without a base tree",
+        "no code licence identified"
+      ]
+    },
+    {
+      "source_id": "4130c9a7-ee88-443a-91b5-224accd13629",
+      "population": "natural:chat",
+      "reasons": [
+        "no recoverable base commit (none)",
+        "replay: unreconstructable without a base tree",
+        "no correction candidate under the correction-cue rule",
+        "no code licence identified"
+      ]
+    },
+    {
+      "source_id": "4222016d-1932-4abb-94b3-463203bd8876",
+      "population": "natural:chat",
+      "reasons": [
+        "no recoverable base commit (none)",
+        "replay: unreconstructable without a base tree",
+        "no code licence identified"
+      ]
+    },
+    {
+      "source_id": "479c5e9f-a299-457f-8459-5948adf8aa8e",
+      "population": "natural:chat",
+      "reasons": [
+        "no recoverable base commit (none)",
+        "replay: unreconstructable without a base tree",
+        "no correction candidate under the correction-cue rule",
+        "no code licence identified"
+      ]
+    },
+    {
+      "source_id": "47d9fc04-420c-47bb-8ac0-85780af22632",
+      "population": "natural:chat",
+      "reasons": [
+        "no recoverable base commit (none)",
+        "replay: unreconstructable without a base tree",
+        "no code licence identified"
+      ]
+    },
+    {
+      "source_id": "4c09dfa9-ff25-4b4c-a2d0-d2fd702c64ee",
+      "population": "natural:chat",
+      "reasons": [
+        "unsuitable_task: no file changed by the main agent",
+        "no recoverable base commit (none)",
+        "replay: unreconstructable without a base tree",
+        "no correction candidate under the correction-cue rule",
+        "no code licence identified"
+      ]
+    },
+    {
+      "source_id": "674e0f5c-c481-4830-b2ef-3e1e069a2b7f",
+      "population": "natural:chat",
+      "reasons": [
+        "no recoverable base commit (none)",
+        "replay: unreconstructable without a base tree",
+        "no correction candidate under the correction-cue rule",
+        "no code licence identified"
+      ]
+    },
+    {
+      "source_id": "6a7964ed-6f92-4eee-ae5e-3f91a6445833",
+      "population": "natural:chat",
+      "reasons": [
+        "no recoverable base commit (commit_seen_repository_unidentified)",
+        "replay: unreconstructable without a base tree",
+        "no code licence identified"
+      ]
+    },
+    {
+      "source_id": "7563bddf-c1a0-4c3e-86ee-062bf288e6d3",
+      "population": "natural:chat",
+      "reasons": [
+        "no recoverable base commit (none)",
+        "replay: unreconstructable without a base tree",
+        "no code licence identified"
+      ]
+    },
+    {
+      "source_id": "860618e1-0cf6-43c6-81cf-fe67123082ba",
+      "population": "natural:chat",
+      "reasons": [
+        "no recoverable base commit (none)",
+        "replay: unreconstructable without a base tree",
+        "no code licence identified"
+      ]
+    },
+    {
+      "source_id": "89cf9e13-a4bd-4cf9-9486-7c89737bec1b",
+      "population": "natural:chat",
+      "reasons": [
+        "no recoverable base commit (repository_identified_no_commit)",
+        "replay: unreconstructable without a base tree",
+        "no correction candidate under the correction-cue rule"
+      ]
+    },
+    {
+      "source_id": "92833a43-c30d-4b44-8447-c32ee17d6e6e",
+      "population": "natural:chat",
+      "reasons": [
+        "no recoverable base commit (none)",
+        "replay: unreconstructable without a base tree",
+        "no correction candidate under the correction-cue rule",
+        "no code licence identified"
+      ]
+    },
+    {
+      "source_id": "a20a4070-6246-4e9e-adf6-f38b0c1dc3fa",
+      "population": "natural:chat",
+      "reasons": [
+        "no recoverable base commit (none)",
+        "replay: unreconstructable without a base tree",
+        "no code licence identified"
+      ]
+    },
+    {
+      "source_id": "ba1b4916-b581-4e05-9a5c-c1d8ffc9b50a",
+      "population": "natural:chat",
+      "reasons": [
+        "no recoverable base commit (none)",
+        "replay: unreconstructable without a base tree",
+        "no code licence identified"
+      ]
+    },
+    {
+      "source_id": "c84c0ad3-c368-40df-87b1-5ef9effe237a",
+      "population": "natural:chat",
+      "reasons": [
+        "no recoverable base commit (none)",
+        "replay: unreconstructable without a base tree",
+        "no code licence identified"
+      ]
+    },
+    {
+      "source_id": "c99032e9-377b-4ae9-a9a9-ec7752b059cd",
+      "population": "natural:chat",
+      "reasons": [
+        "no recoverable base commit (none)",
+        "replay: unreconstructable without a base tree",
+        "no code licence identified"
+      ]
+    },
+    {
+      "source_id": "comparia-voting-fields-anon",
+      "population": "natural:chat",
+      "reasons": [
+        "unsuitable_task: no file changed by the main agent",
+        "no recoverable base commit (none)",
+        "replay: unreconstructable without a base tree",
+        "no correction candidate under the correction-cue rule",
+        "no code licence identified"
+      ]
+    },
+    {
+      "source_id": "d4c4d47d-642c-4c26-a866-51ab85587896",
+      "population": "natural:chat",
+      "reasons": [
+        "no recoverable base commit (none)",
+        "replay: unreconstructable without a base tree",
+        "no code licence identified"
+      ]
+    },
+    {
+      "source_id": "da5d32d6-547f-45ae-a5b5-4747ed06542f",
+      "population": "natural:chat",
+      "reasons": [
+        "no recoverable base commit (commit_seen_repository_unidentified)",
+        "replay: unreconstructable without a base tree",
+        "no code licence identified"
+      ]
+    },
+    {
+      "source_id": "da6566ff-0116-4424-bb59-660623f9eb31",
+      "population": "natural:chat",
+      "reasons": [
+        "unsuitable_task: no file changed by the main agent",
+        "unsuitable_task: the first request is an operation (install, deploy, commit)",
+        "no recoverable base commit (none)",
+        "replay: unreconstructable without a base tree",
+        "no correction candidate under the correction-cue rule",
+        "no code licence identified"
+      ]
+    },
+    {
+      "source_id": "f93127ef-dec9-4d58-964b-ee660964ec4d",
+      "population": "natural:chat",
+      "reasons": [
+        "no recoverable base commit (none)",
+        "replay: unreconstructable without a base tree",
+        "no correction candidate under the correction-cue rule",
+        "no code licence identified"
+      ]
+    },
+    {
+      "source_id": "debaa898-grafana-loki-monitoring",
+      "population": "natural:chat",
+      "reasons": [
+        "format: transcript replay supports Claude Code sessions only",
+        "unsuitable_task: no file changed by the main agent",
+        "no recoverable base commit (none)",
+        "replay: unreconstructable without a base tree",
+        "no correction candidate under the correction-cue rule",
+        "no code licence identified"
+      ]
+    },
+    {
+      "source_id": "ses_129b55f7effeSKRtimLg9wxpXa",
+      "population": "natural:chat",
+      "reasons": [
+        "format: transcript replay supports Claude Code sessions only",
+        "unsuitable_task: no file changed by the main agent",
+        "no recoverable base commit (none)",
+        "replay: unreconstructable without a base tree",
+        "no correction candidate under the correction-cue rule",
+        "no code licence identified"
+      ]
+    }
+  ],
+  "note": "Natural-data screening (decision log D47): natural:chat (screen-trace-commons:v1; source revision 112ebd4d): 30 screened, 30 rejected, 0 pending review, 0 eligible; natural:pr-review (scripts/screen_aidev.py; source revision b37f9fd1): a funnel, not per-candidate rows; 684 review_comments on 190 PRs survive stage S8a, sample S9 of 150, none in this ledger yet; SWE-chat: not screened (its dataset terms await the owner, D4)."
 }
