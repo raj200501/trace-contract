@@ -555,3 +555,70 @@ task.
 
 **What this amendment does not change.** D19, the freezing rules and §8 still apply; the
 frozen pilot, its verifiers and the harness it used are not changed.
+
+## 16. Amendments in v0.8 (after a verification of round 4 by model agents, D51; before any run, fresh attempt or natural verifier under v0.7)
+
+This section makes the protocol v0.8. The version line at the top of the file is left as
+it was, so that the earlier text stays a byte prefix of this file. No run, fresh attempt
+or natural verifier exists under v0.7.
+
+**16.1 Harness.**
+* §15.3's description of 0.3.4 was too broad. 0.3.4 catches exceptions raised inside
+  `repr()` and `str()` and while formatting a traceback, but a successful call can still
+  be reported as failed when its result cannot be encoded: for example a dict with mixed
+  key types, a self-referencing list, or a dict subclass whose methods raise. 0.3.4 is
+  never used for a run.
+* New runs use `tc-harness/0.3.5`. It differs from 0.3.3 in one respect: a failure while
+  formatting or encoding a value or an exception for a result message never turns a
+  successful call into a failed one, and never leaves a call without a result. A value
+  that cannot be encoded is converted by trusted code that calls no candidate method,
+  with a placeholder naming the type wherever conversion is not possible. The order of
+  trust restoration in 0.3.3 is unchanged.
+* Candidate code that runs while the result is formatted can still end or stall the
+  call. That is the in-call limit, unchanged.
+* Every use of 0.3.4 in §15 is to be read as 0.3.5. The reliability re-grade of
+  `pilot-v0.3.3` (§15.3) runs under 0.3.5, with three repeats.
+
+**16.2 Fresh-agent instructions and audit (§15.4).**
+* The controlled sessions' first prompts name the build session's workspace paths. Those
+  directories were sealed on 2026-11-21 (D50).
+* `u1` and `final` therefore use U1 and U2 with each absolute path of the old workspace
+  replaced by the corresponding path of the attempt's workspace: the repository
+  checkout, `run_tests.sh` and `run_python.sh`. Nothing else is changed. Each
+  substitution is recorded, and the sha256 of every instruction file is logged before
+  the first attempt.
+* A fresh-attempt audit profile applies. Everything outside the attempt's own workspace
+  counts as forbidden: the repository, the sealed directory, the third-party data under
+  `/home/user/ext`, and other workspaces. Tool inputs and tool outputs are both scanned.
+  A flagged attempt is excluded and reported.
+
+**16.3 Identifiers.** The schema records:
+* the candidate origins `fresh_attempt` and `natural_pre_review`, both labelled by D19's
+  natural-candidate rule (sources 1 and 2);
+* the labeler kind `source_evidence`;
+* the condition B3 (`diff_derived`);
+* the sub-populations `natural:pr-review` and `natural:chat`.
+
+Records of the pilot are unchanged.
+
+**16.4 Natural arm (§15.6).**
+* S6 is a proxy. It passes a comment when GitHub moved its commit or marked it outdated,
+  which does not prove that the commented file changed. S9 criterion 2 therefore
+  rejects a comment with the reason "no later commit changes the commented file" when
+  no later commit in the PR changes that file.
+* S11 means: accepted for building, that is, passes S10 and is within the family cap.
+* Every S9 failure is written to the rejection ledger with its stage and reason.
+
+**16.5 Reconstruction check.** Every newly built task must pass the reconstruction check
+(`tracecontract reconstruction-check`) before it can pass the acceptance gate or enter a
+run. The vacuous leakage field is no longer recorded as a pass for new builds.
+
+**16.6 Analysis of new runs.** `tracecontract analyze` implements the reporting rules of
+§15.7 for new runs:
+* exact sign-flip p-values with their floors;
+* each distinct graded patch counted once;
+* the oracle-gated view;
+* solve rates per configuration and variant, and the audit exclusions, for `fresh-v1`;
+* bootstrap intervals marked as not inferential below 10 families.
+
+The frozen pilot's analysis is unchanged.

@@ -1440,3 +1440,51 @@ amendment (§15.4 requires U1 verbatim otherwise).
 `tasks/CS-0*/provenance.json`, contrary to D47's statement that frozen task files are
 not edited. These files are not hashed inputs of the analysis. The proposals are being
 moved to sidecar files, and the four records restored.
+
+### D51. Verification of round 4; protocol v0.8 hashed
+**Verification (2026-11-21, 04:58-06:20).** A read-only verification by four model
+agents covered everything changed since `c5ede4c`, through four lenses: code, security
+and privacy, protocol integrity, and the truth of the public text. Its major findings,
+each checked by a reproduction, were:
+* the vacuous leakage field is still written for new builds, and nothing requires the
+  reconstruction check;
+* the reconstruction check can pass a leaked file that hides behind an unrecognised
+  shell command;
+* the two replay implementations differ;
+* harness 0.3.4 can still report a successful call as failed;
+* the report pools populations silently;
+* the controlled first prompts point fresh agents to the old workspaces, which held the
+  reference solutions (sealed, D50);
+* there is no fresh-attempt audit profile;
+* the schema lacks the identifiers §15 names;
+* the privacy scan covers only the sampled reviewers;
+* the text was stale on the acceptance gate and the Harbor reward directory.
+
+Minor findings were also recorded, along with the earlier exporter's planted-reward
+defect and the new gate rules. Neither of those two had a log entry; the gate rules
+await the owner's confirmation (DOCU-23). No recorded result is affected: no run exists
+under 0.3.4, and the frozen pilot regenerates identically.
+
+**Protocol v0.8** (`experiments/protocol.md` §16) was appended and hashed at
+2026-11-21T06:22:31Z, before the fixes and before any run, fresh attempt or natural
+verifier under v0.7: sha256
+`81cdb9c641b46d4b87b5077b678eff729152be189854b9ffea8f59a9d8be4791`. It introduces:
+* harness 0.3.5, under which a successful call is never reported as failed because its
+  result cannot be formatted or encoded;
+* a recorded path substitution in the fresh-agent instructions, and a fresh-attempt
+  audit profile;
+* the identifiers fresh_attempt, natural_pre_review, source_evidence, B3 and the two
+  natural sub-populations;
+* a correction of S6, the definition of S11, and S9 failures written to the ledger;
+* the reconstruction check, required for every new task;
+* the reporting rules, implemented in `tracecontract analyze`.
+
+**Corrections.**
+* D49: the coverage ranges it gives (sign-flip 0.94 to 0.97 from 8 families on; cluster
+  bootstrap 0.77 to 0.94) hold in the two simulated scenarios with an effect. In the
+  null scenario the bootstrap does not under-cover, and the sign-flip interval is
+  conservative.
+* D48: the pseudonymised texts still name repository owners in their repository URLs,
+  and 2 issue bodies keep a link that names a person.
+* D34: "user-rejected pre-correction states" should read "states before a scripted
+  correction".
