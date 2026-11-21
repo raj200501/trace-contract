@@ -14,12 +14,20 @@ the reporting rules of a new run (``meta.reporting_rules``, protocol §15.7) is 
 rules ask: the per-family table first, exact sign-flip p-values with their floors, the null
 results with them, and the cluster-bootstrap intervals in an appendix. A run recorded before
 these features (``pilot-v0.3.3``) renders as it did.
+
+A run that graded the independent labeler shows its second labeling (``independent_labeling``) beside
+the primary labels, with the agreement between D19 and the labeler, and a label-support verifier's
+column is marked as such. When the run directory holds the sensitivity view of protocol §18.1
+(``analysis_sensitivity.json`` and ``.md``, written by ``tracecontract analyze --sensitivity-exclusions``),
+a banner links to it and says whether it was computed with the current ``analysis.json``.
 """
 
 from __future__ import annotations
 
+import hashlib
 import html
 import json
+import os
 from pathlib import Path
 
 from .schemas import Candidate, TaskContract, TaskManifest, VerificationResult, VerifierSpec
@@ -214,6 +222,18 @@ def _fresh_section(f: dict) -> str:
                    f"<td>{d['not_solved']}</td><td>{d['undecided']}</td><td>{d['rate']:.2f}</td>"
                    f"<td>{e.get('finished', 0)} / {e.get('gave_up', 0)} / {e.get('error', 0)}</td><td>{per}</td></tr>")
     out.append("</table></div>")
+    if "rule_independent_label" in f:  # the run graded the independent labeler: the solve rates under each labeling
+        out.append(f"<h4>Solve rates under each labeling</h4><p class='muted'>{_e(_sentence(f['rule_independent_label']))}.</p>"
+                   "<div class='scroll'><table><tr><th>Configuration</th><th>Variant</th><th>Attempts</th><th>Solved, D19</th>"
+                   "<th>Solve rate, D19</th><th>Solved, independent</th><th>Not solved, independent</th>"
+                   "<th>Undecided, independent</th><th>Solve rate, independent</th><th>Per family, independent</th></tr>")
+        for d in f["by_configuration_variant"].values():
+            x = d["independent_label"]
+            per = ", ".join(f"{_e(fam)} {y['solved']}/{y['attempts']}" for fam, y in x["per_family"].items())
+            out.append(f"<tr><td>{_e(d['configuration'])}</td><td>{_e(d['variant'])}</td><td>{d['attempts']}</td>"
+                       f"<td>{d['solved']}</td><td>{d['rate']:.2f}</td><td>{x['solved']}</td><td>{x['not_solved']}</td>"
+                       f"<td>{x['undecided']}</td><td>{x['rate']:.2f}</td><td>{per}</td></tr>")
+        out.append("</table></div>")
     if f["excluded"]:
         out.append(f"<p>Excluded from every analysis ({len(f['excluded'])}): " + "; ".join(
             f"{_e(x['candidate_id'])} ({_e(x['reason'])})" for x in f["excluded"]) + ".</p>")
@@ -230,6 +250,69 @@ def _source_section(s: dict) -> str:
                    f"<td>{d['valid']['rejected']}/{d['valid']['n']}</td></tr>")
     out.append("</table></div>")
     return "".join(out)
+
+
+def _two_rates(d: dict) -> str:
+    return f"<td>{_rate(d['false_acceptance'], False)}</td><td>{_rate(d['false_rejection'], False)}</td>"
+
+
+def _independent_section(x: dict) -> str:
+    """The independent labeler's second labeling beside the primary labels, and its agreement with D19 (§15.4, §15.5)."""
+    lab = x["labels"]
+    amb = ", ".join(f"{_e(o)} {n}" for o, n in x["ambiguous_outcomes"].items())
+    sanity = "; ".join(f"{_e(t)} {_e(o)} {s['pass']}/{s['n']}" for t, d in x["sanity"].items() for o, s in d.items()) or "not graded"
+    out = [f"<h3>Independent labeler: a second labeling</h3><p class='muted'>{_e(_sentence(x['rule']))}. Graded on "
+           f"{_e(', '.join(x['tasks']))}; held-out candidates: {lab['valid']} valid, {lab['invalid']} invalid, {lab['ambiguous']} "
+           f"ambiguous{f' ({amb})' if amb else ''}, {lab['not_graded']} not graded. The labeler passes on (sanity): {sanity}. "
+           f"Primary: {_e(x['primary_labels'])}.</p>"]
+    groups = [("All candidates", x["conditions"])] + [(f"Stratum {s}", d["conditions"]) for s, d in x.get("by_stratum", {}).items()]
+    for title, conds in groups:
+        out.append(f"<h4>{_e(title)}</h4><div class='scroll'><table><tr><th>Condition</th><th>FA, primary</th><th>FR, primary</th>"
+                   "<th>FA, independent</th><th>FR, independent</th></tr>")
+        for c, d in _ordered(conds):
+            out.append(f"<tr><td>{_cname(c)}</td>{_two_rates(d['primary'])}{_two_rates(d['independent_label'])}</tr>")
+        out.append("</table></div>")
+    ag = x["agreement"]
+    out.append(f"<h4>Agreement between D19 and the independent labeler</h4><p class='muted'>{_e(_sentence(ag['rule']))}.</p>")
+    for title, g in [(f"Stratum {s}", g) for s, g in ag["by_stratum"].items()] + ([("All strata pooled", ag["pooled"])]
+                                                                                if "pooled" in ag else []):
+        rate = "n/a" if g["agreement"] is None else f"{g['agreement']:.2f}"
+        kappa = "n/a" if g["kappa"] is None else f"{g['kappa']:.2f}" + (" (degenerate)" if g["kappa_degenerate"] else "")
+        note = f" <b>Exploratory:</b> {_e(g['why_exploratory'])}." if g.get("why_exploratory") else ""
+        t = g["table"]
+        out.append(f"<p><b>{_e(title)}</b>: {g['n_units']} unit(s); both decide {g['n_decided_by_both']}: agree {g['agree']}, "
+                   f"disagree {g['disagree']} (agreement {rate}, Cohen's κ {kappa}).{note}</p><div class='scroll'><table>"
+                   "<tr><th>D19 \\ independent</th><th>valid</th><th>invalid</th></tr>"
+                   + "".join(f"<tr><td>{a}</td><td>{t[a]['valid']}</td><td>{t[a]['invalid']}</td></tr>" for a in ("valid", "invalid"))
+                   + "</table></div>")
+    return "".join(out)
+
+
+def _sensitivity_banner(run_dir: Path, out: Path) -> str:
+    """A banner linking the sensitivity view of protocol §18.1, if the run directory holds it; else ''."""
+    from .analysis import SENSITIVITY_JSON, SENSITIVITY_MD
+
+    files = [run_dir / n for n in (SENSITIVITY_MD, SENSITIVITY_JSON) if (run_dir / n).is_file()]
+    if not files:
+        return ""
+    links = " · ".join(f"<a href='{_e(Path(os.path.relpath(f, out.parent)).as_posix())}'>{_e(f.name)}</a>" for f in files)
+    text = ""
+    try:
+        s = json.loads((run_dir / SENSITIVITY_JSON).read_text(encoding="utf-8"))["meta"]["sensitivity"]
+    except (OSError, ValueError, KeyError, TypeError):
+        s = None
+    if isinstance(s, dict) and s:
+        srcs = ", ".join(_e(x.get("file")) for x in s.get("sources", []) if isinstance(x, dict))
+        text = (f" It recomputes every table with {len(s.get('excluded_here', []))} more fresh attempt(s) excluded: those listed "
+                f"in {srcs or 'no file'}" + (f"; {len(s['not_in_run'])} listed id(s) name no attempt of this run" if s.get("not_in_run") else "")
+                + ".")
+        main = run_dir / "analysis.json"
+        current = main.is_file() and s.get("primary_analysis_sha256") == hashlib.sha256(main.read_bytes()).hexdigest()
+        if not current:
+            text += (" <b>It was not computed with the current analysis.json</b>; run <code>tracecontract analyze</code> with "
+                     "<code>--sensitivity-exclusions</code> again to bring it up to date.")
+    return (f"<div class='banner'><b>Sensitivity analysis</b> (protocol §18.1), reported beside this one and not the primary "
+            f"analysis.{text} {links}</div>")
 
 
 def _bootstrap_appendix(analysis: dict) -> str:
@@ -293,7 +376,7 @@ def _label(c: Candidate, analysis: dict):
 def build_report(run_dir: Path, tasks_root: Path, repo_root: Path, out: Path) -> Path:
     from .tasks import session_for_task
 
-    from .analysis import attempt_exclusion
+    from .analysis import LABEL_SUPPORT_CONDITION, LABEL_SUPPORT_VERIFIERS, attempt_exclusion
 
     analysis = json.loads((run_dir / "analysis.json").read_text())
     manifest = json.loads((run_dir / "manifest.json").read_text())
@@ -319,6 +402,9 @@ def build_report(run_dir: Path, tasks_root: Path, repo_root: Path, out: Path) ->
         parts.append(f"<div class='banner'><b>Populations pooled</b> (<code>--pool-populations</code>). This run mixes "
                      f"{len(meta['populations'])} populations ({mixed}). The summary tables pool them; each population is reported "
                      "separately under “By population” below.</div>")
+    sensitivity = _sensitivity_banner(run_dir, out)  # '' unless the run directory holds the sensitivity view (§18.1)
+    if sensitivity:  # never an empty part: the parts are joined by newlines, so the recorded reports stay byte for byte
+        parts.append(sensitivity)
     if new:
         parts.append(_new_run_summary(analysis))
         rates = ("Pooled rates with (num/den), each distinct graded patch once; the cluster-bootstrap intervals are in the "
@@ -389,6 +475,8 @@ def build_report(run_dir: Path, tasks_root: Path, repo_root: Path, out: Path) ->
         parts.append(_fresh_section(analysis["fresh_attempts"]))
     if analysis.get("source_evidence"):
         parts.append(_source_section(analysis["source_evidence"]))
+    if analysis.get("independent_labeling"):
+        parts.append(_independent_section(analysis["independent_labeling"]))
     if new:
         parts.append(_new_run_sections(analysis))
     sens = analysis.get("sensitivity_construction_labels")
@@ -500,9 +588,11 @@ def build_report(run_dir: Path, tasks_root: Path, repo_root: Path, out: Path) ->
         vids = [v for v in t["verifiers"]]
         cids = sorted({r.candidate_id for r in rs})
         grid = {(r.verifier_id, r.candidate_id): r for r in rs}
+        support = {v for v in vids if v in LABEL_SUPPORT_VERIFIERS or t["verifiers"][v].get("condition") == LABEL_SUPPORT_CONDITION}
         parts.append("<h3>Outcome matrix (verifier × held-out candidate)</h3><div class='scroll'><table><tr><th>Candidate</th>"
                      + ("<th>Stratum</th>" if with_strata else "") + "<th>Origin</th><th>Label</th>"
-                     + "".join(f"<th>{_e(v)}</th>" for v in vids) + "</tr>")
+                     + "".join(f"<th>{_e(v)}" + ("<br><span class='muted'>label support, not a condition</span>" if v in support else "")
+                               + "</th>" for v in vids) + "</tr>")
         for cid in cids:
             c = cands[cid]
             lb = _label(c, analysis)

@@ -488,19 +488,27 @@ def cmd_evaluate(a) -> None:
 
 
 def cmd_analyze(a) -> None:
-    from .analysis import MixedPopulations, analyze
+    from .analysis import SENSITIVITY_JSON, SENSITIVITY_MD, ConditionConflict, MixedPopulations, SensitivityExclusionsError, analyze
     from .strata import StratumError
 
+    run = Path(a.run_dir)
+    exclusions = [Path(f) for f in a.sensitivity_exclusions or []]
     try:
-        res = analyze(Path(a.run_dir), REPO / "tasks", allow_proposed=a.allow_proposed_labels, n_boot=a.n_boot,
-                      pool_populations=a.pool_populations, rules=None if a.reporting_rules == "auto" else a.reporting_rules)
-    except (MixedPopulations, StratumError) as exc:  # nothing was written
+        res = analyze(run, REPO / "tasks", allow_proposed=a.allow_proposed_labels, n_boot=a.n_boot,
+                      pool_populations=a.pool_populations, rules=None if a.reporting_rules == "auto" else a.reporting_rules,
+                      sensitivity_exclusions=exclusions)
+    except (MixedPopulations, StratumError, ConditionConflict, SensitivityExclusionsError) as exc:  # nothing was written
         raise SystemExit(f"analyze refused: {exc}") from None
     pooled = {"population_pooling": res["meta"]["population_pooling"]} if "population_pooling" in res["meta"] else {}
     rules = res["meta"].get("reporting_rules", {"rules": "pilot"})
-    _out({"analysis": str(Path(a.run_dir) / "analysis.json"), "markdown": str(Path(a.run_dir) / "analysis.md"),
+    sens = {}
+    if exclusions:  # the sensitivity view of protocol §18.1, written beside the main analysis
+        s = json.loads((run / SENSITIVITY_JSON).read_text(encoding="utf-8"))["meta"]["sensitivity"]
+        sens = {"sensitivity": {"analysis": str(run / SENSITIVITY_JSON), "markdown": str(run / SENSITIVITY_MD),
+                                "also_excluded": len(s["excluded_here"]), "not_in_run": s["not_in_run"]}}
+    _out({"analysis": str(run / "analysis.json"), "markdown": str(run / "analysis.md"),
           "conditions": {c: {"fa": d["false_acceptance"]["rate"], "fr": d["false_rejection"]["rate"]} for c, d in res["conditions"].items()},
-          "reporting_rules": rules["rules"], **pooled})
+          "reporting_rules": rules["rules"], **pooled, **sens})
 
 
 def cmd_report(a) -> None:
@@ -679,6 +687,10 @@ def main(argv: list[str] | None = None) -> None:
                    help="pilot: the pre-specified analysis of the recorded runs; v0.8: the reporting rules of new runs "
                    "(protocol §15.7, §16.6: per-family table, exact sign-flip p-values, distinct patches, oracle-gated view, "
                    "bootstrap appendix); auto (default): v0.8 for a run graded with tc-harness/0.3.4 or later")
+    p.add_argument("--sensitivity-exclusions", action="append", metavar="FILE",
+                   help="sensitivity view (protocol §18.1), repeatable: FILE is an audit report with an 'excluded' list of "
+                   "attempt ids, or a JSON list of attempt ids. The main analysis is written as usual, and "
+                   "analysis_sensitivity.json and analysis_sensitivity.md recompute every table with those attempts excluded too")
     p.set_defaults(fn=cmd_analyze)
     p = sub.add_parser("report", help="static HTML report for a run (from recorded artifacts only)")
     p.add_argument("run_dir"); p.add_argument("--out", required=True); p.set_defaults(fn=cmd_report)

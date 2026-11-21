@@ -43,6 +43,22 @@ an audit verdict, or whose fresh-attempt audit found a read of forbidden materia
 every analysis (:func:`attempt_exclusion`); its exclusion and the attempts' solve rates by
 configuration and variant are reported under ``fresh_attempts`` (§15.4). Source-evidence labels
 (natural PR-review tasks) are reported under ``source_evidence``, apart from D19 (§15.6).
+
+Label-support verifiers (condition ``reference_check``: the reference checks of D19 and the
+independent labeler of §15.5) are never evaluated conditions. Their results never become rows of a
+condition, and a run that records one of them under an evaluated condition, or two verifiers of a
+task under one evaluated condition, is refused (:class:`ConditionConflict`). When the run graded the
+independent labeler (verifier ``independent_label``), its verdicts are a second labeling
+(``independent_labeling``, §15.4): valid if it passes, invalid on ``task_failure``, ambiguous on any
+other outcome. FA and FR per condition are reported under the primary labels and under this labeling
+side by side, with their per-family tables, together with the agreement between D19 and the labeler
+and the fresh attempts' solve rates under each labeling. These keys appear only for a run that graded
+the labeler, so the recorded runs regenerate byte for byte.
+
+Sensitivity view (protocol v0.10 §18.1): ``sensitivity_exclusions`` (``--sensitivity-exclusions``)
+names files that list fresh attempts to exclude as well (an audit report's ``excluded`` list, or a
+JSON list of attempt ids). The main analysis is written as usual; ``analysis_sensitivity.json`` and
+``analysis_sensitivity.md`` recompute every table with those attempts excluded too, and say so.
 """
 
 from __future__ import annotations
@@ -55,10 +71,12 @@ from collections import Counter, defaultdict
 from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
-from typing import Callable
+from typing import Callable, Sequence
 
 from .metrics import ConditionSummary, Row, family_rates, paired_difference, paired_signflip, summarize
-from .schemas import Candidate, CandidateOrigin, LabelerKind, Population, TaskContract, TaskManifest, VerificationResult
+from .schemas import (
+    Candidate, CandidateOrigin, LabelerKind, Population, TaskContract, TaskManifest, VerificationResult, VerifierCondition,
+)
 from .store import load, read_jsonl, write_json
 from .strata import TASK_STRATUM, StratumError, run_stratum_candidates
 
@@ -77,10 +95,30 @@ MIN_INFERENTIAL_FAMILIES = 10  # bootstrap intervals over fewer families are mar
 # The representative of candidates with the same graded patch: a natural state first, then a fresh attempt.
 _REPRESENTATIVE_RANK = {CandidateOrigin.observed_pre_correction.value: 0, CandidateOrigin.natural_pre_review.value: 0,
                         CandidateOrigin.fresh_attempt.value: 1, CandidateOrigin.observed_other.value: 1}
+# Label-support verifiers (D19, protocol §15.5, D55): the reference checks and the independent labeler. Their condition is
+# never an evaluated one, so their results never become rows of a condition (build_rows).
+LABEL_SUPPORT_CONDITION = VerifierCondition.reference_check.value
+INDEPENDENT_LABELER = "independent_label"
+LABEL_SUPPORT_VERIFIERS = ("reference_check", INDEPENDENT_LABELER)
+# The sensitivity view of protocol §18.1, written beside the main analysis.
+SENSITIVITY_JSON, SENSITIVITY_MD = "analysis_sensitivity.json", "analysis_sensitivity.md"
 
 
 class MixedPopulations(ValueError):
     """The run's tasks come from more than one population and pooling was not asked for (``--pool-populations``)."""
+
+
+class ConditionConflict(ValueError):
+    """A verifier would be scored as an evaluated condition it is not: refused before anything is written.
+
+    A label-support verifier (the reference checks or the independent labeler) recorded under an evaluated
+    condition, or two verifiers of one task recorded under the same evaluated condition, whose rows the
+    analysis could not tell apart.
+    """
+
+
+class SensitivityExclusionsError(ValueError):
+    """An exclusions file of the sensitivity view (``--sensitivity-exclusions``) cannot be used: refused before anything is written."""
 
 
 def candidate_label(c: Candidate, policy: str):
@@ -128,6 +166,8 @@ B3_COMPARISONS = [
 ]
 CONDITION_ORDER = ["initial_plain", "initial_audited", "full_plain", "full_audited", "llm_freeform", "repo_tests",
                    "diff_derived"]
+# The evaluated conditions, in order; a label-support verifier is never one of them (D19, protocol §15.5).
+assert LABEL_SUPPORT_CONDITION not in CONDITION_ORDER
 
 
 def _negative_type(c: Candidate, label, ref: TaskContract | None, first_prompt_id: str | None) -> str:
@@ -179,13 +219,45 @@ def reporting_rules(harness_versions) -> tuple[str, str]:
     return PILOT_RULES, "no result of the run was graded with tc-harness/0.3.4 or later, the harness of new runs"
 
 
+def _check_conditions(task_id: str, verifiers: dict[str, dict]) -> None:
+    """Refuse (:class:`ConditionConflict`) a task whose recorded verifiers would be scored as a condition they are not.
+
+    A label-support verifier (:data:`LABEL_SUPPORT_VERIFIERS`) must be recorded under ``reference_check``, which is never
+    an evaluated condition; and each evaluated condition may have one verifier per task, since a row is keyed by its
+    condition and two verifiers of one condition would be counted as one.
+    """
+    for vid, v in sorted(verifiers.items()):
+        if vid in LABEL_SUPPORT_VERIFIERS and v["condition"] != LABEL_SUPPORT_CONDITION:
+            raise ConditionConflict(f"{task_id}: the label-support verifier {vid} is recorded under the evaluated condition "
+                                    f"{v['condition']!r}, not {LABEL_SUPPORT_CONDITION!r}; label-support verifiers are never "
+                                    "evaluated conditions (D19, protocol §15.5)")
+    by_condition: dict[str, list[str]] = defaultdict(list)
+    for vid, v in sorted(verifiers.items()):
+        if v["condition"] != LABEL_SUPPORT_CONDITION:
+            by_condition[v["condition"]].append(vid)
+    shared = {c: vs for c, vs in sorted(by_condition.items()) if len(vs) > 1}
+    if shared:
+        raise ConditionConflict(f"{task_id}: " + "; ".join(f"verifiers {', '.join(vs)} are all recorded under the evaluated "
+                                                           f"condition {c!r}" for c, vs in shared.items())
+                                + "; each condition is scored once per candidate, so one task can have one verifier per condition")
+
+
 def build_rows(run_dir: Path, tasks_root: Path, *, allow_proposed: bool, policy: str | None = None,
                candidates: dict[tuple[str, str], Candidate] | None = None,
-               excluded: dict[tuple[str, str], str] | None = None) -> tuple[list[Row], dict]:
-    """The run's rows (one per result of a known candidate) and the analysis meta.
+               excluded: dict[tuple[str, str], str] | None = None,
+               also_exclude: dict[str, str] | None = None,
+               support: dict[tuple[str, str], dict[str, str]] | None = None) -> tuple[list[Row], dict]:
+    """The run's rows (one per result of a known candidate under an evaluated condition) and the analysis meta.
 
     Results of a fresh attempt that :func:`attempt_exclusion` excludes give no row; ``excluded``, if
     given, receives ``{(task, candidate): reason}`` for them, and ``candidates`` every candidate read.
+    ``also_exclude`` (``{attempt id: reason}``; the sensitivity view, protocol §18.1) excludes the fresh
+    attempts with those attempt ids as well, with that reason.
+
+    Results of a label-support verifier (condition ``reference_check``, or a verifier id in
+    :data:`LABEL_SUPPORT_VERIFIERS`) never give a row: ``support``, if given, receives their outcomes as
+    ``{(task, candidate): {verifier id: outcome}}``, and the meta counts them (``label_support``). A run
+    whose manifest would score a verifier as a condition it is not is refused (:func:`_check_conditions`).
     """
     manifest = json.loads((run_dir / "manifest.json").read_text())
     results = read_jsonl(run_dir / "results.jsonl", VerificationResult)
@@ -226,27 +298,42 @@ def build_rows(run_dir: Path, tasks_root: Path, *, allow_proposed: bool, policy:
         if refs[tid] is not None and refs[tid].requirements:
             intro = sorted({r.introduced_at for r in refs[tid].requirements})
             first[tid] = intro[0]
+        _check_conditions(tid, t["verifiers"])
         for vid, v in t["verifiers"].items():
             conditions[(tid, vid)] = v["condition"]
     if candidates is not None:
         candidates.update(cands)
     rows: list[Row] = []
+    kept_apart: Counter = Counter()  # results of label-support verifiers, by verifier id
     for r in results:
         c = cands.get((r.task_id, r.candidate_id))
         if c is None:
             continue
         why = attempt_exclusion(c)
+        if why is None and also_exclude and c.attempt is not None and c.attempt.attempt_id in also_exclude:
+            why = also_exclude[c.attempt.attempt_id]
         if why is not None:
             if excluded is not None:
                 excluded[(r.task_id, r.candidate_id)] = why
             continue
+        condition = conditions.get((r.task_id, r.verifier_id), r.verifier_id)
+        if condition == LABEL_SUPPORT_CONDITION or r.verifier_id in LABEL_SUPPORT_VERIFIERS:  # never an evaluated condition
+            kept_apart[r.verifier_id] += 1
+            if support is not None:
+                support.setdefault((r.task_id, r.candidate_id), {})[r.verifier_id] = r.outcome.value
+            continue
         label = candidate_label(c, policy)
         rows.append(Row(task_id=r.task_id, family_id=fam[r.task_id], candidate_id=r.candidate_id,
-                        condition=conditions.get((r.task_id, r.verifier_id), r.verifier_id), outcome=r.outcome.value,
+                        condition=condition, outcome=r.outcome.value,
                         label=label.value if label else None, origin=c.origin.value,
                         negative_type=_negative_type(c, label, refs[r.task_id], first[r.task_id]),
                         population=pop[r.task_id], stratum=stratum_of.get((r.task_id, r.candidate_id), TASK_STRATUM)))
     meta["n_results"] = len(results)
+    if kept_apart:  # only for a run that graded a label-support verifier, so the recorded runs keep their meta
+        meta["label_support"] = {"results": dict(sorted(kept_apart.items())),
+                                 "rule": f"label-support verifiers (condition {LABEL_SUPPORT_CONDITION}: the reference checks "
+                                         "and the independent labeler) are never evaluated conditions; their results are kept "
+                                         "apart from the conditions' rows (D19, protocol §15.5)"}
     return rows, meta
 
 
@@ -402,14 +489,23 @@ def _d19_value(c: Candidate) -> str | None:
     return d19[-1].value if d19 else None
 
 
+def _solve_status(label: str | None) -> str:
+    """An attempt's solve status under a labeling: valid is solved, invalid not solved, anything else undecided."""
+    return "solved" if label == "valid" else "not_solved" if label == "invalid" else "undecided"
+
+
 def _fresh_attempts(rows: list[Row], cands: dict[tuple[str, str], Candidate], excluded: dict[tuple[str, str], str],
-                    conds: list[str]) -> dict | None:
+                    conds: list[str], independent: dict[tuple[str, str], str | None] | None = None) -> dict | None:
     """Solve rates of the fresh attempts by configuration and variant, and the excluded attempts (protocol §15.4, §16.6).
 
     An attempt is solved when D19's natural-candidate rule labels it valid: its reference checks pass
     and the regression norm holds. D19 ambiguous (no decision from the reference checks) or no D19
     proposal is undecided and counts as not solved. Every attempt counts, duplicates included; an
     excluded attempt counts nowhere. None for a run without fresh attempts.
+
+    ``independent`` (``{(task, candidate): label}`` of the independent labeling, for a run that graded the
+    labeler) adds each cell's solve rate under that labeling (``independent_label``): valid is solved,
+    invalid not solved, ambiguous or not graded by the labeler undecided, counted as not solved.
     """
     seen = {(r.task_id, r.candidate_id): r for r in rows}
     attempts = sorted(k for k in seen if cands[k].origin == CandidateOrigin.fresh_attempt)
@@ -421,33 +517,48 @@ def _fresh_attempts(rows: list[Row], cands: dict[tuple[str, str], Candidate], ex
         cell = cells.setdefault(f"{rec.configuration}/{rec.variant}", {
             "configuration": rec.configuration, "variant": rec.variant, "attempts": 0, "solved": 0, "not_solved": 0,
             "undecided": 0, "ended": Counter(), "per_family": {}})
-        d19 = _d19_value(cands[k])
-        status = "solved" if d19 == "valid" else "not_solved" if d19 == "invalid" else "undecided"
+        status = _solve_status(_d19_value(cands[k]))
         cell["attempts"] += 1
         cell[status] += 1
         cell["ended"][rec.ended.value] += 1
         fam = cell["per_family"].setdefault(seen[k].family_id, {"attempts": 0, "solved": 0})
         fam["attempts"] += 1
         fam["solved"] += status == "solved"
+        if independent is not None:
+            second = _solve_status(independent.get(k))
+            x = cell.setdefault("independent_label", {"solved": 0, "not_solved": 0, "undecided": 0, "per_family": {}})
+            x[second] += 1
+            xf = x["per_family"].setdefault(seen[k].family_id, {"attempts": 0, "solved": 0})
+            xf["attempts"] += 1
+            xf["solved"] += second == "solved"
     for cell in cells.values():
         cell["rate"] = cell["solved"] / cell["attempts"]
         cell["ended"] = dict(sorted(cell["ended"].items()))
         cell["per_family"] = dict(sorted(cell["per_family"].items()))
+        if "independent_label" in cell:
+            cell["independent_label"]["rate"] = cell["independent_label"]["solved"] / cell["attempts"]
+            cell["independent_label"]["per_family"] = dict(sorted(cell["independent_label"]["per_family"].items()))
     # Estimand 3 of §15.4: u1 attempts that violate a correction requirement, and how C1 and C3 grade them.
     u1 = [k for k in attempts if cands[k].attempt.variant == "u1"]
     viol = [k for k in u1 if (seen[k].label, seen[k].negative_type) == ("invalid", "correction_violating")]
     outcome = {(r.task_id, r.candidate_id, r.condition): r.outcome for r in rows}
     graded = {c: {"accepted": sum(outcome.get((*k, c)) == "pass" for k in viol), "n": sum((*k, c) in outcome for k in viol)}
               for c in ("initial_plain", "full_plain") if c in conds}
-    return {"rule": "solved: D19's natural-candidate rule labels the attempt valid (reference checks and regression norm); "
-                    "D19 ambiguous or no proposal: undecided, counted as not solved; every attempt counts, duplicates included; "
-                    "excluded attempts count nowhere (protocol §15.4)",
-            "n_attempts": len(attempts), "n_excluded": len(excluded), "by_configuration_variant": dict(sorted(cells.items())),
-            "u1_correction_violating": {"attempts": len(u1), "correction_violating": len(viol),
-                                        "share": len(viol) / len(u1) if u1 else None, "graded_by": graded},
-            "excluded": [{"task_id": t, "candidate_id": cid, "reason": why,
-                          "attempt_id": cands[(t, cid)].attempt.attempt_id if cands[(t, cid)].attempt else None}
-                         for (t, cid), why in sorted(excluded.items())]}
+    out = {"rule": "solved: D19's natural-candidate rule labels the attempt valid (reference checks and regression norm); "
+                   "D19 ambiguous or no proposal: undecided, counted as not solved; every attempt counts, duplicates included; "
+                   "excluded attempts count nowhere (protocol §15.4)",
+           "n_attempts": len(attempts), "n_excluded": len(excluded), "by_configuration_variant": dict(sorted(cells.items())),
+           "u1_correction_violating": {"attempts": len(u1), "correction_violating": len(viol),
+                                       "share": len(viol) / len(u1) if u1 else None, "graded_by": graded},
+           "excluded": [{"task_id": t, "candidate_id": cid, "reason": why,
+                         "attempt_id": cands[(t, cid)].attempt.attempt_id if cands[(t, cid)].attempt else None}
+                        for (t, cid), why in sorted(excluded.items())]}
+    if independent is not None:  # only for a run that graded the independent labeler
+        out["rule_independent_label"] = ("solved under the second labeling: the independent labeler passes the attempt (valid); "
+                                         "task_failure: not solved; any other outcome (ambiguous) or not graded by the "
+                                         "labeler: undecided, counted as not solved; every attempt counts, duplicates "
+                                         "included (protocol §15.4, §15.5)")
+    return out
 
 
 def _source_evidence(rows: list[Row], cands: dict[tuple[str, str], Candidate], conds: list[str]) -> dict | None:
@@ -474,20 +585,267 @@ def _source_evidence(rows: list[Row], cands: dict[tuple[str, str], Candidate], c
     return out
 
 
+INDEPENDENT_RULE = ("the independent labeler (verifier independent_label, condition reference_check; protocol §15.5) labels a "
+                    "candidate valid if it passes, invalid if it fails with task_failure, and ambiguous on any other outcome "
+                    "(unresolved, environment failure, verifier error or timeout, recorded as such); a candidate it did not grade "
+                    "is unlabeled. Its verdicts are a second labeling (§15.4): a model proposal, as D19 is, never a human label. "
+                    "The labeler is label support, never an evaluated condition")
+_LABEL_VALUES = ("valid", "invalid", "ambiguous")
+
+
+def independent_label(outcome: str | None) -> str | None:
+    """The second labeling's label of a candidate from the independent labeler's outcome (protocol §15.4); None if not graded."""
+    if outcome is None:
+        return None
+    return "valid" if outcome == "pass" else "invalid" if outcome == "task_failure" else "ambiguous"
+
+
+def _unit_value(values: list[str | None]) -> str | None:
+    """A unit's label from its members' labels, as :func:`distinct_patch_rows` sets it: theirs if the labeled ones agree, else ambiguous."""
+    found = {v for v in values if v is not None}
+    return None if not found else next(iter(found)) if len(found) == 1 else "ambiguous"
+
+
+def _label_units(keys: list[tuple[str, str]], patch_key: dict[tuple[str, str], str] | None,
+                 origin: dict[tuple[str, str], str]) -> list[list[tuple[str, str]]]:
+    """The units labels are counted in: each distinct graded patch of a task (``patch_key``, the rules of a new run), else
+    each candidate. Each unit lists its members with its representative first, as :func:`distinct_patch_rows` orders them;
+    the units are in the order of their task and representative."""
+    groups: dict[tuple, list[tuple[str, str]]] = {}
+    for k in sorted(keys):
+        groups.setdefault((k[0], patch_key[k]) if patch_key else k, []).append(k)
+    units = [sorted(ms, key=lambda k: (_REPRESENTATIVE_RANK.get(origin[k], 2), k[1])) for ms in groups.values()]
+    return sorted(units, key=lambda ms: ms[0])
+
+
+def _agreement(units: list[list[tuple[str, str]]], d19: dict[tuple[str, str], str | None],
+               second: dict[tuple[str, str], str | None], outcome: dict[tuple[str, str], str]) -> dict:
+    """Agreement of D19 and the independent labeling over ``units``: counts, the 2x2 table of the units both decide, and
+    the full cross-table (``none``: no D19 proposal, or not graded by the labeler)."""
+    table = {a: {b: 0 for b in ("valid", "invalid")} for a in ("valid", "invalid")}
+    cross = {a: {b: 0 for b in (*_LABEL_VALUES, "none")} for a in (*_LABEL_VALUES, "none")}
+    pairs, disagreements = [], []
+    for members in units:
+        a, b = _unit_value([d19[k] for k in members]), _unit_value([second[k] for k in members])
+        cross[a or "none"][b or "none"] += 1
+        if a in ("valid", "invalid") and b in ("valid", "invalid"):
+            table[a][b] += 1
+            pairs.append((a, b))
+            if a != b:
+                disagreements.append({"task_id": members[0][0], "representative": members[0][1],
+                                      "members": [k[1] for k in members], "d19": a, "independent_label": b,
+                                      "outcomes": [outcome.get(k) for k in members]})
+    agree = sum(a == b for a, b in pairs)
+    xa, xb = [int(a == "valid") for a, _ in pairs], [int(b == "valid") for _, b in pairs]
+    return {"n_units": len(units), "n_decided_by_both": len(pairs), "agree": agree, "disagree": len(pairs) - agree,
+            "agreement": agree / len(pairs) if pairs else None, "kappa": cohen_kappa(xa, xb),
+            "kappa_degenerate": len(set(xa)) < 2 or len(set(xb)) < 2, "table": table, "crosstab": cross,
+            "disagreements": disagreements}
+
+
+def _labeling_rates(rows: list[Row], condition: str) -> dict:
+    """Pooled FA and FR of one condition under the labels the rows carry, the excluded count and the per-family table."""
+    fam = family_rates(rows, condition=condition)
+    return {**_pooled(fam), "excluded_unlabeled_or_ambiguous":
+            sum(r.label not in ("valid", "invalid") for r in rows if r.condition == condition), "per_family": fam}
+
+
+def _side_by_side(primary_rows: list[Row], second_rows: list[Row], conds: list[str]) -> dict:
+    """FA and FR per condition under the primary labels and under the second labeling, on the same (prepared) rows."""
+    return {c: {"primary": _labeling_rates(primary_rows, c), "independent_label": _labeling_rates(second_rows, c)}
+            for c in conds if any(r.condition == c for r in primary_rows)}
+
+
+def _independent_labeling(rows: list[Row], every: list[Row], support: dict[tuple[str, str], dict[str, str]],
+                          cands: dict[tuple[str, str], Candidate], conds: list[str],
+                          prepare: Callable[[list[Row]], list[Row]], patch_key: dict[tuple[str, str], str] | None,
+                          with_strata: bool, label_rule: str, exclude_origins: tuple[str, ...]) -> dict | None:
+    """The independent labeler's verdicts as a second labeling (protocol §15.4, §15.5); None if the run did not grade it.
+
+    ``every`` holds the held-out candidates' rows (reference and no-op excluded) with their primary labels; they
+    are counted as the primary analysis counts them (``prepare``; for a new run each distinct graded patch once,
+    ``patch_key``). Reported: the labels, the labeler's sanity outcomes (reference, no-op), FA and FR per condition
+    under both labelings side by side with the per-family tables (pooled, and per candidate stratum for a run with
+    strata), and the agreement between D19's proposals and the labeling, per stratum. Agreement on a controlled
+    task's own candidates is exploratory: they existed before the labeler was written (§15.5).
+    """
+    graded = {k: v[INDEPENDENT_LABELER] for k, v in support.items() if INDEPENDENT_LABELER in v}
+    if not graded:
+        return None
+    heldout = sorted({(r.task_id, r.candidate_id) for r in every})
+    second = {k: independent_label(graded.get(k)) for k in heldout}
+    d19 = {k: _d19_value(cands[k]) for k in heldout}
+    origin = {k: cands[k].origin.value for k in heldout}
+    stratum = {(r.task_id, r.candidate_id): r.stratum for r in every}
+    population = {r.task_id: r.population for r in rows}
+    second_every = [replace(r, label=second[(r.task_id, r.candidate_id)], negative_type="") for r in every]
+    counts = Counter(second[k] or "not_graded" for k in heldout)
+    sanity: dict[str, dict] = {}
+    for k, o in sorted(graded.items()):
+        if cands[k].origin.value in exclude_origins:
+            s = sanity.setdefault(k[0], {}).setdefault(cands[k].origin.value, {"pass": 0, "n": 0, "outcomes": Counter()})
+            s["pass"] += o == "pass"
+            s["n"] += 1
+            s["outcomes"][o] += 1
+    for s in (x for t in sanity.values() for x in t.values()):
+        s["outcomes"] = dict(sorted(s["outcomes"].items()))
+    out: dict = {
+        "rule": INDEPENDENT_RULE, "verifier": INDEPENDENT_LABELER,
+        "primary_labels": ("human labels" if label_rule == "human" else
+                           "D19's proposals, or a human label where one exists (the label rule of the primary analysis)"),
+        "tasks": sorted({k[0] for k in graded}),
+        "labels": {v: counts.get(v, 0) for v in (*_LABEL_VALUES, "not_graded")},
+        "ambiguous_outcomes": dict(sorted(Counter(graded[k] for k in heldout if second[k] == "ambiguous").items())),
+        "candidates": {f"{t}/{cid}": {"label": second[(t, cid)], "outcome": graded.get((t, cid)), "d19": d19[(t, cid)],
+                                      **({"stratum": stratum[(t, cid)]} if with_strata else {})} for t, cid in heldout},
+        "sanity": sanity,
+        "conditions": _side_by_side(prepare(every), prepare(second_every), conds),
+    }
+    names = sorted({stratum[k] for k in heldout}, key=lambda s: (s != TASK_STRATUM, s))
+    if with_strata:
+        out["by_stratum"] = {s: {"tasks": sorted({k[0] for k in heldout if stratum[k] == s}),
+                                 "conditions": _side_by_side(prepare([r for r in every if r.stratum == s]),
+                                                             prepare([r for r in second_every if r.stratum == s]), conds)}
+                             for s in names}
+    groups = {}
+    for s in names:
+        ks = [k for k in heldout if stratum[k] == s]
+        tasks = sorted({k[0] for k in ks})
+        exploratory = s == TASK_STRATUM and any(population[t] == Population.controlled.value for t in tasks)
+        groups[s] = {"tasks": tasks, "exploratory": exploratory,
+                     **({"why_exploratory": "these are the task's own candidates of controlled families, which existed "
+                                            "before the labeler was written (protocol §15.5)"} if exploratory else {}),
+                     **_agreement(_label_units(ks, patch_key, origin), d19, second, graded)}
+    out["agreement"] = {
+        "rule": "D19's proposal (labeler builder:refcheck+regression+construction:v1) against the second labeling, "
+                + ("each distinct graded patch once (a unit's label is its members' when they agree, else ambiguous)"
+                   if patch_key else "each candidate once")
+                + "; the 2x2 table holds the units both label valid or invalid, the cross-table every unit (none: no D19 "
+                  "proposal, or not graded by the labeler); per candidate stratum (§15.4 estimand 4, §15.5)",
+        "by_stratum": groups,
+        **({"pooled": {"exploratory": any(g["exploratory"] for g in groups.values()),
+                       **_agreement(_label_units(heldout, patch_key, origin), d19, second, graded)}} if len(names) > 1 else {}),
+    }
+    return out
+
+
+SENSITIVITY_RULE = ("protocol §18.1: the primary analysis (analysis.json, analysis.md) excludes the fresh attempts that the "
+                    "reviewed audit verdicts exclude; this sensitivity analysis also excludes every attempt listed in the files "
+                    "below (an audit report's 'excluded' list holds every attempt that the automated audit flagged, before the "
+                    "manual review) and recomputes every table with them excluded. It is not the primary analysis")
+
+
+def _source_name(path: Path, root: Path) -> str:
+    """How an input file is named in the output: relative to the repository ``root`` if it lies in it, else by its name."""
+    p = Path(path).resolve()
+    try:
+        return p.relative_to(root.resolve()).as_posix()
+    except ValueError:
+        return p.name
+
+
+def read_sensitivity_exclusions(paths: Sequence[Path], root: Path) -> tuple[list[dict], dict[str, str]]:
+    """The fresh attempts that the sensitivity view (protocol §18.1) excludes as well, read from the files ``paths``.
+
+    Each file is an audit report with an ``excluded`` list of attempt ids (the fresh-attempt audit's report, whose
+    ``excluded`` list holds every attempt its automated pass flagged), or a JSON list of attempt ids. Returns the
+    sources (file, sha256, kind, ids) and ``{attempt id: reason}``, the reason naming the files that list it. A file
+    that cannot be read as JSON, has neither form, or lists something other than attempt ids (non-empty strings
+    without whitespace) is refused (:class:`SensitivityExclusionsError`). A file inside the repository ``root`` is
+    named relative to it, any other by its name, so no local path is recorded.
+    """
+    sources: list[dict] = []
+    listed_in: dict[str, list[str]] = {}
+    for path in paths:
+        name = _source_name(Path(path), root)
+        try:
+            raw = Path(path).read_bytes()
+            data = json.loads(raw)
+        except (OSError, ValueError) as exc:
+            raise SensitivityExclusionsError(f"{name}: cannot be read as JSON ({type(exc).__name__}: {exc})") from None
+        if isinstance(data, list):
+            ids, kind = data, "a JSON list of attempt ids"
+        elif isinstance(data, dict) and isinstance(data.get("excluded"), list):
+            ids, kind = data["excluded"], "an audit report ('excluded' list)"
+        else:
+            raise SensitivityExclusionsError(f"{name}: neither a JSON list of attempt ids nor an audit report with an "
+                                             "'excluded' list of attempt ids")
+        bad = [x for x in ids if not isinstance(x, str) or not x or any(ch.isspace() for ch in x)]
+        if bad:
+            raise SensitivityExclusionsError(f"{name}: {len(bad)} listed entr{'y is' if len(bad) == 1 else 'ies are'} not an "
+                                             f"attempt id (a non-empty string without whitespace), e.g. {bad[0]!r}")
+        ids = list(dict.fromkeys(ids))
+        sources.append({"file": name, "sha256": hashlib.sha256(raw).hexdigest(), "kind": kind, "ids": ids})
+        for x in ids:
+            listed_in.setdefault(x, [])
+            if name not in listed_in[x]:
+                listed_in[x].append(name)
+    return sources, {x: f"sensitivity analysis only (protocol §18.1): listed in {', '.join(fs)}" for x, fs in listed_in.items()}
+
+
 def analyze(run_dir: Path, tasks_root: Path, *, allow_proposed: bool = False, n_boot: int = 2000,
             exclude_origins: tuple[str, ...] = ("reference", "noop"), pool_populations: bool = False,
-            rules: str | None = None) -> dict:
+            rules: str | None = None, sensitivity_exclusions: Sequence[Path] = ()) -> dict:
     """Analyse a recorded run; write ``analysis.json`` and ``analysis.md`` into its directory and return the analysis.
 
     ``rules``: ``pilot`` (the pre-specified analysis of the recorded runs) or ``v0.8`` (the reporting
     rules of new runs; see the module docstring). By default :func:`reporting_rules` picks them from
     the harness versions of the run's results.
+
+    ``sensitivity_exclusions`` (files read by :func:`read_sensitivity_exclusions`; protocol §18.1): the main
+    analysis is written as usual, and so are ``analysis_sensitivity.json`` and ``analysis_sensitivity.md``,
+    which recompute every table with the fresh attempts those files list excluded as well. Both analyses
+    are computed before anything is written, so a refusal writes neither.
     """
     if rules is not None and rules not in REPORTING_RULES:
         raise ValueError(f"unknown reporting rules {rules!r}; expected one of {', '.join(REPORTING_RULES)}")
+    sources, also = read_sensitivity_exclusions(sensitivity_exclusions, tasks_root.parent) if sensitivity_exclusions else ([], {})
+
+    def compute(also_exclude: dict[str, str] | None) -> dict:
+        return _analysis(run_dir, tasks_root, allow_proposed=allow_proposed, n_boot=n_boot, exclude_origins=exclude_origins,
+                         pool_populations=pool_populations, rules=rules, also_exclude=also_exclude)
+
+    out = compute(None)
+    sens = compute(also) if sensitivity_exclusions else None
+    write_json(out, run_dir / "analysis.json")
+    (run_dir / "analysis.md").write_text(to_markdown(out), encoding="utf-8")
+    if sens is not None:
+        sens["meta"]["sensitivity"].update(rule=SENSITIVITY_RULE, primary_analysis="analysis.json",
+                                           primary_analysis_sha256=_sha(run_dir / "analysis.json"), sources=sources)
+        write_json(sens, run_dir / SENSITIVITY_JSON)
+        (run_dir / SENSITIVITY_MD).write_text(to_markdown(sens), encoding="utf-8")
+    return out
+
+
+def _analysis(run_dir: Path, tasks_root: Path, *, allow_proposed: bool, n_boot: int, exclude_origins: tuple[str, ...],
+              pool_populations: bool, rules: str | None, also_exclude: dict[str, str] | None = None) -> dict:
+    """The analysis of a recorded run (see :func:`analyze`), written nowhere.
+
+    ``also_exclude`` (``{attempt id: reason}``) makes it the sensitivity view: those fresh attempts are excluded
+    as well, from every table, and ``meta.sensitivity`` says which were excluded here, which the primary
+    analysis excludes already, and which listed ids name no attempt of the run.
+    """
     cands: dict[tuple[str, str], Candidate] = {}
     excluded: dict[tuple[str, str], str] = {}
-    rows, meta = build_rows(run_dir, tasks_root, allow_proposed=allow_proposed, candidates=cands, excluded=excluded)
+    support: dict[tuple[str, str], dict[str, str]] = {}
+    rows, meta = build_rows(run_dir, tasks_root, allow_proposed=allow_proposed, candidates=cands, excluded=excluded,
+                            also_exclude=also_exclude, support=support)
+    if also_exclude is not None:
+        matched: set[str] = set()
+        here: list[dict] = []
+        before: list[dict] = []
+        for (t, cid), why in sorted(excluded.items()):
+            rec = cands[(t, cid)].attempt
+            if rec is None or rec.attempt_id not in also_exclude:
+                continue
+            matched.add(rec.attempt_id)
+            entry = {"task_id": t, "candidate_id": cid, "attempt_id": rec.attempt_id}
+            if why == also_exclude[rec.attempt_id]:
+                here.append(entry)
+            else:
+                before.append({**entry, "reason": why})
+        meta["sensitivity"] = {"excluded_here": here, "already_excluded": before,
+                               "not_in_run": sorted(set(also_exclude) - matched)}
     populations = _populations(rows)
     if len(populations) > 1 and not pool_populations:  # refused before anything is written
         raise MixedPopulations(f"the run mixes {len(populations)} populations ({_describe(populations)}), and populations are "
@@ -504,7 +862,8 @@ def analyze(run_dir: Path, tasks_root: Path, *, allow_proposed: bool = False, n_
     keys = {k: _patch_key(cands[k]) for k in {(r.task_id, r.candidate_id) for r in every}} if new_rules else {}
     prepare: Callable[[list[Row]], list[Row]] = (lambda rs: distinct_patch_rows(rs, keys)[0]) if new_rules else list
     primary = prepare(every)  # the rows counted: for a new run, each distinct graded patch once
-    conds = [c for c in CONDITION_ORDER if any(r.condition == c for r in rows)]
+    # The evaluated conditions only: a label-support verifier is never one (its results are not rows, build_rows).
+    conds = [c for c in CONDITION_ORDER if c != LABEL_SUPPORT_CONDITION and any(r.condition == c for r in rows)]
     tasks = sorted({r.task_id for r in rows})
     # Population and stratum keys only where they say something (see the module docstring).
     with_populations = any(p != DEFAULT_POPULATION for p in populations)
@@ -574,7 +933,7 @@ def analyze(run_dir: Path, tasks_root: Path, *, allow_proposed: bool = False, n_
         out["by_stratum"] = _by_group(every, conds, "stratum", n_boot, prepare)
     if allow_proposed:
         # Exploratory (not pre-specified): constructed candidates labeled by construction intent.
-        srows, _ = build_rows(run_dir, tasks_root, allow_proposed=True, policy="construction")
+        srows, _ = build_rows(run_dir, tasks_root, allow_proposed=True, policy="construction", also_exclude=also_exclude)
         sprim = prepare([r for r in srows if r.origin not in exclude_origins])
         out["sensitivity_construction_labels"] = {}
         for c in conds:
@@ -587,7 +946,7 @@ def analyze(run_dir: Path, tasks_root: Path, *, allow_proposed: bool = False, n_
     kept_cands = {t: {cid: v for cid, v in f.items() if (t, cid) not in excluded} for t, f in stratum_cands.items()}
     if allow_proposed:
         out.update(_post_hoc(run_dir, tasks_root, rows, primary, conds, n_boot, exclude_origins,
-                             {t: [c for _, _, c in f.values()] for t, f in kept_cands.items()}, prepare))
+                             {t: [c for _, _, c in f.values()] for t, f in kept_cands.items()}, prepare, also_exclude))
     if new_rules:
         out["meta"]["reporting_rules"] = {"rules": NEW_RUN_RULES, "basis": basis,
                                           "protocol": "experiments/protocol.md v0.7 §15.7 and v0.8 §16.6"}
@@ -603,12 +962,18 @@ def analyze(run_dir: Path, tasks_root: Path, *, allow_proposed: bool = False, n_
                                    "groups": distinct_patch_rows(every, keys)[1]}
         out["sensitivity_every_candidate"] = {c: _pooled(family_rates(every, condition=c)) for c in conds}
         out["oracle_gated"] = _oracle_gated(rows, primary, conds)
-    fresh = _fresh_attempts(rows, cands, excluded, conds)
+    second = _independent_labeling(rows, every, support, cands, conds, prepare, keys, with_strata, meta["label_rule"],
+                                   exclude_origins)
+    fresh = _fresh_attempts(rows, cands, excluded, conds,
+                            None if second is None else {k: independent_label(v.get(INDEPENDENT_LABELER))
+                                                         for k, v in support.items()})
     if fresh is not None:
         out["fresh_attempts"] = fresh
     source = _source_evidence(rows, cands, conds)
     if source is not None:
         out["source_evidence"] = source
+    if second is not None:  # only for a run that graded the independent labeler
+        out["independent_labeling"] = second
     by_name: dict[str, dict[str, list[Candidate]]] = {}  # {task: {stratum: candidates}}
     for t, f in kept_cands.items():
         for name, _, c in f.values():
@@ -619,8 +984,6 @@ def analyze(run_dir: Path, tasks_root: Path, *, allow_proposed: bool = False, n_
     out["meta"]["inputs"] = _input_hashes(run_dir, [tasks_root / t for t in tasks],
                                           [(tasks_root / t, rel) for t, f in stratum_cands.items() for _, rel, _ in f.values()],
                                           ("stats.py",) if new_rules else ())
-    write_json(out, run_dir / "analysis.json")
-    (run_dir / "analysis.md").write_text(to_markdown(out), encoding="utf-8")
     return out
 
 
@@ -676,11 +1039,12 @@ def _norm_patch(patch: str) -> str:
 
 def _post_hoc(run_dir: Path, tasks_root: Path, rows: list[Row], primary: list[Row], conds: list[str], n_boot: int,
               exclude_origins: tuple[str, ...], stratum_cands: dict[str, list[Candidate]] | None = None,
-              prepare: Callable[[list[Row]], list[Row]] = list) -> dict:
+              prepare: Callable[[list[Row]], list[Row]] = list, also_exclude: dict[str, str] | None = None) -> dict:
     """Exploratory analyses added after the internal review (protocol v0.4; never primary).
 
     ``stratum_cands`` (by task id) are the stratum candidates the run graded; the duplicate check covers them too.
     ``prepare`` turns rows into the rows counted (for a new run: each distinct graded patch once).
+    ``also_exclude`` (the sensitivity view) excludes those fresh attempts here as well (:func:`build_rows`).
     """
     out: dict = {}
     # 1. Near-miss acceptance by D19 status (confirmed invalid vs ambiguous).
@@ -691,7 +1055,7 @@ def _post_hoc(run_dir: Path, tasks_root: Path, rows: list[Row], primary: list[Ro
                  for k, lab in (("confirmed_invalid", "invalid"), ("ambiguous", "ambiguous"))}
     out["near_miss_crosstab"] = xt
     # 2. Rates under the independent construction checks' assessed labels.
-    crows, _ = build_rows(run_dir, tasks_root, allow_proposed=True, policy="check")
+    crows, _ = build_rows(run_dir, tasks_root, allow_proposed=True, policy="check", also_exclude=also_exclude)
     cprim = prepare([r for r in crows if r.origin not in exclude_origins])
     out["sensitivity_check_labels"] = {}
     for c in conds:
@@ -861,7 +1225,8 @@ def _signflip_markdown(comparisons: list[dict], heading: str = "## Paired compar
     return lines + ["", text + (f"; {untested} comparison(s) have no labeled candidate to test." if untested else ".")]
 
 
-def _fresh_markdown(f: dict) -> list[str]:
+def _fresh_markdown(f: dict, sensitivity: bool = False) -> list[str]:
+    """The fresh attempts' section; ``sensitivity``: of the sensitivity view, whose exclusions hold for it alone."""
     lines = ["", "## Fresh-agent attempts: solve rates and audit exclusions", "", _sentence(f["rule"]), "",
              "| Configuration | Variant | Attempts | Solved | Not solved | Undecided | Solve rate | Finished / gave up / error | "
              "Per family (solved/attempts) |", "| --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
@@ -870,15 +1235,113 @@ def _fresh_markdown(f: dict) -> list[str]:
         per = ", ".join(f"{fam} {x['solved']}/{x['attempts']}" for fam, x in d["per_family"].items())
         lines.append(f"| {d['configuration']} | {d['variant']} | {d['attempts']} | {d['solved']} | {d['not_solved']} | "
                      f"{d['undecided']} | {d['rate']:.2f} | {e.get('finished', 0)} / {e.get('gave_up', 0)} / {e.get('error', 0)} | {per} |")
+    if "rule_independent_label" in f:  # the run graded the independent labeler
+        lines += ["", "### Solve rates under each labeling", "", _sentence(f["rule_independent_label"]), "",
+                  "| Configuration | Variant | Attempts | Solved, D19 | Solve rate, D19 | Solved, independent | "
+                  "Not solved, independent | Undecided, independent | Solve rate, independent | Per family, independent "
+                  "(solved/attempts) |", "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
+        for d in f["by_configuration_variant"].values():
+            x = d["independent_label"]
+            per = ", ".join(f"{fam} {y['solved']}/{y['attempts']}" for fam, y in x["per_family"].items())
+            lines.append(f"| {d['configuration']} | {d['variant']} | {d['attempts']} | {d['solved']} | {d['rate']:.2f} | "
+                         f"{x['solved']} | {x['not_solved']} | {x['undecided']} | {x['rate']:.2f} | {per} |")
     u = f["u1_correction_violating"]
     graded = "; ".join(f"{c} accepts {x['accepted']}/{x['n']}" for c, x in u["graded_by"].items())
     lines += ["", f"u1 attempts that violate a correction requirement: {u['correction_violating']}/{u['attempts']}"
               + (f" ({graded})" if graded and u["correction_violating"] else "") + "."]
     if f["excluded"]:
-        lines += ["", f"Excluded from every analysis ({len(f['excluded'])}):", ""]
+        lines += ["", f"Excluded from {'this sensitivity analysis' if sensitivity else 'every analysis'} ({len(f['excluded'])}):", ""]
         lines += [f"* {x['candidate_id']} ({x['task_id']}, attempt {x['attempt_id'] or '-'}): {x['reason']}" for x in f["excluded"]]
     else:
         lines += ["", "No attempt is excluded."]
+    return lines
+
+
+def _sensitivity_markdown(s: dict) -> list[str]:
+    """The banner of the sensitivity view (protocol §18.1), at the top of ``analysis_sensitivity.md``."""
+    srcs = "; ".join(f"`{x['file']}` ({x['kind']}, {len(x['ids'])} id(s), sha256 {x['sha256'][:12]})" for x in s["sources"])
+    lines = [f"> **Sensitivity analysis, not the primary analysis** (protocol §18.1). Every table below is recomputed with "
+             f"{len(s['excluded_here'])} more fresh attempt(s) excluded: those listed in {srcs or 'no file'}. The primary analysis, "
+             f"which uses the reviewed audit verdicts, is `{s['primary_analysis'].replace('.json', '.md')}` "
+             f"(`{s['primary_analysis']}`, sha256 {s['primary_analysis_sha256'][:12]}).", ">"]
+    here = ", ".join(f"{x['candidate_id']} ({x['task_id']})" for x in s["excluded_here"]) or "none"
+    lines.append(f"> Excluded here as well ({len(s['excluded_here'])}): {here}.")
+    if s["already_excluded"]:
+        lines += [">", f"> Listed, and excluded by the primary analysis already ({len(s['already_excluded'])}): "
+                  + "; ".join(f"{x['candidate_id']} ({x['reason']})" for x in s["already_excluded"]) + "."]
+    if s["not_in_run"]:
+        lines += [">", f"> **Listed but not an attempt of this run** ({len(s['not_in_run'])}): {', '.join(s['not_in_run'])}."]
+    return lines + [""]
+
+
+def _rates_cell(x: dict) -> tuple[str, str]:
+    fa, fr = x["false_acceptance"], x["false_rejection"]
+    return _fmt(fa["rate"], fa["num"], fa["den"]), _fmt(fr["rate"], fr["num"], fr["den"])
+
+
+def _side_by_side_markdown(conditions: dict) -> list[str]:
+    """FA and FR per condition under the primary labels and under the independent labeling, and the per-family table."""
+    lines = ["| Condition | FA, primary | FA, independent | FR, primary | FR, independent | Excluded (unlabeled/ambiguous), "
+             "primary / independent |", "| --- | --- | --- | --- | --- | --- |"]
+    for c, d in conditions.items():
+        (pfa, pfr), (ifa, ifr) = _rates_cell(d["primary"]), _rates_cell(d["independent_label"])
+        lines.append(f"| {c} | {pfa} | {ifa} | {pfr} | {ifr} | {d['primary']['excluded_unlabeled_or_ambiguous']} / "
+                     f"{d['independent_label']['excluded_unlabeled_or_ambiguous']} |")
+    fams = sorted({f for d in conditions.values() for x in d.values() for f in x["per_family"]})
+    head = ["Condition", "Labeling", *(f"{f} {m}" for f in fams for m in ("FA", "FR")), "All FA", "All FR"]
+    lines += ["", "| " + " | ".join(head) + " |", "| " + " | ".join("---" for _ in head) + " |"]
+    for c, d in conditions.items():
+        for name, key in (("primary", "primary"), ("independent", "independent_label")):
+            pf, cells = d[key]["per_family"], []
+            for f in fams:
+                x = pf.get(f)
+                cells += ["-", "-"] if x is None else [f"{x['fa_num']}/{x['fa_den']}", f"{x['fr_num']}/{x['fr_den']}"]
+            lines.append(f"| {c} | {name} | " + " | ".join(cells) + " | " + " | ".join(_rates_cell(d[key])) + " |")
+    return lines
+
+
+def _agreement_markdown(title: str, g: dict) -> list[str]:
+    """One stratum's (or the pooled) agreement between D19 and the independent labeling: counts, the 2x2 table, the rest."""
+    note = f" **Exploratory:** {g['why_exploratory']}." if g.get("why_exploratory") else (
+        " Includes exploratory units (see the task stratum)." if g.get("exploratory") else "")
+    kappa = "n/a" if g["kappa"] is None else f"{g['kappa']:.2f}" + (" (degenerate: one labeling uses one value only)"
+                                                                       if g["kappa_degenerate"] else "")
+    rate = "n/a" if g["agreement"] is None else f"{g['agreement']:.2f}"
+    lines = ["", f"**{title}**: {g['n_units']} unit(s); both decide {g['n_decided_by_both']}: agree {g['agree']}, "
+                 f"disagree {g['disagree']} (agreement {rate}, Cohen's kappa {kappa}).{note}", "",
+             "| D19 \\ independent | valid | invalid |", "| --- | --- | --- |"]
+    lines += [f"| {a} | {g['table'][a]['valid']} | {g['table'][a]['invalid']} |" for a in ("valid", "invalid")]
+    cross = g["crosstab"]
+    rest = [f"D19 {a}, independent {b}: {n}" for a, row in cross.items() for b, n in row.items()
+            if n and not (a in ("valid", "invalid") and b in ("valid", "invalid"))]
+    lines += ["", "Outside the 2x2 table (none: no D19 proposal, or not graded by the labeler): " + ("; ".join(rest) or "none") + "."]
+    if g["disagreements"]:
+        lines += [""] + [f"* {x['representative']} ({x['task_id']}{', with ' + ', '.join(x['members'][1:]) if len(x['members']) > 1 else ''}): "
+                         f"D19 {x['d19']}, independent {x['independent_label']} (outcome {', '.join(o or '-' for o in x['outcomes'])})"
+                         for x in g["disagreements"]]
+    return lines
+
+
+def _independent_markdown(x: dict) -> list[str]:
+    """The second labeling by the independent labeler (protocol §15.4, §15.5)."""
+    lab, amb = x["labels"], x["ambiguous_outcomes"]
+    sanity = "; ".join(f"{t} {o} {s['pass']}/{s['n']}" for t, d in x["sanity"].items() for o, s in d.items()) or "not graded"
+    lines = ["", "## Independent labeler: a second labeling (protocol §15.4, §15.5)", "", _sentence(x["rule"]), "",
+             f"Graded on {', '.join(x['tasks'])}. Held-out candidates: {lab['valid']} valid, {lab['invalid']} invalid, "
+             f"{lab['ambiguous']} ambiguous" + (f" ({', '.join(f'{o} {n}' for o, n in amb.items())})" if amb else "")
+             + f", {lab['not_graded']} not graded. The labeler passes on (sanity): {sanity}.", "",
+             "### False acceptance and false rejection under each labeling", "",
+             f"(numerator/denominator), counted as the primary analysis counts them; primary: {x['primary_labels']}; "
+             "independent: the labeler's verdicts. Unlabeled and ambiguous candidates are excluded and counted.", ""]
+    lines += _side_by_side_markdown(x["conditions"])
+    for s, d in x.get("by_stratum", {}).items():
+        lines += ["", f"### Stratum {s} (tasks: {', '.join(d['tasks'])})", ""] + _side_by_side_markdown(d["conditions"])
+    ag = x["agreement"]
+    lines += ["", "### Agreement between D19 and the independent labeler", "", _sentence(ag["rule"])]
+    for s, g in ag["by_stratum"].items():
+        lines += _agreement_markdown(f"Stratum {s} (tasks: {', '.join(g['tasks'])})", g)
+    if "pooled" in ag:
+        lines += _agreement_markdown("All strata pooled", ag["pooled"])
     return lines
 
 
@@ -951,8 +1414,11 @@ def _bootstrap_appendix(a: dict) -> list[str]:
 
 def to_markdown(a: dict) -> str:
     new = "reporting_rules" in a["meta"]  # a new run: the reporting rules of protocol §15.7 (module docstring)
-    lines = [f"# Analysis ({a['meta']['label_policy']})", "",
-             f"Tasks: {a['n_tasks']} | independent task families: {a['n_families']} | results: {a['meta']['n_results']}", ""]
+    sens = a["meta"].get("sensitivity")  # the sensitivity view (protocol §18.1), said first
+    lines = [f"# {'Sensitivity analysis' if sens else 'Analysis'} ({a['meta']['label_policy']})", ""]
+    if sens:
+        lines += _sensitivity_markdown(sens)
+    lines += [f"Tasks: {a['n_tasks']} | independent task families: {a['n_families']} | results: {a['meta']['n_results']}", ""]
     if "automated pilot" in a["meta"]["label_policy"]:
         lines += ["> **Automated pilot.** Labels are model/construction proposals, not human-adjudicated ground truth. "
                   "With this few task families the intervals are not meaningful evidence of an effect.", ""]
@@ -999,9 +1465,11 @@ def to_markdown(a: dict) -> str:
                                  "and no-op excluded). The tables above pool the strata." + degenerate,
                                  a["by_stratum"], with_ci=not new)
     if a.get("fresh_attempts"):
-        lines += _fresh_markdown(a["fresh_attempts"])
+        lines += _fresh_markdown(a["fresh_attempts"], sensitivity=bool(sens))
     if a.get("source_evidence"):
         lines += _source_markdown(a["source_evidence"])
+    if a.get("independent_labeling"):
+        lines += _independent_markdown(a["independent_labeling"])
     if new:
         lines += _oracle_markdown(a["oracle_gated"]) + _distinct_markdown(a["distinct_patches"])
     lines += ["", "## Accepted negatives by type", "", "| Condition | correction-violating | initial-violating | unspecified |", "| --- | --- | --- | --- |"]

@@ -21,6 +21,13 @@ Decision rule (pre-specified, docs/decision_log.md D19; :func:`d19`):
   not observable by the checks (protocol §15.6)
 * any disagreement                                                    -> ambiguous
   (excluded from FA/FR, queued for human review)
+* a missing decision                                                  -> ambiguous
+  (the reference checks give no outcome but pass or task failure; or the regression norm
+  gives none and names no failing check, e.g. a timeout of the repository tests, while
+  the reference checks pass: "no regression" is then not known)
+
+The reference checks must be the frozen ones: a frozen spec whose test files or check list
+changed since it was frozen is refused before anything is graded or written.
 
 Proposed labels are appended with ``labeler_kind = model``; they never replace or
 hide human labels, and nothing here writes ``task.json``. A task's own candidates get
@@ -51,6 +58,7 @@ from tracecontract.schemas import (
 )
 from tracecontract.store import dump, load, write_json
 from tracecontract.strata import load_stratum
+from tracecontract.verifier import check_frozen
 
 LABELER = "builder:refcheck+regression+construction:v1"
 
@@ -75,23 +83,31 @@ def regression_spec(tdir: Path, m: TaskManifest, overlay: Path, tag: str, ref: C
 
 
 def d19(origin: CandidateOrigin, construction: Label | None, *, infra: bool, rc_ok: bool, violated_rc: list[str],
-        reg_fail: list[str]) -> tuple[str, list[str], str]:
+        reg_fail: list[str], reg_infra: bool = False) -> tuple[str, list[str], str]:
     """D19's proposal for one candidate: ``(value, violated requirements, why)`` (rule in the module docstring).
 
     ``infra``: the reference checks gave no decision; ``rc_ok``: they all passed; ``violated_rc``: the
-    requirements of the failing reference checks; ``reg_fail``: the failing regression-norm checks.
+    requirements of the failing reference checks; ``reg_fail``: the failing regression-norm checks;
+    ``reg_infra``: the regression norm gave no decision (no pass, no task failure) and names no failing
+    check, so whether a regression holds is not known. A missing decision makes the label ambiguous
+    wherever it is needed: a candidate whose reference checks fail is invalid without it.
     """
     regression = ["REGRESSION"] if reg_fail else []
     if infra:
         return "ambiguous", [], "reference checks did not produce a decision"
+    undecided = rc_ok and reg_infra and not reg_fail  # "no regression" would be needed, and is not known
     if construction is None or origin in NATURAL_ORIGINS:  # a natural candidate: never by construction intent
         if rc_ok and origin == CandidateOrigin.natural_pre_review:
             return ("ambiguous", regression, "natural pre-review state passes the reference checks: the correction is not "
                     "observable by the checks")
+        if undecided:
+            return "ambiguous", [], "natural candidate passes reference checks; the regression norm did not produce a decision"
         if rc_ok and not reg_fail:
             return "valid", [], "natural candidate passes reference checks and regression norm"
         return "invalid", violated_rc + regression, "natural candidate fails reference checks and/or regression norm"
     if construction.value == "valid":
+        if undecided:
+            return "ambiguous", [], "construction valid, reference checks pass; the regression norm did not produce a decision"
         if rc_ok and not reg_fail:
             return "valid", [], "construction valid, confirmed by reference checks and regression norm"
         return "ambiguous", violated_rc + regression, "construction valid but checks fail"
@@ -101,6 +117,8 @@ def d19(origin: CandidateOrigin, construction: Label | None, *, infra: bool, rc_
         return "invalid", sorted(target | set(violated_rc)), "construction invalid, confirmed on targeted requirement"
     if not rc_ok or reg_fail:
         return "ambiguous", violated_rc + regression, "construction invalid but failing checks map to other requirements"
+    if undecided:
+        return "ambiguous", [], "construction invalid, reference checks pass; the regression norm did not produce a decision"
     return "ambiguous", [], "construction invalid but reference checks and regression norm pass"
 
 
@@ -116,9 +134,13 @@ def main(task_dir: str, *base_test_paths: str, stratum: str | None = None) -> No
         cands = {c.candidate_id: (rel, c) for rel, c in load_stratum(tdir, stratum, m.task_id).candidates}
     else:
         cands = own
+    refcheck = load(tdir / "verifiers" / "reference_check" / "spec.json", VerifierSpec)
+    try:  # the frozen reference checks, unchanged since freezing; checked before anything is built, graded or written
+        check_frozen(refcheck, tdir)
+    except ValueError as exc:
+        raise SystemExit(f"propose_labels refused: {exc}") from None
     tag, _ = build_env_image(m.env_requirements, CACHE / "images")
     base = SNAPSHOTS / m.task_id
-    refcheck = load(tdir / "verifiers" / "reference_check" / "spec.json", VerifierSpec)
     # Base-test overlay (the repository's own tests at the BASE commit).
     overlay = tdir / "labels" / "base_tests_overlay"
     if stratum is None:
@@ -146,11 +168,14 @@ def main(task_dir: str, *base_test_paths: str, stratum: str | None = None) -> No
         failed_rc = [k.check_id for k in rc.checks if k.status != "passed"]
         violated_rc = sorted({r for f in failed_rc for r in req_of.get(f, [])})
         reg_fail = []
+        reg_infra = False
         if reg_spec is not None:
             rr = verify_candidate(image=tag, base_dir=base, spec=reg_spec, task_dir=tdir, candidate=c, run_id="labels",
                                   candidate_pythonpath=m.candidate_pythonpath, repo_test_args=m.repo_test_args)
             reg_fail = [k.check_id for k in rr.checks if k.status != "passed"]
             reg_outcome = rr.outcome.value
+            # No decision: e.g. a timeout or an environment failure, which records no check at all.
+            reg_infra = rr.outcome not in (Outcome.passed, Outcome.task_failure) and not reg_fail
         else:
             reg_outcome = "not run"
         construction = next((lb for lb in c.labels if lb.labeler_kind == LabelerKind.construction), None)
@@ -158,7 +183,8 @@ def main(task_dir: str, *base_test_paths: str, stratum: str | None = None) -> No
         infra = rc.outcome not in (Outcome.passed, Outcome.task_failure)
         note = {"refcheck_outcome": rc.outcome.value, "refcheck_failed": failed_rc[:20], "regression_outcome": reg_outcome,
                 "regression_failed": reg_fail[:20], "construction": construction.model_dump(mode="json") if construction else None}
-        value, violated, why = d19(c.origin, construction, infra=infra, rc_ok=rc_ok, violated_rc=violated_rc, reg_fail=reg_fail)
+        value, violated, why = d19(c.origin, construction, infra=infra, rc_ok=rc_ok, violated_rc=violated_rc, reg_fail=reg_fail,
+                                   reg_infra=reg_infra)
         lab = Label(value=value, violated_requirements=violated, labeler=LABELER, labeler_kind=LabelerKind.model,
                     timestamp=now(), note=why + " | " + json.dumps(note)[:3000])
         c2 = c.model_copy(update={"labels": [lb for lb in c.labels if lb.labeler != LABELER] + [lab]})
