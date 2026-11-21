@@ -209,6 +209,10 @@ def diff_dirs(base: Path, new: Path, *, exclude: tuple[str, ...] = (".git",)) ->
             else:
                 item.unlink()
         _copy(new, repo)
+        # Empty the index before adding the new tree, so that every file is hashed again. Otherwise
+        # git's stat cache can take a same-size edit for an unchanged file: copy2 keeps the new
+        # file's mtime, and a recreated file can reuse the old inode within the same second.
+        run("rm", "-r", "-q", "--cached", "--ignore-unmatch", ".")
         run("add", "-A", "-f")
         out = run("diff", "--cached", "--binary", "--no-renames", "--no-color", "--full-index").stdout
     return out

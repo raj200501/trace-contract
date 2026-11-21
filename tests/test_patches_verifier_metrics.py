@@ -52,6 +52,29 @@ def test_diff_and_apply_roundtrip(tmp_path):
     assert (ws / "pkg/a.py").read_text() == "x = 2\n" and (ws / "pkg/b.py").read_text() == "y = 3\n"
 
 
+def test_diff_sees_same_size_edits_with_preserved_mtimes(tmp_path):
+    """Every edit is in the diff, even when size and mtime are those of the base file.
+
+    copy2 keeps the new tree's mtimes, and a file recreated in the same second can reuse the
+    old inode, so git's stat cache alone could take such an edit for an unchanged file (found in
+    a strict audit of 2026-11-21; no recorded candidate was affected). Many small files make
+    inode reuse likely, which is the case that used to fail.
+    """
+    import os
+
+    n = 60
+    base = _tree(tmp_path / "base", {f"pkg/m{i}.py": f"v = {i % 10}\n" for i in range(n)})
+    new = _tree(tmp_path / "new", {f"pkg/m{i}.py": f"v = {(i + 1) % 10}\n" for i in range(n)})
+    for i in range(n):
+        st = os.stat(base / f"pkg/m{i}.py")
+        os.utime(new / f"pkg/m{i}.py", ns=(st.st_atime_ns, st.st_mtime_ns))
+    patch = diff_dirs(base, new)
+    assert sorted(p for p in patch.split("\n") if p.startswith("diff --git ")) == sorted(
+        f"diff --git a/pkg/m{i}.py b/pkg/m{i}.py" for i in range(n))
+    ws, _ = apply_patch(base, patch, tmp_path / "ws")
+    assert all((ws / f"pkg/m{i}.py").read_text() == f"v = {(i + 1) % 10}\n" for i in range(n))
+
+
 @pytest.mark.parametrize("bad_path, reason", [
     ("../../etc/passwd", "parent-directory"),
     ("/etc/passwd", "absolute"),
