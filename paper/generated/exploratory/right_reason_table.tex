@@ -1,0 +1,10 @@
+\begin{table}[t]\centering\footnotesize
+\caption{\textbf{Post hoc, exploratory (not pre-specified).} Right-reason view: a rejection of an invalid candidate counts only if a failing check passes on the reference and maps (verifier requirement map, then contract mapping) to a requirement the candidate violates; other rejections count as acceptances. n/e: not evaluable (B2 has no mapping to the reference contract). B1: checks from the base commit's own tests are mapped to the regression norm by this re-analysis.}\label{tab:expl-right-reason}
+\begin{tabular}{lcccccc}\toprule Condition & Rejected & Fails a ref.-passing check & Right reason (m1) & Right reason (m2) & FA & FA right reason \\\midrule
+C1 initial\_plain & 11/17 & 7/17 & 6/17 & 6/17 & 6/17 & 11/17 \\
+C2 initial\_audited & 12/17 & 8/17 & 6/17 & 6/17 & 5/17 & 11/17 \\
+C3 full\_plain & 17/17 & 17/17 & 17/17 & 17/17 & 0/17 & 0/17 \\
+C4 full\_audited & 17/17 & 17/17 & 17/17 & 17/17 & 0/17 & 0/17 \\
+B2 llm\_freeform & 16/17 & 16/17 & n/e & n/e & 1/17 & n/e \\
+B1 repo\_tests & 12/17 & 12/17 & 4/17 & -- & 5/17 & 13/17 \\
+\bottomrule\end{tabular}\end{table}

@@ -1,0 +1,19 @@
+\begin{table}[t]\centering\footnotesize
+\caption{\textbf{Post hoc, exploratory (not pre-specified).} \emph{Planning simulation, not an analysis of pilot outcomes.} Coverage of the two-sided 95\% interval for the mean per-family FA difference, by inverting the exact sign-flip test over families, against the cluster-bootstrap percentile interval; in brackets the attainable level of the inverted interval with the smallest attainable $\alpha$ (for $K=4$, 1/16 per side). Scenarios and replicates: \texttt{planning\_simulation.json}.}\label{tab:plan-coverage}
+\begin{tabular}{lrccc}\toprule Scenario & $K$ & Sign-flip 95\% & Sign-flip (attainable level) & Bootstrap 95\% \\\midrule
+null, rare events & 4 & 1.000 & 1.000 (0.875) & 0.995 \\
+null, rare events & 6 & 1.000 & 1.000 (0.950) & 0.982 \\
+null, rare events & 8 & 1.000 & 1.000 (0.950) & 0.981 \\
+null, rare events & 12 & 1.000 & 1.000 (0.950) & 0.977 \\
+null, rare events & 20 & 0.998 & 0.998 (0.950) & 0.966 \\
+$\Delta=0.20$, $\tau$ mid & 4 & 1.000 & 0.794 (0.875) & 0.766 \\
+$\Delta=0.20$, $\tau$ mid & 6 & 0.918 & 0.918 (0.950) & 0.874 \\
+$\Delta=0.20$, $\tau$ mid & 8 & 0.954 & 0.954 (0.950) & 0.849 \\
+$\Delta=0.20$, $\tau$ mid & 12 & 0.951 & 0.951 (0.950) & 0.902 \\
+$\Delta=0.20$, $\tau$ mid & 20 & 0.946 & 0.946 (0.950) & 0.939 \\
+$\Delta=0.35$, $\tau$ high (pilot-like) & 4 & 1.000 & 0.850 (0.875) & 0.840 \\
+$\Delta=0.35$, $\tau$ high (pilot-like) & 6 & 0.950 & 0.950 (0.950) & 0.890 \\
+$\Delta=0.35$, $\tau$ high (pilot-like) & 8 & 0.970 & 0.970 (0.950) & 0.904 \\
+$\Delta=0.35$, $\tau$ high (pilot-like) & 12 & 0.954 & 0.954 (0.950) & 0.928 \\
+$\Delta=0.35$, $\tau$ high (pilot-like) & 20 & 0.944 & 0.944 (0.950) & 0.927 \\
+\bottomrule\end{tabular}\end{table}

@@ -1342,3 +1342,52 @@ comments / PRs / repositories:
 * **Scan:** `scripts/scan_tracked_files.py` gained `--aidev-logins`, which checks tracked
   files against the sampled reviewers' logins in memory and flags @handles under
   `data/manifests/`.
+
+### D49. Exploratory re-analysis of pilot-v0.3.3 and a draft precision plan
+Post hoc analyses (protocol §15.1), written by a model agent and read-only on the
+frozen run: `scripts/exploratory_reanalysis.py` writes
+`results/analyses/pilot-v0.3.3-exploratory/`, 13 tables in
+`paper/generated/exploratory/` and a ledger of their 1,111 values,
+`paper/evidence_ledger_exploratory.md`. Every table is marked post hoc and
+exploratory. The script first checks that its recomputed counts equal the frozen
+`analysis.json`.
+* **Exact family-level tests.** For C1 vs C3 FA the per-family differences are +0.17, 0,
+  +0.50 and +0.80. The exact sign-flip test gives one-sided p = 0.125 and two-sided
+  0.25. The zero difference in CS-02 raises the attainable floor from 0.0625 to 0.125.
+  None of the 14 pre-specified comparisons goes below 0.125. With four families, no
+  comparison is significant.
+* **Rejections for the wrong reason.** C1 rejects 11 of the 17 invalid candidates.
+  Only 6 of those rejections come from a check that passes on the reference and maps
+  to a requirement the candidate violates. Counting only those, C1 accepts 11 of 17
+  invalid candidates, and C2 does the same. All 17 rejections by C3 and C4 have the
+  right reason. B2 cannot be scored this way, because its checks map only to its own
+  requirement list.
+* **Labeler agreement on all 32 candidates.**
+
+  | Verifier | With the reference checks | With the independent construction checks |
+  | --- | --- | --- |
+  | C3 and C4 | 30/32 | 26/32 |
+  | B2 | 30/32 | 24/32 |
+  | C1 | 23/32 | 17/32 |
+
+* **B2 against C3/C4** as an equivalence question (margin 0.10): equivalence cannot be
+  shown with four families; the TOST p never goes below 0.0625.
+* **Oracle gate.** C1 and C2 fail their own reference in CS-01. With those cells
+  dropped, C1's FA is 5/11 and its FR 0/8. Counting each distinct patch once (31
+  patches), C1's FA is 5/16.
+
+**Draft precision plan** (`experiments/precision_plan_v1.0-draft.md`, sha256
+`eb4b8477565b41dcb68da64728904a2f911c2fb93718ea5c72b69dba91145a44`, logged 2026-11-21T04:14:28Z). It is
+not adopted. A later protocol version must adopt it before any confirmatory run.
+* **Primary endpoint:** the per-family C1 − C3 FA difference on natural and
+  pre-correction negatives, tested with an exact sign-flip test over families.
+* **Guardrails:** an FR non-inferiority guardrail with margin 0.10, and TOST for B2
+  against C3/C4.
+* **Multiplicity:** a fixed testing sequence.
+* **Coverage simulation:** the sign-flip interval covers at 0.94 to 0.97 from 8
+  families on, while the pilot's cluster bootstrap under-covers at 0.77 to 0.94 up to
+  20 families.
+* **Sample size:** about 60 eligible families are needed to detect a difference of 0.20
+  with one natural negative per family. This exceeds the cap of 30 tasks in §15.6:
+  with 30, power is 0.45 at a difference of 0.20 and 0.87 at 0.35. The cap stays as
+  hashed; the natural arm remains a pilot.

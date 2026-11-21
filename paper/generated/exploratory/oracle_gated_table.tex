@@ -1,0 +1,12 @@
+\begin{table}[t]\centering\footnotesize
+\caption{\textbf{Post hoc, exploratory (not pre-specified).} Oracle-gated view (secondary, protocol v0.7 \S15.7): a verifier $\times$ task cell is dropped when the verifier does not pass the task's reference solution (run sanity grading; the recorded audits agree). Cells kept is the per-arm yield. Last rows: the correction-aware arm on the families where the initial-only arm passes its reference (the design audit's 0/11 and 0/8).}\label{tab:expl-gated}
+\begin{tabular}{lcccc}\toprule Condition & Cells kept & Held-out kept & FA & FR \\\midrule
+C1 initial\_plain & 3/4 & 24/32 & 5/11 & 0/8 \\
+C2 initial\_audited & 3/4 & 24/32 & 4/11 & 0/8 \\
+C3 full\_plain & 4/4 & 32/32 & 0/17 & 0/10 \\
+C4 full\_audited & 4/4 & 32/32 & 0/17 & 0/10 \\
+B2 llm\_freeform & 4/4 & 32/32 & 1/17 & 0/10 \\
+B1 repo\_tests & 4/4 & 32/32 & 5/17 & 4/10 \\
+C3 on C1's support & 3/4 & -- & 0/11 & 0/8 \\
+C4 on C2's support & 3/4 & -- & 0/11 & 0/8 \\
+\bottomrule\end{tabular}\end{table}
