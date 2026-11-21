@@ -335,6 +335,72 @@ def test_forbidden_material_includes_sealed_external_and_other_workspaces(tmp_pa
     assert sorted(p.name for p in (tmp_path / "workspaces").iterdir()) == ["a", "c"]
 
 
+def _vanishing(monkeypatch, *, before_stat: dict[Path, object], before_read: tuple[Path, ...] = ()) -> None:
+    """Make files of forbidden material vanish while it is walked, as a running S10 resolver's temporary files do: each
+    path of ``before_stat`` is listed by the walk and then removed by its callable before it is stat'ed; each path of
+    ``before_read`` is removed after it was stat'ed, before it is read."""
+    files, sha = MAW.Forbidden.files, MAW._sha
+
+    def walk(self):
+        for p, ok in files(self):
+            if p in before_stat:
+                before_stat[p]()
+            yield p, ok
+
+    def read(p):
+        if p in before_read:
+            p.unlink()
+        return sha(p)
+
+    monkeypatch.setattr(MAW.Forbidden, "files", walk)
+    monkeypatch.setattr(MAW, "_sha", read)
+
+
+def test_a_file_that_vanishes_while_forbidden_material_is_walked_is_skipped(tmp_path, monkeypatch):
+    """The walk covers the whole of data/, the git-ignored data/natural/s10_work included (its content is not fixed, and
+    data/natural holds pseudonymised third-party text). A file there that is listed and then gone, or whose directory is
+    gone or became a file, before it is read is skipped; every file still there is checked."""
+    import shutil
+
+    text = "pseudonymised third-party text\n"
+    data = tmp_path / "data"
+    kept = _w(data / "natural" / "tasks" / "NP-01" / "thread.txt", text)
+    work = data / "natural" / "s10_work" / "NP-01"
+    in_work = _w(work / "round-0" / "copy.txt", text.upper())  # same size: the work directory is still walked
+    gone = _w(work / "round-0" / "cache" / "tmp-1", "x" * len(text))
+    gone_dir = _w(work / "round-1" / "cache" / "tmp-2", "y" * len(text))
+    became_file = _w(work / "round-2" / "tmp-3", "z" * len(text))
+    read_gone = _w(work / "round-0" / "report.json.tmp", "w" * len(text))
+
+    def to_file():
+        shutil.rmtree(work / "round-2")
+        (work / "round-2").write_text("now a file\n")
+
+    _vanishing(monkeypatch, before_stat={gone: gone.unlink, gone_dir: lambda: shutil.rmtree(work / "round-1"),
+                                         became_file: to_file}, before_read=(read_gone,))
+    bad = MAW._forbidden_hashes(MAW.Forbidden((data,)), set(), {len(text)})
+    assert sorted(bad.values()) == sorted([str(kept), str(in_work)])
+    assert not gone.exists() and not read_gone.exists() and (work / "round-2").is_file()
+
+
+def test_a_workspace_is_built_and_checked_while_a_resolver_writes_under_data(tmp_path, monkeypatch):
+    """End to end: the S10 resolver's temporary files under the study's data/natural/s10_work vanish during the check, the
+    workspace is built, and a workspace file that equals material there is still refused."""
+    repo, td, sealed, instr = _study(tmp_path)
+    work = repo / "data" / "natural" / "s10_work" / "NP-01" / "round-0"
+    size = instr.stat().st_size
+    tmp = [_w(work / "cache" / f"tmp-{k}", str(k) * size) for k in range(3)]
+    _vanishing(monkeypatch, before_stat={tmp[0]: tmp[0].unlink, tmp[1]: tmp[1].unlink}, before_read=(tmp[2],))
+    rec = MAW.make_workspace(td, tmp_path / "workspaces", role="fresh", name="w", repo_root=repo, sealed=(sealed,),
+                             instruction=instr, external=(), old_workspaces=())
+    assert rec["role"] == "fresh" and not any(p.exists() for p in tmp)
+    copied = _w(work / "report.json", "MARK-NATURAL: a copy of study material\n")
+    with pytest.raises(MAW.WorkspaceError, match=r"equals forbidden material \(.*/data/natural/s10_work/NP-01/round-0/report"):
+        MAW.make_workspace(td, tmp_path / "workspaces", role="fresh", name="w2", repo_root=repo, sealed=(sealed,),
+                           instruction=copied, external=(), old_workspaces=())
+    assert not (tmp_path / "workspaces" / "w2").exists()
+
+
 def _old_session(tmp_path: Path) -> tuple[Path, str, str]:
     old = tmp_path / "old_ws" / "FX-02"
     u1 = (f"Please fix add in calc.py MARK-U1.\n\nThe repo is checked out (as a git working copy) at {old}/calc. Use the "

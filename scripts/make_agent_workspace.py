@@ -364,13 +364,23 @@ def forbidden_for(repo_root: Path, sealed: tuple[Path, ...], *, external: tuple[
 
 
 def _forbidden_hashes(forbidden: Forbidden, allowed: set[str], sizes: set[int]) -> dict[str, str]:
-    """sha256 -> one forbidden file with that content, for files of a size in ``sizes`` not also in the base snapshot."""
+    """sha256 -> one forbidden file with that content, for files of a size in ``sizes`` not also in the base snapshot.
+
+    A file that vanishes while the material is walked (listed, then gone, or its directory gone, before it is read: a
+    temporary file that a running S10 resolver renames under the git-ignored ``data/natural/s10_work``, for example) is
+    skipped, since there is nothing left to read; every file still there is checked. No directory is left out of the
+    walk: ``data/natural`` holds pseudonymised third-party text, and what the S10 work directory holds is not fixed.
+    """
     out: dict[str, str] = {}
     for p, ok in forbidden.files():
-        if p.stat().st_size in sizes:
+        try:
+            if p.stat().st_size not in sizes:
+                continue
             h = _sha(p)
-            if h not in allowed and h not in ok and h != _EMPTY:
-                out.setdefault(h, str(p))
+        except (FileNotFoundError, NotADirectoryError):  # it vanished after the listing
+            continue
+        if h not in allowed and h not in ok and h != _EMPTY:
+            out.setdefault(h, str(p))
     return out
 
 
