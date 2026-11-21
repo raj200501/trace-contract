@@ -32,8 +32,9 @@ The format (`natural-template/1`) is described in `scripts/check_natural_prompts
 * `{{x}}...{{/}}` marks a deviation of letter x; an empty marker marks removed source text. Markers are removed when the
   prompt is rendered.
 
-Deviation (i), the owner-context line that six held-out templates leave out, holds only once the owner has accepted it,
-before the first natural agent starts (decision log D64).
+Deviation (i), the owner-context line that six held-out templates leave out, is a builder decision pending the owner's
+review (decision log D64, decision 17). If the owner restores the line, the six templates become new versions, hashed
+in a new entry before their next use.
 
 Checks, from the repository root (the script imports the package, so it runs with the repository's virtual
 environment):
