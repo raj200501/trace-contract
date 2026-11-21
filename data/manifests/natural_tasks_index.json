@@ -294,7 +294,7 @@
           "n_files": 14
         },
         "verifiers/repo_tests/selection.json": "3e6f668796c7c0b6572d5b5c4a0b247f892320a1d5dff47f7b605f2dac6fab45",
-        "verifiers/repo_tests/spec.json": "6ed8486c0ef57fb8214771af85788b47a4227cea4753dd9f04124581e62b5aaa"
+        "verifiers/repo_tests/spec.json": "dc0d4e907a8b4bcfb3b72f1820f02fa4ff42dae54aebf25acb809bcda717681c"
       },
       "issue_id": 946090363,
       "licence": {
@@ -404,7 +404,7 @@
           "n_files": 1
         },
         "verifiers/repo_tests/selection.json": "2f5cfbbff4f261f0e4ee30ddbf550cc8fc602448c06856a69499fb0da1827a89",
-        "verifiers/repo_tests/spec.json": "4955afc58054f099d130923738cab057ab3735a16aad0157a415580938ab44da"
+        "verifiers/repo_tests/spec.json": "110903690bb1c50a586ed5a524b4774f0e88cab454c986fdc2c6099768f8df79"
       },
       "issue_id": 3224735099,
       "licence": {
@@ -514,7 +514,7 @@
           "n_files": 16
         },
         "verifiers/repo_tests/selection.json": "0964f427396a6a67631412d75752077e92fa2e41fe49dce94481f3c3deb67cde",
-        "verifiers/repo_tests/spec.json": "405736e0a2401aca5dcb0faa8e97f1896673581a295fc27c0a24966bccde691d"
+        "verifiers/repo_tests/spec.json": "19d4d7b8e7ccee92505d02f0a67e22336bed0fe96defc7613874f78193688ed6"
       },
       "issue_id": 3225563965,
       "licence": {
@@ -1541,7 +1541,7 @@
           "n_files": 1
         },
         "verifiers/repo_tests/selection.json": "001e7cee3913dde2e85720eef6212a28cd542a839cb49ae64d6b42a5ee731366",
-        "verifiers/repo_tests/spec.json": "5f748258c49f78dd0f293a6c48c37801c66ed1f3ab2dc7b54bf1ac0d5890d889"
+        "verifiers/repo_tests/spec.json": "a4c64e45e1d77acbf3a0a7683d908010bb3ec8074cf2c68a902074beb2df5c1b"
       },
       "issue_id": 3562477184,
       "licence": {
@@ -1651,7 +1651,7 @@
           "n_files": 2
         },
         "verifiers/repo_tests/selection.json": "e3775fa112c5ec32b78ce27b0fff7a4c0a763181c55db7557320d5a565ad9294",
-        "verifiers/repo_tests/spec.json": "d3e3456616a3f7f9be384295b82aac03d4757db4c5722d62260e98403d4d9bdd"
+        "verifiers/repo_tests/spec.json": "335de64c3a2b924e999c33a7a7a4ede63b5c62d3fe6cd6c3dd87b76579f39e5b"
       },
       "issue_id": 2724847830,
       "licence": {
@@ -1753,7 +1753,7 @@
           "n_files": 3
         },
         "verifiers/repo_tests/selection.json": "a3d317a778721d2481402d4497da815812b40ac12085942160e843ee6b9cfb42",
-        "verifiers/repo_tests/spec.json": "1cf117e8276e5484ca4d491db88d8b778e41ef6b5dd825f6be9989412f308a10"
+        "verifiers/repo_tests/spec.json": "ba0c3bd852041605af080790c4bce0afc36c52f6b57edbb472e9922759e0e700"
       },
       "issue_id": 3321784971,
       "licence": {
