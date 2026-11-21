@@ -8,6 +8,12 @@ to three digits; every task has two reviewers; a candidate whose reviewers give
 different values has no final label until it is adjudicated; and the list of what
 reviewers must not open is the one in the packet's README.
 
+Correction (2026-11-21): section 2 described the acceptance gate as it worked before
+commit `738493a`, reading only the latest human review of each requirement and counting
+`edit` as acceptance. It now states the gate's rules and how the coordinator records a
+re-review or an adjudicated contract review (decision log D51, D52). The procedure for
+reviewers is unchanged.
+
 This guide is for human reviewers of TraceContract tasks. It covers two jobs:
 reviewing **contracts** (what the user actually required) and labeling
 **candidates** (whether a patch is an acceptable solution). Model or rule outputs
@@ -49,6 +55,8 @@ statement, observable behaviour, and the user's quotes with their event ids):
 5. **Observable.** Every scored requirement needs a behavioural way to check it.
    If it is subjective or not observable, it must not be scored (`scored: false`, and
    `subjective: true` if it is a matter of taste): choose `edit` and say so in the note.
+   An `edit` keeps the requirement out of an accepted task until the contract has been
+   changed and the requirement re-reviewed (section 2).
 6. **Missing requirements.** Report any requirement the user stated that is missing,
    with its quote, to the coordinator (section 3). The label file has entries only for
    the listed requirements.
@@ -64,8 +72,9 @@ Record a decision on each requirement in the `contract_reviews` of your label fi
 The merge (section 2) appends each decision to the requirement's `reviews` in
 `tasks/<id>/contracts/reference.json` as a human review (reviewer `human:<your id>`).
 After the merge, `tracecontract validate-task tasks/<id>` shows which requirements
-still block the acceptance gate. Without `--show-candidates` it prints no candidate's
-origin or label; do not use that option before your labels have been merged.
+still block the acceptance gate (section 2 says how the gate reads the reviews). Without
+`--show-candidates` it prints no candidate's origin or label; do not use that option
+before your labels have been merged.
 
 ## 2. Candidate labels (blinded)
 
@@ -184,10 +193,55 @@ an adjudicated label with `"adjudicated": true`, appended to the candidate file:
 
 Until then, a candidate whose reviewers gave different values has no final label
 (`Candidate.final_label()` returns `None`), and the review queue lists it as needing
-adjudication. The merge does not resolve contract disagreements either. The acceptance
-gate reads only the latest human review of each requirement and counts `edit` as
-acceptance, so check every contract disagreement and every `edit` before relying on
-the gate.
+adjudication. The merge does not resolve contract disagreements either.
+
+**How the acceptance gate reads contract reviews** (`src/tracecontract/contract.py`;
+the rules await the owner's confirmation, decision log D51). Only human reviews count;
+model and rule reviews are proposals. For each requirement the gate takes each human
+reviewer's latest decision and accepts the requirement only if all of them are
+`accept`:
+* reviewers whose latest decisions differ leave it blocked until an adjudicated review
+  is added. From then on the reviews added after the latest adjudicated review decide,
+  and while there are none, that adjudicated review alone does;
+* `edit` and `needs_discussion` block it until it has been re-reviewed and accepted: a
+  later `accept` by each reviewer whose latest decision is not `accept`, or an
+  adjudicated `accept`;
+* `reject` blocks it.
+
+Every active scored requirement of the reference contract needs this acceptance, and
+so does every active scored inferred requirement of any contract. An unresolved
+requirement always blocks.
+
+**Recording a re-review or an adjudicated contract review.** `merge-reviews` merges each
+packet once and only from complete label files, so the coordinator appends the review by
+hand to the requirement's `reviews` list in `tasks/<id>/contracts/reference.json`, after
+the merged reviews:
+
+```json
+{"reviewer": "human:<id>", "reviewer_kind": "human", "decision": "accept|reject|edit|needs_discussion",
+ "timestamp": "<ISO 8601 time with a time zone>", "note": "...", "adjudicated": true}
+```
+
+* A re-review by one of the two reviewers uses that reviewer's id
+  (`human:<reviewer id>`) and leaves out `"adjudicated": true`.
+* An adjudicated review records the decision of a third person or of a discussion, with
+  `"adjudicated": true`; its `note` says which reviews it settles and why.
+* If an `edit` changes the requirement, the coordinator changes the contract first, and
+  the changed requirement is then reviewed again.
+
+Then `tracecontract validate-task tasks/<id>` shows, per contract, which requirements
+still block, and `tracecontract accept-task tasks/<id> --dry-run` lists every reason the
+gate gives without changing the task.
+
+Contract reviews alone cannot open the gate. It also needs the task's provenance record
+(`tasks/<id>/provenance.json`) to be `eligible`, which no command sets; a passed
+reconstruction record made from the current files; and every contract the task lists
+to pass, the initial-only and full-session contracts included, whose inferred and
+unresolved requirements the packet does not show. Recording reviews by hand, like the
+merge, writes into a task file that decision log D47 freezes. Whether reviews may be
+written there, where the provenance review is recorded, and whether the gate should
+check reviews on the condition contracts or on the reference contract only are open
+decisions for the repository owner.
 
 ## 2a. After your labels are merged: the queue and the evidence
 

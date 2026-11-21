@@ -9,6 +9,12 @@
 % docs/research/verified_bibliography.bib: kim2026swewhatif and he2026swegate (arXiv abstract
 % pages) and anonymous2026agentic (OpenReview search API; abstract only).
 %
+% Four entries were added on 2026-11-21 for the natural data sources that data.tex names, and their
+% check is recorded in docs/research/verified_bibliography.md ("Added for the paper on 2026-11-21"):
+% li2025rise, li2026aidev and tracecommons2026trace are copied from verified_bibliography.bib, with
+% their primary pages re-checked on 2026-11-21; haoli2025aidev cites the dataset at its tag v5, the
+% revision the study uses (decision log D47), where verified_bibliography.bib names the main revision.
+%
 % The legacy keys swechat, trace2eval and swetogether are kept as the entry keys. Each entry
 % lists its key in verified_bibliography.bib under `ids`, so biber resolves either key to the
 % same entry.
@@ -25,6 +31,55 @@
   howpublished = {San Francisco Data (blog essay)},
   url          = {https://www.sfdata.com/blog/production-traces/},
   note         = {Essay dated 1 October 2026}
+}
+
+% --- Natural data sources screened by this study (decision log D47) ----------------------------
+
+% verified 2026-11-18 and re-checked 2026-11-21: https://arxiv.org/abs/2507.15003 (v1 2025-07-20, only
+% version; primary cs.SE). The AIDev dataset card is tagged with this paper.
+@misc{li2025rise,
+  title         = {{The Rise of AI Teammates in Software Engineering (SE) 3.0: How Autonomous Coding Agents Are Reshaping Software Engineering}},
+  author        = {Li, Hao and Zhang, Haoxiang and Hassan, Ahmed E.},
+  year          = {2025},
+  eprint        = {2507.15003},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.SE},
+  url           = {https://arxiv.org/abs/2507.15003}
+}
+
+% verified 2026-11-18 and re-checked 2026-11-21: https://arxiv.org/abs/2602.09185 (v1 2026-02-09, only
+% version; primary cs.SE; citation_doi 10.1145/3793302.3797249, MSR '26 per Crossref on 2026-11-18).
+@misc{li2026aidev,
+  title         = {{AIDev: Studying AI Coding Agents on GitHub}},
+  author        = {Li, Hao and Zhang, Haoxiang and Hassan, Ahmed E.},
+  year          = {2026},
+  eprint        = {2602.09185},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.SE},
+  doi           = {10.1145/3793302.3797249},
+  url           = {https://arxiv.org/abs/2602.09185}
+}
+
+% verified 2026-11-21: https://huggingface.co/api/datasets/hao-li/AIDev/refs (tag v5 =
+% b37f9fd1613cfec55886105bb76721918d015dc7) and .../revision/v5 (created 2025-07-25; last modified
+% 2026-10-21; license tag cc-by-4.0; not gated; tagged arxiv:2507.15003 and arxiv:2602.09185).
+@misc{haoli2025aidev,
+  title        = {{AIDev}},
+  author       = {{hao-li}},
+  year         = {2025},
+  howpublished = {Hugging Face dataset hao-li/AIDev, tag v5 (revision b37f9fd161)},
+  url          = {https://huggingface.co/datasets/hao-li/AIDev}
+}
+
+% verified 2026-11-18 and re-checked 2026-11-21:
+% https://huggingface.co/api/datasets/trace-commons/agent-traces/revision/112ebd4d03ce852b00e935d523107c3d0c9a65bf
+% (created 2026-06-11; last modified 2026-06-18; license tag cc-by-4.0; not gated).
+@misc{tracecommons2026trace,
+  title        = {{Trace Commons --- Agent Traces}},
+  author       = {{Trace Commons}},
+  year         = {2026},
+  howpublished = {Hugging Face dataset trace-commons/agent-traces, revision 112ebd4d03},
+  url          = {https://huggingface.co/datasets/trace-commons/agent-traces}
 }
 
 % --- Sessions and session-derived tasks -------------------------------------------------------

@@ -54,7 +54,7 @@
    - **Base states are not recorded.**
 6. **Top 3 alternatives to SWE-chat for TraceContract** (§8):
    1. **AIDev-pop (`hao-li/AIDev` v5)**:
-      - agent-authored PRs with human review comments that carry `commit_id` / `original_commit_id` (exact pre-correction states) and follow-up commits;
+      - agent-authored PRs with human review comments that carry `commit_id` / `original_commit_id` and follow-up commits. These do not give exact pre-correction states without checks (correction of 2026-11-21, §8);
       - 361,296 PRs and 291,248 inline review comments;
       - CC-BY-4.0 compilation; repository content keeps its own licenses.
    2. **pi-share-hf per-project session datasets** (`badlogicgames/pi-mono`, `thomasmustier/*`, aggregated in `MaxDevv/real-pi-coding-agent-traces-sessions`, 1,291 sessions):
@@ -612,7 +612,7 @@ All rows are VERIFIED from cards/API unless marked "(I)" for inference.
 |---|---|---|---|---|---|---|---|
 | **SWE-chat** `SALT-NLP/SWE-chat` (reference; see `swechat.md`) | N | yes | yes; pushback labels | Entire checkpoints → commits | ODC-BY; gated | v2 ~18k sessions | medium-high |
 | **Trace Commons** `trace-commons/agent-traces` (2026-06-11 / 06-18) | N (donated; OSS certified) | yes | likely, multi-turn, unlabeled (I) | no commits; `cwd` and `gitBranch` kept | CC-BY-4.0 compilation; embedded content keeps own licenses; reuser must check | 30 sessions | low-medium (I) |
-| **AIDev** `hao-li/AIDev` v5 (2025-07-25 / 2026-10-21) | N (mined from GitHub) | yes (PR authors, reviewers) | yes, as PR review comments plus follow-up commits (paper Fig. 1) | **exact**: `pr_commits.sha`; review comments carry `commit_id`, `original_commit_id`, `diff_hunk`; patches | CC-BY-4.0; "**Each source repository retains its original copyright and license**"; `repository.license` field | 7,685,281 PRs (all); AIDev-pop 361,296 PRs / 25,402 repos / 291,248 inline review comments / 541,831 reviews / 1,718,829 commits | high (public repos) (I) |
+| **AIDev** `hao-li/AIDev` v5 (2025-07-25 / 2026-10-21) | N (mined from GitHub) | yes (PR authors, reviewers) | yes, as PR review comments plus follow-up commits (paper Fig. 1) | `pr_commits.sha`; review comments carry `commit_id`, `original_commit_id`, `diff_hunk`; patches. Not exact without checks (correction of 2026-11-21, §8) | CC-BY-4.0; "**Each source repository retains its original copyright and license**"; `repository.license` field | 7,685,281 PRs (all); AIDev-pop 361,296 PRs / 25,402 repos / 291,248 inline review comments / 541,831 reviews / 1,718,829 commits | high (public repos) (I) |
 | **pi-share-hf datasets**, e.g. `badlogicgames/pi-mono` (2026-04-06) | N | yes (project author) | yes; tree-structured sessions with `branch_summary` entries | header has `cwd` and `timestamp` only; source repo named on card; no commit | `license: other` (no text); others vary: `thomasmustier/*` MIT, `julien-c/pi-sessions` CC-BY-4.0 | 629 files | medium: base inferred by time (I) |
 | `MaxDevv/real-pi-coding-agent-traces-sessions` (2026-07-19) | N (aggregate of 21 pi datasets) | yes | yes | per-session provenance in `manifest.jsonl` | `license: other`; per-session source license | 1,291 sessions, 192,309 messages, ~194M tokens, 2025-12-01 → 2026-06-18 | medium (I) |
 | **DataClaw** datasets (49 tagged), e.g. `peteromallet/dataclaw-peteromallet` (2026-02-24) | N | yes | yes | `project`, `git_branch`, timestamps; tool inputs and outputs; no repo URL or commit | MIT (per dataset); **no open-source-only rule**; README: "**This is a performance art project.**" | 549 sessions / 14 projects | low-medium (I) |
@@ -693,7 +693,7 @@ Criteria, in order:
 6. independence from SWE-Together's sources.
 
 1. **AIDev-pop (`hao-li/AIDev` v5).**
-   - **Why.** Human review comments are natural corrections. Each inline comment pins the reviewed commit (`original_commit_id`), so the pre-correction state is exact. Follow-up commits and the merged state give the accepted target. Repos are public, with license metadata for filtering. The scale is very large (291,248 inline review comments). SWE-Together did not use it.
+   - **Why.** Human review comments are natural corrections. Each inline comment names the reviewed commit (`original_commit_id`). **Correction (2026-11-21, decision log D47, D48):** this note first called the pre-correction state exact. It is not exact without checks: `pull_request` has no base or head SHA, `pr_commits` has no dates or parents, and the reviewed commit was missing from the PR's commit list in 3 of 19 sampled behaviour comments, and in 11.7% of the comments that pass stage S6 of the later screening funnel. Each state must be verified by fetching it from its repository. Follow-up commits and the merged state give the accepted target. Repos are public, with license metadata for filtering. The scale is very large (291,248 inline review comments). SWE-Together did not use it.
    - **Caveats.**
      - It is not a chat session: the private user–agent prompts behind Codex, Claude Code and Cursor PRs are absent. The "initial request" is the PR body or linked issue.
      - Not every review comment changes a requirement (style, nits). Not every follow-up is by the agent.
@@ -729,7 +729,7 @@ Criteria, in order:
    - negative candidate = `original_commit_id` state;
    - positive candidates = the follow-up or merged state, and valid alternatives drawn from independent implementations.
 
-   This gives exact naturally observed pre-correction states at scale and complements chat-based SWE-chat tasks.
+   This gives naturally observed pre-correction states at scale, each to be verified against its repository (§8, correction of 2026-11-21), and complements chat-based SWE-chat tasks.
 2. **Adopt traj2envs's trial matrix and mutant-kill thresholds as the minimum automated audit**, and report them alongside human-label FA/FR:
    - repair: do nothing / tamper with the check;
    - build: stub / empty workspace;

@@ -14,7 +14,7 @@
 \item honour the dataset's data-removal policy by re-checking identifiers against the current release before publication;
 \item re-scan every derived file for secrets and personal information.
 \end{itemize}
-The two ungated sources being screened (\S\ref{sec:data}) contain personal data such as GitHub logins and comment text. Their files are kept outside the repository, which holds only identifiers, commit SHAs, file paths, hashes of texts, counts and categorical labels: no verbatim comment or session text, and no logins or handles (decision log D47).
+The two ungated sources taken up for screening (\S\ref{sec:data}) contain personal data such as GitHub logins and comment text. Their files are kept outside the repository. The repository holds identifiers, commit SHAs, file paths, hashes of texts, counts, categorical labels and checked model-written paraphrases of the 31 qualifying review comments. It holds no verbatim comment or session text, and no login or handle of the sampled pull requests' reviewers or of their pull-request, issue or commit authors. The URLs of the repositories fetched for screening name the owning account, which is masked as \texttt{\{owner\}} where that account also acts in AIDev (decision log D47, D50, D52).
 \paragraph{Benchmark misuse.} Trace-derived verifiers can be used as training rewards.
 \begin{itemize}
 \item The process-separated verifiers resist the tampering probes we tested (\S\ref{sec:repro}).

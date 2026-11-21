@@ -248,6 +248,10 @@ Not checked, because they are outside the bibliographic fields:
 | `swechat` | `baumann2026swechat` | Title, authors, eprint, year and url match. `primaryClass` should be cs.AI, not cs.SE. COLM 2026 acceptance is now confirmed on colm.cc |
 | `trace2eval` | `shi2026trace2eval` | All fields match (primary cs.SE; only version v1 2026-11-04) |
 | `swetogether` | `wu2026swetogether` | All fields match. primaryClass is missing (cs.AI). Only version is v1 2026-06-29 |
+| `li2025rise` | `li2025rise` | Added 2026-11-21 (next section). Fields copied unchanged |
+| `li2026aidev` | `li2026aidev` | Added 2026-11-21. Fields copied unchanged |
+| `haoli2025aidev` | `haoli2025aidev` | Added 2026-11-21. Title, author and year unchanged; `howpublished` names tag v5 (revision b37f9fd161) instead of the main revision b8dc67df93 |
+| `tracecommons2026trace` | `tracecommons2026trace` | Added 2026-11-21. Fields copied unchanged |
 
 Works named only in `paper/sections/related.tex` TODOs map to these verified keys:
 - SWE-smith: `yang2025swesmith`
@@ -260,6 +264,24 @@ Works named only in `paper/sections/related.tex` TODOs map to these verified key
 - Terminal-Bench task review: `harborframework2026task`
 - Harbor: `harborframeworkteam2026harbor`
 - "Getting Better at Working With You": `zhou2026tellonce` (cite as v1, or by the v2 title)
+
+## Added for the paper on 2026-11-21 (AIDev and Trace Commons)
+
+`paper/sections/data.tex` now cites the two natural data sources the study screens (decision
+log D47). Four entries were added to `paper/references.bib`. Each was checked on 2026-11-21
+(about 07:49 UTC) against its primary page. The downloads are kept in the build session's
+scratch directory, as untrusted data, and are not committed.
+
+| paper key | primary page checked on 2026-11-21 | result |
+|---|---|---|
+| `li2025rise` | https://arxiv.org/abs/2507.15003 (`citation_*` metas, submission history) | Title "The Rise of AI Teammates in Software Engineering (SE) 3.0: How Autonomous Coding Agents Are Reshaping Software Engineering"; authors Li, Hao; Zhang, Haoxiang; Hassan, Ahmed E.; v1 2025-07-20 is still the only version; primary cs.SE. Matches the entry verified on 2026-11-18 |
+| `li2026aidev` | https://arxiv.org/abs/2602.09185 | Title "AIDev: Studying AI Coding Agents on GitHub"; the same three authors; v1 2026-02-09 is the only version; primary cs.SE; `citation_doi` 10.1145/3793302.3797249. Matches |
+| `haoli2025aidev` | https://huggingface.co/api/datasets/hao-li/AIDev/refs and `.../revision/v5` | Tag v5 points to commit b37f9fd1613cfec55886105bb76721918d015dc7, the revision the study downloaded (decision log D47); main is at b8dc67df93e7c11f6f20c84129db7232eb1ec253. Created 2025-07-25, last modified 2026-10-21, license tag cc-by-4.0, not gated, tagged arxiv:2507.15003 and arxiv:2602.09185. The entry cites tag v5. The `sha` field of the `revision` endpoint names the main commit even when the tag or its commit is requested, so the tag's commit is taken from `refs` |
+| `tracecommons2026trace` | https://huggingface.co/api/datasets/trace-commons/agent-traces/revision/112ebd4d03ce852b00e935d523107c3d0c9a65bf | sha 112ebd4d03ce852b00e935d523107c3d0c9a65bf, the revision the study screened; created 2026-06-11, last modified 2026-06-18, license tag cc-by-4.0, not gated; pretty name "Trace Commons — Agent Traces". Matches the entry verified on 2026-11-18 |
+
+`verified_bibliography.bib` is not changed: its `haoli2025aidev` entry still names the main
+revision b8dc67df93, which the download record describes as having the same tree as tag v5
+(`data/manifests/third_party_downloads.json`).
 
 ## Notes
 

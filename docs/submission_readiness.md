@@ -12,10 +12,13 @@ requires the repository owner's explicit instruction.
    statistics (protocol §5, §9, §14).
 2. **No natural tasks.** All tasks are controlled sessions with scripted
    corrections. Natural SWE-chat tasks are blocked on the dataset's access terms
-   (decision log D4). Two ungated, openly licensed sources, AIDev v5 pull-request
-   review threads and Trace Commons sessions, are being screened (D47, D48), but no
-   natural task has been built from them. Until one is, external-validity claims must
-   be limited to controlled sessions.
+   (decision log D4). Two ungated, openly licensed sources were taken up for
+   screening (D47): all 30 Trace Commons sessions were screened and rejected, none
+   reconstructable; in AIDev v5 pull-request review threads, 31 of 150 sampled review
+   comments qualify at the model-judged stage S9 (model proposals, not human coding;
+   D50), and stage S10 (replayability) is under way. No natural task has been built
+   from either. Until one is, external-validity claims must be limited to controlled
+   sessions.
 3. **Too few independent task families** for any inferential claim. The pilot is
    descriptive; a confirmatory study needs a v1.0 protocol frozen after the pilot.
 4. **Novelty positioning** is narrowed but not yet confirmed by the owner (decision
@@ -108,7 +111,7 @@ The bracketed part must describe only what the human authors actually did.
 
 - [ ] Human contract reviews and candidate labels recorded; agreement reported.
 - [ ] Natural-session tasks included, or claims explicitly limited to controlled sessions.
-- [ ] Adversarial internal review by model agents: run on `pilot-v0.3` (six lenses; the skeptic stage was stopped before every finding was checked), followed by a dispositions review and a final claims audit on `pilot-v0.3.1` (decision log D40), findings and dispositions in `docs/internal_review.md`; then a read-only verification of the resulting fixes (decision log D44) and a final read-only verification of round 3 (D46). Tick only after a review of the final version, including human review, once human labels exist.
+- [ ] Adversarial internal review by model agents: run on `pilot-v0.3` (six lenses; the skeptic stage was stopped before every finding was checked), followed by a dispositions review and a final claims audit on `pilot-v0.3.1` (decision log D40), findings and dispositions in `docs/internal_review.md`; then a read-only verification of the resulting fixes (decision log D44), a final read-only verification of round 3 (D46), a re-audit against the specification (D47) and a read-only verification of round 4 (D51) with its fixes (D52). Tick only after a review of the final version, including human review, once human labels exist.
 - [ ] All numbers regenerated from recorded runs (`paper/make_tables.py`) and present in `paper/evidence_ledger.md`.
 - [ ] Bibliography entries verified against primary pages (dates recorded).
 - [ ] Data rights re-checked (SWE-chat terms, removal requests, repository licences).

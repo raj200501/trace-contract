@@ -49,16 +49,29 @@ Produced with Claude (via Claude Code), reviewed only by the model so far:
 * the independent construction checks, both requirement mappers, and the
   adversarial verification of the research brief (skeptics, citation and fact
   checks) together with the resulting revisions;
-* the diagnosis and fixes of the five harness defects (D29–D31, D36, D40, D44),
-  protocol amendments v0.2 to v0.7, transcript sanitiser v2 (D38), the post-hoc
-  analyses (D37), the CS-02 reference-check review loop, the CS-01 mapping correction
-  (D42), the blinded review packet tooling (`tracecontract review-packet` and
-  `merge-reviews`; D43, D44, D46), the strict re-audit of the generator transcripts
-  (`scripts/strict_reaudit.py`, D44, D46) and the pilot's results text;
+* the diagnosis and fixes of the five harness defects (D29–D31, D36, D40, D44), and
+  of the result-formatting behaviour disclosed in D46, for which harness 0.3.4 was too
+  narrow a fix and 0.3.5 is the one new runs use (D51, D52);
+* the Harbor exporter's planted-reward defect and its fixes (`tc-harbor-export/0.2.0`
+  and `0.3.0`, D51, D52), the reconstruction check that replaced the vacuous leakage
+  check found in D47 (version 2: D52), and the enforced acceptance gate (D51, D52);
+* protocol amendments v0.2 to v0.8, transcript sanitiser v2 (D38), the post-hoc
+  analyses (D37), the exploratory re-analysis and the draft precision plan (D49), the
+  CS-02 reference-check review loop, the CS-01 mapping correction (D42), the blinded
+  review packet tooling (`tracecontract review-packet` and `merge-reviews`; D43, D44,
+  D46), the strict re-audit of the generator transcripts (`scripts/strict_reaudit.py`,
+  D44, D46) and the pilot's results text;
+* the natural-data screening: the Trace Commons screen with transcript replay and
+  triage, the AIDev funnel, the stage-S9 judgments and paraphrases, the
+  pseudonymiser and the privacy scan of the sampled logins (D47, D48, D50, D52);
+* the fresh-agent tooling (workspaces with the recorded path substitution, the
+  fresh-attempt audit and `add-stratum-candidate`), the schema identifiers of protocol
+  v0.8 and the reporting rules of new runs (D52);
 * the six-lens internal review with its skeptic agents, the dispositions review, the
   final claims audit, the verification of the resulting fixes and the final
-  verification (D36–D46), all run by
-  model agents, and the fixes that followed them.
+  verification (D36–D46), the re-audit against the specification (D47) and the
+  verification of round 4 (D51), all run by model agents, and the fixes that followed
+  them (through D52).
 
 ## Human decisions and reviews still required
 
@@ -67,11 +80,17 @@ Produced with Claude (via Claude Code), reviewed only by the model so far:
    (`docs/annotation_guide.md`; protocol v0.6 §14). Until their labels are merged,
    reviewers open no task files, results or documents except the annotation guide;
    this document is one they must not open. Someone who has already read these files
-   is not blind to the proposals and outcomes they state.
+   is not blind to the proposals and outcomes they state. Reviews alone cannot open
+   the acceptance gate: it also needs a recorded provenance review and the owner
+   decisions on the condition contracts and on where reviews are written (`STATUS.md`,
+   Blocked).
 2. **Data access**: accept the SWE-chat terms and supply a working read token. Two
-   ungated, openly licensed sources, AIDev v5 pull-request review threads and Trace
-   Commons sessions, need neither and are being screened (D47, D48). Decide whether
-   pull-request review comments count as user corrections for the claim (D47).
+   ungated, openly licensed sources need neither and were taken up for screening
+   (D47): all 30 Trace Commons sessions were screened and rejected; in AIDev v5
+   pull-request review threads, stage S9 is done (31 of 150 sampled comments qualify,
+   as model proposals; D50) and stage S10 is under way. No natural task has been
+   built. Decide whether pull-request review comments count as user corrections for
+   the claim (D47).
 3. **Scope of the claim.** The adversarial review (D34) narrowed it to a
    conjunction. SessionFarmer is the closest work; its Table 3 already compares
    suites with and without refinement on a held-out pool, with LLM labels. Confirm
@@ -80,7 +99,9 @@ Produced with Claude (via Claude Code), reviewed only by the model so far:
 4. **Repository licence** and the licence of released task data.
 5. **Authorship, AI-use disclosure, and whether/when to submit anything.**
 6. **Spending**: whether to approve any paid model or compute budget (default zero),
-   e.g. for a second model family or fresh-agent difficulty checks.
+   e.g. for a second model family. Fresh-agent difficulty checks no longer need it:
+   protocol v0.7 §15.4 plans them with subagents of the build session (none has run
+   yet).
 
 ## Hard technical questions (be ready to answer these yourself)
 
@@ -139,5 +160,5 @@ Produced with Claude (via Claude Code), reviewed only by the model so far:
    named candidate (`export_task(..., candidates=[...])`; by default only the
    reference solution is packaged), run the oracle with two different `CANDIDATE`
    values, and check that Harbor's reward matches `tracecontract grade`. Then read
-   how exporter 0.2.0 keeps candidate code from writing its own reward file, and the
-   two probes that show it (`scripts/harbor_validate.sh`).
+   how the exporter (since 0.2.0; now 0.3.0) keeps candidate code from writing its own
+   reward file, and the two probes that show it (`scripts/harbor_validate.sh`).

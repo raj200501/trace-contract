@@ -6,19 +6,33 @@ Writes paper/generated/*.tex and paper/evidence_ledger.md. Every number printed 
 table is listed in the ledger with its source file and JSON path. Nothing is entered
 by hand: tables come from task manifests, the controlled scenarios (hashed and logged
 locally before each session), verifier specs, the run's analysis.json and the
-run-comparison files written by scripts/compare_runs.py. Existing generated tables are
-deleted first, so a table whose inputs are missing cannot survive from an earlier run.
+run-comparison files written by scripts/compare_runs.py.
+
+The arguments are parsed and checked before anything is written: every run directory
+must hold ``analysis.json`` and ``manifest.json``, and every ``--compare`` directory
+``results.jsonl``. The tables and the ledger are written to a temporary directory first.
+Only when all of them have been written do they replace ``paper/generated/*.tex`` and
+the ledger, and a top-level table that this invocation did not write is then deleted, so
+a table whose inputs are missing cannot survive from an earlier run. ``--help``, a
+mistyped directory or a failure while generating leaves every file as it was; the
+subdirectory ``paper/generated/exploratory/`` (scripts/exploratory_reanalysis.py) is
+never touched.
 """
 
 from __future__ import annotations
 
+import argparse
 import ast
 import json
+import os
+import shutil
 import sys
+import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 GEN = ROOT / "paper" / "generated"
+LEDGER = ROOT / "paper" / "evidence_ledger.md"
 COND_TEX = {"initial_plain": "C1 initial, plain", "initial_audited": "C2 initial, audited", "full_plain": "C3 full, plain",
             "full_audited": "C4 full, audited", "llm_freeform": "B2 full-session LLM", "repo_tests": "B1 repository tests"}
 
@@ -64,7 +78,7 @@ def table(caption: str, label: str, spec: str, header: str, rows: list[str], siz
             + "\n".join(rows) + "\n\\bottomrule\\end{tabular}\\end{table}\n")
 
 
-def tasks_and_scenarios(led: Ledger) -> None:
+def tasks_and_scenarios(led: Ledger, out: Path) -> None:
     rows, srows = [], []
     for td in sorted((ROOT / "tasks").glob("*/task.json")):
         m = json.loads(td.read_text())
@@ -86,16 +100,16 @@ def tasks_and_scenarios(led: Ledger) -> None:
             cell = lambda rs: ", ".join(f"{tex(r['id'])}" + (" (superseded)" if r["final_status"] == "superseded" else "") for r in rs)  # noqa: E731
             srows.append(f"{tex(m['task_id'])} & \\texttt{{{tex(repo.split('/')[-1])}}} & {cell(u1)} & {cell(u2)} \\\\")
             led.add("scenarios", f"{m['task_id']} requirements U1/U2", f"{len(u1)}/{len(u2)}", rel(sc))
-    (GEN / "tasks_table.tex").write_text(table(
+    (out / "tasks_table.tex").write_text(table(
         "Tasks (generated from task manifests). Held-out candidates exclude the reference solution and the no-op.", "tab:tasks",
         "lllllr", "Task & Population & Repository & Commit & Verifiers & Held-out", rows))
-    (GEN / "scenario_table.tex").write_text(table(
+    (out / "scenario_table.tex").write_text(table(
         "Intended requirements of the controlled scenarios (hashed and logged locally before each session), by the user turn "
         "that introduced them (generated from \\texttt{data/controlled/scenarios}).", "tab:scenarios", "llp{0.33\\linewidth}p{0.33\\linewidth}",
         "Task & Library & Initial request ($U_1$) & Correction ($U_2$)", srows, size="\\footnotesize"))
 
 
-def results(run: Path, led: Ledger) -> None:
+def results(run: Path, led: Ledger, out: Path) -> None:
     a = json.loads((run / "analysis.json").read_text())
     run_id = json.loads((run / "manifest.json").read_text())["run_id"]
     src = rel(run / "analysis.json")
@@ -125,7 +139,7 @@ def results(run: Path, led: Ledger) -> None:
         led.add("summary", f"{run_id} {c} tasks_with_any_accepted_negative", f"{tn['num']}/{tn['den']}", f"{src} conditions.{c}")
         led.add("summary", f"{run_id} {c} infrastructure", f"{d['infrastructure']['num']}/{d['infrastructure']['den']}", f"{src} conditions.{c}")
     led.add("summary", f"{run_id} tasks / families (caption)", f"{a['n_tasks']} / {a['n_families']}", f"{src} n_tasks, n_families")
-    (GEN / "results_summary.tex").write_text(table(
+    (out / "results_summary.tex").write_text(table(
         f"Verifier reward fidelity on the held-out pool, run \\texttt{{{tex(run_id)}}} ({a['n_tasks']} tasks, {a['n_families']} families). " + pre +
         "Rates with (num/den) and 95\\% task-family bootstrap interval ($^{*}$: degenerate, every family has the same rate); "
         "below, the exact binomial interval (ignores clustering; reference scale only) and the macro rate (mean over families). "
@@ -143,7 +157,7 @@ def results(run: Path, led: Ledger) -> None:
         led.add("comparisons", f"{run_id} {d['a']} - {d['b']} {d['metric']}", f"{d['difference']} ci95={d['ci95']} "
                 f"degenerate={d.get('ci95_degenerate')} n={d['n_metric']} (pairs={d['n_common']}) discordant={d['discordant']}",
                 f"{src} comparisons")
-    (GEN / "results_comparisons.tex").write_text(table(
+    (out / "results_comparisons.tex").write_text(table(
         f"Pre-specified paired comparisons on the same candidates, run \\texttt{{{tex(run_id)}}}" + (" (automated pilot)" if pilot else "") +
         ". n: labeled candidates for the metric (invalid for FA, valid for FR). $^{*}$: degenerate interval (every family has "
         "the same difference). Last column: A accepts \\& B rejects / A rejects \\& B accepts.", "tab:comparisons", "lllllrr",
@@ -163,7 +177,7 @@ def results(run: Path, led: Ledger) -> None:
         nrows.append(f"{tex(COND_TEX.get(c, c))} & {pre_a}/{pre_n} & {nm_a}/{nm_n} & {cv_a}/{cv_n} & {iv_a}/{iv_n} \\\\")
         led.add("negatives", f"{run_id} {c} accepted pre-correction/near-miss/correction-violating/initial-violating",
                 f"{pre_a}/{pre_n}, {nm_a}/{nm_n}, {cv_a}/{cv_n}, {iv_a}/{iv_n}", f"{src} per_task")
-    (GEN / "negatives_table.tex").write_text(table(
+    (out / "negatives_table.tex").write_text(table(
         "Accepted invalid candidates by origin and by negative type (accepted/total)" + (" (automated pilot)" if pilot else "") +
         ". Correction-violating: violates a reference requirement introduced after the first user request.", "tab:negatives",
         "lrrrr", "Condition & Pre-correction state & Near miss & Correction-violating & Initial-violating", nrows, size="\\footnotesize"))
@@ -173,7 +187,7 @@ def results(run: Path, led: Ledger) -> None:
         r, n = s.get("reference", {}), s.get("noop", {})
         srows.append(f"{tex(COND_TEX.get(c, c))} & {r.get('pass', '-')}/{r.get('n', '-')} & {n.get('pass', '-')}/{n.get('n', '-')} \\\\")
         led.add("sanity", f"{run_id} {c} reference/no-op passes", f"{r.get('pass')}/{r.get('n')}, {n.get('pass')}/{n.get('n')}", f"{src} sanity.{c}")
-    (GEN / "sanity_table.tex").write_text(table(
+    (out / "sanity_table.tex").write_text(table(
         "Sanity checks (excluded from the rates): reference solution and no-op passes per condition.", "tab:sanity", "lrr",
         "Condition & Reference passes & No-op passes", srows, size="\\footnotesize"))
 
@@ -190,7 +204,7 @@ def results(run: Path, led: Ledger) -> None:
                     f"{d['fa']} ({d['fa_num']}/{d['fa_den']}) ci95={d['fa_ci95']} exact95={d.get('fa_exact95')} degenerate={d.get('fa_ci95_degenerate')}, "
                     f"{d['fr']} ({d['fr_num']}/{d['fr_den']}) ci95={d['fr_ci95']} exact95={d.get('fr_exact95')} degenerate={d.get('fr_ci95_degenerate')}",
                     f"{src} sensitivity_construction_labels.{c}")
-        (GEN / "sensitivity_table.tex").write_text(table(
+        (out / "sensitivity_table.tex").write_text(table(
             "\\textbf{Exploratory, not pre-specified (protocol v0.3):} rates when constructed candidates are labeled by construction "
             "intent (including those the pre-specified rule marked ambiguous). $^{*}$: degenerate interval; exact: binomial "
             "interval ignoring clustering.", "tab:sensitivity", "lll",
@@ -215,7 +229,7 @@ def results(run: Path, led: Ledger) -> None:
             led.add("posthoc", f"{run_id} B1 upstream-only FA/FR", f"{b1['fa_num']}/{b1['fa_den']}, {b1['fr_num']}/{b1['fr_den']}", f"{src} b1_upstream_only")
         n_dup = len(a.get("duplicates", {}))
         led.add("posthoc", f"{run_id} held-out candidates dropped as duplicates (caption)", n_dup, f"{src} duplicates")
-        (GEN / "posthoc_table.tex").write_text(table(
+        (out / "posthoc_table.tex").write_text(table(
             "\\textbf{Exploratory, post hoc (protocol v0.4; duplicates view widened in v0.5).} Near misses accepted among those "
             "the label rule confirmed invalid and among those it marked ambiguous; rates under the independent construction "
             f"checks' labels; rates without the {n_dup} held-out candidates that duplicate another candidate (same graded "
@@ -230,7 +244,7 @@ def results(run: Path, led: Ledger) -> None:
         led.add("labels", f"{t} valid/invalid/ambiguous/unlabeled/queued",
                 f"{cn.get('valid', 0)}/{cn.get('invalid', 0)}/{cn.get('ambiguous', 0)}/{cn.get('unlabeled', 0)}/{len(d['review_queue'])}", f"{src} labels.{t}")
     if lrows:
-        (GEN / "labels_table.tex").write_text(table(
+        (out / "labels_table.tex").write_text(table(
             "Proposed labels of held-out candidates under rule D19 and the queue for human review (ambiguous, unlabeled, or "
             "disagreeing with the independent construction check).", "tab:labels", "lrrrrr",
             "Task & Valid & Invalid & Ambiguous & Unlabeled & Queued", lrows, size="\\footnotesize"))
@@ -250,7 +264,7 @@ def results(run: Path, led: Ledger) -> None:
                     f"{d['coverage']} ({len(d['covered'])}/{n_ref}), {cbc}, {len(d['unsupported'])}/{d['n_recovered_scored']}, {len(d['contradicting'])}, "
                     f"{d2['coverage'] if d2 else None}, {k}", f"{src} coverage.{t} / mapping_agreement.{t}")
     if vrows:
-        (GEN / "coverage_table.tex").write_text(table(
+        (out / "coverage_table.tex").write_text(table(
             "Recovered contracts against the reference contract (model mappings, proposals; one mapper-1 claim corrected by the "
             "builder, see text). Coverage: share of active scored reference requirements that a recovered requirement maps to "
             "without contradicting it. Contra.\\ cov.: covered requirements that another recovered requirement contradicts "
@@ -270,13 +284,13 @@ def results(run: Path, led: Ledger) -> None:
             short = {"observed_pre_correction": "pre-corr.", "constructed_near_miss": "near miss", "valid_alternative": "alternative"}.get(d["origin"], d["origin"])
             mrows.append(f"{tex(cid)} & {short} & {tex(d['label'] or '--')} & " + " & ".join(mark(d.get(c)) for c in conds) + " \\\\")
     hdr = "Candidate & Origin & Label & " + " & ".join(tex(COND_TEX.get(c, c).split(' ')[0]) for c in conds)
-    (GEN / "outcome_matrix.tex").write_text(table(
+    (out / "outcome_matrix.tex").write_text(table(
         f"Outcome of every verifier on every held-out candidate, run \\texttt{{{tex(run_id)}}} (\\checkmark{{}} pass, $\\times$ any "
         "non-pass outcome).", "tab:matrix", "lll" + "c" * len(conds), hdr, mrows, size="\\scriptsize"))
     led.add("matrix", f"{run_id} outcome matrix rows", len(mrows), f"{src} per_task")
 
 
-def comparisons(new_run: Path, old_runs: list[Path], led: Ledger) -> None:
+def comparisons(new_run: Path, old_runs: list[Path], led: Ledger, out: Path) -> None:
     rows = []
     for old in old_runs:
         p = new_run / f"compare_{old.name}.json"
@@ -299,7 +313,7 @@ def comparisons(new_run: Path, old_runs: list[Path], led: Ledger) -> None:
         if ch:
             led.add("reliability", f"{d['old_run']} vs {d['new_run']}: changed-verifier pairs with the same reward", ch_txt, rel(p))
     if rows:
-        (GEN / "reliability_table.tex").write_text(table(
+        (out / "reliability_table.tex").write_text(table(
             f"Agreement of earlier runs with the final run \\texttt{{{tex(new_run.name)}}} on pairs graded in both. Reward agreement "
             "is pass vs non-pass; outcome agreement is the exact outcome. Both are computed on pairs whose verifier is unchanged "
             "(same version, test content and scored check list: the check-list hash where both run manifests record it, "
@@ -308,7 +322,7 @@ def comparisons(new_run: Path, old_runs: list[Path], led: Ledger) -> None:
             "Earlier run & Harness & Pairs & Reward agr. & Outcome agr. & Changed verifier", rows, size="\\footnotesize"))
 
 
-def verifiers(run: Path, led: Ledger) -> None:
+def verifiers(run: Path, led: Ledger, out: Path) -> None:
     """Verifier construction: checks per verifier, audit revisions, and the B1 checks the session agent added."""
     a = json.loads((run / "analysis.json").read_text())
     up = (a.get("b1_upstream_only") or {}).get("n_checks", {})
@@ -342,30 +356,68 @@ def verifiers(run: Path, led: Ledger) -> None:
                 led.add("verifiers", f"{m['task_id']} {cond} checks", n, rel(path))
             cells.append(txt)
         rows.append(f"{tex(m['task_id'])} & " + " & ".join(cells) + " \\\\")
-    (GEN / "verifiers_table.tex").write_text(table(
+    (out / "verifiers_table.tex").write_text(table(
         "Verifiers per task (generated from \\texttt{tasks/*/verifiers/*/spec.json}): scored checks. Audited verifiers: audit "
         "revisions, whether the audit passed, and ``= plain'' when the audited tests are identical to the plain ones. B1: checks "
         "added to the repository's tests by the session agent (not in the base commit). Ref.: reference checks used for labels.",
         "tab:verifiers", "lccccccc", "Task & C1 & C2 & C3 & C4 & B2 & B1 & Ref.", rows, size="\\scriptsize"))
 
 
-def main(argv: list[str]) -> None:
+def parse_args(argv: list[str]) -> argparse.Namespace:
+    """Parse and check the arguments; nothing is read beyond the directories' listings, and nothing is written."""
+    ap = argparse.ArgumentParser(
+        prog="paper/make_tables.py",
+        description="Generate paper/generated/*.tex and paper/evidence_ledger.md from recorded runs. The outputs "
+                    "are replaced only after every table has been written; on any error every file is left as it was.")
+    ap.add_argument("runs", nargs="+", metavar="RUN_DIR",
+                    help="run directory with analysis.json and manifest.json, e.g. results/runs/pilot-v0.3.3")
+    ap.add_argument("--compare", nargs="+", default=[], metavar="OLD_RUN_DIR",
+                    help="earlier run directories (with results.jsonl) for the reliability table; it uses the "
+                         "compare_<run>.json files that scripts/compare_runs.py wrote into the run directory")
+    a = ap.parse_args(argv)
+    for rd in a.runs:
+        missing = [f for f in ("analysis.json", "manifest.json") if not (Path(rd) / f).is_file()]
+        if missing:
+            ap.error(f"{rd}: no {' or '.join(missing)}; a run directory needs both (run `tracecontract analyze` first)")
+    for od in a.compare:
+        if not (Path(od) / "results.jsonl").is_file():
+            ap.error(f"--compare {od}: no results.jsonl; not a run directory")
+    return a
+
+
+def _replace_outputs(tmp_gen: Path, tmp_ledger: Path) -> int:
+    """Move the new tables and ledger into place; delete the top-level tables this invocation did not write."""
+    new = {p.name: p for p in tmp_gen.glob("*.tex")}
     GEN.mkdir(parents=True, exist_ok=True)
     for old in GEN.glob("*.tex"):
-        old.unlink()  # every table is regenerated; none may survive from an earlier invocation
+        if old.name not in new:
+            old.unlink()  # every table is regenerated; none may survive from an earlier invocation
+    for name, p in sorted(new.items()):
+        os.replace(p, GEN / name)
+    os.replace(tmp_ledger, LEDGER)
+    return len(new)
+
+
+def main(argv: list[str]) -> None:
+    a = parse_args(argv)  # --help and argument errors exit here, before anything is written
     led = Ledger(argv)
-    olds: list[Path] = []
-    if "--compare" in argv:
-        i = argv.index("--compare")
-        olds = [Path(x) for x in argv[i + 1:]]
-        argv = argv[:i]
-    tasks_and_scenarios(led)
-    for rd in argv:
-        results(Path(rd), led)
-        verifiers(Path(rd), led)
-        comparisons(Path(rd), olds, led)
-    (ROOT / "paper" / "evidence_ledger.md").write_text("\n".join(led.lines) + "\n")
-    print(f"wrote tables to {rel(GEN)}; ledger with {len(led.lines) - 4} entries")
+    LEDGER.parent.mkdir(parents=True, exist_ok=True)
+    # The temporary directory sits next to the outputs, so os.replace never crosses a file system.
+    tmp = Path(tempfile.mkdtemp(prefix=".make_tables-", dir=LEDGER.parent))
+    try:
+        out = tmp / "generated"
+        out.mkdir()
+        olds = [Path(x) for x in a.compare]
+        tasks_and_scenarios(led, out)
+        for rd in a.runs:
+            results(Path(rd), led, out)
+            verifiers(Path(rd), led, out)
+            comparisons(Path(rd), olds, led, out)
+        (tmp / "evidence_ledger.md").write_text("\n".join(led.lines) + "\n")
+        n = _replace_outputs(out, tmp / "evidence_ledger.md")
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    print(f"wrote {n} tables to {rel(GEN)}; ledger with {len(led.lines) - 4} entries")
 
 
 if __name__ == "__main__":

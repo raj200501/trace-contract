@@ -14,109 +14,12 @@ TraceContract measures both directly.
 > **Status: research prototype, automated pilot only.**
 > * No human labels exist yet; candidate labels are proposals from a pre-specified rule.
 > * All four sessions are *controlled*: real agent runs with user turns scripted by
->   the study's AI agent, not natural user traffic.
+>   the study's AI agent, not natural user traffic. No natural task has been built:
+>   Trace Commons was screened (all 30 sessions rejected), and AIDev v5 is being
+>   screened (see Limitations).
 > * Nothing here is peer reviewed.
 >
 > See [STATUS.md](STATUS.md).
-
-## What is here
-
-* **A measurement design.** Every verifier condition scores the *same* held-out
-  candidate patches. Each task's pool holds:
-  * the agent's naturally observed **pre-correction state**;
-  * constructed near misses;
-  * independent valid alternatives.
-
-  The pre-correction state is captured during the session. It existed before the
-  verifiers, and its edits appear, abbreviated, in the session text that B2's
-  generator and the full-session contract proposer read. The alternatives and near
-  misses are generated only after the task's verifiers are frozen (CS-04's B1 was
-  re-selected afterwards, decision log D31). The conditions form a 2×2 grid:
-
-  | | plain generated tests | + predefined audit (audit:v1) |
-  | --- | --- | --- |
-  | initial-request-only contract | C1 `initial_plain` | C2 `initial_audited` |
-  | correction-aware contract | C3 `full_plain` | C4 `full_audited` |
-
-  There are two baselines: B1 (repository tests at the reference state) and B2 (an
-  LLM given the whole session, without contract machinery). The initial-only arm
-  measures information lost during dataset construction, not agent capability.
-* **Evidence-linked contracts.**
-  * Each requirement carries a status (explicit, inferred, superseded or
-    unresolved) and the turn that introduced it; explicit requirements carry exact
-    quotes from the session.
-  * Superseded requirements are never scored.
-  * Inferred requirements need human review before a task is accepted
-    (`src/tracecontract/contract.py`). `tracecontract accept-task` sets a task's status
-    to `accepted` only if this gate passes. `evaluate` refuses rejected tasks, and it
-    evaluates a task that has not been accepted only with `--pilot`, which the run
-    manifest records. No task has passed the gate, since no human review exists.
-* **Process-separated grading (harness `tc-harness/0.3.3` for the pilot)** for C1–C4
-  and B2. New runs use `tc-harness/0.3.4`, which differs only in that a failure while
-  formatting a value or an exception for a result message is replaced by the type
-  name, so formatting cannot change an outcome (protocol v0.7 §15.3; D46).
-  * Hidden tests run in a trusted grader.
-  * Candidate code runs only as an unprivileged UID allocated to that container. It
-    cannot read the tests or write the results.
-  * Per-call results are authenticated, and the host recomputes outcomes, so a
-    missing or stale result never becomes a reward.
-  * **In-call limit:** within one call, code that the snippet runs, directly or
-    through candidate modules it imports, still controls what that call reports. It
-    can, for example, detect that it is being graded. Every test of these verifiers
-    therefore asserts on a returned value, not only on success; the test lint flags
-    any test whose only assertions are on success (decision log D3, D36, D40).
-  * Adversarial Docker probes cover the boundary (`tests/test_sandbox_isolation.py`).
-    They include regression probes for the defects found during the pilot and its
-    reviews: two in resource isolation (decision log D29–D31) and two start-up paths
-    for forged results, a module shadowing the standard library (D36) and an
-    `encodings` package loaded while the interpreter starts (D40).
-  * A later verification by model agents found a further path for forged results in
-    0.3.2: a candidate `ast.py` could load while the wrapper formatted a snippet's
-    exception. Harness 0.3.3 closes it and adds a regression probe for it. No candidate
-    patch in the pool ships an `ast` or `unicodedata` module (D44).
-  * **Exception:** the repository-test baseline B1 runs pytest with candidate code in
-    the reporting process. An adversarial candidate can forge its report (see
-    Limitations).
-* **Controlled-session protocol (CS-v1):** scenarios hashed and logged locally before
-  each run (not a formal preregistration), state capture between turns, transcript
-  sanitisation and contamination audits.
-* **Labels, checks and review.**
-  * Label proposals come from a pre-specified rule (D19): independent reference
-    checks, plus the regression norm, plus construction intent. Disagreement gives
-    `ambiguous`.
-  * An independent model check of every held-out candidate
-    (`tasks/*/labels/construction_checks.json`) is advisory only.
-  * A human-review queue that shows no verifier outcomes is in
-    `tasks/*/labels/review_queue.json`. Reviewers open it only after their labels are
-    merged.
-  * Human labels are to be made from a blinded review packet (`tracecontract
-    review-packet`): the session's user turns, the reference contract, and each
-    held-out change under a random id, shuffled, with no proposal or outcome;
-    identical changes share one id. The packet hides the origin field but not the
-    origin, which the content can reveal: near misses resemble each other and the
-    reference, and the user's corrections describe the agent's first attempt. Each
-    reviewer therefore records an origin guess per candidate, and the merge reports
-    how often the guesses are right. The key stays with a coordinator, and
-    `tracecontract merge-reviews` needs two complete reviews per task
-    (`docs/annotation_guide.md`, decision log D43, D44).
-* **Harbor export** (pinned 0.25.0, separate verifier, only approved artifacts;
-  exporter `tc-harbor-export/0.2.0`). Harbor makes the separate verifier's reward
-  directory world-writable before the test runs. Under the earlier exporter, two probes
-  whose candidate code writes its own reward file (on a grader timeout and on a
-  collection error) received reward 1.0. Exporter 0.2.0 locks the directory before
-  candidate code runs and removes every reward file it did not write, and both probes
-  now end without a reward (`results/harbor_validation/tc-harbor-export-0.2.0/`). It
-  exports only the reference solution unless candidates are named, and it refuses
-  rejected tasks.
-
-Related work: [docs/research_brief.md](docs/research_brief.md), adversarially
-verified by model agents (not yet reviewed by a human), and
-`paper/sections/related.tex`. Each component of the design has partial precedents,
-notably SessionFarmer, SWE-Together and Trace2Eval. The claim is limited to their
-*combination*: initial-only vs correction-aware verifiers from one frozen procedure,
-scored on one held-out pool anchored on the session's own pre-correction states,
-against independent human labels (decision log D34). The last element does not
-exist yet, and the pool's departures from blindness are listed under Limitations.
 
 ## Pilot results (automated labels, four controlled task families)
 
@@ -200,6 +103,134 @@ request but violates the correction.
   both valid alternatives and the reference solution.
 * All correction-aware conditions reject it and accept the alternatives.
 
+## What is here
+
+* **A measurement design.** Every verifier condition scores the *same* held-out
+  candidate patches. Each task's pool holds:
+  * the agent's naturally observed **pre-correction state**;
+  * constructed near misses;
+  * independent valid alternatives.
+
+  The pre-correction state is captured during the session. It existed before the
+  verifiers, and its edits appear, abbreviated, in the session text that B2's
+  generator and the full-session contract proposer read. The alternatives and near
+  misses are generated only after the task's verifiers are frozen (CS-04's B1 was
+  re-selected afterwards, decision log D31). The conditions form a 2×2 grid:
+
+  | | plain generated tests | + predefined audit (audit:v1) |
+  | --- | --- | --- |
+  | initial-request-only contract | C1 `initial_plain` | C2 `initial_audited` |
+  | correction-aware contract | C3 `full_plain` | C4 `full_audited` |
+
+  There are two baselines: B1 (repository tests at the reference state) and B2 (an
+  LLM given the whole session, without contract machinery). The initial-only arm
+  measures information lost during dataset construction, not agent capability.
+* **Evidence-linked contracts.**
+  * Each requirement carries a status (explicit, inferred, superseded or
+    unresolved) and the turn that introduced it; explicit requirements carry exact
+    quotes from the session.
+  * Superseded requirements are never scored.
+  * **Acceptance gate** (`src/tracecontract/contract.py`; its rules await the owner's
+    confirmation, D51). A task passes only if its provenance record is `eligible`, its
+    reconstruction record passed and was made from the current files, and every
+    contract it lists is valid, has no unresolved requirement and has each scored
+    inferred requirement (in the reference contract, each scored requirement) accepted
+    by human review. Each human reviewer's latest decision counts: reviewers who
+    disagree block a requirement until an adjudicated review is added, and `edit` or
+    `needs_discussion` blocks it until a re-review accepts it. `tracecontract
+    accept-task` sets the status to `accepted` only if the gate passes; `evaluate` runs
+    the gate again, always refuses a rejected task or source, and evaluates a task that
+    has not been accepted only with `--pilot`, which the run manifest records.
+  * **No task can pass today.** `tracecontract accept-task tasks/<id> --dry-run` lists
+    three kinds of reason for each of the four tasks: the provenance record is
+    `pending_review`, and no command sets it to `eligible`; no requirement of the
+    reference contract has a human review; and the initial-only and full-session
+    contracts hold unresolved requirements and unreviewed inferred ones, which the
+    blinded review packet does not show.
+* **Process-separated grading** for C1–C4 and B2: harness `tc-harness/0.3.3` for the
+  pilot, `tc-harness/0.3.5` for new runs.
+  * Hidden tests run in a trusted grader.
+  * Candidate code runs only as an unprivileged UID allocated to that container. It
+    cannot read the tests or write the results.
+  * Per-call results are authenticated, and the host recomputes outcomes, so a
+    missing or stale result never becomes a reward.
+  * **In-call limit:** within one call, code that the snippet runs, directly or
+    through candidate modules it imports, still controls what that call reports. It
+    can, for example, detect that it is being graded. Every test of these verifiers
+    therefore asserts on a returned value, not only on success; the test lint flags
+    any test whose only assertions are on success (decision log D3, D36, D40).
+  * Adversarial Docker probes cover the boundary (`tests/test_sandbox_isolation.py`).
+    They include regression probes for the defects found during the pilot and its
+    reviews: two in resource isolation (decision log D29–D31) and two start-up paths
+    for forged results, a module shadowing the standard library (D36) and an
+    `encodings` package loaded while the interpreter starts (D40).
+  * A later verification by model agents found a further path for forged results in
+    0.3.2: a candidate `ast.py` could load while the wrapper formatted a snippet's
+    exception. Harness 0.3.3 closes it and adds a regression probe for it. No candidate
+    patch in the pool ships an `ast` or `unicodedata` module (D44).
+  * **Harness 0.3.5** (protocol v0.8 §16.1; D52) differs from 0.3.3 in one respect: a
+    failure while formatting or encoding a value or an exception for a result message
+    never turns a successful call into a failed one and never leaves a call without a
+    result. What JSON cannot encode is converted by trusted code that calls no
+    candidate method, or replaced by a placeholder naming the type. Candidate code that
+    runs while the result is formatted (a `__repr__` or `__str__`) can still end or
+    stall the call: the in-call limit, unchanged. 0.3.4 was never used for a run (D51).
+  * **Exception:** the repository-test baseline B1 runs pytest with candidate code in
+    the reporting process. An adversarial candidate can forge its report (see
+    Limitations).
+* **Controlled-session protocol (CS-v1):** scenarios hashed and logged locally before
+  each run (not a formal preregistration), state capture between turns, transcript
+  sanitisation and contamination audits.
+* **Reconstruction check** (`tracecontract reconstruction-check`, v2; D47, D52): each
+  base is tested against its own session from recorded material only. Every changed
+  file needs a passed first-edit or base-read item, so a file whose base content the
+  session's record does not attest makes the result incomplete. All four bases pass,
+  with every changed file attested (`tasks/*/reconstruction_check.json`). The leakage
+  check recorded in each `snapshot.json` was vacuous as called (D47); new builds record
+  none.
+* **Labels, checks and review.**
+  * Label proposals come from a pre-specified rule (D19): independent reference
+    checks, plus the regression norm, plus construction intent. Disagreement gives
+    `ambiguous`.
+  * An independent model check of every held-out candidate
+    (`tasks/*/labels/construction_checks.json`) is advisory only.
+  * A human-review queue that shows no verifier outcomes is in
+    `tasks/*/labels/review_queue.json`. Reviewers open it only after their labels are
+    merged.
+  * Human labels are to be made from a blinded review packet (`tracecontract
+    review-packet`): the session's user turns, the reference contract, and each
+    held-out change under a random id, shuffled, with no proposal or outcome;
+    identical changes share one id. The packet hides the origin field but not the
+    origin, which the content can reveal: near misses resemble each other and the
+    reference, and the user's corrections describe the agent's first attempt. Each
+    reviewer therefore records an origin guess per candidate, and the merge reports
+    how often the guesses are right. The key stays with a coordinator, and
+    `tracecontract merge-reviews` needs two complete reviews per task
+    (`docs/annotation_guide.md`, decision log D43, D44). It writes the reviews into
+    the candidate files and the reference contract, which D47 freezes; whether it may
+    is an owner decision (STATUS.md).
+* **Harbor export** (pinned Harbor 0.25.0, separate verifier, only approved artifacts;
+  exporter `tc-harbor-export/0.3.0`). Harbor makes the separate verifier's reward
+  directory world-writable before the test runs; under the exporter of `c5ede4c`, two
+  probes whose candidate code writes its own reward file (on a grader timeout and on a
+  collection error) received reward 1.0. Since 0.2.0 the grade script locks the
+  directory before candidate code runs and removes every reward file it did not write.
+  0.3.0 also refuses every task that the acceptance gate refuses (a rejected task or
+  source, or a failed reconstruction check), and its verifier image has no setuid or
+  setgid file. Validated with Harbor 0.25.0 under harness 0.3.5: oracle 1.0, a wrong
+  candidate 0.0, no-op 0.0 and no reward on either probe, while the `c5ede4c` exporter
+  still gives 1.0 on both (`results/harbor_validation/tc-harbor-export-0.3.0/`). It
+  exports only the reference solution unless candidates are named.
+
+Related work: [docs/research_brief.md](docs/research_brief.md), adversarially
+verified by model agents (not yet reviewed by a human), and
+`paper/sections/related.tex`. Each component of the design has partial precedents,
+notably SessionFarmer, SWE-Together and Trace2Eval. The claim is limited to their
+*combination*: initial-only vs correction-aware verifiers from one frozen procedure,
+scored on one held-out pool anchored on the session's own pre-correction states,
+against independent human labels (decision log D34). The last element does not
+exist yet, and the pool's departures from blindness are listed under Limitations.
+
 ## Reproduce
 
 Requirements:
@@ -221,19 +252,23 @@ uv venv --python 3.13 .venv && uv pip install --python .venv/bin/python -e ".[de
 ```
 
 ```bash
-.venv/bin/python -m pytest -q -m "not docker"   # offline unit/pipeline tests (fixtures only)
+.venv/bin/python -m pytest -q -m "not docker"   # offline tests: fixtures, plus read-only checks of the recorded tasks, transcripts and the frozen pilot run
 ```
 
 ```bash
-.venv/bin/python -m pytest -q -m docker          # grading-isolation probes (needs Docker)
+.venv/bin/python -m pytest -q -m docker          # grading-isolation probes and the fresh-agent wrappers (needs Docker)
 ```
+
+`pytest --collect-only -q` lists the tests: 373 at `a0542bb` (353 offline, 20 Docker),
+all passing (D52), and 378 with the table-generator tests added since
+(`tests/test_make_tables.py`).
 
 ```bash
 for t in CS-01 CS-02 CS-03 CS-04; do .venv/bin/tracecontract snapshot tasks/$t; done   # rebuild every base snapshot from its pinned commit
 ```
 
 ```bash
-.venv/bin/tracecontract reconstruction-check tasks/CS-01   # the base against the session's own record; exit 1 if a check fails
+.venv/bin/tracecontract reconstruction-check tasks/CS-01   # the base against the session's own record: exit 0 passed, 1 a check failed, 2 incomplete (for example, no snapshot built); --write records it
 ```
 
 ```bash
@@ -249,18 +284,20 @@ for t in CS-01 CS-02 CS-03 CS-04; do .venv/bin/tracecontract snapshot tasks/$t; 
 ```
 
 ```bash
-.venv/bin/python scripts/preflight_final_run.py tasks/CS-01 tasks/CS-02 tasks/CS-03 tasks/CS-04
+.venv/bin/python scripts/preflight_final_run.py tasks/CS-01 tasks/CS-02 tasks/CS-03 tasks/CS-04 --run-id my-run --conditions initial_plain initial_audited full_plain full_audited llm_freeform repo_tests --repeats 3 --pilot
 ```
 
 ```bash
-.venv/bin/tracecontract evaluate tasks/CS-01 tasks/CS-02 tasks/CS-03 tasks/CS-04 --run-id my-run --conditions initial_plain initial_audited full_plain full_audited llm_freeform repo_tests --pilot
+.venv/bin/tracecontract evaluate tasks/CS-01 tasks/CS-02 tasks/CS-03 tasks/CS-04 --run-id my-run --conditions initial_plain initial_audited full_plain full_audited llm_freeform repo_tests --repeats 3 --pilot
 ```
 
 `--pilot` is required because no task has passed the acceptance gate; without it,
-`evaluate` refuses the four tasks and writes nothing.
+`evaluate` refuses the four tasks and writes nothing. A new run grades every pair three
+times under harness 0.3.5 or later; the pre-flight fails otherwise (protocol §15.3,
+§16.1).
 
 ```bash
-.venv/bin/tracecontract analyze results/runs/my-run --allow-proposed-labels
+.venv/bin/tracecontract analyze results/runs/my-run --allow-proposed-labels   # --reporting-rules auto (the default): the v0.8 reporting rules for a run graded with harness 0.3.4 or later, the pilot's analysis otherwise
 ```
 
 ```bash
@@ -276,7 +313,7 @@ for t in CS-01 CS-02 CS-03 CS-04; do .venv/bin/tracecontract snapshot tasks/$t; 
 ```
 
 ```bash
-.venv/bin/python scripts/verify_frozen_inputs.py   # pilot-v0.3.3's inputs unchanged; its analysis and report regenerate byte for byte
+.venv/bin/python scripts/verify_frozen_inputs.py   # pilot-v0.3.3's frozen files and inputs unchanged; its analysis and report regenerate byte for byte
 ```
 
 ```bash
@@ -285,10 +322,15 @@ for t in CS-01 CS-02 CS-03 CS-04; do .venv/bin/tracecontract snapshot tasks/$t; 
 
 The frozen-input check compares against the commit `c5ede4c` and regenerates the
 analysis and report in a temporary copy of the run directory; it is run at the end of
-every phase. The exploratory re-analysis reads the frozen run and the task records
-without changing them, and writes `results/analyses/pilot-v0.3.3-exploratory/`,
-`paper/generated/exploratory/` and `paper/evidence_ledger_exploratory.md`; every table
-it writes is marked post hoc and exploratory.
+every phase. It exempts two things only: the git revision that `analysis.json`
+records, and analysis code that changed since the run, as long as the analysis and
+report regenerate byte for byte. Nothing else is exempt: the rule-based triage
+proposals of the four tasks are kept in the sidecars `tasks/<id>/triage.json`, and the
+provenance records are back to their bytes at `c5ede4c` (D52). The exploratory
+re-analysis reads the frozen run and the task records without changing them, and
+writes `results/analyses/pilot-v0.3.3-exploratory/`, `paper/generated/exploratory/`
+and `paper/evidence_ledger_exploratory.md`; every table it writes is marked post hoc
+and exploratory.
 
 To write one candidate's final file state to a directory without running any code
 (reviewers label from the blinded packet and use this only after their labels are
@@ -303,6 +345,15 @@ To re-check the Harbor export on the synthetic fixture task (outputs are recorde
 
 ```bash
 HARBOR=/path/to/harbor scripts/harbor_validate.sh
+```
+
+For the fresh-agent stratum of protocol §15.4 and §16.2 (no attempt exists yet): a
+workspace, the registration of an attempt, and its audit.
+
+```bash
+.venv/bin/python scripts/make_agent_workspace.py tasks/CS-01 --role fresh --variant u1 --image <the task's sandbox image> --root <directory outside the repository> --name CS-01-fresh-A-u1-1   # instruction u1 with the recorded path substitution
+.venv/bin/tracecontract add-stratum-candidate tasks/CS-01 fresh-v1 CS-01-fresh-A-u1-1 --state-dir <workspace>/repo --origin fresh_attempt --attempt-record <attempt.json>   # task.json is never changed
+.venv/bin/python scripts/strict_reaudit.py --fresh <attempts.json> --transcripts <transcript directory> --report <report.json>   # everything outside the attempt's workspace is forbidden
 ```
 
 ```bash
@@ -328,11 +379,13 @@ time limits. `paper/evidence_ledger.md` lists every number in the generated tabl
 with its source file.
 
 Before each push, `scripts/scan_tracked_files.py --private-markers <file kept outside
-the repository>` is run as a manual step, not as a git hook. It checks the
-working tree and every file version in the commits the push would send for
-credentials, session-local paths, e-mail addresses and the private markers (decision
-log D44). Earlier commits, already pushed, still hold material that has since been
-removed; STATUS.md lists it.
+the repository> --aidev-logins <AIDev directory>` is run as a manual step, not as a git
+hook. It checks the working tree and every file version in the commits the push would
+send for credentials, session-local paths, e-mail addresses and the private markers
+(decision log D44). With `--aidev-logins` it also checks for the 119 logins and names
+tied to the sampled AIDev pull requests, loaded in memory from the AIDev files, and for
+@handles in files under `tasks/` and `data/` (D48, D52). Earlier commits, already
+pushed, still hold material that has since been removed; STATUS.md lists it.
 
 ## Limitations
 
@@ -372,22 +425,28 @@ removed; STATUS.md lists it.
     which CS-01's alternatives and reference checks also used;
   * CS-04's B1 was re-selected after its pool existed;
   * the hash of each scored check list was added only after the run `pilot-v0.3`.
-* No natural data yet. SWE-chat is blocked on its access terms, which only the owner
-  can accept (D4). Two ungated, openly licensed sources are being screened as separate
-  populations: AIDev v5 pull-request review threads and Trace Commons sessions (D47,
-  D48). No natural task has been built from them.
+* No natural task yet. SWE-chat is blocked on its access terms, which only the owner
+  can accept (D4). Two ungated, openly licensed sources were taken up for screening as
+  separate populations (D47):
+  * Trace Commons: all 30 sessions were screened and rejected, none reconstructable;
+  * AIDev v5 pull-request review threads: the deterministic stages S1 to S8a leave 684
+    review comments, and of a random sample of 150, 31 qualify at stage S9 by two
+    model judges (model proposals, not human coding; D48, D50). Stage S10
+    (replayability) is under way and has no recorded result yet.
+
+  No natural task has been built.
 
 ## Layout
 
 ```
 src/tracecontract/   schemas, ingest, contract, snapshot, reconstruction, patches, sandbox/, verifier,
-                     audit, evaluate, strata, metrics, analysis, report, review, duplicates, triage,
+                     audit, evaluate, strata, metrics, stats, analysis, report, review, duplicates, triage,
                      shadowing, harbor_export, controlled, tasks, store, cli
-tasks/<id>/          task manifests, provenance, contracts (+ mappings), candidates, verifiers, labels,
-                     reconstruction check
+tasks/<id>/          task manifests, provenance, triage proposals, contracts (+ mappings), candidates,
+                     verifiers, labels, reconstruction check
 data/                manifests (incl. natural-data screening records), sanitised controlled transcripts,
                      scenarios, reference proposals
-experiments/         protocol.md (v0.7), precision_plan_v1.0-draft.md (not adopted),
+experiments/         protocol.md (v0.8), precision_plan_v1.0-draft.md (not adopted),
                      prompts/ (workflow scripts and agent prompts)
 results/runs/<id>/   manifest, raw results, analysis, comparisons, report (logs are local only)
 results/analyses/    post hoc, exploratory re-analyses of frozen runs
