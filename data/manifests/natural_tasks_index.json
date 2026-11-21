@@ -8,16 +8,42 @@
   },
   "decision_log": [
     "D47",
+    "D48",
+    "D49",
     "D50",
-    "D53"
+    "D51",
+    "D52",
+    "D53",
+    "D54",
+    "D55",
+    "D56",
+    "D57",
+    "D58",
+    "D59",
+    "D60"
   ],
+  "fields": {
+    "files": "sha256 of each task file by its task-relative path; a key ending in / is a directory, given as the manifest hash (path within the directory and sha256 of each file) and the number of its files",
+    "sanitize_natural": "what sanitize-natural:v1 replaces in the stored session.json, as counts only. pass: by kind, the counts of the v1 pass itself (sanitize_session), as an agent's sanitised copy gets them; the pass renders a commit event's text from its tool input, so a commit message is dropped there, not counted. counts and where: the v1 rules applied to every stored string (each event's text, a commit message included, and tool input, the metadata and the repository URL), by kind and by part of the thread (issue, pr_body, commits, hunk, review_comment, replies, metadata, repo_url; an event of another form: its kind). session.json is never rewritten, and a handle counted can be one of the pseudonymiser's own role labels"
+  },
   "population": "natural:pr-review",
-  "privacy": "ids, SHAs, licence identifiers, sha256 file hashes, counts and S10 outcomes only: no login, handle, e-mail address, URL, repository name, path or text; the tasks are under data/natural/ (git-ignored, \u00a717.4)",
-  "protocol": "experiments/protocol.md \u00a715.6, \u00a716.4, \u00a717",
+  "privacy": "ids, SHAs, licence identifiers, sha256 hashes, counts and outcomes only: no thread text, login, handle or e-mail address; no source repository's name, URL or file path; no local path. The PR, review comment, issue and repository ids are public GitHub ids, as AIDev v5 publishes them; the fetched repositories are recorded in data/manifests/third_party_downloads.json, not here. File keys are the study's own file names, and each directory of repository files or generated tests (B1's overlay, verifiers/<id>/tests/, labels/base_tests_overlay/) is one manifest hash and a file count. The tasks are under data/natural/ (git-ignored, \u00a717.4)",
+  "protocol": "experiments/protocol.md \u00a715.6, \u00a716.4, \u00a717, \u00a719",
+  "s11_by_sample": {
+    "extension": 0,
+    "first": 6
+  },
+  "sample_rule": "first: NP-01 to NP-25, the families and reserves of the first S9 sample; extension: from NP-26 on, the families of the S9 extension (\u00a719.2, \u00a719.3). The size rule of \u00a719.6 counts the S11 tasks of both samples together",
   "schema": "tracecontract/natural-tasks-index/v1",
   "source": {
+    "attribution": "AIDev v5: the Hugging Face dataset hao-li/AIDev at tag v5, released with Li, Zhang and Hassan, arXiv:2507.15003 and arXiv:2602.09185; licensed under CC BY 4.0",
+    "changes": "ids, SHAs, counts and hashes extracted; no text",
     "dataset": "hao-li/AIDev",
-    "revision": "b37f9fd1613cfec55886105bb76721918d015dc7"
+    "licence": "CC-BY-4.0",
+    "licence_url": "https://creativecommons.org/licenses/by/4.0/",
+    "repositories": "each source repository keeps its own licence (per row: licence, identified from its LICENSE file at the base); no repository code or text is in this index",
+    "revision": "b37f9fd1613cfec55886105bb76721918d015dc7",
+    "url": "https://huggingface.co/datasets/hao-li/AIDev"
   },
   "storage": "data/natural/tasks/<task id>/ and data/natural/snapshots/<task id>/",
   "stratum": "natural-pr-v1",
@@ -106,6 +132,13 @@
         "stage": "S10"
       },
       "s11": false,
+      "sample": "first",
+      "sanitize_natural": {
+        "counts": {},
+        "pass": {},
+        "sanitizer": "sanitize-natural:v1",
+        "where": {}
+      },
       "snapshot_manifest_sha256": "4f9e8167473f0b3560a4f282e3de13ee20ca289cb238ab21de01463859edd957",
       "status": "rejected",
       "task_id": "NP-01",
@@ -195,6 +228,13 @@
         "stage": "S10"
       },
       "s11": false,
+      "sample": "first",
+      "sanitize_natural": {
+        "counts": {},
+        "pass": {},
+        "sanitizer": "sanitize-natural:v1",
+        "where": {}
+      },
       "snapshot_manifest_sha256": "c965e7ad52cb5f5baa261516b8e845d3def0dd873ace86f15eb7b21a57a58765",
       "status": "rejected",
       "task_id": "NP-02",
@@ -290,6 +330,21 @@
         "stage": "S10"
       },
       "s11": true,
+      "sample": "first",
+      "sanitize_natural": {
+        "counts": {
+          "handles": 1
+        },
+        "pass": {
+          "handles": 1
+        },
+        "sanitizer": "sanitize-natural:v1",
+        "where": {
+          "pr_body": {
+            "handles": 1
+          }
+        }
+      },
       "snapshot_manifest_sha256": "95314e6cc6719d397cf104e26dc0c9d8766f6c77d37e5cfff99b970840efd864",
       "status": "pending_review",
       "task_id": "NP-03",
@@ -385,6 +440,21 @@
         "stage": "S10"
       },
       "s11": true,
+      "sample": "first",
+      "sanitize_natural": {
+        "counts": {
+          "ips": 1
+        },
+        "pass": {
+          "ips": 1
+        },
+        "sanitizer": "sanitize-natural:v1",
+        "where": {
+          "pr_body": {
+            "ips": 1
+          }
+        }
+      },
       "snapshot_manifest_sha256": "dbf2d81aa39001ae1162d62b428194a18536437d52f4520aac21aef2838d86f5",
       "status": "pending_review",
       "task_id": "NP-04",
@@ -480,6 +550,13 @@
         "stage": "S10"
       },
       "s11": true,
+      "sample": "first",
+      "sanitize_natural": {
+        "counts": {},
+        "pass": {},
+        "sanitizer": "sanitize-natural:v1",
+        "where": {}
+      },
       "snapshot_manifest_sha256": "239679254006b762ffa3fb041c740fac193d3ab5b09d8dfb64c1988ca8130958",
       "status": "pending_review",
       "task_id": "NP-05",
@@ -569,6 +646,21 @@
         "stage": "S10"
       },
       "s11": false,
+      "sample": "first",
+      "sanitize_natural": {
+        "counts": {
+          "handles": 1
+        },
+        "pass": {
+          "handles": 1
+        },
+        "sanitizer": "sanitize-natural:v1",
+        "where": {
+          "pr_body": {
+            "handles": 1
+          }
+        }
+      },
       "snapshot_manifest_sha256": "9c88274c13a0fb1a62b6e371bef321991c82b12dbbec21649aa05cb9ecf8ced6",
       "status": "rejected",
       "task_id": "NP-06",
@@ -589,6 +681,7 @@
         "stage": "S10"
       },
       "s11": false,
+      "sample": "first",
       "task_id": "NP-07"
     },
     {
@@ -606,6 +699,7 @@
         "stage": "S10"
       },
       "s11": false,
+      "sample": "first",
       "task_id": "NP-08"
     },
     {
@@ -692,6 +786,21 @@
         "stage": "S10"
       },
       "s11": false,
+      "sample": "first",
+      "sanitize_natural": {
+        "counts": {
+          "handles": 1
+        },
+        "pass": {
+          "handles": 1
+        },
+        "sanitizer": "sanitize-natural:v1",
+        "where": {
+          "pr_body": {
+            "handles": 1
+          }
+        }
+      },
       "snapshot_manifest_sha256": "f0af3b713e7a79143abde427029c46463b48aab74b781fcc1331de0f110fd62c",
       "status": "rejected",
       "task_id": "NP-09",
@@ -776,6 +885,21 @@
         "stage": "S10"
       },
       "s11": false,
+      "sample": "first",
+      "sanitize_natural": {
+        "counts": {
+          "handles": 1
+        },
+        "pass": {
+          "handles": 1
+        },
+        "sanitizer": "sanitize-natural:v1",
+        "where": {
+          "pr_body": {
+            "handles": 1
+          }
+        }
+      },
       "snapshot_manifest_sha256": "b51c39a164d84704877934c043e23f03d554601071874e64e9e742c216863557",
       "status": "rejected",
       "task_id": "NP-10",
@@ -865,6 +989,13 @@
         "stage": "S10"
       },
       "s11": false,
+      "sample": "first",
+      "sanitize_natural": {
+        "counts": {},
+        "pass": {},
+        "sanitizer": "sanitize-natural:v1",
+        "where": {}
+      },
       "snapshot_manifest_sha256": "44a08f5b256ce702340740a4f40b7c29614d8fc7cdb1350c0c53ba1f69625592",
       "status": "rejected",
       "task_id": "NP-11",
@@ -885,6 +1016,7 @@
         "stage": "S10"
       },
       "s11": false,
+      "sample": "first",
       "task_id": "NP-12"
     },
     {
@@ -966,6 +1098,13 @@
         "stage": "S10"
       },
       "s11": false,
+      "sample": "first",
+      "sanitize_natural": {
+        "counts": {},
+        "pass": {},
+        "sanitizer": "sanitize-natural:v1",
+        "where": {}
+      },
       "snapshot_manifest_sha256": "f9e30f7efb31002b619d92560e4968b7bc7e2836a70b9b1e11fd2d37faee4134",
       "status": "rejected",
       "task_id": "NP-13",
@@ -1055,6 +1194,21 @@
         "stage": "S10"
       },
       "s11": false,
+      "sample": "first",
+      "sanitize_natural": {
+        "counts": {
+          "handles": 1
+        },
+        "pass": {
+          "handles": 1
+        },
+        "sanitizer": "sanitize-natural:v1",
+        "where": {
+          "pr_body": {
+            "handles": 1
+          }
+        }
+      },
       "snapshot_manifest_sha256": "de6e3b12cccb29811ef4fe910e3c4797cf2f357a0c0e3e731832a84742d422d1",
       "status": "rejected",
       "task_id": "NP-14",
@@ -1139,6 +1293,13 @@
         "stage": "S10"
       },
       "s11": false,
+      "sample": "first",
+      "sanitize_natural": {
+        "counts": {},
+        "pass": {},
+        "sanitizer": "sanitize-natural:v1",
+        "where": {}
+      },
       "snapshot_manifest_sha256": "2ce1e3618578d04b771c67bb549b8551f0240a05d4a4cc896639e381a1386e2d",
       "status": "rejected",
       "task_id": "NP-15",
@@ -1223,6 +1384,13 @@
         "stage": "S10"
       },
       "s11": false,
+      "sample": "first",
+      "sanitize_natural": {
+        "counts": {},
+        "pass": {},
+        "sanitizer": "sanitize-natural:v1",
+        "where": {}
+      },
       "snapshot_manifest_sha256": "d2198e21add2402899dc762822b285a39bb440ea2a26ff7cdfe861b644b2ff4f",
       "status": "rejected",
       "task_id": "NP-16",
@@ -1307,6 +1475,13 @@
         "stage": "S10"
       },
       "s11": false,
+      "sample": "first",
+      "sanitize_natural": {
+        "counts": {},
+        "pass": {},
+        "sanitizer": "sanitize-natural:v1",
+        "where": {}
+      },
       "snapshot_manifest_sha256": "d2198e21add2402899dc762822b285a39bb440ea2a26ff7cdfe861b644b2ff4f",
       "status": "rejected",
       "task_id": "NP-17",
@@ -1402,6 +1577,21 @@
         "stage": "S10"
       },
       "s11": true,
+      "sample": "first",
+      "sanitize_natural": {
+        "counts": {
+          "handles": 1
+        },
+        "pass": {
+          "handles": 1
+        },
+        "sanitizer": "sanitize-natural:v1",
+        "where": {
+          "pr_body": {
+            "handles": 1
+          }
+        }
+      },
       "snapshot_manifest_sha256": "14e92d7a834467200ea967f77829aa4363dae79e8f56802261fc9bc8eb1b38cc",
       "status": "pending_review",
       "task_id": "NP-18",
@@ -1497,6 +1687,13 @@
         "stage": "S10"
       },
       "s11": true,
+      "sample": "first",
+      "sanitize_natural": {
+        "counts": {},
+        "pass": {},
+        "sanitizer": "sanitize-natural:v1",
+        "where": {}
+      },
       "snapshot_manifest_sha256": "06549250e72bab6e93670844c78137e9d9303c0cace3e03ceec5d43b883d8f01",
       "status": "pending_review",
       "task_id": "NP-19",
@@ -1592,6 +1789,13 @@
         "stage": "S10"
       },
       "s11": true,
+      "sample": "first",
+      "sanitize_natural": {
+        "counts": {},
+        "pass": {},
+        "sanitizer": "sanitize-natural:v1",
+        "where": {}
+      },
       "snapshot_manifest_sha256": "38ade7b1212c52b31fc6b9bdd33dcfee5b723cb556cca710fc65fcc0461c369a",
       "status": "pending_review",
       "task_id": "NP-20",
@@ -1681,6 +1885,19 @@
         "stage": "S10"
       },
       "s11": false,
+      "sample": "first",
+      "sanitize_natural": {
+        "counts": {
+          "handles": 1
+        },
+        "pass": {},
+        "sanitizer": "sanitize-natural:v1",
+        "where": {
+          "commits": {
+            "handles": 1
+          }
+        }
+      },
       "snapshot_manifest_sha256": "c34d7c1ac92b4be3e37e0ea9e46c0fce8d78fdb490d419f3c91b1f0a7c9fae66",
       "status": "rejected",
       "task_id": "NP-21",
@@ -1770,6 +1987,13 @@
         "stage": "S10"
       },
       "s11": false,
+      "sample": "first",
+      "sanitize_natural": {
+        "counts": {},
+        "pass": {},
+        "sanitizer": "sanitize-natural:v1",
+        "where": {}
+      },
       "snapshot_manifest_sha256": "f6d1bbbf1eba3443cf0be0a117fe2207ee36c3036a72a8e80f2345d4c50c45aa",
       "status": "rejected",
       "task_id": "NP-22",
@@ -1785,6 +2009,7 @@
         "outcome": "not built"
       },
       "s11": false,
+      "sample": "first",
       "task_id": "NP-23"
     },
     {
@@ -1797,6 +2022,7 @@
         "outcome": "not built"
       },
       "s11": false,
+      "sample": "first",
       "task_id": "NP-24"
     },
     {
@@ -1809,6 +2035,7 @@
         "outcome": "not built"
       },
       "s11": false,
+      "sample": "first",
       "task_id": "NP-25"
     }
   ]

@@ -8,7 +8,15 @@
 * the committed index holds ids, SHAs, licences, file hashes and S10 outcomes, no text, and the rejection ledger gets
   one S10 row per rejected family (scripts/build_manifests.py);
 * the S10 environment and base-test functions plan their commands without Docker or network, and with stubs they
-  reject an environment over the cap, an unresolvable closure and base tests that fail to collect.
+  reject an environment over the cap, an unresolvable closure and base tests that fail to collect;
+* a re-run of S10 over a task directory that holds more than S10's own material (contracts, labels, a frozen B1, verifiers
+  other than B1, candidates beyond the four S10 ones, a reviewed eligibility, any file S10 does not write) is refused and
+  deletes nothing, while an S10-only directory is rebuilt as before; the S10 environment step also refuses material that
+  appears while it runs, before its next write;
+* ``pr_recheck`` rewrites only the reconstruction record, holds each stored patch to its commit's whole tree, and never
+  certifies a session file the compiler does not rebuild byte for byte;
+* the index summarises generated tests and the label step's copies of repository tests, gives each row its sample
+  (§19.3) and its session's sanitize-natural:v1 counts (the pass's own and the rules' over every stored string).
 
 A synthetic world only (tests/natural_pr_world.py); Docker and the network are never used. Not research evidence.
 """
@@ -33,14 +41,17 @@ from tracecontract import natural_env as env
 from tracecontract import natural_pr as npr
 from tracecontract.contract import task_gate
 from tracecontract.ingest.github_pr import AIDev, BareClone
-from tracecontract.patches import apply_patch, filter_patch
+from tracecontract.ingest.sanitize_natural import sanitize_session
+from tracecontract.patches import apply_patch, filter_patch, split_sections
 from tracecontract.reconstruction import RECORD, recorded_check
 from tracecontract.sandbox.docker_runner import RawRun, _req_hash
 from tracecontract.schemas import (
     Candidate, CandidateOrigin, Eligibility, LabelerKind, Population, ProvenanceRecord, Session, Snapshot, Split, TaskManifest,
+    VerifierSpec,
 )
 from tracecontract.snapshot import manifest, manifest_sha256
-from tracecontract.store import load
+from tracecontract.store import dump, load
+from tracecontract.verifier import freeze
 
 pytest.importorskip("duckdb")
 REPO = Path(__file__).resolve().parents[1]
@@ -142,19 +153,23 @@ def test_the_gate_accepts_the_pr_reconstruction_record(built, tmp_path):
     shutil.copytree(w.out / "NP-01", td)
     rc = recorded_check(td, w.root)  # dispatches to natural_pr.recorded_pr_check for this population
     assert rc.ok and rc.status == "passed"
-    gate = task_gate(td, w.root)
-    assert not gate.refusals and gate.reasons == ["provenance: eligibility is 'pending_review'; a reviewer must find the source "
-                                                  "eligible", "contract: the task has no reference contract"]
+    gate = task_gate(td, w.root)  # the gate's other natural rules (S10 outcome, committed index) are not this test's subject
+    assert not [r for r in gate.reasons if r.startswith("reconstruction")]
+    assert {"provenance: eligibility is 'pending_review'; a reviewer must find the source eligible",
+            "contract: the task has no reference contract"} <= set(gate.reasons)
     rec = json.loads((td / RECORD).read_text())
     assert rec["method"] == npr.PR_METHOD and [c["status"] for c in rec["checks"]] == ["passed"] * 6
-    # A changed session file makes the record stale; a current failed record refuses the task.
+    # A changed session file makes the record stale (the hint names the non-destructive re-check); a current failed record
+    # refuses the task.
     (td / "session.json").write_text((td / "session.json").read_text() + "\n")
     stale = recorded_check(td, w.root)
     assert not stale.ok and not stale.failed and "session_sha256" in stale.problems[0]
+    assert "natural_pr.pr_recheck" in stale.problems[0] and "compile-pr-task" not in stale.problems[0]
     rec["inputs"]["session_sha256"] = npr.pr_current_inputs(td)["session_sha256"]
     rec.update(status="failed", passed=False)
     (td / RECORD).write_text(json.dumps(rec))
-    assert recorded_check(td, w.root).failed and task_gate(td, w.root).refusals
+    assert recorded_check(td, w.root).failed
+    assert [r for r in task_gate(td, w.root).refusals if r.startswith("reconstruction")]
 
 
 def test_the_merge_rule_makes_a_task_approximate(built):
@@ -863,3 +878,509 @@ def test_the_s10_environment_step(built, tmp_path):
                                   runner=_runner(broken, pytest_exit_code=2), build=lambda reqs, cache: ("tc-env:np01", "sha256:" + "1" * 64))
     assert rej["outcome"] == "rejected" and rej["reason"] == "base tests fail to collect"
     assert load(td2 / "task.json", TaskManifest).status == "rejected" and (td2 / "rejection.json").is_file()
+
+
+# --------------------------------------------------------------------------- generated material, re-check, index privacy
+
+PLANTED_TEST = "test_fx_planted_generated_name.py"  # a generated test's file name (generators name files after the code)
+BASE_TEST = "tests/test_mod.py"  # a repository test path, as propose_labels copies it into labels/base_tests_overlay/
+
+
+def _tree(root: Path) -> dict[str, str]:
+    """The sha256 of every file under ``root``, by its relative path."""
+    return {p.relative_to(root).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(root.rglob("*"))
+            if p.is_file()}
+
+
+def _layout(built, tmp_path: Path, tid: str = "NP-01") -> tuple[Path, Path, Path]:
+    """A copy of one built task and its base snapshot in ``tmp_path/data/natural/{tasks,snapshots}``, as S10 left them."""
+    w = built[0]
+    out = tmp_path / "data" / "natural" / "tasks"
+    shutil.copytree(w.out / tid, out / tid)
+    shutil.copytree(w.out.parent / "snapshots" / tid, out.parent / "snapshots" / tid)
+    return out, out / tid, out.parent / "snapshots" / tid
+
+
+def _with_b1(built, td: Path) -> None:
+    """B1 as the S10 environment step builds it (a stub runner; no Docker)."""
+    env.build_b1(td, built[0].out.parent / "snapshots" / td.name, "img", subset=[BASE_TEST], pythonpath="/work",
+                 runner=_runner([{"nodeid": "tests/test_mod.py::test_add", "outcome": "passed"}]))
+
+
+def _generate(td: Path, *kinds: str) -> None:
+    """Synthetic material made after S10 (no real contract, test or label)."""
+    tid = td.name
+    for kind in kinds:
+        if kind == "contracts":
+            (td / "contracts").mkdir(exist_ok=True)
+            (td / "contracts" / "initial_only.json").write_text('{"synthetic": true}\n')
+        elif kind == "verifier":
+            (td / "verifiers" / "initial_plain" / "tests").mkdir(parents=True, exist_ok=True)
+            (td / "verifiers" / "initial_plain" / "spec.json").write_text('{"synthetic": true}\n')
+            (td / "verifiers" / "initial_plain" / "tests" / PLANTED_TEST).write_text("def test_x():\n    assert True\n")
+        elif kind == "labels":
+            overlay = td / "labels" / "base_tests_overlay" / BASE_TEST
+            overlay.parent.mkdir(parents=True, exist_ok=True)
+            overlay.write_text("def test_add():\n    pass\n")
+            (td / "labels" / "proposed_labels.json").write_text('{"synthetic": true}\n')
+        elif kind == "extra":
+            (td / "verifiers_extra.json").write_text('{"verifiers": []}\n')
+        elif kind == "candidate":
+            shutil.copyfile(td / "candidates" / f"{tid}-noop-eval.json", td / "candidates" / f"{tid}-eval-alt-1.json")
+        elif kind == "strata":
+            (td / "strata").mkdir(exist_ok=True)
+            (td / "strata" / "x.json").write_text("{}\n")
+        elif kind == "label":
+            p = td / "candidates" / f"{tid}-pre-review.json"
+            c = json.loads(p.read_text())
+            c["labels"].append({**c["labels"][0], "labeler": "d19:propose_labels", "labeler_kind": "proposed"})
+            p.write_text(json.dumps(c, indent=2) + "\n")
+        elif kind == "registered":
+            m = json.loads((td / "task.json").read_text())
+            m["contracts"] = {"initial_only": "contracts/initial_only.json"}
+            (td / "task.json").write_text(json.dumps(m, indent=2) + "\n")
+        elif kind == "frozen":  # P0: `tracecontract freeze $TD repo_tests` (freeze point F1)
+            sp = td / "verifiers" / "repo_tests" / "spec.json"
+            dump(freeze(load(sp, VerifierSpec), td), sp)
+        elif kind == "b1-file":  # a file in B1's directory that build_b1 does not write
+            (td / "verifiers" / "repo_tests" / "status.json").write_text('{"synthetic": true}\n')
+        elif kind == "b1-record":  # a record set on B1's spec after S10 (build_b1 sets none)
+            sp = td / "verifiers" / "repo_tests" / "spec.json"
+            spec = json.loads(sp.read_text())
+            spec["generation"] = {"synthetic": True}
+            sp.write_text(json.dumps(spec, indent=2) + "\n")
+        elif kind == "unlisted":  # outputs no rule names (a later work package's): S10's own names are listed instead
+            (td / "review").mkdir(exist_ok=True)
+            (td / "review" / "packet.json").write_text("{}\n")
+            (td / "generation_records.json").write_text("{}\n")
+        elif kind == "note":
+            (td / "stale-note.txt").write_text("left by hand\n")
+        elif kind == "unreadable":
+            (td / "candidates" / f"{tid}-noop-dev.json").write_text("{")
+        elif kind == "reviewed":  # a reviewer found the source eligible, and the task was accepted (S10 sets neither)
+            for rel, key, value in (("provenance.json", "eligibility", "eligible"), ("task.json", "status", "accepted")):
+                data = json.loads((td / rel).read_text())
+                data[key] = value
+                (td / rel).write_text(json.dumps(data, indent=2) + "\n")
+        else:
+            raise AssertionError(kind)
+
+
+class _Untouchable:
+    """A clone or dataset that must not be used: any attribute access fails the test."""
+
+    def __getattr__(self, name: str):
+        raise AssertionError(f"{name} was used, though the step should have been refused before any work")
+
+
+@pytest.mark.parametrize("kinds, expect", [
+    (("contracts",), ["contracts/"]),
+    (("labels",), ["labels/"]),
+    (("extra",), ["verifiers_extra.json"]),
+    (("verifier",), ["verifiers/initial_plain/"]),
+    (("candidate",), ["candidates/NP-01-eval-alt-1.json"]),
+    (("strata",), ["strata/"]),
+    (("label",), ["candidates/NP-01-pre-review.json: a label added or changed after S10"]),
+    (("registered",), ["task.json: contracts"]),
+    (("frozen",), ["verifiers/repo_tests/spec.json: B1 frozen (frozen, frozen_at, checks_sha256)"]),
+    (("b1-file",), ["verifiers/repo_tests/status.json"]),
+    (("b1-record",), ["verifiers/repo_tests/spec.json: changed after S10 (generation)"]),
+    (("unlisted",), ["generation_records.json", "review/"]),
+    (("note",), ["stale-note.txt"]),
+    (("unreadable",), ["candidates/NP-01-noop-dev.json: unreadable"]),
+    (("reviewed",), ["provenance.json: eligibility eligible", "task.json: status accepted"]),
+])
+def test_a_rerun_over_generated_material_is_refused_and_deletes_nothing(built, tmp_path, kinds, expect):
+    _, fams, _, _ = built
+    out, td, snap = _layout(built, tmp_path)
+    _with_b1(built, td)
+    assert npr.generated_material(td) == []  # B1 and the four S10 candidates are S10's own material
+    _generate(td, *kinds)
+    assert npr.generated_material(td) == expect
+    before = _tree(tmp_path)
+    fam = npr.find_family(fams, 9001)
+    res = npr.compile_pr_task(fam, out, aidev=_Untouchable(), clone=_Untouchable())  # refused before anything is read
+    assert res["outcome"] == "refused" and res["generated"] == expect and res["fetches"] == []
+    assert "refused" in res["reason"] and "never replaced or deleted" in res["reason"] and "pr_recheck" in res["reason"]
+    assert "stage" not in res  # a refusal is not a rejection
+    assert _tree(tmp_path) == before  # neither the task directory nor its snapshot changed
+    # The S10 environment step refuses it too, dry run or not, and changes nothing.
+    for dry in (True, False):
+        got = npr.run_s10_environment(td, snap.parent, tmp_path / "work", tmp_path / "cache", dry_run=dry, run=_Untouchable(),
+                                      runner=_Untouchable(), build=_Untouchable())
+        assert got["outcome"] == "refused" and got["generated"] == expect
+    assert _tree(tmp_path) == before
+    # A rejection record is never written over it either.
+    with pytest.raises(npr.Refused):
+        npr.write_rejection(td, fam, "S10", "synthetic reason")
+    assert _tree(tmp_path) == before
+
+
+def test_generated_material_found_late_is_refused_too(built, tmp_path, monkeypatch):
+    """The check runs again just before the task directory would be replaced (a build) or deleted (a rejection), so material
+    that appears while a family compiles is kept as well; only the compiler's own staging is removed."""
+    _, fams, aidev, _ = built
+    out, td, snap = _layout(built, tmp_path)
+    _generate(td, "contracts", "verifier")
+    before = _tree(tmp_path)
+    real = npr.generated_material
+    calls: list[Path] = []
+
+    def late(task_dir):  # the material "appears" after the first check
+        calls.append(Path(task_dir))
+        return [] if len(calls) == 1 else real(task_dir)
+
+    monkeypatch.setattr(npr, "generated_material", late)
+    fam = npr.find_family(fams, 9001)
+    built_now = npr.compile_pr_task(fam, out, aidev=aidev)  # a build that would replace the directory
+    assert built_now["outcome"] == "refused" and built_now["generated"] == ["contracts/", "verifiers/initial_plain/"]
+    assert _tree(tmp_path) == before and not list(out.parent.rglob(".*.partial"))
+    calls.clear()
+    rejected_now = npr.compile_pr_task(dataclasses.replace(fam, path="fxpkg/nowhere.py"), out, aidev=aidev)  # a rejection
+    assert rejected_now["outcome"] == "refused" and rejected_now["rejection_found"] == {
+        "stage": "S10", "reason": "the commented file is not a file at the reviewed commit"}
+    assert "details" not in rejected_now and "stage" not in rejected_now
+    assert _tree(tmp_path) == before and (snap / "pyproject.toml").is_file()  # the snapshot is kept
+
+
+def test_a_rerun_over_an_s10_only_directory_rebuilds_as_before(built, tmp_path):
+    _, fams, aidev, _ = built
+    out, td, snap = _layout(built, tmp_path)
+    _with_b1(built, td)
+    assert npr.generated_material(td) == []  # S10's own files only, an unfrozen B1 included
+    old = {p: (td / p).read_bytes() for p in ("snapshot.json", "provenance.json", RECORD)}
+    fam = npr.find_family(fams, 9001)
+    res = npr.compile_pr_task(fam, out, aidev=aidev)
+    assert res["outcome"] == "built" and res["reconstruction"] == "passed"
+    assert sorted(p.name for p in td.iterdir()) == ["candidates", "provenance.json", RECORD, "s10.json", "session.json",
+                                                    "snapshot.json", "task.json"]  # replaced whole: B1 is gone (S10 rebuilds it)
+    assert (td / "snapshot.json").read_bytes() == old["snapshot.json"] and (td / RECORD).read_bytes() == old[RECORD]
+    assert json.loads((td / "provenance.json").read_text())["natural_pr"] == json.loads(old["provenance.json"])["natural_pr"]
+    assert manifest_sha256(manifest(snap)) == load(td / "snapshot.json", Snapshot).file_manifest_sha256
+    assert res["session"]["sanitize_natural"]["sanitizer"] == "sanitize-natural:v1"
+    # A rejection over an S10-only directory still leaves only the rejection record and no snapshot.
+    rej = npr.compile_pr_task(dataclasses.replace(fam, path="fxpkg/nowhere.py"), out, aidev=aidev)
+    assert rej["outcome"] == "rejected" and [p.name for p in td.iterdir()] == ["rejection.json"] and not snap.exists()
+
+
+def _recheck(built, td: Path, snap: Path, fam=None, **kw):
+    _, fams, aidev, _ = built
+    return npr.pr_recheck(td, fam or npr.find_family(fams, 9001), aidev=aidev, snapshot_root=snap.parent, **kw)
+
+
+def test_pr_recheck_rewrites_only_the_reconstruction_record(built, tmp_path):
+    _, td, snap = _layout(built, tmp_path)
+    _with_b1(built, td)
+    _generate(td, "contracts", "verifier", "labels", "candidate")  # a task in the middle of generation
+    old = json.loads((td / RECORD).read_text())
+    old_sha = hashlib.sha256((td / RECORD).read_bytes()).hexdigest()
+    before = _tree(tmp_path)
+    res = _recheck(built, td, snap)
+    assert res["outcome"] == "rechecked" and res["status"] == "passed" and res["previous_status"] == "passed"
+    assert res["inputs_changed"] == [] and set(res["checks"].values()) == {"passed"}
+    after = _tree(tmp_path)
+    assert {k for k in before if before[k] != after.get(k)} == {f"data/natural/tasks/NP-01/{RECORD}"}
+    assert set(after) == set(before)  # no file added (the record is replaced in one step) and none removed
+    new = json.loads((td / RECORD).read_text())
+    assert new["recheck"]["previous_sha256"] == old_sha and new["recheck"]["approximations_as_recorded"] is True
+    assert new["inputs"] == old["inputs"] and (new["fidelity"], new["approximations"]) == (old["fidelity"], old["approximations"])
+    assert [(c["check_id"], c["status"], c["reason"]) for c in new["checks"]] == [
+        (c["check_id"], c["status"], c["reason"]) for c in old["checks"]]  # the same checks, re-run, as at build
+    e = {i["candidate"]: i for i in new["checks"][4]["items"]}
+    assert e["reference"]["equals_recompiled_patch"] and e["pre-review"]["equals_recompiled_patch"]
+    assert e["reference"]["extra_changes"] == e["pre-review"]["extra_changes"] == []
+    assert new["checks"][3]["items"][0]["manifest_equals_snapshot_record"] is True
+    assert new["recheck"]["session_rebuilt"] is True  # the session was rebuilt from the thread, byte for byte
+    assert recorded_check(td, built[0].root).ok
+
+
+def test_pr_recheck_records_the_current_files_and_fails_what_no_longer_holds(built, tmp_path):
+    w = built[0]
+    _, td, snap = _layout(built, tmp_path)
+    # A stale record becomes current again when the changed file still reproduces the PR's state: here the reference
+    # patch with its file sections in the other order (another text, the same tree). The record names the input that
+    # changed and that the stored patch is not the one the compiler makes now; the session is rebuilt and is the same.
+    p = td / "candidates" / "NP-01-reference.json"
+    c = json.loads(p.read_text())
+    c["patch"] = "".join(s.text for s in reversed(split_sections(c["patch"])))
+    c["patch_sha256"] = hashlib.sha256(c["patch"].encode()).hexdigest()
+    p.write_text(json.dumps(c, indent=2) + "\n")
+    assert not recorded_check(td, w.root).ok
+    res = _recheck(built, td, snap)
+    assert res["status"] == "passed" and res["inputs_changed"] == ["reference_patch_sha256"] and recorded_check(td, w.root).ok
+    rec = json.loads((td / RECORD).read_text())
+    e = {i["candidate"]: i for i in rec["checks"][4]["items"]}
+    assert e["reference"]["equals_recompiled_patch"] is False and e["reference"]["extra_changes"] == []
+    assert rec["recheck"]["session_rebuilt"] is True
+    # A changed file of the base snapshot fails check d; the record is current and failed, so the gate refuses the task.
+    f = snap / "fxpkg" / "mod.py"
+    f.write_text(f.read_text() + "# changed\n")
+    res = _recheck(built, td, snap)
+    assert res["status"] == "failed" and res["checks"]["d_snapshot_equals_base_tree"] == "failed"
+    d = json.loads((td / RECORD).read_text())["checks"][3]
+    assert "1 differ from their blob" in d["reason"] and d["items"][0]["manifest_equals_snapshot_record"] is False
+    rc = recorded_check(td, w.root)
+    assert rc.failed and [r for r in task_gate(td, w.root).refusals if r.startswith("reconstruction")]
+    shutil.rmtree(snap)
+    shutil.copytree(w.out.parent / "snapshots" / "NP-01", snap)
+    # A pre-review patch that no longer reproduces its commit (here: the reference's patch) fails check e.
+    p = td / "candidates" / "NP-01-pre-review.json"
+    c = json.loads(p.read_text())
+    c["patch"] = json.loads((td / "candidates" / "NP-01-reference.json").read_text())["patch"]
+    c["patch_sha256"] = hashlib.sha256(c["patch"].encode()).hexdigest()
+    p.write_text(json.dumps(c, indent=2) + "\n")
+    res = _recheck(built, td, snap)
+    assert res["status"] == "failed" and res["checks"]["e_candidates_reproduce_commits"] == "failed"
+    assert res["inputs_changed"] == ["pre_review_patch_sha256"]
+    e = {i["candidate"]: i for i in json.loads((td / RECORD).read_text())["checks"][4]["items"]}
+    assert e["pre-review"]["status"] == "failed" and e["pre-review"]["equals_recompiled_patch"] is False
+    assert e["pre-review"]["mismatched"] == ["fxpkg/mod.py"] and e["pre-review"]["extra_changes"] == ["tests/test_mod.py"]
+    assert e["reference"]["status"] == "passed"
+
+
+def test_pr_recheck_fails_a_git_rule_that_no_longer_holds(built, tmp_path):
+    w, fams, _, _ = built
+    _, td, snap = _layout(built, tmp_path)
+    fam = npr.find_family(fams, 9001)
+    # The addressing commit no longer descends from the reviewed one: check a fails, the later checks do not run.
+    res = _recheck(built, td, snap, dataclasses.replace(fam, addressing_commit=w.shas["a1"]))
+    assert res["status"] == "failed" and res["checks"] == {
+        "a_commits_reachable": "failed", "b_base_rule": "not_checked", "c_merge_rule": "not_checked",
+        "d_snapshot_equals_base_tree": "not_checked", "e_candidates_reproduce_commits": "not_checked",
+        "f_no_stale_copies": "not_checked"}
+    assert recorded_check(td, w.root).failed
+    # Nothing was recomputed beyond check a: the approximations (copied from snapshot.json) and the session are not
+    # said to be checked.
+    rc = json.loads((td / RECORD).read_text())["recheck"]
+    assert rc["approximations_as_recorded"] is None and rc["session_rebuilt"] is None
+    # The rules hold but give another reviewed commit than the task records.
+    res = _recheck(built, td, snap, dataclasses.replace(fam, reviewed_commit=w.shas["a1"]))
+    rec = json.loads((td / RECORD).read_text())
+    assert res["status"] == "failed" and rec["checks"][0]["reason"] == (
+        "the PR's commits now give another reviewed commit than the task records")
+    assert rec["recheck"]["approximations_as_recorded"] is None and rec["recheck"]["session_rebuilt"] is None
+    # Back to the family's own commits: passed again.
+    assert _recheck(built, td, snap)["status"] == "passed" and recorded_check(td, w.root).ok
+
+
+def test_pr_recheck_writes_nothing_when_it_cannot_check(built, tmp_path):
+    w, fams, aidev, _ = built
+    _, td, snap = _layout(built, tmp_path)
+    before = _tree(tmp_path)
+    other = npr.find_family(fams, 9002)  # another family's PR
+    for res in (_recheck(built, td, snap, other),
+                npr.pr_recheck(td, npr.find_family(fams, 9001), aidev=aidev, snapshot_root=tmp_path / "nowhere"),
+                _recheck(built, td, snap, dataclasses.replace(npr.find_family(fams, 9001), bare_clone=w.root / "missing.git")),
+                npr.pr_recheck(tmp_path / "not-a-task", aidev=aidev)):
+        assert res["outcome"] == "not rechecked" and res["reason"], res
+    assert _tree(tmp_path) == before
+
+
+# Synthetic sections appended to a stored candidate patch (paths of the fixture's repository 101).
+PLANTED_FILE = ("diff --git a/fxpkg/planted.py b/fxpkg/planted.py\nnew file mode 100644\n--- /dev/null\n+++ b/fxpkg/planted.py\n"
+                "@@ -0,0 +1 @@\n+X = 1\n")
+DELETED_FILE = ("diff --git a/fxpkg/__init__.py b/fxpkg/__init__.py\ndeleted file mode 100644\n--- a/fxpkg/__init__.py\n"
+                "+++ /dev/null\n@@ -1 +0,0 @@\n-from .mod import add\n")
+EDITED_FILE = ("diff --git a/fxpkg/other.py b/fxpkg/other.py\n--- a/fxpkg/other.py\n+++ b/fxpkg/other.py\n@@ -1,2 +1,2 @@\n"
+               " def unrelated():\n-    return 1\n+    return 5\n")
+
+
+@pytest.mark.parametrize("cand, section, path", [
+    ("reference", PLANTED_FILE, "fxpkg/planted.py"),  # probe A: a file the addressing commit does not add
+    ("pre-review", DELETED_FILE, "fxpkg/__init__.py"),  # probe A': a file the reviewed commit does not delete
+    ("reference", EDITED_FILE, "fxpkg/other.py"),  # a file the addressing commit does not change
+])
+def test_pr_recheck_fails_a_stored_patch_that_changes_files_its_commit_does_not(built, tmp_path, cand, section, path):
+    """Check e compares the whole tree the stored patch makes with the commit's: every file the commit changes must be the
+    commit's, and no other file may differ from the base. Only the commit's own files were compared before, so a stored
+    patch that also added, deleted or edited another file was certified."""
+    w = built[0]
+    _, td, snap = _layout(built, tmp_path)
+    p = td / "candidates" / f"NP-01-{cand}.json"
+    c = json.loads(p.read_text())
+    c["patch"] += section
+    c["patch_sha256"] = hashlib.sha256(c["patch"].encode()).hexdigest()
+    p.write_text(json.dumps(c, indent=2) + "\n")
+    assert not recorded_check(td, w.root).ok  # stale first
+    res = _recheck(built, td, snap)
+    assert res["outcome"] == "rechecked" and res["status"] == "failed"
+    assert res["checks"]["e_candidates_reproduce_commits"] == "failed"
+    rec = json.loads((td / RECORD).read_text())
+    e = {i["candidate"]: i for i in rec["checks"][4]["items"]}
+    assert e[cand]["status"] == "failed" and e[cand]["mismatched"] == [] and e[cand]["extra_changes"] == [path]
+    assert e[cand]["equals_recompiled_patch"] is False and "the patch also changes 1 other file" in e[cand]["reason"]
+    other = e["pre-review" if cand == "reference" else "reference"]
+    assert other["status"] == "passed" and other["extra_changes"] == []
+    assert recorded_check(td, w.root).failed  # current and failed: the gate refuses the task
+    assert [r for r in task_gate(td, w.root).refusals if r.startswith("reconstruction")]
+
+
+def test_pr_recheck_never_certifies_a_session_the_compiler_does_not_make(built, tmp_path):
+    """Probe B: a session.json changed after the build is not made current by a re-check. The session is rebuilt from the
+    thread in memory and must equal the file byte for byte; otherwise nothing is written and the record stays stale, so
+    the gate keeps failing the task. Before, the re-check copied the new file's hash into a passing record."""
+    w = built[0]
+    _, td, snap = _layout(built, tmp_path)
+    path = td / "session.json"
+    raw = path.read_bytes()
+    sess = json.loads(raw)
+    (corr,) = [e for e in sess["events"] if e["event_id"] == sess["metadata"]["events"]["correction"]]
+    corr["text"] = "A synthetic correction that no reviewer wrote."
+    for changed in ((json.dumps(sess, indent=2) + "\n").encode(), raw + b"\n"):  # the correction replaced; a byte appended
+        path.write_bytes(changed)
+        record = (td / RECORD).read_bytes()
+        assert not recorded_check(td, w.root).ok
+        res = _recheck(built, td, snap)
+        assert res["outcome"] == "not rechecked" and "session.json is not the session" in res["reason"]
+        assert res["session"] == {"file_sha256": hashlib.sha256(changed).hexdigest(),
+                                  "rebuilt_sha256": hashlib.sha256(raw).hexdigest()}
+        assert (td / RECORD).read_bytes() == record and not recorded_check(td, w.root).ok  # left stale
+        assert [r for r in task_gate(td, w.root).reasons if r.startswith("reconstruction")]
+    path.write_bytes(raw)  # the compiler's own session again
+    res = _recheck(built, td, snap)
+    assert res["status"] == "passed" and res["inputs_changed"] == [] and recorded_check(td, w.root).ok
+
+
+def test_the_s10_environment_step_refuses_material_that_appears_while_it_runs(built, tmp_path):
+    """Probe F: the check runs again before every write of the step, and between B1's grading run and B1's records, so
+    material made while the resolver, the image build or a grading run is under way is kept: the step is refused there and
+    writes nothing more. Before, the step ended ``passed`` and its stale copy of task.json dropped the registration."""
+    w = built[0]
+    snaps = w.out.parent / "snapshots"
+    def sizes(name, version=None):
+        return {"urls": [{"filename": f"{name}-{version}-py3-none-any.whl", "size": 10}]}
+
+    def stub_build(reqs, cache):
+        return "tc-env:np01", "sha256:" + "1" * 64
+
+    passing = _runner([{"nodeid": "tests/test_mod.py::test_add", "outcome": "passed"}])
+    for when in ("resolver", "resolver that fails", "base tests", "B1 grading"):
+        td = tmp_path / when.replace(" ", "-") / "tasks" / "NP-01"
+        shutil.copytree(w.out / "NP-01", td)
+        before = _tree(td)
+        grading: list[int] = []
+
+        def run(cmd, td=td, when=when, **kw):
+            if "--report" in cmd:
+                if when.startswith("resolver"):
+                    _generate(td, "contracts", "registered")  # registered while the resolver runs
+                    if when == "resolver that fails":
+                        return _Proc(1, "ERROR: ResolutionTooDeep")
+                _report(Path(cmd[cmd.index("--report") + 1]), [("pytest", "8.0", "pytest-8.0-py3-none-any.whl")])
+            return _Proc(0)
+
+        def runner(image, td=td, when=when, grading=grading, **kw):
+            grading.append(1)
+            if (when, len(grading)) in (("base tests", 1), ("B1 grading", 2)):
+                _generate(td, "contracts", "registered")
+            return passing(image, **kw)
+
+        got = npr.run_s10_environment(td, snaps, tmp_path / "work" / when.replace(" ", "-"), tmp_path / "cache", dry_run=False,
+                                      run=run, fetch_json=sizes, runner=runner, build=stub_build)
+        assert got["outcome"] == "refused" and got["generated"] == ["contracts/", "task.json: contracts"], (when, got)
+        m = load(td / "task.json", TaskManifest)
+        assert m.contracts == {"initial_only": "contracts/initial_only.json"} and m.status == "pending_review", when
+        assert not (td / "rejection.json").exists() and not (td / "verifiers" / "repo_tests" / "spec.json").exists()
+        s10 = json.loads((td / "s10.json").read_text())
+        assert s10["outcome"] == "built" and s10["base_test_run"] is None and s10["b1"] is None, when
+        if when.startswith("resolver"):  # refused before the environment record: nothing of the task was rewritten
+            after = _tree(td)
+            assert {k for k in before if before[k] != after.get(k)} == {"task.json"}, when  # the registration only
+            assert set(after) - set(before) == {"contracts/initial_only.json"}, when
+        else:  # the environment record was written before the material appeared; the pins survive with the registration
+            assert s10["environment"]["pins"] == ["pytest==8.0"] and m.env_requirements == ["pytest==8.0"], when
+
+
+def test_the_index_summarises_generated_tests_and_base_test_copies(built, tmp_path):
+    out, td, _ = _layout(built, tmp_path)
+    _with_b1(built, td)
+    _generate(td, "contracts", "verifier", "labels", "candidate", "extra")
+    path = tmp_path / "idx.json"
+    row = npr.write_natural_index(out, path)["tasks"][0]
+    text = path.read_text()
+    assert PLANTED_TEST not in text and "test_mod" not in text and BASE_TEST not in text and "fxpkg" not in text
+    files = row["files"]
+    for key, d in (("verifiers/initial_plain/tests/", td / "verifiers/initial_plain/tests"),
+                   ("labels/base_tests_overlay/", td / "labels/base_tests_overlay"), (npr.OVERLAY, td / npr.OVERLAY)):
+        assert files[key] == {"manifest_sha256": manifest_sha256(manifest(d)), "n_files": 1}
+    for key in ("contracts/initial_only.json", "labels/proposed_labels.json", "candidates/NP-01-eval-alt-1.json",
+                "verifiers/initial_plain/spec.json", "verifiers_extra.json", "verifiers/repo_tests/spec.json"):
+        assert files[key] == hashlib.sha256((td / key).read_bytes()).hexdigest()
+    assert not [k for k in files if "/tests/" in k and not k.endswith("/tests/")]
+    # A changed generated test changes the row, though its name is not in it.
+    (td / "verifiers/initial_plain/tests" / PLANTED_TEST).write_text("def test_x():\n    assert 1\n")
+    again = npr.write_natural_index(out, tmp_path / "idx2.json")["tasks"][0]["files"]
+    assert again["verifiers/initial_plain/tests/"] != files["verifiers/initial_plain/tests/"]
+    assert {k: v for k, v in again.items() if k != "verifiers/initial_plain/tests/"} == {
+        k: v for k, v in files.items() if k != "verifiers/initial_plain/tests/"}
+    assert npr.summary_dir("notes/x/y.md") == "notes/" and npr.summary_dir("candidates/x/y.json") == "candidates/x/"
+    assert npr.summary_dir("task.json") is None and npr.summary_dir("verifiers/v/status.json") is None
+
+
+def test_the_index_rows_of_s10_only_tasks_keep_their_file_hashes(built, tmp_path):
+    """The rows of tasks whose files did not change are as before, apart from the new fields: every file by its path, and
+    only B1's overlay summarised."""
+    _, td, _ = _layout(built, tmp_path)
+    _with_b1(built, td)
+    legacy: dict = {}
+    overlay = []
+    for p in sorted(td.rglob("*")):
+        if p.is_file():
+            rel, digest = p.relative_to(td).as_posix(), hashlib.sha256(p.read_bytes()).hexdigest()
+            if rel.startswith(npr.OVERLAY):
+                overlay.append((rel[len(npr.OVERLAY):], digest))
+            else:
+                legacy[rel] = digest
+    legacy[npr.OVERLAY] = {"manifest_sha256": manifest_sha256(overlay), "n_files": len(overlay)}
+    assert npr.file_hashes(td) == legacy
+
+
+def test_the_index_header_rows_samples_and_sanitizer_counts(built, tmp_path):
+    w, fams, _, _ = built
+    out, td, _ = _layout(built, tmp_path)
+    # Plant what the sanitiser replaces: a handle in the issue and an IP address in a commit message (both built at run
+    # time). The fixture's pseudonymised session already has handle-like role labels, which the sanitiser counts too.
+    from natural_pr_world import AT
+
+    session_path = td / "session.json"
+    baseline = npr.sanitizer_counts(load(session_path, Session))
+    handle, ip = AT + "fx-planted", ".".join(str(n) for n in (203, 0, 113, 7))
+    sess = json.loads(session_path.read_text())
+    for e in sess["events"]:
+        if e["event_id"].endswith("/issue"):
+            e["text"] += " cc " + handle
+        if "/commit/" in e["event_id"]:
+            e["text"] += " see " + ip
+            break
+    sess["repo_url"] = sess["repo_url"].replace("https://github.com/", f"https://{ip}/")  # an IP in the masked URL too
+    session_path.write_text(json.dumps(sess, indent=2) + "\n")
+    shutil.copytree(w.out / "NP-07", out / "NP-26")  # a rejection-only directory standing in for an extension family
+    raw = session_path.read_bytes()
+    idx = npr.write_natural_index(out, tmp_path / "idx.json", families=fams)
+    assert session_path.read_bytes() == raw  # the session file is never rewritten
+    rows = {r["task_id"]: r for r in idx["tasks"]}
+    got = rows["NP-01"]["sanitize_natural"]
+    assert got["sanitizer"] == "sanitize-natural:v1" and "commits" not in baseline["where"]
+    assert got["counts"] == {**baseline["counts"], "handles": baseline["counts"].get("handles", 0) + 1, "ips": 2}
+    assert got["where"] == {**baseline["where"], "commits": {"ips": 1}, "repo_url": {"ips": 1},
+                            "issue": {"handles": baseline["where"].get("issue", {}).get("handles", 0) + 1}}
+    # The pass itself (sanitize_session) is counted apart: it renders a commit event's text from its tool input, so the
+    # address in the commit message is not among its counts (found on real data: a handle in one family's commit message).
+    passed = sanitize_session(load(session_path, Session))[1]
+    assert got["pass"] == passed == {**baseline["pass"], "handles": baseline["pass"].get("handles", 0) + 1, "ips": 1}
+    note = idx["fields"]["sanitize_natural"]
+    assert all(f"{part}," in note or f"{part};" in note or f"{part})" in note for part in got["where"])  # each part is named
+    assert "sanitize_session" in note and "pass" in note
+    assert [r["task_id"] for r in idx["tasks"] if "sanitize_natural" in r] == ["NP-01"]  # only built tasks have a session
+    assert {t: r["sample"] for t, r in rows.items()} == {**{f.task_id: "first" for f in fams}, "NP-26": "extension"}
+    assert (npr.sample_of("NP-25"), npr.sample_of("NP-26"), npr.sample_of("CS-01")) == ("first", "extension", None)
+    assert idx["s11_by_sample"] == {"first": 0, "extension": 0} and idx["counts"]["s11"] == 0
+    assert idx["decision_log"] == [f"D{n}" for n in range(47, 61)] and "§19" in idx["protocol"]
+    src = idx["source"]
+    assert (src["licence"], src["url"], src["changes"]) == (
+        "CC-BY-4.0", f"https://huggingface.co/datasets/{npr.AIDEV_DATASET}", "ids, SHAs, counts and hashes extracted; no text")
+    assert "CC BY 4.0" in src["attribution"] and src["revision"] == npr.AIDEV_REVISION
+    assert "third_party_downloads.json" in idx["privacy"] and "public GitHub ids" in idx["privacy"]
+    text = (tmp_path / "idx.json").read_text().lower()
+    assert handle not in text and ip not in text and AT not in text and "github.com" not in text
+    assert not [x for x in forbidden() if x.lower() in text]
