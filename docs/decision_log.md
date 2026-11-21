@@ -1700,3 +1700,70 @@ attempt was graded or labelled: sha256 `957717e50a77a22fcf1f7586c8e3816c0ea7f0ff
   titles, and a working-directory line naming the study repository; no reference,
   verifier, candidate or label material), and of one denied, unrelated tool call by a
   configuration-B attempt.
+
+### D58. Strict audit of the labeler writers; fresh-v1 labels proposed; corrections to D57
+**Labeler writers (protocol §15.5; D55 left this audit open).** `scripts/strict_reaudit.py`
+has a new labeler-writer profile (`--labeler TASK=TRANSCRIPT`, `--revision
+TASK=TRANSCRIPT`). It resolves every path in every tool input, shell commands included,
+and scans every tool output for forbidden paths, candidate ids and the text of forbidden
+files (an index of the distinctive lines and test names of 258 files). It also checks the
+prompts and the harness context, and a revision prompt against the names-only rule. The
+existing profiles are unchanged: on the same inputs (all 80 fresh attempts; 410 generator
+transcripts) the old and new script give identical output. Report:
+`data/labelers/writer_audit.json` (sha256 `d1f3cd22...`), run at 2026-11-21T11:38:34Z
+over the five transcripts by sha256.
+* Every writer prompt is the labeler workflow's template and hashes to the frozen spec's
+  `prompt_sha256`. Replaying the transcripts' writes reproduces every frozen labeler test
+  file byte for byte, so these five transcripts account for all four labelers.
+* The script flagged 4 items in 2 transcripts. Read in the transcripts, 3 are false
+  positives: an `ls` of the writer's own directory before it existed; a repository-wide
+  `grep` by the CS-03 reviser that the permission system denied before it ran, which
+  was not retried; and a harness notice naming a file that was never opened. One holds:
+  the CS-03 revision prompt gave each failing check's name with its kind ("passes on
+  unchanged base"), and its shape showed that nothing failed on the reference. §15.5
+  and D55 say names only. This is information about the labeler's own checks on the
+  base, which a writer may compute itself, not forbidden material.
+* Verdicts: CS-01, CS-02 and CS-04 independent; CS-03 concerns (the revision prompt, and
+  the denied search). As recorded in its `status.json`, the CS-03 revision makes the
+  R-all-caps-input checks fail on the no-op only by coupling them to R-acronym, so their
+  per-requirement attribution is unreliable. The candidate-level verdict that the second
+  labeling uses is not affected.
+* A second agent checked the same transcripts independently, from the raw JSONL and
+  without the script, with a content-level search for forbidden text. It reached the
+  same verdicts and found no read of forbidden material.
+* For the natural-task labelers (§15.5), the revision step passes bare check names.
+
+**fresh-v1 labels** (2026-11-21, 10:59:47-11:21:02Z, `scripts/propose_labels.py tasks/<id>
+--stratum fresh-v1`, commits `9367db1` and `4a6e98f`). D19 with fresh attempts treated as
+natural candidates: invalid if any frozen reference check or the regression norm fails,
+else valid. No proposal is ambiguous.
+
+| Family | u1, A | u1, B | final, A | final, B |
+| --- | --- | --- | --- | --- |
+| CS-01 | 5 invalid | 5 invalid | 5 valid | 5 valid |
+| CS-02 | 2 invalid, 3 valid | 5 valid | 5 valid | 5 valid |
+| CS-03 | 2 invalid, 3 valid | 5 invalid | 5 valid | 5 valid |
+| CS-04 | 5 invalid | 5 invalid | 5 valid | 5 valid |
+
+These are model proposals, not human labels. The 29 invalid `u1` attempts are natural
+correction-violating negatives: no generator wrote them. Before grading, every recorded
+patch was re-derived from its attempt's workspace. All 80 are identical to the recorded
+patches. A content comparison of base plus patch against the workspace, which does not
+depend on timestamps, finds no difference beyond the files the patch policy removes.
+The re-derivation was needed because the audit agent found that `patches.diff_dirs`
+could miss a same-size edit through git's stat cache. Since this entry, it empties the
+index before adding the new tree.
+
+**Corrections to D57.**
+* The first attempt started at 2026-11-21T08:58:21.8Z (CS-01-fresh-A-u1-1, by the
+  attempt records), not at 09:06Z. That is still after the instructions were logged in
+  D56 at 08:57:32Z. The last attempt ended at 10:21:02Z.
+* The audit reports of CS-01 and CS-04 name protocol v0.9 and D55/D56. Those of CS-02 and
+  CS-03 name v0.10 (§18.1) and D57. CS-01 was reviewed at 09:55:54Z, before v0.10 was
+  hashed (10:04:22Z). CS-04 was reviewed at 10:13:44Z, after it, but kept the earlier
+  header. Both reviews read every flag in its transcript and judged every flag a false
+  positive. The flags were harness notices naming files that were never opened; tokens
+  the parser misread as paths (heredoc operators, sed expressions, an environment
+  assignment); and old workspace paths printed from the attempt's own manifest. None is
+  a read, listing or search outside the workspace, which is what §18.1 excludes. The
+  recorded headers are left as they are; this entry is the correction.

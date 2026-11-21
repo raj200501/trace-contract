@@ -1,0 +1,1322 @@
+{
+  "script": "scripts/strict_reaudit.py --labeler",
+  "profile": "labeler writer (protocol §15.5, decision log D55): a writer may read only its family's reference contract, the base snapshot, the harness API (tc_sandbox.py), the lint rules (verifier.py) and the synthetic example of the test format, and may write only its own tests directory; every tool input and every tool output is scanned, and so are the prompt and the harness context; a revision may be told only the names of the failing checks",
+  "task": "the strict audit of the transcripts of the agents that wrote the independent labelers of CS-01 to CS-04 (protocol §15.5); decision log D55 recorded that it was still to be run",
+  "protocol": "v0.10 (§15.5; review conventions of §16.2 and §18.1)",
+  "decision_log": "D55",
+  "run": {
+    "at": "2026-11-21T11:38:34Z",
+    "command": ".venv/bin/python -I scripts/strict_reaudit.py --labeler CS-01=93933e53037205ebaf09787bab2a17a1964dee8eb77bec88c40a7dc6f1d9bea8 --labeler CS-02=db7815d2d6b0ceba1b9c509fa5aea2733e9cf66a04514935f992907b16d39601 --labeler CS-03=5da6ec889215e54ca9d5d1e03c0a9eee15c6ebc3cb3c7b2ac48871024e2d09db --labeler CS-04=43e6b8111612571fa69418ca65ab070d0659cd41b41ce49a89b200c961c45764 --revision CS-03=195972d133562f6e7d8672b59f92b60ba5e5055847ee819ba4cf525c806e04f8 --transcripts <the build session's records of the labeler workflow> --scratch <scratchpad> --report <file>",
+    "transcripts": "the agent-*.jsonl files of the labeler workflow (D55) in the build session's private subagent records, matched by sha256; each is the one whose .meta.json carries the label it is listed under",
+    "exit_status": 0
+  },
+  "postprocessing": "The script's report, unchanged except: transcript excerpts (the text and path of every hit, exposure and harness finding, and the lines under own_text_also_in_forbidden_material) longer than 80 characters are cut to 80, around the flagged token where it fits (a cut is marked with …; 5 fields were cut, the longest is now 79 characters); each prompt block gained task_text_sha256 (the computed task text without the harness preamble and indent, hashed as the generation records hash it) and the frozen spec's prompt_sha256; the keys task, protocol, decision_log, run, postprocessing, revision_information_flow, chain_to_frozen_labelers, manual_review and verdicts, the stated rules, an index note and a review block per transcript were added; the agent harness's home directory, which the writers' prompts name among the locations they must not read, is written <harness-home> under paths_named (5 entries). The script itself writes <session> for session ids and <scratchpad>, <session-tmp> and <session-dir> for the build session's scratch directory, temporary directory and directory of agent records. It was checked before it was written here: no excerpt is longer than 80 characters, and the report holds no login or name, e-mail address, account handle, session-local path, session id, agent id or model identifier.",
+  "rules": {
+    "stated": {
+      "allowed": "a writer may read only its family's reference contract, the base snapshot, the harness API and the lint rules, and a synthetic example of the test format; it writes only its own tasks/<id>/verifiers/independent_label/tests/",
+      "forbidden": "the reference diff and solution (any reference candidate or patch, the materialised reference state's files), the reference checks, any generated verifier, any candidate (candidates/, strata/), any label (labels/, label fields), and what contains them: the session transcripts under data/controlled/, results/, snapshots of states other than the base, and documentation or paper text that quotes candidates, reference checks or verdicts (judged by what each read showed)",
+      "revision": "the single revision (CS-03) may see only the names of the failing checks",
+      "prompt": "the prompt is an input: it must hold nothing forbidden"
+    },
+    "allowed": {
+      "CS-01": [
+        {
+          "path": "tasks/CS-01/contracts/reference.json",
+          "what": "the reference contract"
+        },
+        {
+          "path": "snapshots/CS-01",
+          "what": "the base snapshot"
+        },
+        {
+          "path": "src/tracecontract/sandbox/harness/tc_sandbox.py",
+          "what": "the harness API"
+        },
+        {
+          "path": "src/tracecontract/verifier.py",
+          "what": "the lint rules"
+        },
+        {
+          "path": "tests/fixtures/harbor_fx01/tasks/FX-01/verifiers/v1",
+          "what": "the synthetic example of the test format"
+        }
+      ],
+      "CS-02": [
+        {
+          "path": "tasks/CS-02/contracts/reference.json",
+          "what": "the reference contract"
+        },
+        {
+          "path": "snapshots/CS-02",
+          "what": "the base snapshot"
+        },
+        {
+          "path": "src/tracecontract/sandbox/harness/tc_sandbox.py",
+          "what": "the harness API"
+        },
+        {
+          "path": "src/tracecontract/verifier.py",
+          "what": "the lint rules"
+        },
+        {
+          "path": "tests/fixtures/harbor_fx01/tasks/FX-01/verifiers/v1",
+          "what": "the synthetic example of the test format"
+        }
+      ],
+      "CS-03": [
+        {
+          "path": "tasks/CS-03/contracts/reference.json",
+          "what": "the reference contract"
+        },
+        {
+          "path": "snapshots/CS-03",
+          "what": "the base snapshot"
+        },
+        {
+          "path": "src/tracecontract/sandbox/harness/tc_sandbox.py",
+          "what": "the harness API"
+        },
+        {
+          "path": "src/tracecontract/verifier.py",
+          "what": "the lint rules"
+        },
+        {
+          "path": "tests/fixtures/harbor_fx01/tasks/FX-01/verifiers/v1",
+          "what": "the synthetic example of the test format"
+        }
+      ],
+      "CS-04": [
+        {
+          "path": "tasks/CS-04/contracts/reference.json",
+          "what": "the reference contract"
+        },
+        {
+          "path": "snapshots/CS-04",
+          "what": "the base snapshot"
+        },
+        {
+          "path": "src/tracecontract/sandbox/harness/tc_sandbox.py",
+          "what": "the harness API"
+        },
+        {
+          "path": "src/tracecontract/verifier.py",
+          "what": "the lint rules"
+        },
+        {
+          "path": "tests/fixtures/harbor_fx01/tasks/FX-01/verifiers/v1",
+          "what": "the synthetic example of the test format"
+        }
+      ]
+    },
+    "own": "tasks/<task>/verifiers/independent_label/tests/ (written and read back)",
+    "system": "system locations, the study's virtual environment, and /tmp outside the Claude session directories (its reads and listings are flagged)",
+    "forbidden": "the reference solution (the reference candidate and its patch); the reference checks; every other verifier, of any family, and the coordinator's grading status of the labeler; candidates and strata; labels; the mappings of generated verifiers; data/controlled (the controlled sessions' records); results/; the sealed directory; third-party data; the old workspaces; every Claude session directory; and any search or listing over them",
+    "doc": "docs/, paper/, experiments/, README.md and STATUS.md: judged by what each read showed",
+    "outside": "every other path; judged by what each read showed",
+    "outputs": "paths in forbidden material, candidate ids, and the text of forbidden files (distinctive lines and test names, from labeler_index) shown in a tool output, except text the agent wrote first",
+    "prompt": "the prompt is scanned for the text of forbidden files; a revision's prompt may carry nothing but the names of the failing checks"
+  },
+  "index": {
+    "forbidden_files": 258,
+    "distinctive_lines": 19791,
+    "test_names": 288,
+    "candidate_ids": 80,
+    "note": "the content scans compare tool outputs, prompts and harness context with the distinctive lines and test names of every forbidden file in the checkout; results/ and the strata are covered by the path rules only (the strata did not exist when the labelers were written: the first fresh attempt started at 09:06Z, the last of these transcripts ended at 08:40Z)"
+  },
+  "transcripts": {
+    "L-write-CS-01": {
+      "task_id": "CS-01",
+      "round": 1,
+      "transcript_sha256": "93933e53037205ebaf09787bab2a17a1964dee8eb77bec88c40a7dc6f1d9bea8",
+      "tool_calls": {
+        "Bash": 9,
+        "Edit": 1,
+        "Read": 3,
+        "SubagentHandback": 1,
+        "Write": 1
+      },
+      "tool_calls_total": 15,
+      "denied_calls": 0,
+      "own_checks": [
+        "test_strip_trailing_zero.py::test_custom_format_examples",
+        "test_strip_trailing_zero.py::test_custom_format_matches_base",
+        "test_strip_trailing_zero.py::test_default_examples_unchanged",
+        "test_strip_trailing_zero.py::test_default_flag_false_matches_base",
+        "test_strip_trailing_zero.py::test_default_matches_base",
+        "test_strip_trailing_zero.py::test_keep_meaningful_differential",
+        "test_strip_trailing_zero.py::test_keep_meaningful_examples",
+        "test_strip_trailing_zero.py::test_opt_in_examples",
+        "test_strip_trailing_zero.py::test_opt_in_matches_rule"
+      ],
+      "prompt": {
+        "sha256": "4a7e9603de71866b2617d2e559b55ea1d276542e556e5c0f3f51a3d72adf5a8e",
+        "chars": 3193,
+        "later_prompts": 0,
+        "forbidden_content": [],
+        "paths_named": [
+          {
+            "path": "/home/user/trace-contract/tasks/CS-01/verifiers",
+            "category": "outside",
+            "why": "the verifiers directory"
+          },
+          {
+            "path": "/home/user/trace-contract/tasks/CS-01/candidates",
+            "category": "forbidden",
+            "why": "a candidate"
+          },
+          {
+            "path": "/home/user/trace-contract/tasks/CS-01/labels",
+            "category": "forbidden",
+            "why": "a label"
+          },
+          {
+            "path": "/home/user/trace-contract/results",
+            "category": "forbidden",
+            "why": "verdicts (results/)"
+          },
+          {
+            "path": "/home/user/trace-contract/data",
+            "category": "outside",
+            "why": "outside the allowed inputs"
+          },
+          {
+            "path": "/home/user/trace-contract/docs",
+            "category": "doc",
+            "why": "documentation or paper text (judged by what it showed)"
+          },
+          {
+            "path": "/home/user/trace-contract/paper",
+            "category": "doc",
+            "why": "documentation or paper text (judged by what it showed)"
+          },
+          {
+            "path": "/home/user/trace-contract/experiments",
+            "category": "doc",
+            "why": "documentation or paper text (judged by what it showed)"
+          },
+          {
+            "path": "/home/user/.tc_sealed",
+            "category": "forbidden",
+            "why": "sealed material"
+          },
+          {
+            "path": "/home/user/ext",
+            "category": "forbidden",
+            "why": "third-party data"
+          },
+          {
+            "path": "<harness-home>",
+            "category": "forbidden",
+            "why": "a Claude session directory (the build session's records)"
+          },
+          {
+            "path": "/home/user/trace-contract",
+            "category": "outside",
+            "why": "outside the allowed inputs"
+          }
+        ],
+        "task_text_sha256": "41f2d5a5a688ca11df3c3a8af63d9df94719ac1a06edd19d749bd2573aaeeb52",
+        "frozen_spec_prompt_sha256": "41f2d5a5a688ca11df3c3a8af63d9df94719ac1a06edd19d749bd2573aaeeb52"
+      },
+      "accesses": {
+        "allowed": 13,
+        "own": 5
+      },
+      "hits": [],
+      "exposures": [],
+      "harness_context": {
+        "attachments": {
+          "deferred_tools_delta": 2,
+          "environment": 1,
+          "model": 1,
+          "skill_listing": 1,
+          "session_context": 1,
+          "date": 1,
+          "credential_org": 1,
+          "remote_session_change": 1,
+          "prompt_snapshot": 2,
+          "mcp_instructions_delta": 1,
+          "auto_mode": 1,
+          "total_tokens_reminder": 11,
+          "deferred_tools_record": 3,
+          "task_reminder": 1
+        },
+        "reminders": 1,
+        "forbidden_content": [],
+        "forbidden_paths_named": [
+          {
+            "path": "<scratchpad>",
+            "where": "environment",
+            "why": "a Claude session directory (the build session's records)",
+            "text": "<scratchpad>"
+          }
+        ]
+      },
+      "own_text_also_in_forbidden_material": {
+        "lines": [
+          {
+            "line": "\"test_default_matches_base\": [\"R-default-unchanged\"],",
+            "also_in": [
+              "tasks/CS-04/verifiers/independent_label/tests/test_consecutive_groups.py"
+            ],
+            "files": 1
+          },
+          {
+            "line": "\"decimal\": (\"kB\", \"MB\", \"GB\", \"TB\", \"PB\", \"EB\", \"ZB\", \"YB\", \"RB\", \"QB\"),",
+            "also_in": [
+              "tasks/CS-01/verifiers/llm_freeform/tests/test_naturalsize_strip_trailing_zero.py"
+            ],
+            "files": 1
+          },
+          {
+            "line": "\"binary\": (\"KiB\", \"MiB\", \"GiB\", \"TiB\", \"PiB\", \"EiB\", \"ZiB\", \"YiB\", \"RiB\", \"QiB…",
+            "also_in": [
+              "tasks/CS-01/verifiers/llm_freeform/tests/test_naturalsize_strip_trailing_zero.py"
+            ],
+            "files": 1
+          },
+          {
+            "line": "def _base_naturalsize(value, binary=False, gnu=False, format=\"%.1f\"):",
+            "also_in": [
+              "tasks/CS-01/verifiers/full_audited/tests/test_naturalsize_strip_trailing_zero.py",
+              "tasks/CS-01/verifiers/full_plain/tests/test_naturalsize_strip_trailing_zero.py"
+            ],
+            "files": 2
+          },
+          {
+            "line": "return \"%d Byte\" % int(bytes_)",
+            "also_in": [
+              "tasks/CS-01/verifiers/full_audited/tests/test_naturalsize_strip_trailing_zero.py",
+              "tasks/CS-01/verifiers/full_plain/tests/test_naturalsize_strip_trailing_zero.py",
+              "tasks/CS-01/verifiers/llm_freeform/tests/test_naturalsize_strip_trailing_zero.py"
+            ],
+            "files": 3
+          },
+          {
+            "line": "return f\"{int(bytes_)}B\" if gnu else \"%d Bytes\" % int(bytes_)",
+            "also_in": [
+              "tasks/CS-01/verifiers/full_audited/tests/test_naturalsize_strip_trailing_zero.py",
+              "tasks/CS-01/verifiers/full_plain/tests/test_naturalsize_strip_trailing_zero.py",
+              "tasks/CS-01/verifiers/llm_freeform/tests/test_naturalsize_strip_trailing_zero.py"
+            ],
+            "files": 3
+          },
+          {
+            "line": "return format % (bytes_ / (base**exp)) + space + suffix[exp - 1]",
+            "also_in": [
+              "tasks/CS-01/verifiers/full_audited/tests/test_naturalsize_strip_trailing_zero.py",
+              "tasks/CS-01/verifiers/full_plain/tests/test_naturalsize_strip_trailing_zero.py"
+            ],
+            "files": 2
+          },
+          {
+            "line": "def test_default_examples_unchanged():",
+            "also_in": [
+              "tasks/CS-01/verifiers/llm_freeform/tests/test_naturalsize_strip_trailing_zero.py"
+            ],
+            "files": 1
+          },
+          {
+            "line": "\"from humanize import naturalsize\\n\"",
+            "also_in": [
+              "tasks/CS-01/verifiers/initial_audited/tests/test_naturalsize_trailing_zero.py",
+              "tasks/CS-01/verifiers/initial_plain/tests/test_naturalsize_trailing_zero.py"
+            ],
+            "files": 2
+          },
+          {
+            "line": "def test_default_matches_base():",
+            "also_in": [
+              "tasks/CS-04/verifiers/independent_label/tests/test_consecutive_groups.py"
+            ],
+            "files": 1
+          }
+        ],
+        "test_names": [
+          {
+            "name": "test_default_examples_unchanged",
+            "also_in": [
+              "tasks/CS-01/verifiers/llm_freeform/spec.json",
+              "tasks/CS-01/verifiers/llm_freeform/tests/test_naturalsize_strip_trailing_zero.py"
+            ],
+            "files": 2
+          },
+          {
+            "name": "test_default_matches_base",
+            "also_in": [
+              "tasks/CS-04/verifiers/independent_label/spec.json",
+              "tasks/CS-04/verifiers/independent_label/tests/test_consecutive_groups.py"
+            ],
+            "files": 2
+          }
+        ]
+      },
+      "flagged": false,
+      "review": {
+        "independent": true,
+        "judgment": "not flagged",
+        "reasons": [
+          "labeler-writer audit: no hit, no exposure, no forbidden text in the prompt or the harness context",
+          "prompt: the labeler workflow's writer template for CS-01, byte for byte (its task text hashes to the frozen spec's prompt_sha256); it names the allowed inputs and, as prohibitions, forbidden locations, and holds no content of either; no later prompt",
+          "file tools: Read named only the reference contract, tc_sandbox.py (the harness API) and verifier.py (the lint rules); Write and Edit named only its own test file",
+          "shell: find of the base snapshot and of the synthetic example; reads (cat, sed, grep) of the example's test and spec and of base files (filesize.py; i18n.py, __init__.py and tests/test_filesize.py after a cd into the snapshot); mkdir and ls of its tests directory; lint-tests on it; three python -I runs from /tmp that put its tests directory and the harness directory on sys.path by absolute path and imported its own module, to check its oracle; date",
+          "tool outputs showed only those files, its own file and the lint result",
+          "replaying its Write and Edit reproduces the frozen test file byte for byte",
+          "leads, not flags: its test name test_default_examples_unchanged is also a test of CS-01's llm_freeform verifier, and test_default_matches_base one of the CS-04 labeler, written at the same time; 10 of its lines also occur in generated verifiers: the base naturalsize it copied as an oracle (as the prompt asks), the base suffix tables without N_(), an import line, and those two names; it read none of those files, and both names follow from the requirement R-default-unchanged",
+          "verdict: independent; nothing outside the allowed inputs was read"
+        ]
+      }
+    },
+    "L-write-CS-02": {
+      "task_id": "CS-02",
+      "round": 1,
+      "transcript_sha256": "db7815d2d6b0ceba1b9c509fa5aea2733e9cf66a04514935f992907b16d39601",
+      "tool_calls": {
+        "Bash": 5,
+        "Read": 6,
+        "SubagentHandback": 1
+      },
+      "tool_calls_total": 12,
+      "denied_calls": 0,
+      "own_checks": [
+        "test_atomic_write.py::test_failed_insert_file_parses_to_old_data",
+        "test_atomic_write.py::test_failed_insert_keeps_bytes_identical",
+        "test_atomic_write.py::test_failed_update_keeps_old_bytes",
+        "test_atomic_write.py::test_no_temp_files_after_failed_insert",
+        "test_atomic_write.py::test_no_temp_files_after_successful_writes",
+        "test_atomic_write.py::test_successful_insert_file_holds_exact_data",
+        "test_atomic_write.py::test_successful_shorter_write_file_holds_exact_data",
+        "test_reads_and_bytes.py::test_bytes_default_kwargs_utf8",
+        "test_reads_and_bytes.py::test_bytes_ensure_ascii_false_utf8",
+        "test_reads_and_bytes.py::test_bytes_indent_sort_keys_utf8",
+        "test_reads_and_bytes.py::test_bytes_latin1_and_utf16",
+        "test_reads_and_bytes.py::test_bytes_overwrite_shorter",
+        "test_reads_and_bytes.py::test_new_instance_sees_writes",
+        "test_reads_and_bytes.py::test_read_after_write_same_instance",
+        "test_reads_and_bytes.py::test_read_after_write_storage_object"
+      ],
+      "prompt": {
+        "sha256": "ee0b4769d9270e75b4af875fa80cfb0c24e4b5058f125a00232eb696f9f125ec",
+        "chars": 3193,
+        "later_prompts": 0,
+        "forbidden_content": [],
+        "paths_named": [
+          {
+            "path": "/home/user/trace-contract/tasks/CS-02/verifiers",
+            "category": "outside",
+            "why": "the verifiers directory"
+          },
+          {
+            "path": "/home/user/trace-contract/tasks/CS-02/candidates",
+            "category": "forbidden",
+            "why": "a candidate"
+          },
+          {
+            "path": "/home/user/trace-contract/tasks/CS-02/labels",
+            "category": "forbidden",
+            "why": "a label"
+          },
+          {
+            "path": "/home/user/trace-contract/results",
+            "category": "forbidden",
+            "why": "verdicts (results/)"
+          },
+          {
+            "path": "/home/user/trace-contract/data",
+            "category": "outside",
+            "why": "outside the allowed inputs"
+          },
+          {
+            "path": "/home/user/trace-contract/docs",
+            "category": "doc",
+            "why": "documentation or paper text (judged by what it showed)"
+          },
+          {
+            "path": "/home/user/trace-contract/paper",
+            "category": "doc",
+            "why": "documentation or paper text (judged by what it showed)"
+          },
+          {
+            "path": "/home/user/trace-contract/experiments",
+            "category": "doc",
+            "why": "documentation or paper text (judged by what it showed)"
+          },
+          {
+            "path": "/home/user/.tc_sealed",
+            "category": "forbidden",
+            "why": "sealed material"
+          },
+          {
+            "path": "/home/user/ext",
+            "category": "forbidden",
+            "why": "third-party data"
+          },
+          {
+            "path": "<harness-home>",
+            "category": "forbidden",
+            "why": "a Claude session directory (the build session's records)"
+          },
+          {
+            "path": "/home/user/trace-contract",
+            "category": "outside",
+            "why": "outside the allowed inputs"
+          }
+        ],
+        "task_text_sha256": "6bf8a0620f498ace3d46eb2a5387dbd55a355856995dc1dc06372dee6ef3974a",
+        "frozen_spec_prompt_sha256": "6bf8a0620f498ace3d46eb2a5387dbd55a355856995dc1dc06372dee6ef3974a"
+      },
+      "accesses": {
+        "allowed": 13,
+        "forbidden": 1,
+        "own": 6,
+        "system": 2
+      },
+      "hits": [
+        {
+          "event_id": "<session>/L000038.00",
+          "ts": "2026-11-21T08:21:17.550Z",
+          "tool": "Bash",
+          "op": "list",
+          "path": "/home/user/trace-contract/tasks/CS-02/verifiers/independent_label",
+          "category": "forbidden",
+          "why": "a listing of a directory that holds forbidden material (the coordinator's grading status of the labeler)",
+          "text": "ls /home/user/trace-contract/tasks/CS-02/verifiers/independent_label/ 2>/dev/n…"
+        }
+      ],
+      "exposures": [],
+      "harness_context": {
+        "attachments": {
+          "deferred_tools_delta": 2,
+          "environment": 1,
+          "model": 1,
+          "skill_listing": 1,
+          "session_context": 1,
+          "date": 1,
+          "credential_org": 1,
+          "remote_session_change": 1,
+          "prompt_snapshot": 2,
+          "mcp_instructions_delta": 1,
+          "auto_mode": 1,
+          "total_tokens_reminder": 6,
+          "task_reminder": 1
+        },
+        "reminders": 1,
+        "forbidden_content": [],
+        "forbidden_paths_named": [
+          {
+            "path": "<scratchpad>",
+            "where": "environment",
+            "why": "a Claude session directory (the build session's records)",
+            "text": "<scratchpad>"
+          }
+        ]
+      },
+      "own_text_also_in_forbidden_material": {
+        "lines": [
+          {
+            "line": "from tinydb import TinyDB, Query",
+            "also_in": [
+              "tasks/CS-02/verifiers/reference_check/tests/test_failed_writes.py",
+              "tasks/CS-02/verifiers/reference_check/tests/test_no_leftover_files.py",
+              "tasks/CS-02/verifiers/reference_check/tests/test_read_after_write.py"
+            ],
+            "files": 8
+          },
+          {
+            "line": "serialized = json.dumps(data, **kwargs)",
+            "also_in": [
+              "tasks/CS-02/verifiers/llm_freeform/tests/test_atomic_json_storage.py",
+              "tasks/CS-02/verifiers/repo_tests/overlay/tests/test_storages.py",
+              "tasks/CS-02/candidates/CS-02-dev-attack-full_session-a1.json"
+            ],
+            "files": 16
+          }
+        ],
+        "test_names": []
+      },
+      "flagged": true,
+      "review": {
+        "independent": true,
+        "judgment": "flagged; false positive",
+        "reasons": [
+          "labeler-writer audit: 1 hit, no exposure, no forbidden text in the prompt or the harness context; read in the transcript",
+          "false positive: the hit is an ls of tasks/CS-02/verifiers/independent_label/ (errors to /dev/null) at the end of a command that grepped base files; the directory did not exist yet (the writer created it with mkdir -p two calls later), and the output shows no entry of it; it holds only the labeler's tests and the coordinator's spec.json and status.json, written after the writer had finished",
+          "prompt: the labeler workflow's writer template for CS-02, byte for byte (its task text hashes to the frozen spec's prompt_sha256); it names the allowed inputs and, as prohibitions, forbidden locations, and holds no content of either; no later prompt",
+          "file tools: Read named only the reference contract, tc_sandbox.py, verifier.py, the synthetic example's test, and base files (tinydb/storages.py, tinydb/database.py)",
+          "shell: find of the base snapshot and of the synthetic example; grep of base files after a cd into the snapshot; ls of the CLI binary; mkdir of its tests directory, its two test files written there by heredoc, and lint-tests on it; date",
+          "replaying its heredocs reproduces both frozen test files byte for byte",
+          "leads, not flags: 2 of its lines also occur in reference checks and other verifiers: an import line and the base JSONStorage.write line it copied as an oracle (json.dumps of the data with the storage's kwargs); no test name coincides",
+          "verdict: independent; nothing outside the allowed inputs was read"
+        ]
+      }
+    },
+    "L-write-CS-03": {
+      "task_id": "CS-03",
+      "round": 1,
+      "transcript_sha256": "5da6ec889215e54ca9d5d1e03c0a9eee15c6ebc3cb3c7b2ac48871024e2d09db",
+      "tool_calls": {
+        "Bash": 5,
+        "Read": 5,
+        "SubagentHandback": 1,
+        "Write": 4
+      },
+      "tool_calls_total": 15,
+      "denied_calls": 0,
+      "own_checks": [
+        "test_acronym.py::test_acronym_examples",
+        "test_acronym.py::test_acronym_position",
+        "test_acronym.py::test_acronym_two_letters",
+        "test_all_caps.py::test_all_caps_example",
+        "test_all_caps.py::test_all_caps_matches_base",
+        "test_humanize.py::test_humanize_examples",
+        "test_humanize.py::test_humanize_matches_base",
+        "test_underscore.py::test_underscore_example",
+        "test_underscore.py::test_underscore_matches_base"
+      ],
+      "prompt": {
+        "sha256": "0ff38dec6154429589e410b73af4b385df2fdebb1c8605974866edb954c7fe9d",
+        "chars": 3193,
+        "later_prompts": 0,
+        "forbidden_content": [],
+        "paths_named": [
+          {
+            "path": "/home/user/trace-contract/tasks/CS-03/verifiers",
+            "category": "outside",
+            "why": "the verifiers directory"
+          },
+          {
+            "path": "/home/user/trace-contract/tasks/CS-03/candidates",
+            "category": "forbidden",
+            "why": "a candidate"
+          },
+          {
+            "path": "/home/user/trace-contract/tasks/CS-03/labels",
+            "category": "forbidden",
+            "why": "a label"
+          },
+          {
+            "path": "/home/user/trace-contract/results",
+            "category": "forbidden",
+            "why": "verdicts (results/)"
+          },
+          {
+            "path": "/home/user/trace-contract/data",
+            "category": "outside",
+            "why": "outside the allowed inputs"
+          },
+          {
+            "path": "/home/user/trace-contract/docs",
+            "category": "doc",
+            "why": "documentation or paper text (judged by what it showed)"
+          },
+          {
+            "path": "/home/user/trace-contract/paper",
+            "category": "doc",
+            "why": "documentation or paper text (judged by what it showed)"
+          },
+          {
+            "path": "/home/user/trace-contract/experiments",
+            "category": "doc",
+            "why": "documentation or paper text (judged by what it showed)"
+          },
+          {
+            "path": "/home/user/.tc_sealed",
+            "category": "forbidden",
+            "why": "sealed material"
+          },
+          {
+            "path": "/home/user/ext",
+            "category": "forbidden",
+            "why": "third-party data"
+          },
+          {
+            "path": "<harness-home>",
+            "category": "forbidden",
+            "why": "a Claude session directory (the build session's records)"
+          },
+          {
+            "path": "/home/user/trace-contract",
+            "category": "outside",
+            "why": "outside the allowed inputs"
+          }
+        ],
+        "task_text_sha256": "2de11e3c9cd78d0c8545bd2120cbab438cb71e8aeab512699bfc386a89874dd2",
+        "frozen_spec_prompt_sha256": "2de11e3c9cd78d0c8545bd2120cbab438cb71e8aeab512699bfc386a89874dd2"
+      },
+      "accesses": {
+        "allowed": 9,
+        "own": 7
+      },
+      "hits": [],
+      "exposures": [],
+      "harness_context": {
+        "attachments": {
+          "deferred_tools_delta": 2,
+          "environment": 1,
+          "model": 1,
+          "skill_listing": 1,
+          "session_context": 1,
+          "date": 1,
+          "credential_org": 1,
+          "remote_session_change": 1,
+          "prompt_snapshot": 2,
+          "mcp_instructions_delta": 1,
+          "auto_mode": 1,
+          "total_tokens_reminder": 6,
+          "deferred_tools_record": 2,
+          "task_reminder": 1
+        },
+        "reminders": 1,
+        "forbidden_content": [],
+        "forbidden_paths_named": [
+          {
+            "path": "<scratchpad>",
+            "where": "environment",
+            "why": "a Claude session directory (the build session's records)",
+            "text": "<scratchpad>"
+          }
+        ]
+      },
+      "own_text_also_in_forbidden_material": {
+        "lines": [
+          {
+            "line": "def _base_underscore(word):",
+            "also_in": [
+              "tasks/CS-03/verifiers/reference_check/tests/test_titleize_all_caps.py",
+              "tasks/CS-03/verifiers/reference_check/tests/test_underscore_unchanged.py",
+              "tasks/CS-03/verifiers/full_audited/tests/test_titleize_acronyms.py"
+            ],
+            "files": 4
+          },
+          {
+            "line": "def _base_humanize(word):",
+            "also_in": [
+              "tasks/CS-03/verifiers/reference_check/tests/test_humanize_unchanged.py",
+              "tasks/CS-03/verifiers/reference_check/tests/test_titleize_all_caps.py",
+              "tasks/CS-03/verifiers/full_audited/tests/test_titleize_acronyms.py"
+            ],
+            "files": 4
+          },
+          {
+            "line": "def _base_titleize(word):",
+            "also_in": [
+              "tasks/CS-03/verifiers/reference_check/tests/test_titleize_all_caps.py",
+              "tasks/CS-03/verifiers/full_audited/tests/test_titleize_acronyms.py",
+              "tasks/CS-03/verifiers/full_plain/tests/test_titleize_acronyms.py"
+            ],
+            "files": 3
+          },
+          {
+            "line": "_base_humanize(_base_underscore(word)).title()",
+            "also_in": [
+              "tasks/CS-03/verifiers/reference_check/tests/test_titleize_all_caps.py",
+              "tasks/CS-03/verifiers/full_audited/tests/test_titleize_acronyms.py",
+              "tasks/CS-03/verifiers/full_plain/tests/test_titleize_acronyms.py"
+            ],
+            "files": 3
+          },
+          {
+            "line": "assert r.value == expected",
+            "also_in": [
+              "tasks/CS-03/verifiers/reference_check/tests/test_humanize_unchanged.py",
+              "tasks/CS-03/verifiers/reference_check/tests/test_titleize_acronyms.py",
+              "tasks/CS-03/verifiers/reference_check/tests/test_titleize_all_caps.py"
+            ],
+            "files": 4
+          }
+        ],
+        "test_names": []
+      },
+      "flagged": false,
+      "review": {
+        "independent": true,
+        "judgment": "not flagged",
+        "reasons": [
+          "labeler-writer audit: no hit, no exposure, no forbidden text in the prompt or the harness context",
+          "prompt: the labeler workflow's writer template for CS-03, byte for byte (its task text hashes to the frozen spec's prompt_sha256); it names the allowed inputs and, as prohibitions, forbidden locations, and holds no content of either; no later prompt",
+          "file tools: Read named only the reference contract, tc_sandbox.py, verifier.py, the synthetic example's test and the base inflection/__init__.py; Write named only its four test files",
+          "shell: find of the base snapshot and of the synthetic example; mkdir and ls of its tests directory; lint-tests on it; date",
+          "replaying its writes and then the revision's two edits reproduces the four frozen test files byte for byte",
+          "leads, not flags: 5 of its lines also occur in the reference checks and other verifiers: the def lines of the base underscore, humanize and titleize it copied as oracles (with a _base_ prefix), the base titleize body, and a generic assertion; no test name coincides",
+          "verdict: independent; nothing outside the allowed inputs was read"
+        ]
+      }
+    },
+    "L-write-CS-04": {
+      "task_id": "CS-04",
+      "round": 1,
+      "transcript_sha256": "43e6b8111612571fa69418ca65ab070d0659cd41b41ce49a89b200c961c45764",
+      "tool_calls": {
+        "Bash": 7,
+        "SubagentHandback": 1,
+        "Write": 1
+      },
+      "tool_calls_total": 9,
+      "denied_calls": 0,
+      "own_checks": [
+        "test_consecutive_groups.py::test_default_matches_base",
+        "test_consecutive_groups.py::test_groups_are_lazy_iterators",
+        "test_consecutive_groups.py::test_groups_consume_source_lazily",
+        "test_consecutive_groups.py::test_negative_step_example",
+        "test_consecutive_groups.py::test_positional_ordering_example",
+        "test_consecutive_groups.py::test_positional_ordering_matches_base",
+        "test_consecutive_groups.py::test_step_breaks_on_other_gaps",
+        "test_consecutive_groups.py::test_step_example",
+        "test_consecutive_groups.py::test_zero_step_raises"
+      ],
+      "prompt": {
+        "sha256": "dfc6840e6c28261e8344f8a8151c1834932e8d37ac9fa4ca12f42c8d4a4bdd4a",
+        "chars": 3193,
+        "later_prompts": 0,
+        "forbidden_content": [],
+        "paths_named": [
+          {
+            "path": "/home/user/trace-contract/tasks/CS-04/verifiers",
+            "category": "outside",
+            "why": "the verifiers directory"
+          },
+          {
+            "path": "/home/user/trace-contract/tasks/CS-04/candidates",
+            "category": "forbidden",
+            "why": "a candidate"
+          },
+          {
+            "path": "/home/user/trace-contract/tasks/CS-04/labels",
+            "category": "forbidden",
+            "why": "a label"
+          },
+          {
+            "path": "/home/user/trace-contract/results",
+            "category": "forbidden",
+            "why": "verdicts (results/)"
+          },
+          {
+            "path": "/home/user/trace-contract/data",
+            "category": "outside",
+            "why": "outside the allowed inputs"
+          },
+          {
+            "path": "/home/user/trace-contract/docs",
+            "category": "doc",
+            "why": "documentation or paper text (judged by what it showed)"
+          },
+          {
+            "path": "/home/user/trace-contract/paper",
+            "category": "doc",
+            "why": "documentation or paper text (judged by what it showed)"
+          },
+          {
+            "path": "/home/user/trace-contract/experiments",
+            "category": "doc",
+            "why": "documentation or paper text (judged by what it showed)"
+          },
+          {
+            "path": "/home/user/.tc_sealed",
+            "category": "forbidden",
+            "why": "sealed material"
+          },
+          {
+            "path": "/home/user/ext",
+            "category": "forbidden",
+            "why": "third-party data"
+          },
+          {
+            "path": "<harness-home>",
+            "category": "forbidden",
+            "why": "a Claude session directory (the build session's records)"
+          },
+          {
+            "path": "/home/user/trace-contract",
+            "category": "outside",
+            "why": "outside the allowed inputs"
+          }
+        ],
+        "task_text_sha256": "e07f16d590555351e6c87ba2735a425a62883da27659029a28219a365d2158a7",
+        "frozen_spec_prompt_sha256": "e07f16d590555351e6c87ba2735a425a62883da27659029a28219a365d2158a7"
+      },
+      "accesses": {
+        "allowed": 15,
+        "own": 2
+      },
+      "hits": [],
+      "exposures": [],
+      "harness_context": {
+        "attachments": {
+          "deferred_tools_delta": 2,
+          "environment": 1,
+          "model": 1,
+          "skill_listing": 1,
+          "session_context": 1,
+          "date": 1,
+          "credential_org": 1,
+          "remote_session_change": 1,
+          "prompt_snapshot": 2,
+          "mcp_instructions_delta": 1,
+          "auto_mode": 1,
+          "total_tokens_reminder": 5,
+          "deferred_tools_record": 1
+        },
+        "reminders": 1,
+        "forbidden_content": [],
+        "forbidden_paths_named": [
+          {
+            "path": "<scratchpad>",
+            "where": "environment",
+            "why": "a Claude session directory (the build session's records)",
+            "text": "<scratchpad>"
+          }
+        ]
+      },
+      "own_text_also_in_forbidden_material": {
+        "lines": [
+          {
+            "line": "from itertools import groupby",
+            "also_in": [
+              "data/controlled/transcripts/CS-04.jsonl"
+            ],
+            "files": 1
+          },
+          {
+            "line": "from operator import itemgetter",
+            "also_in": [
+              "data/controlled/transcripts/CS-04.jsonl"
+            ],
+            "files": 1
+          },
+          {
+            "line": "\"test_default_matches_base\": [\"R-default-unchanged\"],",
+            "also_in": [
+              "tasks/CS-01/verifiers/independent_label/tests/test_strip_trailing_zero.py"
+            ],
+            "files": 1
+          },
+          {
+            "line": "assert r.value == [[2, 4, 6], [10, 12]]",
+            "also_in": [
+              "tasks/CS-04/verifiers/reference_check/tests/test_consecutive_groups_step.py",
+              "tasks/CS-04/verifiers/initial_audited/tests/test_consecutive_groups_step.py",
+              "tasks/CS-04/verifiers/initial_plain/tests/test_consecutive_groups_step.py"
+            ],
+            "files": 4
+          },
+          {
+            "line": "assert r.value == [[9, 8, 7], [3, 2]]",
+            "also_in": [
+              "tasks/CS-04/verifiers/reference_check/tests/test_consecutive_groups_step.py"
+            ],
+            "files": 1
+          },
+          {
+            "line": "assert r.value == [[\"a\", \"b\", \"c\", \"d\"], [\"f\", \"g\"], [\"i\"], [\"l\", \"m\", \"n\", \"o…",
+            "also_in": [
+              "tasks/CS-04/verifiers/reference_check/tests/test_consecutive_groups_step.py"
+            ],
+            "files": 1
+          },
+          {
+            "line": "def test_positional_ordering_matches_base():",
+            "also_in": [
+              "tasks/CS-04/verifiers/reference_check/tests/test_consecutive_groups_step.py"
+            ],
+            "files": 1
+          },
+          {
+            "line": "def test_default_matches_base():",
+            "also_in": [
+              "tasks/CS-01/verifiers/independent_label/tests/test_strip_trailing_zero.py"
+            ],
+            "files": 1
+          }
+        ],
+        "test_names": [
+          {
+            "name": "test_default_matches_base",
+            "also_in": [
+              "tasks/CS-01/verifiers/independent_label/spec.json",
+              "tasks/CS-01/verifiers/independent_label/tests/test_strip_trailing_zero.py"
+            ],
+            "files": 2
+          },
+          {
+            "name": "test_positional_ordering_matches_base",
+            "also_in": [
+              "tasks/CS-04/verifiers/reference_check/spec.json",
+              "tasks/CS-04/verifiers/reference_check/tests/test_consecutive_groups_step.py",
+              "tasks/CS-04/candidates/CS-04-eval-nm-3.json"
+            ],
+            "files": 4
+          }
+        ]
+      },
+      "flagged": false,
+      "review": {
+        "independent": true,
+        "judgment": "not flagged",
+        "reasons": [
+          "labeler-writer audit: no hit, no exposure, no forbidden text in the prompt or the harness context",
+          "prompt: the labeler workflow's writer template for CS-04, byte for byte (its task text hashes to the frozen spec's prompt_sha256); it names the allowed inputs and, as prohibitions, forbidden locations, and holds no content of either; no later prompt",
+          "file tools: Write named only its own test file; it read everything with the shell",
+          "shell: cat of the reference contract; ls -R of the base snapshot and of the synthetic example; cat of the example's test and spec and of tc_sandbox.py; grep and sed of verifier.py; grep of base files (more.py, __init__.py, more.pyi, tests/test_more.py) after a cd into the snapshot; lint-tests on its tests directory; date",
+          "replaying its Write reproduces the frozen test file byte for byte",
+          "leads, not flags: its test name test_positional_ordering_matches_base is also a test of CS-04's reference check (and appears in a near-miss candidate's patch), and test_default_matches_base one of the CS-01 labeler, written at the same time; the bodies differ (the reference check's uses seeded generated inputs and helpers this labeler does not have); 8 of its lines also occur in forbidden files: the contract's two examples and the base docstring's example as assertions, the two imports of the base code it copied as an oracle, and the lines of those two names; it read none of those files, and the names follow from the requirement ids R-positional-ordering and R-default-unchanged",
+          "verdict: independent; nothing outside the allowed inputs was read"
+        ]
+      }
+    },
+    "L-revise-CS-03": {
+      "task_id": "CS-03",
+      "round": 2,
+      "transcript_sha256": "195972d133562f6e7d8672b59f92b60ba5e5055847ee819ba4cf525c806e04f8",
+      "tool_calls": {
+        "Bash": 9,
+        "Edit": 2,
+        "Read": 2,
+        "SubagentHandback": 1
+      },
+      "tool_calls_total": 14,
+      "denied_calls": 1,
+      "own_checks": [
+        "test_all_caps.py::test_all_caps_example",
+        "test_all_caps.py::test_all_caps_matches_base"
+      ],
+      "prompt": {
+        "sha256": "d95b594f7185ef79fd12a59d55194f1e1bde12c32ea372b8d1632d2723160456",
+        "chars": 2473,
+        "later_prompts": 0,
+        "forbidden_content": [],
+        "paths_named": [
+          {
+            "path": "/home/user/trace-contract/tasks/CS-03/verifiers",
+            "category": "outside",
+            "why": "the verifiers directory"
+          },
+          {
+            "path": "/home/user/trace-contract/tasks/CS-03/candidates",
+            "category": "forbidden",
+            "why": "a candidate"
+          },
+          {
+            "path": "/home/user/trace-contract/tasks/CS-03/labels",
+            "category": "forbidden",
+            "why": "a label"
+          },
+          {
+            "path": "/home/user/trace-contract/results",
+            "category": "forbidden",
+            "why": "verdicts (results/)"
+          },
+          {
+            "path": "/home/user/trace-contract/data",
+            "category": "outside",
+            "why": "outside the allowed inputs"
+          },
+          {
+            "path": "/home/user/trace-contract/docs",
+            "category": "doc",
+            "why": "documentation or paper text (judged by what it showed)"
+          },
+          {
+            "path": "/home/user/trace-contract/paper",
+            "category": "doc",
+            "why": "documentation or paper text (judged by what it showed)"
+          },
+          {
+            "path": "/home/user/trace-contract/experiments",
+            "category": "doc",
+            "why": "documentation or paper text (judged by what it showed)"
+          },
+          {
+            "path": "/home/user/.tc_sealed",
+            "category": "forbidden",
+            "why": "sealed material"
+          },
+          {
+            "path": "/home/user/ext",
+            "category": "forbidden",
+            "why": "third-party data"
+          },
+          {
+            "path": "<harness-home>",
+            "category": "forbidden",
+            "why": "a Claude session directory (the build session's records)"
+          },
+          {
+            "path": "/home/user/trace-contract",
+            "category": "outside",
+            "why": "outside the allowed inputs"
+          }
+        ],
+        "revision_input": {
+          "listed": [
+            "test_all_caps.py::test_all_caps_example",
+            "test_all_caps.py::test_all_caps_matches_base"
+          ],
+          "kinds": {
+            "test_all_caps.py::test_all_caps_example": "passes on unchanged base",
+            "test_all_caps.py::test_all_caps_matches_base": "passes on unchanged base"
+          },
+          "unknown_names": [],
+          "grading_text": [],
+          "more_than_names": true
+        },
+        "task_text_sha256": "acb4ff24f02bc85a62cf13941df3fa24d79c9c3d729a08235dc86dec6fc02184",
+        "frozen_spec_prompt_sha256": "2de11e3c9cd78d0c8545bd2120cbab438cb71e8aeab512699bfc386a89874dd2"
+      },
+      "accesses": {
+        "allowed": 13,
+        "forbidden": 1,
+        "own": 11,
+        "system": 1
+      },
+      "hits": [
+        {
+          "event_id": "<session>/L000032.00",
+          "ts": "2026-11-21T08:39:37.531Z",
+          "tool": "Bash",
+          "op": "search",
+          "path": "/home/user/trace-contract",
+          "category": "forbidden",
+          "why": "recursive search over forbidden material (a reference check)",
+          "text": "grep -rn \"lint-tests\\|lint_tests\" --include=*.py --include=*.toml --include=*.…",
+          "denied": true
+        }
+      ],
+      "exposures": [
+        {
+          "event_id": "<session>/L000029.00",
+          "ts": "2026-11-21T08:39:16.707Z",
+          "call": "<session>/L000025.00",
+          "tool": "Bash",
+          "path": "<session-dir>/tool-results/bxuj100sg.txt",
+          "why": "shown in a tool output: a Claude session directory (the build session's records)",
+          "text": "…large (38.1KB). Full output saved to: <session-dir>/tool-results/bxuj100sg.txt"
+        }
+      ],
+      "harness_context": {
+        "attachments": {
+          "deferred_tools_delta": 2,
+          "environment": 1,
+          "model": 1,
+          "skill_listing": 1,
+          "session_context": 1,
+          "date": 1,
+          "credential_org": 1,
+          "remote_session_change": 1,
+          "prompt_snapshot": 2,
+          "mcp_instructions_delta": 1,
+          "auto_mode": 1,
+          "total_tokens_reminder": 8,
+          "deferred_tools_record": 3,
+          "task_reminder": 1
+        },
+        "reminders": 1,
+        "forbidden_content": [],
+        "forbidden_paths_named": [
+          {
+            "path": "<scratchpad>",
+            "where": "environment",
+            "why": "a Claude session directory (the build session's records)",
+            "text": "<scratchpad>"
+          }
+        ]
+      },
+      "own_text_also_in_forbidden_material": {
+        "lines": [
+          {
+            "line": "assert r.value == expected",
+            "also_in": [
+              "tasks/CS-03/verifiers/reference_check/tests/test_humanize_unchanged.py",
+              "tasks/CS-03/verifiers/reference_check/tests/test_titleize_acronyms.py",
+              "tasks/CS-03/verifiers/reference_check/tests/test_titleize_all_caps.py"
+            ],
+            "files": 4
+          }
+        ],
+        "test_names": []
+      },
+      "flagged": true,
+      "review": {
+        "independent": true,
+        "judgment": "flagged; a search denied before it ran, a harness notice, and a prompt that carried the failure kind with each name",
+        "reasons": [
+          "labeler-writer audit: 1 hit, 1 exposure, and a revision prompt that carries more than names; read in the transcript",
+          "the hit: a shell command ended with grep -rn over the repository root (where every shell call starts), which would have searched forbidden material; the permission classifier denied the whole call before it ran, so nothing was read; the agent wrote that it would stop searching and read only the allowed files, did not retry, and reported the denied call in its hand-back",
+          "the exposure: a harness notice that the output of its cat of tc_sandbox.py and verifier.py was saved to a tool-results file of the session directory; the agent saw a 2 KB preview of tc_sandbox.py, never opened that file, and then read verifier.py with Read",
+          "the prompt: the labeler workflow's revision template for CS-03, byte for byte, filled with the lists that L-validate1-CS-03 returned (see revision_information_flow): the two failing check names, each prefixed with its kind, 'passes on unchanged base'; no message, value, traceback, count, note or reference material; the kind is more than the name",
+          "file tools: Read named only verifier.py and its own test file; Edit only its own test file",
+          "shell: ls -la of its tests directory; cat of the reference contract; ls -R of the synthetic example and of the base snapshot; cat of its four test files and of the example's test and spec; cat of tc_sandbox.py and verifier.py; cat of the base inflection/__init__.py; one python run with PYTHONPATH set to the repository's src/ that imported tracecontract.verifier and ran its lint and check discovery on its own tests directory (the package's code, as the CLI runs it; the output showed only the result for its directory); date",
+          "replaying its two edits on the round-1 file reproduces the frozen test_all_caps.py byte for byte",
+          "leads, not flags: 1 of its lines, a generic assertion, also occurs in the reference checks",
+          "verdict: no forbidden material was read; the revision was told the failure kind of each check as well as its name (a concern for CS-03, see verdicts)"
+        ]
+      }
+    }
+  },
+  "families": {
+    "CS-01": {
+      "transcripts": [
+        "L-write-CS-01"
+      ],
+      "flagged": []
+    },
+    "CS-02": {
+      "transcripts": [
+        "L-write-CS-02"
+      ],
+      "flagged": [
+        "L-write-CS-02"
+      ]
+    },
+    "CS-03": {
+      "transcripts": [
+        "L-write-CS-03",
+        "L-revise-CS-03"
+      ],
+      "flagged": [
+        "L-revise-CS-03"
+      ]
+    },
+    "CS-04": {
+      "transcripts": [
+        "L-write-CS-04"
+      ],
+      "flagged": []
+    }
+  },
+  "flagged": [
+    "L-write-CS-02",
+    "L-revise-CS-03"
+  ],
+  "not_audited": [],
+  "revision_information_flow": {
+    "revision": "L-revise-CS-03",
+    "validator": "L-validate1-CS-03, the configuration-A coordinator of round 1: its structured result",
+    "validator_returned": {
+      "failing_on_reference": [],
+      "uncovered_requirements": [],
+      "frozen": false,
+      "status": "needs_revision",
+      "change_checks_passing_on_noop": [
+        "test_all_caps.py::test_all_caps_example",
+        "test_all_caps.py::test_all_caps_matches_base"
+      ],
+      "notes": "not passed on; a long text with grading detail: per-check outcomes on CS-03-reference and CS-03-noop-dev, the outcomes of the three repeats, and the validator's view that R-all-caps-input (kind change, base behaviour for all-caps input) cannot fail on the no-op unless coupled to R-acronym; and the build and the generation record"
+    },
+    "launching_script": "the labeler workflow builds the list from the validator's three lists only, one line per item, prefixed 'fails on reference: ', 'passes on unchanged base: ' or 'uncovered requirement: '; it would pass the first 500 characters of the validator's notes only if all three lists were empty, which they were not",
+    "revision_prompt": "the workflow's revision template for CS-03 with that list, byte for byte; its task text sha256 is acb4ff24f02bc85a62cf13941df3fa24d79c9c3d729a08235dc86dec6fc02184 (the frozen spec records the writer's prompt_sha256 only)",
+    "listed": [
+      "passes on unchanged base: test_all_caps.py::test_all_caps_example",
+      "passes on unchanged base: test_all_caps.py::test_all_caps_matches_base"
+    ],
+    "told_beyond_the_names": [
+      "the failure kind of each check: it passed on the unchanged base (the no-op)",
+      "by the absence of other lines: no check failed on the reference and no requirement was uncovered"
+    ],
+    "not_told": "no message, assertion value, traceback, count, outcome of a repeat, coordinator's note or reference material; none of the validator's notes reached the reviser",
+    "only_names": false,
+    "assessment": "The revision saw more than the names of the failing checks: the failure kind of each, and by implication that nothing failed on the reference. That is information about the labeler's own checks on the base and the reference state, which §15.5 lets a writer obtain itself by running its tests there; it is not forbidden material. It did shape the revision: the reviser made both checks fail on the no-op by appending the mixed-case input 'NASA rocket launch' and mapping both to R-acronym as well, which the round-2 coordinator recorded as a caveat in status.json (per-requirement labels for R-all-caps-input from these checks are not reliable; whole-candidate verdicts are not affected)."
+  },
+  "chain_to_frozen_labelers": {
+    "prompts": "each writer's task text (the computed text, without the harness preamble and indent) is the labeler workflow's writer template for its family, byte for byte, and hashes to the prompt_sha256 of the frozen spec",
+    "tests": "replaying the transcripts' writes (Write, Edit and heredocs; for CS-03 round 1 and then the revision) reproduces every frozen file under tasks/<id>/verifiers/independent_label/tests/ byte for byte, and no transcript wrote anywhere else, so these five transcripts account for the four frozen labelers"
+  },
+  "manual_review": {
+    "rule": "Protocol §15.5 and decision log D55 (see rules), with the review conventions of the fresh audits (§16.2, §18.1): each hit, exposure and prompt finding is a lead, read in its transcript. A labeler whose writer or reviser read, listed or searched forbidden material, or was shown its text by a prompt or a tool output, is not independent for that family. A read outside the allowed inputs that showed no forbidden material, a harness notice naming a file the agent never opened, a token the parser took for a path, and a call the permission system denied before it ran do not make it so. The revision's prompt is checked against the names-only rule, and so is the information flow into it.",
+    "reviewed_at": "2026-11-21T11:38:39Z",
+    "flagged_by_script": [
+      "L-write-CS-02",
+      "L-revise-CS-03"
+    ],
+    "flags": [
+      {
+        "transcript": "L-write-CS-02",
+        "flag": "hit <session>/L000038.00: ls of tasks/CS-02/verifiers/independent_label/",
+        "judged": "false positive",
+        "reason": "the directory did not exist yet (created two calls later), the output shows no entry of it, and it holds only the labeler's tests and the coordinator's records, written after the writer finished"
+      },
+      {
+        "transcript": "L-revise-CS-03",
+        "flag": "hit <session>/L000032.00: grep -rn over the repository root",
+        "judged": "false positive: denied before it ran",
+        "reason": "the permission classifier denied the whole call before it ran, so nothing was read; the agent did not retry and reported it"
+      },
+      {
+        "transcript": "L-revise-CS-03",
+        "flag": "exposure <session>/L000029.00: a tool-results file of the session directory",
+        "judged": "false positive: a harness notice naming a file never opened",
+        "reason": "the notice says where the long output of its own cat of tc_sandbox.py and verifier.py was saved; the agent never opened that file"
+      },
+      {
+        "transcript": "L-revise-CS-03",
+        "flag": "revision prompt: a kind with each listed name",
+        "judged": "confirmed: more than names; not forbidden material",
+        "reason": "each of the two names came with 'passes on unchanged base', and the list's form implied that no check failed on the reference and no requirement was uncovered; this exceeds the names-only rule of §15.5 and D55 by the failure kind, an outcome of the labeler's own checks on the base, which §15.5 lets a writer establish itself by running its tests on the base"
+      }
+    ],
+    "judged_false_positive": [
+      {
+        "transcript": "L-write-CS-02",
+        "flag": "hit <session>/L000038.00: ls of tasks/CS-02/verifiers/independent_label/",
+        "reason": "the directory did not exist yet (created two calls later), the output shows no entry of it, and it holds only the labeler's tests and the coordinator's records, written after the writer finished"
+      },
+      {
+        "transcript": "L-revise-CS-03",
+        "flag": "hit <session>/L000032.00: grep -rn over the repository root",
+        "reason": "the permission classifier denied the whole call before it ran, so nothing was read; the agent did not retry and reported it"
+      },
+      {
+        "transcript": "L-revise-CS-03",
+        "flag": "exposure <session>/L000029.00: a tool-results file of the session directory",
+        "reason": "the notice says where the long output of its own cat of tc_sandbox.py and verifier.py was saved; the agent never opened that file"
+      }
+    ],
+    "confirmed": [
+      {
+        "transcript": "L-revise-CS-03",
+        "flag": "revision prompt: a kind with each listed name",
+        "reason": "each of the two names came with 'passes on unchanged base', and the list's form implied that no check failed on the reference and no requirement was uncovered; this exceeds the names-only rule of §15.5 and D55 by the failure kind, an outcome of the labeler's own checks on the base, which §15.5 lets a writer establish itself by running its tests on the base"
+      }
+    ],
+    "excluded_after_review": [],
+    "not_independent": [],
+    "note": "For labelers, excluded_after_review would list the transcripts whose writer read forbidden material, making the family's labeler not independent; it is empty. judged_false_positive lists the flags that, on reading, mark no read of forbidden material, each with its reason; confirmed lists the one flag that holds: the CS-03 revision was told more than names. 'flagged' above is the script's own list.",
+    "independent_sweep": "Beyond the flags, every tool call of the five transcripts (65 in all: 35 shell commands, 16 Read, 6 Write, 3 Edit and 5 hand-backs) and every tool output was read for this review, with each shell command's working directory and every absolute and relative path it names. No file tool named a path outside the allowed inputs and the agent's own tests directory; there was no Grep or Glob call and no tool other than the file tools, the shell and the hand-back. Every listing and search stayed in the base snapshot, the synthetic example or the agent's own tests directory, except the CS-02 listing and the denied search above. The writers never ran git, ran the CLI only as lint-tests on their own directory (the reviser not at all), and graded nothing; the only python runs located or imported their own test modules with the harness, or (the reviser) ran tracecontract.verifier's lint functions on its own directory. Apart from the harness notice, no output showed a path in forbidden material, a candidate id, or a line or test name of a forbidden file that the agent had not written itself first. The leads under own_text_also_in_forbidden_material were each compared with the forbidden file: they are code copied from the base snapshot as oracles (which the prompt asks for), the contract's and the base docstring's examples, generic assertion and import lines, and three test names that follow from requirement ids; no writer read the files they also occur in.",
+    "outside_scope": "Harness context that is not a tool input or output: each agent was given the workflow subagents' system prompt, an environment block naming the study repository as its working directory and the build session's scratch directory for temporary files, a reminder about the hand-back, tool and skill listings, and (all but L-write-CS-04) one reminder listing the build session's 24 task titles and descriptions. The script scanned all of it for the text of forbidden files and found none; read for this review, it mentions that verifiers, candidates, reference checks and labels exist, but holds none of their content. No agent used the scratch directory or a task tool."
+  },
+  "verdicts": {
+    "CS-01": {
+      "verdict": "independent",
+      "transcripts": [
+        "L-write-CS-01"
+      ],
+      "evidence": "the writer read only the reference contract, the base snapshot, the harness API, the lint rules and the synthetic example, and wrote only its tests directory; no flag; its prompt is the writer template; the frozen tests are its writes"
+    },
+    "CS-02": {
+      "verdict": "independent",
+      "transcripts": [
+        "L-write-CS-02"
+      ],
+      "evidence": "the writer read only the allowed inputs; its one flag, an ls of its own labeler directory before it existed, showed nothing; its prompt is the writer template; the frozen tests are its writes"
+    },
+    "CS-03": {
+      "verdict": "concerns",
+      "independent_of_forbidden_material": true,
+      "transcripts": [
+        "L-write-CS-03",
+        "L-revise-CS-03"
+      ],
+      "evidence": "neither the writer nor the reviser read forbidden material: the writer has no flag; the reviser's repository-wide search was denied before it ran and the file its harness notice names was never opened; both prompts are the workflow's templates; the frozen tests are the two runs' writes",
+      "concerns": [
+        "the revision was told more than the names of the failing checks: each name came with its failure kind ('passes on unchanged base'), and the list implied that nothing failed on the reference (§15.5 and D55 say names only); this is information about the labeler's own checks on the base, which §15.5 lets a writer obtain itself, not forbidden material, but it shaped the revision, whose per-requirement caveat for R-all-caps-input the round-2 coordinator recorded in status.json",
+        "the reviser tried one repository-wide recursive search outside its allowed inputs; it was denied before it ran and read nothing"
+      ]
+    },
+    "CS-04": {
+      "verdict": "independent",
+      "transcripts": [
+        "L-write-CS-04"
+      ],
+      "evidence": "the writer read only the allowed inputs; no flag; its prompt is the writer template; the frozen tests are its writes; its test name test_positional_ordering_matches_base coincides with one of the reference check, whose files it never read, and the bodies differ"
+    }
+  }
+}

@@ -1,10 +1,35 @@
-"""Stricter re-audit of the registered generator transcripts (decision log D44), and of fresh attempts (§16.2).
+"""Stricter re-audit of the registered generator transcripts (decision log D44), of fresh attempts (§16.2), and of the
+writers of the independent labelers (§15.5).
 
 Usage: python scripts/strict_reaudit.py --transcripts <dir> [--transcripts <dir> ...]
                                         [--extra <transcript.jsonl> ...] --scratch <dir> [--write]
                                         [--outputs <report.json>]
        python scripts/strict_reaudit.py --fresh <attempts.json> --transcripts <dir> [--transcripts <dir> ...]
                                         --report <report.json> [--scratch <dir>]
+       python scripts/strict_reaudit.py --labeler <task>=<transcript> [--labeler ...] [--revision <task>=<transcript> ...]
+                                        --report <report.json> [--transcripts <dir> ...] [--scratch <dir>]
+
+**Labeler writers** (``--labeler``, ``--revision``; protocol §15.5, decision log D55). Each ``<transcript>`` is the
+path of a writer's transcript, or its sha256, looked up among the ``agent-*.jsonl`` files under the ``--transcripts``
+directories; ``--labeler`` names a first-round writer, ``--revision`` the single revision of the same family. A
+writer may read only its family's reference contract, the base snapshot, the harness API (``tc_sandbox.py``), the
+lint rules (``verifier.py``) and the synthetic example of the test format, and may write only its own
+``verifiers/independent_label/tests/`` directory. :func:`audit_labeler_transcript` resolves every path of every tool
+input (file tools, Grep and Glob paths and patterns, every shell command with its ``cd``, variables, heredocs, inline
+code and relative paths, and the arguments of the study's CLI) and classifies it: its own directory, an allowed input,
+a system location, the container's ``/tmp``, forbidden material (the reference solution, reference checks, any other
+verifier, candidates, strata, labels, the mappings of generated verifiers, the controlled sessions' records under
+``data/controlled``, ``results/``, the sealed directory, third-party data, the old workspaces and every Claude session
+directory, and any recursive search or listing over them), documentation (judged by what it showed), or outside the
+allowed inputs. Every tool output is scanned for paths in forbidden material, for candidate ids, and for the text of
+forbidden files (:func:`labeler_index`: their distinctive lines and their test names), except text the agent wrote
+itself first. The prompt is an input too: it is scanned for the text of forbidden files, and a revision's prompt must
+carry nothing but the names of failing checks (:func:`revision_input`). The harness context (system prompt, reminders,
+environment) is scanned for forbidden text. A transcript with a hit, an exposure, forbidden text in its prompt or
+harness context, or a revision prompt that carries more than names is flagged; each flag is a lead for reading the
+transcript, not a finding. The report (``--report``) holds per transcript its label, family, round, sha256, tool calls
+by tool, hits and exposures, with session ids and session-local paths redacted. Where the Claude session directories
+are is set in one place, :data:`SESSION_ROOTS` (:class:`SessionRoots`).
 
 **Fresh attempts** (``--fresh``, protocol v0.8 §16.2). ``<attempts.json>`` holds the attempt
 records, a list (or ``{"attempts": [...]}``) of objects with ``attempt_id``, ``task_id``,
@@ -74,11 +99,14 @@ import re
 import shlex
 import sys
 from pathlib import Path
+from typing import NamedTuple
 
 from tracecontract.controlled import (
-    _VAR, _command_words, _shell_segments, audit_fresh_attempt_transcript, audit_generator_transcript_strict,
+    _EXCLUSION_ARG, _LITERAL_PATH, _VAR, _command_words, _scan_command, _shell_segments, _split_unquoted,
+    audit_fresh_attempt_transcript, audit_generator_transcript_strict,
 )
-from tracecontract.ingest.claude_code import _redact_emails
+from tracecontract.ingest.claude_code import _redact_emails, parse_claude_code_jsonl
+from tracecontract.schemas import EventKind, Population
 
 R = Path(__file__).resolve().parents[1]
 REPO, HOME = "/home/user/trace-contract", "/home/user"
@@ -341,17 +369,836 @@ def audit_fresh(records: list[dict], transcripts: list[Path], scratch: str | Non
     return _redact_output(out, scratch)
 
 
+# --------------------------------------------------------------------------- labeler writers (protocol §15.5, D55)
+
+LABELER_PROFILE = (
+    "labeler writer (protocol §15.5, decision log D55): a writer may read only its family's reference contract, the base "
+    "snapshot, the harness API (tc_sandbox.py), the lint rules (verifier.py) and the synthetic example of the test format, "
+    "and may write only its own tests directory; every tool input and every tool output is scanned, and so are the prompt "
+    "and the harness context; a revision may be told only the names of the failing checks")
+_LABELER_SYSTEM = ("/usr", "/bin", "/sbin", "/lib", "/lib32", "/lib64", "/libx32", "/etc", "/dev", "/proc", "/sys", "/opt",
+                   "/root/.local/bin")
+_GENERATED = ("reference_check", "repo_tests", "initial_plain", "full_plain", "llm_freeform", "initial_audited", "full_audited")
+_AREAS = {"candidates": "a candidate", "strata": "a stratum candidate", "labels": "a label"}
+_SESSION_WHY = "a Claude session directory (the build session's records)"
+_EDIT_TOOLS = {"Write", "Edit", "MultiEdit", "NotebookEdit"}
+_HANDBACK = {"SubagentHandback", "StructuredOutput"}  # the agent's final report: scanned for what it names, not an access
+_FLAGGED_CATEGORIES = ("forbidden", "doc", "outside")
+# A token that the shell parsers take for a path but is an option value, a sed range or a redirection operator.
+_NOT_A_PATH = re.compile(r"[-+]?\d[\d,.:]*[A-Za-z]?|\d?[<>&|;()]+\d?")
+_LINE_PREFIX = re.compile(r"^\s*\d+\t|^[\w./-]+:\d+[:-]|^\d+[:-]")  # Read's line numbers, grep -n's prefixes
+_TEST_NAME = re.compile(r"(?<![\w-])test_\w+")
+_CHECK_NAME = re.compile(r"[\w./-]+\.py::\w+(?:::\w+)?")
+_LISTED = re.compile(r"(?:(?P<kind>[A-Za-z][\w ]*?):\s+)?(?P<name>[\w./-]+\.py::\w+(?:::\w+)?|R-[\w.-]+)")
+_FRESH_ID = re.compile(r"(?<![\w-])CS-\d\d-fresh-[AB]-(?:u1|final)-\d+\b")
+# What grading output looks like, beyond the names of checks: messages, tracebacks, outcomes and counts.
+_GRADING = re.compile(r"Traceback|\b\w+Error\b|\bassert\b|\bPASSED\b|\bFAILED\b|\btask_failure\b|\brepeats?\b|\boutcome\b|"
+                      r"\bstdout\b|\bstderr\b|\bnotes\b|\b\d+ (?:checks? )?(?:passed|failed)\b")
+_HEREDOC_FILE = re.compile(r"(?:cat|tee)\s*>{1,2}\s*['\"]?(\S+?)['\"]?\s*<<-?\s*['\"]?(\w+)['\"]?[^\n]*\n(.*?)\n\2(?:\n|$)", re.S)
+_UUID = r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
+
+
+class SessionRoots(NamedTuple):
+    """Where the Claude Code harness keeps the build session's own files. For the labeler profile every path there is a
+    Claude session directory (forbidden, and so is a listing or search over one), and the report redacts them. The
+    defaults are the harness's real locations; the tests point :data:`SESSION_ROOTS` at synthetic ones.
+
+    ``records`` is the directory of the agents' records, with one directory per session,
+    ``<records>/projects/<project>/<session id>`` (redacted as ``<session-dir>``), where the harness also saves the tool
+    outputs too long to show (its "Full output saved to: ..." notices name them). ``tmp`` begins the name of each user's
+    temporary directory, ``<tmp><uid>``, with one directory per session, ``<tmp><uid>/<project>/<session id>`` (redacted
+    as ``<session-tmp>``), which holds the session's scratch directory, ``scratchpad`` (redacted as ``<scratchpad>``); a
+    path that holds ``tmp`` anywhere is a session directory. ``uid`` is the user the sessions ran as, whose temporary
+    directory a listing of its parent shows.
+    """
+
+    records: str = "/root/.claude"
+    tmp: str = "/tmp/claude-"
+    uid: str = "0"
+
+    def session_dir(self) -> re.Pattern:
+        """One session's directory of records."""
+        return re.compile(re.escape(self.records) + r"/projects/[^/\s\"']+/" + _UUID)
+
+    def session_tmp(self) -> re.Pattern:
+        """One session's temporary directory, of any user."""
+        return re.compile(re.escape(self.tmp) + r"\d+/[^/\s\"']+/" + _UUID)
+
+    def scratch(self) -> re.Pattern:
+        """One session's scratch directory."""
+        return re.compile(self.session_tmp().pattern + "/scratchpad")
+
+
+SESSION_ROOTS = SessionRoots()
+
+
+def _inside(p: str, root: str) -> bool:
+    return p == root or p.startswith(root.rstrip("/") + "/")
+
+
+def labeler_allowed(task: str, repo: str = REPO) -> tuple[tuple[str, str], ...]:
+    """The inputs a labeler writer of ``task`` may read (protocol §15.5, D55), each with what it is."""
+    return ((f"{repo}/tasks/{task}/contracts/reference.json", "the reference contract"),
+            (f"{repo}/snapshots/{task}", "the base snapshot"),
+            (f"{repo}/src/tracecontract/sandbox/harness/tc_sandbox.py", "the harness API"),
+            (f"{repo}/src/tracecontract/verifier.py", "the lint rules"),
+            (f"{repo}/tests/fixtures/harbor_fx01/tasks/FX-01/verifiers/v1", "the synthetic example of the test format"))
+
+
+def labeler_own(task: str, repo: str = REPO) -> str:
+    """The one directory a labeler writer of ``task`` may write (and read back)."""
+    return f"{repo}/tasks/{task}/verifiers/independent_label/tests"
+
+
+def _labeler_direct(p: str, task: str, repo: str, home: str, extra: tuple[str, ...]) -> tuple[str, str]:
+    """(category, why) of the path ``p`` itself; see :func:`labeler_classify`."""
+    if SESSION_ROOTS.tmp in p or _inside(p, SESSION_ROOTS.records) or any(_inside(p, x) for x in extra):
+        return "forbidden", _SESSION_WHY
+    if any(m in p for m in ("scratchpad/sealed", "scratchpad/scenarios", "scratchpad/reference")):
+        return "forbidden", "sealed material"
+    if _inside(p, labeler_own(task, repo)):
+        return "own", "its own tests directory"
+    for root, why in labeler_allowed(task, repo):
+        if _inside(p, root):
+            return "allowed", why
+    if _inside(p, repo):
+        parts = os.path.relpath(p, repo).split("/")
+        if parts[0] == "tasks" and len(parts) >= 3:
+            fam, area = parts[1], parts[2]
+            other = "" if fam == task else " of another family"
+            if area == "candidates" and len(parts) > 3 and parts[3] == f"{fam}-reference.json":
+                return "forbidden", "the reference solution (the reference candidate and its patch)" + other
+            if area == "verifiers" and len(parts) > 3:
+                if parts[3] == "reference_check":
+                    return "forbidden", "a reference check" + other
+                if parts[3] == "independent_label" and fam == task:
+                    if parts[4:5] == ["status.json"]:
+                        return "forbidden", "the coordinator's grading status of the labeler"
+                    return "outside", "the coordinator's record of the labeler (its spec)"
+                return "forbidden", "a generated verifier" + other
+            if area in _AREAS:
+                return "forbidden", _AREAS[area] + other
+            if area == "contracts" and len(parts) > 3 and parts[3].startswith("mapping"):
+                return "forbidden", "a mapping of a generated verifier's checks" + other
+            if area == "contracts":
+                return "outside", ("the contracts directory" if len(parts) == 3 else "another contract") + other
+            if area == "verifiers":
+                return "outside", "the verifiers directory" + other
+            return "outside", "task metadata (it lists the verifiers and candidates)" + other
+        if parts[:2] == ["data", "controlled"]:
+            return "forbidden", "the controlled sessions' records (their transcripts hold the reference edits)"
+        if parts[0] == "results":
+            return "forbidden", "verdicts (results/)"
+        if parts[0] == "snapshots" and len(parts) > 1:
+            return "outside", "another family's base snapshot"
+        if parts[0] in ("docs", "paper", "experiments") or parts in (["README.md"], ["STATUS.md"]):
+            return "doc", "documentation or paper text (judged by what it showed)"
+        if parts[0] == ".venv":
+            return "system", "the study's virtual environment (interpreter and CLI)"
+        return "outside", "outside the allowed inputs"
+    if _inside(p, f"{home}/.tc_sealed"):
+        return "forbidden", "sealed material"
+    if _inside(p, f"{home}/ext"):
+        return "forbidden", "third-party data"
+    if any(_inside(p, f"{home}/{d}") for d in ("cs_workspaces", "gen_workspaces", "fresh_ws")):
+        return "forbidden", "a workspace of the controlled sessions, the generators or the fresh attempts"
+    if any(_inside(p, s) for s in _LABELER_SYSTEM):
+        return "system", "a system location"
+    if _inside(p, "/tmp"):
+        return "tmp", "the container's temporary directory"
+    return "outside", "outside the allowed inputs"
+
+
+def _labeler_anchors(task: str, families: tuple[str, ...], repo: str, home: str, extra: tuple[str, ...]) -> list:
+    """Forbidden roots, for deciding whether a recursive search or a listing covers forbidden material."""
+    out = []
+    for f in dict.fromkeys((task, *families)):
+        o = "" if f == task else " of another family"
+        out += [(f"{repo}/tasks/{f}/verifiers/{v}", ("a reference check" if v == "reference_check" else "a generated verifier") + o)
+                for v in _GENERATED]
+        out.append((f"{repo}/tasks/{f}/verifiers/independent_label/status.json", "the coordinator's grading status of the labeler")
+                   if f == task else (f"{repo}/tasks/{f}/verifiers/independent_label", "a generated verifier" + o))
+        out += [(f"{repo}/tasks/{f}/{a}", why + o) for a, why in _AREAS.items()]
+        out.append((f"{repo}/tasks/{f}/contracts/mapping_full_session.json", "a mapping of a generated verifier's checks" + o))
+    out += [(f"{repo}/data/controlled", "the controlled sessions' records"), (f"{repo}/results", "verdicts (results/)"),
+            (f"{home}/.tc_sealed", "sealed material"), (f"{home}/ext", "third-party data"),
+            *[(f"{home}/{d}", "a workspace of the controlled sessions, the generators or the fresh attempts")
+              for d in ("cs_workspaces", "gen_workspaces", "fresh_ws")],
+            (SESSION_ROOTS.records, _SESSION_WHY), (SESSION_ROOTS.tmp + SESSION_ROOTS.uid, _SESSION_WHY),
+            *[(x, _SESSION_WHY) for x in extra]]
+    return out
+
+
+def labeler_classify(p: str, task: str, *, op: str = "read", families: tuple[str, ...] = (), repo: str = REPO,
+                     home: str = HOME, extra_forbidden: tuple[str, ...] = (), pruned: tuple[str, ...] = ()) -> tuple[str, str]:
+    """``(category, why)`` of one resolved path that a labeler writer of ``task`` reads, lists, searches, runs or writes.
+
+    Categories: ``own`` (its tests directory), ``allowed`` (:func:`labeler_allowed`), ``system`` (system locations, the
+    study's virtual environment), ``tmp`` (the container's temporary directory, outside the Claude session directories),
+    ``forbidden`` (the reference solution, a reference check, any other verifier, the coordinator's grading status of the
+    labeler, candidates, strata, labels, the mappings of generated verifiers, ``data/controlled``, ``results/``, sealed
+    material, third-party data, the old workspaces and every Claude session directory), ``doc`` (``docs/``, ``paper/``,
+    ``experiments/``, ``README.md``, ``STATUS.md``: judged by what the read showed) and ``outside`` (everything else). A
+    search (``op="search"``) or a listing (``op="list"``) whose root holds forbidden material that it does not prune is
+    forbidden too.
+    """
+    extra = tuple(os.path.normpath(x) for x in extra_forbidden)
+    cat, why = _labeler_direct(p, task, repo, home, extra)
+    if op in ("search", "list") and cat != "forbidden":
+        held = [w for a, w in _labeler_anchors(task, families, repo, home, extra)
+                if _inside(a, p) and a != p and not any(_inside(a, x) for x in pruned)]
+        if held:
+            lead = "recursive search over forbidden material" if op == "search" else "a listing of a directory that holds forbidden material"
+            return "forbidden", f"{lead} ({held[0]})"
+    return cat, why
+
+
+def _segments_cwd(cmd: str, start: str):
+    """``(segment, words, cwd)`` for each segment of a shell command, following ``cd`` (inside ``( ... )`` until its end)."""
+    cwd, env, stack = start, {}, []
+    for seg in _shell_segments(cmd):
+        raw = seg.strip()
+        if raw.startswith("("):
+            stack.append(cwd)
+        words = _command_words(raw, env)
+        if words and os.path.basename(words[0]) == "cd" and len(words) > 1 and "$" not in words[1]:
+            cwd = _norm(words[1], cwd)
+        yield raw, words, cwd
+        if raw.endswith(")") and stack:
+            cwd = stack.pop()
+
+
+def _labeler_shell(cmd: str, starts: list[str], candidate: re.Pattern) -> tuple[list, list, list, list]:
+    """The accesses of one shell command: ``(ops, unresolved, bases, ends)``.
+
+    ``ops`` holds ``(op, path, text, pruned)`` (``op``: read, search, list, exec or write), from both shell parsers of
+    the strict audit (:func:`_ops` and ``controlled._scan_command``), started in each directory of ``starts``; the
+    study's CLI may read anything under a path it is given (a search). ``unresolved`` holds the recursive searches
+    rooted at a variable, ``bases`` the directories the command may run in (its starts and every ``cd`` target), and
+    ``ends`` those it may end in. Tokens that are option values, sed ranges, redirection operators, inline code, or the
+    script of a sed or awk call are not taken for paths. A CLI call other than ``lint-tests`` and a candidate id given
+    to the CLI are returned as ops ``cli`` and ``candidate``.
+    """
+    ops, unresolved, bases, ends, scripts = [], [], list(starts), [], set()
+    for s in starts:
+        for raw, words, cwd in _segments_cwd(cmd, s):
+            bases.append(cwd)
+            name = os.path.basename(words[0]) if words else ""
+            args = [w for w in words[1:] if not w.startswith("-")]
+            if name in ("sed", "awk", "gawk") and args:
+                scripts.add(_norm(args[0], cwd))
+            if name == "tracecontract":
+                if words[1:2] != ["lint-tests"]:
+                    ops.append(("cli", " ".join(words[:2]), raw[:300], ()))
+                for w in words[2:]:
+                    if candidate.fullmatch(w):
+                        ops.append(("candidate", w, raw[:300], ()))
+                    elif not w.startswith("-") and "/" in w and "$" not in w:
+                        ops.append(("search", _norm(w, cwd), raw[:300], ()))  # it may read anything under it
+        cds = set()
+        for op, p, seg in _ops(cmd, s):
+            if op == "cd":
+                cds.add(p)
+            else:
+                ops.append((op, p, seg.strip()[:300], ()))
+        checks, unres, end = _scan_command(cmd, s, _norm)
+        ops += [("search" if rec else "read", p, text, pruned) for p, rec, text, pruned in checks if rec or p not in cds]
+        unresolved += unres
+        ends.append(end)
+    noise = lambda p: (p in scripts or bool(_NOT_A_PATH.fullmatch(os.path.basename(p)))  # noqa: E731
+                       or any(c in p for c in "\n\t '\"()<>|;&"))
+    kept, seen = [], set()
+    listed = {p for op, p, _, _ in ops if op in ("list", "search")}
+    for op, p, text, pruned in ops:
+        if op in ("cli", "candidate") or not (noise(p) or (op == "read" and p in listed)):
+            if (op, p) not in seen:
+                seen.add((op, p))
+                kept.append((op, p, text, pruned))
+    return kept, list(dict.fromkeys(unresolved)), list(dict.fromkeys(bases)), list(dict.fromkeys(ends))
+
+
+def _norm_line(line: str) -> str:
+    """A line as the content scans compare it: stripped, without a diff marker, Read's line number or grep's prefix."""
+    s = _LINE_PREFIX.sub("", line, count=1).strip()
+    if s[:1] in ("+", "-") and not s.startswith(("+++", "---")):
+        s = s[1:].strip()
+    return s
+
+
+def _distinctive(s: str) -> bool:
+    """A line long enough to identify its file: 24 characters with a word of three letters, and more than one token
+    (a bare path or id is left to the path and id rules)."""
+    return len(s) >= 24 and re.search(r"[A-Za-z]{3}", s) is not None and re.search(r"[\s()=:,\[\]{}]", s) is not None
+
+
+def _json_strings(x):
+    if isinstance(x, str):
+        yield x
+    elif isinstance(x, list):
+        for v in x:
+            yield from _json_strings(v)
+    elif isinstance(x, dict):
+        for v in x.values():
+            yield from _json_strings(v)
+
+
+def _text_of(p: Path) -> str | None:
+    try:
+        return p.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError):
+        return None
+
+
+def _lines_of(p: Path) -> set[str]:
+    """The normalised lines of a file, and, for JSON, those of every string in it (candidate patches, labels)."""
+    raw = _text_of(p)
+    if raw is None:
+        return set()
+    texts = [raw]
+    if p.suffix in (".json", ".jsonl"):
+        for chunk in (raw.splitlines() if p.suffix == ".jsonl" else [raw]):
+            try:
+                texts += list(_json_strings(json.loads(chunk))) if chunk.strip() else []
+            except ValueError:
+                pass
+    return {_norm_line(x) for t in texts for x in t.splitlines()}
+
+
+def labeler_index(root: Path, families: tuple[str, ...] | None = None) -> dict:
+    """Fingerprints of the forbidden material in the checkout at ``root``, for the content scans of the labeler profile.
+
+    * ``lines``: the distinctive lines (at least 24 characters, with a word of three letters, compared as
+      :func:`_norm_line` normalises them) of the forbidden files, each with the repository-relative files that hold it,
+      except lines that also occur in an allowed input of any family (the reference contracts, the base snapshots, the
+      harness API, the lint rules and the synthetic example);
+    * ``names``: the test functions defined in forbidden verifiers, except names that occur in an allowed input;
+    * ``candidates``: the candidate ids, except those that occur in an allowed input (a contract id equals the id of the
+      reference candidate);
+    * ``allowed_lines``: the normalised lines of the allowed inputs (a path in such a line of a tool output is part of
+      an allowed input, not an exposure).
+
+    Forbidden files: every verifier directory of every family (the labelers' tests included: one family's labeler is
+    forbidden for another, and a writer's own lines are told apart when the transcript is scanned), the candidates, the
+    labels, the mappings of the contracts, and ``data/controlled``. ``results/`` and the strata are covered by the path
+    rules only.
+    """
+    root = Path(root)
+    fams = families if families is not None else tuple(sorted(p.parent.name for p in root.glob("tasks/*/task.json")))
+    allowed_files: list[Path] = []
+    for f in fams:
+        allowed_files += [root / "tasks" / f / "contracts" / "reference.json"]
+        allowed_files += [p for p in (root / "snapshots" / f).rglob("*") if p.is_file()]
+    allowed_files += [root / "src/tracecontract/sandbox/harness/tc_sandbox.py", root / "src/tracecontract/verifier.py"]
+    allowed_files += [p for p in (root / "tests/fixtures/harbor_fx01/tasks/FX-01/verifiers/v1").rglob("*") if p.is_file()]
+    allowed_lines: set[str] = set()
+    allowed_text: list[str] = []
+    for p in allowed_files:
+        if p.is_file():
+            allowed_lines |= _lines_of(p)
+            allowed_text.append(_text_of(p) or "")
+    allowed_blob = "\n".join(allowed_text)
+    allowed_names = set(_TEST_NAME.findall(allowed_blob))
+    forbidden_files: list[Path] = []
+    for f in fams:
+        t = root / "tasks" / f
+        forbidden_files += [p for p in (t / "verifiers").rglob("*") if p.is_file() and "__pycache__" not in p.parts]
+        forbidden_files += [p for d in ("candidates", "labels") for p in (t / d).rglob("*") if p.is_file()]
+        forbidden_files += sorted((t / "contracts").glob("mapping*.json"))
+    forbidden_files += [p for p in (root / "data" / "controlled").rglob("*") if p.is_file()]
+    lines: dict[str, list[str]] = {}
+    names: dict[str, list[str]] = {}
+    for p in forbidden_files:
+        rel = p.relative_to(root).as_posix()
+        for s in _lines_of(p):
+            if _distinctive(s) and s not in allowed_lines:
+                lines.setdefault(s, []).append(rel)
+        raw = _text_of(p) or ""
+        found = re.findall(r"def (test_\w+)", raw) if p.suffix == ".py" else [m.split("::")[-1] for m in _CHECK_NAME.findall(raw)]
+        for n in found:
+            if n not in allowed_names:
+                names.setdefault(n, []).append(rel)
+    cands = sorted({p.stem for f in fams for p in (root / "tasks" / f / "candidates").glob("*.json")})
+    cands = [c for c in cands if not re.search(rf"(?<![\w-]){re.escape(c)}(?![\w-])", allowed_blob)]
+    return {"families": list(fams), "lines": {k: sorted(set(v)) for k, v in lines.items()},
+            "names": {k: sorted(set(v)) for k, v in names.items()}, "candidates": cands,
+            "files": len(forbidden_files), "allowed_lines": allowed_lines}
+
+
+def _sources(srcs: list[str], task: str, names: bool = False) -> list[str]:
+    """The forbidden files among ``srcs`` (repository-relative) for a writer of ``task``, most relevant first: its family
+    before others, then reference checks, other verifiers, candidates, labels and the controlled sessions' records. The
+    writer's own tests are not forbidden, and for test names neither is the coordinator's spec of its labeler, which
+    lists them."""
+    own = f"tasks/{task}/verifiers/independent_label/" + ("" if names else "tests/")
+    rank = lambda x: (not x.startswith(f"tasks/{task}/"), next((i for i, k in enumerate(  # noqa: E731
+        ("/verifiers/reference_check/", "/verifiers/", "/candidates/", "/labels/", "data/controlled/")) if k in x), 5), x)
+    return sorted((x for x in srcs if not x.startswith(own)), key=rank)
+
+
+def _candidate_re(index: dict) -> re.Pattern:
+    ids = sorted(index.get("candidates", []), key=len, reverse=True)
+    alts = "|".join(map(re.escape, ids))
+    return re.compile(rf"(?<![\w-])(?:{alts})(?![\w-])|{_FRESH_ID.pattern}" if alts else _FRESH_ID.pattern)
+
+
+def _content_findings(text: str, index: dict, own_lines: set[str], own_names: set[str], task: str,
+                      cand: re.Pattern) -> list[tuple[str, str, int]]:
+    """Forbidden text in ``text``: ``(what, why, offset)`` for each distinctive line of a forbidden file, test name of a
+    forbidden verifier and candidate id it holds, except what the agent's own text (``own_lines``, ``own_names``) or the
+    own tests directory of ``task`` also holds."""
+    what = lambda rel: _labeler_direct(f"{REPO}/{rel}", task, REPO, HOME, ())[1]  # noqa: E731
+    out, seen, pos = [], set(), 0
+    for line in text.splitlines(keepends=True):
+        s = _norm_line(line)
+        srcs = _sources(index["lines"].get(s, []), task) if s not in own_lines else []
+        if srcs and srcs[0] not in seen:
+            seen.add(srcs[0])
+            out.append((srcs[0], "text of " + what(srcs[0]), pos))
+        pos += len(line)
+    for m in _TEST_NAME.finditer(text):
+        n = m.group(0)
+        srcs = _sources(index["names"].get(n, []), task, names=True)
+        if srcs and n not in own_names and n not in seen:
+            seen.add(n)
+            out.append((n, f"the name of a test in {what(srcs[0])} ({srcs[0]})", m.start()))
+    for m in cand.finditer(text):
+        if m.group(0) not in own_names and m.group(0) not in seen:
+            seen.add(m.group(0))
+            out.append((m.group(0), "a candidate id", m.start()))
+    return out
+
+
+def _excerpt(text: str, at: int, width: int = 150) -> str:
+    """The line of ``text`` that holds offset ``at``, cut to ``width`` characters on either side of it."""
+    a = max(text.rfind("\n", 0, at) + 1, at - width)
+    b = text.find("\n", at)
+    return text[a:min(len(text) if b < 0 else b, at + width)]
+
+
+def _own_text(ti: dict) -> str:
+    """Every string of a tool input: what the agent wrote itself."""
+    return "\n".join(_json_strings(ti))
+
+
+def _written_checks(path: Path, own: str) -> set[str]:
+    """The check ids (``file.py::test_x``) of the test files that a transcript wrote into its tests directory ``own``."""
+    found: set[str] = set()
+
+    def add(target: str, body: str) -> None:
+        p = _norm(target, REPO)
+        if _inside(p, own) and p.endswith(".py"):
+            found.update(f"{os.path.relpath(p, own)}::{n}" for n in re.findall(r"^\s*def (test_\w+)", body, re.M))
+
+    for _, _, tool, ti in _tool_calls(path):
+        if tool == "Write":
+            add(str(ti.get("file_path", "")), str(ti.get("content", "")))
+        elif tool == "Edit":
+            add(str(ti.get("file_path", "")), str(ti.get("new_string", "")))
+        elif tool == "MultiEdit":
+            add(str(ti.get("file_path", "")), "\n".join(str(e.get("new_string", "")) for e in ti.get("edits") or []))
+        elif tool == "Bash" and isinstance(ti.get("command"), str):
+            for m in _HEREDOC_FILE.finditer(ti["command"]):
+                add(m.group(1), m.group(3))
+    return found
+
+
+def revision_input(prompt: str, writer_prompt: str, *, checks: set[str] | None, requirements: set[str]) -> dict:
+    """What a revision's prompt told the reviser beyond the writer's own prompt (protocol §15.5: names of failing checks only).
+
+    The lines of ``prompt`` that the writer's prompt does not hold are split into listed items (``[<kind>: ]<check id or
+    requirement id>``, one per line) and instruction lines. ``more_than_names`` is set when an item carries a kind (what
+    the check failed on), names a check that is not among ``checks`` (the writer's own, when known) or a requirement that
+    is not in the contract, or when an instruction line holds grading text (a check name, a candidate id, a message, a
+    traceback, an outcome, a count of passing or failing checks, or the coordinator's notes).
+    """
+    known = {x.strip() for x in writer_prompt.splitlines()}
+    items, kinds, unknown, grading = [], {}, [], []
+    for line in prompt.splitlines():
+        s = line.strip()
+        if not s or s in known:
+            continue
+        m = _LISTED.fullmatch(s)
+        if m:
+            name = m.group("name")
+            items.append(name)
+            if m.group("kind"):
+                kinds[name] = m.group("kind")
+            if (name.startswith("R-") and name not in requirements) or (not name.startswith("R-") and checks is not None
+                                                                         and name not in checks):
+                unknown.append(name)
+            continue
+        hits = [x.group(0) for x in _GRADING.finditer(s)] + _CHECK_NAME.findall(s) + _TEST_NAME.findall(s)
+        hits += _FRESH_ID.findall(s) + re.findall(r"(?<![\w-])CS-\d\d-(?:reference|noop-\w+|eval-[\w-]+|pre-correction)\b", s)
+        if hits:
+            grading.append({"line": s[:300], "matched": sorted(set(hits))})
+    return {"listed": items, "kinds": kinds, "unknown_names": unknown, "grading_text": grading,
+            "more_than_names": bool(kinds or unknown or grading)}
+
+
+def _user_texts(rows: list[dict]) -> tuple[list[str], list[str]]:
+    """``(prompts, reminders)``: the user-role texts that are not tool results, apart from harness reminders."""
+    prompts, reminders = [], []
+    for e in rows:
+        if e.get("type") != "user":
+            continue
+        c = e.get("message", {}).get("content")
+        blocks = [c] if isinstance(c, str) else [x.get("text", "") for x in c or [] if isinstance(x, dict) and x.get("type") == "text"]
+        for b in blocks:
+            (reminders if b.lstrip().startswith("<system-reminder>") else prompts).append(b)
+    return prompts, reminders
+
+
+def audit_labeler_transcript(path: Path, *, task: str, index: dict, round_no: int = 1, writer: Path | None = None,
+                             families: tuple[str, ...] = (), requirements: set[str] | None = None, repo: str = REPO,
+                             home: str = HOME, extra_forbidden: tuple[str, ...] = ()) -> dict:
+    """The labeler-writer profile of the strict audit for one transcript (protocol §15.5, D55; see the module docstring).
+
+    ``index`` is :func:`labeler_index` of the checkout. ``writer`` is, for a revision (``round_no`` 2), the transcript of
+    the same family's first round: its tool inputs count as the reviser's own text, the check ids it wrote are the names
+    the revision may be told, and its prompt is the baseline of :func:`revision_input`. The result holds the tool calls
+    by tool, the prompt check, the hits in tool inputs (every access that is forbidden, documentation or outside the
+    allowed inputs, reads and listings of ``/tmp`` other than of files the agent wrote there, writes outside the agent's
+    own directory, CLI calls other than ``lint-tests``, searches rooted at an unresolved variable, tools other than the
+    file tools and the shell, and forbidden material, documentation or a candidate id named anywhere in a tool input or
+    in the final report), the exposures in tool outputs, the harness context, the counts of accesses by category, and,
+    as leads for the review, the agent's own text that also occurs in forbidden material.
+    """
+    rows = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    prompts, reminders = _user_texts(rows)
+    prompt = prompts[0] if prompts else ""
+    cand = _candidate_re(index)
+    cls = lambda p, op="read", pruned=(): labeler_classify(p, task, op=op, families=families, repo=repo, home=home,  # noqa: E731
+                                                           extra_forbidden=extra_forbidden, pruned=pruned)
+    own_lines: set[str] = set()
+    own_names: set[str] = set()
+
+    def own_add(text: str) -> None:
+        own_lines.update(_norm_line(x) for x in text.splitlines())
+        own_names.update(_TEST_NAME.findall(text))
+
+    writer_prompt, checks = "", None
+    if writer is not None:
+        wrows = [json.loads(line) for line in writer.read_text(encoding="utf-8").splitlines() if line.strip()]
+        writer_prompt = (_user_texts(wrows)[0] or [""])[0]
+        checks = _written_checks(writer, labeler_own(task, repo))
+        for _, _, _, ti in _tool_calls(writer):
+            own_add(_own_text(ti))
+        own_names.update(c.split("::")[-1] for c in checks)
+    # The prompt: forbidden text in it, the paths it names, and for a revision what it told beyond names.
+    findings = _content_findings("\n".join(prompts), index, set(), own_names, task, cand)
+    named = []
+    for m in _LITERAL_PATH.finditer("\n".join(prompts)):
+        tok = m.group(0).rstrip(".,:;")
+        p = _norm(tok, repo)
+        c, why = cls(p)
+        if c in _FLAGGED_CATEGORIES and not any(x["path"] == p for x in named):
+            named.append({"path": p, "category": c, "why": why})
+    prompt_block: dict = {"sha256": hashlib.sha256(prompt.encode("utf-8")).hexdigest(), "chars": len(prompt),
+                          "later_prompts": len(prompts) - 1, "forbidden_content": [
+                              {"what": w, "why": "in the prompt: " + why, "text": _excerpt("\n".join(prompts), at)}
+                              for w, why, at in findings],
+                          "paths_named": named}
+    if round_no > 1:
+        prompt_block["revision_input"] = revision_input(prompt, writer_prompt, checks=checks, requirements=requirements or set())
+    for t in prompts:
+        own_add(t)
+    # The harness context: the system prompt, reminders, environment and other attachments the agent was given.
+    harness: dict = {"attachments": {}, "reminders": len(reminders), "forbidden_content": [], "forbidden_paths_named": []}
+    ctx: list[tuple[str, str]] = [("reminder", r) for r in reminders]
+    for e in rows:
+        if e.get("type") == "attachment":
+            kind = str((e.get("attachment") or {}).get("type"))
+            harness["attachments"][kind] = harness["attachments"].get(kind, 0) + 1
+            ctx += [(kind, s) for s in _json_strings(e.get("attachment"))]
+    for kind, s in ctx:
+        for w, why, at in _content_findings(s, index, own_lines, own_names, task, cand):
+            harness["forbidden_content"].append({"what": w, "why": f"in the harness context ({kind}): {why}", "text": _excerpt(s, at)})
+        for m in _LITERAL_PATH.finditer(s):
+            p = _norm(m.group(0).rstrip(".,:;"), repo)
+            c, why = cls(p) if m.group(0).startswith(("/", "~")) else ("", "")
+            if c == "forbidden" and not any(x["path"] == p for x in harness["forbidden_paths_named"]):
+                harness["forbidden_paths_named"].append({"path": p, "where": kind, "why": why, "text": _excerpt(s, m.start())})
+    # Tool inputs, in order; each tool result is scanned when it comes, against the agent's own text up to then.
+    s = parse_claude_code_jsonl(path, population=Population.controlled, source="audit", include_sidechains=True)
+    results = {ev.tool_call_id: ev for ev in s.events if ev.kind == EventKind.tool_result}
+    counts: dict[str, int] = {}
+    accesses: dict[str, int] = {}
+    hits: list[dict] = []
+    exposures: list[dict] = []
+    calls: dict = {}
+    written: list[str] = []  # paths the agent wrote: reading back its own file in /tmp is not flagged again
+    carried = repo
+    for ev in s.events:
+        if ev.kind == EventKind.tool_result:
+            tool, call_id, ends = calls.get(ev.tool_call_id, (None, None, []))
+            if tool in _EDIT_TOOLS or tool in _HANDBACK or not ev.text:
+                continue  # it only confirms the write of its input path, or the delivery of the final report
+            found: dict = {}
+            for m in _LITERAL_PATH.finditer(ev.text):
+                end = ev.text.find("\n", m.end())
+                line = ev.text[ev.text.rfind("\n", 0, m.start()) + 1:len(ev.text) if end < 0 else end]
+                if _norm_line(line) in index.get("allowed_lines", ()):
+                    continue  # a path in a line of an allowed input (the lint rules name the session directories)
+                tok = m.group(0).rstrip(".,:;")
+                for p in [_norm(tok, repo)] if tok.startswith(("/", "~")) else [_norm(tok, e) for e in ends]:
+                    c, why = cls(p)
+                    if c == "forbidden":
+                        found.setdefault((p, "shown in a tool output: " + why), m.start())
+                        break
+            for w, why, at in _content_findings(ev.text, index, own_lines, own_names, task, cand):
+                found.setdefault((w, "shown in a tool output: " + why), at)
+            for (p, why), at in found.items():
+                exposures.append({"event_id": ev.event_id, "ts": ev.timestamp, "call": call_id, "tool": tool, "path": p,
+                                  "why": why, "text": _excerpt(ev.text, at)})
+            continue
+        if ev.kind != EventKind.tool_call:
+            continue
+        tool, ti = ev.tool_name or "", ev.tool_input or {}
+        counts[tool] = counts.get(tool, 0) + 1
+        res = results.get(ev.tool_call_id)
+        denied = bool(res is not None and "Permission for this action was denied" in (res.text or "")[:300])
+        ops: list[tuple[str, str, str, tuple]] = []
+        bases, ends, unresolved = [repo, carried], [], []
+        cmd = ti.get("command") if tool == "Bash" and isinstance(ti.get("command"), str) else ""
+        if tool == "Read" and ti.get("file_path"):
+            ops.append(("read", _norm(str(ti["file_path"]), repo), str(ti["file_path"]), ()))
+        elif tool in _EDIT_TOOLS and (ti.get("file_path") or ti.get("notebook_path")):
+            fp = str(ti.get("file_path") or ti.get("notebook_path"))
+            ops.append(("write", _norm(fp, repo), fp, ()))
+        elif tool == "Grep":
+            ops.append(("search", _norm(str(ti.get("path") or "."), repo), json.dumps(ti)[:300], ()))
+        elif tool == "Glob":
+            # The listing's root: the path joined with the pattern's leading components that hold no wildcard.
+            pattern, static = str(ti.get("pattern") or ""), []
+            for part in pattern.split("/"):
+                if any(ch in part for ch in "*?[{"):
+                    break
+                static.append(part)
+            root = "/" + "/".join(static[1:]) if pattern.startswith("/") else os.path.join(str(ti.get("path") or "."), *static)
+            ops.append(("list", _norm(root, repo), json.dumps(ti)[:300], ()))
+        elif cmd:
+            starts = list(dict.fromkeys([repo, carried]))
+            ops, unresolved, bases, ends = _labeler_shell(cmd, starts, cand)
+            carried = ends[-1] if carried != repo and len(ends) > 1 else ends[0]
+        elif tool not in _HANDBACK:
+            hits.append({"event_id": ev.event_id, "ts": ev.timestamp, "tool": tool, "op": "tool", "path": tool,
+                         "category": "outside", "why": "a tool other than the file tools and the shell", "text": json.dumps(ti)[:300],
+                         **({"denied": True} if denied else {})})
+        calls[ev.tool_call_id] = (tool, ev.event_id, ends)
+        seen = set()
+        for op, p, text, pruned in ops:
+            if op == "cli":
+                hits.append({"event_id": ev.event_id, "ts": ev.timestamp, "tool": tool, "op": op, "path": p, "category": "outside",
+                             "why": "a CLI call other than lint-tests", "text": text, **({"denied": True} if denied else {})})
+                continue
+            if op == "candidate":
+                hits.append({"event_id": ev.event_id, "ts": ev.timestamp, "tool": tool, "op": op, "path": p, "category": "forbidden",
+                             "why": "a candidate named in a CLI call", "text": text, **({"denied": True} if denied else {})})
+                continue
+            c, why = cls(p, op, pruned)
+            accesses[c] = accesses.get(c, 0) + 1
+            if op == "write":
+                written.append(p)
+            flag = (c in _FLAGGED_CATEGORIES or (op == "write" and c not in ("own", "system"))
+                    or (c == "tmp" and op in ("read", "list", "search") and not any(_inside(p, w) for w in written)))
+            if flag and (p, op) not in seen:
+                seen.add((p, op))
+                if op == "write" and c not in _FLAGGED_CATEGORIES:
+                    why = "a write outside its own tests directory: " + why
+                hits.append({"event_id": ev.event_id, "ts": ev.timestamp, "tool": tool, "op": op, "path": p, "category": c,
+                             "why": why, "text": text, **({"denied": True} if denied else {})})
+        for tok, text, head in unresolved:
+            if cls(head, "search")[0] == "forbidden" or cls(head)[0] in _FLAGGED_CATEGORIES:
+                hits.append({"event_id": ev.event_id, "ts": ev.timestamp, "tool": tool, "op": "search", "path": tok,
+                             "category": "forbidden", "why": "search rooted at an unresolved variable", "text": text,
+                             **({"denied": True} if denied else {})})
+        # Forbidden material or documentation named anywhere in the input (heredoc bodies, inline code, written content,
+        # the final report): a fail-safe for what the parsers cannot see. A relative path counts only if it lands there
+        # from every directory the command may run in.
+        texts = [_EXCLUSION_ARG.sub(" ", "\n".join(_split_unquoted(cmd)))] if cmd else []
+        texts += [str(v) for k, v in ti.items() if k != "command" and isinstance(v, str)]
+        texts += [str(e.get("new_string", "")) for e in ti.get("edits") or [] if isinstance(e, dict)]
+        for text in texts:
+            for m in _LITERAL_PATH.finditer(text):
+                tok = m.group(0).rstrip(".,:;")
+                tok = tok.split("=", 1)[1] if re.match(r"[A-Za-z_]\w*=", tok) else tok  # VAR=/path
+                resolved = [_norm(tok, repo)] if tok.startswith(("/", "~")) else [_norm(tok, b) for b in bases]
+                verdicts = [cls(r) for r in resolved]
+                if all(v[0] in ("forbidden", "doc") for v in verdicts):
+                    p, (c, why) = resolved[0], verdicts[0]
+                    if not any(h["event_id"] == ev.event_id and (_inside(p, h["path"]) or _inside(h["path"], p)) for h in hits):
+                        hits.append({"event_id": ev.event_id, "ts": ev.timestamp, "tool": tool, "op": "named", "path": p,
+                                     "category": c, "why": "named in the tool input: " + why,
+                                     "text": text[max(0, m.start() - 80): m.end() + 80], **({"denied": True} if denied else {})})
+            # A candidate id typed anywhere (a writer can only know one from forbidden material).
+            for m in cand.finditer(text):
+                if not any(h["event_id"] == ev.event_id and m.group(0) in h["path"] for h in hits):  # not in a flagged path
+                    hits.append({"event_id": ev.event_id, "ts": ev.timestamp, "tool": tool, "op": "named", "path": m.group(0),
+                                 "category": "forbidden", "why": "named in the tool input: a candidate id",
+                                 "text": text[max(0, m.start() - 80): m.end() + 80], **({"denied": True} if denied else {})})
+        own_add(_own_text(ti))
+    flagged = bool(hits or exposures or prompt_block["forbidden_content"] or harness["forbidden_content"]
+                   or prompt_block.get("revision_input", {}).get("more_than_names"))
+    # Leads for the review, not flags: what the agent wrote itself that is also in forbidden material (the output scan
+    # leaves text the agent wrote first aside).
+    own_writing = "\n".join(_own_text(ti) for _, _, tool, ti in _tool_calls(path) if tool in _EDIT_TOOLS or tool == "Bash")
+    coincide = {"lines": [], "test_names": []}
+    for line in dict.fromkeys(_norm_line(x) for x in own_writing.splitlines()):
+        srcs = _sources(index["lines"].get(line, []), task)
+        if srcs:
+            coincide["lines"].append({"line": line[:150], "also_in": srcs[:3], "files": len(srcs)})
+    for n in sorted({c.split("::")[-1] for c in _written_checks(path, labeler_own(task, repo))}):
+        srcs = _sources(index["names"].get(n, []), task, names=True)
+        if srcs:
+            coincide["test_names"].append({"name": n, "also_in": srcs[:3], "files": len(srcs)})
+    return {"task_id": task, "round": round_no, "transcript_sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+            "tool_calls": dict(sorted(counts.items())), "tool_calls_total": sum(counts.values()),
+            "denied_calls": sum(1 for ev in s.events if ev.kind == EventKind.tool_result
+                                and "Permission for this action was denied" in (ev.text or "")[:300]),
+            "own_checks": sorted(_written_checks(path, labeler_own(task, repo))), "prompt": prompt_block,
+            "accesses": dict(sorted(accesses.items())), "hits": hits, "exposures": exposures, "harness_context": harness,
+            "own_text_also_in_forbidden_material": coincide, "flagged": flagged}
+
+
+def _redact_labeler(x, scratch: str | None):
+    """:func:`_redact_output`, after the session's directories are replaced by ``<scratchpad>``, ``<session-tmp>`` and
+    ``<session-dir>`` (the build session's scratch directory, its temporary directory, its directory of agent records,
+    where :data:`SESSION_ROOTS` puts them)."""
+    if isinstance(x, str):
+        x = x.replace(scratch, "<scratchpad>") if scratch else x
+        x = SESSION_ROOTS.scratch().sub("<scratchpad>", x)
+        x = SESSION_ROOTS.session_dir().sub("<session-dir>", SESSION_ROOTS.session_tmp().sub("<session-tmp>", x))
+        return _redact_output(x, None)
+    if isinstance(x, list):
+        return [_redact_labeler(v, scratch) for v in x]
+    if isinstance(x, dict):
+        return {k: _redact_labeler(v, scratch) for k, v in x.items()}
+    return x
+
+
+def _labeler_label(p: Path, task: str, round_no: int) -> str:
+    """The agent's label from the ``.meta.json`` beside its transcript (only that field is read), or a default."""
+    meta = p.with_name(p.stem + ".meta.json")
+    try:
+        label = json.loads(meta.read_text(encoding="utf-8")).get("description")
+    except (OSError, ValueError, AttributeError):
+        label = None
+    return str(label) if label else f"L-{'write' if round_no == 1 else 'revise'}-{task}"
+
+
+def audit_labelers(writers: list[tuple[str, str]], revisions: list[tuple[str, str]], *, root: Path,
+                   transcripts: list[Path], scratch: str | None = None) -> dict:
+    """The labeler-writer report (see the module docstring): ``writers`` and ``revisions`` are ``(task, path or sha256)``."""
+    by_sha = {hashlib.sha256(p.read_bytes()).hexdigest(): p for p in transcripts}
+    index = labeler_index(root)
+    fams = tuple(index["families"])
+    extra = (os.path.normpath(scratch),) if scratch else ()
+
+    def find(ref: str) -> Path | None:
+        if re.fullmatch(r"[0-9a-f]{64}", ref):
+            return by_sha.get(ref)
+        return Path(ref) if Path(ref).is_file() else None
+
+    out: dict = {"script": "scripts/strict_reaudit.py --labeler", "profile": LABELER_PROFILE,
+                 "rules": {
+                     "allowed": {t: [{"path": os.path.relpath(p, REPO), "what": w} for p, w in labeler_allowed(t)]
+                                 for t in dict.fromkeys(t for t, _ in writers + revisions)},
+                     "own": "tasks/<task>/verifiers/independent_label/tests/ (written and read back)",
+                     "system": "system locations, the study's virtual environment, and /tmp outside the Claude session "
+                               "directories (its reads and listings are flagged)",
+                     "forbidden": "the reference solution (the reference candidate and its patch); the reference checks; every "
+                                  "other verifier, of any family, and the coordinator's grading status of the labeler; "
+                                  "candidates and strata; labels; the mappings of generated verifiers; data/controlled (the "
+                                  "controlled sessions' records); results/; the sealed directory; third-party data; the old "
+                                  "workspaces; every Claude session directory; and any search or listing over them",
+                     "doc": "docs/, paper/, experiments/, README.md and STATUS.md: judged by what each read showed",
+                     "outside": "every other path; judged by what each read showed",
+                     "outputs": "paths in forbidden material, candidate ids, and the text of forbidden files (distinctive lines "
+                                "and test names, from labeler_index) shown in a tool output, except text the agent wrote first",
+                     "prompt": "the prompt is scanned for the text of forbidden files; a revision's prompt may carry nothing but "
+                               "the names of the failing checks"},
+                 "index": {"forbidden_files": index["files"], "distinctive_lines": len(index["lines"]),
+                           "test_names": len(index["names"]), "candidate_ids": len(index["candidates"])},
+                 "transcripts": {}, "families": {}, "flagged": [], "not_audited": []}
+    first: dict[str, Path] = {}
+    for task, ref in writers:
+        p = find(ref)
+        if p is not None:
+            first.setdefault(task, p)
+    for round_no, group in ((1, writers), (2, revisions)):
+        for task, ref in group:
+            p = find(ref)
+            label = _labeler_label(p, task, round_no) if p is not None else f"L-{'write' if round_no == 1 else 'revise'}-{task}"
+            while label in out["transcripts"]:
+                label += "'"
+            fam = out["families"].setdefault(task, {"transcripts": [], "flagged": []})
+            fam["transcripts"].append(label)
+            if p is None:
+                out["transcripts"][label] = {"task_id": task, "round": round_no, "error": "transcript not found", "flagged": True}
+                out["not_audited"].append(label)
+                fam["flagged"].append(label)
+                out["flagged"].append(label)
+                continue
+            contract = root / "tasks" / task / "contracts" / "reference.json"
+            try:
+                reqs = {r["req_id"] for r in json.loads(contract.read_text(encoding="utf-8")).get("requirements", [])}
+            except (OSError, ValueError, KeyError, TypeError):
+                reqs = set()
+            rec = audit_labeler_transcript(p, task=task, index=index, round_no=round_no,
+                                           writer=first.get(task) if round_no > 1 else None, families=fams,
+                                           requirements=reqs, extra_forbidden=extra)
+            out["transcripts"][label] = rec
+            if rec["flagged"]:
+                fam["flagged"].append(label)
+                out["flagged"].append(label)
+    return _redact_labeler(out, scratch)
+
+
 def main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--transcripts", action="append", required=True)
+    ap.add_argument("--transcripts", action="append")
     ap.add_argument("--extra", action="append", default=[])
     ap.add_argument("--scratch", help="the builder's scratch directory (required for generator transcripts)")
     ap.add_argument("--write", action="store_true")
     ap.add_argument("--outputs", metavar="FILE", help="also scan tool outputs and write what they showed each agent to FILE "
                     "(JSON), apart from its reads; generator_audit.json never receives them")
     ap.add_argument("--fresh", metavar="ATTEMPTS", help="audit fresh attempts (protocol §16.2) from these attempt records")
-    ap.add_argument("--report", metavar="FILE", help="with --fresh: where the report goes (JSON)")
+    ap.add_argument("--report", metavar="FILE", help="with --fresh, --labeler or --revision: where the report goes (JSON)")
+    ap.add_argument("--labeler", metavar="TASK_ID=TRANSCRIPT", action="append", default=[],
+                    help="audit the first-round writer of TASK_ID's independent labeler (protocol §15.5); TRANSCRIPT is a "
+                         "path or the sha256 of an agent-*.jsonl file under --transcripts (repeatable)")
+    ap.add_argument("--revision", metavar="TASK_ID=TRANSCRIPT", action="append", default=[],
+                    help="audit the single revision of TASK_ID's independent labeler, as --labeler (repeatable)")
     a = ap.parse_args(argv)
+    if a.labeler or a.revision:
+        if not a.report or a.write or a.outputs or a.extra or a.fresh:
+            ap.error("--labeler and --revision take --report and optionally --transcripts and --scratch")
+        pairs = []
+        for spec in (*a.labeler, *a.revision):
+            task, sep, ref = spec.partition("=")
+            if not sep or not task or not ref:
+                ap.error(f"expected TASK_ID=TRANSCRIPT, got {spec!r}")
+            pairs.append((task, ref))
+        files = sorted({p for d in a.transcripts or [] for p in Path(d).rglob("agent-*.jsonl")})
+        rep = audit_labelers(pairs[:len(a.labeler)], pairs[len(a.labeler):], root=R, transcripts=files,
+                             scratch=os.path.normpath(a.scratch) if a.scratch else None)
+        Path(a.report).write_text(json.dumps(rep, indent=2) + "\n", encoding="utf-8")
+        for label, rec in rep["transcripts"].items():
+            if "error" in rec:
+                print(f"{label}: {rec['error']}")
+                continue
+            extra = rec["prompt"].get("revision_input", {})
+            print(f"{label} ({rec['task_id']}, round {rec['round']}): {rec['tool_calls_total']} tool call(s), "
+                  f"{len(rec['hits'])} hit(s), {len(rec['exposures'])} exposure(s), "
+                  f"{len(rec['prompt']['forbidden_content'])} forbidden text(s) in the prompt, "
+                  f"{len(rec['harness_context']['forbidden_content'])} in the harness context"
+                  + ("; the revision's prompt carries more than names" if extra.get("more_than_names") else "")
+                  + ("; flagged" if rec["flagged"] else ""))
+        print(f"labeler writers: {len(rep['transcripts'])} audited or listed, {len(rep['flagged'])} flagged, "
+              f"{len(rep['not_audited'])} not audited")
+        return 1 if rep["not_audited"] else 0
+    if not a.transcripts:
+        ap.error("the following arguments are required: --transcripts")
     if a.fresh:
         if not a.report or a.write or a.outputs or a.extra:
             ap.error("--fresh takes --transcripts, --report and optionally --scratch")
