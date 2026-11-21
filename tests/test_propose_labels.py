@@ -9,6 +9,12 @@
   failing base test makes an attempt invalid; a regression norm that gives no decision (a timeout of the
   repository tests) leaves an attempt whose reference checks pass ambiguous, never valid (a missing decision, D19).
 * A frozen reference-check verifier that changed since freezing is refused before anything is built or written.
+* ``--repeats N`` grades a controlled task N times as well (default 1, the rule as the pilot and fresh-v1 used it); base
+  test paths are checked before the overlay is rebuilt; the new overlay is built and graded outside the task and put in
+  place after the last grade, so a refusal on the reference keeps the recorded overlay; a stratum's regression norm reads
+  the recorded overlay where it is; and a symbolic link as the label log is refused before any label is written. The
+  natural PR-review rules are in tests/test_natural_labels.py, and the reproduction of the recorded labels in
+  tests/test_recorded_labels.py.
 
 Synthetic fixtures and a stubbed grader (no Docker); not research evidence.
 """
@@ -173,11 +179,26 @@ BASE_TESTS = ["tests/test_base.py::test_a", "tests/test_base.py::test_b"]  # the
 
 
 @pytest.fixture()
-def fresh_task(tmp_path, monkeypatch) -> tuple[Path, list[str]]:
+def overlays() -> list[tuple[Path, dict[str, str]]]:
+    """The overlay each in-process run of the base tests on the reference was given (``fresh_task``'s stub): its path,
+    and its files (path and sha256) at the time of the run."""
+    return []
+
+
+@pytest.fixture()
+def reference_status() -> dict:
+    """More keys of the results of ``fresh_task``'s in-process run of the base tests on the reference (``{"timed_out":
+    True}``: it timed out)."""
+    return {}
+
+
+@pytest.fixture()
+def fresh_task(tmp_path, monkeypatch, overlays, reference_status) -> tuple[Path, list[str]]:
     """FX-1 with frozen reference checks, a recorded base-test overlay and a stratum fresh-v1 of fresh attempts.
 
     The stubbed grader grades the reference checks and the regression norm per FRESH_CASES; the regression norm's
-    checks are the overlay's base tests that pass on the reference (stubbed in-process run of the reference).
+    checks are the overlay's base tests that pass on the reference (stubbed in-process run of the reference, which
+    ``reference_status`` can make time out). Each run's overlay is appended to ``overlays``.
     """
     td = tmp_path / "FX-1"
     _cand(td, "candidates/FX-1-reference.json", "FX-1-reference", CandidateOrigin.reference, Split.dev)
@@ -207,9 +228,10 @@ def fresh_task(tmp_path, monkeypatch) -> tuple[Path, list[str]]:
         return workspace, [], None
 
     def run_grader(tag, *, workspace, mode, overlay_dir, **_):  # the reference, in process, with the base tests
-        assert mode == Isolation.in_process and overlay_dir == td / "labels" / "base_tests_overlay"
+        assert mode == Isolation.in_process
+        overlays.append((Path(overlay_dir), _all_hashes(Path(overlay_dir))))
         tests = [{"nodeid": n, "outcome": "passed"} for n in BASE_TESTS] + [{"nodeid": "tests/test_base.py::test_c", "outcome": "failed"}]
-        return SimpleNamespace(results={"nonce": "n0", "status": "completed", "tests": tests}), "n0"
+        return SimpleNamespace(results={"nonce": "n0", "status": "completed", "tests": tests, **reference_status}), "n0"
 
     def verify(*, spec, candidate, **_):  # a timeout records no check, as the grader's aggregation does
         rc, reg, _ = FRESH_CASES[candidate.candidate_id]
@@ -238,10 +260,13 @@ def _all_hashes(td: Path) -> dict[str, str]:
     return {str(p.relative_to(td)): hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(td.rglob("*")) if p.is_file()}
 
 
-def test_fresh_attempts_get_the_natural_rule_with_the_regression_norm(fresh_task):
+def test_fresh_attempts_get_the_natural_rule_with_the_regression_norm(fresh_task, overlays):
     td, _ = fresh_task
     before = _all_hashes(td)
     pl.main(str(td), stratum="fresh-v1")
+    # The stratum's regression norm is the task's recorded overlay, read where it is.
+    recorded = {k[len("labels/base_tests_overlay/"):]: v for k, v in before.items() if k.startswith("labels/base_tests_overlay/")}
+    assert overlays == [(td / "labels" / "base_tests_overlay", recorded)]
     labels = {cid: load(td / "strata" / "fresh-v1" / "candidates" / f"{cid}.json", Candidate) for cid in FRESH_CASES}
     assert {cid: (c.labels[-1].value, c.labels[-1].violated_requirements) for cid, c in labels.items()} == {
         cid: case[2] for cid, case in FRESH_CASES.items()}
@@ -267,3 +292,72 @@ def test_reference_checks_changed_since_freezing_are_refused_before_anything_is_
     with pytest.raises(SystemExit, match="propose_labels refused: reference_check: frozen verifier was modified"):
         pl.main(str(td), stratum="fresh-v1")
     assert _all_hashes(td) == before and built == []  # nothing graded, built or written
+
+
+def test_a_controlled_task_may_be_graded_with_repeats(fresh_task, monkeypatch):
+    """--repeats 3 on a controlled task: three single grades per verifier and candidate; repeats that agree give the label
+    of one repeat, and the log records the repeats (one repeat, the default, logs as before)."""
+    td, _ = fresh_task
+    calls = []
+    verify = pl.verify_candidate
+
+    def counted(**kw):
+        calls.append((kw["spec"].verifier_id, kw["candidate"].candidate_id))
+        return verify(**kw)
+
+    monkeypatch.setattr(pl, "verify_candidate", counted)
+    pl.main(str(td), stratum="fresh-v1", repeats=3)
+    labels = {cid: load(td / "strata" / "fresh-v1" / "candidates" / f"{cid}.json", Candidate).labels[-1] for cid in FRESH_CASES}
+    assert {cid: (lb.value, lb.violated_requirements) for cid, lb in labels.items()} == {c: case[2] for c, case in FRESH_CASES.items()}
+    assert len(calls) == 3 * 2 * len(FRESH_CASES) and set(calls) == {(v, c) for v in ("reference_check", "regression_norm")
+                                                                      for c in FRESH_CASES}
+    log = json.loads((td / "strata" / "fresh-v1" / "proposed_labels.json").read_text())
+    assert log["repeats"] == 3 and log["regression_norm"]["reference_runs"] == 3 and log["regression_norm"]["base_test_paths"] is None
+    assert all(e["repeats_agree"] and len(e["repeat_results"]) == 3 for e in log["candidates"].values())
+
+
+def test_base_test_paths_are_checked_before_the_overlay_is_rebuilt(fresh_task, monkeypatch, tmp_path, overlays):
+    td, built = fresh_task
+    repo = tmp_path / "repo"
+    (repo / "snapshots" / "FX-1" / "tests").mkdir(parents=True)
+    (repo / "snapshots" / "FX-1" / "tests" / "test_base.py").write_text("def test_a():\n    pass\n")
+    monkeypatch.setattr(pl, "REPO", repo)  # roots.snapshot_root: <repo>/snapshots for a task that is not natural
+    before = _all_hashes(td)
+    for paths, msg in ((("../escape.py",), "must be a relative path inside the base snapshot"),
+                       (("/etc/hostname",), "must be a relative path inside the base snapshot"),
+                       (("tests/test_base.py", "tests/missing.py"), "does not exist in the base snapshot")):
+        with pytest.raises(SystemExit, match=msg):
+            pl.main(str(td), *paths)
+    assert _all_hashes(td) == before and built == []  # the recorded overlay is kept, and nothing was built or graded
+    pl.main(str(td), "tests/test_base.py")
+    new = {"tests/test_base.py": hashlib.sha256(b"def test_a():\n    pass\n").hexdigest()}
+    assert _all_hashes(td / "labels" / "base_tests_overlay") == new
+    # The reference was run with the new overlay's files, in a directory outside the task.
+    assert [(td in p.parents, files) for p, files in overlays] == [(False, new)]
+    log = json.loads((td / "labels" / "proposed_labels.json").read_text())
+    assert set(log) == {"task_id", "labeler", "created_at", "candidates"}  # one repeat: the log has the pilot's keys
+
+
+def test_a_refusal_on_the_reference_keeps_the_recorded_overlay(fresh_task, monkeypatch, tmp_path, reference_status):
+    """Other base test paths on a task with a recorded overlay, and the base tests time out on the reference: refused, and
+    the recorded overlay, the labels and the log are as they were (the new overlay never entered the task)."""
+    td, _ = fresh_task
+    repo = tmp_path / "repo"
+    (repo / "snapshots" / "FX-1" / "tests").mkdir(parents=True)
+    (repo / "snapshots" / "FX-1" / "tests" / "test_other.py").write_text("def test_o():\n    pass\n")
+    monkeypatch.setattr(pl, "REPO", repo)
+    reference_status["timed_out"] = True
+    before = _all_hashes(td)
+    with pytest.raises(SystemExit, match=r"nothing written: the base tests did not complete on the reference"):
+        pl.main(str(td), "tests/test_other.py")
+    assert _all_hashes(td) == before
+
+
+def test_a_symbolic_link_as_the_label_log_is_refused_before_any_label_is_written(fresh_task, tmp_path):
+    td, built = fresh_task
+    target = tmp_path / "elsewhere.json"
+    (td / "strata" / "fresh-v1" / "proposed_labels.json").symlink_to(target)
+    before = _all_hashes(td)
+    with pytest.raises(SystemExit, match="symbolic link"):
+        pl.main(str(td), stratum="fresh-v1")
+    assert _all_hashes(td) == before and not target.exists() and built == []

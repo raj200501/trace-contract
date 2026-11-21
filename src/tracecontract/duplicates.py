@@ -9,10 +9,19 @@ Two levels (decision log D37, D40):
   docstrings; other files by text. This needs the base snapshot.
 
 ``scripts/find_duplicates.py`` writes the same-code duplicates of each task to
-``tasks/<id>/labels/duplicates.json``. The analysis reads that file (so analysis
+``<task dir>/labels/duplicates.json``. The analysis reads that file (so analysis
 output does not depend on whether snapshots are present), and the preflight check
 recomputes it and fails if it differs. Reading a candidate here applies its patch to a
-copy of the base snapshot; no candidate code is executed.
+copy of the base snapshot, which ``roots.snapshot_root`` locates (``snapshots/<id>``, or
+``data/natural/snapshots/<id>`` for a natural PR-review task); no candidate code is executed.
+
+Held-out candidates are compared in the order of :func:`representative_order`: the natural
+state first (the agent's own state before the user's correction, or a natural PR-review
+task's pre-review state), then by id. The first of a group of same-code candidates is its
+representative, and the later ones are listed as its duplicates, so a constructed candidate
+(a near miss, say) that reproduces the pre-review state is the duplicate, never the state
+itself. Every held-out candidate, the pre-review state included, is also compared with the
+development candidates (dev attacks and dev alternatives).
 """
 
 from __future__ import annotations
@@ -23,9 +32,18 @@ import json
 import shutil
 from pathlib import Path
 
+from . import roots
 from .patches import filter_patch, split_sections
 from .schemas import Candidate, CandidateOrigin, TaskManifest
 from .store import load
+
+# Held-out origins that represent a group of same-code candidates: the natural states, before any constructed candidate.
+REPRESENTATIVE_FIRST = frozenset({CandidateOrigin.observed_pre_correction, CandidateOrigin.natural_pre_review})
+
+
+def representative_order(c: Candidate) -> tuple[bool, str]:
+    """Sort key of the held-out candidates: :data:`REPRESENTATIVE_FIRST` origins first, then by candidate id."""
+    return c.origin not in REPRESENTATIVE_FIRST, c.candidate_id
 
 
 def _strip_docstrings(tree: ast.AST) -> ast.AST:
@@ -71,7 +89,7 @@ def code_signatures(base_dir: Path, cands: list[Candidate]) -> dict[str, str | N
     union = sorted(set().union(*(changed_paths(c.patch) for c in cands if c.patch)))
     sig: dict[str, str | None] = {}
     for c in cands:
-        ws, _diags, err = prepare_workspace(base_dir, c.patch)
+        ws, _diags, _err = prepare_workspace(base_dir, c.patch)
         if ws is None:
             sig[c.candidate_id] = None
             continue
@@ -86,25 +104,29 @@ def code_signatures(base_dir: Path, cands: list[Candidate]) -> dict[str, str | N
     return sig
 
 
-def same_code_duplicates(task_dir: Path, snapshot_root: Path) -> dict:
-    """Held-out candidates whose code equals a development candidate's or an earlier held-out candidate's.
+def same_code_duplicates(task_dir: Path, snapshot_root: Path | None = None) -> dict:
+    """Held-out candidates whose code equals a development candidate's or an earlier held-out candidate's
+    (:func:`representative_order`).
 
     Only pairs whose graded patches differ are listed (identical patches are the
-    analysis's ``same graded patch`` level).
+    analysis's ``same graded patch`` level). ``snapshot_root``: the directory holding the
+    task's base snapshot (``<root>/<task id>``); by default the one ``roots.snapshot_root``
+    names for the task.
     """
     from .analysis import _norm_patch
 
+    if snapshot_root is None:
+        snapshot_root = roots.snapshot_root(task_dir)
     m = load(task_dir / "task.json", TaskManifest)
     cands = [load(task_dir / p, Candidate) for p in m.candidates]
     cands = [c for c in cands if c.patch and c.origin not in (CandidateOrigin.noop, CandidateOrigin.reference)]
     sig = code_signatures(snapshot_root / m.task_id, cands)
     dev = [c for c in cands if c.split.value == "dev"]
-    held = sorted((c for c in cands if c.split.value == "eval"),
-                  key=lambda c: (c.origin != CandidateOrigin.observed_pre_correction, c.candidate_id))
+    held = sorted((c for c in cands if c.split.value == "eval"), key=representative_order)
     out: dict = {}
     seen: list[Candidate] = []
     for c in held:
-        hits = {}
+        hits: dict[str, list[str]] = {}
         if sig[c.candidate_id] is not None:
             for d in dev:
                 if sig[d.candidate_id] == sig[c.candidate_id] and _norm_patch(d.patch) != _norm_patch(c.patch):

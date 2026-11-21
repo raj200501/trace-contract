@@ -17,15 +17,22 @@ from pathlib import Path
 import pytest
 
 import tracecontract.tasks as tasks_mod
-from tracecontract.review import TEMPLATE, export_packet, merge_labels
+from tracecontract.review import PACKET_README, TEMPLATE, export_packet, merge_labels
 from tracecontract.schemas import Candidate, CandidateOrigin, LabelerKind, Split, TaskContract, TaskManifest
 from tracecontract.store import dump, load
 
 FX = Path(__file__).parent / "fixtures" / "harbor_fx01"
 
 
+def _repo(tmp_path: Path) -> Path:
+    """The scratch repository the packet is read from (its ``tasks/`` and ``data/``)."""
+    return tmp_path / "repo"
+
+
 def _task(tmp_path: Path) -> Path:
-    td = tmp_path / "tasks" / "FX-01"
+    """FX-01 with two more held-out candidates, in the scratch repository ``tmp_path/repo`` (:func:`_repo`); the tests
+    write packets and keys next to it, outside it, as export_packet requires."""
+    td = _repo(tmp_path) / "tasks" / "FX-01"
     shutil.copytree(FX / "tasks" / "FX-01", td)
     ref = load(td / "candidates" / "FX-01-reference.json", Candidate)
     wrong = load(td / "candidates" / "FX-01-wrong.json", Candidate)
@@ -45,15 +52,16 @@ def test_packet_is_blind_and_merge_is_guarded(tmp_path, monkeypatch):
     monkeypatch.setattr(tasks_mod, "verify_snapshot", lambda t, s: True)
     out, key = tmp_path / "packet", tmp_path / "coordinator" / "key.json"
     with pytest.raises(ValueError, match="outside the packet"):
-        export_packet([td], out, out / "key.json", snapshot_root=FX / "snapshots", repo_root=tmp_path, seed=7)
-    res = export_packet([td], out, key, snapshot_root=FX / "snapshots", repo_root=tmp_path, seed=7)
+        export_packet([td], out, out / "key.json", snapshot_root=FX / "snapshots", repo_root=_repo(tmp_path), seed=7)
+    res = export_packet([td], out, key, snapshot_root=FX / "snapshots", repo_root=_repo(tmp_path), seed=7)
     assert res == {"packet": str(out.resolve()), "key": str(key.resolve()), "items": 2, "candidates": 3}
     assert stat.S_IMODE(key.stat().st_mode) == 0o600
     with pytest.raises(ValueError, match="exists"):
-        export_packet([td], tmp_path / "packet2", key, snapshot_root=FX / "snapshots", repo_root=tmp_path, seed=8)
+        export_packet([td], tmp_path / "packet2", key, snapshot_root=FX / "snapshots", repo_root=_repo(tmp_path), seed=8)
     text = "\n".join(p.read_text(errors="replace") for p in out.rglob("*") if p.is_file())
     for leak in ("FX-01-wrong", "FX-01-eval", "constructed_near_miss", "valid_alternative", "SECRET-NOTE", "same patch as"):
         assert leak not in text, leak
+    assert (out / "README.md").read_text() == PACKET_README  # no task from a pull-request thread: no paragraph about them
     items = json.loads(key.read_text())["tasks"]["FX-01"]
     assert sorted(sorted(v) for v in items.values()) == [["FX-01-eval-alt-1"], ["FX-01-eval-nm-9", "FX-01-wrong"]]
     for oid in items:
@@ -76,14 +84,14 @@ def test_packet_is_blind_and_merge_is_guarded(tmp_path, monkeypatch):
 
     a = write("R1", "valid")
     with pytest.raises(ValueError, match="fewer than 2"):
-        merge_labels([a], key, tmp_path / "tasks")
+        merge_labels([a], key, _repo(tmp_path) / "tasks")
     with pytest.raises(ValueError, match="pseudonymous"):
-        merge_labels([write("R9", "valid", reviewer="Jane Doe"), a], key, tmp_path / "tasks")
+        merge_labels([write("R9", "valid", reviewer="Jane Doe"), a], key, _repo(tmp_path) / "tasks")
     (out / "FX-01" / "labels_R9.json").unlink()
     write("R2", "ambiguous", decision="edit")
     documented = [Path(p) for p in sorted(glob.glob(str(out / "*" / "labels_*.json")))]  # the guide's glob
     assert [p.name for p in documented] == ["labels_R1.json", "labels_R2.json"]
-    rep = merge_labels(documented, key, tmp_path / "tasks")
+    rep = merge_labels(documented, key, _repo(tmp_path) / "tasks")
     assert rep["merged_labels"] == 6 and rep["merged_contract_reviews"] == 2
     assert rep["disagreements"]["FX-01"][0]["candidates"] == ["FX-01-eval-alt-1"]
     assert rep["origin_guesses"]["R1"] == {"correct": 2, "wrong": 0, "unsure": 1}
@@ -95,16 +103,16 @@ def test_packet_is_blind_and_merge_is_guarded(tmp_path, monkeypatch):
     r1 = load(td / "contracts" / "reference.json", TaskContract).requirements[0]
     assert [(rv.reviewer, rv.decision) for rv in r1.reviews[-2:]] == [("human:R1", "accept"), ("human:R2", "edit")]
     with pytest.raises(ValueError, match="merged already"):
-        merge_labels(documented, key, tmp_path / "tasks")
+        merge_labels(documented, key, _repo(tmp_path) / "tasks")
     with pytest.raises(ValueError, match="empty template"):
-        merge_labels([out / "FX-01" / TEMPLATE], key, tmp_path / "tasks")
+        merge_labels([out / "FX-01" / TEMPLATE], key, _repo(tmp_path) / "tasks")
 
 
 def test_merge_rejects_unscored_or_inconsistent_labels(tmp_path, monkeypatch):
     td = _task(tmp_path)
     monkeypatch.setattr(tasks_mod, "verify_snapshot", lambda t, s: True)
     out, key = tmp_path / "packet", tmp_path / "key.json"
-    export_packet([td], out, key, snapshot_root=FX / "snapshots", repo_root=tmp_path, seed=1)
+    export_packet([td], out, key, snapshot_root=FX / "snapshots", repo_root=_repo(tmp_path), seed=1)
     tmpl = json.loads((out / "FX-01" / TEMPLATE).read_text())
     base = dict(tmpl, reviewer="R1", contract_reviews={r: {"decision": "accept", "note": ""} for r in tmpl["contract_reviews"]})
     bad_cases = [
@@ -118,14 +126,14 @@ def test_merge_rejects_unscored_or_inconsistent_labels(tmp_path, monkeypatch):
         f = tmp_path / "labels_R1.json"
         f.write_text(json.dumps(d))
         with pytest.raises(ValueError, match=msg):
-            merge_labels([f], key, tmp_path / "tasks", min_reviewers=1)
+            merge_labels([f], key, _repo(tmp_path) / "tasks", min_reviewers=1)
 
 
 def test_packet_session_holds_user_turns_only(tmp_path, monkeypatch):
     """The agent's messages and tool calls, which show its edits before the correction, stay out of the packet."""
     td = _task(tmp_path)
     monkeypatch.setattr(tasks_mod, "verify_snapshot", lambda t, s: True)
-    tr = tmp_path / "data" / "fixtures" / "transcripts" / "FX-01.jsonl"
+    tr = _repo(tmp_path) / "data" / "fixtures" / "transcripts" / "FX-01.jsonl"
     tr.parent.mkdir(parents=True)
     rows = [
         {"type": "user", "uuid": "u0", "parentUuid": None, "sessionId": "s", "timestamp": "2026-01-01T00:00:00Z",
@@ -142,7 +150,7 @@ def test_packet_session_holds_user_turns_only(tmp_path, monkeypatch):
     ]
     tr.write_text("".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
     out = tmp_path / "packet"
-    export_packet([td], out, tmp_path / "key.json", snapshot_root=FX / "snapshots", repo_root=tmp_path, seed=3)
+    export_packet([td], out, tmp_path / "key.json", snapshot_root=FX / "snapshots", repo_root=_repo(tmp_path), seed=3)
     text = (out / "FX-01" / "session.txt").read_text()
     assert "USER-TURN-ONE" in text and "USER-TURN-TWO" in text
     for leak in ("ASSISTANT-TEXT", "FIRST-ATTEMPT-EDIT", "TOOL-OUTPUT"):
@@ -154,7 +162,7 @@ def test_merge_checks_types_before_writing_anything(tmp_path, monkeypatch):
     td = _task(tmp_path)
     monkeypatch.setattr(tasks_mod, "verify_snapshot", lambda t, s: True)
     out, key = tmp_path / "packet", tmp_path / "key.json"
-    export_packet([td], out, key, snapshot_root=FX / "snapshots", repo_root=tmp_path, seed=5)
+    export_packet([td], out, key, snapshot_root=FX / "snapshots", repo_root=_repo(tmp_path), seed=5)
     tmpl = json.loads((out / "FX-01" / TEMPLATE).read_text())
     assert list(tmpl["labels"]) == sorted(tmpl["labels"])  # entries follow the random ids, not the seeded order
     records = sorted((td / "candidates").glob("*.json")) + [td / "contracts" / "reference.json"]
@@ -171,7 +179,7 @@ def test_merge_checks_types_before_writing_anything(tmp_path, monkeypatch):
     files = [write("R1", "fine"), write("R2", 7)]
     for dry in (True, False):
         with pytest.raises(ValueError, match="note must be text"):
-            merge_labels(files, key, tmp_path / "tasks", dry_run=dry)
+            merge_labels(files, key, _repo(tmp_path) / "tasks", dry_run=dry)
     assert {p: p.read_bytes() for p in records} == before
 
 

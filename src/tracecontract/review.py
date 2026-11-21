@@ -20,6 +20,17 @@ what the code itself shows: near misses are small edits of the agent's final cod
 the alternatives are independent implementations, so a reviewer may still infer
 origin. The origin guesses measure how often that happens.
 
+The packet is written outside the repository: it holds the session's turns and the
+candidates' code (for a natural PR-review task, pseudonymised third-party text and
+upstream code, protocol §17.4), and reviewers are told not to open the repository until
+their labels are merged. ``export_packet`` refuses an ``out`` inside the repository it
+reads (``repo_root``) or inside the study repository, git-ignored directories included,
+before anything is written.
+
+A natural PR-review task's pre-review state (origin ``natural_pre_review``) is the
+"pre-correction" origin class of the origin guesses, as an observed pre-correction state
+is: the agent's state before the reviewer's correction.
+
 The mapping from random ids to candidates (the *key*) is written to a separate file
 that the coordinator keeps; reviewers must not see it. ``merge_labels`` reads the
 reviewers' files with the key, refuses to merge until every task has the required
@@ -41,6 +52,7 @@ import shutil
 from datetime import datetime, timezone
 from pathlib import Path
 
+from . import roots
 from .schemas import Candidate, CandidateOrigin, Label, LabelerKind, Review, ReviewerKind, TaskContract, TaskManifest
 from .store import dump, load
 
@@ -49,8 +61,33 @@ DECISIONS = ("accept", "reject", "edit", "needs_discussion")
 ORIGIN_GUESSES = ("pre-correction", "alternative", "near-miss", "unsure")
 TEMPLATE = "label_template.json"  # deliberately not matched by the reviewers' labels_<id>.json
 REVIEWER_ID = re.compile(r"^R[0-9]{1,3}$")  # pseudonymous ids only; never a name
-_ORIGIN_CLASS = {CandidateOrigin.observed_pre_correction: "pre-correction", CandidateOrigin.valid_alternative: "alternative",
-                 CandidateOrigin.constructed_near_miss: "near-miss"}
+# The origin class an origin guess is scored against: a natural PR-review task's pre-review state is the agent's state
+# before the reviewer's correction, so it is "pre-correction" as an observed pre-correction state is.
+_ORIGIN_CLASS = {CandidateOrigin.observed_pre_correction: "pre-correction", CandidateOrigin.natural_pre_review: "pre-correction",
+                 CandidateOrigin.valid_alternative: "alternative", CandidateOrigin.constructed_near_miss: "near-miss"}
+
+
+def origin_class(origin: CandidateOrigin) -> str:
+    """The origin class of the packet's origin guesses (``pre-correction``, ``alternative``, ``near-miss``), or ``other``."""
+    return _ORIGIN_CLASS.get(origin, "other")
+
+
+def packet_location_problem(out: Path, repo_root: Path) -> str | None:
+    """Why the packet may not be written to ``out``; ``None`` if it may.
+
+    Refused: ``out`` inside the repository ``repo_root`` that the packet is read from, or inside the study repository
+    (``roots.REPO``), git-ignored directories such as ``data/natural/`` included. The packet holds the session's turns
+    and the candidates' code (a natural PR-review task's: third-party text and upstream code, §17.4), and its reviewers
+    must not open the repository before their labels are merged. Both the path as given (made absolute, ``..`` taken
+    out as written: ``<repo>/../p`` is outside) and its resolved form (links followed) are checked.
+    """
+    given = Path(os.path.abspath(out))
+    for repo in dict.fromkeys((Path(os.path.abspath(repo_root)), roots.REPO)):
+        for path, root in ((given, repo), (given.resolve(), repo.resolve())):
+            if path == root or root in path.parents:
+                return (f"{out} lies inside the repository {root}; the packet is written outside it (it holds the session's "
+                        "turns and the candidates' code, and its reviewers must not open the repository)")
+    return None
 
 
 def _now() -> str:
@@ -105,11 +142,15 @@ def _key_tag(key_path: Path) -> str:
 
 def export_packet(task_dirs: list[Path], out: Path, key_path: Path, *, snapshot_root: Path, repo_root: Path,
                   seed: int) -> dict:
-    """Write the blinded packet to ``out`` and the key to ``key_path`` (outside ``out``; never overwritten)."""
+    """Write the blinded packet to ``out`` (outside the repository: :func:`packet_location_problem`) and the key to
+    ``key_path`` (outside ``out``; never overwritten)."""
     from .analysis import _norm_patch
     from .sandbox.docker_runner import prepare_workspace
     from .tasks import verify_snapshot
 
+    problem = packet_location_problem(out, repo_root)
+    if problem:
+        raise ValueError(problem)
     out, key_path = out.resolve(), key_path.resolve()
     if key_path.is_relative_to(out):
         raise ValueError("the key must be written outside the packet")
@@ -117,17 +158,23 @@ def export_packet(task_dirs: list[Path], out: Path, key_path: Path, *, snapshot_
         raise ValueError(f"{out} exists; choose a new directory")
     if key_path.exists():
         raise ValueError(f"{key_path} exists; it may be the only record of an earlier packet's mapping")
+    tasks: list[tuple[Path, TaskManifest, TaskContract]] = []
+    for td in task_dirs:  # every task is checked before anything is written
+        m = load(td / "task.json", TaskManifest)
+        if not verify_snapshot(td, snapshot_root):
+            hint = ("a natural PR-review task's base is built by `tracecontract compile-pr-task`"
+                    if m.population.value == roots.NATURAL_PR else "run `tracecontract snapshot`")
+            raise ValueError(f"{m.task_id}: base snapshot missing or modified ({hint})")
+        if "reference" not in m.contracts:
+            raise ValueError(f"{m.task_id}: no reference contract; the reviewers judge the candidates against it")
+        tasks.append((td, m, load(td / m.contracts["reference"], TaskContract)))
     rng = random.Random(seed)  # recorded in the key; the ids, and the order of folders and entries, come from secrets
     key: dict = {"seed": seed, "created_at": _now(), "tasks": {}}
     used: set[str] = set()
-    for td in task_dirs:
-        m = load(td / "task.json", TaskManifest)
-        if not verify_snapshot(td, snapshot_root):
-            raise ValueError(f"{m.task_id}: base snapshot missing or modified (run `tracecontract snapshot`)")
+    for td, m, ref in tasks:
         tout = out / m.task_id
         (tout / "candidates").mkdir(parents=True)
         (tout / "session.txt").write_text(_user_turns(td, repo_root), encoding="utf-8")
-        ref = load(td / m.contracts["reference"], TaskContract)
         (tout / "reference_contract.md").write_text(_contract_text(ref), encoding="utf-8")
         groups: dict[str, list[Candidate]] = {}
         for c in sorted(held_out(td), key=lambda c: c.candidate_id):
@@ -161,7 +208,8 @@ def export_packet(task_dirs: list[Path], out: Path, key_path: Path, *, snapshot_
                     "labels": {oid: {"value": None, "violated_requirements": [], "origin_guess": None, "note": ""}
                                for oid in tkey}}
         (tout / TEMPLATE).write_text(json.dumps(template, indent=2) + "\n", encoding="utf-8")
-    (out / "README.md").write_text(PACKET_README, encoding="utf-8")
+    natural = any(m.population.value == roots.NATURAL_PR for _, m, _ in tasks)
+    (out / "README.md").write_text(PACKET_README + (NATURAL_PACKET_README if natural else ""), encoding="utf-8")
     key["packet_files_sha256"] = {str(p.relative_to(out)): hashlib.sha256(p.read_bytes()).hexdigest()
                                   for p in sorted(out.rglob("*")) if p.is_file() and "/state/" not in str(p.relative_to(out))}
     key_path.parent.mkdir(parents=True, exist_ok=True)
@@ -206,6 +254,26 @@ broken existing behaviour) or `ambiguous` (with a note saying what is unclear); 
 independent valid implementation; `near-miss`: a deliberately flawed variant;
 `unsure`). It is used only to measure how blind the review was, never as a label. Give
 each decision a short note with your reason.
+"""
+
+# Added to the README when the packet holds a natural PR-review task (protocol §15.6, §17.4).
+NATURAL_PACKET_README = """
+## Tasks from public pull-request threads
+
+Some tasks come from public GitHub pull requests. Their `session.txt` holds the linked
+issue, the reviewer's comment and the same reviewer's later replies, pseudonymised; the
+code the comment was made on is not shown, since it would identify a candidate. Their
+states hold the project's own code, under its licence. For these tasks, `pre-correction`
+is the agent's state that the reviewer commented on. Until your labels have been merged,
+do not look up the thread, its repository or its commits online: they show how the
+candidates were made. Keep the packet private; do not copy its texts or code elsewhere.
+
+These tasks are not in the study repository's `tasks/` folder. To run code in one of
+their candidates' states, give `sandbox-python` the task as `data/natural/tasks/<task>`;
+the command reads the task's environment from there, and the rule above still holds: do
+not open that folder yourself.
+
+    tracecontract sandbox-python data/natural/tasks/<task> <packet>/<task>/candidates/<id>/state -c '...'
 """
 
 
@@ -285,7 +353,7 @@ def merge_labels(label_files: list[Path], key_path: Path, tasks_root: Path, *, m
             for cid in cids:
                 path = tasks_root / t / "candidates" / f"{cid}.json"
                 c = load(path, Candidate)
-                truth = _ORIGIN_CLASS.get(c.origin, "other")
+                truth = origin_class(c.origin)
                 for rev, v in sorted(values.items()):
                     g = report["origin_guesses"].setdefault(rev, {"correct": 0, "wrong": 0, "unsure": 0})
                     g["unsure" if v["origin_guess"] == "unsure" else "correct" if v["origin_guess"] == truth else "wrong"] += 1
