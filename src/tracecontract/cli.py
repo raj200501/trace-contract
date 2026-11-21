@@ -519,6 +519,31 @@ def cmd_reconstruction_check(a) -> None:
     sys.exit(1 if rep["status"] == "failed" else 2 if rep["status"] == "incomplete" or unavailable else 0)
 
 
+def cmd_compile_pr_task(a) -> None:
+    """Compile one natural PR-review family into ``<out>/NP-<k>/`` (or only plan it); exit 1 if it is rejected (§15.6, §17)."""
+    from . import natural_pr as npr
+
+    try:
+        fam = npr.find_family(npr.load_families(Path(a.qualifying) if a.qualifying else npr.QUALIFYING), a.pr_id)
+    except (KeyError, OSError, ValueError) as exc:
+        raise SystemExit(f"compile-pr-task: {exc}") from None
+    res = npr.compile_pr_task(fam, Path(a.out), plan_only=a.plan_only, aidev_data=Path(a.aidev_data) if a.aidev_data else npr.AIDEV_DATA,
+                              snapshot_root=Path(a.snapshots) if a.snapshots else None,
+                              fetch_log=Path(a.fetch_log) if a.fetch_log else None)
+    _out(res)
+    sys.exit(1 if res["outcome"] == "rejected" else 0)
+
+
+def cmd_natural_index(a) -> None:
+    """Write the committed index of the natural PR-review tasks: ids, SHAs, licences, file hashes and S10 outcomes; no text."""
+    from . import natural_pr as npr
+
+    q = Path(a.qualifying) if a.qualifying else npr.QUALIFYING
+    idx = npr.write_natural_index(Path(a.tasks), Path(a.out) if a.out else npr.INDEX,
+                                  families=npr.load_families(q) if q.is_file() else None)
+    _out({"index": str(Path(a.out) if a.out else npr.INDEX), "tasks": len(idx["tasks"]), "counts": idx["counts"]})
+
+
 def main(argv: list[str] | None = None) -> None:
     ap = argparse.ArgumentParser(prog="tracecontract")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -647,6 +672,21 @@ def main(argv: list[str] | None = None) -> None:
     p = sub.add_parser("reconstruction-check", help="check a task's base snapshot against its session transcript and captured states")
     p.add_argument("task"); p.add_argument("--write", action="store_true", help="write tasks/<id>/reconstruction_check.json")
     p.set_defaults(fn=cmd_reconstruction_check)
+    p = sub.add_parser("compile-pr-task", help="compile a natural PR-review family (an AIDev S9 survivor) into <out>/NP-<k>/ "
+                       "(git-ignored); exit 1 if it is rejected at S10")
+    p.add_argument("pr_id", type=int); p.add_argument("--out", default=str(REPO / "data" / "natural" / "tasks"))
+    p.add_argument("--plan-only", action="store_true", help="plan only: base, fidelity, licence check and planned closure; "
+                   "nothing is built or written but the fetch log (blobs it reads are fetched within the caps)")
+    p.add_argument("--qualifying", help="s9_qualifying.json (default: the S9 record outside the repository)")
+    p.add_argument("--aidev-data", help="directory of the AIDev v5 parquet files")
+    p.add_argument("--snapshots", help="base snapshots (default: <out>/../snapshots)")
+    p.add_argument("--fetch-log", help="fetch log, JSON lines (default: <out>/../s10_fetch_log.jsonl)")
+    p.set_defaults(fn=cmd_compile_pr_task)
+    p = sub.add_parser("natural-index", help="write the committed index of the natural PR-review tasks (no text)")
+    p.add_argument("--tasks", default=str(REPO / "data" / "natural" / "tasks"))
+    p.add_argument("--out", help="default: data/manifests/natural_tasks_index.json")
+    p.add_argument("--qualifying", help="s9_qualifying.json, for the families not built yet")
+    p.set_defaults(fn=cmd_natural_index)
 
     a = ap.parse_args(argv)
     a.fn(a)

@@ -1394,6 +1394,16 @@ def recorded_check(task_dir: Path, repo_root: Path) -> RecordCheck:
     ``tracecontract reconstruction-check <task> --write`` makes or refreshes the record.
     """
     task_dir = Path(task_dir)
+    from .store import load
+
+    try:  # a natural PR-review task has no transcript: its record comes from the PR's commits (natural_pr.PR_METHOD)
+        population = load(task_dir / "task.json", TaskManifest).population.value
+    except Exception:  # noqa: BLE001 - an unreadable task.json is reported below, as before
+        population = None
+    if population == "natural:pr-review":
+        from .natural_pr import recorded_pr_check  # natural_pr imports this module
+
+        return recorded_pr_check(task_dir, repo_root)
     path, hint = task_dir / RECORD, f"run `tracecontract reconstruction-check tasks/{task_dir.name} --write`"
     if not path.is_file():
         return RecordCheck(None, [f"no {RECORD}: the base has not been checked against its session ({hint})"])

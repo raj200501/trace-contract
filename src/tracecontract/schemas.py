@@ -658,6 +658,47 @@ class RedactionStatus(str, Enum):
     pending = "pending"
 
 
+class PRProvenance(_Model):
+    """The source of a natural PR-review task (population ``natural:pr-review``; protocol §15.6, §17).
+
+    Ids, SHAs and categorical values only: no login, URL or text. ``reviewed_commit`` is the comment's
+    ``original_commit_id`` (the pre-review state), ``addressing_commit`` the PR's first later commit that
+    changes the commented file (the reference), and ``base_commit`` the merge-base of the first commit's
+    parent with the default branch (``base_rule`` ``merge_base``), or that parent when the merge-base cannot
+    be determined (``parent_of_first_commit``, approximate). ``merge_state`` applies the merge rule of §15.6.
+    """
+
+    dataset: str
+    revision: str  # the dataset revision (AIDev v5: the tag's commit)
+    pr_id: int
+    pr_number: int
+    repo_id: int
+    agent: str  # AIDev's agent field: a product name, never a model identifier
+    comment_id: int  # the correction: the PR's earliest qualifying review comment (S9)
+    other_qualifying_comment_ids: list[int] = Field(default_factory=list)
+    reply_comment_ids: list[int] = Field(default_factory=list)  # the reviewer's later replies in the thread, before the addressing commit
+    issue_id: int | None = None  # the linked issue: the initial request
+    issue_number: int | None = None
+    base_commit: str
+    base_rule: Literal["merge_base", "parent_of_first_commit"]
+    first_commit: str  # the PR's first commit: AIDev's first pr_commits row, confirmed with git
+    reviewed_commit: str
+    addressing_commit: str
+    head_commit: str | None = None  # the PR head (refs/pull/<n>/head) in the clone
+    default_branch_tip: str | None = None
+    merge_state: Literal["no_merges", "merges_not_touching_the_commented_file", "merge_touches_the_commented_file"]
+    merges: list[str] = Field(default_factory=list)  # merge commits between the base and the addressing commit
+    merges_touching_the_commented_file: list[str] = Field(default_factory=list)
+    fidelity: Fidelity
+    approximations: list[str] = Field(default_factory=list)
+    licence_file_spdx: str | None = None  # identified from the repository's LICENSE file at the base
+    licence_file_sha256: str | None = None
+    licence_aidev: str | None = None  # AIDev's repository.license field
+    licence_agrees: bool | None = None
+    snapshot_subdir: str = ""  # the package directory of a monorepo that forms the workspace ("" = the repository root)
+    owner_masked: bool = False  # the repository URL's owner is masked under the {owner} rule
+
+
 class ProvenanceRecord(_Model):
     schema_version: str = SCHEMA_VERSION
     record_id: str
@@ -680,6 +721,16 @@ class ProvenanceRecord(_Model):
     triage: TriageProposal | None = None
     accessed: str
     notes: str = ""
+    # Natural PR-review tasks only (protocol §15.6, §17). Omitted from the JSON while None, so records written
+    # before the field existed re-serialise byte for byte.
+    natural_pr: PRProvenance | None = None
+
+    @model_serializer(mode="wrap")
+    def _omit_empty_natural_pr(self, handler: SerializerFunctionWrapHandler) -> dict[str, Any]:
+        data = handler(self)
+        if self.natural_pr is None:
+            data.pop("natural_pr", None)
+        return data
 
 
 # ---------------------------------------------------------------------------

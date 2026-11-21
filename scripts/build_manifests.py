@@ -14,7 +14,11 @@ Inputs:
   becomes one ledger row with the stage and its reason, keyed by ids only (comment, PR and
   repository ids). A comment the judges disagree on is excluded and counted, not a failure. A
   comment whose PR has no later commit that changes the commented file also gets the reason
-  "no later commit changes the commented file" (§16.4).
+  "no later commit changes the commented file" (§16.4);
+* the index of the natural PR-review tasks, ``data/manifests/natural_tasks_index.json`` (written by
+  ``tracecontract natural-index``, protocol v0.9 §17.4): every family it records as rejected at S10
+  becomes one ledger row with stage S10 and its reason, keyed by ids only, with the reserve that takes
+  its place (§17.3) where there is one.
 
 Any other ``screening_natural_*.json`` file is refused, so that no file is summarised as what it
 is not. Every screened session appears in the index (accepted, pending, or rejected), so that
@@ -36,6 +40,7 @@ _FIELDS = ("record_id", "session_id", "population", "source_id", "repo_url", "ba
            "rejection_reasons", "triage", "accessed")
 NO_LATER_COMMIT = "no later commit changes the commented file"  # protocol v0.8 §16.4
 _EXCLUDED = "judges_disagree"  # excluded and counted, not a failure (protocol §15.6)
+NATURAL_INDEX = "natural_tasks_index.json"  # natural PR-review tasks: S10 outcomes (protocol v0.9 §17.4)
 
 
 def _triage(task_dir: Path, record: dict[str, Any]) -> Any:
@@ -79,6 +84,29 @@ def stage_rejections(result: dict[str, Any]) -> list[dict[str, Any]]:
     return out
 
 
+def s10_rejections(index: dict[str, Any]) -> list[dict[str, Any]]:
+    """One ledger row per family the natural-task index records as rejected at S10, keyed by its ids, with its reason."""
+    out = []
+    for t in index.get("tasks", []):
+        s10 = t.get("s10") or {}
+        if s10.get("outcome") != "rejected":
+            continue
+        row = {"source_id": f"pr:{t.get('pr_id')}", "population": index.get("population"), "stage": s10.get("stage") or "S10",
+               "reasons": [s10.get("reason")], "comment_id": t.get("comment_id"), "pr_id": t.get("pr_id"),
+               "repo_id": t.get("repo_id"), "task_id": t.get("task_id")}
+        if t.get("replaced_by"):
+            row["replaced_by"] = t["replaced_by"]
+        out.append(row)
+    return out
+
+
+def _s10_part(index: dict[str, Any], failed: int) -> str:
+    counts = index.get("counts") or {}
+    others = ", ".join(f"{n} {k}" for k, n in sorted(counts.items()) if k != "rejected")
+    return (f"of the {len(index.get('tasks', []))} families and reserves of S10 in {NATURAL_INDEX}, {failed} are rejected (in "
+            f"this ledger with stage S10 and their reasons)" + (f" and {others}" if others else ""))
+
+
 def _funnel_part(funnel: dict[str, Any]) -> str:
     stages = {st.get("id"): st for st in funnel["stages"]}
     last = stages.get("S8a") or funnel["stages"][-1]
@@ -100,7 +128,8 @@ def _stage_part(result: dict[str, Any], failed: int) -> str:
 
 
 def ledger_note(screened: list[dict[str, Any]], funnels: Sequence[tuple[str, dict]] = (),
-                stages: Sequence[tuple[str, dict]] = (), failed: dict[tuple[str, str], int] | None = None) -> str:
+                stages: Sequence[tuple[str, dict]] = (), failed: dict[tuple[str, str], int] | None = None,
+                s10: dict[str, Any] | None = None) -> str:
     """One clause per population: what its screening rows, funnels and stage results record."""
     failed = failed or {}
     pops: dict[str, dict[str, Any]] = {}
@@ -126,6 +155,10 @@ def ledger_note(screened: list[dict[str, Any]], funnels: Sequence[tuple[str, dic
         p = pop(str(s.get("population")))
         p["sources"].append(name)
         p["parts"].append(_stage_part(s, failed.get((str(s.get("population")), s["stage"]), 0)))
+    if s10 is not None:
+        p = pop(str(s10.get("population")))
+        p["sources"].append(NATURAL_INDEX)
+        p["parts"].append(_s10_part(s10, failed.get((str(s10.get("population")), "S10"), 0)))
     parts = []
     for name, p in sorted(pops.items()):
         c = p["rows"]
@@ -165,6 +198,11 @@ def build(root: Path) -> tuple[dict[str, Any], dict[str, Any]]:
         rows = stage_rejections(s)
         failed[(str(s.get("population")), s["stage"])] = len(rows)
         ledger += rows
+    s10 = json.loads((manifests / NATURAL_INDEX).read_text(encoding="utf-8")) if (manifests / NATURAL_INDEX).is_file() else None
+    if s10 is not None:
+        rows = s10_rejections(s10)
+        failed[(str(s10.get("population")), "S10")] = len(rows)
+        ledger += rows
     by_pop: dict[str, Counter] = {}
     for row in index:
         c = by_pop.setdefault(row["population"], Counter())
@@ -172,7 +210,7 @@ def build(root: Path) -> tuple[dict[str, Any], dict[str, Any]]:
         c[row["eligibility"]] += 1
         c["accepted" if row.get("task_status") == "accepted" else "not_accepted"] += 1
     return ({"records": index, "yield_by_population": {k: dict(v) for k, v in by_pop.items()}},
-            {"rejections": ledger, "note": ledger_note(screened, funnels, stages, failed)})
+            {"rejections": ledger, "note": ledger_note(screened, funnels, stages, failed, s10)})
 
 
 def main() -> None:

@@ -229,6 +229,9 @@ def compile_controlled_task(
 
 _TRANSCRIPT_DIRS = {Population.controlled: "data/controlled/transcripts", Population.fixture: "data/fixtures/transcripts",
                     Population.natural: "data/natural/transcripts"}
+# A natural PR-review task keeps its pseudonymised session (a Session record, not a transcript) in its own directory,
+# which lies under data/natural/ and is git-ignored (natural_pr.compile_pr_task; protocol v0.9 §17.4).
+PR_SESSION_FILE = "session.json"
 
 
 def _transcript_rel(m: TaskManifest) -> str:
@@ -247,6 +250,10 @@ def transcript_path(task_dir: Path, repo_root: Path) -> Path:
 
 def session_for_task(task_dir: Path, repo_root: Path) -> Session:
     m = load(task_dir / "task.json", TaskManifest)
+    if m.population == Population.natural_pr_review:
+        if not (task_dir / PR_SESSION_FILE).is_file():
+            raise FileNotFoundError(f"{m.task_id}: no {PR_SESSION_FILE}")
+        return load(task_dir / PR_SESSION_FILE, Session)
     pop, rel = m.population, _transcript_rel(m)
     return parse_claude_code_jsonl(repo_root / rel, population=pop, source=f"{pop.value}:tracecontract",
                                    relpath=rel, scripted_turns=m.scripted_turns)
