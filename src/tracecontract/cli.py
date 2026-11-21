@@ -250,22 +250,79 @@ def cmd_grade(a) -> None:
 
 
 def cmd_audit(a) -> None:
-    from .audit import run_audit
+    """Run audit:v1 and print the iteration record (``audit.iteration_output``): the findings, the runs with every check
+    each candidate failed (in each run of the reference), when it was graded, what with, and the tests graded
+    (``tests``: each check with a hash of its function's source and of the code it depends on).
 
+    ``--record N`` grades the tests after N revisions again and stores the audit in the spec as the iteration after N
+    revisions. It needs the N + 1 iteration records of the audit loop, iteration 0 first (``--previous FILE ...``: what
+    this command printed for each iteration; the last is the loop's audit of the tests that are recorded), since a
+    revision replaces the tests in place; the record then keeps every iteration's failing checks and what each revision
+    added, removed and changed (decision log D62). Those records must be of distinct files and in the loop's order, all
+    graded with this run's contract, audit set and candidates; every one but the last did not pass; the last graded
+    the tests that this run grades; and the first of an audited verifier graded a copy of its plain verifier's tests
+    (``audit.read_loop``, protocol §4). Every refusal comes before anything is graded or written."""
+    import hashlib
+    from datetime import datetime, timezone
+
+    from .audit import (
+        REFERENCE_REPEATS, STARTS_FROM, AuditInputs, AuditRecordError, iteration_output, read_loop, run_audit, suite_snapshot,
+    )
+
+    graded_at = datetime.now(timezone.utc).isoformat(timespec="microseconds")
     tdir, m = _task(a.task)
-    spec = load(_spec_path(tdir, a.verifier_id), VerifierSpec)
-    contract = load(tdir / m.contracts[a.contract], TaskContract) if a.contract else None
+    sp = _spec_path(tdir, a.verifier_id)
+    spec = load(sp, VerifierSpec)
+    cpath = tdir / m.contracts[a.contract] if a.contract else None
+    contract = load(cpath, TaskContract) if cpath is not None else None
     dev = [load(tdir / p, Candidate) for p in m.candidates]
     dev = [c for c in dev if c.split == Split.dev and (not a.only or c.candidate_id in a.only)]
     if a.audit_set:
         dev = [c for c in dev if c.candidate_id.startswith(m.task_id + "-noop") or c.origin.value == "reference"
                or a.audit_set in c.produced_by]
-    rep = run_audit(spec, contract, dev, _grader(tdir, m, "audit"), task_dir=tdir)
+    dev_ids = [c.candidate_id for c in dev]
+    previous = getattr(a, "previous", None) or []
+    inputs = AuditInputs(contract=a.contract or None,
+                         contract_sha256=hashlib.sha256(cpath.read_bytes()).hexdigest() if cpath is not None else None,
+                         audit_set=a.audit_set or None, only=sorted(set(a.only)) if a.only else None,
+                         reference_repeats=REFERENCE_REPEATS)
+
+    def refuse(why: str) -> SystemExit:
+        return SystemExit(f"audit refused, nothing graded or recorded: {why}")
+
+    tests = suite_snapshot(spec, tdir)
+    loop = []
+    if a.record is None and previous:
+        raise refuse("--previous gives the iterations of a record's audit loop, so it is read only with --record N")
     if a.record is not None:
-        rec = rep.to_record(iterations=a.record, dev_ids=[c.candidate_id for c in dev])
-        dump(spec.model_copy(update={"audit": rec}), _spec_path(tdir, a.verifier_id))
-    _out({"passed": rep.passed, "findings": [f.__dict__ for f in rep.findings], "runs": rep.runs,
-          "dev_candidates": [c.candidate_id for c in dev]})
+        if a.record < 0:
+            raise refuse(f"--record takes the number of revisions before this iteration, not {a.record}")
+        if spec.frozen:
+            raise refuse(f"{a.verifier_id} is frozen; its audit record cannot change")
+        if tests.content_sha256 != spec.content_sha256:
+            raise refuse(f"the test files of {a.verifier_id} changed since its spec was built; run build-verifier first, "
+                         "so that the record describes the tests that are frozen")
+        start = None
+        plain = STARTS_FROM.get(spec.condition.value)
+        if plain is not None:
+            psp = _spec_path(tdir, plain)
+            if not psp.is_file():
+                raise refuse(f"{a.verifier_id} starts from a copy of {plain}'s tests (protocol §4), and the task has no "
+                             f"{plain} spec to check iteration 0 against")
+            start = (plain, load(psp, VerifierSpec).content_sha256)
+        try:
+            loop = read_loop(previous, task_id=m.task_id, verifier_id=spec.verifier_id, revisions=a.record, tests=tests,
+                             inputs=inputs, dev_ids=dev_ids, graded_at=graded_at, start=start)
+        except AuditRecordError as exc:
+            raise refuse(str(exc)) from None
+    rep = run_audit(spec, contract, dev, _grader(tdir, m, "audit"), task_dir=tdir, reference_repeats=REFERENCE_REPEATS)
+    out = iteration_output(rep, task_id=m.task_id, verifier_id=spec.verifier_id, dev_ids=dev_ids, tests=tests,
+                           inputs=inputs, graded_at=graded_at)
+    if a.record is not None:
+        rec = rep.to_record(iterations=a.record, dev_ids=dev_ids, tests=tests, loop=loop, graded_at=graded_at)
+        dump(spec.model_copy(update={"audit": rec}), sp)
+        out["record"] = rec.model_dump(mode="json")
+    _out(out)
 
 
 def cmd_add_candidate(a) -> None:
@@ -990,6 +1047,10 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("task"); p.add_argument("verifier_id"); p.add_argument("--contract")
     p.add_argument("--only", nargs="*"); p.add_argument("--audit-set", help="only dev candidates whose produced_by contains this tag")
     p.add_argument("--record", type=int, help="store the audit result in the spec with this number of revision iterations")
+    p.add_argument("--previous", nargs="+", metavar="ITERATION_RECORD",
+                   help="with --record N: the N + 1 iteration records of the audit loop, iteration 0 first, the last of the "
+                   "tests this run grades again (the JSON this command printed for each); the record keeps every "
+                   "iteration's failing checks and what each revision changed")
     p.set_defaults(fn=cmd_audit)
     p = sub.add_parser("add-candidate", help="register a candidate from a state directory or a patch file")
     p.add_argument("task"); p.add_argument("candidate_id"); p.add_argument("--origin", required=True)

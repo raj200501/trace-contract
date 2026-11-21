@@ -600,12 +600,135 @@ class CheckSpec(_Model):
     requirement_ids: list[str] = Field(default_factory=list)
 
 
+class AuditCheck(_Model):
+    """A check of an audited verifier as one audit iteration graded it (``AuditIteration.checks``)."""
+
+    check_id: str
+    requirement_ids: list[str] = Field(default_factory=list)
+    # sha256 of the check function's source in its test file, from its first decorator to its last line; None when
+    # the check id names no function in the verifier's test files
+    sha256: str | None = None
+    # sha256 of the code the function depends on beyond its own source (``audit.suite_snapshot``): the module-level code
+    # of its file that it uses by name, directly or through other module-level code (helpers, constants, imports, the
+    # other members of its class, a module-level statement that changes a name it uses, a fixture it names, also through
+    # usefixtures or a fixture's name=), the file's autouse fixtures, pytestmark and module-level setup functions, and
+    # every conftest.py above its file; None when it depends on none. Data files and other modules are not followed.
+    uses_sha256: str | None = None
+
+
+class AuditRepeat(_Model):
+    """One run of a development candidate that an audit iteration graded more than once (the reference)."""
+
+    outcome: str
+    failed_checks: list[str] = Field(default_factory=list)
+
+
+class AuditRun(_Model):
+    """One development candidate as one audit iteration graded it, with every check that did not pass."""
+
+    candidate_id: str
+    origin: str
+    outcome: str  # graded more than once: one outcome when the runs agree, else unresolved (the grader's rule)
+    failed_checks: list[str] = Field(default_factory=list)  # graded more than once: those of the last run
+    repeats: list[AuditRepeat] = Field(default_factory=list)  # graded more than once: each run, in order
+
+
+class AuditFindingEntry(_Model):
+    """One finding of an audit iteration, as ``tracecontract audit`` prints it (``audit.AuditFinding``)."""
+
+    code: str
+    message: str
+    candidate_id: str | None = None
+    requirement_id: str | None = None
+
+
+class AuditIteration(_Model):
+    """One iteration of an audit: iteration 0 grades the tests it starts from, iteration i the tests after revision i."""
+
+    iteration: int
+    passed: bool
+    graded_at: str | None = None  # when the iteration was graded (ISO time, UTC)
+    content_sha256: str  # the test files graded (verifier.hash_test_dir)
+    checks_sha256: str  # the scored check list graded: ids and requirement ids (verifier.checks_sha256)
+    files: dict[str, str] = Field(default_factory=dict)  # every file of the tests: path in the test dir -> sha256
+    checks: list[AuditCheck] = Field(default_factory=list)
+    findings: list[AuditFindingEntry] = Field(default_factory=list)
+    runs: list[AuditRun] = Field(default_factory=list)  # every failing check of every candidate graded, in each run
+
+
+class AuditRequirementChange(_Model):
+    """A check whose requirement ids differ between two iterations; None: the check is not one of that iteration's."""
+
+    check_id: str
+    before: list[str] | None = None
+    after: list[str] | None = None
+
+
+class AuditCodeChange(_Model):
+    """A file of the tests, or a module-level definition in one (``<file>::<name>``), that a revision changed."""
+
+    name: str
+    change: Literal["added", "removed", "changed"]
+
+
+class AuditRevision(_Model):
+    """What revision i changed, against the tests of iteration i - 1. All lists empty: the revision changed nothing."""
+
+    revision: int
+    added: list[str] = Field(default_factory=list)  # check ids
+    removed: list[str] = Field(default_factory=list)
+    changed: list[str] = Field(default_factory=list)  # checks whose function source changed (AuditCheck.sha256)
+    # checks whose function source is unchanged but whose module-level code changed (AuditCheck.uses_sha256)
+    changed_indirectly: list[str] = Field(default_factory=list)
+    requirement_map: list[AuditRequirementChange] = Field(default_factory=list)  # added and removed checks included
+    module_code: list[AuditCodeChange] = Field(default_factory=list)  # definitions other than the checks
+    files: list[AuditCodeChange] = Field(default_factory=list)
+
+
 class AuditRecord(_Model):
     procedure: str  # e.g. "audit:v1"
     iterations: int
     passed: bool
     findings: list[str] = Field(default_factory=list)
     dev_candidate_ids: list[str] = Field(default_factory=list)
+    # Every iteration of the audit, 0 to ``iterations``, with every failing check, and what each revision changed
+    # (``tracecontract audit --record N --previous ...``; decision log D62). Omitted from the JSON while empty, so
+    # records written before the fields existed re-serialise byte for byte.
+    history: list[AuditIteration] = Field(default_factory=list)
+    revisions: list[AuditRevision] = Field(default_factory=list)
+
+    @model_serializer(mode="wrap")
+    def _omit_empty_history(self, handler: SerializerFunctionWrapHandler) -> dict[str, Any]:
+        data = handler(self)
+        if not self.history:
+            data.pop("history", None)
+        if not self.revisions:
+            data.pop("revisions", None)
+        return data
+
+    @model_validator(mode="after")
+    def _check_history(self) -> "AuditRecord":
+        if not (self.history or self.revisions):
+            return self
+        if [h.iteration for h in self.history] != list(range(self.iterations + 1)):
+            raise ValueError(f"audit record: the history must hold iterations 0 to {self.iterations}, in order")
+        if [r.revision for r in self.revisions] != list(range(1, self.iterations + 1)):
+            raise ValueError(f"audit record: the revisions must be 1 to {self.iterations}, in order")
+        if self.history[-1].passed != self.passed:
+            raise ValueError("audit record: passed differs from the last iteration's")
+        if any(h.passed for h in self.history[:-1]):
+            raise ValueError("audit record: only the last iteration may pass, since a revision follows only an audit "
+                             "that did not pass")
+        times = [h.graded_at for h in self.history]
+        if all(times):
+            try:
+                at = [datetime.fromisoformat(t) for t in times]
+                ordered = all(a < b for a, b in zip(at, at[1:]))
+            except (TypeError, ValueError):  # not an ISO time, or one without a time zone beside one with
+                ordered = False
+            if not ordered:
+                raise ValueError("audit record: the iterations must have been graded one after another, in order")
+        return self
 
 
 class VerifierSpec(_Model):
