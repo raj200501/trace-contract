@@ -1867,3 +1867,63 @@ contract, verifier, held-out candidate or label existed.
 
 The extension was decided after the first sample's S10 yield (D59) was known. It is
 disclosed as a post-hoc design change, and it used no verifier outcome on natural data.
+
+### D61. Run fresh-v1: 80 fresh-agent attempts graded; results
+**Run.** `fresh-v1`, 2026-11-21, 12:40:35-15:12:56Z, code revision `eb56aec`, harness
+`tc-harness/0.3.5`, one invocation:
+`tracecontract evaluate tasks/CS-01 tasks/CS-02 tasks/CS-03 tasks/CS-04 --run-id fresh-v1
+--strata fresh-v1 --only-strata --conditions initial_plain initial_audited full_plain full_audited
+llm_freeform repo_tests reference_check --with-extra-verifiers --repeats 3 --pilot`.
+* The extended pre-flight passed first, with no failure, from a clean working tree and
+  with no other sandbox container (`eb56aec`).
+* 672 pairs: 4 families × 21 candidates (20 attempts and the reference) × 8 verifiers. That is
+  the 6 conditions, the reference checks and the independent labeler, each pair graded
+  three times. 427 pass and 245 task failures, with no infrastructure outcome. No pair's
+  repeats disagreed, so none is unresolved.
+* Other agents worked in the working tree during the run, on files the grader does not
+  read: no edit under `tasks/` or the harness, and no container besides the grader's.
+* The analysis ran from a clean worktree at `cbdcd92`. Its analysis code is unchanged since
+  `6d07115`. It ran there because the main working tree held other agents' unfinished
+  edits. `analysis.json` records that revision without `+dirty`. `analysis.md`,
+  `analysis_sensitivity.md` and `report.html` are identical to the outputs of a first
+  analysis run from the main tree.
+
+**Results** (D19 labels, model proposals; each distinct patch once; CS-02-fresh-A-final-1
+excluded by the reviewed audit; 29 invalid and 50 valid attempts):
+
+| Condition | FA | FR | FA per family (CS-01, CS-02, CS-03, CS-04) |
+| --- | --- | --- | --- |
+| C1 initial_plain | 24/29 (0.83) | 13/50 (0.26) | 10/10, 0/2, 4/7, 10/10 |
+| C2 initial_audited | 24/29 (0.83) | 13/50 (0.26) | the same as C1 |
+| C3 full_plain | 2/29 (0.07) | 0/50 (0.00) | 0/10, 2/2, 0/7, 0/10 |
+| C4 full_audited | 2/29 (0.07) | 6/50 (0.12) | as C3; the 6 rejections are all in CS-03 |
+| B2 llm_freeform | 2/29 (0.07) | 2/50 (0.04) | as C3 |
+| B1 repo_tests | 0/29 (0.00) | 34/50 (0.68) | 0 in every family |
+
+* **Correction-violating attempts.** 27 of the 40 `u1` attempts violate a correction
+  requirement. C1 and C2 accept 24 of them; C3, C4 and B2 accept none.
+* **The 2 C3/C4/B2 acceptances.** They are the CS-02 `u1` attempts A-u1-4 and A-u1-5, which
+  D19 calls invalid without a correction requirement. The independent labeler calls both
+  valid.
+* **Paired comparisons.** All 14 are null at the protocol's resolution: with 4 families, no
+  two-sided exact sign-flip p-value can go below 0.125. C1 against C3 on FA is +0.76, with
+  a one-sided p of 0.125 (floor 0.0625).
+* **The audit.** It changed no outcome of C1 (C2 equals C1). It added 6 false rejections
+  to C4 in CS-03.
+* **Oracle-gated view.** C1 and C2 fail CS-01's reference solution. That verifier encodes
+  the initial request, which the correction reversed, so it rejects all 10 valid CS-01
+  attempts and accepts all 10 invalid ones.
+* **Second labeling.** The independent labeler agrees with D19 on 77 of 79 units
+  (kappa 0.94). The 2 disagreements are the CS-02 attempts above. Under it, FA is 24/27
+  for C1 and C2 and 0/27 for C3, C4 and B2; FR is 15/52 for C1 and 0/52 for C3.
+* **Solve rates** (D19): `final` 19/19 (configuration A) and 20/20 (B); `u1` 6/20 (A) and
+  5/20 (B). With the correction in the instruction, every attempt of both configurations
+  solves its task; these tasks are not hard.
+* **Sensitivity view** (§18.1; all 26 automatically flagged attempts excluded): FA 18/21 for
+  C1 against 1/21 for C3; FR 9/33 against 0/33. The conclusions are unchanged.
+
+These are automated-pilot results on four controlled families, with model labels. They
+are descriptive, not inferential. The fresh attempts are natural negatives and positives,
+which no generator wrote. They measure information lost when a task is reconstructed
+from the initial request alone, not the skill of an agent that was never told the
+correction.

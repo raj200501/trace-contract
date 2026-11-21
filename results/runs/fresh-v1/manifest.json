@@ -1,0 +1,923 @@
+{
+  "code_revision": "eb56aec76e3bb93db50bd84edf37c52c2c9f0730",
+  "conditions": [
+    "initial_plain",
+    "initial_audited",
+    "full_plain",
+    "full_audited",
+    "llm_freeform",
+    "repo_tests",
+    "reference_check"
+  ],
+  "extra_verifiers": true,
+  "finished_at": "2026-11-21T15:12:56+00:00",
+  "invocations": [
+    {
+      "at": "2026-11-21T12:40:35+00:00",
+      "code_revision": "eb56aec76e3bb93db50bd84edf37c52c2c9f0730",
+      "only_strata": true,
+      "pilot": true,
+      "strata": [
+        "fresh-v1"
+      ],
+      "tasks": [
+        "CS-01",
+        "CS-02",
+        "CS-03",
+        "CS-04"
+      ]
+    }
+  ],
+  "limits": {
+    "cpus": 2.0,
+    "memory": "4g",
+    "pids": 512,
+    "tmp_size": "512m",
+    "wall_s": 900.0,
+    "work_size": "1g"
+  },
+  "pilot": true,
+  "repeats": 3,
+  "run_id": "fresh-v1",
+  "split": "eval",
+  "started_at": "2026-11-21T12:40:35+00:00",
+  "tasks": [
+    {
+      "acceptance_gate": {
+        "accepted": false,
+        "passed": false,
+        "provenance_eligibility": "pending_review",
+        "reasons": [
+          "provenance: eligibility is 'pending_review'; a reviewer must find the source eligible",
+          "contract reference: needs_human_review: reference requirement R-keep-meaningful (no human review)",
+          "contract reference: needs_human_review: reference requirement R-opt-in (no human review)",
+          "contract reference: needs_human_review: reference requirement R-default-unchanged (no human review)",
+          "contract reference: needs_human_review: reference requirement R-custom-format-unchanged (no human review)",
+          "contract initial_only: needs_human_review: inferred R5 (no human review)",
+          "contract initial_only: unresolved: R6 must be resolved or removed",
+          "contract initial_only: unresolved: R7 must be resolved or removed",
+          "contract full_session: unresolved: R7 must be resolved or removed",
+          "contract full_session: needs_human_review: inferred R8 (no human review)",
+          "contract full_session: needs_human_review: inferred R9 (no human review)"
+        ],
+        "refused": false,
+        "status": "pending_review",
+        "task_id": "CS-01"
+      },
+      "candidates": {
+        "CS-01-fresh-A-final-1": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "d376110a886e6a6b8db50f60a72ad1661874a118d9c4c478488361f1c3d5b39d",
+          "path": "strata/fresh-v1/candidates/CS-01-fresh-A-final-1.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-01-fresh-A-final-2": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "65ecb687924cc15acfcec2797b7baf4234ac2e54939d34a6be2d0fb66bc6c811",
+          "path": "strata/fresh-v1/candidates/CS-01-fresh-A-final-2.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-01-fresh-A-final-3": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "9eb54aad7a88e0b08c3cc2ed4cc91ce55296f93b7a649de6194962889dede1ce",
+          "path": "strata/fresh-v1/candidates/CS-01-fresh-A-final-3.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-01-fresh-A-final-4": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "c70aeb4d1c5955a25889e7db8d4fe27b0db6d1ece603d934869b68b520f78ea2",
+          "path": "strata/fresh-v1/candidates/CS-01-fresh-A-final-4.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-01-fresh-A-final-5": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "25ab50c9bbdb7e24607aa91f81d54b416fcf0fc7fc1cd5e17a3aaa69588bc199",
+          "path": "strata/fresh-v1/candidates/CS-01-fresh-A-final-5.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-01-fresh-A-u1-1": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "e591310d39da40bd3d9affc7ddb6065a00964f927f2a0a7e29b9d613453dd065",
+          "path": "strata/fresh-v1/candidates/CS-01-fresh-A-u1-1.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-01-fresh-A-u1-2": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "891a242fb4560049d542ecf0e588597fbffab779b1f54337c7c8222e36b8fff6",
+          "path": "strata/fresh-v1/candidates/CS-01-fresh-A-u1-2.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-01-fresh-A-u1-3": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "23636c06be689611e2473454aba05da07bc1ce80308fc0405d7a0d5d89293fad",
+          "path": "strata/fresh-v1/candidates/CS-01-fresh-A-u1-3.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-01-fresh-A-u1-4": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "2ec0c86541397cd70c5dfc5c2261bf3538598dd09897682140204bb0a9ad8b0f",
+          "path": "strata/fresh-v1/candidates/CS-01-fresh-A-u1-4.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-01-fresh-A-u1-5": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "8f9370f9a365a51b2aa0766360b50a6aa2204b752834c2d5dc4d966f2330a016",
+          "path": "strata/fresh-v1/candidates/CS-01-fresh-A-u1-5.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-01-fresh-B-final-1": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "d1d75655176b03434fc1460198fe30d5467a509573f664f21b174d95e9c22c72",
+          "path": "strata/fresh-v1/candidates/CS-01-fresh-B-final-1.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-01-fresh-B-final-2": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "440187223725ee84d00d62667c47d0a4e11193fb3e7e39e6c2fdfb585be84acf",
+          "path": "strata/fresh-v1/candidates/CS-01-fresh-B-final-2.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-01-fresh-B-final-3": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "40beae34dbdbe675e9d7b1681fdeebc81eb27826bf64cbda0c3dadb07d33ad7c",
+          "path": "strata/fresh-v1/candidates/CS-01-fresh-B-final-3.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-01-fresh-B-final-4": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "6a4de33a74bb8c1bf1e5b5f75660f67b575b3ac94c8aa40e017ac94640f48058",
+          "path": "strata/fresh-v1/candidates/CS-01-fresh-B-final-4.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-01-fresh-B-final-5": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "21c633927400ea357a70566ccb8e5f74efb44f2e744024a9a421a1c4fb5a0a82",
+          "path": "strata/fresh-v1/candidates/CS-01-fresh-B-final-5.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-01-fresh-B-u1-1": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "a330ba5f42294b42368275fc16c427b4d40e3f721e3d94fb80c9df4fc29ec17e",
+          "path": "strata/fresh-v1/candidates/CS-01-fresh-B-u1-1.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-01-fresh-B-u1-2": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "5c962fe17628299fd7b35b3c561b416db3b583f3845dafc10474762675721c99",
+          "path": "strata/fresh-v1/candidates/CS-01-fresh-B-u1-2.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-01-fresh-B-u1-3": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "6ce7eb81f3458e9cdf27153e0aa57715f19da35078317d4ef608f9323e325884",
+          "path": "strata/fresh-v1/candidates/CS-01-fresh-B-u1-3.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-01-fresh-B-u1-4": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "db433ce1f37f61a653c6fb4c12e13e027b2f46bfb6b556b8c316221f6a2bb808",
+          "path": "strata/fresh-v1/candidates/CS-01-fresh-B-u1-4.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-01-fresh-B-u1-5": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "66567c7377252a6303d5fabcdcfec778bfaf6a3f190904d4ed414a0f516ec8dc",
+          "path": "strata/fresh-v1/candidates/CS-01-fresh-B-u1-5.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-01-reference": {
+          "origin": "reference",
+          "patch_sha256": "2f917455ac18afcdb63b6015fbec947fb1fb30cd044031e291ca170fa3da4465"
+        }
+      },
+      "family_id": "CS-01",
+      "image": "tc-env:0b1591bd588d585e",
+      "image_id": "sha256:d6a5a665cc60790d839560fb6792d81401f1274d0c2be3ba0cab0479054945aa",
+      "snapshot_manifest_sha256": "0e87b6c1b51f5c87ce008d9a1145a9a38543fc92299a356f587a72ed8a229179",
+      "strata": {
+        "fresh-v1": {
+          "manifest": "strata/fresh-v1.json",
+          "manifest_sha256": "a2f134fc79347960453446dcb460468aee0202d6ccfd912b0eefe9fa6f5965fe"
+        }
+      },
+      "task_id": "CS-01",
+      "verifiers": {
+        "full_audited": {
+          "checks_sha256": "663d06fb52efcb90a1685dcfa35bb024eb809f3fcc8c95a4796919a71633baa8",
+          "condition": "full_audited",
+          "content_sha256": "490bcf4e6191152e9c33097eb8a0f54452c0dc129136980a685169807ccf05c1",
+          "n_checks": 14,
+          "version": 1
+        },
+        "full_plain": {
+          "checks_sha256": "663d06fb52efcb90a1685dcfa35bb024eb809f3fcc8c95a4796919a71633baa8",
+          "condition": "full_plain",
+          "content_sha256": "490bcf4e6191152e9c33097eb8a0f54452c0dc129136980a685169807ccf05c1",
+          "n_checks": 14,
+          "version": 1
+        },
+        "independent_label": {
+          "checks_sha256": "df04299bea298a406e0aca11b743720e9d5234c43b3eaa64609184241e6dd8de",
+          "condition": "reference_check",
+          "content_sha256": "d567a430ec728469bbd6d370d007a63573764c749ee5e46784fa6ea3bf4de3fd",
+          "n_checks": 9,
+          "version": 1
+        },
+        "initial_audited": {
+          "checks_sha256": "73904c2858fa72e9da5a8df40cdbfe92eba1b5a80eb950747ca547d268088926",
+          "condition": "initial_audited",
+          "content_sha256": "b92ec8804226c4d465fdb035aa966e3b8c2ff481d2c1c4e29463896ccdefe895",
+          "n_checks": 14,
+          "version": 1
+        },
+        "initial_plain": {
+          "checks_sha256": "73904c2858fa72e9da5a8df40cdbfe92eba1b5a80eb950747ca547d268088926",
+          "condition": "initial_plain",
+          "content_sha256": "d61532ca2e51ff1f1285c0745d0139e5db42a136413b0bb038efa726c5f13dde",
+          "n_checks": 14,
+          "version": 1
+        },
+        "llm_freeform": {
+          "checks_sha256": "5e67ad6486c0f76e64526d5c654c0f2650ed5c79dda9e12c64b638e2679c0291",
+          "condition": "llm_freeform",
+          "content_sha256": "3911f5e5059502cf52863f348f4985e6703ea464b59fdfc4a6f028feeb1fa982",
+          "n_checks": 14,
+          "version": 1
+        },
+        "reference_check": {
+          "checks_sha256": "8365f7c199818c5880bacd553aa6b493b2fe7b0a0ffd6a0f7e68d2abcc322455",
+          "condition": "reference_check",
+          "content_sha256": "f63d2cec38514fa332789e7bdc5f2918f519db06bfe094b4be731e2ed32d7fb6",
+          "n_checks": 17,
+          "version": 1
+        },
+        "repo_tests": {
+          "checks_sha256": "f7768b9e71dc08b8c37309734f46708606c85acbecbcdb00a2a397f8efb36569",
+          "condition": "repo_tests",
+          "content_sha256": "af477e8e205e8abc16cee5b9f558bb3bd70dc6f90fdb5d7360d2e338e7106c39",
+          "n_checks": 737,
+          "version": 1
+        }
+      }
+    },
+    {
+      "acceptance_gate": {
+        "accepted": false,
+        "passed": false,
+        "provenance_eligibility": "pending_review",
+        "reasons": [
+          "provenance: eligibility is 'pending_review'; a reviewer must find the source eligible",
+          "contract reference: needs_human_review: reference requirement R-atomic (no human review)",
+          "contract reference: needs_human_review: reference requirement R-new-content (no human review)",
+          "contract reference: needs_human_review: reference requirement R-read-after-write (no human review)",
+          "contract reference: needs_human_review: reference requirement R-bytes-unchanged (no human review)",
+          "contract reference: needs_human_review: reference requirement R-no-temp-files (no human review)",
+          "contract reference: needs_human_review: reference requirement R-original-intact (no human review)",
+          "contract full_session: needs_human_review: inferred R9 (no human review)",
+          "contract full_session: needs_human_review: inferred R10 (no human review)",
+          "contract full_session: unresolved: R11 must be resolved or removed",
+          "contract initial_only: needs_human_review: inferred R3 (no human review)",
+          "contract initial_only: needs_human_review: inferred R4 (no human review)",
+          "contract initial_only: needs_human_review: inferred R5 (no human review)",
+          "contract initial_only: needs_human_review: inferred R6 (no human review)",
+          "contract initial_only: needs_human_review: inferred R7 (no human review)",
+          "contract initial_only: needs_human_review: inferred R8 (no human review)"
+        ],
+        "refused": false,
+        "status": "pending_review",
+        "task_id": "CS-02"
+      },
+      "candidates": {
+        "CS-02-fresh-A-final-1": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "552feaf39d904d95caa936ba6ee2b2158602222f2f0083396f7ecd2ee2e68a85",
+          "path": "strata/fresh-v1/candidates/CS-02-fresh-A-final-1.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-02-fresh-A-final-2": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "5ae0a33db10898b4e85119536edf1255e11efa3f0056d7a8c38c4ab7ecb05a8b",
+          "path": "strata/fresh-v1/candidates/CS-02-fresh-A-final-2.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-02-fresh-A-final-3": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "0f1930ef477ed861a758959acbe7e0fe866ef55860bb4b00a605414d2d90d914",
+          "path": "strata/fresh-v1/candidates/CS-02-fresh-A-final-3.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-02-fresh-A-final-4": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "8f71286a499b9834def6a0f7db74ad624b2ad7295058051fccfc3e205fb9d1a5",
+          "path": "strata/fresh-v1/candidates/CS-02-fresh-A-final-4.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-02-fresh-A-final-5": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "b0f705827f62bd276a71669c41f35707057ab7cc4142bd6be5cb89dbe89c46eb",
+          "path": "strata/fresh-v1/candidates/CS-02-fresh-A-final-5.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-02-fresh-A-u1-1": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "abd6c40cfd4a4db9030b2aeb6ad2b494c33ec3985f136631cc249fd96450bc24",
+          "path": "strata/fresh-v1/candidates/CS-02-fresh-A-u1-1.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-02-fresh-A-u1-2": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "5cc20521f38f888c95af096137ac08d5ff884521324122958fbc28d8f8b4a872",
+          "path": "strata/fresh-v1/candidates/CS-02-fresh-A-u1-2.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-02-fresh-A-u1-3": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "4fda701f8ac76eadb2065aa6d2f067b9051bdd89a0e604ac0488efd635fa07aa",
+          "path": "strata/fresh-v1/candidates/CS-02-fresh-A-u1-3.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-02-fresh-A-u1-4": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "a0ba82f9f30517bdbbca9a11bb72c6fdc8c492e79be0c8c266c9c63d7b5d52dd",
+          "path": "strata/fresh-v1/candidates/CS-02-fresh-A-u1-4.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-02-fresh-A-u1-5": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "b88a523664f7f742cd5481e5acf65d316fea0cc2e19bad241dd63e35dd54d2ca",
+          "path": "strata/fresh-v1/candidates/CS-02-fresh-A-u1-5.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-02-fresh-B-final-1": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "a84945bdb15b641bace45149461da0e78a37e33f23273e44d543e525aeebcd2e",
+          "path": "strata/fresh-v1/candidates/CS-02-fresh-B-final-1.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-02-fresh-B-final-2": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "8891b0705edd657c57402fb2e63e1acd21341006a103f727c4fa633b1934a91b",
+          "path": "strata/fresh-v1/candidates/CS-02-fresh-B-final-2.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-02-fresh-B-final-3": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "d8d429c12edab5dd20d1e201d848bc24e900179bd70956187894186232530705",
+          "path": "strata/fresh-v1/candidates/CS-02-fresh-B-final-3.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-02-fresh-B-final-4": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "791ef0e799d7dfbdb8d9d061d450d62817f5d77ba616e9d532e707fa851faa25",
+          "path": "strata/fresh-v1/candidates/CS-02-fresh-B-final-4.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-02-fresh-B-final-5": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "6800a635e5fdea2425720b46b965bf5a5baca444cc325f1835d2b57cede31d8e",
+          "path": "strata/fresh-v1/candidates/CS-02-fresh-B-final-5.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-02-fresh-B-u1-1": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "0ef14e5eff83af842788f258e5aab659c94f5cb110a55bc4234d509d59ecd358",
+          "path": "strata/fresh-v1/candidates/CS-02-fresh-B-u1-1.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-02-fresh-B-u1-2": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "3c6bd55564a7c2dc3b90012e3ac9c549bf90079801d5fb4005c4cd95668f6779",
+          "path": "strata/fresh-v1/candidates/CS-02-fresh-B-u1-2.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-02-fresh-B-u1-3": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "5553f18ff9e951cf7f0332ad21a0416082fbdd877a01712974cc5d47181abbf6",
+          "path": "strata/fresh-v1/candidates/CS-02-fresh-B-u1-3.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-02-fresh-B-u1-4": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "8cd4f1a5ccb84313157a87de27399da03100851478ac634bd20b7e9587183585",
+          "path": "strata/fresh-v1/candidates/CS-02-fresh-B-u1-4.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-02-fresh-B-u1-5": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "ec9fecda2ca4208a0c4da99ebc86d04d3df45bc2745ff1b39e4eedbf1c436d75",
+          "path": "strata/fresh-v1/candidates/CS-02-fresh-B-u1-5.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-02-reference": {
+          "origin": "reference",
+          "patch_sha256": "18317acd6aa9e4379bf3e7f6a2dca2299bce1fab255fa58eaf840da6aeaa93ba"
+        }
+      },
+      "family_id": "CS-02",
+      "image": "tc-env:801a26fad4c5e101",
+      "image_id": "sha256:035acd7634f10312c8ef4d6e206cfe978165ebd11bcf5ab9d17e097d794edc21",
+      "snapshot_manifest_sha256": "8f30c35e16795f234c71e7b6945a6355ca0b4d139feda3b36642ea01e3b8d64b",
+      "strata": {
+        "fresh-v1": {
+          "manifest": "strata/fresh-v1.json",
+          "manifest_sha256": "1dd2d9bbe3fa835bbdb83f63641d5d13006ddfa6a35a2ed5bdde2fdb3d9f2dad"
+        }
+      },
+      "task_id": "CS-02",
+      "verifiers": {
+        "full_audited": {
+          "checks_sha256": "e9d7c4757acdb42a43719f8f6e7fb3d9112d65aa106c082cbd948c59ea21244c",
+          "condition": "full_audited",
+          "content_sha256": "da14dc888713c66f4f908a07a8a1e295e3ba36705b6cb670221a5ae89505cd7c",
+          "n_checks": 13,
+          "version": 1
+        },
+        "full_plain": {
+          "checks_sha256": "e9d7c4757acdb42a43719f8f6e7fb3d9112d65aa106c082cbd948c59ea21244c",
+          "condition": "full_plain",
+          "content_sha256": "306e08df3c1e297d8eeeca45999d194f97960fe276c9db1e6b65558b0ff1b633",
+          "n_checks": 13,
+          "version": 1
+        },
+        "independent_label": {
+          "checks_sha256": "998141767dc3f16b00f153c7c8637cf74ae85d7df937b8f6f36a16154799c1b4",
+          "condition": "reference_check",
+          "content_sha256": "164df735e6a8ddfa3df998c3cad5de668125759e72c734bf63601f50e9247e0e",
+          "n_checks": 15,
+          "version": 1
+        },
+        "initial_audited": {
+          "checks_sha256": "2bb8c5bd7ad79626e70d0e437096cfd1fcfb97faeabf0185fe249dde9aa4602b",
+          "condition": "initial_audited",
+          "content_sha256": "0692c34269f91151b97caafb58894e2a9d7d0c56d6a539c07da3b6df6f91a2b3",
+          "n_checks": 14,
+          "version": 1
+        },
+        "initial_plain": {
+          "checks_sha256": "2bb8c5bd7ad79626e70d0e437096cfd1fcfb97faeabf0185fe249dde9aa4602b",
+          "condition": "initial_plain",
+          "content_sha256": "0692c34269f91151b97caafb58894e2a9d7d0c56d6a539c07da3b6df6f91a2b3",
+          "n_checks": 14,
+          "version": 1
+        },
+        "llm_freeform": {
+          "checks_sha256": "44449bca5427e380a3d2ff4afc9f12b859751befc90748bd260b7203ea1897b3",
+          "condition": "llm_freeform",
+          "content_sha256": "ab50e0f5b60e25ee58aaf098650d1b958e3d356d79869a4ec6f77ba241e542e9",
+          "n_checks": 13,
+          "version": 1
+        },
+        "reference_check": {
+          "checks_sha256": "549d52457550e18cd2a919a9bfebf6514bf2efb4134d5c95b6ff2f0dc3d9b0c6",
+          "condition": "reference_check",
+          "content_sha256": "62a819e98256b00e9b7cfd54856491fc4f89e7829c0afa35d84a6bee7b04bbad",
+          "n_checks": 28,
+          "version": 1
+        },
+        "repo_tests": {
+          "checks_sha256": "aeb0543cde8d7cd45dabdde0794e48d8c469dd22df6555ea669b0c288bf1fe44",
+          "condition": "repo_tests",
+          "content_sha256": "4f2bb625af70507913737dd3f06007482b548d720870d9f2cf812f0c366a9b24",
+          "n_checks": 239,
+          "version": 1
+        }
+      }
+    },
+    {
+      "acceptance_gate": {
+        "accepted": false,
+        "passed": false,
+        "provenance_eligibility": "pending_review",
+        "reasons": [
+          "provenance: eligibility is 'pending_review'; a reviewer must find the source eligible",
+          "contract reference: needs_human_review: reference requirement R-acronym (no human review)",
+          "contract reference: needs_human_review: reference requirement R-all-caps-input (no human review)",
+          "contract reference: needs_human_review: reference requirement R-humanize-unchanged (no human review)",
+          "contract reference: needs_human_review: reference requirement R-underscore-unchanged (no human review)",
+          "contract initial_only: needs_human_review: inferred R4 (no human review)",
+          "contract initial_only: needs_human_review: inferred R5 (no human review)",
+          "contract initial_only: unresolved: R6 must be resolved or removed",
+          "contract initial_only: unresolved: R7 must be resolved or removed",
+          "contract full_session: needs_human_review: inferred R2 (no human review)",
+          "contract full_session: unresolved: R3 must be resolved or removed"
+        ],
+        "refused": false,
+        "status": "pending_review",
+        "task_id": "CS-03"
+      },
+      "candidates": {
+        "CS-03-fresh-A-final-1": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "204dce236c7cff2c8519e13197ef0869918cee6b269c3e39349e477b9eef0d09",
+          "path": "strata/fresh-v1/candidates/CS-03-fresh-A-final-1.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-03-fresh-A-final-2": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "69c050fe80cc6663cc13a81bd9f3278890ce6cc1999d1ec6ebcc6a26675bad49",
+          "path": "strata/fresh-v1/candidates/CS-03-fresh-A-final-2.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-03-fresh-A-final-3": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "9d541c0c032827d3800d311b8a2d4212f5fbe6ac0a472d54d8080bbf46273712",
+          "path": "strata/fresh-v1/candidates/CS-03-fresh-A-final-3.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-03-fresh-A-final-4": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "c0d5d969e5d536a03a75abfc87b976a605e30e9f717ae36c1beddf2b44cd66ca",
+          "path": "strata/fresh-v1/candidates/CS-03-fresh-A-final-4.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-03-fresh-A-final-5": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "7654ff7bca2b627d15657ed28408c7fe2cbbb23c06af8e875a411fc556d0be92",
+          "path": "strata/fresh-v1/candidates/CS-03-fresh-A-final-5.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-03-fresh-A-u1-1": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "a436f6e03e4ce9bad064cfa5f45cfff8e2facdcac8d831a6f521bf291c64e9ef",
+          "path": "strata/fresh-v1/candidates/CS-03-fresh-A-u1-1.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-03-fresh-A-u1-2": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "5021c38b449b22238c07f3528a84256629abb284e575cc77687aaa5e4db2fa7e",
+          "path": "strata/fresh-v1/candidates/CS-03-fresh-A-u1-2.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-03-fresh-A-u1-3": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "d825ba43f6c56f58d9e906ad4b411de584f31f3746cd578b2c470a9c40f8bcd4",
+          "path": "strata/fresh-v1/candidates/CS-03-fresh-A-u1-3.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-03-fresh-A-u1-4": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "a4af2220c353e46edcfb2a862d1c1618d20ae0304bbf28a10c74138e8179e414",
+          "path": "strata/fresh-v1/candidates/CS-03-fresh-A-u1-4.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-03-fresh-A-u1-5": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "1140163d720b4d5d6d318ba98e8b06670137870aed215b1a423d549398a3e63c",
+          "path": "strata/fresh-v1/candidates/CS-03-fresh-A-u1-5.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-03-fresh-B-final-1": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "529007ee90ee2c1d535ea678298d884cd0eb6660c88710c8ccee3ff2db7e8850",
+          "path": "strata/fresh-v1/candidates/CS-03-fresh-B-final-1.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-03-fresh-B-final-2": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "12fc367f78de3f1dda8419602f9af651d5caf2049bc298883c65a06bc9e36913",
+          "path": "strata/fresh-v1/candidates/CS-03-fresh-B-final-2.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-03-fresh-B-final-3": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "0902bb40920644aa0404711d6fb14f26acf9d57c526ffd76d653164234c1ec3f",
+          "path": "strata/fresh-v1/candidates/CS-03-fresh-B-final-3.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-03-fresh-B-final-4": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "46965cf56c7c0ebb66f4d03fa68d8a27d651d985b820a050741997379ef08889",
+          "path": "strata/fresh-v1/candidates/CS-03-fresh-B-final-4.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-03-fresh-B-final-5": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "05a4201cce35ba5b16c3ce28cc7934923530351088e4563b41df7b6013b9dac5",
+          "path": "strata/fresh-v1/candidates/CS-03-fresh-B-final-5.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-03-fresh-B-u1-1": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "9251f88e5d01508128aca1af1e47441210d84d026a60d49c866ccf8a9161c2d5",
+          "path": "strata/fresh-v1/candidates/CS-03-fresh-B-u1-1.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-03-fresh-B-u1-2": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "f1a00dde68e4ee26e3213da180ac12688335ed0fcb39c34c9ef11cc1ab24fc48",
+          "path": "strata/fresh-v1/candidates/CS-03-fresh-B-u1-2.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-03-fresh-B-u1-3": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "1accaaa6425474e403025e36596b6994ea217786bc29ef92cb62a24fb5f1a814",
+          "path": "strata/fresh-v1/candidates/CS-03-fresh-B-u1-3.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-03-fresh-B-u1-4": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "dba4238788e797d6f98bdd4b71517be5c3c0ff87cfdde36f1d26783fb7070e67",
+          "path": "strata/fresh-v1/candidates/CS-03-fresh-B-u1-4.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-03-fresh-B-u1-5": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "b96b54cb118eff9d1922fab7d5aab416e99f8962f498573891f0f5e5c5542fec",
+          "path": "strata/fresh-v1/candidates/CS-03-fresh-B-u1-5.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-03-reference": {
+          "origin": "reference",
+          "patch_sha256": "24d6f7d5057674e4e466d326420b4f2215d01a47c63af799928f7fed069b3d13"
+        }
+      },
+      "family_id": "CS-03",
+      "image": "tc-env:801a26fad4c5e101",
+      "image_id": "sha256:035acd7634f10312c8ef4d6e206cfe978165ebd11bcf5ab9d17e097d794edc21",
+      "snapshot_manifest_sha256": "7e61aca7b70ce1b5b5ba314144454dd0cbbfc26619e0ac5ca17e2ae03e29d80e",
+      "strata": {
+        "fresh-v1": {
+          "manifest": "strata/fresh-v1.json",
+          "manifest_sha256": "9c296212d25b26d3586e21b2246079337061df940d98d3120a1a762d7070faf6"
+        }
+      },
+      "task_id": "CS-03",
+      "verifiers": {
+        "full_audited": {
+          "checks_sha256": "e8baacd654e3a6501210194cab69f932ef693e156586b91379610c1a09de9c1f",
+          "condition": "full_audited",
+          "content_sha256": "0dff1fb9382ce7f34a11715b0dfe662b9b3a3b15b50547837ea093c046a4f0d2",
+          "n_checks": 14,
+          "version": 1
+        },
+        "full_plain": {
+          "checks_sha256": "c5067d4a788ec370f7a400e121fed3e24391fc9c2e41f9e27faa33381477c92c",
+          "condition": "full_plain",
+          "content_sha256": "21f7af73e24351e8c26f09fa5f17427d90baf849ed2cf900d5052934dcd8522e",
+          "n_checks": 12,
+          "version": 1
+        },
+        "independent_label": {
+          "checks_sha256": "ac37bbc97340a8c917bc3b3ed44ff6b605195efa672f36ed09e9bd7f64acc62c",
+          "condition": "reference_check",
+          "content_sha256": "d9e13c4a946427ecbcc9aae6c5c60a65c93cd3cffcf3393c9775787196f944a6",
+          "n_checks": 9,
+          "version": 1
+        },
+        "initial_audited": {
+          "checks_sha256": "3f4da76f501f5c75a830e392c25221c6355d80a9f985c73f8e83698ee432bfbe",
+          "condition": "initial_audited",
+          "content_sha256": "e57368e3106c2151dabecc17ecbcf92070cae0dccc00dcdb69c6343edc075d40",
+          "n_checks": 15,
+          "version": 1
+        },
+        "initial_plain": {
+          "checks_sha256": "f881f78c849229559900cf5c6041e89b32c4a0c72684a176c6c6be6c40a8033a",
+          "condition": "initial_plain",
+          "content_sha256": "8931e33066a1999166b43ae5631d87eabacf2f021dc1425ebc961a68c7425d6f",
+          "n_checks": 14,
+          "version": 1
+        },
+        "llm_freeform": {
+          "checks_sha256": "3d97175bce1cd1494a2391b70a55b32ac99688474d02975d76ab800b0c22578d",
+          "condition": "llm_freeform",
+          "content_sha256": "9dd525bd888fe357f9c01df53c0cf6859b1bdf98a9fe709399d8264490307b2c",
+          "n_checks": 13,
+          "version": 1
+        },
+        "reference_check": {
+          "checks_sha256": "7a5cb6e1c42b0e38f00ffa28056851e2fc2d3a3a21312e3dc30a70b04db4c69e",
+          "condition": "reference_check",
+          "content_sha256": "9b5a3263189c4b00e70ce4e80e9c4e81bb9c74bb52f6d6a925cd8475099106cf",
+          "n_checks": 15,
+          "version": 1
+        },
+        "repo_tests": {
+          "checks_sha256": "e3af208226302ed4f0ac89e4b0a2de4b29a1549a8085d726cd06d47a8d440dc0",
+          "condition": "repo_tests",
+          "content_sha256": "f7bca4feac5cca75cccdd7835c75f7df83b948a3f880c7ccef1237a7d266962f",
+          "n_checks": 466,
+          "version": 1
+        }
+      }
+    },
+    {
+      "acceptance_gate": {
+        "accepted": false,
+        "passed": false,
+        "provenance_eligibility": "pending_review",
+        "reasons": [
+          "provenance: eligibility is 'pending_review'; a reviewer must find the source eligible",
+          "contract reference: needs_human_review: reference requirement R-step (no human review)",
+          "contract reference: needs_human_review: reference requirement R-negative-step (no human review)",
+          "contract reference: needs_human_review: reference requirement R-zero-step (no human review)",
+          "contract reference: needs_human_review: reference requirement R-positional-ordering (no human review)",
+          "contract reference: needs_human_review: reference requirement R-lazy (no human review)",
+          "contract reference: needs_human_review: inferred R-default-unchanged (no human review)",
+          "contract initial_only: needs_human_review: inferred R3 (no human review)",
+          "contract initial_only: unresolved: R5 must be resolved or removed",
+          "contract full_session: needs_human_review: inferred R6 (no human review)",
+          "contract full_session: needs_human_review: inferred R7 (no human review)"
+        ],
+        "refused": false,
+        "status": "pending_review",
+        "task_id": "CS-04"
+      },
+      "candidates": {
+        "CS-04-fresh-A-final-1": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "41e0131c32f8e6c693e782414d8c5eb5ce42adb849a95e3137666bb76e1d3bd8",
+          "path": "strata/fresh-v1/candidates/CS-04-fresh-A-final-1.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-04-fresh-A-final-2": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "1349270edbd56476220787dcd3bc416fb68f9bf1539e0e2dd8f672179a251252",
+          "path": "strata/fresh-v1/candidates/CS-04-fresh-A-final-2.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-04-fresh-A-final-3": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "2a070f14d903ea2f6bf394125a5e446ccae915d7730a5c0151630ce8168c9824",
+          "path": "strata/fresh-v1/candidates/CS-04-fresh-A-final-3.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-04-fresh-A-final-4": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "9089739fbc9d3f8beb510ae22d16eb196844a56c2417c08b57b1fd72ee5c5b40",
+          "path": "strata/fresh-v1/candidates/CS-04-fresh-A-final-4.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-04-fresh-A-final-5": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "989ae5c40eed045e39bc467f1ba8d1e9b624a1bc4e4caf7294ae376b2da1733c",
+          "path": "strata/fresh-v1/candidates/CS-04-fresh-A-final-5.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-04-fresh-A-u1-1": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "67cee8e02888a02af069aa4a0785980f5ef0e6d397e7ae7f5700a62168c3a106",
+          "path": "strata/fresh-v1/candidates/CS-04-fresh-A-u1-1.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-04-fresh-A-u1-2": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "3d94c75b360260ac62c601854368f8a9e95cbe800df365a1c5e268e22261d047",
+          "path": "strata/fresh-v1/candidates/CS-04-fresh-A-u1-2.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-04-fresh-A-u1-3": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "90f96bb07637db8d6a4fb99c6a7d1a769475cde2c42e982b7f618b8363958065",
+          "path": "strata/fresh-v1/candidates/CS-04-fresh-A-u1-3.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-04-fresh-A-u1-4": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "147650587219d7c1b65732ec69fc8be90042d1108081b735c6354f4840553c7e",
+          "path": "strata/fresh-v1/candidates/CS-04-fresh-A-u1-4.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-04-fresh-A-u1-5": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "d62686df2c1ee84fde95fb9aa3987418fb1f78298ff345f68815d15c6ba86de3",
+          "path": "strata/fresh-v1/candidates/CS-04-fresh-A-u1-5.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-04-fresh-B-final-1": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "745af970768ef778eb32a9c7701e5347dd9506234cc130bbc8e3b753114455e5",
+          "path": "strata/fresh-v1/candidates/CS-04-fresh-B-final-1.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-04-fresh-B-final-2": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "9b55fa27e56041f6d7444a7dd5cbb5c0ae622465380626fa8d26ddf881c660fd",
+          "path": "strata/fresh-v1/candidates/CS-04-fresh-B-final-2.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-04-fresh-B-final-3": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "ab750161c062033a92363a56b43473f647c50164264f5c98b1887b9bbf2b04f0",
+          "path": "strata/fresh-v1/candidates/CS-04-fresh-B-final-3.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-04-fresh-B-final-4": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "cc6eb8fdc62f7d140b5664f60fd5cde525be3909a65684498050b0eed125150b",
+          "path": "strata/fresh-v1/candidates/CS-04-fresh-B-final-4.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-04-fresh-B-final-5": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "6914b4bb4a26b98e76ee3560d9505821e8ce094601531b4fd999174fdc89454b",
+          "path": "strata/fresh-v1/candidates/CS-04-fresh-B-final-5.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-04-fresh-B-u1-1": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "9a529046df4e8c835d2bd9ddf38a86ebf6a76f0abeca50c43116cd675df10121",
+          "path": "strata/fresh-v1/candidates/CS-04-fresh-B-u1-1.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-04-fresh-B-u1-2": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "8b1856fea3ce4497d489dc309f9b0fdc49bf3ce0eee1849b10491689e99905a7",
+          "path": "strata/fresh-v1/candidates/CS-04-fresh-B-u1-2.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-04-fresh-B-u1-3": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "6f24f92e716e7187217779cff83afa6b24513024defb606f766647f236f06d2c",
+          "path": "strata/fresh-v1/candidates/CS-04-fresh-B-u1-3.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-04-fresh-B-u1-4": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "ba37d9485c5f1b55efb470b0612183046021c8af8d84ae4324db6d03838046fe",
+          "path": "strata/fresh-v1/candidates/CS-04-fresh-B-u1-4.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-04-fresh-B-u1-5": {
+          "origin": "fresh_attempt",
+          "patch_sha256": "9849833132579e19575df401b7076bd26eb72003a80dcc636e264a187bda3e73",
+          "path": "strata/fresh-v1/candidates/CS-04-fresh-B-u1-5.json",
+          "stratum": "fresh-v1"
+        },
+        "CS-04-reference": {
+          "origin": "reference",
+          "patch_sha256": "7b5c874389eff6d0c4f6ce3d1d3655bbc427ac5577f84f4e645fb855a286ef96"
+        }
+      },
+      "family_id": "CS-04",
+      "image": "tc-env:801a26fad4c5e101",
+      "image_id": "sha256:035acd7634f10312c8ef4d6e206cfe978165ebd11bcf5ab9d17e097d794edc21",
+      "snapshot_manifest_sha256": "23d3be29cf4ba18308a6db7658382cdb9d20184d556646d7d854675531f92c2f",
+      "strata": {
+        "fresh-v1": {
+          "manifest": "strata/fresh-v1.json",
+          "manifest_sha256": "4bc7e840a163b1654093f98ed024abe4bf70a5c2b7b83c0c963f9625e97f1d6f"
+        }
+      },
+      "task_id": "CS-04",
+      "verifiers": {
+        "full_audited": {
+          "checks_sha256": "d548824b4ae744a75e36b01ad9b311ecb42cf2a318e0e4677c661360f95b7403",
+          "condition": "full_audited",
+          "content_sha256": "0b26cede9d6ba4638baacb2c3bd3400e911efa762e533d6448f781a3e6dc77c9",
+          "n_checks": 13,
+          "version": 1
+        },
+        "full_plain": {
+          "checks_sha256": "d548824b4ae744a75e36b01ad9b311ecb42cf2a318e0e4677c661360f95b7403",
+          "condition": "full_plain",
+          "content_sha256": "0b26cede9d6ba4638baacb2c3bd3400e911efa762e533d6448f781a3e6dc77c9",
+          "n_checks": 13,
+          "version": 1
+        },
+        "independent_label": {
+          "checks_sha256": "3d970a3f3029781b26c86c846d6016e078852c7c7c95def5e69ec73484b3cca5",
+          "condition": "reference_check",
+          "content_sha256": "23c7a6dd071d1802193b0e520f03b1c588487d12aba0d89df706f2ba4c065df2",
+          "n_checks": 9,
+          "version": 1
+        },
+        "initial_audited": {
+          "checks_sha256": "16d30dc5b5ea5b20efd4efc91b272724fc2a778154af154b6a965147e24e7ea2",
+          "condition": "initial_audited",
+          "content_sha256": "200e5e425c85b32f6affe4071dd83f2915dee71dc1469443157e54052721c8d1",
+          "n_checks": 12,
+          "version": 1
+        },
+        "initial_plain": {
+          "checks_sha256": "16d30dc5b5ea5b20efd4efc91b272724fc2a778154af154b6a965147e24e7ea2",
+          "condition": "initial_plain",
+          "content_sha256": "200e5e425c85b32f6affe4071dd83f2915dee71dc1469443157e54052721c8d1",
+          "n_checks": 12,
+          "version": 1
+        },
+        "llm_freeform": {
+          "checks_sha256": "a74646dfab45c296292bd464c00a46ce12618349a9e25f56ab6eb0fe69a2f05f",
+          "condition": "llm_freeform",
+          "content_sha256": "45b77c731e8ecca692309f8c4f7377a3a3271cbeb1a36d9c527207edd8cb9c63",
+          "n_checks": 14,
+          "version": 1
+        },
+        "reference_check": {
+          "checks_sha256": "c95df8c62fb9c71038c9aaa3d30f5f833e8aa8e9288542f39b4d72f018df2a41",
+          "condition": "reference_check",
+          "content_sha256": "2a5da126aa570a64ae0955ae065eaaac89d1fba09d244437feadcd564382fc1d",
+          "n_checks": 19,
+          "version": 1
+        },
+        "repo_tests": {
+          "checks_sha256": "b33939d63beda1ba9875815d81c274f43b95bb9dcc32f470ae81abbc920eb8cc",
+          "condition": "repo_tests",
+          "content_sha256": "41002085ee793a6cd77c9df354a3a0abc1b513fa48da58b8b0d8d82b0f3c38fa",
+          "n_checks": 777,
+          "version": 2
+        }
+      }
+    }
+  ]
+}
