@@ -96,7 +96,15 @@ def cmd_build_verifier(a) -> None:
     rel = f"verifiers/{a.verifier_id}/spec.json"
     if not a.dry_run:
         dump(spec, sp)
-        if rel not in m.verifiers:
+        if a.sidecar:  # register beside the task, never in a frozen task.json (protocol §15.5)
+            from .evaluate import EXTRA_VERIFIERS, extra_verifier_paths
+            have = extra_verifier_paths(tdir)
+            if rel not in have and rel not in m.verifiers:
+                (tdir / EXTRA_VERIFIERS).write_text(json.dumps(
+                    {"verifiers": have + [rel],
+                     "note": "label-support verifiers added after the task's files were frozen; "
+                             "evaluate includes them only with --with-extra-verifiers"}, indent=2) + "\n", encoding="utf-8")
+        elif rel not in m.verifiers:
             dump(m.model_copy(update={"verifiers": m.verifiers + [rel]}), tdir / "task.json")
     _out({"spec": rel, "recorded": not a.dry_run, "generation_record": record, "n_checks": len(spec.checks),
           "unmapped_checks": [c.check_id for c in spec.checks if not c.requirement_ids], "lint": [i.__dict__ for i in issues]})
@@ -470,7 +478,8 @@ def cmd_evaluate(a) -> None:
         out = run_matrix([Path(t).resolve() for t in a.tasks], run_id=a.run_id, out_root=REPO / "results" / "runs",
                          cache_dir=CACHE / "images", snapshot_root=SNAPSHOTS, split=Split(a.split),
                          conditions=a.conditions or None, repeats=a.repeats, require_frozen=not a.allow_unfrozen,
-                         repo_root=REPO, pilot=a.pilot, strata=a.strata, only_strata=a.only_strata)
+                         repo_root=REPO, pilot=a.pilot, strata=a.strata, only_strata=a.only_strata,
+                         extra_verifiers=a.with_extra_verifiers)
     except TaskRefused as exc:  # nothing was written
         raise SystemExit(f"evaluate refused by the acceptance gate:\n{exc}") from None
     except StratumError as exc:  # nothing was written
@@ -557,6 +566,8 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--isolation", default="process_separated"); p.add_argument("--test-subdir", default="tests")
     p.add_argument("--contract-id"); p.add_argument("--check-ids")
     p.add_argument("--dry-run", action="store_true", help="build and lint only; record nothing (no generation record needed)")
+    p.add_argument("--sidecar", action="store_true",
+                   help="register the verifier in verifiers_extra.json instead of task.json (for tasks whose files are frozen)")
     g = p.add_argument_group("generation record (required to record a generated verifier; never a model identifier)")
     g.add_argument("--gen-run-id", help="run id of the agent run that wrote the tests")
     g.add_argument("--config", help="configuration label of that run, e.g. config-A")
@@ -653,6 +664,8 @@ def main(argv: list[str] | None = None) -> None:
                    "acceptance gate (recorded in the run manifest); rejected tasks are always refused")
     p.add_argument("--strata", nargs="+", metavar="NAME", help="also grade the candidates of these candidate strata "
                    "(tasks/<id>/strata/<name>.json); task.json and the task's candidate files are never changed")
+    p.add_argument("--with-extra-verifiers", action="store_true",
+                   help="also grade the label-support verifiers registered in each task's verifiers_extra.json")
     p.add_argument("--only-strata", action="store_true", help="with --strata: grade the strata's candidates instead of the "
                    "task's own (the task's reference solution is still graded as the sanity check)")
     p.set_defaults(fn=cmd_evaluate)

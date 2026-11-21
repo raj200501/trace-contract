@@ -1613,3 +1613,46 @@ the new reporting rules (§16.6), because it was graded with harness 0.3.4 or la
 
 **Correction to D52.** D52 says that a changed file needs "a passed or explained"
 first-edit or base-read item. The code counts only passed items of checks b and c.
+
+### D55. Independent labelers for CS-01 to CS-04 (protocol §15.5); a frozen-file incident
+**Labelers.** One labeler per family was written by configuration B, a different agent
+configuration from the configuration-A writers of the reference checks. Each writer
+read only:
+* the reference contract;
+* the base snapshot;
+* the harness API and the lint rules;
+* a synthetic example of the test format.
+
+It wrote checks in `tasks/<id>/verifiers/independent_label/tests/` without grading
+them. A configuration-A coordinator then did the following:
+* built each labeler with a complete generation record (configuration label, prompt
+  sha256, times, turns and tool calls taken from the private transcripts);
+* graded it with three repeats on the reference and on the development no-op;
+* reported only the names of failing checks;
+* froze it after at most one revision.
+
+| Family | Checks | Round | Status | Frozen |
+| --- | --- | --- | --- | --- |
+| CS-01 | 9 | 1 | usable | 08:30:39Z |
+| CS-02 | 15 | 1 | usable | 08:30:45Z |
+| CS-03 | 9 | 2 | usable | 08:47:55Z |
+| CS-04 | 9 | 1 | usable | 08:38:39Z |
+
+In CS-03, the first round had two checks mapped to a change requirement that passed on
+the unchanged base. The single revision fixed both. All four labelers pass the reference
+in every repeat. On the no-op, each fails at least one check of every change
+requirement. Every active requirement of each reference contract is covered. All four
+were frozen before any fresh attempt existed. The coordinators looked over the writers'
+tool inputs; the strict audit of their transcripts is still to be run.
+
+**Incident: frozen `task.json` modified, and reverted.** `build-verifier` appended each
+new labeler to its task's `task.json`, which is one of the 135 hashed inputs of the
+frozen analysis. The other workflow's agent noticed this when the frozen-input check
+failed. The four files were restored to their committed content, and the labelers are
+now registered in a sidecar, `tasks/<id>/verifiers_extra.json`:
+* `build-verifier --sidecar` writes there and leaves `task.json` alone;
+* `evaluate --with-extra-verifiers` includes those verifiers and records that it did;
+* the report shows a sidecar verifier only where a run graded it.
+
+No run used the modified files. The frozen pilot regenerates identically, and 414
+tests pass.

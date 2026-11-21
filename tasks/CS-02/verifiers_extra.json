@@ -1,0 +1,6 @@
+{
+  "verifiers": [
+    "verifiers/independent_label/spec.json"
+  ],
+  "note": "label-support verifiers added after the task's files were frozen; evaluate includes them only with --with-extra-verifiers"
+}

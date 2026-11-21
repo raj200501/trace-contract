@@ -1,0 +1,86 @@
+{
+  "schema_version": "0.1.0",
+  "verifier_id": "independent_label",
+  "task_id": "CS-04",
+  "condition": "reference_check",
+  "contract_id": "CS-04-reference",
+  "isolation": "process_separated",
+  "test_dir": "verifiers/independent_label/tests",
+  "checks": [
+    {
+      "check_id": "test_consecutive_groups.py::test_step_example",
+      "requirement_ids": [
+        "R-step"
+      ]
+    },
+    {
+      "check_id": "test_consecutive_groups.py::test_step_breaks_on_other_gaps",
+      "requirement_ids": [
+        "R-step"
+      ]
+    },
+    {
+      "check_id": "test_consecutive_groups.py::test_negative_step_example",
+      "requirement_ids": [
+        "R-negative-step"
+      ]
+    },
+    {
+      "check_id": "test_consecutive_groups.py::test_zero_step_raises",
+      "requirement_ids": [
+        "R-zero-step"
+      ]
+    },
+    {
+      "check_id": "test_consecutive_groups.py::test_positional_ordering_example",
+      "requirement_ids": [
+        "R-positional-ordering"
+      ]
+    },
+    {
+      "check_id": "test_consecutive_groups.py::test_positional_ordering_matches_base",
+      "requirement_ids": [
+        "R-positional-ordering"
+      ]
+    },
+    {
+      "check_id": "test_consecutive_groups.py::test_default_matches_base",
+      "requirement_ids": [
+        "R-default-unchanged"
+      ]
+    },
+    {
+      "check_id": "test_consecutive_groups.py::test_groups_are_lazy_iterators",
+      "requirement_ids": [
+        "R-lazy"
+      ]
+    },
+    {
+      "check_id": "test_consecutive_groups.py::test_groups_consume_source_lazily",
+      "requirement_ids": [
+        "R-lazy"
+      ]
+    }
+  ],
+  "content_sha256": "23c7a6dd071d1802193b0e520f03b1c588487d12aba0d89df706f2ba4c065df2",
+  "checks_sha256": "3d970a3f3029781b26c86c846d6016e078852c7c7c95def5e69ec73484b3cca5",
+  "frozen_at": "2026-11-21T08:38:39+00:00",
+  "generation": {
+    "generator": "config-B",
+    "run_id": "agent-a185c3c60fbfdb593",
+    "prompt_sha256": "e07f16d590555351e6c87ba2735a425a62883da27659029a28219a365d2158a7",
+    "created_at": "2026-11-21T08:23:26Z",
+    "budget": {
+      "started_at": "2026-11-21T08:22:31Z",
+      "ended_at": "2026-11-21T08:23:26Z",
+      "wall_s": 55.0,
+      "turns": 6,
+      "tool_calls": 9,
+      "run_record": "build-session:subagents/workflows/wf_5db2f657-fdf/agent-a185c3c60fbfdb593.jsonl"
+    },
+    "notes": ""
+  },
+  "audit": null,
+  "frozen": true,
+  "version": 1
+}

@@ -1,0 +1,10 @@
+{
+  "status": "usable",
+  "round": 1,
+  "reasons": [
+    "All 15 checks pass on CS-02-reference in each of 3 repeats (outcome pass, tc-harness/0.3.5).",
+    "The only change requirement, R-atomic, has two checks, test_failed_insert_keeps_bytes_identical and test_failed_insert_file_parses_to_old_data. Both fail on CS-02-noop-dev, whose outcome is task_failure in each of 3 repeats.",
+    "No check mapped to a change requirement passes on CS-02-noop-dev.",
+    "Each of the 6 active requirements of CS-02-reference is mapped to at least one check."
+  ]
+}

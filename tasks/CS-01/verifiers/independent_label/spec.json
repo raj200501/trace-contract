@@ -1,0 +1,86 @@
+{
+  "schema_version": "0.1.0",
+  "verifier_id": "independent_label",
+  "task_id": "CS-01",
+  "condition": "reference_check",
+  "contract_id": "CS-01-reference",
+  "isolation": "process_separated",
+  "test_dir": "verifiers/independent_label/tests",
+  "checks": [
+    {
+      "check_id": "test_strip_trailing_zero.py::test_default_examples_unchanged",
+      "requirement_ids": [
+        "R-default-unchanged"
+      ]
+    },
+    {
+      "check_id": "test_strip_trailing_zero.py::test_default_matches_base",
+      "requirement_ids": [
+        "R-default-unchanged"
+      ]
+    },
+    {
+      "check_id": "test_strip_trailing_zero.py::test_default_flag_false_matches_base",
+      "requirement_ids": [
+        "R-opt-in"
+      ]
+    },
+    {
+      "check_id": "test_strip_trailing_zero.py::test_opt_in_examples",
+      "requirement_ids": [
+        "R-opt-in"
+      ]
+    },
+    {
+      "check_id": "test_strip_trailing_zero.py::test_opt_in_matches_rule",
+      "requirement_ids": [
+        "R-opt-in"
+      ]
+    },
+    {
+      "check_id": "test_strip_trailing_zero.py::test_keep_meaningful_examples",
+      "requirement_ids": [
+        "R-keep-meaningful"
+      ]
+    },
+    {
+      "check_id": "test_strip_trailing_zero.py::test_keep_meaningful_differential",
+      "requirement_ids": [
+        "R-keep-meaningful"
+      ]
+    },
+    {
+      "check_id": "test_strip_trailing_zero.py::test_custom_format_examples",
+      "requirement_ids": [
+        "R-custom-format-unchanged"
+      ]
+    },
+    {
+      "check_id": "test_strip_trailing_zero.py::test_custom_format_matches_base",
+      "requirement_ids": [
+        "R-custom-format-unchanged"
+      ]
+    }
+  ],
+  "content_sha256": "d567a430ec728469bbd6d370d007a63573764c749ee5e46784fa6ea3bf4de3fd",
+  "checks_sha256": "df04299bea298a406e0aca11b743720e9d5234c43b3eaa64609184241e6dd8de",
+  "frozen_at": "2026-11-21T08:30:39+00:00",
+  "generation": {
+    "generator": "config-B",
+    "run_id": "wf_5db2f657-fdf/L-write-CS-01",
+    "prompt_sha256": "41f2d5a5a688ca11df3c3a8af63d9df94719ac1a06edd19d749bd2573aaeeb52",
+    "created_at": "2026-11-21T08:22:04.778Z",
+    "budget": {
+      "started_at": "2026-11-21T08:20:25.921Z",
+      "ended_at": "2026-11-21T08:22:04.778Z",
+      "wall_s": 98.857,
+      "turns": 12,
+      "tool_calls": 15,
+      "run_record": "subagents/workflows/wf_5db2f657-fdf/agent-ad824e4ec7da43519.jsonl (agent L-write-CS-01; the build session's private records, outside the repository)"
+    },
+    "notes": ""
+  },
+  "audit": null,
+  "frozen": true,
+  "version": 1
+}

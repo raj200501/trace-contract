@@ -45,9 +45,28 @@ def code_revision(repo_root: Path) -> str:
         return "unknown"
 
 
-def load_task(task_dir: Path) -> tuple[TaskManifest, list[VerifierSpec], list[Candidate]]:
+EXTRA_VERIFIERS = "verifiers_extra.json"
+
+
+def extra_verifier_paths(task_dir: Path) -> list[str]:
+    """Verifier specs registered in the task's sidecar ``verifiers_extra.json``, not in ``task.json``.
+
+    Label-support verifiers added after a task's files were frozen (for example the
+    independent labeler, protocol §15.5) are registered here, so the frozen ``task.json``
+    is never changed. Evaluations include them only when asked to.
+    """
+    p = task_dir / EXTRA_VERIFIERS
+    if not p.is_file():
+        return []
+    import json as _json
+    data = _json.loads(p.read_text(encoding="utf-8"))
+    return [str(x) for x in data.get("verifiers", [])]
+
+
+def load_task(task_dir: Path, *, extra: bool = False) -> tuple[TaskManifest, list[VerifierSpec], list[Candidate]]:
     m = load(task_dir / "task.json", TaskManifest)
-    specs = [load(task_dir / p, VerifierSpec) for p in m.verifiers]
+    paths = list(m.verifiers) + ([x for x in extra_verifier_paths(task_dir) if x not in m.verifiers] if extra else [])
+    specs = [load(task_dir / p, VerifierSpec) for p in paths]
     cands = [load(task_dir / p, Candidate) for p in m.candidates]
     return m, specs, cands
 
@@ -111,7 +130,7 @@ def run_matrix(task_dirs: list[Path], *, run_id: str, out_root: Path, cache_dir:
                split: Split = Split.eval, conditions: list[str] | None = None, repeats: int = 1,
                limits: Limits | None = None, require_frozen: bool = True, repo_root: Path | None = None,
                include_reference: bool = True, pilot: bool = False, strata: list[str] | None = None,
-               only_strata: bool = False) -> Path:
+               only_strata: bool = False, extra_verifiers: bool = False) -> Path:
     root = repo_root or Path.cwd()
     gates = gate_tasks(task_dirs, repo_root=root, pilot=pilot)  # before anything is written
     out = out_root / run_id
@@ -144,12 +163,14 @@ def run_matrix(task_dirs: list[Path], *, run_id: str, out_root: Path, cache_dir:
         # recorded before the gate was enforced (no "pilot" key) counts as such.
         "pilot": any(inv.get("pilot", True) for inv in invocations),
     }
+    if extra_verifiers:  # label-support verifiers from verifiers_extra.json were included
+        manifest["extra_verifiers"] = True
     from .tasks import verify_snapshot
 
     # Check every task's snapshot and frozen verifiers before grading anything, so a run
     # cannot stop part-way on a missing or modified input.
     for td in task_dirs:
-        m, specs, _ = load_task(td)
+        m, specs, _ = load_task(td, extra=extra_verifiers)
         base = snapshot_root / m.task_id
         if not base.is_dir():
             raise FileNotFoundError(f"snapshot for {m.task_id} not built at {base} (run `tracecontract snapshot`)")
@@ -162,7 +183,7 @@ def run_matrix(task_dirs: list[Path], *, run_id: str, out_root: Path, cache_dir:
                 raise ValueError(f"{s.verifier_id} is not frozen; freeze verifiers before final evaluation")
             check_frozen(s, td)
     for td in task_dirs:
-        m, specs, cands = load_task(td)
+        m, specs, cands = load_task(td, extra=extra_verifiers)
         base = snapshot_root / m.task_id
         snap = load(td / (m.snapshot or "snapshot.json"), Snapshot)
         tag, image_id = build_env_image(m.env_requirements, cache_dir)

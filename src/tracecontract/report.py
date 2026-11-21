@@ -490,7 +490,12 @@ def build_report(run_dir: Path, tasks_root: Path, repo_root: Path, out: Path) ->
         cands = {load(tdir / p, Candidate).candidate_id: load(tdir / p, Candidate) for p in m.candidates}
         stratum = {cid: name for cid, (name, _, _) in strata_of[tid].items()}  # stratum candidates, as the run recorded them
         cands.update({cid: c for cid, (_, _, c) in strata_of[tid].items()})
+        from .evaluate import extra_verifier_paths
         specs = {load(tdir / p, VerifierSpec).verifier_id: load(tdir / p, VerifierSpec) for p in m.verifiers}
+        for xp in extra_verifier_paths(tdir):  # sidecar verifiers, only where this run graded them
+            xs = load(tdir / xp, VerifierSpec)
+            if xs.verifier_id in t["verifiers"] and xs.verifier_id not in specs:
+                specs[xs.verifier_id] = xs
         rs = by_task.get(tid, [])
         vids = [v for v in t["verifiers"]]
         cids = sorted({r.candidate_id for r in rs})

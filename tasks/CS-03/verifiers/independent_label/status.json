@@ -1,0 +1,10 @@
+{
+  "status": "usable",
+  "round": 2,
+  "reasons": [
+    "No check fails on the reference: CS-03-reference passed all 9 checks, with outcome pass in each of 3 repeats (tc-harness/0.3.5).",
+    "On the no-op (CS-03-noop-dev, 3 repeats, outcome task_failure in each), all 5 checks mapped to the change requirements R-acronym and R-all-caps-input fail, and the 4 invariant checks pass.",
+    "Every requirement of CS-03-reference has at least one check: R-acronym 5, R-all-caps-input 2, R-humanize-unchanged 2, R-underscore-unchanged 2.",
+    "Caveat on R-all-caps-input: it requires base behaviour for fully uppercase input, so the no-op satisfies it. Its two checks, test_all_caps_example and test_all_caps_matches_base, fail on the no-op only because of the mixed-case input 'NASA rocket launch' that the revision appended. That input tests R-acronym, and both checks are also mapped to R-acronym. Their all-caps assertions pass on the no-op, so no check fails on the no-op because of R-all-caps-input itself. A failure of these checks does not show an R-all-caps-input violation. Per-requirement labels for R-all-caps-input taken from them would mark any candidate that lacks R-acronym, the no-op included, as violating it. Verdicts on whole candidates are not affected, because test_acronym_examples asserts the same input."
+  ]
+}

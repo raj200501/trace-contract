@@ -1,0 +1,123 @@
+{
+  "schema_version": "0.1.0",
+  "verifier_id": "independent_label",
+  "task_id": "CS-02",
+  "condition": "reference_check",
+  "contract_id": "CS-02-reference",
+  "isolation": "process_separated",
+  "test_dir": "verifiers/independent_label/tests",
+  "checks": [
+    {
+      "check_id": "test_atomic_write.py::test_failed_insert_keeps_bytes_identical",
+      "requirement_ids": [
+        "R-original-intact",
+        "R-atomic"
+      ]
+    },
+    {
+      "check_id": "test_atomic_write.py::test_failed_insert_file_parses_to_old_data",
+      "requirement_ids": [
+        "R-atomic"
+      ]
+    },
+    {
+      "check_id": "test_atomic_write.py::test_failed_update_keeps_old_bytes",
+      "requirement_ids": [
+        "R-original-intact"
+      ]
+    },
+    {
+      "check_id": "test_atomic_write.py::test_no_temp_files_after_failed_insert",
+      "requirement_ids": [
+        "R-no-temp-files"
+      ]
+    },
+    {
+      "check_id": "test_atomic_write.py::test_no_temp_files_after_successful_writes",
+      "requirement_ids": [
+        "R-no-temp-files"
+      ]
+    },
+    {
+      "check_id": "test_atomic_write.py::test_successful_insert_file_holds_exact_data",
+      "requirement_ids": [
+        "R-new-content"
+      ]
+    },
+    {
+      "check_id": "test_atomic_write.py::test_successful_shorter_write_file_holds_exact_data",
+      "requirement_ids": [
+        "R-new-content"
+      ]
+    },
+    {
+      "check_id": "test_reads_and_bytes.py::test_read_after_write_same_instance",
+      "requirement_ids": [
+        "R-read-after-write"
+      ]
+    },
+    {
+      "check_id": "test_reads_and_bytes.py::test_read_after_write_storage_object",
+      "requirement_ids": [
+        "R-read-after-write"
+      ]
+    },
+    {
+      "check_id": "test_reads_and_bytes.py::test_new_instance_sees_writes",
+      "requirement_ids": [
+        "R-read-after-write"
+      ]
+    },
+    {
+      "check_id": "test_reads_and_bytes.py::test_bytes_default_kwargs_utf8",
+      "requirement_ids": [
+        "R-bytes-unchanged"
+      ]
+    },
+    {
+      "check_id": "test_reads_and_bytes.py::test_bytes_indent_sort_keys_utf8",
+      "requirement_ids": [
+        "R-bytes-unchanged"
+      ]
+    },
+    {
+      "check_id": "test_reads_and_bytes.py::test_bytes_ensure_ascii_false_utf8",
+      "requirement_ids": [
+        "R-bytes-unchanged"
+      ]
+    },
+    {
+      "check_id": "test_reads_and_bytes.py::test_bytes_latin1_and_utf16",
+      "requirement_ids": [
+        "R-bytes-unchanged"
+      ]
+    },
+    {
+      "check_id": "test_reads_and_bytes.py::test_bytes_overwrite_shorter",
+      "requirement_ids": [
+        "R-bytes-unchanged"
+      ]
+    }
+  ],
+  "content_sha256": "164df735e6a8ddfa3df998c3cad5de668125759e72c734bf63601f50e9247e0e",
+  "checks_sha256": "998141767dc3f16b00f153c7c8637cf74ae85d7df937b8f6f36a16154799c1b4",
+  "frozen_at": "2026-11-21T08:30:45+00:00",
+  "generation": {
+    "generator": "config-B",
+    "run_id": "L-write-CS-02@wf_5db2f657-fdf",
+    "prompt_sha256": "6bf8a0620f498ace3d46eb2a5387dbd55a355856995dc1dc06372dee6ef3974a",
+    "created_at": "2026-11-21T08:22:22Z",
+    "budget": {
+      "started_at": "2026-11-21T08:20:29Z",
+      "ended_at": "2026-11-21T08:22:22Z",
+      "wall_s": 113.0,
+      "turns": 7,
+      "tool_calls": 12,
+      "run_record": "build-session subagent transcript subagents/workflows/wf_5db2f657-fdf/agent-a749a46355596de2b.jsonl (with its .meta.json), outside the repository"
+    },
+    "notes": ""
+  },
+  "audit": null,
+  "frozen": true,
+  "version": 1
+}

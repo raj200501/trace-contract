@@ -1,0 +1,11 @@
+{
+  "status": "usable",
+  "round": 1,
+  "reasons": [
+    "All 9 checks pass on CS-01-reference (grade --repeats 3: outcome pass; the repeated runs agree).",
+    "The one active change requirement, R-opt-in, has 3 checks (test_default_flag_false_matches_base, test_opt_in_examples, test_opt_in_matches_rule). All 3 fail on CS-01-noop-dev (TypeError: unexpected keyword argument 'strip_trailing_zero'; grade --repeats 3: outcome task_failure; the repeated runs agree). No check mapped to a change requirement passes on the no-op.",
+    "Every active requirement has at least one check: R-opt-in 3, R-keep-meaningful 2, R-default-unchanged 2, R-custom-format-unchanged 2. R-default-trim (change, superseded by R-default-unchanged) is inactive and has no check.",
+    "On the no-op the 4 checks of R-default-unchanged and R-custom-format-unchanged pass. The 2 checks of R-keep-meaningful fail, because that invariant's statement itself calls strip_trailing_zero=True.",
+    "Frozen after round 1, with no revision: frozen_at 2026-11-21T08:30:39+00:00, content_sha256 d567a430ec728469bbd6d370d007a63573764c749ee5e46784fa6ea3bf4de3fd, checks_sha256 df04299bea298a406e0aca11b743720e9d5234c43b3eaa64609184241e6dd8de."
+  ]
+}

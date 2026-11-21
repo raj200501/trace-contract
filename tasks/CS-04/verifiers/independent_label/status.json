@@ -1,0 +1,11 @@
+{
+  "status": "usable",
+  "round": 1,
+  "reasons": [
+    "all 9 checks pass on CS-04-reference (outcome pass in each of 3 repeats, tc-harness/0.3.5)",
+    "on CS-04-noop-dev (outcome task_failure in each of 3 repeats) every change requirement has a failing check: R-step (test_step_example, test_step_breaks_on_other_gaps), R-negative-step (test_negative_step_example), R-zero-step (test_zero_step_raises)",
+    "no check mapped to a change requirement passes on CS-04-noop-dev; the 5 checks that pass there are mapped to the invariants R-positional-ordering, R-default-unchanged and R-lazy",
+    "every requirement of CS-04-reference is mapped to at least one check",
+    "frozen in round 1 with no revision"
+  ]
+}

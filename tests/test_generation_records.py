@@ -73,12 +73,22 @@ def test_each_missing_or_invalid_field_is_refused():
 
 
 def test_the_pilot_records_are_incomplete_and_stay_as_recorded():
-    """The frozen specs of CS-01..04 carry the old fields ('unrecorded', no hash); they are read, never rewritten."""
+    """The frozen specs of CS-01..04 carry the old fields ('unrecorded', no hash); they are read, never rewritten.
+
+    Label-support verifiers added later (verifiers_extra.json, protocol §15.5) carry complete records instead.
+    """
+    import json as _json
     for p in sorted(R.glob("tasks/CS-0*/verifiers/*/spec.json")):
         before = p.read_bytes()
         s = load(p, VerifierSpec)
+        task = p.parents[2]
+        extra = task / "verifiers_extra.json"
+        later = extra.is_file() and str(p.relative_to(task)) in _json.loads(extra.read_text())["verifiers"]
         if s.generation is not None:
-            assert generation_record_problems(s.generation), p
+            if later:
+                assert not generation_record_problems(s.generation), p
+            else:
+                assert generation_record_problems(s.generation), p
         assert p.read_bytes() == before
 
 

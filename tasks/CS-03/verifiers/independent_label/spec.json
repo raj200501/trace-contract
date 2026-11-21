@@ -1,0 +1,88 @@
+{
+  "schema_version": "0.1.0",
+  "verifier_id": "independent_label",
+  "task_id": "CS-03",
+  "condition": "reference_check",
+  "contract_id": "CS-03-reference",
+  "isolation": "process_separated",
+  "test_dir": "verifiers/independent_label/tests",
+  "checks": [
+    {
+      "check_id": "test_acronym.py::test_acronym_examples",
+      "requirement_ids": [
+        "R-acronym"
+      ]
+    },
+    {
+      "check_id": "test_acronym.py::test_acronym_position",
+      "requirement_ids": [
+        "R-acronym"
+      ]
+    },
+    {
+      "check_id": "test_acronym.py::test_acronym_two_letters",
+      "requirement_ids": [
+        "R-acronym"
+      ]
+    },
+    {
+      "check_id": "test_all_caps.py::test_all_caps_example",
+      "requirement_ids": [
+        "R-all-caps-input",
+        "R-acronym"
+      ]
+    },
+    {
+      "check_id": "test_all_caps.py::test_all_caps_matches_base",
+      "requirement_ids": [
+        "R-all-caps-input",
+        "R-acronym"
+      ]
+    },
+    {
+      "check_id": "test_humanize.py::test_humanize_examples",
+      "requirement_ids": [
+        "R-humanize-unchanged"
+      ]
+    },
+    {
+      "check_id": "test_humanize.py::test_humanize_matches_base",
+      "requirement_ids": [
+        "R-humanize-unchanged"
+      ]
+    },
+    {
+      "check_id": "test_underscore.py::test_underscore_example",
+      "requirement_ids": [
+        "R-underscore-unchanged"
+      ]
+    },
+    {
+      "check_id": "test_underscore.py::test_underscore_matches_base",
+      "requirement_ids": [
+        "R-underscore-unchanged"
+      ]
+    }
+  ],
+  "content_sha256": "d9e13c4a946427ecbcc9aae6c5c60a65c93cd3cffcf3393c9775787196f944a6",
+  "checks_sha256": "ac37bbc97340a8c917bc3b3ed44ff6b605195efa672f36ed09e9bd7f64acc62c",
+  "frozen_at": "2026-11-21T08:47:55+00:00",
+  "generation": {
+    "generator": "config-B",
+    "run_id": "wf_5db2f657-fdf.agent-ae4cd2f604b3542e1+agent-a5e71a24bba3530d7",
+    "prompt_sha256": "2de11e3c9cd78d0c8545bd2120cbab438cb71e8aeab512699bfc386a89874dd2",
+    "created_at": "2026-11-21T08:40:13.428Z",
+    "budget": {
+      "started_at": "2026-11-21T08:22:04.796Z",
+      "ended_at": "2026-11-21T08:40:13.428Z",
+      "wall_s": 123.176,
+      "turns": 16,
+      "tool_calls": 29,
+      "run_record": "build-session:subagents/workflows/wf_5db2f657-fdf/agent-ae4cd2f604b3542e1.jsonl;build-session:subagents/workflows/wf_5db2f657-fdf/agent-a5e71a24bba3530d7.jsonl"
+    },
+    "notes": ""
+  },
+  "audit": null,
+  "frozen": true,
+  "version": 1
+}
