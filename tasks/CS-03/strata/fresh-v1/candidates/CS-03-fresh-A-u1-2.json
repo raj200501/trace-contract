@@ -8,7 +8,19 @@
   "patch_sha256": "5021c38b449b22238c07f3528a84256629abb284e575cc77687aaa5e4db2fa7e",
   "produced_by": "fresh-attempt:config-A",
   "description": "",
-  "labels": [],
+  "labels": [
+    {
+      "value": "invalid",
+      "violated_requirements": [
+        "R-all-caps-input"
+      ],
+      "labeler": "builder:refcheck+regression+construction:v1",
+      "labeler_kind": "model",
+      "adjudicated": false,
+      "timestamp": "2026-11-21T11:04:15+00:00",
+      "note": "natural candidate fails reference checks and/or regression norm | {\"refcheck_outcome\": \"task_failure\", \"refcheck_failed\": [\"test_titleize_all_caps.py::test_titleize_all_caps_contract_example\", \"test_titleize_all_caps.py::test_titleize_all_caps_input_does_not_keep_capitals\", \"test_titleize_all_caps.py::test_titleize_all_caps_with_separators_matches_base\", \"test_titleize_all_caps.py::test_titleize_all_caps_generated_inputs_match_base\"], \"regression_outcome\": \"pass\", \"regression_failed\": [], \"construction\": null}"
+    }
+  ],
   "attempt": {
     "attempt_id": "CS-03-fresh-A-u1-2",
     "configuration": "config-A",

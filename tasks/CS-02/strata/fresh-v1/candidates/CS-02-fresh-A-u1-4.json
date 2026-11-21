@@ -8,7 +8,19 @@
   "patch_sha256": "a0ba82f9f30517bdbbca9a11bb72c6fdc8c492e79be0c8c266c9c63d7b5d52dd",
   "produced_by": "fresh-attempt:config-A",
   "description": "",
-  "labels": [],
+  "labels": [
+    {
+      "value": "invalid",
+      "violated_requirements": [
+        "REGRESSION"
+      ],
+      "labeler": "builder:refcheck+regression+construction:v1",
+      "labeler_kind": "model",
+      "adjudicated": false,
+      "timestamp": "2026-11-21T11:02:46+00:00",
+      "note": "natural candidate fails reference checks and/or regression norm | {\"refcheck_outcome\": \"pass\", \"refcheck_failed\": [], \"regression_outcome\": \"task_failure\", \"regression_failed\": [\"tests.test_middlewares::test_caching_json_write\"], \"construction\": null}"
+    }
+  ],
   "attempt": {
     "attempt_id": "CS-02-fresh-A-u1-4",
     "configuration": "config-A",

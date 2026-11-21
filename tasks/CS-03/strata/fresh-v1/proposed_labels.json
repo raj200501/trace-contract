@@ -1,0 +1,278 @@
+{
+  "candidates": {
+    "CS-03-fresh-A-final-1": {
+      "construction": null,
+      "origin": "fresh_attempt",
+      "proposed": "valid",
+      "refcheck_failed": [],
+      "refcheck_outcome": "pass",
+      "regression_failed": [],
+      "regression_outcome": "pass",
+      "violated": [],
+      "why": "natural candidate passes reference checks and regression norm"
+    },
+    "CS-03-fresh-A-final-2": {
+      "construction": null,
+      "origin": "fresh_attempt",
+      "proposed": "valid",
+      "refcheck_failed": [],
+      "refcheck_outcome": "pass",
+      "regression_failed": [],
+      "regression_outcome": "pass",
+      "violated": [],
+      "why": "natural candidate passes reference checks and regression norm"
+    },
+    "CS-03-fresh-A-final-3": {
+      "construction": null,
+      "origin": "fresh_attempt",
+      "proposed": "valid",
+      "refcheck_failed": [],
+      "refcheck_outcome": "pass",
+      "regression_failed": [],
+      "regression_outcome": "pass",
+      "violated": [],
+      "why": "natural candidate passes reference checks and regression norm"
+    },
+    "CS-03-fresh-A-final-4": {
+      "construction": null,
+      "origin": "fresh_attempt",
+      "proposed": "valid",
+      "refcheck_failed": [],
+      "refcheck_outcome": "pass",
+      "regression_failed": [],
+      "regression_outcome": "pass",
+      "violated": [],
+      "why": "natural candidate passes reference checks and regression norm"
+    },
+    "CS-03-fresh-A-final-5": {
+      "construction": null,
+      "origin": "fresh_attempt",
+      "proposed": "valid",
+      "refcheck_failed": [],
+      "refcheck_outcome": "pass",
+      "regression_failed": [],
+      "regression_outcome": "pass",
+      "violated": [],
+      "why": "natural candidate passes reference checks and regression norm"
+    },
+    "CS-03-fresh-A-u1-1": {
+      "construction": null,
+      "origin": "fresh_attempt",
+      "proposed": "valid",
+      "refcheck_failed": [],
+      "refcheck_outcome": "pass",
+      "regression_failed": [],
+      "regression_outcome": "pass",
+      "violated": [],
+      "why": "natural candidate passes reference checks and regression norm"
+    },
+    "CS-03-fresh-A-u1-2": {
+      "construction": null,
+      "origin": "fresh_attempt",
+      "proposed": "invalid",
+      "refcheck_failed": [
+        "test_titleize_all_caps.py::test_titleize_all_caps_contract_example",
+        "test_titleize_all_caps.py::test_titleize_all_caps_input_does_not_keep_capitals",
+        "test_titleize_all_caps.py::test_titleize_all_caps_with_separators_matches_base",
+        "test_titleize_all_caps.py::test_titleize_all_caps_generated_inputs_match_base"
+      ],
+      "refcheck_outcome": "task_failure",
+      "regression_failed": [],
+      "regression_outcome": "pass",
+      "violated": [
+        "R-all-caps-input"
+      ],
+      "why": "natural candidate fails reference checks and/or regression norm"
+    },
+    "CS-03-fresh-A-u1-3": {
+      "construction": null,
+      "origin": "fresh_attempt",
+      "proposed": "valid",
+      "refcheck_failed": [],
+      "refcheck_outcome": "pass",
+      "regression_failed": [],
+      "regression_outcome": "pass",
+      "violated": [],
+      "why": "natural candidate passes reference checks and regression norm"
+    },
+    "CS-03-fresh-A-u1-4": {
+      "construction": null,
+      "origin": "fresh_attempt",
+      "proposed": "invalid",
+      "refcheck_failed": [
+        "test_titleize_all_caps.py::test_titleize_all_caps_contract_example",
+        "test_titleize_all_caps.py::test_titleize_all_caps_input_does_not_keep_capitals",
+        "test_titleize_all_caps.py::test_titleize_all_caps_with_separators_matches_base",
+        "test_titleize_all_caps.py::test_titleize_all_caps_generated_inputs_match_base"
+      ],
+      "refcheck_outcome": "task_failure",
+      "regression_failed": [],
+      "regression_outcome": "pass",
+      "violated": [
+        "R-all-caps-input"
+      ],
+      "why": "natural candidate fails reference checks and/or regression norm"
+    },
+    "CS-03-fresh-A-u1-5": {
+      "construction": null,
+      "origin": "fresh_attempt",
+      "proposed": "valid",
+      "refcheck_failed": [],
+      "refcheck_outcome": "pass",
+      "regression_failed": [],
+      "regression_outcome": "pass",
+      "violated": [],
+      "why": "natural candidate passes reference checks and regression norm"
+    },
+    "CS-03-fresh-B-final-1": {
+      "construction": null,
+      "origin": "fresh_attempt",
+      "proposed": "valid",
+      "refcheck_failed": [],
+      "refcheck_outcome": "pass",
+      "regression_failed": [],
+      "regression_outcome": "pass",
+      "violated": [],
+      "why": "natural candidate passes reference checks and regression norm"
+    },
+    "CS-03-fresh-B-final-2": {
+      "construction": null,
+      "origin": "fresh_attempt",
+      "proposed": "valid",
+      "refcheck_failed": [],
+      "refcheck_outcome": "pass",
+      "regression_failed": [],
+      "regression_outcome": "pass",
+      "violated": [],
+      "why": "natural candidate passes reference checks and regression norm"
+    },
+    "CS-03-fresh-B-final-3": {
+      "construction": null,
+      "origin": "fresh_attempt",
+      "proposed": "valid",
+      "refcheck_failed": [],
+      "refcheck_outcome": "pass",
+      "regression_failed": [],
+      "regression_outcome": "pass",
+      "violated": [],
+      "why": "natural candidate passes reference checks and regression norm"
+    },
+    "CS-03-fresh-B-final-4": {
+      "construction": null,
+      "origin": "fresh_attempt",
+      "proposed": "valid",
+      "refcheck_failed": [],
+      "refcheck_outcome": "pass",
+      "regression_failed": [],
+      "regression_outcome": "pass",
+      "violated": [],
+      "why": "natural candidate passes reference checks and regression norm"
+    },
+    "CS-03-fresh-B-final-5": {
+      "construction": null,
+      "origin": "fresh_attempt",
+      "proposed": "valid",
+      "refcheck_failed": [],
+      "refcheck_outcome": "pass",
+      "regression_failed": [],
+      "regression_outcome": "pass",
+      "violated": [],
+      "why": "natural candidate passes reference checks and regression norm"
+    },
+    "CS-03-fresh-B-u1-1": {
+      "construction": null,
+      "origin": "fresh_attempt",
+      "proposed": "invalid",
+      "refcheck_failed": [
+        "test_titleize_all_caps.py::test_titleize_all_caps_contract_example",
+        "test_titleize_all_caps.py::test_titleize_all_caps_input_does_not_keep_capitals",
+        "test_titleize_all_caps.py::test_titleize_all_caps_with_separators_matches_base",
+        "test_titleize_all_caps.py::test_titleize_all_caps_generated_inputs_match_base"
+      ],
+      "refcheck_outcome": "task_failure",
+      "regression_failed": [],
+      "regression_outcome": "pass",
+      "violated": [
+        "R-all-caps-input"
+      ],
+      "why": "natural candidate fails reference checks and/or regression norm"
+    },
+    "CS-03-fresh-B-u1-2": {
+      "construction": null,
+      "origin": "fresh_attempt",
+      "proposed": "invalid",
+      "refcheck_failed": [
+        "test_titleize_all_caps.py::test_titleize_all_caps_contract_example",
+        "test_titleize_all_caps.py::test_titleize_all_caps_input_does_not_keep_capitals",
+        "test_titleize_all_caps.py::test_titleize_all_caps_with_separators_matches_base",
+        "test_titleize_all_caps.py::test_titleize_all_caps_generated_inputs_match_base"
+      ],
+      "refcheck_outcome": "task_failure",
+      "regression_failed": [],
+      "regression_outcome": "pass",
+      "violated": [
+        "R-all-caps-input"
+      ],
+      "why": "natural candidate fails reference checks and/or regression norm"
+    },
+    "CS-03-fresh-B-u1-3": {
+      "construction": null,
+      "origin": "fresh_attempt",
+      "proposed": "invalid",
+      "refcheck_failed": [
+        "test_titleize_all_caps.py::test_titleize_all_caps_contract_example",
+        "test_titleize_all_caps.py::test_titleize_all_caps_input_does_not_keep_capitals",
+        "test_titleize_all_caps.py::test_titleize_all_caps_with_separators_matches_base",
+        "test_titleize_all_caps.py::test_titleize_all_caps_generated_inputs_match_base"
+      ],
+      "refcheck_outcome": "task_failure",
+      "regression_failed": [],
+      "regression_outcome": "pass",
+      "violated": [
+        "R-all-caps-input"
+      ],
+      "why": "natural candidate fails reference checks and/or regression norm"
+    },
+    "CS-03-fresh-B-u1-4": {
+      "construction": null,
+      "origin": "fresh_attempt",
+      "proposed": "invalid",
+      "refcheck_failed": [
+        "test_titleize_all_caps.py::test_titleize_all_caps_contract_example",
+        "test_titleize_all_caps.py::test_titleize_all_caps_input_does_not_keep_capitals",
+        "test_titleize_all_caps.py::test_titleize_all_caps_with_separators_matches_base",
+        "test_titleize_all_caps.py::test_titleize_all_caps_generated_inputs_match_base"
+      ],
+      "refcheck_outcome": "task_failure",
+      "regression_failed": [],
+      "regression_outcome": "pass",
+      "violated": [
+        "R-all-caps-input"
+      ],
+      "why": "natural candidate fails reference checks and/or regression norm"
+    },
+    "CS-03-fresh-B-u1-5": {
+      "construction": null,
+      "origin": "fresh_attempt",
+      "proposed": "invalid",
+      "refcheck_failed": [
+        "test_titleize_all_caps.py::test_titleize_all_caps_contract_example",
+        "test_titleize_all_caps.py::test_titleize_all_caps_input_does_not_keep_capitals",
+        "test_titleize_all_caps.py::test_titleize_all_caps_with_separators_matches_base",
+        "test_titleize_all_caps.py::test_titleize_all_caps_generated_inputs_match_base"
+      ],
+      "refcheck_outcome": "task_failure",
+      "regression_failed": [],
+      "regression_outcome": "pass",
+      "violated": [
+        "R-all-caps-input"
+      ],
+      "why": "natural candidate fails reference checks and/or regression norm"
+    }
+  },
+  "created_at": "2026-11-21T11:03:45+00:00",
+  "labeler": "builder:refcheck+regression+construction:v1",
+  "regression_overlay": "labels/base_tests_overlay",
+  "stratum": "fresh-v1",
+  "task_id": "CS-03"
+}

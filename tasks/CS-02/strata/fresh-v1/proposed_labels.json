@@ -1,0 +1,237 @@
+{
+  "candidates": {
+    "CS-02-fresh-A-final-1": {
+      "construction": null,
+      "origin": "fresh_attempt",
+      "proposed": "valid",
+      "refcheck_failed": [],
+      "refcheck_outcome": "pass",
+      "regression_failed": [],
+      "regression_outcome": "pass",
+      "violated": [],
+      "why": "natural candidate passes reference checks and regression norm"
+    },
+    "CS-02-fresh-A-final-2": {
+      "construction": null,
+      "origin": "fresh_attempt",
+      "proposed": "valid",
+      "refcheck_failed": [],
+      "refcheck_outcome": "pass",
+      "regression_failed": [],
+      "regression_outcome": "pass",
+      "violated": [],
+      "why": "natural candidate passes reference checks and regression norm"
+    },
+    "CS-02-fresh-A-final-3": {
+      "construction": null,
+      "origin": "fresh_attempt",
+      "proposed": "valid",
+      "refcheck_failed": [],
+      "refcheck_outcome": "pass",
+      "regression_failed": [],
+      "regression_outcome": "pass",
+      "violated": [],
+      "why": "natural candidate passes reference checks and regression norm"
+    },
+    "CS-02-fresh-A-final-4": {
+      "construction": null,
+      "origin": "fresh_attempt",
+      "proposed": "valid",
+      "refcheck_failed": [],
+      "refcheck_outcome": "pass",
+      "regression_failed": [],
+      "regression_outcome": "pass",
+      "violated": [],
+      "why": "natural candidate passes reference checks and regression norm"
+    },
+    "CS-02-fresh-A-final-5": {
+      "construction": null,
+      "origin": "fresh_attempt",
+      "proposed": "valid",
+      "refcheck_failed": [],
+      "refcheck_outcome": "pass",
+      "regression_failed": [],
+      "regression_outcome": "pass",
+      "violated": [],
+      "why": "natural candidate passes reference checks and regression norm"
+    },
+    "CS-02-fresh-A-u1-1": {
+      "construction": null,
+      "origin": "fresh_attempt",
+      "proposed": "valid",
+      "refcheck_failed": [],
+      "refcheck_outcome": "pass",
+      "regression_failed": [],
+      "regression_outcome": "pass",
+      "violated": [],
+      "why": "natural candidate passes reference checks and regression norm"
+    },
+    "CS-02-fresh-A-u1-2": {
+      "construction": null,
+      "origin": "fresh_attempt",
+      "proposed": "valid",
+      "refcheck_failed": [],
+      "refcheck_outcome": "pass",
+      "regression_failed": [],
+      "regression_outcome": "pass",
+      "violated": [],
+      "why": "natural candidate passes reference checks and regression norm"
+    },
+    "CS-02-fresh-A-u1-3": {
+      "construction": null,
+      "origin": "fresh_attempt",
+      "proposed": "valid",
+      "refcheck_failed": [],
+      "refcheck_outcome": "pass",
+      "regression_failed": [],
+      "regression_outcome": "pass",
+      "violated": [],
+      "why": "natural candidate passes reference checks and regression norm"
+    },
+    "CS-02-fresh-A-u1-4": {
+      "construction": null,
+      "origin": "fresh_attempt",
+      "proposed": "invalid",
+      "refcheck_failed": [],
+      "refcheck_outcome": "pass",
+      "regression_failed": [
+        "tests.test_middlewares::test_caching_json_write"
+      ],
+      "regression_outcome": "task_failure",
+      "violated": [
+        "REGRESSION"
+      ],
+      "why": "natural candidate fails reference checks and/or regression norm"
+    },
+    "CS-02-fresh-A-u1-5": {
+      "construction": null,
+      "origin": "fresh_attempt",
+      "proposed": "invalid",
+      "refcheck_failed": [],
+      "refcheck_outcome": "pass",
+      "regression_failed": [
+        "tests.test_middlewares::test_caching_json_write"
+      ],
+      "regression_outcome": "task_failure",
+      "violated": [
+        "REGRESSION"
+      ],
+      "why": "natural candidate fails reference checks and/or regression norm"
+    },
+    "CS-02-fresh-B-final-1": {
+      "construction": null,
+      "origin": "fresh_attempt",
+      "proposed": "valid",
+      "refcheck_failed": [],
+      "refcheck_outcome": "pass",
+      "regression_failed": [],
+      "regression_outcome": "pass",
+      "violated": [],
+      "why": "natural candidate passes reference checks and regression norm"
+    },
+    "CS-02-fresh-B-final-2": {
+      "construction": null,
+      "origin": "fresh_attempt",
+      "proposed": "valid",
+      "refcheck_failed": [],
+      "refcheck_outcome": "pass",
+      "regression_failed": [],
+      "regression_outcome": "pass",
+      "violated": [],
+      "why": "natural candidate passes reference checks and regression norm"
+    },
+    "CS-02-fresh-B-final-3": {
+      "construction": null,
+      "origin": "fresh_attempt",
+      "proposed": "valid",
+      "refcheck_failed": [],
+      "refcheck_outcome": "pass",
+      "regression_failed": [],
+      "regression_outcome": "pass",
+      "violated": [],
+      "why": "natural candidate passes reference checks and regression norm"
+    },
+    "CS-02-fresh-B-final-4": {
+      "construction": null,
+      "origin": "fresh_attempt",
+      "proposed": "valid",
+      "refcheck_failed": [],
+      "refcheck_outcome": "pass",
+      "regression_failed": [],
+      "regression_outcome": "pass",
+      "violated": [],
+      "why": "natural candidate passes reference checks and regression norm"
+    },
+    "CS-02-fresh-B-final-5": {
+      "construction": null,
+      "origin": "fresh_attempt",
+      "proposed": "valid",
+      "refcheck_failed": [],
+      "refcheck_outcome": "pass",
+      "regression_failed": [],
+      "regression_outcome": "pass",
+      "violated": [],
+      "why": "natural candidate passes reference checks and regression norm"
+    },
+    "CS-02-fresh-B-u1-1": {
+      "construction": null,
+      "origin": "fresh_attempt",
+      "proposed": "valid",
+      "refcheck_failed": [],
+      "refcheck_outcome": "pass",
+      "regression_failed": [],
+      "regression_outcome": "pass",
+      "violated": [],
+      "why": "natural candidate passes reference checks and regression norm"
+    },
+    "CS-02-fresh-B-u1-2": {
+      "construction": null,
+      "origin": "fresh_attempt",
+      "proposed": "valid",
+      "refcheck_failed": [],
+      "refcheck_outcome": "pass",
+      "regression_failed": [],
+      "regression_outcome": "pass",
+      "violated": [],
+      "why": "natural candidate passes reference checks and regression norm"
+    },
+    "CS-02-fresh-B-u1-3": {
+      "construction": null,
+      "origin": "fresh_attempt",
+      "proposed": "valid",
+      "refcheck_failed": [],
+      "refcheck_outcome": "pass",
+      "regression_failed": [],
+      "regression_outcome": "pass",
+      "violated": [],
+      "why": "natural candidate passes reference checks and regression norm"
+    },
+    "CS-02-fresh-B-u1-4": {
+      "construction": null,
+      "origin": "fresh_attempt",
+      "proposed": "valid",
+      "refcheck_failed": [],
+      "refcheck_outcome": "pass",
+      "regression_failed": [],
+      "regression_outcome": "pass",
+      "violated": [],
+      "why": "natural candidate passes reference checks and regression norm"
+    },
+    "CS-02-fresh-B-u1-5": {
+      "construction": null,
+      "origin": "fresh_attempt",
+      "proposed": "valid",
+      "refcheck_failed": [],
+      "refcheck_outcome": "pass",
+      "regression_failed": [],
+      "regression_outcome": "pass",
+      "violated": [],
+      "why": "natural candidate passes reference checks and regression norm"
+    }
+  },
+  "created_at": "2026-11-21T11:01:58+00:00",
+  "labeler": "builder:refcheck+regression+construction:v1",
+  "regression_overlay": "labels/base_tests_overlay",
+  "stratum": "fresh-v1",
+  "task_id": "CS-02"
+}
