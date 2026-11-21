@@ -24,6 +24,7 @@ import json
 import shutil
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any
 
 from .contract import requirements_from_proposals, validate_contract
 from .controlled import audit_access, candidate_from_state
@@ -33,6 +34,7 @@ from .schemas import (
     CandidateOrigin,
     ContractVariant,
     Eligibility,
+    Event,
     EventKind,
     Label,
     LabelerKind,
@@ -44,9 +46,11 @@ from .schemas import (
     Session,
     Snapshot,
     SnapshotSource,
+    SourceRef,
     Split,
     TaskContract,
     TaskManifest,
+    canonical_json,
     sha256_text,
 )
 from .snapshot import build_snapshot, manifest, manifest_sha256
@@ -259,6 +263,12 @@ def session_for_task(task_dir: Path, repo_root: Path) -> Session:
                                    relpath=rel, scripted_turns=m.scripted_turns)
 
 
+# A natural PR-review session's source format (ingest.github_pr.SOURCE_FORMAT; a test checks that the two agree). Such a
+# session is rendered as its thread, by ingest.github_pr.render_pr_thread, which this module imports only when needed.
+PR_THREAD_FORMAT = "aidev_pr_thread_v1"
+SESSION_EVENTS_FORMAT = "tracecontract/session-events/v1"
+
+
 def render_session(session: Session, *, include_tools: bool = True, max_tool_chars: int = 600,
                    first_prompt_only: bool = False) -> str:
     """Plain-text rendering of a session for model-based reconstruction.
@@ -266,7 +276,19 @@ def render_session(session: Session, *, include_tools: bool = True, max_tool_cha
     User prompts and assistant text are kept verbatim with their event ids; tool
     calls are abbreviated. ``first_prompt_only`` renders only the first user request
     (the initial-request-only baseline input).
+
+    A natural PR-review session (source format ``aidev_pr_thread_v1``) is rendered as its thread by
+    :func:`ingest.github_pr.render_pr_thread`: the variant ``initial_only`` (the banner and the linked issue) for
+    ``first_prompt_only``, else ``full_session`` (the banner, the issue, the comment's diff hunk, the review comment
+    and the reviewer's later replies). It shows no tool call, so ``include_tools`` and ``max_tool_chars`` do not apply
+    to it: never a commit message, and the PR body only in the full thread of a PR without a linked issue (in the
+    issue's place, labelled AGENT), whose first-prompt render is refused (``ValueError``;
+    :func:`ingest.github_pr.pr_thread_events` says why, and what else is refused).
     """
+    if session.source_format == PR_THREAD_FORMAT:
+        from .ingest.github_pr import render_pr_thread
+
+        return render_pr_thread(session, ContractVariant.initial_only if first_prompt_only else ContractVariant.full_session)
     lines = []
     prompts = session.user_prompts()
     if first_prompt_only:
@@ -284,3 +306,132 @@ def render_session(session: Session, *, include_tools: bool = True, max_tool_cha
             t = ev.text if len(ev.text) <= max_tool_chars else ev.text[:max_tool_chars] + " ...[truncated]"
             lines.append(f"[{ev.event_id}] TOOL RESULT: {t}")
     return "\n".join(lines)
+
+
+def _shown_events(session: Session, first_prompt_only: bool, max_tool_chars: int = 600) -> list[dict[str, Any]]:
+    """The events that :func:`render_session` shows of a session other than a PR thread, with its defaults, each with
+    the text it shows: a tool call's or result's text truncated as rendered, and a tool call's tool name."""
+    if first_prompt_only:
+        p = session.user_prompts()[0]
+        return [{"event_id": p.event_id, "kind": p.kind.value, "text": p.text}]
+    out: list[dict[str, Any]] = []
+    for ev in session.events:
+        if ev.kind == EventKind.user_prompt or (ev.kind == EventKind.assistant_text and ev.text.strip()):
+            out.append({"event_id": ev.event_id, "kind": ev.kind.value, "text": ev.text})
+        elif ev.kind in (EventKind.tool_call, EventKind.tool_result):
+            t = ev.text if len(ev.text) <= max_tool_chars else ev.text[:max_tool_chars] + " ...[truncated]"
+            out.append({"event_id": ev.event_id, "kind": ev.kind.value, "text": t}
+                       | ({"tool_name": ev.tool_name} if ev.kind == EventKind.tool_call else {}))
+    return out
+
+
+def render_session_events(session: Session, variant: str | ContractVariant) -> str:
+    """The events that a contract variant's proposer sees in its session text, as JSON: ``session_events.json`` of the
+    contract workspaces, which check-proposals reads back with :func:`session_from_events`.
+
+    The session text is :func:`render_session`, with ``first_prompt_only`` for ``initial_only``; ``full_session`` and
+    ``reference`` (whose drafter reads the whole thread) have the full render. Each event has its id, its kind and the
+    text shown: for a PR thread, the event's text with its role in the thread (``initial_request``,
+    ``correction_context``, ``correction`` or ``reply``); for any other session, the user prompts and assistant texts,
+    and the tool calls (with the tool name) and results truncated as rendered. The record also names the session,
+    its population and source format, the variant and the sha256 of the render (``render_sha256``), and for a PR
+    thread it carries the banner (``notice``) and, for the full thread only, the commented path that the headers
+    name. It holds nothing that the render does not show.
+    """
+    v = ContractVariant(variant)
+    first = v == ContractVariant.initial_only
+    data: dict[str, Any] = {"format": SESSION_EVENTS_FORMAT, "session_id": session.session_id,
+                            "population": session.population.value, "source_format": session.source_format, "variant": v.value,
+                            "render_sha256": sha256_text(render_session(session, first_prompt_only=first))}
+    if session.source_format == PR_THREAD_FORMAT:
+        from .ingest.github_pr import PR_THREAD_BANNER, pr_thread_events
+
+        data["notice"] = PR_THREAD_BANNER
+        if not first and session.metadata.get("commented_path"):
+            data["commented_path"] = session.metadata["commented_path"]
+        thread = pr_thread_events(session, ContractVariant.initial_only if first else ContractVariant.full_session)
+        data["events"] = [{"event_id": ev.event_id, "kind": ev.kind.value, "role": role, "text": ev.text} for role, ev in thread]
+    else:
+        data["events"] = _shown_events(session, first)
+    return json.dumps(data, indent=2, ensure_ascii=False) + "\n"
+
+
+def session_from_events(data: str | bytes | dict[str, Any], *, verify: bool = True) -> Session:
+    """The session that a :func:`render_session_events` record describes (for check-proposals).
+
+    It holds the rendered events only, in their order and indexed from 0, each with its id, kind and the text shown (a
+    tool call with its tool name). For a PR thread, ``metadata["events"]`` maps the roles to the event ids as the
+    whole session does (``initial_request``, ``correction_context``, ``correction``, ``replies``), and
+    ``metadata["commented_path"]`` is the path the headers name. On it, ``contract.requirements_from_proposals`` and
+    ``contract.validate_contract`` decide a proposal that names rendered events only as they do on the whole session;
+    a quote from a truncated tool text can match only its shown part.
+
+    ``verify`` (the default) refuses a record that is not exactly what :func:`render_session_events` gives for the
+    session it describes (:func:`_check_record`), also when the render stays the same, as it does for an added event
+    that no render shows, a reordered thread, a variant's record carrying another's events or another notice. It also
+    refuses what neither the render nor that round trip shows: a thread event of another kind than its role's
+    (``ingest.github_pr.PR_THREAD_ROLE_KINDS``; the headers come from the roles) and a population that does not go
+    with the source format, on which check-proposals' natural rules depend. These checks compare the record with
+    itself only: a record rewritten consistently (an event added with its role, its kind and a new ``render_sha256``)
+    describes another session, which only the whole session, as make-contract reads it, tells apart. A record that is
+    not one, or that is refused, raises :class:`ValueError`.
+    """
+    try:
+        d = json.loads(data) if isinstance(data, (str, bytes)) else data
+        if not isinstance(d, dict) or d.get("format") != SESSION_EVENTS_FORMAT:
+            raise ValueError(f"not a {SESSION_EVENTS_FORMAT} record")
+        sid = d["session_id"]
+        events, roles, replies = [], {}, []
+        for i, e in enumerate(d["events"]):
+            events.append(Event(event_id=e["event_id"], session_id=sid, index=i, kind=EventKind(e["kind"]), text=e["text"],
+                                tool_name=e.get("tool_name"), source=SourceRef(path="session_events.json", line=i + 1)))
+            if e.get("role") == "reply":
+                replies.append(e["event_id"])
+            elif e.get("role"):
+                roles[e["role"]] = e["event_id"]
+        metadata: dict[str, Any] = {"events": {**roles, "replies": replies}} if roles or replies else {}
+        if d.get("commented_path"):
+            metadata["commented_path"] = d["commented_path"]
+        session = Session(session_id=sid, population=Population(d["population"]), source="session-events",
+                          source_format=d["source_format"], trace_sha256=sha256_text(canonical_json(d)), events=events,
+                          metadata=metadata)
+        if verify:
+            _check_record(d, session)
+    except (KeyError, IndexError, TypeError, AttributeError) as exc:
+        raise ValueError(f"not a complete {SESSION_EVENTS_FORMAT} record ({type(exc).__name__}: {exc})") from None
+    return session
+
+
+def _check_record(d: dict[str, Any], session: Session) -> None:
+    """Refuse (:class:`ValueError`) a session-events record ``d`` that is not exactly what :func:`render_session_events`
+    gives for ``session``, the session that :func:`session_from_events` read from it. In order:
+
+    * the population goes with the source format: a PR thread is ``natural:pr-review``, and a ``natural:pr-review``
+      session is a PR thread (``ingest.github_pr.build_session`` makes every one), since check-proposals applies the
+      natural rules by population and a render does not show it;
+    * the session renders: for a PR thread, each role's event has a kind that the ingester gives the role, and the
+      first-prompt render has a linked issue (``ingest.github_pr.pr_thread_events``);
+    * its render is the record's ``render_sha256``;
+    * the record is the one :func:`render_session_events` gives for it, key for key: no event, role, key or variant
+      that the render does not show, and the events in the order shown.
+
+    The messages name the record's keys and the session's event ids, never a text.
+    """
+    changed = "it was changed, or not made by render_session_events"
+    pr_thread = session.source_format == PR_THREAD_FORMAT
+    if pr_thread != (session.population == Population.natural_pr_review):
+        raise ValueError(f"the record's population {session.population.value} does not go with its source format "
+                         f"{session.source_format} (a PR thread, {PR_THREAD_FORMAT}, is {Population.natural_pr_review.value}, "
+                         f"and a {Population.natural_pr_review.value} session is a PR thread): {changed}")
+    variant = ContractVariant(d["variant"])
+    try:
+        render = render_session(session, first_prompt_only=variant == ContractVariant.initial_only)
+        again = json.loads(render_session_events(session, variant))
+    except ValueError as exc:
+        raise ValueError(f"the record's session does not render ({exc}): {changed}") from None
+    if sha256_text(render) != d.get("render_sha256"):
+        raise ValueError(f"the record does not reproduce its render (render_sha256): {changed}")
+    if again != d:
+        keys = sorted(k for k in set(d) | set(again) if d.get(k) != again.get(k))
+        raise ValueError("the record is not what render_session_events gives for the session it describes (it differs "
+                         f"in: {', '.join(keys)}): {changed}")

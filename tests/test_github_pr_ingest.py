@@ -5,7 +5,9 @@
   review comment and the same reviewer's later replies before the addressing commit (the correction);
 * every text is pseudonymised: no login, @handle, e-mail address, person's profile account or model identifier
   remains, and the repository URL follows the {owner} rule;
-* ``render_pr_thread`` for the contract proposers and B2, in the ``initial_only`` and ``full_session`` variants;
+* ``render_pr_thread`` for every reader of the session, behind its fixed banner, in the ``initial_only`` and
+  ``full_session`` variants, with the comment and the replies labelled USER (tests/test_render_session.py has the
+  rest);
 * the bare clone: missing blobs are listed without fetching, fetched by id and logged, and the caps stop a fetch.
 
 A synthetic world only (tests/natural_pr_world.py): fictional logins, git repositories made in a temporary
@@ -24,8 +26,8 @@ from natural_pr_world import MAIL_REV, MODEL_ID, build_world, forbidden
 from tracecontract import natural_pr as npr
 from tracecontract.contract import align_quote, validate_contract
 from tracecontract.ingest.github_pr import (
-    AIDev, BareClone, CapExceeded, GitError, build_session, collect_thread, leftover_identifiers, make_pseudonymizer,
-    render_pr_thread,
+    PR_THREAD_BANNER, AIDev, BareClone, CapExceeded, GitError, build_session, collect_thread, leftover_identifiers,
+    make_pseudonymizer, render_pr_thread,
 )
 from tracecontract.schemas import (
     Author, ContractVariant, EventKind, Population, Requirement, RequirementKind, RequirementStatus, Session, TaskContract,
@@ -135,12 +137,21 @@ def test_render_pr_thread_variants(world, aidev):
     s, _ = _session(world, aidev)
     first = render_pr_thread(s, "initial_only")
     full = render_pr_thread(s, ContractVariant.full_session)
-    assert first.startswith("[aidev-pr-9001/issue] USER (linked issue: the initial request):\nadd() is wrong")
-    assert "REVIEWER" not in first and "this breaks negatives" not in first and "Fix add for NP-01" not in first
+    assert first.startswith(f"{PR_THREAD_BANNER}\n\n[aidev-pr-9001/issue] USER (linked issue: the initial request):\n"
+                            "add() is wrong")
+    assert first.count("\n[aidev-pr-9001/") == 1  # the issue alone
+    assert "this breaks negatives" not in first and "Fix add for NP-01" not in first and "fxpkg/mod.py" not in first
     assert full.startswith(first.rstrip("\n"))
     for eid in ("aidev-pr-9001/review/8001/hunk", "aidev-pr-9001/review/8001", "aidev-pr-9001/reply/8102"):
         assert f"[{eid}]" in full
-    assert "```diff\n@@ -1,2 +1,3 @@" in full and "not the reviewer's words" in full and "Fix add for NP-01" not in full
+    assert ("[aidev-pr-9001/review/8001/hunk] DIFF HUNK under review in fxpkg/mod.py (GitHub's context for the comment; "
+            "the agent's code, not the reviewer's words):\n```diff\n@@ -1,2 +1,3 @@") in full
+    # The comment and the reply are the user's turns for the contract:v1 template ("as stated by the USER").
+    assert ("\n[aidev-pr-9001/review/8001] USER (the reviewer: review comment on fxpkg/mod.py; the correction):\n"
+            "@user-") in full
+    assert ("\n[aidev-pr-9001/reply/8102] USER (the same reviewer: later reply in the same thread, before the addressing "
+            "commit):\nAlso zero") in full
+    assert "REVIEWER" not in full and "Fix add for NP-01" not in full and "/pr]" not in full and "/commit/" not in full
     assert full.index("review/8001]") < full.index("reply/8102]")
     with pytest.raises(ValueError):
         render_pr_thread(s, "reference")
