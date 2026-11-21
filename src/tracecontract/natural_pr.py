@@ -81,6 +81,7 @@ REGULAR = ("100644", "100755")
 PACKAGE_FILES = ("pyproject.toml", "setup.py", "setup.cfg")
 LICENCE_FILE = re.compile(r"^(?:licen[cs]e|copying)(?:[-_.](?:md|txt|rst|mit|apache|bsd))?$", re.I)
 S10_RECORD, REJECTION = "s10.json", "rejection.json"
+OVERLAY = "verifiers/repo_tests/overlay/"  # B1's overlay: the repository's test files (natural_env.build_b1)
 PR_COMPARED = ("session_sha256", "base_manifest_sha256", "reference_candidate", "reference_patch_sha256", "pre_review_candidate",
                "pre_review_patch_sha256", "base_commit", "reviewed_commit", "addressing_commit")
 CHECK_TITLES = {
@@ -366,16 +367,21 @@ def _extract(data: bytes, dest: Path, strip: str) -> None:
 
 
 def materialize_base(clone: BareClone, base: str, subdir: str, dest: Path) -> dict[str, Any]:
-    """``git archive`` of the base (the workspace's directory), its blobs fetched by id first; checked against the tree."""
+    """``git archive`` of the base (the workspace's directory), its blobs fetched by id first; checked against the tree.
+
+    A monorepo package is archived as the subtree ``<base>:<subdir>``, not as the commit with a pathspec: on a blob-less
+    partial clone, ``git archive <commit> <subdir>`` fetches every missing blob of the whole commit (git 2.43), far
+    beyond the workspace and towards the caps of §15.6.
+    """
     entries = clone.ls_tree(base, [subdir] if subdir else [])
     regular = {p: (m, o) for m, t, o, p in entries if t == "blob" and m in REGULAR}
     links = sorted(p for m, t, _, p in entries if m == "120000")
     gitlinks = sorted(p for _, t, _, p in entries if t == "commit")
     fetched = clone.ensure(base, {o for _, o in regular.values()}, label=f"base tree {base[:12]}")
-    data = clone.run("archive", "--format=tar", base, *([subdir] if subdir else []), fetch=True, label="archive").stdout
+    data = clone.run("archive", "--format=tar", f"{base}:{subdir}" if subdir else base, fetch=True, label="archive").stdout
     if dest.exists():
         shutil.rmtree(dest)
-    _extract(data, dest, subdir)
+    _extract(data, dest, "")
     want = {_rel(p, subdir): v for p, v in regular.items()}
     entries_now = manifest(dest)
     have = {rel for rel, _ in entries_now}
@@ -902,7 +908,11 @@ def run_s10_environment(task_dir: str | Path, snapshot_root: str | Path, workdir
         write_json(s10, task_dir / S10_RECORD)
         return reject_task(task_dir, rec["reason"], details=_safe(rec))
 
+    # A real step (one that builds a real image) checks the resolver interpreter itself, whatever ``run`` wraps: pip must
+    # evaluate environment markers for Python 3.12 (natural_env.RESOLVER_PYTHON). A step with a stub build records none.
+    resolver = env.check_resolver_python() if build is None else None
     closure = env.resolve_with_sdists(plan, workdir, run=run, fetch_json=fetch_json or env.pypi_json, download=download or env._download)
+    closure["resolver"] = closure.get("resolver") or resolver
     if closure.get("rejected"):
         return fail("environment", closure)
     local = workdir / "built-wheels" if closure.get("sdist_builds") else None
@@ -913,6 +923,7 @@ def run_s10_environment(task_dir: str | Path, snapshot_root: str | Path, workdir
                           "index_bytes": closure.get("wheelhouse_bytes"), "unknown_sizes": closure.get("unknown_sizes", []),
                           "uploaded_prior_to": closure.get("uploaded_prior_to"), "sdist_builds": closure.get("sdist_builds", []),
                           "dropped_path_requirements": closure.get("dropped_path_requirements", []),
+                          "resolver": closure.get("resolver"),
                           "image": image["image"], "image_id": image["image_id"], "commands": closure.get("commands", [])}
     dump(m.model_copy(update={"env_requirements": closure["pins"]}), task_dir / "task.json")
     snap = load(task_dir / (m.snapshot or "snapshot.json"), Snapshot)
@@ -934,6 +945,24 @@ def _num(task_id: str) -> int:
     return int(m.group(1)) if m else 10 ** 6
 
 
+def file_hashes(task_dir: Path) -> dict[str, Any]:
+    """The sha256 of every file of a task directory, by its path there. B1's overlay holds the repository's own test files
+    (at the addressing commit, under their repository paths): it is summarised as one manifest hash and a file count
+    under :data:`OVERLAY`, so that no repository path enters the committed index."""
+    files: dict[str, Any] = {}
+    overlay: list[tuple[str, str]] = []
+    for p in sorted(task_dir.rglob("*")):
+        if p.is_file():
+            rel, digest = p.relative_to(task_dir).as_posix(), sha256_bytes(p.read_bytes())
+            if rel.startswith(OVERLAY):
+                overlay.append((rel[len(OVERLAY):], digest))
+            else:
+                files[rel] = digest
+    if overlay:
+        files[OVERLAY] = {"manifest_sha256": manifest_sha256(overlay), "n_files": len(overlay)}
+    return files
+
+
 def index_row(task_dir: Path | None, fam: Family | None) -> dict[str, Any]:
     """One family's row of the committed index: ids, SHAs, licence identifiers, file hashes and the S10 outcome; no text."""
     row: dict[str, Any] = _ids(fam) if fam else {"task_id": task_dir.name if task_dir else None}
@@ -942,7 +971,7 @@ def index_row(task_dir: Path | None, fam: Family | None) -> dict[str, Any]:
     if task_dir is None or not task_dir.is_dir() or not any(task_dir.iterdir()):
         row["s10"] = {"outcome": "not built"}
         return row
-    files = {p.relative_to(task_dir).as_posix(): sha256_bytes(p.read_bytes()) for p in sorted(task_dir.rglob("*")) if p.is_file()}
+    files = file_hashes(task_dir)
     rej = json.loads((task_dir / REJECTION).read_text(encoding="utf-8")) if (task_dir / REJECTION).is_file() else None
     if not (task_dir / "task.json").is_file():
         row.update({k: rej.get(k) for k in ("pr_id", "repo_id", "comment_id") if rej and rej.get(k) is not None})

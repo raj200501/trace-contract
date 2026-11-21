@@ -1578,7 +1578,199 @@
       "comment_id": 3072702941,
       "pr_id": 4124128098,
       "repo_id": 1085158702
+    },
+    {
+      "source_id": "pr:3078187008",
+      "population": "natural:pr-review",
+      "stage": "S10",
+      "reasons": [
+        "base tests fail to collect"
+      ],
+      "comment_id": 2100781832,
+      "pr_id": 3078187008,
+      "repo_id": 4127088,
+      "task_id": "NP-01"
+    },
+    {
+      "source_id": "pr:3159178442",
+      "population": "natural:pr-review",
+      "stage": "S10",
+      "reasons": [
+        "base tests fail to collect"
+      ],
+      "comment_id": 2156570999,
+      "pr_id": 3159178442,
+      "repo_id": 4127088,
+      "task_id": "NP-02"
+    },
+    {
+      "source_id": "pr:4095008687",
+      "population": "natural:pr-review",
+      "stage": "S10",
+      "reasons": [
+        "base tests fail to collect"
+      ],
+      "comment_id": 2953438776,
+      "pr_id": 4095008687,
+      "repo_id": 133100880,
+      "task_id": "NP-06"
+    },
+    {
+      "source_id": "pr:3108908027",
+      "population": "natural:pr-review",
+      "stage": "S10",
+      "reasons": [
+        "base tests: the base-test subset is empty (no test file imports a changed module, the PR changes no test file present at the base, and the changed package has no test directory) (\u00a717.2)"
+      ],
+      "comment_id": 2121219198,
+      "pr_id": 3108908027,
+      "repo_id": 136202695,
+      "task_id": "NP-07"
+    },
+    {
+      "source_id": "pr:3128687696",
+      "population": "natural:pr-review",
+      "stage": "S10",
+      "reasons": [
+        "fetch over the caps (\u00a715.6): git fetch stopped: the clone went over the repository cap of 300000000 bytes"
+      ],
+      "comment_id": 2134827481,
+      "pr_id": 3128687696,
+      "repo_id": 136202695,
+      "task_id": "NP-08"
+    },
+    {
+      "source_id": "pr:3715789527",
+      "population": "natural:pr-review",
+      "stage": "S10",
+      "reasons": [
+        "base tests fail to collect"
+      ],
+      "comment_id": 2607658018,
+      "pr_id": 3715789527,
+      "repo_id": 139199684,
+      "task_id": "NP-09"
+    },
+    {
+      "source_id": "pr:3848411760",
+      "population": "natural:pr-review",
+      "stage": "S10",
+      "reasons": [
+        "no resolvable closure: no wheels-only resolution"
+      ],
+      "comment_id": 2726163260,
+      "pr_id": 3848411760,
+      "repo_id": 139199684,
+      "task_id": "NP-10"
+    },
+    {
+      "source_id": "pr:3090570894",
+      "population": "natural:pr-review",
+      "stage": "S10",
+      "reasons": [
+        "base tests fail to collect"
+      ],
+      "comment_id": 2110886365,
+      "pr_id": 3090570894,
+      "repo_id": 172703996,
+      "task_id": "NP-11"
+    },
+    {
+      "source_id": "pr:3113782046",
+      "population": "natural:pr-review",
+      "stage": "S10",
+      "reasons": [
+        "a merge between the base and the addressing commit changes the commented file (\u00a715.6)"
+      ],
+      "comment_id": 2128276190,
+      "pr_id": 3113782046,
+      "repo_id": 174629277,
+      "task_id": "NP-12"
+    },
+    {
+      "source_id": "pr:3181433167",
+      "population": "natural:pr-review",
+      "stage": "S10",
+      "reasons": [
+        "no resolvable closure: an sdist-only requirement is not pure Python"
+      ],
+      "comment_id": 2172100116,
+      "pr_id": 3181433167,
+      "repo_id": 174629277,
+      "task_id": "NP-13"
+    },
+    {
+      "source_id": "pr:3497926869",
+      "population": "natural:pr-review",
+      "stage": "S10",
+      "reasons": [
+        "base tests fail to collect"
+      ],
+      "comment_id": 2415830344,
+      "pr_id": 3497926869,
+      "repo_id": 184555939,
+      "task_id": "NP-14"
+    },
+    {
+      "source_id": "pr:3185333353",
+      "population": "natural:pr-review",
+      "stage": "S10",
+      "reasons": [
+        "environment too large: the wheelhouse would hold 3.15 GB, over the 1.5 GB cap (\u00a717.1)"
+      ],
+      "comment_id": 2173524848,
+      "pr_id": 3185333353,
+      "repo_id": 224148738,
+      "task_id": "NP-15"
+    },
+    {
+      "source_id": "pr:3392393778",
+      "population": "natural:pr-review",
+      "stage": "S10",
+      "reasons": [
+        "no resolvable closure: pip's resolver did not finish within 30 minutes"
+      ],
+      "comment_id": 2331433642,
+      "pr_id": 3392393778,
+      "repo_id": 369428935,
+      "task_id": "NP-16"
+    },
+    {
+      "source_id": "pr:3392399944",
+      "population": "natural:pr-review",
+      "stage": "S10",
+      "reasons": [
+        "no resolvable closure: pip's resolver did not finish within 30 minutes"
+      ],
+      "comment_id": 2331247278,
+      "pr_id": 3392399944,
+      "repo_id": 369428935,
+      "task_id": "NP-17"
+    },
+    {
+      "source_id": "pr:3193634550",
+      "population": "natural:pr-review",
+      "stage": "S10",
+      "reasons": [
+        "base tests fail to collect"
+      ],
+      "comment_id": 2198255936,
+      "pr_id": 3193634550,
+      "repo_id": 4127088,
+      "task_id": "NP-21"
+    },
+    {
+      "source_id": "pr:3257632101",
+      "population": "natural:pr-review",
+      "stage": "S10",
+      "reasons": [
+        "base tests fail to collect"
+      ],
+      "comment_id": 2226682791,
+      "pr_id": 3257632101,
+      "repo_id": 4127088,
+      "task_id": "NP-22"
     }
   ],
-  "note": "Natural-data screening (decision log D47): natural:chat (screen-trace-commons:v1; source revision 112ebd4d): 30 screened, 30 rejected, 0 pending review, 0 eligible; natural:pr-review (scripts/screen_aidev.py, screening_natural_aidev_s9.json; source revision b37f9fd1): 684 review_comments on 190 PRs survive stage S8a (a funnel, not per-candidate rows), and of the 150 sampled for S9, 31 qualify, 117 fail (in this ledger with stage S9 and their reasons) and 2 are excluded because the judges disagree; SWE-chat: not screened (its dataset terms await the owner, D4)."
+  "note": "Natural-data screening (decision log D47): natural:chat (screen-trace-commons:v1; source revision 112ebd4d): 30 screened, 30 rejected, 0 pending review, 0 eligible; natural:pr-review (scripts/screen_aidev.py, screening_natural_aidev_s9.json, natural_tasks_index.json; source revision b37f9fd1): 684 review_comments on 190 PRs survive stage S8a (a funnel, not per-candidate rows), and of the 150 sampled for S9, 31 qualify, 117 fail (in this ledger with stage S9 and their reasons) and 2 are excluded because the judges disagree, and of the 25 families and reserves of S10 in natural_tasks_index.json, 16 are rejected (in this ledger with stage S10 and their reasons) and 3 not built, 6 passed, 6 s11; SWE-chat: not screened (its dataset terms await the owner, D4)."
 }

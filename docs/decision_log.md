@@ -1767,3 +1767,103 @@ index before adding the new tree.
   assignment); and old workspace paths printed from the attempt's own manifest. None is
   a read, listing or search outside the workspace, which is what §18.1 excludes. The
   recorded headers are left as they are; this entry is the correction.
+
+### D59. Stage S10 of the natural arm: 6 of 22 built families pass
+**Run.** 2026-11-21, 08:59-11:52Z. One agent ran the compiler's own functions
+(`natural_pr.compile_pr_task`, then `natural_pr.run_s10_environment`). It took the
+families NP-01 to NP-20 in order, one at a time, with at most one image build or test
+run at once. The reserves NP-21 and NP-22 replaced NP-01 and NP-02 (§17.3) and were
+also rejected. NP-23 to NP-25 were not needed. All repository code (base tests, sdist
+builds) ran only in containers without network. On the host only git plumbing, pip's
+dry-run resolver (wheels only) and wheel downloads ran.
+
+**Accepted (S11): NP-03, NP-04, NP-05, NP-18, NP-19, NP-20.**
+
+| Task | Fidelity | Closure | Base-test subset at the base | B1 |
+| --- | --- | --- | --- | --- |
+| NP-03 | approximate: 1 symbolic link and 2 submodules not materialised | 73 pins | 966 collected: 954 pass, 10 fail, 2 skipped | 954 |
+| NP-04 | exact | 17 pins | 33 collected, all pass | 34 |
+| NP-05 | exact | 17 pins | 359 collected: 354 pass, 5 fail (live-network tests) | 354 |
+| NP-18 | exact | 144 pins | 24 collected, all pass | 26 |
+| NP-19 | exact | 106 pins (1 sdist built) | 9 collected: 1 pass, 5 fail, 3 setup errors (missing API key) | 1 |
+| NP-20 | exact | 71 pins (2 sdists built) | 48 collected, all pass | 48 |
+
+Failing and erroring tests count as run (§17.2). B1 is the subset's tests at the
+addressing commit that pass on the reference.
+
+**Rejected: 16.**
+* Base tests fail to collect (8):
+  * NP-01, NP-02, NP-21 and NP-22: a monorepo's own test tooling, a path requirement
+    outside the workspace that is not on PyPI;
+  * NP-09 and NP-14: a version module that the build backend generates, absent from the
+    source tree;
+  * NP-11: a git submodule, which is another repository;
+  * NP-06: a declared dev pin that imports `distutils`, which Python 3.12 lacks.
+* No resolvable closure (4):
+  * NP-10: pip's resolver stopped with "resolution too deep";
+  * NP-13: an sdist-only requirement with a C extension;
+  * NP-16 and NP-17: the resolver did not finish within the 30-minute limit.
+* Environment too large (1): NP-15, with a 3.15 GB wheelhouse against the 1.5 GB cap.
+* Empty base-test subset (1): NP-07.
+* Fetch over the 300 MB cap (1): NP-08. The clone stopped at 318.8 MB, because the
+  last fetch finished between two watchdog polls.
+* Merge rule (1): NP-12.
+
+**Yield.** 6 tasks from the 150 sampled comments (4.0%) and from the 31 qualifying ones.
+That is fewer than the 10 that §15.6 requires, so under §15.6 as written the arm is a
+screening study only (see D60). Three rejections (NP-10, NP-16, NP-17) depend on pip's
+resolver and on the compiler's 30-minute limit, which is an implementation parameter,
+not a protocol rule. Seven others follow from rules that cannot yield a runnable
+environment: path requirements outside the workspace, generated version modules,
+submodules. Whether S10 should admit these is a question for the owner. The accepted
+tasks are therefore biased toward small repositories with plain test setups.
+
+**Compiler fixes during the stage**, each with a test that fails on the old code:
+* a monorepo package's base is archived as the subtree, so no blob outside the package
+  is fetched;
+* sdists are built in a private directory of the build user, and exactly one wheel is
+  copied back;
+* an sdist must satisfy every declaration of its name that applies to Python 3.12;
+* every round of sdist builds is followed by a resolution;
+* the resolver runs on a Python 3.12 interpreter. pip's `--python-version` does not
+  change environment markers, so closures had been resolved for the host's Python 3.13;
+* a resolver timeout is a rejection;
+* pip's TMPDIR is a work directory that is removed after each run. NP-16's killed
+  resolver had left 975,916 temporary directories in /tmp; they were removed;
+* the resolver interpreter is checked and recorded in `s10.json`;
+* B1's overlay is listed in the index as one manifest hash;
+* a test directory whose name ends in "tests" counts for the §17.2 fallback.
+
+Every family processed before a fix was re-run after it, and every re-run reproduced
+its earlier outcome. The resolver venv is CPython 3.12.3 with pip 26.3, kept outside
+the repository. NP-10 and NP-16 ran before the resolver was recorded, so their
+`s10.json` has `environment.resolver` null; their recorded commands show the 3.12
+interpreter.
+
+**Records and resources.**
+* `data/natural/tasks/NP-xx/s10.json` holds each family's record (git-ignored).
+* `data/manifests/natural_tasks_index.json` (new) has 25 rows: 6 passed, 16 rejected and
+  3 not built. It holds ids, SHAs, licences and file hashes, with no URL, account,
+  local path or repository file path.
+* The rejection ledger gains 16 S10 rows.
+* Fetches in this stage came to 574.6 MB, and all clones together to 1.06 GB (cap 5 GB).
+* After the stage, the images of the rejected families and two superseded images were
+  removed. They can be rebuilt from the recorded closures.
+
+### D60. Protocol v0.11: the natural arm's S9 extension, hashed before any further screening
+**Protocol v0.11** (`experiments/protocol.md` §19), hashed at 2026-11-21T11:56:28Z: sha256
+`535a483f6d2506866a8a7bb31da50cf2271409a14060bf708e891a9cbe8ad6a0`. At that time no comment of the extension had been judged, and no natural
+contract, verifier, held-out candidate or label existed.
+* S9 is extended to the 534 S8a comments not in the first sample. All of them are
+  screened, in ascending comment id, under unchanged S9 rules and caps, by new judges.
+* Families are formed over both samples. The first sample's families keep their ids and
+  places, new ones are numbered from NP-26, and repositories that already have 2 accepted
+  families get no new one.
+* S10 and its implementation parameters (D59) are unchanged.
+* The size rule of §15.6 applies to both samples together. If the arm still has fewer
+  than 10 tasks, the built tasks are reported as per-family exploratory case studies.
+* Accepted families may be built before the extension is screened. No natural verifier
+  is graded on a held-out candidate before building stops.
+
+The extension was decided after the first sample's S10 yield (D59) was known. It is
+disclosed as a post-hoc design change, and it used no verifier outcome on natural data.

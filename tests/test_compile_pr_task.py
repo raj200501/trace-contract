@@ -20,6 +20,7 @@ import hashlib
 import importlib.util
 import io
 import json
+import os
 import shutil
 import subprocess
 import tarfile
@@ -31,7 +32,7 @@ from natural_pr_world import build_world, forbidden, written_text
 from tracecontract import natural_env as env
 from tracecontract import natural_pr as npr
 from tracecontract.contract import task_gate
-from tracecontract.ingest.github_pr import AIDev
+from tracecontract.ingest.github_pr import AIDev, BareClone
 from tracecontract.patches import apply_patch, filter_patch
 from tracecontract.reconstruction import RECORD, recorded_check
 from tracecontract.sandbox.docker_runner import RawRun, _req_hash
@@ -219,6 +220,36 @@ def test_the_monorepo_package_is_the_workspace(built):
     assert "1 changed file(s) outside the workspace are left out of the candidates" in snap.approximations
 
 
+def _partial_clone(src: Path, dest: Path, home: Path) -> Path:
+    """A blob-less partial clone of ``src`` (file protocol), as the S9 fetches made them from GitHub."""
+    for k, v in (("uploadpack.allowFilter", "true"), ("uploadpack.allowAnySHA1InWant", "true")):
+        subprocess.run(["git", "-C", str(src), "config", k, v], check=True)
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    env = {"GIT_CONFIG_GLOBAL": "/dev/null", "GIT_CONFIG_SYSTEM": "/dev/null", "HOME": str(home), "PATH": "/usr/bin:/bin"}
+    subprocess.run(["git", "clone", "-q", "--bare", "--filter=blob:none", f"file://{src}", str(dest)], check=True, env=env,
+                   capture_output=True)
+    return dest
+
+
+def test_the_base_of_a_monorepo_package_fetches_no_blob_outside_the_package(built, tmp_path):
+    """On a blob-less partial clone the snapshot fetches the package's blobs only: ``git archive <commit> <subdir>``
+    fetched every missing blob of the whole commit (found on real data, where a 90-file package fetched 44,648 blobs)."""
+    w, _, _, _ = built
+    dest = _partial_clone(w.root / "src" / "105", tmp_path / "repos" / "205.git", tmp_path)
+    log = tmp_path / "fetch.jsonl"
+    clone = BareClone(dest, repo_id=205, fetch_log=log, allow_file_protocol=True, poll_s=0.05)
+    base = w.shas["base105"]
+    tree = clone.ls_tree(base)
+    inside = {o for m, t, o, p in tree if t == "blob" and p.startswith("packages/fxsub/")}
+    outside = {o for m, t, o, p in tree if t == "blob" and not p.startswith("packages/fxsub/")} - inside
+    assert inside and outside and (inside | outside) <= clone.missing(base)
+    snap = npr.materialize_base(clone, base, "packages/fxsub", tmp_path / "snap")
+    assert not (snap["mismatched"] or snap["missing"] or snap["extra"]) and snap["blobs_fetched"] == len(inside)
+    assert outside <= clone.missing(base) and not inside & clone.missing(base)  # nothing outside the package is fetched
+    assert [json.loads(ln)["label"] for ln in log.read_text().splitlines()] == [f"base tree {base[:12]} ({len(inside)} blobs)"]
+    assert manifest_sha256(manifest(tmp_path / "snap")) == manifest_sha256(manifest(w.out.parent / "snapshots" / "NP-06"))
+
+
 def test_nothing_written_holds_a_login_or_thread_identifier(built):
     w, _, _, _ = built
     text = written_text(w.out)
@@ -396,6 +427,51 @@ def test_pure_python_sdists_and_their_sandboxed_build(tmp_path):
     assert env.build_sdist_wheel(native, tmp_path / "wheels", tmp_path / "out", dry_run=True)["rejected"]
 
 
+def _out_mount(cmd: list[str]) -> Path:
+    return Path(next(a for a in cmd if a.endswith(":/out:rw")).rsplit(":", 2)[0])
+
+
+def test_the_sandboxed_sdist_build_writes_only_into_a_private_directory_of_its_user(tmp_path):
+    """Found on real data: ``/out`` was the root-owned directory of built wheels, which the container's user cannot write
+    (``Permission denied``), so no sdist could build; a shared directory would also expose the earlier wheels."""
+    (tmp_path / "in").mkdir()
+    sd = _sdist(tmp_path / "in" / "pure-1.0.tar.gz", {"setup.py": "from setuptools import setup\nsetup(name='pure')\n"})
+    out = tmp_path / "work" / "built-wheels"
+    out.mkdir(parents=True)
+    (out / "zz-9.0-py3-none-any.whl").write_bytes(b"earlier")
+    seen: dict = {}
+
+    def run(cmd, **kw):
+        mount = _out_mount(cmd)
+        st = mount.stat()
+        seen.update(mount=mount, uid=st.st_uid, mode=st.st_mode & 0o777, user=cmd[cmd.index("--user") + 1],
+                    empty=not any(mount.iterdir()), network=cmd[cmd.index("--network") + 1])
+        (mount / "pure-1.0-py3-none-any.whl").write_bytes(b"wheel")
+        return _Proc(0)
+
+    got = env.build_sdist_wheel(sd, tmp_path / "wheels", out, run=run)
+    assert got["wheel"] == "pure-1.0-py3-none-any.whl" and got["wheel_sha256"] == hashlib.sha256(b"wheel").hexdigest()
+    assert seen["mount"] != out and seen["empty"] and seen["network"] == "none" and not seen["mount"].exists()
+    assert seen["user"] == f"{env.SDIST_BUILD_UID}:{env.SDIST_BUILD_UID}"
+    assert (seen["uid"], seen["mode"]) == (env.SDIST_BUILD_UID, 0o700) if os.geteuid() == 0 else seen["mode"] == 0o777
+    assert (out / "pure-1.0-py3-none-any.whl").read_bytes() == b"wheel" and (out / "zz-9.0-py3-none-any.whl").read_bytes() == b"earlier"
+
+    def run_link(cmd, **kw):  # a build that leaves a symbolic link instead of a wheel
+        (_out_mount(cmd) / "pure-1.1-py3-none-any.whl").symlink_to(out / "zz-9.0-py3-none-any.whl")
+        return _Proc(0)
+
+    def run_two(cmd, **kw):  # a build that leaves more than the one wheel
+        for n in ("pure-1.1-py3-none-any.whl", "other-1.0-py3-none-any.whl"):
+            (_out_mount(cmd) / n).write_bytes(b"w")
+        return _Proc(0)
+
+    for bad in (run_link, run_two):
+        rej = env.build_sdist_wheel(sd, tmp_path / "wheels", out, run=bad)
+        assert rej["rejected"] and "did not build into a wheel" in rej["reason"]
+    assert sorted(p.name for p in out.iterdir()) == ["pure-1.0-py3-none-any.whl", "zz-9.0-py3-none-any.whl"]
+    assert sorted(p.name for p in out.parent.iterdir()) == ["built-wheels"]  # no build directory is left behind
+
+
 def test_build_image_fills_the_wheelhouse_build_env_image_reads(tmp_path):
     pins = ["b==2", "a==1"]
     dry = env.build_image(pins, tmp_path, dry_run=True)
@@ -442,6 +518,31 @@ def test_select_and_run_the_base_tests(built, tmp_path):
     assert empty["reason"] == "base tests: the subset collects no test"
 
 
+def test_the_test_directory_of_the_changed_package_can_have_another_name(tmp_path):
+    """Found on real data: a repository whose tests live in ``selftests/`` (run with ``python -m unittest discover``) was
+    rejected because "the changed package has no test directory": the fallback of §17.2 knew only tests, test and testing."""
+    snap = tmp_path / "snap"
+    for rel, text in {"pkg/__init__.py": "", "pkg/tools/fio.py": "X = 1\n", "selftests/__init__.py": "",
+                      "selftests/test_core.py": "import pkg\n", "examples/testsuites/test_vm.py": "import pkg\n"}.items():
+        (snap / rel).parent.mkdir(parents=True, exist_ok=True)
+        (snap / rel).write_text(text)
+    pick = lambda: env.select_base_tests(snap, changed=[("M", "pkg/tools/fio.py")], commented_path="pkg/tools/fio.py")  # noqa: E731
+    sel = pick()
+    assert sel["by_import"] == {} and sel["subset"] == ["selftests"] and not sel["empty"]
+    assert sel["rule"] == "the test directory of the changed package (no test file imports a changed module)"
+    (snap / "pkg" / "unittests").mkdir()
+    (snap / "pkg" / "unittests" / "test_fio.py").write_text("import pkg\n")
+    assert pick()["subset"] == ["selftests"]  # the root first, as for the conventional names
+    (snap / "tests").mkdir()
+    (snap / "tests" / "test_x.py").write_text("import pkg\n")
+    assert pick()["subset"] == ["tests"]  # the conventional names come first
+    shutil.rmtree(snap / "tests")
+    shutil.rmtree(snap / "selftests")
+    assert pick()["subset"] == ["pkg/unittests"]  # in the changed package
+    shutil.rmtree(snap / "pkg" / "unittests")
+    assert pick()["empty"]  # "testsuites" is not a test directory of the package
+
+
 def test_b1_is_selected_at_the_addressing_commit(built, tmp_path):
     w, _, _, _ = built
     td = tmp_path / "NP-01"
@@ -459,6 +560,25 @@ def test_b1_is_selected_at_the_addressing_commit(built, tmp_path):
     none = env.build_b1(td, base, "img", subset=["tests/test_mod.py"], pythonpath="/work",
                         runner=_runner([{"nodeid": "tests/test_mod.py::test_add", "outcome": "failed"}]))
     assert none["available"] is False and "B1 unavailable" in none["reason"]
+
+
+def test_the_index_names_no_repository_path_of_b1s_overlay(built, tmp_path):
+    """Found on real data: the index listed every file of a task by its path, and B1's overlay holds the repository's own
+    test files under their repository paths. The overlay is one manifest hash and a count in the index."""
+    w, _, _, _ = built
+    td = tmp_path / "tasks" / "NP-01"
+    shutil.copytree(w.out / "NP-01", td)
+    base = w.out.parent / "snapshots" / "NP-01"
+    env.build_b1(td, base, "img", subset=["tests/test_mod.py"], pythonpath="/work",
+                 runner=_runner([{"nodeid": "tests/test_mod.py::test_add", "outcome": "passed"}]))
+    overlay = td / "verifiers" / "repo_tests" / "overlay"
+    assert (overlay / "tests" / "test_mod.py").is_file()
+    out = tmp_path / "idx.json"
+    row = npr.write_natural_index(tmp_path / "tasks", out)["tasks"][0]
+    assert npr.OVERLAY == "verifiers/repo_tests/overlay/" and "test_mod" not in out.read_text()
+    assert row["files"][npr.OVERLAY] == {"manifest_sha256": manifest_sha256(manifest(overlay)), "n_files": 1}
+    assert not [k for k in row["files"] if k.startswith(npr.OVERLAY) and k != npr.OVERLAY]
+    assert row["files"]["verifiers/repo_tests/spec.json"] == hashlib.sha256((td / "verifiers/repo_tests/spec.json").read_bytes()).hexdigest()
 
 
 def _pypi(releases: dict[str, list[dict]]):
@@ -516,6 +636,192 @@ def test_wheel_less_pure_python_requirements_are_built_in_the_sandbox(tmp_path):
     native = env.resolve_with_sdists(plan, tmp_path / "w2", run=lambda c, **k: _Proc(1, "No matching distribution found for pure"),
                                      fetch_json=lambda n, v=None: {"releases": {}, "urls": []})
     assert native["rejected"] and "no sdist released before the base date" in native["reason"]
+
+
+def test_the_sdist_satisfies_every_declaration_of_a_wheel_less_requirement(tmp_path):
+    """Found on real data: a closure declared ``k-api==2.15.0`` (requirements.txt) and ``k-api>=2.15.0,<3`` (setup.py);
+    the sdist was chosen for the last declaration alone (2.16.0), so the resolver could never accept its wheel."""
+    reqs = ["k-api==2.15.0", "k-api>=2.15.0,<3", "x>=1", "x<0.5; sys_platform == 'win32'", "kfp==2.15.0"]
+    assert env.sdist_requirement("k-api", reqs) == "k-api<3,==2.15.0,>=2.15.0"
+    assert env.sdist_requirement("x", reqs) == "x>=1"  # a declaration for another platform does not count
+    assert env.sdist_requirement("k-server", reqs, "k-server==2.15.0") == "k-server==2.15.0"  # a transitive one, as pip reports it
+    err = ("ERROR: Could not find a version that satisfies the requirement k-api==2.15.0 (from versions: none)\n"
+           "ERROR: No matching distribution found for k-api==2.15.0\n")
+    assert env.unsatisfied_requirements(err) == {"k-api": "k-api==2.15.0"} and env.wheel_less(err) == ["k-api"]
+    (tmp_path / "src").mkdir()
+    data = {v: _sdist(tmp_path / "src" / f"k-api-{v}.tar.gz", {"setup.py": "from setuptools import setup\nsetup(name='k-api')\n"}
+                      ).read_bytes() for v in ("2.15.0", "2.16.0")}
+    releases = {v: [{"packagetype": "sdist", "filename": f"k-api-{v}.tar.gz", "url": f"https://files.example.invalid/k-api-{v}.tar.gz",
+                     "upload_time_iso_8601": when, "digests": {"sha256": hashlib.sha256(data[v]).hexdigest()}}]
+                for v, when in (("2.15.0", "2024-01-01T00:00:00Z"), ("2.16.0", "2024-06-01T00:00:00Z"))}
+
+    def run(cmd, **kw):
+        if "--report" in cmd:
+            links = Path(cmd[cmd.index("--find-links") + 1]) if "--find-links" in cmd else None
+            if links is None or not (links / "k_api-2.15.0-py3-none-any.whl").is_file():
+                return _Proc(1, err)
+            _report(Path(cmd[cmd.index("--report") + 1]), [("k-api", "2.15.0", "k_api-2.15.0-py3-none-any.whl")])
+            return _Proc(0)
+        if cmd[:2] == ["docker", "run"]:
+            version = cmd[-1].rsplit("-", 1)[1].removesuffix(".tar.gz")
+            (_out_mount(cmd) / f"k_api-{version}-py3-none-any.whl").write_bytes(b"wheel")
+        return _Proc(0)
+
+    plan = {"requirements": ["k-api==2.15.0", "k-api>=2.15.0,<3"], "uploaded_prior_to": "2025-01-01T00:00:00Z", "path_only": []}
+    got = env.resolve_with_sdists(plan, tmp_path / "w", run=run, fetch_json=lambda n, v=None: {"releases": releases, "urls": []},
+                                  download=lambda url, dest: dest.write_bytes(data[url.rsplit("-", 1)[1].removesuffix(".tar.gz")]))
+    assert "rejected" not in got and got["pins"] == ["k-api==2.15.0"]
+    b = got["sdist_builds"][0]
+    assert (b["version"], b["sdist"], b["requirement"]) == ("2.15.0", "k-api-2.15.0.tar.gz", "k-api<3,==2.15.0,>=2.15.0")
+
+
+def test_every_round_of_sdist_builds_is_followed_by_a_resolution(tmp_path):
+    """Found on real data: three sdist-only requirements, found one per round (the last a transitive one, which pip reports
+    as ``name (from parent)``), were all built, but the third build was never resolved: max_rounds=3 ended the loop."""
+    err = "ERROR: Could not find a version that satisfies the requirement u (from d) (from versions: none)\n"
+    assert env.unsatisfied_requirements(err) == {"u": "u"}
+    assert env.unsatisfied_requirements(err.replace("u (from d)", "u>=0.1 (from d)")) == {"u": "u>=0.1"}
+    order = ["a", "d", "u"]
+    (tmp_path / "src").mkdir()
+    data = {n: _sdist(tmp_path / "src" / f"{n}-1.0.tar.gz", {"setup.py": "from setuptools import setup\n"}).read_bytes() for n in order}
+    releases = {n: {"1.0": [{"packagetype": "sdist", "filename": f"{n}-1.0.tar.gz", "url": f"https://files.example.invalid/{n}-1.0.tar.gz",
+                             "upload_time_iso_8601": "2024-01-01T00:00:00Z", "digests": {"sha256": hashlib.sha256(data[n]).hexdigest()}}]}
+                for n in order}
+
+    def run(cmd, **kw):
+        if "--report" in cmd:
+            links = Path(cmd[cmd.index("--find-links") + 1]) if "--find-links" in cmd else None
+            have = {p.name.split("-")[0] for p in links.glob("*.whl")} if links else set()
+            for n in order:
+                if n not in have:
+                    via = "" if n == "a" else " (from d)" if n == "u" else " (from a)"
+                    return _Proc(1, f"ERROR: Could not find a version that satisfies the requirement {n}{via} (from versions: none)\n"
+                                    f"ERROR: No matching distribution found for {n}{via}\n")
+            _report(Path(cmd[cmd.index("--report") + 1]), [(n, "1.0", f"{n}-1.0-py3-none-any.whl") for n in order])
+            return _Proc(0)
+        if cmd[:2] == ["docker", "run"]:
+            n = cmd[-1].removeprefix("/in/").split("-")[0]
+            (_out_mount(cmd) / f"{n}-1.0-py3-none-any.whl").write_bytes(b"wheel")
+        return _Proc(0)
+
+    plan = {"requirements": ["a"], "uploaded_prior_to": "2025-01-01T00:00:00Z", "path_only": []}
+    fetch = lambda n, v=None: {"releases": releases[n], "urls": []}  # noqa: E731
+    dl = lambda url, dest: dest.write_bytes(data[url.rsplit("/", 1)[1].split("-")[0]])  # noqa: E731
+    got = env.resolve_with_sdists(plan, tmp_path / "w", run=run, fetch_json=fetch, download=dl)
+    assert "rejected" not in got and got["pins"] == ["a==1.0", "d==1.0", "u==1.0"]
+    assert [b["name"] for b in got["sdist_builds"]] == order
+    few = env.resolve_with_sdists(plan, tmp_path / "w2", run=run, fetch_json=fetch, download=dl, max_rounds=2)
+    assert few["rejected"] and few["reason"] == "no resolvable closure after 2 rounds of sdist builds"
+    assert [b["name"] for b in few["sdist_builds"]] == ["a", "d"] and few["wheel_less"] == ["u"]
+
+
+def test_the_resolver_runs_on_a_python_312_interpreter(tmp_path, monkeypatch):
+    """Found on real data: pip's ``--python-version 3.12`` changes only wheel tags and Requires-Python; markers were evaluated
+    for the study's Python 3.13, so a closure lost ``pendulum; python_version < "3.13"`` and its base tests could not import
+    it. pip's resolver runs on a Python 3.12 interpreter, which a real resolution checks first."""
+    cmd = env.resolver_command(["a"], report="r.json", uploaded_prior_to=None)
+    assert cmd[0] == env.RESOLVER_PYTHON and cmd[1:4] == ["-m", "pip", "install"]
+    assert env.resolver_command(["a"], report="r.json", uploaded_prior_to=None, python="/x/python")[0] == "/x/python"
+
+    def interp(version: str, helps: bool = True):
+        def run(cmd, **kw):
+            p = _Proc(0)
+            p.stdout = f"{version} 26.3\n" if "-c" in cmd else ("  --uploaded-prior-to <datetime>" if helps else "")
+            return p
+        return run
+
+    assert env.check_resolver_python("/x/python", run=interp("3.12.3")) == {
+        "interpreter": "/x/python", "python": "3.12.3", "pip": "26.3", "markers": "evaluated for Python 3.12.3"}
+    with pytest.raises(RuntimeError, match="is not Python 3.12"):
+        env.check_resolver_python("/x/python", run=interp("3.13.5"))
+    with pytest.raises(RuntimeError, match="no --uploaded-prior-to"):
+        env.check_resolver_python("/x/python", run=interp("3.12.3", helps=False))
+    # A real resolution (subprocess.run) refuses to run on an interpreter that is not there; a stub run skips the check.
+    monkeypatch.setattr(env, "RESOLVER_PYTHON", str(tmp_path / "missing" / "python"))
+    plan = {"requirements": ["a"], "uploaded_prior_to": None, "path_only": []}
+    with pytest.raises(RuntimeError, match="no resolver interpreter"):
+        env.resolve_closure(plan, tmp_path / "w")
+    stub = env.resolve_closure(plan, tmp_path / "w2", run=lambda c, **k: _Proc(1, "ERROR: No matching distribution found for a"))
+    assert stub["rejected"] and stub["commands"][0][0] == str(tmp_path / "missing" / "python") and stub["resolver"] is None
+
+
+def test_a_resolver_that_runs_out_of_time_is_a_rejection(tmp_path):
+    """Found on real data: pip's backtracking resolver ran for many minutes on a closure of 99 requirements; a timeout
+    raised subprocess.TimeoutExpired out of the S10 step instead of rejecting the family."""
+    def slow(cmd, **kw):
+        raise subprocess.TimeoutExpired(cmd, kw.get("timeout"))
+
+    plan = {"requirements": ["a", "b"], "uploaded_prior_to": None, "path_only": []}
+    for got in (env.resolve_closure(plan, tmp_path / "w", run=slow), env.resolve_with_sdists(plan, tmp_path / "w2", run=slow)):
+        assert got["rejected"] and got["timed_out"] is True and got["stage"] == "S10"
+        assert got["reason"] == f"no resolvable closure: pip's resolver did not finish within {env.RESOLVER_TIMEOUT_S // 60} minutes"
+    # The retry without a local path requirement is covered too.
+    calls = []
+
+    def first_fails_then_slow(cmd, **kw):
+        calls.append(cmd)
+        if len(calls) == 1:
+            return _Proc(1, "ERROR: No matching distribution found for sib")
+        raise subprocess.TimeoutExpired(cmd, kw.get("timeout"))
+
+    plan2 = {"requirements": ["a", "sib"], "uploaded_prior_to": None, "path_only": ["sib"]}
+    got = env.resolve_closure(plan2, tmp_path / "w3", run=first_fails_then_slow)
+    assert got["timed_out"] and len(calls) == 2 and "sib" not in calls[1]
+
+
+def test_a_killed_resolver_leaves_no_temporary_files(tmp_path):
+    """Found on real data: pip's resolver, killed at the timeout after 30 minutes of backtracking, left 975,916 temporary
+    directories (about 9 GB) in /tmp. Its TMPDIR is a directory of the work directory, removed after every run."""
+    seen = []
+
+    def slow(cmd, **kw):
+        tmp = Path(kw["env"]["TMPDIR"])
+        seen.append(tmp)
+        assert tmp.is_dir() and tmp.is_relative_to(tmp_path)
+        (tmp / "pip-unpack-x").mkdir()
+        (tmp / "pip-unpack-x" / "a-1.0-py3-none-any.whl").write_bytes(b"w")
+        raise subprocess.TimeoutExpired(cmd, kw.get("timeout"))
+
+    plan = {"requirements": ["a"], "uploaded_prior_to": None, "path_only": []}
+    assert env.resolve_closure(plan, tmp_path / "w", run=slow)["timed_out"]
+    assert seen == [tmp_path / "w" / "pip-tmp"] and not seen[0].exists()
+
+    def ok(cmd, **kw):
+        (Path(kw["env"]["TMPDIR"]) / "pip-metadata-y").mkdir()
+        _report(Path(cmd[cmd.index("--report") + 1]), [("a", "1.0", "a-1.0-py3-none-any.whl")])
+        return _Proc(0)
+
+    got = env.resolve_closure(plan, tmp_path / "w2", run=ok, fetch_json=lambda n, v=None: {"urls": []})
+    assert got["pins"] == ["a==1.0"] and not (tmp_path / "w2" / "pip-tmp").exists()
+
+
+def test_a_real_s10_step_checks_and_records_the_resolver_whatever_run_wraps(built, tmp_path, monkeypatch):
+    """Found on real data: a logging wrapper around ``run`` (not subprocess.run itself) skipped the resolver check, and the
+    S10 records said nothing of the interpreter that evaluated the markers. A step that builds a real image checks it."""
+    w, _, _, _ = built
+    td = tmp_path / "tasks" / "NP-01"
+    shutil.copytree(w.out / "NP-01", td)
+    rec = {"interpreter": "/x/python", "python": "3.12.3", "pip": "26.3", "markers": "evaluated for Python 3.12.3"}
+    checked = []
+    monkeypatch.setattr(env, "check_resolver_python", lambda *a, **k: checked.append(1) or rec)
+    monkeypatch.setattr(env, "build_image", lambda pins, cache, **kw: {"image": "tc-env:np01", "image_id": "sha256:" + "2" * 64,
+                                                                        "wheelhouse": str(cache), "wheelhouse_bytes": 1})
+
+    def run(cmd, **kw):  # a wrapper, as a logging driver passes
+        if "--report" in cmd:
+            _report(Path(cmd[cmd.index("--report") + 1]), [("pytest", "8.0", "pytest-8.0-py3-none-any.whl")])
+        return _Proc(0)
+
+    got = npr.run_s10_environment(td, w.out.parent / "snapshots", tmp_path / "work", tmp_path / "cache", dry_run=False, run=run,
+                                  fetch_json=lambda n, v=None: {"urls": []},
+                                  runner=_runner([{"nodeid": "tests/test_mod.py::test_add", "outcome": "passed"}]))
+    assert got["outcome"] == "passed" and got["environment"]["resolver"] == rec and checked == [1]
+    # A rejection at the environment step records it too.
+    td2 = tmp_path / "tasks2" / "NP-01"
+    shutil.copytree(w.out / "NP-01", td2)
+    rej = npr.run_s10_environment(td2, w.out.parent / "snapshots", tmp_path / "work2", tmp_path / "cache", dry_run=False,
+                                  run=lambda c, **k: _Proc(1, "ERROR: ResolutionTooDeep"), fetch_json=lambda n, v=None: {"urls": []})
+    assert rej["outcome"] == "rejected" and rej["environment"]["resolver"] == rec
 
 
 def test_the_s10_environment_step(built, tmp_path):

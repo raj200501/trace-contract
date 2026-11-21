@@ -55,10 +55,12 @@ from typing import Any
 
 PYTHON = "3.12"
 WHEELHOUSE_CAP = 1_500_000_000  # bytes (§17.1)
+RESOLVER_TIMEOUT_S = 1800  # one run of pip's resolver
 BASE_TEST_TIMEOUT_S = 600  # §15.6, §17.2
 # manylinux tags the grading image (python:3.12-slim, glibc 2.36) accepts, and pure wheels.
 PLATFORMS = ("manylinux2014_x86_64", *(f"manylinux_2_{k}_x86_64" for k in range(17, 37)), "any")
 STUDY_TEST_REQUIREMENTS = ("pytest", "hypothesis")
+SDIST_BUILD_UID = 1001  # the user of the network-less container that builds a pure-Python sdist (§17.1)
 TEST_SETS = ("test", "tests", "testing")
 DEV_SETS = ("dev", "develop", "development", "devel")
 _NAME = re.compile(r"^\s*([A-Za-z0-9][A-Za-z0-9._-]*)")
@@ -409,11 +411,42 @@ def _platform_flags() -> list[str]:
     return out
 
 
+# pip's --python-version changes only the wheel tags and the Requires-Python check: environment markers are evaluated for
+# the interpreter pip runs on (with the study's Python 3.13, ``pendulum; python_version < "3.13"`` was left out of a
+# closure for the Python 3.12 image). The resolver therefore runs on a Python 3.12 interpreter with a pip that knows
+# --uploaded-prior-to: ``python3.12 -m venv ~/.cache/tracecontract/resolver-py3.12`` with pip 26.3 installed in it, or
+# the interpreter TC_RESOLVER_PYTHON names (:func:`check_resolver_python`).
+RESOLVER_PYTHON = (os.environ.get("TC_RESOLVER_PYTHON")
+                   or str(Path.home() / ".cache" / "tracecontract" / f"resolver-py{PYTHON}" / "bin" / "python"))
+_RESOLVER_CHECKED: dict[str, dict[str, str]] = {}
+
+
+def check_resolver_python(python: str | None = None, *, run: Callable[..., Any] = subprocess.run) -> dict[str, str]:
+    """The resolver interpreter's versions; a RuntimeError (a setup error, not a family's rejection) unless it is Python
+    3.12 (:data:`PYTHON`) with a pip that has ``--uploaded-prior-to``."""
+    python = python or RESOLVER_PYTHON
+    try:
+        p = run([python, "-I", "-c", "import sys, pip; print('%d.%d.%d' % sys.version_info[:3], pip.__version__)"],
+                capture_output=True, text=True, timeout=120)
+        h = run([python, "-I", "-m", "pip", "install", "--help"], capture_output=True, text=True, timeout=120)
+    except OSError as exc:
+        raise RuntimeError(f"no resolver interpreter at {python} ({type(exc).__name__}); see RESOLVER_PYTHON") from exc
+    got = (p.stdout or "").split()
+    if p.returncode != 0 or len(got) != 2 or ".".join(got[0].split(".")[:2]) != PYTHON:
+        raise RuntimeError(f"the resolver interpreter {python} is not Python {PYTHON} with pip (it reports "
+                           f"{' '.join(got) or 'nothing'}): pip would evaluate environment markers for another Python")
+    if "--uploaded-prior-to" not in (h.stdout or ""):
+        raise RuntimeError(f"the pip of the resolver interpreter {python} has no --uploaded-prior-to (pip {got[1]})")
+    return {"interpreter": python, "python": got[0], "pip": got[1], "markers": f"evaluated for Python {got[0]}"}
+
+
 def resolver_command(reqs: list[str], *, report: str, uploaded_prior_to: str | None, find_links: str | None = None,
-                     python: str = sys.executable) -> list[str]:
-    """pip's resolver, dry run, wheels only, for the grading image's interpreter and platform (no build code runs)."""
-    cmd = [python, "-m", "pip", "install", "--dry-run", "--ignore-installed", "--quiet", "--disable-pip-version-check",
-           "--report", report, "--only-binary=:all:", "--python-version", PYTHON, "--implementation", "cp", *_platform_flags()]
+                     python: str | None = None) -> list[str]:
+    """pip's resolver, dry run, wheels only, for the grading image's interpreter and platform (no build code runs);
+    ``python`` (default :data:`RESOLVER_PYTHON`) is a Python 3.12 interpreter, so that markers are evaluated for the image."""
+    cmd = [python or RESOLVER_PYTHON, "-m", "pip", "install", "--dry-run", "--ignore-installed", "--quiet",
+           "--disable-pip-version-check", "--report", report, "--only-binary=:all:", "--python-version", PYTHON,
+           "--implementation", "cp", *_platform_flags()]
     if uploaded_prior_to:
         cmd += ["--uploaded-prior-to", uploaded_prior_to]
     if find_links:
@@ -433,6 +466,51 @@ _NO_MATCH = re.compile(r"No matching distribution found for ([A-Za-z0-9][A-Za-z0
 def wheel_less(stderr: str) -> list[str]:
     """The requirements pip found no wheel for (from its error output)."""
     return sorted({norm_name(m) for m in _NO_MATCH.findall(stderr)})
+
+
+_UNSATISFIED = re.compile(r"Could not find a version that satisfies the requirement (.+?) \(from versions")
+# The grading interpreter (python:3.12-slim on x86_64 Linux), for the environment markers of declared requirements.
+TARGET_MARKERS = {"python_version": PYTHON, "python_full_version": f"{PYTHON}.0", "implementation_name": "cpython",
+                  "platform_python_implementation": "CPython", "sys_platform": "linux", "platform_system": "Linux",
+                  "os_name": "posix", "platform_machine": "x86_64", "extra": ""}
+
+
+def unsatisfied_requirements(stderr: str) -> dict[str, str]:
+    """name -> the requirement pip reports it could not satisfy (from its error output; it can be a transitive one,
+    which pip reports as ``name<spec> (from <parent>)``)."""
+    out: dict[str, str] = {}
+    for m in _UNSATISFIED.finditer(stderr):
+        spec = re.sub(r"\s+\(from [^()]*\)$", "", m.group(1).strip())
+        n = req_name(spec)
+        if n:
+            out.setdefault(n, spec)
+    return out
+
+
+def sdist_requirement(name: str, requirements: Iterable[str], reported: str | None = None) -> str:
+    """The requirement an sdist of ``name`` must satisfy: the intersection of the specifiers of every requirement on
+    ``name`` that applies to the grading interpreter (markers evaluated with :data:`TARGET_MARKERS`) and of the one pip
+    reports it could not satisfy. A closure can declare a name more than once (a pin in requirements.txt and a range
+    in setup.py), and an sdist chosen for one declaration alone may never satisfy the other."""
+    from packaging.markers import UndefinedComparison, UndefinedEnvironmentName
+    from packaging.requirements import InvalidRequirement, Requirement
+    from packaging.specifiers import SpecifierSet
+
+    spec = SpecifierSet()
+    for r in [*requirements, *([reported] if reported else [])]:
+        try:
+            req = Requirement(r)
+        except InvalidRequirement:
+            continue
+        if norm_name(req.name) != name:
+            continue
+        try:
+            if req.marker is not None and not req.marker.evaluate(TARGET_MARKERS):
+                continue
+        except (UndefinedComparison, UndefinedEnvironmentName):
+            pass  # a marker that cannot be evaluated: the specifier still counts
+        spec &= req.specifier
+    return f"{name}{spec}"
 
 
 def pins_from_report(report: dict[str, Any]) -> list[dict[str, Any]]:
@@ -517,6 +595,10 @@ def build_sdist_wheel(sdist: Path, build_wheels: Path, out: Path, *, image: str 
 
     ``build_wheels`` holds the wheels of the sdist's build backend (pip installs them into its isolated build
     environment from there, offline). Returns the command and, after a real build, the wheel's sha256.
+
+    The container's only writable host directory is a fresh one owned by its user (:data:`SDIST_BUILD_UID`): a
+    root-owned ``out`` is not writable by that user, and a shared one would let a build touch earlier wheels. After
+    the build, exactly one regular ``.whl`` file is taken from it and copied into ``out``.
     """
     from .sandbox.docker_runner import BASE_IMAGE
     from .schemas import sha256_bytes
@@ -524,22 +606,39 @@ def build_sdist_wheel(sdist: Path, build_wheels: Path, out: Path, *, image: str 
     ok, why = is_pure_python_sdist(sdist)
     if not ok:
         return _rejected("no resolvable closure: an sdist-only requirement is not pure Python", sdist=sdist.name, why=why)
-    cmd = ["docker", "run", "--rm", "--network", "none", "--cap-drop", "ALL", "--security-opt", "no-new-privileges",
-           "--read-only", "--tmpfs", "/tmp:rw,size=512m", "--memory", "2g", "--pids-limit", "256", "--user", "1001:1001",
-           "-e", "HOME=/tmp", "-e", "PIP_NO_INDEX=1", "-e", "PIP_CONFIG_FILE=/dev/null",
-           "-v", f"{sdist.parent.resolve()}:/in:ro", "-v", f"{build_wheels.resolve()}:/wheels:ro", "-v", f"{out.resolve()}:/out:rw",
-           image or BASE_IMAGE, "python", "-m", "pip", "wheel", "--no-deps", "--no-index", "--find-links", "/wheels",
-           "--disable-pip-version-check", "-w", "/out", f"/in/{sdist.name}"]
-    rec: dict[str, Any] = {"sdist": sdist.name, "sdist_sha256": sha256_bytes(sdist.read_bytes()), "command": cmd}
+
+    def command(mount: Path) -> list[str]:
+        return ["docker", "run", "--rm", "--network", "none", "--cap-drop", "ALL", "--security-opt", "no-new-privileges",
+                "--read-only", "--tmpfs", "/tmp:rw,size=512m", "--memory", "2g", "--pids-limit", "256",
+                "--user", f"{SDIST_BUILD_UID}:{SDIST_BUILD_UID}", "-e", "HOME=/tmp", "-e", "PIP_NO_INDEX=1",
+                "-e", "PIP_CONFIG_FILE=/dev/null", "-v", f"{sdist.parent.resolve()}:/in:ro",
+                "-v", f"{build_wheels.resolve()}:/wheels:ro", "-v", f"{mount.resolve()}:/out:rw",
+                image or BASE_IMAGE, "python", "-m", "pip", "wheel", "--no-deps", "--no-index", "--find-links", "/wheels",
+                "--disable-pip-version-check", "-w", "/out", f"/in/{sdist.name}"]
+
+    rec: dict[str, Any] = {"sdist": sdist.name, "sdist_sha256": sha256_bytes(sdist.read_bytes())}
     if dry_run:
-        return {**rec, "planned": True}
+        return {**rec, "command": command(out), "planned": True}
     out.mkdir(parents=True, exist_ok=True)
-    proc = run(cmd, capture_output=True, text=True, timeout=1800)
-    wheels = sorted(out.glob("*.whl"))
-    if proc.returncode != 0 or not wheels:
-        return _rejected("no resolvable closure: an sdist did not build into a wheel in the sandbox", sdist=sdist.name,
-                         stderr_tail=(proc.stderr or "")[-500:])
-    return {**rec, "wheel": wheels[-1].name, "wheel_sha256": sha256_bytes(wheels[-1].read_bytes())}
+    stage = Path(tempfile.mkdtemp(prefix=".sdist-build-", dir=out.parent))
+    try:
+        try:
+            os.chown(stage, SDIST_BUILD_UID, SDIST_BUILD_UID)
+            os.chmod(stage, 0o700)
+        except PermissionError:  # not root: the container's user can write only through the mode
+            os.chmod(stage, 0o777)
+        cmd = command(stage)
+        proc = run(cmd, capture_output=True, text=True, timeout=1800)
+        made = sorted(stage.iterdir())
+        wheels = [p for p in made if p.name.endswith(".whl") and p.is_file() and not p.is_symlink()]
+        if proc.returncode != 0 or len(wheels) != 1 or len(made) != 1:
+            return _rejected("no resolvable closure: an sdist did not build into a wheel in the sandbox", sdist=sdist.name,
+                             stderr_tail=(proc.stderr or "")[-500:], produced=len(made))
+        wheel = out / wheels[0].name
+        shutil.copyfile(wheels[0], wheel)
+    finally:
+        shutil.rmtree(stage, ignore_errors=True)
+    return {**rec, "command": cmd, "wheel": wheel.name, "wheel_sha256": sha256_bytes(wheel.read_bytes())}
 
 
 def resolve_closure(plan: dict[str, Any], workdir: Path, *, run: Callable[..., Any] = subprocess.run,
@@ -556,11 +655,32 @@ def resolve_closure(plan: dict[str, Any], workdir: Path, *, run: Callable[..., A
     report = workdir / "report.json"
     cmd = resolver_command(plan["requirements"], report=str(report), uploaded_prior_to=plan.get("uploaded_prior_to"),
                            find_links=str(local_wheels) if local_wheels else None)
-    env_note = {"PIP_CONFIG_FILE": "/dev/null", "PIP_CACHE_DIR": str(workdir / "cache")}
+    tmp = workdir / "pip-tmp"
+    env_note = {"PIP_CONFIG_FILE": "/dev/null", "PIP_CACHE_DIR": str(workdir / "cache"), "TMPDIR": str(tmp)}
     if dry_run:
         return {"planned": True, "commands": [cmd], "env": env_note}
+    resolver = None
+    if run is subprocess.run:  # a real resolution: its interpreter must evaluate markers for Python 3.12
+        resolver = _RESOLVER_CHECKED.get(cmd[0]) or _RESOLVER_CHECKED.setdefault(cmd[0], check_resolver_python(cmd[0]))
     report.unlink(missing_ok=True)  # pip writes the report only when it resolves: never read an earlier run's
-    proc = run(cmd, capture_output=True, text=True, timeout=1800, env={**os.environ, **env_note})
+
+    def timed_out(c: list[str]) -> dict[str, Any]:  # a resolver that runs out of time is a rejection, never an exception
+        return _rejected(f"no resolvable closure: pip's resolver did not finish within {RESOLVER_TIMEOUT_S // 60} minutes",
+                         commands=[c], resolver=resolver, timed_out=True)
+
+    def resolve(c: list[str]) -> Any:
+        # pip's temporary directories go to the work directory and are removed after every run: a resolver killed at
+        # the timeout cannot clean up, and one that backtracked for 30 minutes left 975,916 of them in /tmp.
+        tmp.mkdir(parents=True, exist_ok=True)
+        try:
+            return run(c, capture_output=True, text=True, timeout=RESOLVER_TIMEOUT_S, env={**os.environ, **env_note})
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+
+    try:
+        proc = resolve(cmd)
+    except subprocess.TimeoutExpired:
+        return timed_out(cmd)
     dropped: list[str] = []
     if (proc.returncode != 0 or not report.is_file()) and plan.get("path_only"):
         # A local path requirement maps to a project; where the index has no release of it, it is dropped once (recorded).
@@ -571,19 +691,23 @@ def resolve_closure(plan: dict[str, Any], workdir: Path, *, run: Callable[..., A
             cmd2 = resolver_command(keep, report=str(report), uploaded_prior_to=plan.get("uploaded_prior_to"),
                                     find_links=str(local_wheels) if local_wheels else None)
             report.unlink(missing_ok=True)
-            proc = run(cmd2, capture_output=True, text=True, timeout=1800, env={**os.environ, **env_note})
+            try:
+                proc = resolve(cmd2)
+            except subprocess.TimeoutExpired:
+                return timed_out(cmd2)
             cmd = cmd2
     if proc.returncode != 0 or not report.is_file():
         missing = wheel_less(proc.stderr or "")
         return _rejected("no resolvable closure: no wheels-only resolution" + (f" ({len(missing)} wheel-less requirement(s))"
                                                                               if missing else ""),
-                         wheel_less=missing, stderr_tail=(proc.stderr or "")[-1500:], commands=[cmd])
+                         wheel_less=missing, unsatisfied=unsatisfied_requirements(proc.stderr or ""),
+                         stderr_tail=(proc.stderr or "")[-1500:], commands=[cmd], resolver=resolver)
     pins = pins_from_report(json.loads(report.read_text(encoding="utf-8")))
     local = {w.name: w.stat().st_size for w in local_wheels.glob("*.whl")} if local_wheels else {}
     size, unknown = wheelhouse_size(pins, fetch_json=fetch_json, local=local)
     rec = {"pins": [f"{p['name']}=={p['version']}" for p in pins], "files": pins, "wheelhouse_bytes": size,
            "unknown_sizes": unknown, "commands": [cmd], "uploaded_prior_to": plan.get("uploaded_prior_to"),
-           "dropped_path_requirements": dropped}
+           "dropped_path_requirements": dropped, "resolver": resolver}
     if size > cap:
         return _rejected(f"environment too large: the wheelhouse would hold {size / 1e9:.2f} GB, over the 1.5 GB cap (§17.1)",
                          **rec)
@@ -656,34 +780,36 @@ def _sdist_build_requires(path: Path) -> list[str]:
 
 def resolve_with_sdists(plan: dict[str, Any], workdir: Path, *, run: Callable[..., Any] = subprocess.run,
                         fetch_json: Callable[..., dict[str, Any]] = pypi_json, download: Callable[[str, Path], None] = _download,
-                        max_rounds: int = 3, cap: int = WHEELHOUSE_CAP) -> dict[str, Any]:
+                        max_rounds: int = 10, cap: int = WHEELHOUSE_CAP) -> dict[str, Any]:
     """Wheels only; for requirements with no wheel, their pure-Python sdist built into a wheel in the sandbox (§17.1).
 
     Each round resolves with the wheels built so far (``--find-links``). A wheel-less requirement is fetched as the
-    newest sdist uploaded before the base date; it must be pure Python; its build backend is downloaded as wheels for
-    the image's platform; the build runs in a container without network. Every build is recorded with both sha256s.
+    newest sdist uploaded before the base date that satisfies every declaration of it and the requirement pip
+    reports (:func:`sdist_requirement`); it must be pure Python; its build backend is downloaded as wheels for the
+    image's platform; the build runs in a container without network. Every build is recorded with both sha256s.
+    pip stops at the first requirement it cannot satisfy, so each round usually finds one wheel-less requirement:
+    ``max_rounds`` rounds of builds are each followed by a resolution, the last one included.
     """
     built: list[dict[str, Any]] = []
     local, backends = workdir / "built-wheels", workdir / "build-backend-wheels"
-    specs = {req_name(r): r for r in plan["requirements"]}
     res: dict[str, Any] = {}
-    for k in range(max_rounds):
+    for k in range(max_rounds + 1):
         res = resolve_closure(plan, workdir / f"round-{k}", run=run, fetch_json=fetch_json,
                               local_wheels=local if built else None, cap=cap)
-        if not res.get("rejected") or not res.get("wheel_less"):
-            return {**res, "sdist_builds": built}
+        if not res.get("rejected") or not res.get("wheel_less") or k == max_rounds:
+            break
         for name in res["wheel_less"]:
             if any(b["name"] == name for b in built):
                 return _rejected("no resolvable closure: a wheel built from an sdist was not accepted by the resolver",
                                  sdist_builds=built, wheel_less=res["wheel_less"])
-            sd = fetch_sdist(specs.get(name) or name, plan.get("uploaded_prior_to"), workdir / "sdists", fetch_json=fetch_json,
-                             download=download)
+            want = sdist_requirement(name, plan["requirements"], (res.get("unsatisfied") or {}).get(name))
+            sd = fetch_sdist(want, plan.get("uploaded_prior_to"), workdir / "sdists", fetch_json=fetch_json, download=download)
             if sd is None:
                 return _rejected(f"no resolvable closure: {name} has no wheel and no sdist released before the base date",
                                  sdist_builds=built, wheel_less=res["wheel_less"])
             reqs = _sdist_build_requires(Path(sd["path"]))
             backends.mkdir(parents=True, exist_ok=True)
-            dl = [sys.executable, "-m", "pip", "download", "--quiet", "--disable-pip-version-check", "--only-binary=:all:",
+            dl = [RESOLVER_PYTHON, "-m", "pip", "download", "--quiet", "--disable-pip-version-check", "--only-binary=:all:",
                   "--python-version", PYTHON, "--implementation", "cp", *_platform_flags(), "-d", str(backends), *reqs]
             proc = run(dl, capture_output=True, text=True, timeout=900)
             if proc.returncode != 0:
@@ -691,11 +817,13 @@ def resolve_with_sdists(plan: dict[str, Any], workdir: Path, *, run: Callable[..
             rec = build_sdist_wheel(Path(sd["path"]), backends, local, run=run)
             if rec.get("rejected"):
                 return {**rec, "sdist_builds": built}
-            built.append({"name": sd["name"], "version": sd["version"], "sdist": sd["file"], "sdist_sha256": sd["sha256"],
-                          "wheel": rec.get("wheel"), "wheel_sha256": rec.get("wheel_sha256"), "build_requires": reqs,
-                          "command": rec.get("command")})
-    return {**res, "sdist_builds": built} if not res.get("rejected") else _rejected(
-        f"no resolvable closure after {max_rounds} rounds of sdist builds", sdist_builds=built, wheel_less=res.get("wheel_less"))
+            built.append({"name": sd["name"], "version": sd["version"], "requirement": want, "sdist": sd["file"],
+                          "sdist_sha256": sd["sha256"], "wheel": rec.get("wheel"), "wheel_sha256": rec.get("wheel_sha256"),
+                          "build_requires": reqs, "command": rec.get("command")})
+    if not res.get("rejected") or not res.get("wheel_less"):
+        return {**res, "sdist_builds": built}
+    return _rejected(f"no resolvable closure after {max_rounds} rounds of sdist builds", sdist_builds=built,
+                     wheel_less=res.get("wheel_less"))
 
 
 def build_image(pins: list[str], cache_dir: Path, *, local_wheels: Path | None = None, run: Callable[..., Any] = subprocess.run,
@@ -812,7 +940,11 @@ def select_base_tests(snapshot: Path, *, changed: list[tuple[str, str]], comment
     fallback = None
     if not subset:
         parents = [str(p) for p in PurePosixPath(commented_path).parents if str(p) != "."]  # the deepest package first
-        for d in ["tests", "test", "testing", *(f"{p}/{t}" for p in parents for t in ("tests", "test"))]:
+        # The conventional names first; then, at the root and in the changed package, a directory whose name ends in
+        # "tests" (``selftests``, ``unittests``: a repository that runs ``python -m unittest discover`` names its own).
+        other = [f"{p}/{c.name}" if p else c.name for p in ["", *parents] if (snapshot / p).is_dir()
+                 for c in sorted((snapshot / p).iterdir()) if c.is_dir() and c.name.endswith("tests") and c.name != "tests"]
+        for d in ["tests", "test", "testing", *(f"{p}/{t}" for p in parents for t in ("tests", "test")), *other]:
             if (snapshot / d).is_dir() and any(is_test_file(f) and f.startswith(d + "/") for f in tests):
                 fallback = d
                 break
@@ -942,7 +1074,7 @@ def build_b1(task_dir: Path, base_dir: Path, image: str | None, *, subset: list[
     return {"available": True, "n_checks": len(passing), "excluded": len(failing), **call}
 
 
-__all__ = ["BASE_TEST_TIMEOUT_S", "PLATFORMS", "WHEELHOUSE_CAP", "build_b1", "build_image", "build_sdist_wheel", "candidate_pythonpath",
-           "declaration_files", "declared_dependencies", "download_command", "fetch_sdist", "is_pure_python_sdist", "plan_closure",
-           "repo_test_args", "resolve_closure", "resolve_with_sdists", "resolver_command", "run_base_tests", "select_base_tests",
-           "wheel_less", "wheelhouse_size"]
+__all__ = ["BASE_TEST_TIMEOUT_S", "PLATFORMS", "SDIST_BUILD_UID", "WHEELHOUSE_CAP", "build_b1", "build_image", "build_sdist_wheel",
+           "candidate_pythonpath", "declaration_files", "declared_dependencies", "download_command", "fetch_sdist",
+           "is_pure_python_sdist", "plan_closure", "repo_test_args", "resolve_closure", "resolve_with_sdists", "resolver_command",
+           "run_base_tests", "sdist_requirement", "select_base_tests", "unsatisfied_requirements", "wheel_less", "wheelhouse_size"]

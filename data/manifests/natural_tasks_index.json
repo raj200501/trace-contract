@@ -1,0 +1,1815 @@
+{
+  "compiler": "natural_pr:v1",
+  "counts": {
+    "not built": 3,
+    "passed": 6,
+    "rejected": 16,
+    "s11": 6
+  },
+  "decision_log": [
+    "D47",
+    "D50",
+    "D53"
+  ],
+  "population": "natural:pr-review",
+  "privacy": "ids, SHAs, licence identifiers, sha256 file hashes, counts and S10 outcomes only: no login, handle, e-mail address, URL, repository name, path or text; the tasks are under data/natural/ (git-ignored, \u00a717.4)",
+  "protocol": "experiments/protocol.md \u00a715.6, \u00a716.4, \u00a717",
+  "schema": "tracecontract/natural-tasks-index/v1",
+  "source": {
+    "dataset": "hao-li/AIDev",
+    "revision": "b37f9fd1613cfec55886105bb76721918d015dc7"
+  },
+  "storage": "data/natural/tasks/<task id>/ and data/natural/snapshots/<task id>/",
+  "stratum": "natural-pr-v1",
+  "tasks": [
+    {
+      "agent": "Copilot",
+      "approximations": 1,
+      "base_rule": "merge_base",
+      "candidates": {
+        "NP-01-noop-dev": {
+          "origin": "noop",
+          "patch_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "split": "dev"
+        },
+        "NP-01-noop-eval": {
+          "origin": "noop",
+          "patch_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "split": "eval"
+        },
+        "NP-01-pre-review": {
+          "origin": "natural_pre_review",
+          "patch_sha256": "6d2f569b81490d7a457ec2fb50c99676be4aabfce195782a730b372fbb802688",
+          "split": "eval"
+        },
+        "NP-01-reference": {
+          "origin": "reference",
+          "patch_sha256": "3871d9f319f3f71069c9b91d26e232b8cc44f76929ab296af1b475e4bbfa22d9",
+          "split": "dev"
+        }
+      },
+      "comment_id": 2100781832,
+      "commits": {
+        "addressing": "e516b70541e60d92d6d58f1f29b614f8a843619a",
+        "base": "4a3aba24e4d29e3923bf962363289a6d9bccd1fd",
+        "default_branch_tip": "e1c0306c77b27b46c79755f53783474a03fd8c0d",
+        "first": "0a61b45c73f0c49a6f2cec85cb8e35c64b28df3a",
+        "head": "50481c2ec12237818bc7ae5eaf2a671b99c5a607",
+        "reviewed": "f831d8f382ec11ce2756abbe2dad24fa856a6c91"
+      },
+      "eligibility": "rejected",
+      "fidelity": "approximate",
+      "files": {
+        "candidates/NP-01-noop-dev.json": "d01e985f84f3c50647f94852c0d8c8e8c7ac29678d23072e5a301cf347843a22",
+        "candidates/NP-01-noop-eval.json": "1a489505a6d729c2da57ac180475272042987c73434ec67e3921ca70b8895f2a",
+        "candidates/NP-01-pre-review.json": "3fde9b7b655a76349120c7797c944ac4b6db61b498c0c3cb76b7a9881b008ce1",
+        "candidates/NP-01-reference.json": "e5e234c62ca5f63ca1df293e5cae22d84343aba4edb6699b86c2e030bf10f5f4",
+        "provenance.json": "945cc2cc451d73749623c46b6ff930231c7813ef95031b7396cd105c77072de4",
+        "reconstruction_check.json": "18a7af03d242954f727dc9509fb6aff63f331e52236d192882bd8088e8a4da00",
+        "rejection.json": "1e2cc39db357d5e81029a228630810dcb5bbc5275f189a45a23c0c7695c7267b",
+        "s10.json": "4056e9fb429d1af389b8be3d336608040548dab1f44e4358568ffd4b7609cce4",
+        "session.json": "54101b28afa359c6c4da14b691ff91ee584df567f0765670d59c224482b6f542",
+        "snapshot.json": "75d038f16404f2fb993af5d9b4f09e8a2f53b6256b80d0abf6a2bf2c3dd06cd6",
+        "task.json": "c3afd9b5926fd630bb52cfcb694f872d8f1283edba887209b8d913bf32f5b036"
+      },
+      "issue_id": 3022417664,
+      "licence": {
+        "agrees": true,
+        "aidev": "MIT",
+        "file_sha256": "7c77a44a8acd9b41fdc209864a8016b3d430b5d0e09309818d5b7444336df744",
+        "file_spdx": "MIT"
+      },
+      "merge_state": "no_merges",
+      "merges": 0,
+      "monorepo_package": true,
+      "n_files": 90,
+      "pr_id": 3078187008,
+      "reconstruction": {
+        "method": "reconstruction:pr-git:v1",
+        "status": "passed"
+      },
+      "repo_id": 4127088,
+      "role": "family",
+      "s10": {
+        "b1": "pending",
+        "base_test_subset": 1,
+        "base_tests": {
+          "error": 1,
+          "failed": 0,
+          "passed": 0,
+          "skipped": 0
+        },
+        "environment": "pinned",
+        "outcome": "rejected",
+        "pins": 24,
+        "reason": "base tests fail to collect",
+        "stage": "S10"
+      },
+      "s11": false,
+      "snapshot_manifest_sha256": "4f9e8167473f0b3560a4f282e3de13ee20ca289cb238ab21de01463859edd957",
+      "status": "rejected",
+      "task_id": "NP-01",
+      "trace_sha256": "24996a772ece7230c09d0124c2d378a3bd8a99b207655b903624b16abf225d98"
+    },
+    {
+      "agent": "Copilot",
+      "approximations": 1,
+      "base_rule": "merge_base",
+      "candidates": {
+        "NP-02-noop-dev": {
+          "origin": "noop",
+          "patch_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "split": "dev"
+        },
+        "NP-02-noop-eval": {
+          "origin": "noop",
+          "patch_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "split": "eval"
+        },
+        "NP-02-pre-review": {
+          "origin": "natural_pre_review",
+          "patch_sha256": "72e814d81f371bb27edb515e80aee14570eef2f8fc3bb41422857e2e789a5658",
+          "split": "eval"
+        },
+        "NP-02-reference": {
+          "origin": "reference",
+          "patch_sha256": "2199c27f8c6ce6abc930d67b706e62778becef0df253ca2ade7b58b23c79e567",
+          "split": "dev"
+        }
+      },
+      "comment_id": 2156570999,
+      "commits": {
+        "addressing": "021101749cc7ddeda3a6e589b0f0587574f00e11",
+        "base": "ec22d6ad93598b59d112e330af8b55e656ff63fb",
+        "default_branch_tip": "e1c0306c77b27b46c79755f53783474a03fd8c0d",
+        "first": "cfbc42e558cc199285cd7b6ed8913c85511f5f76",
+        "head": "021101749cc7ddeda3a6e589b0f0587574f00e11",
+        "reviewed": "a5a7c3da905f704bb3012aded4dc0e53e0d8401e"
+      },
+      "eligibility": "rejected",
+      "fidelity": "approximate",
+      "files": {
+        "candidates/NP-02-noop-dev.json": "f44632848db1772690df5f466969aec219ef89a86713eac2ed042ad8581e0fb0",
+        "candidates/NP-02-noop-eval.json": "c8d002e11f5820a346c1742ae5e2693801a128eea55ed03dac5b22e5c92a4868",
+        "candidates/NP-02-pre-review.json": "7f4aec1901323959058ea0f2217106bd55aef903cd5fd9c2697ec74745b0f059",
+        "candidates/NP-02-reference.json": "cc590690a5c1302ab2e47b718da9381b658225fc3463bcca7b4e088f1d5ef358",
+        "provenance.json": "d9402e4f3104fc12968ec6ac02d98f702f6d08a0eccb32c7a29e7f402900f5fc",
+        "reconstruction_check.json": "ea39d5aefb60a2db93d6f449006d73756a94d94448149945ab71df806838159e",
+        "rejection.json": "57e7a8252d8a6ca7e71687f0d1c660e73817325913a87939ec785313690f1232",
+        "s10.json": "409550c064ddd7339fa1ca7183688ff339f09317de0dda4216533f132e218257",
+        "session.json": "7632f0e80969a48d28ed72813cc44a2538de847ff6d6cb74d9118ade886a223a",
+        "snapshot.json": "c7f6e2292d443418b1a93e80b425a6661dd08033b1c757e2980badd445aa4875",
+        "task.json": "4bce973730d36f2959df4274d273903997d8bbc268a66f25db3d06eba7d36fa4"
+      },
+      "issue_id": 3007144632,
+      "licence": {
+        "agrees": true,
+        "aidev": "MIT",
+        "file_sha256": "7c77a44a8acd9b41fdc209864a8016b3d430b5d0e09309818d5b7444336df744",
+        "file_spdx": "MIT"
+      },
+      "merge_state": "no_merges",
+      "merges": 0,
+      "monorepo_package": true,
+      "n_files": 5063,
+      "pr_id": 3159178442,
+      "reconstruction": {
+        "method": "reconstruction:pr-git:v1",
+        "status": "passed"
+      },
+      "repo_id": 4127088,
+      "role": "family",
+      "s10": {
+        "b1": "pending",
+        "base_test_subset": 10,
+        "base_tests": {
+          "error": 0,
+          "failed": 0,
+          "passed": 0,
+          "skipped": 0
+        },
+        "environment": "pinned",
+        "outcome": "rejected",
+        "pins": 95,
+        "reason": "base tests fail to collect",
+        "stage": "S10"
+      },
+      "s11": false,
+      "snapshot_manifest_sha256": "c965e7ad52cb5f5baa261516b8e845d3def0dd873ace86f15eb7b21a57a58765",
+      "status": "rejected",
+      "task_id": "NP-02",
+      "trace_sha256": "68b721ebc4c556052d7e1af88515cf48dbce544c8eab9c05cb37f6be532a750d"
+    },
+    {
+      "agent": "Copilot",
+      "approximations": 1,
+      "base_rule": "merge_base",
+      "candidates": {
+        "NP-03-noop-dev": {
+          "origin": "noop",
+          "patch_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "split": "dev"
+        },
+        "NP-03-noop-eval": {
+          "origin": "noop",
+          "patch_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "split": "eval"
+        },
+        "NP-03-pre-review": {
+          "origin": "natural_pre_review",
+          "patch_sha256": "8a540b5f184b7228333bfbae3b56e8699a86b5ba58d7e3f6601641e3afe7c049",
+          "split": "eval"
+        },
+        "NP-03-reference": {
+          "origin": "reference",
+          "patch_sha256": "16294492dfc4cc4b03841c028cf3f9d138e8a37ca3e24ba1c99a793b27b4cffe",
+          "split": "dev"
+        }
+      },
+      "comment_id": 2406291283,
+      "commits": {
+        "addressing": "1083aaeb11038a85d85c623395539c3d7833e95f",
+        "base": "df101577145af2eb1abe5656e592e34e3bb56d23",
+        "default_branch_tip": "aab5e696eac5c3a92575a18521db28547c1476bb",
+        "first": "03b61153ff34b514ea7b119a8eed66291e3fae0a",
+        "head": "c435f7685806fd3ceb0e28e1dad214dbaf924b90",
+        "reviewed": "f5e12cde8fb3106fa5890ef70f8bf615fd20aa68"
+      },
+      "eligibility": "pending_review",
+      "fidelity": "approximate",
+      "files": {
+        "candidates/NP-03-noop-dev.json": "462ce6048a8e0a4e1f74e97a932b69eaeea19883237c66e2244fbea196eb7421",
+        "candidates/NP-03-noop-eval.json": "5e817d59746377d64ebaa7abe1c3eb4de382cdfabf7003e22307d8ca52eb6444",
+        "candidates/NP-03-pre-review.json": "d91d601aa4fd885c33d70b6dd57a0e3145114c8815276e7d7bebeac47154591a",
+        "candidates/NP-03-reference.json": "70c221eedbc13b2941bdf35d100d19b52e4ca2fdc3bb0201b5dd48a779f0624e",
+        "provenance.json": "493e6ef50b3f34578f2652959294fc873ac98711539651b866c3bed705607174",
+        "reconstruction_check.json": "861b5f7acccecc7500119701bbbdcb3b6f088ca761a0e86d7bbf3f3670b21f7e",
+        "s10.json": "d33e8a1ceea6228896e02601c3d7db752f08b6ae0b473747d0b75b715bb308cc",
+        "session.json": "9ccec20e7373fabd5c1161ba055a63ef6c2595e92d5c94c9ac60b5e1758cb8f6",
+        "snapshot.json": "94f9622f6564582c4b70afedbb30d5cba723cbe189d32b9611444701f2b79e8c",
+        "task.json": "28a5b60c24c7384ec8972f5959acf6e0e9190f6b50b943e276c4626928c7c5b8",
+        "verifiers/repo_tests/check_ids.json": "2f94e88af22d133f59ee09189a89a72715bce682e2e89b5ece3eb113b95184d9",
+        "verifiers/repo_tests/overlay/": {
+          "manifest_sha256": "06695c45fe5bb945ccea13290f267722b5de7c42d2b5793ebbabaabcbc718036",
+          "n_files": 14
+        },
+        "verifiers/repo_tests/selection.json": "3e6f668796c7c0b6572d5b5c4a0b247f892320a1d5dff47f7b605f2dac6fab45",
+        "verifiers/repo_tests/spec.json": "6ed8486c0ef57fb8214771af85788b47a4227cea4753dd9f04124581e62b5aaa"
+      },
+      "issue_id": 946090363,
+      "licence": {
+        "agrees": true,
+        "aidev": "MIT",
+        "file_sha256": "1e6c90014b4912815c296ee64bb6f6280af47e6d4c5d80e86232dfc5defe764c",
+        "file_spdx": "MIT"
+      },
+      "merge_state": "no_merges",
+      "merges": 0,
+      "monorepo_package": false,
+      "n_files": 143,
+      "pr_id": 3486247989,
+      "reconstruction": {
+        "method": "reconstruction:pr-git:v1",
+        "status": "passed"
+      },
+      "repo_id": 12830126,
+      "role": "family",
+      "s10": {
+        "b1": "available",
+        "base_test_subset": 14,
+        "base_tests": {
+          "error": 0,
+          "failed": 10,
+          "passed": 954,
+          "skipped": 2
+        },
+        "environment": "pinned",
+        "outcome": "passed",
+        "pins": 73,
+        "reason": null,
+        "stage": "S10"
+      },
+      "s11": true,
+      "snapshot_manifest_sha256": "95314e6cc6719d397cf104e26dc0c9d8766f6c77d37e5cfff99b970840efd864",
+      "status": "pending_review",
+      "task_id": "NP-03",
+      "trace_sha256": "ca981534b1865f0540cc83f632fcc402e6c85ef4134b40c18573e77a3e581106"
+    },
+    {
+      "agent": "Copilot",
+      "approximations": 0,
+      "base_rule": "merge_base",
+      "candidates": {
+        "NP-04-noop-dev": {
+          "origin": "noop",
+          "patch_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "split": "dev"
+        },
+        "NP-04-noop-eval": {
+          "origin": "noop",
+          "patch_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "split": "eval"
+        },
+        "NP-04-pre-review": {
+          "origin": "natural_pre_review",
+          "patch_sha256": "4dac8f6bc43ccabe0d970b2d6ec2eeb919a7f3f89d2df16b49b3f688684afe67",
+          "split": "eval"
+        },
+        "NP-04-reference": {
+          "origin": "reference",
+          "patch_sha256": "569f02c44d1d24a5f71a1d9dbed2781d8768136d59e44a32ac4bb2ae5cc6345e",
+          "split": "dev"
+        }
+      },
+      "comment_id": 2202272312,
+      "commits": {
+        "addressing": "7163adab48ede7a1b2d32b826f285d91cc932d27",
+        "base": "485e6a3e26c5aab9c6c9a7287efd24e00c9ee159",
+        "default_branch_tip": "014d52a6dc7084de4d26d9099a7f4867e5cc496f",
+        "first": "371dc602420df2c4be989ec7bae7198bbcf00ddb",
+        "head": "1aa2bb680da5917ac5144ae4d0ff0d1ea551d2ae",
+        "reviewed": "fa29fc1e3d17f620e97f9774a7a20e54fc7e92c1"
+      },
+      "eligibility": "pending_review",
+      "fidelity": "exact",
+      "files": {
+        "candidates/NP-04-noop-dev.json": "7d8e9122986a129eab982438c62890ff869655418f50759d45b8a1a8e58e4a5b",
+        "candidates/NP-04-noop-eval.json": "df7199b3d43251400c1bcd06a610d5bb33b9283381ee2467326454c8f604d66c",
+        "candidates/NP-04-pre-review.json": "7de3e601985af9c40aba05f8bb445bb0786b77bdd5e23e0c28ccbf6d7ca4f9e5",
+        "candidates/NP-04-reference.json": "9373d1de9b0767cd38152b6047d469d295a4bb8a908462e556bbec3ecca47cbe",
+        "provenance.json": "f29c9cbc7ffb0bde1d149c6f50c6fd23b1d3f325e6add511161307221212808d",
+        "reconstruction_check.json": "cf4f7f2cafaa71006986384c648d21d14796de0776be3abe22eecb8c572cbcbe",
+        "s10.json": "fe29ffecd40c2f0dbed110fc242fdb4d5c9cec04af5dac2753d188f3a37b336e",
+        "session.json": "ff0c3a0fe26f10990eb2f14e65e44ba55d0a11d810c40ca05b3a1a59480a6958",
+        "snapshot.json": "fae2741d6620b7326604203f4976e02c4bdee7e21671b11d2c2d97d48017ae12",
+        "task.json": "c82122e2456cf566d97ff71f0c3657b5309defb80a4d10092258f463434108cb",
+        "verifiers/repo_tests/check_ids.json": "0f232abb0388a3c3ad771d92b2abc2f7e6b220b0defb94463015e3300f93d75e",
+        "verifiers/repo_tests/overlay/": {
+          "manifest_sha256": "18457943a5c0e1de0ab48ac026b9ff2dd9097fb4ff61539a2076825f14bc2c1c",
+          "n_files": 1
+        },
+        "verifiers/repo_tests/selection.json": "2f5cfbbff4f261f0e4ee30ddbf550cc8fc602448c06856a69499fb0da1827a89",
+        "verifiers/repo_tests/spec.json": "4955afc58054f099d130923738cab057ab3735a16aad0157a415580938ab44da"
+      },
+      "issue_id": 3224735099,
+      "licence": {
+        "agrees": true,
+        "aidev": "MIT",
+        "file_sha256": "308f840a3a7e565ed664b8923d8eabe55c2b39178d8880950754025e2506b7fb",
+        "file_spdx": "MIT"
+      },
+      "merge_state": "no_merges",
+      "merges": 0,
+      "monorepo_package": false,
+      "n_files": 133,
+      "pr_id": 3224735740,
+      "reconstruction": {
+        "method": "reconstruction:pr-git:v1",
+        "status": "passed"
+      },
+      "repo_id": 60844169,
+      "role": "family",
+      "s10": {
+        "b1": "available",
+        "base_test_subset": 1,
+        "base_tests": {
+          "error": 0,
+          "failed": 0,
+          "passed": 33,
+          "skipped": 0
+        },
+        "environment": "pinned",
+        "outcome": "passed",
+        "pins": 17,
+        "reason": null,
+        "stage": "S10"
+      },
+      "s11": true,
+      "snapshot_manifest_sha256": "dbf2d81aa39001ae1162d62b428194a18536437d52f4520aac21aef2838d86f5",
+      "status": "pending_review",
+      "task_id": "NP-04",
+      "trace_sha256": "a883903b7ad4c79dff59d33d93ba1be34b30abff3c381596e94022cf51aa864f"
+    },
+    {
+      "agent": "Copilot",
+      "approximations": 0,
+      "base_rule": "merge_base",
+      "candidates": {
+        "NP-05-noop-dev": {
+          "origin": "noop",
+          "patch_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "split": "dev"
+        },
+        "NP-05-noop-eval": {
+          "origin": "noop",
+          "patch_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "split": "eval"
+        },
+        "NP-05-pre-review": {
+          "origin": "natural_pre_review",
+          "patch_sha256": "74694e6b5d895995e7b24045ebc7b66d2e16e106bc158f9c15df35ea022e1748",
+          "split": "eval"
+        },
+        "NP-05-reference": {
+          "origin": "reference",
+          "patch_sha256": "3d1cf6157daf0bbff50233537c6862fd5526f2436b424855f9e6c0747f93bd2a",
+          "split": "dev"
+        }
+      },
+      "comment_id": 2203471019,
+      "commits": {
+        "addressing": "3053eb98882fafd120097c800b3905e35c98c151",
+        "base": "22c9cf8d543c2cfcc8da429d7e0a37d99418aabd",
+        "default_branch_tip": "014d52a6dc7084de4d26d9099a7f4867e5cc496f",
+        "first": "fcb02b6977c01d28abcf8effa415b1a9e75803d2",
+        "head": "bbc3815c46996ff1190f68123c5faa4dab9fa56a",
+        "reviewed": "d789e3b61705345bf8470456d4d906eb4198e1e0"
+      },
+      "eligibility": "pending_review",
+      "fidelity": "exact",
+      "files": {
+        "candidates/NP-05-noop-dev.json": "b4329d1969bbd2bcd4b093184aa2636f9edf62ac857e92d9e272e903eb06df68",
+        "candidates/NP-05-noop-eval.json": "ed5fee0c094d03c50d844a4bf7b6de6880f3253e793a4845eb9cb8a6da4bcb96",
+        "candidates/NP-05-pre-review.json": "a53f9b839979d41a339cd549feb50e23512847bff4bfa988d05b076b162cde9d",
+        "candidates/NP-05-reference.json": "eb89fe5e5c8b52d68836fdae9a499c3b4adec18047694248b9f60f7c7594af97",
+        "provenance.json": "3de2953def40f3a4f7e1db5fcc17c831c6323b0001e6c42387ef6447bad3cd5e",
+        "reconstruction_check.json": "00e84ea85a908c09b05fee65e2b5315a6437321fc7c186132081d1c15aee2a35",
+        "s10.json": "cd5d1822bde48aedddbbebab4feac1bbd2fb6756e14a4a9087ca3fb475d6a029",
+        "session.json": "32e2612fe19f4b61b9d1e2b16fbe748c26004d397a0b8d8c7f8fc2ced08d43a7",
+        "snapshot.json": "44fc7168059103c93b64ca7081ed26f08c1b3c804ee79803566e1539c9fe04fd",
+        "task.json": "4dea06516bf23bbee72d22654fc986bc7741af7326bf8fde5ec815f0952ddc9f",
+        "verifiers/repo_tests/check_ids.json": "60a5f9b9c2040a84c01a0b51104a007237d2c34399882b4aa84e3c9c0b4d02be",
+        "verifiers/repo_tests/overlay/": {
+          "manifest_sha256": "bc43a7a0bcd08c2045158d24aad4a51f31ac952a42f47029f204b2f3464694dd",
+          "n_files": 16
+        },
+        "verifiers/repo_tests/selection.json": "0964f427396a6a67631412d75752077e92fa2e41fe49dce94481f3c3deb67cde",
+        "verifiers/repo_tests/spec.json": "405736e0a2401aca5dcb0faa8e97f1896673581a295fc27c0a24966bccde691d"
+      },
+      "issue_id": 3225563965,
+      "licence": {
+        "agrees": true,
+        "aidev": "MIT",
+        "file_sha256": "308f840a3a7e565ed664b8923d8eabe55c2b39178d8880950754025e2506b7fb",
+        "file_spdx": "MIT"
+      },
+      "merge_state": "no_merges",
+      "merges": 0,
+      "monorepo_package": false,
+      "n_files": 139,
+      "pr_id": 3226556821,
+      "reconstruction": {
+        "method": "reconstruction:pr-git:v1",
+        "status": "passed"
+      },
+      "repo_id": 60844169,
+      "role": "family",
+      "s10": {
+        "b1": "available",
+        "base_test_subset": 16,
+        "base_tests": {
+          "error": 0,
+          "failed": 5,
+          "passed": 354,
+          "skipped": 0
+        },
+        "environment": "pinned",
+        "outcome": "passed",
+        "pins": 17,
+        "reason": null,
+        "stage": "S10"
+      },
+      "s11": true,
+      "snapshot_manifest_sha256": "239679254006b762ffa3fb041c740fac193d3ab5b09d8dfb64c1988ca8130958",
+      "status": "pending_review",
+      "task_id": "NP-05",
+      "trace_sha256": "c244b835a90cd91fd01c0b7545c6ca5a1845c15ae5a3ede6bce95ce75731c3b9"
+    },
+    {
+      "agent": "Copilot",
+      "approximations": 1,
+      "base_rule": "merge_base",
+      "candidates": {
+        "NP-06-noop-dev": {
+          "origin": "noop",
+          "patch_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "split": "dev"
+        },
+        "NP-06-noop-eval": {
+          "origin": "noop",
+          "patch_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "split": "eval"
+        },
+        "NP-06-pre-review": {
+          "origin": "natural_pre_review",
+          "patch_sha256": "d8c5a19479f2076ca0972793b2ec82946a51a3395861fdbb9a93c35611b5ab34",
+          "split": "eval"
+        },
+        "NP-06-reference": {
+          "origin": "reference",
+          "patch_sha256": "89410459d8525f745ca38d722939b2a2c02a5f8fecde7307cc5f2ead97b78ed9",
+          "split": "dev"
+        }
+      },
+      "comment_id": 2953438776,
+      "commits": {
+        "addressing": "fb864866f6e5eab54f67fe82ddec1fa0c893f8a3",
+        "base": "4879f5abdd996cab574a07eb402e9df7cf697614",
+        "default_branch_tip": "2514168ad2f33e1e370eedb5ea4fbc4bab6094b3",
+        "first": "7df9064ea9aa01648ecf059338ab9615b5efc02d",
+        "head": "04e2c2d5062761f3dd8f1d59386080396994f7e8",
+        "reviewed": "0800e954bafa21997a637daae148a2239fc4dbce"
+      },
+      "eligibility": "rejected",
+      "fidelity": "approximate",
+      "files": {
+        "candidates/NP-06-noop-dev.json": "3c663512a748c0f928f19b93f9dc78c046029d5cf81ff0081ee31bab5293664d",
+        "candidates/NP-06-noop-eval.json": "2c1713d879c93b81524a478cf3fb07f43b99a632ae9eb42e51387cb336dfa580",
+        "candidates/NP-06-pre-review.json": "cbd1e220e70893192d232e8cdf662bc153a3d0536977c364145224f3ea05e3d7",
+        "candidates/NP-06-reference.json": "de1bcc699180b85c6674cea39a8eebf541b0b4c4636bbffece325c1edd796ab9",
+        "provenance.json": "750197beec41ee8e5359298d04382a54abb6c8520afca87764a7e75a2595c706",
+        "reconstruction_check.json": "0f2230ebe274478cb2f743ef707359f6d5832092415ff4637d7c877740924ee1",
+        "rejection.json": "96eec4211251afa83c731dc4eb6d200e767c115c987583a6a3739832ca48dcd3",
+        "s10.json": "2731fc21a290d4ff9ea4754fb5a28f200de1637ea7f913da4c33f349675f05a8",
+        "session.json": "d4f7ca7ef5e246df98b3f986015ff780cff744eb0f572c23842eee14ac910e1d",
+        "snapshot.json": "1f7604e076e1a1c9fad25191d10c5b042d1c286dda4b770bb4e4521d3dd9e34d",
+        "task.json": "0ff36077e4caeeaf4ca09c78c0eea2c11c2f3d98a3faf33da29c71cd4a230a1a"
+      },
+      "issue_id": 437399950,
+      "licence": {
+        "agrees": true,
+        "aidev": "Apache-2.0",
+        "file_sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "file_spdx": "Apache-2.0"
+      },
+      "merge_state": "no_merges",
+      "merges": 0,
+      "monorepo_package": true,
+      "n_files": 183,
+      "pr_id": 4095008687,
+      "reconstruction": {
+        "method": "reconstruction:pr-git:v1",
+        "status": "passed"
+      },
+      "repo_id": 133100880,
+      "role": "family",
+      "s10": {
+        "b1": "pending",
+        "base_test_subset": 1,
+        "base_tests": {
+          "error": 1,
+          "failed": 0,
+          "passed": 0,
+          "skipped": 0
+        },
+        "environment": "pinned",
+        "outcome": "rejected",
+        "pins": 92,
+        "reason": "base tests fail to collect",
+        "stage": "S10"
+      },
+      "s11": false,
+      "snapshot_manifest_sha256": "9c88274c13a0fb1a62b6e371bef321991c82b12dbbec21649aa05cb9ecf8ced6",
+      "status": "rejected",
+      "task_id": "NP-06",
+      "trace_sha256": "2ed16d4819b7c3e7b3ea1a0977daa6dea58a9870bab95478d67dde2828526590"
+    },
+    {
+      "agent": "Copilot",
+      "comment_id": 2121219198,
+      "files": {
+        "rejection.json": "d7eb55b2d888944dfce9b274b709c97bcd886a4cb4814d0a31389771b210d550"
+      },
+      "pr_id": 3108908027,
+      "repo_id": 136202695,
+      "role": "family",
+      "s10": {
+        "outcome": "rejected",
+        "reason": "base tests: the base-test subset is empty (no test file imports a changed module, the PR changes no test file present at the base, and the changed package has no test directory) (\u00a717.2)",
+        "stage": "S10"
+      },
+      "s11": false,
+      "task_id": "NP-07"
+    },
+    {
+      "agent": "Copilot",
+      "comment_id": 2134827481,
+      "files": {
+        "rejection.json": "103deefae72b298c08d1bc8bc77d95a9d722514763a85967984a13827b025739"
+      },
+      "pr_id": 3128687696,
+      "repo_id": 136202695,
+      "role": "family",
+      "s10": {
+        "outcome": "rejected",
+        "reason": "fetch over the caps (\u00a715.6): git fetch stopped: the clone went over the repository cap of 300000000 bytes",
+        "stage": "S10"
+      },
+      "s11": false,
+      "task_id": "NP-08"
+    },
+    {
+      "agent": "Devin",
+      "approximations": 1,
+      "base_rule": "merge_base",
+      "candidates": {
+        "NP-09-noop-dev": {
+          "origin": "noop",
+          "patch_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "split": "dev"
+        },
+        "NP-09-noop-eval": {
+          "origin": "noop",
+          "patch_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "split": "eval"
+        },
+        "NP-09-pre-review": {
+          "origin": "natural_pre_review",
+          "patch_sha256": "a3af280b9f6b0c0f774758d1540d40edadbfce1966a3f10b545b62929bf96c12",
+          "split": "eval"
+        },
+        "NP-09-reference": {
+          "origin": "reference",
+          "patch_sha256": "b936aac9ece7491d19dd553846b7ffabf1fcdba6dded16fd8c0c139636810d81",
+          "split": "dev"
+        }
+      },
+      "comment_id": 2607658018,
+      "commits": {
+        "addressing": "73c653bfb7d602f5cd625bcacff607fdd41db6a0",
+        "base": "8e02ef331f8bb177757055b370342466b466b998",
+        "default_branch_tip": "5513abc4df1f20a02bb810849477b64c989c3160",
+        "first": "e265530cbf4cbeca2560de205873f36dfedb8c16",
+        "head": "73c653bfb7d602f5cd625bcacff607fdd41db6a0",
+        "reviewed": "c3edce40dc8a63cc6b410185e376f5f1cfe964e4"
+      },
+      "eligibility": "rejected",
+      "fidelity": "approximate",
+      "files": {
+        "candidates/NP-09-noop-dev.json": "f7fa3aa0f188699ffa340b34ff3211751f7d559c2cb59771e1afc49f5e308395",
+        "candidates/NP-09-noop-eval.json": "a734d3b4a163bd0945f4f8a1d03df0c6bd45af4d10ed862f1aa9f532c7199e1f",
+        "candidates/NP-09-pre-review.json": "1b61021c1a5d46dcd10b8d01673508def909ac205e72bb09aff792c17a0f628c",
+        "candidates/NP-09-reference.json": "e11cd6c9d535134c1d0ba2f31a71c9ea199c089b047e1818dbc58d38de22681e",
+        "provenance.json": "53c49bee6fb51854025a638fd66da7d8995e8ab3e048b5e726b95f79fd59cd5b",
+        "reconstruction_check.json": "ab70915cae65e47978b9f5bfa4776b43fbd9d7a0e54e3afdb84ff764caebd460",
+        "rejection.json": "99e8c82c4ac0797e0e2781b36f2ed34581179519eabfcdf1b664f0a107bc80f3",
+        "s10.json": "92e1bb49d7ce33480ae1fe06d84cf3bdab1f793220fa1e983593f389ebf36870",
+        "session.json": "9a170d491f9fb034dedcd3db82b50ca9807efbdfb7a1473b8ec1c2af2ea2c576",
+        "snapshot.json": "bac809685a0a540b9914aafbbbef88f16116adbbcc671ad3e8daf18adae07bea",
+        "task.json": "f3a663a4ef704b6c0ba2ead609570d78671e5d7d8a66d1744255c55cc7b1bb8a"
+      },
+      "issue_id": 3623110892,
+      "licence": {
+        "agrees": true,
+        "aidev": "Apache-2.0",
+        "file_sha256": "302c6c9fca2c024cdfc4a0b8082fdd2dc52453c0d92e4ca2859f261acdc08774",
+        "file_spdx": "Apache-2.0"
+      },
+      "merge_state": "no_merges",
+      "merges": 0,
+      "monorepo_package": true,
+      "n_files": 22,
+      "pr_id": 3715789527,
+      "reconstruction": {
+        "method": "reconstruction:pr-git:v1",
+        "status": "passed"
+      },
+      "repo_id": 139199684,
+      "role": "family",
+      "s10": {
+        "b1": "pending",
+        "base_test_subset": 2,
+        "base_tests": {
+          "error": 2,
+          "failed": 0,
+          "passed": 0,
+          "skipped": 0
+        },
+        "environment": "pinned",
+        "outcome": "rejected",
+        "pins": 146,
+        "reason": "base tests fail to collect",
+        "stage": "S10"
+      },
+      "s11": false,
+      "snapshot_manifest_sha256": "f0af3b713e7a79143abde427029c46463b48aab74b781fcc1331de0f110fd62c",
+      "status": "rejected",
+      "task_id": "NP-09",
+      "trace_sha256": "7db9908860c1543e7a5e039929d579c761ac7b916e21961e83cdf0a0c528de3a"
+    },
+    {
+      "agent": "Devin",
+      "approximations": 1,
+      "base_rule": "merge_base",
+      "candidates": {
+        "NP-10-noop-dev": {
+          "origin": "noop",
+          "patch_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "split": "dev"
+        },
+        "NP-10-noop-eval": {
+          "origin": "noop",
+          "patch_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "split": "eval"
+        },
+        "NP-10-pre-review": {
+          "origin": "natural_pre_review",
+          "patch_sha256": "4f6230f80111b7f43956a7929969f1094439a540f6997c53e557fdad9613fc6a",
+          "split": "eval"
+        },
+        "NP-10-reference": {
+          "origin": "reference",
+          "patch_sha256": "5dbe14a8130a8290b5d0d9bd678ee751572cacf80181b47717cbb5bee0dd9774",
+          "split": "dev"
+        }
+      },
+      "comment_id": 2726163260,
+      "commits": {
+        "addressing": "bd9e2ccfaf3a26b665236aa8a4f2d58bca7580f4",
+        "base": "d349882d24863907edc0b4a07874896625a6bd19",
+        "default_branch_tip": "5513abc4df1f20a02bb810849477b64c989c3160",
+        "first": "c5b1249035fa1e7cbd7b9d4e25131a1ee4f485f5",
+        "head": "e880098de9415752d74517993123c8c747ccee9a",
+        "reviewed": "0d3ab3c2d3f9f98abfafdf7b9f6d4f8ed3925e40"
+      },
+      "eligibility": "rejected",
+      "fidelity": "approximate",
+      "files": {
+        "candidates/NP-10-noop-dev.json": "48d59248e02e092b4f09f2087ee522dd693d9447595a352076f4a594ce3f266f",
+        "candidates/NP-10-noop-eval.json": "50a2bb0220545791f948ed8737bd92de43b37593d85cb71c5d7352678d91f40b",
+        "candidates/NP-10-pre-review.json": "053f6a21d21c4571c6d44bb001a4c645d579a5fcdd530f8fe37cca54317b52be",
+        "candidates/NP-10-reference.json": "1c70cef3bf6687f76040c146faf363137c6148122f0fe03041a75d918389bf68",
+        "provenance.json": "c6d95115252db17d32c3f2daa43185a3da2978394cc999d02feb1f907084110a",
+        "reconstruction_check.json": "b742f85ee47627d3cfb761519a4211b885f2365ae60a7ea7ae839d91a458f628",
+        "rejection.json": "67444990bb547e50887c4e699dced574d2c1d7b1a8922012ea4bfbe45961786f",
+        "s10.json": "a9758b52d6df3b355a39d958a63814138cacc8fe9f81e41f4d1a19fe846eb5c4",
+        "session.json": "08bfd15cfc4a0e5bd1d29f807ac44feee53cd32d6beb8441b43e39e47dae42dc",
+        "snapshot.json": "718d55b24bd9c6369766dcd27c6d161bb0b27a85bcce526b946343e91cc87a16",
+        "task.json": "76035776fd30ae56a8632d852f67711d72f5c2f0aab457ef04bf1558359199af"
+      },
+      "issue_id": 3874366100,
+      "licence": {
+        "agrees": true,
+        "aidev": "Apache-2.0",
+        "file_sha256": "302c6c9fca2c024cdfc4a0b8082fdd2dc52453c0d92e4ca2859f261acdc08774",
+        "file_spdx": "Apache-2.0"
+      },
+      "merge_state": "no_merges",
+      "merges": 0,
+      "monorepo_package": false,
+      "n_files": 4656,
+      "pr_id": 3848411760,
+      "reconstruction": {
+        "method": "reconstruction:pr-git:v1",
+        "status": "passed"
+      },
+      "repo_id": 139199684,
+      "role": "family",
+      "s10": {
+        "b1": "pending",
+        "base_test_subset": 22,
+        "base_tests": null,
+        "environment": "pinned",
+        "outcome": "rejected",
+        "pins": null,
+        "reason": "no resolvable closure: no wheels-only resolution",
+        "stage": "S10"
+      },
+      "s11": false,
+      "snapshot_manifest_sha256": "b51c39a164d84704877934c043e23f03d554601071874e64e9e742c216863557",
+      "status": "rejected",
+      "task_id": "NP-10",
+      "trace_sha256": "bd98c56b2bb4edbe60238a1afdd9bcd9bd00aa311500146faf49bd7f4580034b"
+    },
+    {
+      "agent": "Copilot",
+      "approximations": 2,
+      "base_rule": "merge_base",
+      "candidates": {
+        "NP-11-noop-dev": {
+          "origin": "noop",
+          "patch_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "split": "dev"
+        },
+        "NP-11-noop-eval": {
+          "origin": "noop",
+          "patch_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "split": "eval"
+        },
+        "NP-11-pre-review": {
+          "origin": "natural_pre_review",
+          "patch_sha256": "770fcb4e0a573068ebbbd84b941a627faf312dc44b80c2abc0087d7f7d332a8c",
+          "split": "eval"
+        },
+        "NP-11-reference": {
+          "origin": "reference",
+          "patch_sha256": "8157ce045e1b6a0dfa13c813fc82b03392d5d9af685b1dc318a580066dd9e085",
+          "split": "dev"
+        }
+      },
+      "comment_id": 2110886365,
+      "commits": {
+        "addressing": "78065af3d27e11de9da84172382fbbf07744d890",
+        "base": "5248dad456918bfe646e3de58d4db2cac2cf5a29",
+        "default_branch_tip": "3d0bab0d82ff4eefd48795fc6007261638711a05",
+        "first": "f6f72c9d435bf97291dae64e1e8b77113a7b1127",
+        "head": "ad5670eff4e165ef35a6f07b3199cf5b7b3ad998",
+        "reviewed": "3fe18e5a26f0054e92254091cd03cf9d8660f4ab"
+      },
+      "eligibility": "rejected",
+      "fidelity": "approximate",
+      "files": {
+        "candidates/NP-11-noop-dev.json": "1c13846f99c7e7f024b0b0d2d96ac1b0f4eeab6164c52ac5f1172094e7f7edf2",
+        "candidates/NP-11-noop-eval.json": "7e058c4f3278e7e4b14210da37548685b8c4cd3c3e25f1dda7b63d83445ca88c",
+        "candidates/NP-11-pre-review.json": "a9547fcfb41b4100c2c69b4e86d8070f57efb0c53dcbff77e8fdf4a1923dfd83",
+        "candidates/NP-11-reference.json": "dac7565085938ab59fab937b31ccd4e0056b7ec0fce517b7b8f335440e1f0ce1",
+        "provenance.json": "d03a192e908c032a0a01cc45d47fa974fec6762eaef1b3c520758828a2054f46",
+        "reconstruction_check.json": "bc333c6afb3a5569ca20e1e3c7c0a4be7175f28e22a539a2cd6007dc38f7635d",
+        "rejection.json": "25f34d6ad4013fed831ce3d9b61a801c0fc7363dfc52b77d3529d1c913a817a2",
+        "s10.json": "2db78e8415f501ce674c56a37b30eccd2506c2309e501789fcceaed0fe54c574",
+        "session.json": "119530e04dd52b1732a78f64ee58f89b26ce663e9c58baed71332203f58fbea5",
+        "snapshot.json": "1590acb24b064eb5e4e2a12a706f9eecf7f39244f0fde4337178ec266c3cb220",
+        "task.json": "53e4d96c1452aef1dce83bd8f0c761bf512ed66b05f3321cbd4d5c82d92c6ed5"
+      },
+      "issue_id": 2329296805,
+      "licence": {
+        "agrees": true,
+        "aidev": "BSD-3-Clause",
+        "file_sha256": "2f8b7c63a352c49aeb4155b97d397765f08fb7504e9bf5d0dbcb2efec0c82025",
+        "file_spdx": "BSD-3-Clause"
+      },
+      "merge_state": "merges_not_touching_the_commented_file",
+      "merges": 4,
+      "monorepo_package": false,
+      "n_files": 1287,
+      "pr_id": 3090570894,
+      "reconstruction": {
+        "method": "reconstruction:pr-git:v1",
+        "status": "passed"
+      },
+      "repo_id": 172703996,
+      "role": "family",
+      "s10": {
+        "b1": "pending",
+        "base_test_subset": 42,
+        "base_tests": {
+          "error": 23,
+          "failed": 0,
+          "passed": 0,
+          "skipped": 0
+        },
+        "environment": "pinned",
+        "outcome": "rejected",
+        "pins": 80,
+        "reason": "base tests fail to collect",
+        "stage": "S10"
+      },
+      "s11": false,
+      "snapshot_manifest_sha256": "44a08f5b256ce702340740a4f40b7c29614d8fc7cdb1350c0c53ba1f69625592",
+      "status": "rejected",
+      "task_id": "NP-11",
+      "trace_sha256": "f049c597a5bc42d3a58ac47712c6be225cb6b96aeeed8e82bda8b6098921e269"
+    },
+    {
+      "agent": "Copilot",
+      "comment_id": 2128276190,
+      "files": {
+        "rejection.json": "867d394a3235d7a2f5f9bcdb809a6aa9face92c3e12c3ccba63b33ffa1c919d3"
+      },
+      "pr_id": 3113782046,
+      "repo_id": 174629277,
+      "role": "family",
+      "s10": {
+        "outcome": "rejected",
+        "reason": "a merge between the base and the addressing commit changes the commented file (\u00a715.6)",
+        "stage": "S10"
+      },
+      "s11": false,
+      "task_id": "NP-12"
+    },
+    {
+      "agent": "Copilot",
+      "approximations": 0,
+      "base_rule": "merge_base",
+      "candidates": {
+        "NP-13-noop-dev": {
+          "origin": "noop",
+          "patch_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "split": "dev"
+        },
+        "NP-13-noop-eval": {
+          "origin": "noop",
+          "patch_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "split": "eval"
+        },
+        "NP-13-pre-review": {
+          "origin": "natural_pre_review",
+          "patch_sha256": "baeab8afb50e06b1782add41f365bb6c56fb94caab74f9dce47a0391d40c4bfa",
+          "split": "eval"
+        },
+        "NP-13-reference": {
+          "origin": "reference",
+          "patch_sha256": "979d233ad6fab9b7de46cb64a384c44958d661ab62a77676a6d05bb08f0f7b59",
+          "split": "dev"
+        }
+      },
+      "comment_id": 2172100116,
+      "commits": {
+        "addressing": "985354f8a4aaaab94b3783d38fe93c1cdc2c219c",
+        "base": "22f67c4e074b672ec0d8cda05e98c3fb18413841",
+        "default_branch_tip": "3a3ee0bd6c9690cd03087337458df5b7c6d3a95f",
+        "first": "294266996234c8a0dc61d7e418e8d8328e46a59a",
+        "head": "ceedd34d2fbe52554cea0484c4eafe6768595036",
+        "reviewed": "642b30c12f62c92dd7200ecfc73e577f4c222734"
+      },
+      "eligibility": "rejected",
+      "fidelity": "exact",
+      "files": {
+        "candidates/NP-13-noop-dev.json": "70197eda95b4e28a92dfe3d4539d956aeee50a9032521eeaa69a6eacf1c0cd16",
+        "candidates/NP-13-noop-eval.json": "3ef2c505cedb32a31a549b40cd85c2e4afc4ba4f06c87f09bcbdaeb6611e458f",
+        "candidates/NP-13-pre-review.json": "67f4b052a468a63a522346fefbf985cdeb484f31790e3d79db6fc385cb2be7fb",
+        "candidates/NP-13-reference.json": "93474707a0fc6c2259f98e07f0771add7369eeed0407af9baa38d0a399a7aba3",
+        "provenance.json": "b36808824ba773c5585f820c50be51c352d1595803dbcf94876ff971063c4340",
+        "reconstruction_check.json": "ea0c0983ddcd94d29d1fcdd71610b30a62ea4a26e33404cc605199fa0e8252d8",
+        "rejection.json": "9fd4e4293b50be01673db0eef97e8b62025c0798af02eea2e5ce79ffe5ac83fb",
+        "s10.json": "a027361728975b74df24d1fdaf36532caf5bd8460b588c48fabb262d18a27812",
+        "session.json": "91848a738f529675654bc03796277f81bb08170f3c5c4ce400ecd0efcaf252cc",
+        "snapshot.json": "363f8435ad0295d8a792f298342a1ad9a8a6809d3689791d6667c45ce498f831",
+        "task.json": "09a7df153368d0e3242fa198399aa5c90a5cd13ba50756bbec3569d6920b5343"
+      },
+      "issue_id": 3181430047,
+      "licence": {
+        "agrees": true,
+        "aidev": "MIT",
+        "file_sha256": "7c77a44a8acd9b41fdc209864a8016b3d430b5d0e09309818d5b7444336df744",
+        "file_spdx": "MIT"
+      },
+      "merge_state": "no_merges",
+      "merges": 0,
+      "monorepo_package": false,
+      "n_files": 564,
+      "pr_id": 3181433167,
+      "reconstruction": {
+        "method": "reconstruction:pr-git:v1",
+        "status": "passed"
+      },
+      "repo_id": 174629277,
+      "role": "family",
+      "s10": {
+        "b1": "pending",
+        "base_test_subset": 1,
+        "base_tests": null,
+        "environment": "pinned",
+        "outcome": "rejected",
+        "pins": null,
+        "reason": "no resolvable closure: an sdist-only requirement is not pure Python",
+        "stage": "S10"
+      },
+      "s11": false,
+      "snapshot_manifest_sha256": "f9e30f7efb31002b619d92560e4968b7bc7e2836a70b9b1e11fd2d37faee4134",
+      "status": "rejected",
+      "task_id": "NP-13",
+      "trace_sha256": "71d2d902de7006163c0750b999d22d0bd6bdf89bb6dbb055addddd92e9291b03"
+    },
+    {
+      "agent": "Copilot",
+      "approximations": 0,
+      "base_rule": "merge_base",
+      "candidates": {
+        "NP-14-noop-dev": {
+          "origin": "noop",
+          "patch_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "split": "dev"
+        },
+        "NP-14-noop-eval": {
+          "origin": "noop",
+          "patch_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "split": "eval"
+        },
+        "NP-14-pre-review": {
+          "origin": "natural_pre_review",
+          "patch_sha256": "5133ced3fb219762e7077fb204bc71c6097948d312dc09ccd1500ee1d99f68a1",
+          "split": "eval"
+        },
+        "NP-14-reference": {
+          "origin": "reference",
+          "patch_sha256": "3942b1b176441411eec48080ab1f9ce499a31e0ce5442951519a24bff0c0850a",
+          "split": "dev"
+        }
+      },
+      "comment_id": 2415830344,
+      "commits": {
+        "addressing": "e138c4cb3cfb8b3d9feb74a5445a47cecf536675",
+        "base": "2703b160b250c066f5cbf0ca40c555ec79d82ae7",
+        "default_branch_tip": "abc5b1d86b7c4c0a745e306a966ec5a8a0c21da8",
+        "first": "96eba0786118f591f4ee75b1c3511b70e19f2594",
+        "head": "69ff0b638b57d3fa677a0c30c125f7bc06dff448",
+        "reviewed": "5872a6b4b7158558f5016ca2b79cde6407c29895"
+      },
+      "eligibility": "rejected",
+      "fidelity": "exact",
+      "files": {
+        "candidates/NP-14-noop-dev.json": "b2cb3727d8326550a0ec0fcf6848006ffc73dce2111b5d69b532fe00d92053a7",
+        "candidates/NP-14-noop-eval.json": "a2a65f29736b939b54348405503e97ea5ce519cc166e230fb9433c0116fdc216",
+        "candidates/NP-14-pre-review.json": "b092344eb4d961046a76be0b918a93f44b82b8fb603c5801c0230b65de72cfad",
+        "candidates/NP-14-reference.json": "1b2e7b1f5c25418de6f4787ac7ce4f71cf968c14a68c59439becbd739a827466",
+        "provenance.json": "e6dc44107701cde7022fb36d0749de5d09a9701b1fdd06be87fd181897d87e3f",
+        "reconstruction_check.json": "4f13e7450ef5a831381414db0435eac4b2cd9d6d1ce5f39a2c9923f942101c10",
+        "rejection.json": "4e2e2c493ea9c484de9f856e34f8d8ae3b6646d15b99e234f241dd284165f1b5",
+        "s10.json": "eaa011fc370a083bf15b86cd59363d07bde5abc9e6c2d7e2af7820e1c78409e4",
+        "session.json": "f1e92a213f3ae1df0653eb4107ea847c6d6d3522cc6e4ede74a33bf8bcedf3e3",
+        "snapshot.json": "1dbc21a49acabb59d5c82f2d22a8e2eadf60cc5bb650a8c46b07a68fec264d8e",
+        "task.json": "c76ef0875f78ccf7c6800fd74e5fa7be3e6e16bb5de4ac762ab05399d07fe205"
+      },
+      "issue_id": 3401416191,
+      "licence": {
+        "agrees": true,
+        "aidev": "MIT",
+        "file_sha256": "28409809c52753f04fedd36e2f469859750388f71f7364018af6d7a79aeed5ce",
+        "file_spdx": "MIT"
+      },
+      "merge_state": "no_merges",
+      "merges": 0,
+      "monorepo_package": false,
+      "n_files": 183,
+      "pr_id": 3497926869,
+      "reconstruction": {
+        "method": "reconstruction:pr-git:v1",
+        "status": "passed"
+      },
+      "repo_id": 184555939,
+      "role": "family",
+      "s10": {
+        "b1": "pending",
+        "base_test_subset": 1,
+        "base_tests": {
+          "error": 13,
+          "failed": 0,
+          "passed": 0,
+          "skipped": 0
+        },
+        "environment": "pinned",
+        "outcome": "rejected",
+        "pins": 52,
+        "reason": "base tests fail to collect",
+        "stage": "S10"
+      },
+      "s11": false,
+      "snapshot_manifest_sha256": "de6e3b12cccb29811ef4fe910e3c4797cf2f357a0c0e3e731832a84742d422d1",
+      "status": "rejected",
+      "task_id": "NP-14",
+      "trace_sha256": "a802815745ac790b03179d820df03575f200b6ac33c447ab2968d04073ea63e1"
+    },
+    {
+      "agent": "Copilot",
+      "approximations": 1,
+      "base_rule": "parent_of_first_commit",
+      "candidates": {
+        "NP-15-noop-dev": {
+          "origin": "noop",
+          "patch_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "split": "dev"
+        },
+        "NP-15-noop-eval": {
+          "origin": "noop",
+          "patch_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "split": "eval"
+        },
+        "NP-15-pre-review": {
+          "origin": "natural_pre_review",
+          "patch_sha256": "e1e2b53b2667b40254b58ef4e38f5e55dbcfc882cb2d5a6e62262cabd5a0cf14",
+          "split": "eval"
+        },
+        "NP-15-reference": {
+          "origin": "reference",
+          "patch_sha256": "6d94aed1213efbefbe3a82971ec91e189863a37a2f01dd474119a4caa5a4cba4",
+          "split": "dev"
+        }
+      },
+      "comment_id": 2173524848,
+      "commits": {
+        "addressing": "92e622fe9e233cb542fe881b271bc4c26906132d",
+        "base": "dfe327195e5ea65dee79b60f33b0152a17b054b8",
+        "default_branch_tip": "9b1be95027567b8587b05f48c22122b1dcac6cc0",
+        "first": "966b610c7b69861f9387a24a8e7ab7782b8cf3b3",
+        "head": "878c804651f9ec97b129f6d4c7a271a2969a66d6",
+        "reviewed": "55a2735a3df8b50dfc91311650d522feef13c639"
+      },
+      "eligibility": "rejected",
+      "fidelity": "approximate",
+      "files": {
+        "candidates/NP-15-noop-dev.json": "23fa9a6695a23e04e53f95dedfa0c7948c1ec9e2b1c3a7682ceeefb5d0adeaba",
+        "candidates/NP-15-noop-eval.json": "c57c47c7e3d550d73132920472e65c284b552849a175214785e7e95616d3d1a8",
+        "candidates/NP-15-pre-review.json": "ad545daaef480b1c24c2b4ed4e0b5702f4e9b6003818988134534f8b93f9f508",
+        "candidates/NP-15-reference.json": "fe2be3398c1613c82c694bd4f35226ac716a837187c8e3eb3985761f63105c56",
+        "provenance.json": "d32ed104a0e2b6f221fefe1d522dc93a320e032ced3bcbddec021b3c222999a9",
+        "reconstruction_check.json": "912e889d5b586532b5ad6f83a688c14897babc839c3343d15f7bb6919a023cc7",
+        "rejection.json": "3019df50c1a5213b442ce9dd0f54d6133681fc719fbbfd484bb483e848d657c6",
+        "s10.json": "9404730a58fe604e308fb47f72fcdc77462071e089a9beafe89199f2197f52c8",
+        "session.json": "37c27a3f9425b448050dcec77ecbf760c2dfaaa6bd33274ebedaf405ae94b12c",
+        "snapshot.json": "a7406252002bec574d17decdf77791e33033f000cc0ae776fba257232b83dbec",
+        "task.json": "49fc67ddcb3a3d725a01eb0471496bd3ad4ff01dbbc75676bb4b81a022b5143b"
+      },
+      "issue_id": 3062939849,
+      "licence": {
+        "agrees": true,
+        "aidev": "Apache-2.0",
+        "file_sha256": "e41c88c4f5d03adb410e70e0fd7a170f0834266c411774007525244c076fe8d9",
+        "file_spdx": "Apache-2.0"
+      },
+      "merge_state": "no_merges",
+      "merges": 0,
+      "monorepo_package": false,
+      "n_files": 284,
+      "pr_id": 3185333353,
+      "reconstruction": {
+        "method": "reconstruction:pr-git:v1",
+        "status": "passed"
+      },
+      "repo_id": 224148738,
+      "role": "family",
+      "s10": {
+        "b1": "pending",
+        "base_test_subset": 1,
+        "base_tests": null,
+        "environment": "pinned",
+        "outcome": "rejected",
+        "pins": 71,
+        "reason": "environment too large: the wheelhouse would hold 3.15 GB, over the 1.5 GB cap (\u00a717.1)",
+        "stage": "S10"
+      },
+      "s11": false,
+      "snapshot_manifest_sha256": "2ce1e3618578d04b771c67bb549b8551f0240a05d4a4cc896639e381a1386e2d",
+      "status": "rejected",
+      "task_id": "NP-15",
+      "trace_sha256": "494aa993e9408e6590251ba5eb53fcd6a3219987be4e2f55153c86feaf6373cd"
+    },
+    {
+      "agent": "Copilot",
+      "approximations": 1,
+      "base_rule": "merge_base",
+      "candidates": {
+        "NP-16-noop-dev": {
+          "origin": "noop",
+          "patch_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "split": "dev"
+        },
+        "NP-16-noop-eval": {
+          "origin": "noop",
+          "patch_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "split": "eval"
+        },
+        "NP-16-pre-review": {
+          "origin": "natural_pre_review",
+          "patch_sha256": "35502f3cc297d030ff28c3b44dea8b922c0019a31b04142dc242361756b1a151",
+          "split": "eval"
+        },
+        "NP-16-reference": {
+          "origin": "reference",
+          "patch_sha256": "1cede14fccff3bb5da2533c1622466995aa3460310a4ce04a7818fe33a3cf5f0",
+          "split": "dev"
+        }
+      },
+      "comment_id": 2331433642,
+      "commits": {
+        "addressing": "fc1930fae650c9885493591c8e58c145f1c64acf",
+        "base": "e7e879b01bce60a33242d7bf7d4fd3e9e0c6da03",
+        "default_branch_tip": "9d1d283846b553c226929d0009c97aa1faa3e23c",
+        "first": "b97405dc0062323b34ec22512b834ac6ff27d03f",
+        "head": "fc1930fae650c9885493591c8e58c145f1c64acf",
+        "reviewed": "751baf3bd18bea3bc99713b9094d63e8df6cd4f7"
+      },
+      "eligibility": "rejected",
+      "fidelity": "approximate",
+      "files": {
+        "candidates/NP-16-noop-dev.json": "dda60a28e6fe1a6b42f04ad688380cc3d0775e7ad5b66b8240a074ba9741a630",
+        "candidates/NP-16-noop-eval.json": "5d061048d394b7132d704aab945d09cc1f125a1e3b2af801aa1e060b2149cc50",
+        "candidates/NP-16-pre-review.json": "28817223e8b055be4b05ccce024ea66183451ed9a393c3ecb37d009a8accbf08",
+        "candidates/NP-16-reference.json": "d7e9cfaa2a0722befefc46473d4433ade9a67d1ab6feb5833d17dfff0d4a1c53",
+        "provenance.json": "9a863c49e0ee3ff2c017d5274f54004817079d9f156283fd1a2c0b182f03a6b4",
+        "reconstruction_check.json": "0305cbbcf4d9cc9e7c85649bc08b8609419816e45b393192b38bf83c4b138033",
+        "rejection.json": "8e49837f693b465d7fb9945752e2eb087af4285bc67de0811ce6248196dbb56d",
+        "s10.json": "3893307e2a4c6ecf9c9904923fbdc7ac3c17fe82027f4f8041c68490de10a962",
+        "session.json": "60c300712bea4098e01d1623b349b2e3948029288683ea0331eb719e9fc41b6e",
+        "snapshot.json": "4f1fe48fd4a9c51a43b9e2d2b4162237629a3d257980dd35a9b13a11010b02b7",
+        "task.json": "61a669f031fe0739000e8fb76f8f7362e52db392173f5b4370d43bbbe46b92d1"
+      },
+      "issue_id": 3359990102,
+      "licence": {
+        "agrees": true,
+        "aidev": "MIT",
+        "file_sha256": "4d5a8ea5a4f49662b5a025ab34fd501a1c1e3028f4af3952a9a8e0aa1ba6d232",
+        "file_spdx": "MIT"
+      },
+      "merge_state": "no_merges",
+      "merges": 0,
+      "monorepo_package": false,
+      "n_files": 3566,
+      "pr_id": 3392393778,
+      "reconstruction": {
+        "method": "reconstruction:pr-git:v1",
+        "status": "passed"
+      },
+      "repo_id": 369428935,
+      "role": "family",
+      "s10": {
+        "b1": "pending",
+        "base_test_subset": 17,
+        "base_tests": null,
+        "environment": "pinned",
+        "outcome": "rejected",
+        "pins": null,
+        "reason": "no resolvable closure: pip's resolver did not finish within 30 minutes",
+        "stage": "S10"
+      },
+      "s11": false,
+      "snapshot_manifest_sha256": "d2198e21add2402899dc762822b285a39bb440ea2a26ff7cdfe861b644b2ff4f",
+      "status": "rejected",
+      "task_id": "NP-16",
+      "trace_sha256": "b4336d22fe13e13875e5216db3d5819e250ea1652ae1d9664ad94719489b01da"
+    },
+    {
+      "agent": "Copilot",
+      "approximations": 1,
+      "base_rule": "merge_base",
+      "candidates": {
+        "NP-17-noop-dev": {
+          "origin": "noop",
+          "patch_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "split": "dev"
+        },
+        "NP-17-noop-eval": {
+          "origin": "noop",
+          "patch_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "split": "eval"
+        },
+        "NP-17-pre-review": {
+          "origin": "natural_pre_review",
+          "patch_sha256": "487933ee035eb206e17a8df6b28fa93b55f93fd413d60eda8af2b87149681dd4",
+          "split": "eval"
+        },
+        "NP-17-reference": {
+          "origin": "reference",
+          "patch_sha256": "8ee9e58b0c79ba3aba151b327f22182f6dc31268a418e02a78c8e8b055b9b62e",
+          "split": "dev"
+        }
+      },
+      "comment_id": 2331247278,
+      "commits": {
+        "addressing": "ede98ceeed0db0e0a4819e638f35410d37b16167",
+        "base": "e7e879b01bce60a33242d7bf7d4fd3e9e0c6da03",
+        "default_branch_tip": "9d1d283846b553c226929d0009c97aa1faa3e23c",
+        "first": "0d8d59764fb7b89082d54cc2a4b614ef5c22468c",
+        "head": "ede98ceeed0db0e0a4819e638f35410d37b16167",
+        "reviewed": "419a9cb773b74dd5a03e56c90275c1853124ee56"
+      },
+      "eligibility": "rejected",
+      "fidelity": "approximate",
+      "files": {
+        "candidates/NP-17-noop-dev.json": "9ed46be849e71259c42345f9ff0c62d0487920f594f494e3f410d1f0cade5517",
+        "candidates/NP-17-noop-eval.json": "9199a6c7aca451e52935bfb7e0ee48048676707f41120a7ee70351ccbd6a4fac",
+        "candidates/NP-17-pre-review.json": "4b92dfdce97287b6cff9bb8afe094f3ef82ed69b1e5e60a72144439c3ec27374",
+        "candidates/NP-17-reference.json": "fbd645d34bc9f3ae00dc4d62851a4c6d1f6f090e35c8e3972be87f4fbe9cc69f",
+        "provenance.json": "9473d7e3e4265ee5df5fa28bd5e170da424a6b46855a35c7542a0342183302ff",
+        "reconstruction_check.json": "8711a359a73d337197da811788ae40fdac9944502d09f23cd2b0502f5b1e45d4",
+        "rejection.json": "f4f0fc8204e51a0fa594bd9ad60ddc12e938e4bbbbd42195aa4beb72a39fc8af",
+        "s10.json": "5590b693d0df121a1a88d5b659e68026c703d9698961e639f2ebae775f3c7629",
+        "session.json": "e6878fc5baca2b97771870daed2798652a35e61ec64383fe2ea5f3fa75c7cab0",
+        "snapshot.json": "f3cf4b3657da7a3b1ba4b80133fca5305ee1f876812bada673edb3b4cfbdfc4b",
+        "task.json": "46244ce6e8b9f4b3dcf52eaaa2c90b388bb9ddb735abd7cae7e3a7410fa76f98"
+      },
+      "issue_id": 2559509289,
+      "licence": {
+        "agrees": true,
+        "aidev": "MIT",
+        "file_sha256": "4d5a8ea5a4f49662b5a025ab34fd501a1c1e3028f4af3952a9a8e0aa1ba6d232",
+        "file_spdx": "MIT"
+      },
+      "merge_state": "no_merges",
+      "merges": 0,
+      "monorepo_package": false,
+      "n_files": 3566,
+      "pr_id": 3392399944,
+      "reconstruction": {
+        "method": "reconstruction:pr-git:v1",
+        "status": "passed"
+      },
+      "repo_id": 369428935,
+      "role": "family",
+      "s10": {
+        "b1": "pending",
+        "base_test_subset": 1,
+        "base_tests": null,
+        "environment": "pinned",
+        "outcome": "rejected",
+        "pins": null,
+        "reason": "no resolvable closure: pip's resolver did not finish within 30 minutes",
+        "stage": "S10"
+      },
+      "s11": false,
+      "snapshot_manifest_sha256": "d2198e21add2402899dc762822b285a39bb440ea2a26ff7cdfe861b644b2ff4f",
+      "status": "rejected",
+      "task_id": "NP-17",
+      "trace_sha256": "74eb1713ac4c3de7806338d0f48e779de94e01e96f03b793d96f419074b0feff"
+    },
+    {
+      "agent": "Copilot",
+      "approximations": 0,
+      "base_rule": "merge_base",
+      "candidates": {
+        "NP-18-noop-dev": {
+          "origin": "noop",
+          "patch_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "split": "dev"
+        },
+        "NP-18-noop-eval": {
+          "origin": "noop",
+          "patch_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "split": "eval"
+        },
+        "NP-18-pre-review": {
+          "origin": "natural_pre_review",
+          "patch_sha256": "67081830ac3814975e7ef7b21a1f9a7c358f53783074f870981f4274b4dec4d5",
+          "split": "eval"
+        },
+        "NP-18-reference": {
+          "origin": "reference",
+          "patch_sha256": "bdea7efc59ccad1ef5734bf473a0c42234acdb0304a5bd219e517e5dc5f86efd",
+          "split": "dev"
+        }
+      },
+      "comment_id": 2477327497,
+      "commits": {
+        "addressing": "6da81b36cca2b1c91c4452a9c0b71cf13b9e97cf",
+        "base": "da69f9d05fc7509eb20c4acb41e8b8b793104f7e",
+        "default_branch_tip": "7fbc8ff1665ee87122f06633270782dbf1f69c6b",
+        "first": "a1d14a58f5596a603c232595084e29d55f4f3fc9",
+        "head": "0055def1ede151b07946214682cf56abdb97294c",
+        "reviewed": "71bd42a8bd34db9c5674bc4a2565f3f333c5f409"
+      },
+      "eligibility": "pending_review",
+      "fidelity": "exact",
+      "files": {
+        "candidates/NP-18-noop-dev.json": "4149a37e56efee4a2131ffcda7a28f835630203424ae813a8519320a4580e315",
+        "candidates/NP-18-noop-eval.json": "325551e4e6c6486b881b53a051287c1ab727aba47b6b946d0bd7b65c9e39649f",
+        "candidates/NP-18-pre-review.json": "72eea701648cfe727c00886e00281e6f11c15bd99841f9a30d67be64babcf96d",
+        "candidates/NP-18-reference.json": "104f60e42b82914dd132f007fd7c65fbbcd3eefdf33791787d87028edf536f6e",
+        "provenance.json": "7bed6873318bfd99be89cdcca11969cb58b0abd0585f1c7c10263df5d78d3793",
+        "reconstruction_check.json": "7270b02d65e93e2ef561835eebeebf9ecf398e795f2170549c2b50975fce11c0",
+        "s10.json": "0dc836aabc41da1b9616bf3cec490bd5b69ccb1c248799c5c5f48792815e2284",
+        "session.json": "023ca4dd8b349b69d712219f8d59e2bbb81f9366c437e4a17d79851fbd08211b",
+        "snapshot.json": "431ea8ee83038e1f8451956c479f0832f599115da53436e4dc4c6e21b782092a",
+        "task.json": "ed8427a564bbcf9a96cd8eb1f096692c0bf2464b9408305a1a740be722f170d2",
+        "verifiers/repo_tests/check_ids.json": "31b73cbf61e9d9a7008079915d57aaca9f386d5c2051e3b40be70d3af093ae1b",
+        "verifiers/repo_tests/overlay/": {
+          "manifest_sha256": "9040bfc4856832513a6f6db63dffed72a5a8f1448ca79e5a49bbb1e107a45107",
+          "n_files": 1
+        },
+        "verifiers/repo_tests/selection.json": "001e7cee3913dde2e85720eef6212a28cd542a839cb49ae64d6b42a5ee731366",
+        "verifiers/repo_tests/spec.json": "5f748258c49f78dd0f293a6c48c37801c66ed1f3ab2dc7b54bf1ac0d5890d889"
+      },
+      "issue_id": 3562477184,
+      "licence": {
+        "agrees": true,
+        "aidev": "MIT",
+        "file_sha256": "fc84421fcf968a696680dacf66ad53db769f699f557690127c5ccb3f6358cfdb",
+        "file_spdx": "MIT"
+      },
+      "merge_state": "no_merges",
+      "merges": 0,
+      "monorepo_package": false,
+      "n_files": 447,
+      "pr_id": 3564611876,
+      "reconstruction": {
+        "method": "reconstruction:pr-git:v1",
+        "status": "passed"
+      },
+      "repo_id": 587050620,
+      "role": "family",
+      "s10": {
+        "b1": "available",
+        "base_test_subset": 1,
+        "base_tests": {
+          "error": 0,
+          "failed": 0,
+          "passed": 24,
+          "skipped": 0
+        },
+        "environment": "pinned",
+        "outcome": "passed",
+        "pins": 144,
+        "reason": null,
+        "stage": "S10"
+      },
+      "s11": true,
+      "snapshot_manifest_sha256": "14e92d7a834467200ea967f77829aa4363dae79e8f56802261fc9bc8eb1b38cc",
+      "status": "pending_review",
+      "task_id": "NP-18",
+      "trace_sha256": "d0fcb518b6a444c77b8f3287175fbfa51fb1e6ce9a1d43b9c115b1106aa8abc2"
+    },
+    {
+      "agent": "Devin",
+      "approximations": 0,
+      "base_rule": "merge_base",
+      "candidates": {
+        "NP-19-noop-dev": {
+          "origin": "noop",
+          "patch_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "split": "dev"
+        },
+        "NP-19-noop-eval": {
+          "origin": "noop",
+          "patch_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "split": "eval"
+        },
+        "NP-19-pre-review": {
+          "origin": "natural_pre_review",
+          "patch_sha256": "092a634e55528e6242fa5e35b5cda03786430f1d00c4e3052ec7fd1cc94a33ca",
+          "split": "eval"
+        },
+        "NP-19-reference": {
+          "origin": "reference",
+          "patch_sha256": "e5207b708a69f8bac30a4d53ad4155087551720c8e5c6bf9dec1d97ac24aff46",
+          "split": "dev"
+        }
+      },
+      "comment_id": 1904742061,
+      "commits": {
+        "addressing": "c065d2774feabd68e6a616bbb1d102e0a0f652f0",
+        "base": "69abd36ba209b1099a23120216e882444104a8c0",
+        "default_branch_tip": "fab184b26578429568c39c6b1e6b1d67e1650ae1",
+        "first": "6a23038f82ea7e4bd8ed10dcf5eb52f2b7283a9b",
+        "head": "bfb1cb6585b36966caa8be499478fb2a40165268",
+        "reviewed": "0d5703fb858a69c021a5bfad1c393e95b80b8b23"
+      },
+      "eligibility": "pending_review",
+      "fidelity": "exact",
+      "files": {
+        "candidates/NP-19-noop-dev.json": "e53cbfca1de633fe725d497fe0fc5c86f83db97121cd6e4b376637a47665a16a",
+        "candidates/NP-19-noop-eval.json": "591f2699bb2b9db2a3f205414c9585e8ea9ba889c68fe7d9b6a79ec8b772f1e4",
+        "candidates/NP-19-pre-review.json": "330c2f3b8ea5d503ef7b433010b9098409623b458105b1dcd5c894e53ebfd491",
+        "candidates/NP-19-reference.json": "2f9cfcbe77d45598dfc7cff37fa75a0f03995714be1f2f26595054dd58347dcf",
+        "provenance.json": "56c75fbc0dc5e2c371ed97376cbdd8e3012ca76775d196506ace1f111561b88f",
+        "reconstruction_check.json": "ec271c346d210d7727b62fd40e3e1d5cea1ec1cad2eef678f13cf4b1997cadfc",
+        "s10.json": "55d1d5f8f61517831173651cda7a9e8568037c807feec6dff132d20ef0b0a8e6",
+        "session.json": "1a460d0ffc7de19c6e3e6fcf4c24afec3fbb9f3fd143e1d319801d879727ce6f",
+        "snapshot.json": "fe84dd628860ac456254dad8dd458b10c8d629a489680c832a89c2ab8041deab",
+        "task.json": "c0707861d01b0040068c450d7928be237022435f7adc924ace0156248604523a",
+        "verifiers/repo_tests/check_ids.json": "3de2ff109c938a3483a694ff0b63a01e28904a63f5650c508f27cf87045c175a",
+        "verifiers/repo_tests/overlay/": {
+          "manifest_sha256": "25bcba3d5c1adeb96d56a87352d8e63d66139011a0abcf65cf61a497d6848401",
+          "n_files": 2
+        },
+        "verifiers/repo_tests/selection.json": "e3775fa112c5ec32b78ce27b0fff7a4c0a763181c55db7557320d5a565ad9294",
+        "verifiers/repo_tests/spec.json": "d3e3456616a3f7f9be384295b82aac03d4757db4c5722d62260e98403d4d9bdd"
+      },
+      "issue_id": 2724847830,
+      "licence": {
+        "agrees": true,
+        "aidev": "Apache-2.0",
+        "file_sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "file_spdx": "Apache-2.0"
+      },
+      "merge_state": "no_merges",
+      "merges": 0,
+      "monorepo_package": false,
+      "n_files": 134,
+      "pr_id": 2771538261,
+      "reconstruction": {
+        "method": "reconstruction:pr-git:v1",
+        "status": "passed"
+      },
+      "repo_id": 879473096,
+      "role": "family",
+      "s10": {
+        "b1": "available",
+        "base_test_subset": 2,
+        "base_tests": {
+          "error": 3,
+          "failed": 5,
+          "passed": 1,
+          "skipped": 0
+        },
+        "environment": "pinned",
+        "outcome": "passed",
+        "pins": 106,
+        "reason": null,
+        "stage": "S10"
+      },
+      "s11": true,
+      "snapshot_manifest_sha256": "06549250e72bab6e93670844c78137e9d9303c0cace3e03ceec5d43b883d8f01",
+      "status": "pending_review",
+      "task_id": "NP-19",
+      "trace_sha256": "a73d26bc90a68edbe2c356aa748f386dcd45a0a1cc334e9ff92c1e40e53cc02b"
+    },
+    {
+      "agent": "Copilot",
+      "approximations": 0,
+      "base_rule": "merge_base",
+      "candidates": {
+        "NP-20-noop-dev": {
+          "origin": "noop",
+          "patch_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "split": "dev"
+        },
+        "NP-20-noop-eval": {
+          "origin": "noop",
+          "patch_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "split": "eval"
+        },
+        "NP-20-pre-review": {
+          "origin": "natural_pre_review",
+          "patch_sha256": "f9e385eb39cad6b299cc151ababc5ed082f8da7db9e7a4b7eecedbca41ed5efe",
+          "split": "eval"
+        },
+        "NP-20-reference": {
+          "origin": "reference",
+          "patch_sha256": "9178a57f45c20e161feaa9baad183c317b4eb2e972d33763963c025a634194c6",
+          "split": "dev"
+        }
+      },
+      "comment_id": 2349474352,
+      "commits": {
+        "addressing": "e9d5691f3e5ba4c5dfb333384c6caeaa20ecdf47",
+        "base": "826149244bc8e9266addc968bddb6f013f58a821",
+        "default_branch_tip": "e044d1e1c449a232f6f10a9afda464cbb68aaf5c",
+        "first": "c1ae2128a4f0708b355df5b84d9b05c11ed8c604",
+        "head": "9236cee017480a1bcf39fc1ba4e928ce53e0207a",
+        "reviewed": "aaa1a97d25363701689435359f5bf39793f80fb5"
+      },
+      "eligibility": "pending_review",
+      "fidelity": "exact",
+      "files": {
+        "candidates/NP-20-noop-dev.json": "ab1e5be6475e095dd328826ce600d976a14a50e53d310f7dce4a104bac12d377",
+        "candidates/NP-20-noop-eval.json": "a51fe1792f186dee686d34d38a4453a8841d89a65a38a08bee08405a8d6389f3",
+        "candidates/NP-20-pre-review.json": "ec47497526e550eca2c992a0ebe46fd96853b55a61d886801a17347273417b3d",
+        "candidates/NP-20-reference.json": "301037c395c3afd1adfff6e61ffb0e0199a2706551cc0c4c2fec2f6660598b9e",
+        "provenance.json": "3b02cf44489c24fd5aa68a96c76d5fcdc347181026138f267ac3321c40028838",
+        "reconstruction_check.json": "54806b3a243ada258f84ae9da12c0402f0c9fb8eab470bd89a9fbbcced19a329",
+        "s10.json": "84d87b6922d4ef8196bcf3021fd78f1e70146eef341debb07c26eb0b095d173c",
+        "session.json": "8608455c08e59f5a81d19e3242d9f9557b1318bfa9290af623c4042a9342c5cf",
+        "snapshot.json": "93cc53d3f023850bc0ede273624318adf15be74f8a8e77eb80f81c4b4a53dc60",
+        "task.json": "fd796e93593a90c7e6e69a505ccaf0a55329b070c9ac40d6f58e51b4bd6c4fa5",
+        "verifiers/repo_tests/check_ids.json": "eb4edab970f66d88a69c5936e5ac5070f3f6ab40f98bdf0cb3c9fce833216577",
+        "verifiers/repo_tests/overlay/": {
+          "manifest_sha256": "77a9fea51313da18d663e08c43a2c6385aac1390c80114fdf12c689fbce2e213",
+          "n_files": 3
+        },
+        "verifiers/repo_tests/selection.json": "a3d317a778721d2481402d4497da815812b40ac12085942160e843ee6b9cfb42",
+        "verifiers/repo_tests/spec.json": "1cf117e8276e5484ca4d491db88d8b778e41ef6b5dd825f6be9989412f308a10"
+      },
+      "issue_id": 3321784971,
+      "licence": {
+        "agrees": true,
+        "aidev": "MIT",
+        "file_sha256": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383",
+        "file_spdx": "MIT"
+      },
+      "merge_state": "no_merges",
+      "merges": 0,
+      "monorepo_package": false,
+      "n_files": 194,
+      "pr_id": 3418238442,
+      "reconstruction": {
+        "method": "reconstruction:pr-git:v1",
+        "status": "passed"
+      },
+      "repo_id": 898171798,
+      "role": "family",
+      "s10": {
+        "b1": "available",
+        "base_test_subset": 3,
+        "base_tests": {
+          "error": 0,
+          "failed": 0,
+          "passed": 48,
+          "skipped": 0
+        },
+        "environment": "pinned",
+        "outcome": "passed",
+        "pins": 71,
+        "reason": null,
+        "stage": "S10"
+      },
+      "s11": true,
+      "snapshot_manifest_sha256": "38ade7b1212c52b31fc6b9bdd33dcfee5b723cb556cca710fc65fcc0461c369a",
+      "status": "pending_review",
+      "task_id": "NP-20",
+      "trace_sha256": "2483e7790c7ebd20153bd9d523126a7f45ef0bb6fb815d3a28d6dcbb86fffb82"
+    },
+    {
+      "agent": "Copilot",
+      "approximations": 1,
+      "base_rule": "merge_base",
+      "candidates": {
+        "NP-21-noop-dev": {
+          "origin": "noop",
+          "patch_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "split": "dev"
+        },
+        "NP-21-noop-eval": {
+          "origin": "noop",
+          "patch_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "split": "eval"
+        },
+        "NP-21-pre-review": {
+          "origin": "natural_pre_review",
+          "patch_sha256": "0c37a78878186847e17d8e9d668d1df3677b04255450a1d75cb9dd2cf0eddf06",
+          "split": "eval"
+        },
+        "NP-21-reference": {
+          "origin": "reference",
+          "patch_sha256": "1eb82829fff2a8d9011d76d982bf85fd6b9fc24701f72273e2aa46f64f430873",
+          "split": "dev"
+        }
+      },
+      "comment_id": 2198255936,
+      "commits": {
+        "addressing": "8cd6833deac4564d8cd39892b513aae52cedb9b6",
+        "base": "417602b81cd681e10b0b8978d51f4e7b6b7e3005",
+        "default_branch_tip": "e1c0306c77b27b46c79755f53783474a03fd8c0d",
+        "first": "25b94f77d4a85f117990f6247d3bf3ed5126de20",
+        "head": "93ca5ca0ae492d1a71f700c2b11d5d03a4c53ac0",
+        "reviewed": "6858c320af4409d9b469686b696f0bf9ef452b70"
+      },
+      "eligibility": "rejected",
+      "fidelity": "approximate",
+      "files": {
+        "candidates/NP-21-noop-dev.json": "5d584c55c966b194d333dbba3a25cdb2c019c4cdecbec0729141172056516b95",
+        "candidates/NP-21-noop-eval.json": "7b65d9d6b4a6e5ba57700f9ab7c17cb738122097502c6d6844ae00b6836f5e6a",
+        "candidates/NP-21-pre-review.json": "c5150d4d7214063fc0d6e2731406821cc922132796b489598e07d898f5700237",
+        "candidates/NP-21-reference.json": "ca386d7b4d09f0e53cc06635044a0e8fa6f49b23eb7af3f16db0003e97827c5f",
+        "provenance.json": "e2fcfcd239eb34ddc291acff4d00c80afe5aaa8d7fa79e5d89df85b3bd5b6750",
+        "reconstruction_check.json": "31e802dcb68622c340c4127497e531c35142608652774047819e8535a123ccc8",
+        "rejection.json": "c7131a5834c6ef54dcadc094bad328fc9463c1a1efa8e3740e0e92dd5f74905d",
+        "s10.json": "cd7855530e380011f55414e310137407cfa3f0ce53b2771d08dc2d23ece603a8",
+        "session.json": "83a17cc613e0af99b3bf341b4713a455ef1720a24bc58237a1d65f52ef6610e6",
+        "snapshot.json": "5e931fdb50324b6c4363414fc5fbe9858a4fbf8a2ed4785283ef66b386fa4f17",
+        "task.json": "d71f393f96182b5cd44e998ad0d41392d71c3026c541fd859ab43862b6bfac6a"
+      },
+      "issue_id": 3173204725,
+      "licence": {
+        "agrees": true,
+        "aidev": "MIT",
+        "file_sha256": "7c77a44a8acd9b41fdc209864a8016b3d430b5d0e09309818d5b7444336df744",
+        "file_spdx": "MIT"
+      },
+      "merge_state": "no_merges",
+      "merges": 0,
+      "monorepo_package": true,
+      "n_files": 436,
+      "pr_id": 3193634550,
+      "reconstruction": {
+        "method": "reconstruction:pr-git:v1",
+        "status": "passed"
+      },
+      "repo_id": 4127088,
+      "role": "reserve",
+      "s10": {
+        "b1": "pending",
+        "base_test_subset": 50,
+        "base_tests": {
+          "error": 0,
+          "failed": 0,
+          "passed": 0,
+          "skipped": 0
+        },
+        "environment": "pinned",
+        "outcome": "rejected",
+        "pins": 123,
+        "reason": "base tests fail to collect",
+        "stage": "S10"
+      },
+      "s11": false,
+      "snapshot_manifest_sha256": "c34d7c1ac92b4be3e37e0ea9e46c0fce8d78fdb490d419f3c91b1f0a7c9fae66",
+      "status": "rejected",
+      "task_id": "NP-21",
+      "trace_sha256": "06b07f42d17dc81245bcbe86a1ffc9bbe16ec3e9223d87838d3f1a5ce2a7ff5d"
+    },
+    {
+      "agent": "Copilot",
+      "approximations": 1,
+      "base_rule": "merge_base",
+      "candidates": {
+        "NP-22-noop-dev": {
+          "origin": "noop",
+          "patch_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "split": "dev"
+        },
+        "NP-22-noop-eval": {
+          "origin": "noop",
+          "patch_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "split": "eval"
+        },
+        "NP-22-pre-review": {
+          "origin": "natural_pre_review",
+          "patch_sha256": "9e0d0e2b64618e1e132ea864fcee0c5b05611b23400fd4b6c9986c8464996839",
+          "split": "eval"
+        },
+        "NP-22-reference": {
+          "origin": "reference",
+          "patch_sha256": "d944f1d64b7046f09f82d592e8919062a963d16916c1daa46230a997be59545a",
+          "split": "dev"
+        }
+      },
+      "comment_id": 2226682791,
+      "commits": {
+        "addressing": "464c41d62e32b1012653d9c410e468b1101a54e8",
+        "base": "b3e716b4b394b9cdeff389c6bb0fe3c875109cf2",
+        "default_branch_tip": "e1c0306c77b27b46c79755f53783474a03fd8c0d",
+        "first": "357bba64263a1a7de7325eef49ab57ac287822a8",
+        "head": "44e69cb919a5d53a756a5be96dc8925478514c33",
+        "reviewed": "a5f2ae69eaec2c3eab6cd5d01020d3cd63c4f5c2"
+      },
+      "eligibility": "rejected",
+      "fidelity": "approximate",
+      "files": {
+        "candidates/NP-22-noop-dev.json": "92bdd2c69d10a743a36d5ef6bfe2c61b5571877882f947bbae190066f9c2ac50",
+        "candidates/NP-22-noop-eval.json": "54c2730e79670039042a1e49a5347ae4aacd14a671c975a2f4dcdb3023aa0a1d",
+        "candidates/NP-22-pre-review.json": "eb9daaa00844e4d92339d39ffa3f58640b8b8177a859a2d375a024db03ca72be",
+        "candidates/NP-22-reference.json": "398b5e4d60c035b8ba1045309d59c6fafaecc222a8c3fe3d341c5ad34cfac624",
+        "provenance.json": "abe5370678fe6986b7c11d4e8508c55f29706047b20a132ac4c688f13b783b42",
+        "reconstruction_check.json": "e8727898f6b7b111b5f68487cf1b92cf1a085fc2d76c591ded2ebaf27bf1af32",
+        "rejection.json": "12fe5188bc56ed70bb7e814d8cbbbdb575d6956358296de847458f6863f26631",
+        "s10.json": "04429adaee74caef408dd0e4f1f4423c14ab972d72aaa8de61368fba339ca378",
+        "session.json": "6fc6b9eced9517b1aae46b3adac65e31991d0807ca6164a0004548eddbaa4587",
+        "snapshot.json": "3a613dd99f31ec33fec56f22ebd97ea7c15c1e153761582d784c4ea8e801f412",
+        "task.json": "7cafe938b352290fabd524d0c87df8fe7e37935e332bec98b401bfa6a5eb656b"
+      },
+      "issue_id": 3257631191,
+      "licence": {
+        "agrees": true,
+        "aidev": "MIT",
+        "file_sha256": "7c77a44a8acd9b41fdc209864a8016b3d430b5d0e09309818d5b7444336df744",
+        "file_spdx": "MIT"
+      },
+      "merge_state": "no_merges",
+      "merges": 0,
+      "monorepo_package": true,
+      "n_files": 253,
+      "pr_id": 3257632101,
+      "reconstruction": {
+        "method": "reconstruction:pr-git:v1",
+        "status": "passed"
+      },
+      "repo_id": 4127088,
+      "role": "reserve",
+      "s10": {
+        "b1": "pending",
+        "base_test_subset": 2,
+        "base_tests": {
+          "error": 0,
+          "failed": 0,
+          "passed": 0,
+          "skipped": 0
+        },
+        "environment": "pinned",
+        "outcome": "rejected",
+        "pins": 32,
+        "reason": "base tests fail to collect",
+        "stage": "S10"
+      },
+      "s11": false,
+      "snapshot_manifest_sha256": "f6d1bbbf1eba3443cf0be0a117fe2207ee36c3036a72a8e80f2345d4c50c45aa",
+      "status": "rejected",
+      "task_id": "NP-22",
+      "trace_sha256": "a89417322ab4a37468b04fea68add1a8365c54bc5b199d582118c9ea508d38d1"
+    },
+    {
+      "agent": "Copilot",
+      "comment_id": 2206177284,
+      "pr_id": 3230529031,
+      "repo_id": 60844169,
+      "role": "reserve",
+      "s10": {
+        "outcome": "not built"
+      },
+      "s11": false,
+      "task_id": "NP-23"
+    },
+    {
+      "agent": "Copilot",
+      "comment_id": 2217298215,
+      "pr_id": 3244901827,
+      "repo_id": 60844169,
+      "role": "reserve",
+      "s10": {
+        "outcome": "not built"
+      },
+      "s11": false,
+      "task_id": "NP-24"
+    },
+    {
+      "agent": "Copilot",
+      "comment_id": 2222823720,
+      "pr_id": 3250824111,
+      "repo_id": 60844169,
+      "role": "reserve",
+      "s10": {
+        "outcome": "not built"
+      },
+      "s11": false,
+      "task_id": "NP-25"
+    }
+  ]
+}

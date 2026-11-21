@@ -699,3 +699,68 @@ labelled.
 
 **18.3 Later attempts.** Fresh attempts in later rounds run with a restricted tool set
 and without harness task lists, where the agent tool allows it.
+
+## 19. Amendments in v0.11 (natural arm after S10 of the first sample, D59; before any further screening and before any natural contract, verifier or label)
+
+This section makes the protocol v0.11. The version line at the top of the file is left as
+it was. It is fixed after S10 of the first sample, where 6 of the 22 built families pass
+(D59). No comment it adds has been judged yet, and no contract, verifier, held-out
+candidate or label of a natural task exists.
+
+**19.1 Reason, and its timing.** Under §15.6, the arm is reported as a screening study
+only if fewer than 10 tasks pass S10. The first sample yields 6. The S9 sample was 150 of
+the 684 comments that survive S8a, and the other 534 have not been judged. This
+amendment extends S9 to them, so that the arm can reach the size §15.6 asks for. The
+decision was taken after the first sample's S10 yield was known, but before any natural
+contract, verifier or label existed, and before any verifier outcome on natural data.
+It is a post-hoc design change and is reported as one.
+
+**19.2 Extension of S9.**
+* The extension holds all 534 S8a comments that are not in the S9 sample. They are
+  screened in ascending order of comment id, and all of them are screened.
+* S9 applies exactly as in §15.6 and §16.4: two configuration-A judges per comment, on
+  pseudonymised text and on the diff of the reviewed commit against the first later
+  commit that touches the commented file, with the same three criteria. Disagreements
+  are excluded and counted.
+* The judges are new agents. They do not see the first sample's judgments.
+* The fetch caps are 300 MB per repository and 5 GB in all, both samples and both stages
+  together. Clones that exist are reused and not fetched again. If the total cap is
+  reached, the remaining comments fail S9 with the reason "fetch over the caps".
+* Every S9 failure goes to the rejection ledger.
+
+**19.3 Families.**
+* Families are formed as in §15.6 and §17.3, from the qualifying comments of both samples
+  together.
+* Families of the first sample keep their ids and their places. New families get ids
+  from NP-26 in order of PR creation time, and S10 takes them in that order.
+* In a repository that already has 2 accepted families, no new family is built.
+  Elsewhere, new PRs fill the open places in order of PR creation time. A PR rejected at
+  S10 is replaced by the next qualifying PR of the same repository (§17.3).
+
+**19.4 S10** is unchanged (§15.6, §17). The implementation parameters fixed in D59 also
+apply unchanged: the Python 3.12 resolver interpreter, the 30-minute resolver limit and
+the work-directory TMPDIR.
+
+**19.5 Stopping.** Building stops at 30 accepted tasks in all, or when every family of
+both samples has been processed.
+
+**19.6 Size rule and reporting.**
+* The threshold of §15.6 applies to the accepted tasks of both samples together.
+* With 10 or more tasks, the natural arm is analysed as §15.6 and §15.7 say, over both
+  samples, and each task's sample is reported.
+* With fewer than 10, the screening is reported as in §15.6. The tasks that were built
+  are reported as exploratory case studies: per-family tables only, with no pooled rate,
+  interval or p-value.
+
+**19.7 Order of work.**
+* The contracts, verifiers, held-out pools and labels of accepted families may be built
+  before the extension has been screened.
+* Every family follows the same recipe (§15.6), and its verifiers are frozen before its
+  held-out pool is generated.
+* No natural verifier is graded on a held-out candidate before building stops. Only the
+  audit loops (development candidates), the reference checks and the labeler
+  (reference and no-op) are graded before then.
+* The run `natural-pr-v1` grades all accepted families together.
+
+**19.8 Independent labelers of natural tasks (§15.5).** The single revision is told only
+the bare names of the failing checks (D58).
