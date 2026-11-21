@@ -1,0 +1,39 @@
+{
+  "schema_version": "0.1.0",
+  "candidate_id": "CS-01-fresh-B-u1-4",
+  "task_id": "CS-01",
+  "origin": "fresh_attempt",
+  "split": "eval",
+  "patch": "diff --git a/README.md b/README.md\nindex 81e8080175994f00a5e540c700d6381f3f402f79..5edea38542b2b718502dd257e98375de5f422169 100644\n--- a/README.md\n+++ b/README.md\n@@ -158,7 +158,7 @@ If seconds are too large, set `minimum_unit` to milliseconds or microseconds:\n ```pycon\n >>> import humanize\n >>> humanize.naturalsize(1_000_000)\n-'1.0 MB'\n+'1 MB'\n >>> humanize.naturalsize(1_000_000, binary=True)\n '976.6 KiB'\n >>> humanize.naturalsize(1_000_000, gnu=True)\ndiff --git a/src/humanize/filesize.py b/src/humanize/filesize.py\nindex 386752b227ed3524eaab881cc50a351bee83e03c..446c5c12ec62cab34730eeadfa395b9e3502f5db 100644\n--- a/src/humanize/filesize.py\n+++ b/src/humanize/filesize.py\n@@ -51,7 +51,7 @@ def naturalsize(\n     Examples:\n         ```pycon\n         >>> naturalsize(3000000)\n-        '3.0 MB'\n+        '3 MB'\n         >>> naturalsize(300, False, True)\n         '300B'\n         >>> naturalsize(3000, False, True)\n@@ -61,11 +61,11 @@ def naturalsize(\n         >>> naturalsize(3000, True)\n         '2.9 KiB'\n         >>> naturalsize(10**28)\n-        '10.0 RB'\n+        '10 RB'\n         >>> naturalsize(10**34 * 3)\n-        '30000.0 QB'\n+        '30000 QB'\n         >>> naturalsize(-4096, True)\n-        '-4.0 KiB'\n+        '-4 KiB'\n \n         ```\n \n@@ -107,5 +107,10 @@ def naturalsize(\n     if exp < len(suffix) and abs(float(format % (abs_bytes / (base**exp)))) >= base:\n         exp += 1\n     space = \"\" if gnu else \" \"\n-    ret: str = format % (bytes_ / (base**exp)) + space + _(suffix[exp - 1])\n+    number = format % (bytes_ / (base**exp))\n+    # Drop a redundant trailing \".0\" (\"3.0 MB\" -> \"3 MB\") but keep any decimal\n+    # that carries information (\"2.9 KiB\").\n+    if number.endswith(\".0\"):\n+        number = number[:-2]\n+    ret: str = number + space + _(suffix[exp - 1])\n     return ret\n",
+  "patch_sha256": "db433ce1f37f61a653c6fb4c12e13e027b2f46bfb6b556b8c316221f6a2bb808",
+  "produced_by": "fresh-attempt:config-B",
+  "description": "",
+  "labels": [],
+  "attempt": {
+    "attempt_id": "CS-01-fresh-B-u1-4",
+    "configuration": "config-B",
+    "variant": "u1",
+    "instruction_sha256": "bce671873edfa49859973ae6665183ae3bce06ad13b71e6a1989b3bd516429d1",
+    "started_at": "2026-11-21T09:28:05.375Z",
+    "ended_at": "2026-11-21T09:28:54.836Z",
+    "wall_s": 49.461,
+    "turns": 11,
+    "tool_calls": 11,
+    "tokens": 967220,
+    "ended": "finished",
+    "patch_sha256": "db433ce1f37f61a653c6fb4c12e13e027b2f46bfb6b556b8c316221f6a2bb808",
+    "run_record": "build-session:subagents/workflows/wf_91d22993-1c2/agent-aa82d7b57f00d814c.jsonl",
+    "audit": {
+      "profile": "fresh-attempt:v1",
+      "passed": true,
+      "findings": [
+        "fresh-attempt audit: 2 hits, no exposure; read in the transcript",
+        "false positive: both hits are sed editing expressions that begin with a slash, taken for absolute paths; both commands began with a cd into the workspace's repo and edited only its own test file",
+        "file tools and searches named only workspace paths; every shell command began with a cd into the workspace",
+        "verdict: passed, nothing outside the workspace was read"
+      ],
+      "audited_at": "2026-11-21T09:55:54Z",
+      "record": "data/fresh/fresh-v1/audit_CS-01.json"
+    }
+  }
+}

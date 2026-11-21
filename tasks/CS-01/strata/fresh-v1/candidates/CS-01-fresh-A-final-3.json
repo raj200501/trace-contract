@@ -1,0 +1,39 @@
+{
+  "schema_version": "0.1.0",
+  "candidate_id": "CS-01-fresh-A-final-3",
+  "task_id": "CS-01",
+  "origin": "fresh_attempt",
+  "split": "eval",
+  "patch": "diff --git a/src/humanize/filesize.py b/src/humanize/filesize.py\nindex 386752b227ed3524eaab881cc50a351bee83e03c..b139a2ce28ad564d9a5d7cf10ade556ef1ea23a5 100644\n--- a/src/humanize/filesize.py\n+++ b/src/humanize/filesize.py\n@@ -41,6 +41,8 @@ def naturalsize(\n     binary: bool = False,\n     gnu: bool = False,\n     format: str = \"%.1f\",\n+    *,\n+    strip_trailing_zero: bool = False,\n ) -> str:\n     \"\"\"Format a number of bytes like a human-readable filesize (e.g. 10 kB).\n \n@@ -66,6 +68,12 @@ def naturalsize(\n         '30000.0 QB'\n         >>> naturalsize(-4096, True)\n         '-4.0 KiB'\n+        >>> naturalsize(3000000, strip_trailing_zero=True)\n+        '3 MB'\n+        >>> naturalsize(1024, True, strip_trailing_zero=True)\n+        '1 KiB'\n+        >>> naturalsize(3000, True, strip_trailing_zero=True)\n+        '2.9 KiB'\n \n         ```\n \n@@ -76,6 +84,12 @@ def naturalsize(\n         gnu (bool): If `True`, the binary argument is ignored and GNU-style\n             (`ls -sh` style) prefixes are used (K, M) with the 2**10 definition.\n         format (str): Custom formatter.\n+        strip_trailing_zero (bool): If `True`, drop the decimal point and the\n+            digits after it when they are all zeros, so \"3.0 MB\" becomes \"3 MB\"\n+            (as does \"3.00 MB\" from `format=\"%.2f\"`). A fraction that is not all\n+            zeros is left exactly as `format` produced it: \"2.9 KiB\" stays\n+            \"2.9 KiB\". Leave it `False` (the default) to keep the output\n+            compatible with jinja2's `filesizeformat`.\n \n     Returns:\n         str: Human readable representation of a filesize.\n@@ -106,6 +120,14 @@ def naturalsize(\n     # suffix is available, step up one suffix so the result reads \"1.0 MB\".\n     if exp < len(suffix) and abs(float(format % (abs_bytes / (base**exp)))) >= base:\n         exp += 1\n+    number = format % (bytes_ / (base**exp))\n+    if strip_trailing_zero:\n+        # Drop the fraction only if it is all zeros (\"3.0\" and \"3.00\" become\n+        # \"3\"; \"2.9\" and \"2.930\" are kept). Zeros before the point, as in\n+        # \"10.0\", are kept, and a number with no point at all is left alone.\n+        whole, point, fraction = number.rpartition(\".\")\n+        if point and fraction and not fraction.strip(\"0\"):\n+            number = whole\n     space = \"\" if gnu else \" \"\n-    ret: str = format % (bytes_ / (base**exp)) + space + _(suffix[exp - 1])\n+    ret: str = number + space + _(suffix[exp - 1])\n     return ret\n",
+  "patch_sha256": "9eb54aad7a88e0b08c3cc2ed4cc91ce55296f93b7a649de6194962889dede1ce",
+  "produced_by": "fresh-attempt:config-A",
+  "description": "",
+  "labels": [],
+  "attempt": {
+    "attempt_id": "CS-01-fresh-A-final-3",
+    "configuration": "config-A",
+    "variant": "final",
+    "instruction_sha256": "94c1b7d6134bca17e19be041311e2c95c0053f46381c17cc79931e67220c615e",
+    "started_at": "2026-11-21T09:18:35.574Z",
+    "ended_at": "2026-11-21T09:28:05.361Z",
+    "wall_s": 569.787,
+    "turns": 24,
+    "tool_calls": 34,
+    "tokens": 3015212,
+    "ended": "finished",
+    "patch_sha256": "9eb54aad7a88e0b08c3cc2ed4cc91ce55296f93b7a649de6194962889dede1ce",
+    "run_record": "build-session:subagents/workflows/wf_91d22993-1c2/agent-ab337ffd76098a87e.jsonl",
+    "audit": {
+      "profile": "fresh-attempt:v1",
+      "passed": true,
+      "findings": [
+        "fresh-attempt audit: 1 exposure, no hit; read in the transcript",
+        "false positive: the attempt printed its own wrapper scripts by absolute workspace path; an environment assignment in their text was resolved as a path from the shell's start directory, which was never read",
+        "file tools and searches named only workspace paths; every other shell command began with a cd into the workspace or called its wrappers by absolute path (their arguments are container paths)",
+        "verdict: passed, nothing outside the workspace was read"
+      ],
+      "audited_at": "2026-11-21T09:55:54Z",
+      "record": "data/fresh/fresh-v1/audit_CS-01.json"
+    }
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "schema_version": "0.1.0",
+  "candidate_id": "CS-01-fresh-A-final-1",
+  "task_id": "CS-01",
+  "origin": "fresh_attempt",
+  "split": "eval",
+  "patch": "diff --git a/src/humanize/filesize.py b/src/humanize/filesize.py\nindex 386752b227ed3524eaab881cc50a351bee83e03c..5071650ec9ddbc01176d4b680fec95d4450efe7c 100644\n--- a/src/humanize/filesize.py\n+++ b/src/humanize/filesize.py\n@@ -36,11 +36,26 @@ suffixes = {\n }\n \n \n+def _strip_trailing_zeros(number: str) -> str:\n+    \"\"\"Remove trailing zeros from the fractional part of a formatted number.\n+\n+    The decimal point goes too when no fractional digits remain, so \"3.0\" becomes\n+    \"3\" and \"2.930\" becomes \"2.93\", while \"2.9\", \"10\" and \"2.05\" are unchanged.\n+    Digits before the decimal point and any exponent are never touched.\n+    \"\"\"\n+    import re\n+\n+    # Either keep the digits up to the last non-zero one and drop the zeros after\n+    # it (\".930\" -> \".93\"), or drop a fraction made only of zeros (\".0\" -> \"\").\n+    return re.sub(r\"(?<=\\d)(?:(\\.\\d*[1-9])0+|\\.0*)(?!\\d)\", r\"\\1\", number, count=1)\n+\n+\n def naturalsize(\n     value: float | str,\n     binary: bool = False,\n     gnu: bool = False,\n     format: str = \"%.1f\",\n+    strip_trailing_zero: bool = False,\n ) -> str:\n     \"\"\"Format a number of bytes like a human-readable filesize (e.g. 10 kB).\n \n@@ -66,6 +81,14 @@ def naturalsize(\n         '30000.0 QB'\n         >>> naturalsize(-4096, True)\n         '-4.0 KiB'\n+        >>> naturalsize(3000000, strip_trailing_zero=True)\n+        '3 MB'\n+        >>> naturalsize(1024, True, strip_trailing_zero=True)\n+        '1 KiB'\n+        >>> naturalsize(3000, True, strip_trailing_zero=True)\n+        '2.9 KiB'\n+        >>> naturalsize(3000, False, True, \"%.3f\", strip_trailing_zero=True)\n+        '2.93K'\n \n         ```\n \n@@ -76,6 +99,12 @@ def naturalsize(\n         gnu (bool): If `True`, the binary argument is ignored and GNU-style\n             (`ls -sh` style) prefixes are used (K, M) with the 2**10 definition.\n         format (str): Custom formatter.\n+        strip_trailing_zero (bool): If `True`, trailing zeros are removed from the\n+            fractional part of the formatted number, along with the decimal point\n+            when no fractional digits remain (e.g. \"3.0 MB\" becomes \"3 MB\" and\n+            \"2.930K\" becomes \"2.93K\", while \"2.9 KiB\" is unchanged). Leave it\n+            `False` (the default) for output compatible with jinja2's\n+            `filesizeformat`.\n \n     Returns:\n         str: Human readable representation of a filesize.\n@@ -106,6 +135,9 @@ def naturalsize(\n     # suffix is available, step up one suffix so the result reads \"1.0 MB\".\n     if exp < len(suffix) and abs(float(format % (abs_bytes / (base**exp)))) >= base:\n         exp += 1\n+    number = format % (bytes_ / (base**exp))\n+    if strip_trailing_zero:\n+        number = _strip_trailing_zeros(number)\n     space = \"\" if gnu else \" \"\n-    ret: str = format % (bytes_ / (base**exp)) + space + _(suffix[exp - 1])\n+    ret: str = number + space + _(suffix[exp - 1])\n     return ret\n",
+  "patch_sha256": "d376110a886e6a6b8db50f60a72ad1661874a118d9c4c478488361f1c3d5b39d",
+  "produced_by": "fresh-attempt:config-A",
+  "description": "",
+  "labels": [],
+  "attempt": {
+    "attempt_id": "CS-01-fresh-A-final-1",
+    "configuration": "config-A",
+    "variant": "final",
+    "instruction_sha256": "f155d3f5850996739d10061e9b7cd374758d604a8da7d421a41b0d27b542f7ef",
+    "started_at": "2026-11-21T08:59:09.018Z",
+    "ended_at": "2026-11-21T09:10:03.070Z",
+    "wall_s": 654.052,
+    "turns": 23,
+    "tool_calls": 29,
+    "tokens": 2953614,
+    "ended": "finished",
+    "patch_sha256": "d376110a886e6a6b8db50f60a72ad1661874a118d9c4c478488361f1c3d5b39d",
+    "run_record": "build-session:subagents/workflows/wf_91d22993-1c2/agent-a6e73592e78a179ab.jsonl",
+    "audit": {
+      "profile": "fresh-attempt:v1",
+      "passed": true,
+      "findings": [
+        "fresh-attempt audit: no hit, no exposure",
+        "file tools and searches named only workspace paths; every shell command began with a cd into the workspace",
+        "verdict: passed, nothing outside the workspace was read"
+      ],
+      "audited_at": "2026-11-21T09:55:54Z",
+      "record": "data/fresh/fresh-v1/audit_CS-01.json"
+    }
+  }
+}

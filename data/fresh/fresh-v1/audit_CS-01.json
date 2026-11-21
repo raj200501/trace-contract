@@ -1,0 +1,469 @@
+{
+  "script": "scripts/strict_reaudit.py --fresh",
+  "profile": "fresh attempt (protocol v0.8 §16.2): everything outside the attempt's own workspace is forbidden; tool inputs and tool outputs are scanned; an attempt with a hit or an exposure is excluded",
+  "task_id": "CS-01",
+  "stratum": "fresh-v1",
+  "protocol": "v0.9 (§15.4, §16.2)",
+  "decision_log": "D55, D56",
+  "run": {
+    "at": "2026-11-21T09:55:54Z",
+    "command": "scripts/strict_reaudit.py --fresh <attempt records> --transcripts build-session:subagents/workflows/wf_91d22993-1c2 --scratch <scratchpad> --report <file>",
+    "attempt_records": "attempt_id, task_id, workspace and transcript_sha256 per attempt, as listed under attempts",
+    "exit_status": 0
+  },
+  "postprocessing": "The script's report, unchanged except that transcript excerpts (text and path of every hit and exposure) are cut to at most 80 characters, around the flagged token where it occurs (a cut is marked with …), and session-local paths are replaced by <session-dir>; the script itself writes <session> for session ids and <scratchpad> for the build session's scratch directory. The review blocks and manual_review were added.",
+  "attempts": {
+    "CS-01-fresh-A-u1-1": {
+      "task_id": "CS-01",
+      "workspace": "/home/user/fresh_ws/CS-01-fresh-A-u1-1",
+      "transcript_sha256": "d5d0c18d2d467d92372ef786536e50cdf3f7207bea2b17b1923c828066263e33",
+      "flagged": false,
+      "hits": [],
+      "exposures": [],
+      "review": {
+        "passed": true,
+        "judgment": "not flagged",
+        "reasons": [
+          "fresh-attempt audit: no hit, no exposure",
+          "file tools and searches named only workspace paths; every shell command began with a cd into the workspace",
+          "verdict: passed, nothing outside the workspace was read"
+        ]
+      }
+    },
+    "CS-01-fresh-A-u1-2": {
+      "task_id": "CS-01",
+      "workspace": "/home/user/fresh_ws/CS-01-fresh-A-u1-2",
+      "transcript_sha256": "cd48981bf36172826fb36adb693032192791719cc3e374857a9526db3fd92cff",
+      "flagged": true,
+      "hits": [],
+      "exposures": [
+        {
+          "event_id": "<session>/L000040.00",
+          "ts": "2026-11-21T09:07:59.936Z",
+          "call": "<session>/L000036.00",
+          "tool": "Grep",
+          "path": "<session-dir>/tool-results/toolu_01D92Manwxgiyhgrm82u7wcr.txt",
+          "why": "shown in a tool output: inside forbidden material",
+          "text": "…output saved to: <session-dir>/tool-results/toolu_01D92Manwxgiyhgrm82u7wcr.txt"
+        }
+      ],
+      "review": {
+        "passed": true,
+        "judgment": "flagged; false positive",
+        "reasons": [
+          "fresh-attempt audit: 1 exposure, no hit; read in the transcript",
+          "false positive: a harness notice named the session file that held the attempt's own oversized search result over its repo; the file was never opened, and the preview held only workspace paths",
+          "file tools and searches named only workspace paths; every shell command began with a cd into the workspace",
+          "verdict: passed, nothing outside the workspace was read"
+        ]
+      }
+    },
+    "CS-01-fresh-A-u1-3": {
+      "task_id": "CS-01",
+      "workspace": "/home/user/fresh_ws/CS-01-fresh-A-u1-3",
+      "transcript_sha256": "4ba8c94a128bc0decfc06b34f427e63275fff7b4cb8fadcbbc4e8c80829bab65",
+      "flagged": true,
+      "hits": [],
+      "exposures": [
+        {
+          "event_id": "<session>/L000035.00",
+          "ts": "2026-11-21T09:15:43.572Z",
+          "call": "<session>/L000034.00",
+          "tool": "Grep",
+          "path": "<session-dir>/tool-results/toolu_01RcapvQF3gPseVcyAXYoYuM.txt",
+          "why": "shown in a tool output: inside forbidden material",
+          "text": "…output saved to: <session-dir>/tool-results/toolu_01RcapvQF3gPseVcyAXYoYuM.txt"
+        }
+      ],
+      "review": {
+        "passed": true,
+        "judgment": "flagged; false positive",
+        "reasons": [
+          "fresh-attempt audit: 1 exposure, no hit; read in the transcript",
+          "false positive: a harness notice named the session file that held the attempt's own oversized search result over its repo; the file was never opened, and the preview held only workspace paths",
+          "file tools and searches named only workspace paths; every shell command began with a cd into the workspace",
+          "verdict: passed, nothing outside the workspace was read"
+        ]
+      }
+    },
+    "CS-01-fresh-A-u1-4": {
+      "task_id": "CS-01",
+      "workspace": "/home/user/fresh_ws/CS-01-fresh-A-u1-4",
+      "transcript_sha256": "2e2534f696f82db123fa51b92167e02b8b07d3d21b27d31bc55ed709dd712251",
+      "flagged": false,
+      "hits": [],
+      "exposures": [],
+      "review": {
+        "passed": true,
+        "judgment": "not flagged",
+        "reasons": [
+          "fresh-attempt audit: no hit, no exposure",
+          "file tools and searches named only workspace paths; every shell command began with a cd into the workspace",
+          "verdict: passed, nothing outside the workspace was read"
+        ]
+      }
+    },
+    "CS-01-fresh-A-u1-5": {
+      "task_id": "CS-01",
+      "workspace": "/home/user/fresh_ws/CS-01-fresh-A-u1-5",
+      "transcript_sha256": "0a94f2d9f8369652cf605823181b6cdf723b2cc5c00b95a4c4585532fece2ac9",
+      "flagged": false,
+      "hits": [],
+      "exposures": [],
+      "review": {
+        "passed": true,
+        "judgment": "not flagged",
+        "reasons": [
+          "fresh-attempt audit: no hit, no exposure",
+          "file tools and searches named only workspace paths; every shell command began with a cd into the workspace",
+          "verdict: passed, nothing outside the workspace was read"
+        ]
+      }
+    },
+    "CS-01-fresh-A-final-1": {
+      "task_id": "CS-01",
+      "workspace": "/home/user/fresh_ws/CS-01-fresh-A-final-1",
+      "transcript_sha256": "574115244f6c27fa34f8e58aee653a9c6910d3ef6750515931ac18c835fdca2e",
+      "flagged": false,
+      "hits": [],
+      "exposures": [],
+      "review": {
+        "passed": true,
+        "judgment": "not flagged",
+        "reasons": [
+          "fresh-attempt audit: no hit, no exposure",
+          "file tools and searches named only workspace paths; every shell command began with a cd into the workspace",
+          "verdict: passed, nothing outside the workspace was read"
+        ]
+      }
+    },
+    "CS-01-fresh-A-final-2": {
+      "task_id": "CS-01",
+      "workspace": "/home/user/fresh_ws/CS-01-fresh-A-final-2",
+      "transcript_sha256": "f8a65516b84de774eb7f5c6032f2dc459ad5ef4c67fd2c27eec867a10f0150c0",
+      "flagged": false,
+      "hits": [],
+      "exposures": [],
+      "review": {
+        "passed": true,
+        "judgment": "not flagged",
+        "reasons": [
+          "fresh-attempt audit: no hit, no exposure",
+          "file tools and searches named only workspace paths; every shell command began with a cd into the workspace",
+          "verdict: passed, nothing outside the workspace was read"
+        ]
+      }
+    },
+    "CS-01-fresh-A-final-3": {
+      "task_id": "CS-01",
+      "workspace": "/home/user/fresh_ws/CS-01-fresh-A-final-3",
+      "transcript_sha256": "1e14ab49c6378d7c10dcc7039e8ca26f3149a79c46794366ffc0214b6d5c4a9b",
+      "flagged": true,
+      "hits": [],
+      "exposures": [
+        {
+          "event_id": "<session>/L000031.00",
+          "ts": "2026-11-21T09:18:49.161Z",
+          "call": "<session>/L000030.00",
+          "tool": "Bash",
+          "path": "/home/user/trace-contract/PYTHONPATH=/repo/src",
+          "why": "shown in a tool output: inside forbidden material",
+          "text": "  -e PYTHONDONTWRITEBYTECODE=1 -e PYTHONPATH=/repo/src \\"
+        }
+      ],
+      "review": {
+        "passed": true,
+        "judgment": "flagged; false positive",
+        "reasons": [
+          "fresh-attempt audit: 1 exposure, no hit; read in the transcript",
+          "false positive: the attempt printed its own wrapper scripts by absolute workspace path; an environment assignment in their text was resolved as a path from the shell's start directory, which was never read",
+          "file tools and searches named only workspace paths; every other shell command began with a cd into the workspace or called its wrappers by absolute path (their arguments are container paths)",
+          "verdict: passed, nothing outside the workspace was read"
+        ]
+      }
+    },
+    "CS-01-fresh-A-final-4": {
+      "task_id": "CS-01",
+      "workspace": "/home/user/fresh_ws/CS-01-fresh-A-final-4",
+      "transcript_sha256": "bb09adc8bbb0051e05f83e727e0ab99e9e9dfb77a212a7683afb8e89f5d5b1c7",
+      "flagged": false,
+      "hits": [],
+      "exposures": [],
+      "review": {
+        "passed": true,
+        "judgment": "not flagged",
+        "reasons": [
+          "fresh-attempt audit: no hit, no exposure",
+          "file tools and searches named only workspace paths; every shell command began with a cd into the workspace",
+          "the system python3 was run on workspace files only (a system location)",
+          "verdict: passed, nothing outside the workspace was read"
+        ]
+      }
+    },
+    "CS-01-fresh-A-final-5": {
+      "task_id": "CS-01",
+      "workspace": "/home/user/fresh_ws/CS-01-fresh-A-final-5",
+      "transcript_sha256": "381c2e5a9a0eb298d5baf945da351b9cba18a090ad2d348548c549dec4995697",
+      "flagged": true,
+      "hits": [
+        {
+          "event_id": "<session>/L000052.00",
+          "tool": "Bash",
+          "path": "/home/user/trace-contract/>",
+          "why": "inside forbidden material",
+          "text": "cat > /home/user/fresh_ws/CS-01-fresh-A-final-5/scratch/cases.py <<'EOF'"
+        },
+        {
+          "event_id": "<session>/L000052.00",
+          "tool": "Bash",
+          "path": "/home/user/trace-contract/<<EOF",
+          "why": "inside forbidden material",
+          "text": "cat > /home/user/fresh_ws/CS-01-fresh-A-final-5/scratch/cases.py <<'EOF'"
+        }
+      ],
+      "exposures": [],
+      "review": {
+        "passed": true,
+        "judgment": "flagged; false positive",
+        "reasons": [
+          "fresh-attempt audit: 2 hits, no exposure; read in the transcript",
+          "false positive: one command wrote two helper files into the workspace's scratch with heredocs; its redirection operators were parsed as paths from the shell's start directory, and it read nothing",
+          "file tools and searches named only workspace paths; every other shell command began with a cd into the workspace",
+          "verdict: passed, nothing outside the workspace was read"
+        ]
+      }
+    },
+    "CS-01-fresh-B-u1-1": {
+      "task_id": "CS-01",
+      "workspace": "/home/user/fresh_ws/CS-01-fresh-B-u1-1",
+      "transcript_sha256": "200f460e6f5936daacc06a3e15fe5db2cf6abf2be30615d5ec705130c7e74d4f",
+      "flagged": false,
+      "hits": [],
+      "exposures": [],
+      "review": {
+        "passed": true,
+        "judgment": "not flagged",
+        "reasons": [
+          "fresh-attempt audit: no hit, no exposure",
+          "file tools and searches named only workspace paths; every shell command began with a cd into the workspace",
+          "verdict: passed, nothing outside the workspace was read"
+        ]
+      }
+    },
+    "CS-01-fresh-B-u1-2": {
+      "task_id": "CS-01",
+      "workspace": "/home/user/fresh_ws/CS-01-fresh-B-u1-2",
+      "transcript_sha256": "cd4d875d9f5d93b464df9357a23562b907c012fbc98d56c1a6e49465cec62365",
+      "flagged": false,
+      "hits": [],
+      "exposures": [],
+      "review": {
+        "passed": true,
+        "judgment": "not flagged",
+        "reasons": [
+          "fresh-attempt audit: no hit, no exposure",
+          "file tools and searches named only workspace paths; every shell command began with a cd into the workspace",
+          "verdict: passed, nothing outside the workspace was read"
+        ]
+      }
+    },
+    "CS-01-fresh-B-u1-3": {
+      "task_id": "CS-01",
+      "workspace": "/home/user/fresh_ws/CS-01-fresh-B-u1-3",
+      "transcript_sha256": "3910835e832836dbaa551d5124e5f6ecbe4508fcb2f383d44bc13e8c6600a35c",
+      "flagged": false,
+      "hits": [],
+      "exposures": [],
+      "review": {
+        "passed": true,
+        "judgment": "not flagged",
+        "reasons": [
+          "fresh-attempt audit: no hit, no exposure",
+          "file tools and searches named only workspace paths; every shell command began with a cd into the workspace",
+          "the system python3 was run on workspace files only (a system location)",
+          "verdict: passed, nothing outside the workspace was read"
+        ]
+      }
+    },
+    "CS-01-fresh-B-u1-4": {
+      "task_id": "CS-01",
+      "workspace": "/home/user/fresh_ws/CS-01-fresh-B-u1-4",
+      "transcript_sha256": "7ee6e35ee08927698d18cfdccd90999c81284cf578fd8b941153d41ada6035bd",
+      "flagged": true,
+      "hits": [
+        {
+          "event_id": "<session>/L000040.00",
+          "tool": "Bash",
+          "path": "/^        \\(\\[/ s/\"(-?[0-9]+)\\.0([ KMGTPEZYRQiB])/\"\\1\\2",
+          "why": "outside the attempt's workspace",
+          "text": "sed -i -E '/^        \\(\\[/ s/\"(-?[0-9]+)\\.0([ KMGTPEZYRQiB])/\"\\1\\2/' tests/tes…"
+        },
+        {
+          "event_id": "<session>/L000049.00",
+          "tool": "Bash",
+          "path": "/(\\[1024\\*\\*2 - 1, False, True\\], \"1M\"),/a\\        ([1024, True], \"1 KiB\"),\\n  …",
+          "why": "outside the attempt's workspace",
+          "text": "sed -i '/(\\[1024\\*\\*2 - 1, False, True\\], \"1M\"),/a\\        ([1024, True], \"1 Ki…"
+        }
+      ],
+      "exposures": [],
+      "review": {
+        "passed": true,
+        "judgment": "flagged; false positive",
+        "reasons": [
+          "fresh-attempt audit: 2 hits, no exposure; read in the transcript",
+          "false positive: both hits are sed editing expressions that begin with a slash, taken for absolute paths; both commands began with a cd into the workspace's repo and edited only its own test file",
+          "file tools and searches named only workspace paths; every shell command began with a cd into the workspace",
+          "verdict: passed, nothing outside the workspace was read"
+        ]
+      }
+    },
+    "CS-01-fresh-B-u1-5": {
+      "task_id": "CS-01",
+      "workspace": "/home/user/fresh_ws/CS-01-fresh-B-u1-5",
+      "transcript_sha256": "3b4752134070c333f360b21d5161fae43090ea18bff3a6f1b0e817582e8e9631",
+      "flagged": false,
+      "hits": [],
+      "exposures": [],
+      "review": {
+        "passed": true,
+        "judgment": "not flagged",
+        "reasons": [
+          "fresh-attempt audit: no hit, no exposure",
+          "file tools and searches named only workspace paths; every shell command began with a cd into the workspace",
+          "verdict: passed, nothing outside the workspace was read"
+        ]
+      }
+    },
+    "CS-01-fresh-B-final-1": {
+      "task_id": "CS-01",
+      "workspace": "/home/user/fresh_ws/CS-01-fresh-B-final-1",
+      "transcript_sha256": "37b690bb91268a0104fdd2ff541ac2df1ecb8b87b1576770c45fc88d4aaa5c59",
+      "flagged": false,
+      "hits": [],
+      "exposures": [],
+      "review": {
+        "passed": true,
+        "judgment": "not flagged",
+        "reasons": [
+          "fresh-attempt audit: no hit, no exposure",
+          "file tools and searches named only workspace paths; every shell command began with a cd into the workspace",
+          "the system python3 was run on workspace files only (a system location)",
+          "verdict: passed, nothing outside the workspace was read"
+        ]
+      }
+    },
+    "CS-01-fresh-B-final-2": {
+      "task_id": "CS-01",
+      "workspace": "/home/user/fresh_ws/CS-01-fresh-B-final-2",
+      "transcript_sha256": "307ebdb64172c859bcded103eb478b818e1ce67fba392570c3fced6e35fc7c3c",
+      "flagged": false,
+      "hits": [],
+      "exposures": [],
+      "review": {
+        "passed": true,
+        "judgment": "not flagged",
+        "reasons": [
+          "fresh-attempt audit: no hit, no exposure",
+          "file tools and searches named only workspace paths; every shell command began with a cd into the workspace",
+          "verdict: passed, nothing outside the workspace was read"
+        ]
+      }
+    },
+    "CS-01-fresh-B-final-3": {
+      "task_id": "CS-01",
+      "workspace": "/home/user/fresh_ws/CS-01-fresh-B-final-3",
+      "transcript_sha256": "657917f6c9646e2e4c8c451fca30706236fb99cc6fd0fafd3e14307c7ee55f66",
+      "flagged": false,
+      "hits": [],
+      "exposures": [],
+      "review": {
+        "passed": true,
+        "judgment": "not flagged",
+        "reasons": [
+          "fresh-attempt audit: no hit, no exposure",
+          "file tools and searches named only workspace paths; every shell command began with a cd into the workspace",
+          "the system python3 was run on workspace files only (a system location)",
+          "verdict: passed, nothing outside the workspace was read"
+        ]
+      }
+    },
+    "CS-01-fresh-B-final-4": {
+      "task_id": "CS-01",
+      "workspace": "/home/user/fresh_ws/CS-01-fresh-B-final-4",
+      "transcript_sha256": "55ef777b44d51d0f74eb9651cb6807ef27db6ecc1975fd8e896e0b482a387d4e",
+      "flagged": true,
+      "hits": [],
+      "exposures": [
+        {
+          "event_id": "<session>/L000014.00",
+          "ts": "2026-11-21T09:34:06.199Z",
+          "call": "<session>/L000013.00",
+          "tool": "Bash",
+          "path": "/home/user/trace-contract/tests/test_filesize.py",
+          "why": "shown in a tool output: inside forbidden material",
+          "text": "…args] (e.g. run_tests.sh -q tests/test_filesize.py) and /home/user/fresh_ws/CS…"
+        }
+      ],
+      "review": {
+        "passed": true,
+        "judgment": "flagged; false positive",
+        "reasons": [
+          "fresh-attempt audit: 1 exposure, no hit; read in the transcript",
+          "false positive: the attempt printed its own instruction file by absolute workspace path; a relative example path mentioned only in the instruction was resolved from the shell's start directory, where no such file exists",
+          "file tools and searches named only workspace paths; every other shell command began with a cd into the workspace or called its wrappers by absolute path (their arguments are container paths)",
+          "verdict: passed, nothing outside the workspace was read"
+        ]
+      }
+    },
+    "CS-01-fresh-B-final-5": {
+      "task_id": "CS-01",
+      "workspace": "/home/user/fresh_ws/CS-01-fresh-B-final-5",
+      "transcript_sha256": "d3ee2128e733e9e8e8ec11d1812f50c00014d3b213efa320e3cd1fd88ec4b9c3",
+      "flagged": false,
+      "hits": [],
+      "exposures": [],
+      "review": {
+        "passed": true,
+        "judgment": "not flagged",
+        "reasons": [
+          "fresh-attempt audit: no hit, no exposure",
+          "file tools and searches named only workspace paths; every shell command began with a cd into the workspace",
+          "verdict: passed, nothing outside the workspace was read"
+        ]
+      }
+    }
+  },
+  "excluded": [
+    "CS-01-fresh-A-u1-2",
+    "CS-01-fresh-A-u1-3",
+    "CS-01-fresh-A-final-3",
+    "CS-01-fresh-A-final-5",
+    "CS-01-fresh-B-u1-4",
+    "CS-01-fresh-B-final-4"
+  ],
+  "not_audited": [],
+  "manual_review": {
+    "rule": "Each hit or exposure is a lead for a manual reading (controlled.audit_generator_transcript_strict). Every flagged access was read in its transcript. An attempt that read anything outside its workspace fails and is excluded; an attempt that only read or listed its own workspace, or touched only system locations, passes.",
+    "reviewed_at": "2026-11-21T09:55:54Z",
+    "flagged_by_script": [
+      "CS-01-fresh-A-u1-2",
+      "CS-01-fresh-A-u1-3",
+      "CS-01-fresh-A-final-3",
+      "CS-01-fresh-A-final-5",
+      "CS-01-fresh-B-u1-4",
+      "CS-01-fresh-B-final-4"
+    ],
+    "judged_false_positive": [
+      "CS-01-fresh-A-final-3",
+      "CS-01-fresh-A-final-5",
+      "CS-01-fresh-A-u1-2",
+      "CS-01-fresh-A-u1-3",
+      "CS-01-fresh-B-final-4",
+      "CS-01-fresh-B-u1-4"
+    ],
+    "excluded_after_review": [],
+    "note": "'excluded' above is the script's own list of flagged attempts. After the reading, the attempts excluded from every analysis are those in excluded_after_review; each candidate's attempt record carries the verdict (audit.passed).",
+    "outside_scope": "Harness context that is not a tool input or output was not scanned by the script: every attempt received reminders listing the build session's task titles, and the session's working directory and scratch path. Read for this review, they hold no reference, transcript, verifier, candidate or label of CS-01, and no attempt used a task tool."
+  }
+}

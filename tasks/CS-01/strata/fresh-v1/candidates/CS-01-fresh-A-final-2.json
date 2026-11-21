@@ -1,0 +1,38 @@
+{
+  "schema_version": "0.1.0",
+  "candidate_id": "CS-01-fresh-A-final-2",
+  "task_id": "CS-01",
+  "origin": "fresh_attempt",
+  "split": "eval",
+  "patch": "diff --git a/src/humanize/filesize.py b/src/humanize/filesize.py\nindex 386752b227ed3524eaab881cc50a351bee83e03c..5430582b99c161783381511379b22596e5005c9c 100644\n--- a/src/humanize/filesize.py\n+++ b/src/humanize/filesize.py\n@@ -41,12 +41,14 @@ def naturalsize(\n     binary: bool = False,\n     gnu: bool = False,\n     format: str = \"%.1f\",\n+    strip_trailing_zero: bool = False,\n ) -> str:\n     \"\"\"Format a number of bytes like a human-readable filesize (e.g. 10 kB).\n \n     By default, decimal suffixes (kB, MB) are used.\n \n-    Non-GNU modes are compatible with jinja2's `filesizeformat` filter.\n+    Non-GNU modes are compatible with jinja2's `filesizeformat` filter, as long\n+    as `strip_trailing_zero` is left at its default of `False`.\n \n     Examples:\n         ```pycon\n@@ -66,6 +68,14 @@ def naturalsize(\n         '30000.0 QB'\n         >>> naturalsize(-4096, True)\n         '-4.0 KiB'\n+        >>> naturalsize(3000000, strip_trailing_zero=True)\n+        '3 MB'\n+        >>> naturalsize(1024, True, strip_trailing_zero=True)\n+        '1 KiB'\n+        >>> naturalsize(3000, True, strip_trailing_zero=True)\n+        '2.9 KiB'\n+        >>> naturalsize(2500000, format=\"%.2f\", strip_trailing_zero=True)\n+        '2.5 MB'\n \n         ```\n \n@@ -76,6 +86,11 @@ def naturalsize(\n         gnu (bool): If `True`, the binary argument is ignored and GNU-style\n             (`ls -sh` style) prefixes are used (K, M) with the 2**10 definition.\n         format (str): Custom formatter.\n+        strip_trailing_zero (bool): If `True`, zeros at the end of the formatted\n+            number's fractional part are removed, and so is the decimal point\n+            if no fractional digits remain: \"3.0 MB\" becomes \"3 MB\", while\n+            \"2.9 KiB\" is unchanged. Digits before the decimal point are never\n+            removed.\n \n     Returns:\n         str: Human readable representation of a filesize.\n@@ -107,5 +122,21 @@ def naturalsize(\n     if exp < len(suffix) and abs(float(format % (abs_bytes / (base**exp)))) >= base:\n         exp += 1\n     space = \"\" if gnu else \" \"\n-    ret: str = format % (bytes_ / (base**exp)) + space + _(suffix[exp - 1])\n-    return ret\n+    number: str = format % (bytes_ / (base**exp))\n+    if strip_trailing_zero:\n+        number = _strip_trailing_zeros(number)\n+    return number + space + _(suffix[exp - 1])\n+\n+\n+def _strip_trailing_zeros(number: str) -> str:\n+    \"\"\"Remove the zeros that end the fractional part of a formatted number.\n+\n+    The decimal point goes too when no fractional digits are left, so \"3.0\" becomes\n+    \"3\" and \"2.50\" becomes \"2.5\". A string that does not end in a decimal fraction,\n+    such as \"30\" or \"3.0e+06\", is returned unchanged.\n+    \"\"\"\n+    whole, point, fraction = number.rpartition(\".\")\n+    if not (point and fraction.isascii() and fraction.isdigit()):\n+        return number\n+    fraction = fraction.rstrip(\"0\")\n+    return f\"{whole}.{fraction}\" if fraction else whole\n",
+  "patch_sha256": "65ecb687924cc15acfcec2797b7baf4234ac2e54939d34a6be2d0fb66bc6c811",
+  "produced_by": "fresh-attempt:config-A",
+  "description": "",
+  "labels": [],
+  "attempt": {
+    "attempt_id": "CS-01-fresh-A-final-2",
+    "configuration": "config-A",
+    "variant": "final",
+    "instruction_sha256": "54bf41a40978605dae0fa1f8878c90db42c42f7b1743d541d8be96355bd8630c",
+    "started_at": "2026-11-21T09:10:55.676Z",
+    "ended_at": "2026-11-21T09:17:47.438Z",
+    "wall_s": 411.762,
+    "turns": 22,
+    "tool_calls": 27,
+    "tokens": 2509880,
+    "ended": "finished",
+    "patch_sha256": "65ecb687924cc15acfcec2797b7baf4234ac2e54939d34a6be2d0fb66bc6c811",
+    "run_record": "build-session:subagents/workflows/wf_91d22993-1c2/agent-a7c1b6045b8d2c490.jsonl",
+    "audit": {
+      "profile": "fresh-attempt:v1",
+      "passed": true,
+      "findings": [
+        "fresh-attempt audit: no hit, no exposure",
+        "file tools and searches named only workspace paths; every shell command began with a cd into the workspace",
+        "verdict: passed, nothing outside the workspace was read"
+      ],
+      "audited_at": "2026-11-21T09:55:54Z",
+      "record": "data/fresh/fresh-v1/audit_CS-01.json"
+    }
+  }
+}

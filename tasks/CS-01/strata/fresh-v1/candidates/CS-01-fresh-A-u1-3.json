@@ -1,0 +1,39 @@
+{
+  "schema_version": "0.1.0",
+  "candidate_id": "CS-01-fresh-A-u1-3",
+  "task_id": "CS-01",
+  "origin": "fresh_attempt",
+  "split": "eval",
+  "patch": "diff --git a/README.md b/README.md\nindex 81e8080175994f00a5e540c700d6381f3f402f79..5edea38542b2b718502dd257e98375de5f422169 100644\n--- a/README.md\n+++ b/README.md\n@@ -158,7 +158,7 @@ If seconds are too large, set `minimum_unit` to milliseconds or microseconds:\n ```pycon\n >>> import humanize\n >>> humanize.naturalsize(1_000_000)\n-'1.0 MB'\n+'1 MB'\n >>> humanize.naturalsize(1_000_000, binary=True)\n '976.6 KiB'\n >>> humanize.naturalsize(1_000_000, gnu=True)\ndiff --git a/src/humanize/filesize.py b/src/humanize/filesize.py\nindex 386752b227ed3524eaab881cc50a351bee83e03c..9f949738b3ab3f80a0b7732b73a5790efb82128b 100644\n--- a/src/humanize/filesize.py\n+++ b/src/humanize/filesize.py\n@@ -40,17 +40,22 @@ def naturalsize(\n     value: float | str,\n     binary: bool = False,\n     gnu: bool = False,\n-    format: str = \"%.1f\",\n+    format: str | None = None,\n ) -> str:\n     \"\"\"Format a number of bytes like a human-readable filesize (e.g. 10 kB).\n \n-    By default, decimal suffixes (kB, MB) are used.\n+    By default, decimal suffixes (kB, MB) are used, and the size is shown with one\n+    decimal place, which is dropped when it is zero (3 MB, but 2.9 MB).\n \n-    Non-GNU modes are compatible with jinja2's `filesizeformat` filter.\n+    Non-GNU modes are compatible with jinja2's `filesizeformat` filter, except that\n+    the filter always keeps the decimal place (3.0 MB); pass `format=\"%.1f\"` to\n+    keep it too.\n \n     Examples:\n         ```pycon\n         >>> naturalsize(3000000)\n+        '3 MB'\n+        >>> naturalsize(3000000, format=\"%.1f\")\n         '3.0 MB'\n         >>> naturalsize(300, False, True)\n         '300B'\n@@ -60,12 +65,14 @@ def naturalsize(\n         '2.930K'\n         >>> naturalsize(3000, True)\n         '2.9 KiB'\n+        >>> naturalsize(1024, True)\n+        '1 KiB'\n         >>> naturalsize(10**28)\n-        '10.0 RB'\n+        '10 RB'\n         >>> naturalsize(10**34 * 3)\n-        '30000.0 QB'\n+        '30000 QB'\n         >>> naturalsize(-4096, True)\n-        '-4.0 KiB'\n+        '-4 KiB'\n \n         ```\n \n@@ -75,7 +82,9 @@ def naturalsize(\n             2<sup>10</sup> instead of 10<sup>3</sup>.\n         gnu (bool): If `True`, the binary argument is ignored and GNU-style\n             (`ls -sh` style) prefixes are used (K, M) with the 2**10 definition.\n-        format (str): Custom formatter.\n+        format (str | None): Custom formatter, applied as given (so `\"%.1f\"`\n+            keeps a trailing `.0`). If `None`, one decimal place is shown and\n+            dropped when it is zero.\n \n     Returns:\n         str: Human readable representation of a filesize.\n@@ -99,13 +108,19 @@ def naturalsize(\n \n     from math import log\n \n+    fmt = \"%.1f\" if format is None else format\n     exp = int(min(log(abs_bytes, base), len(suffix)))\n-    # The suffix is chosen from the unrounded byte count, but `format` rounds the\n+    # The suffix is chosen from the unrounded byte count, but `fmt` rounds the\n     # mantissa afterward; rounding can push it up to `base` (e.g. 999999 is\n-    # 999.999 kB, which formats to \"1000.0 kB\"). When that happens and a larger\n-    # suffix is available, step up one suffix so the result reads \"1.0 MB\".\n-    if exp < len(suffix) and abs(float(format % (abs_bytes / (base**exp)))) >= base:\n+    # 999.999 kB, which formats to \"1000.0\"). When that happens and a larger\n+    # suffix is available, step up one suffix so the result reads \"1 MB\".\n+    if exp < len(suffix) and abs(float(fmt % (abs_bytes / (base**exp)))) >= base:\n         exp += 1\n+    number = fmt % (bytes_ / (base**exp))\n+    if format is None:\n+        # The default keeps its one decimal place only when it is meaningful:\n+        # \"3.0\" becomes \"3\", while \"2.9\" stays as it is.\n+        number = number.removesuffix(\".0\")\n     space = \"\" if gnu else \" \"\n-    ret: str = format % (bytes_ / (base**exp)) + space + _(suffix[exp - 1])\n+    ret: str = number + space + _(suffix[exp - 1])\n     return ret\n",
+  "patch_sha256": "23636c06be689611e2473454aba05da07bc1ce80308fc0405d7a0d5d89293fad",
+  "produced_by": "fresh-attempt:config-A",
+  "description": "",
+  "labels": [],
+  "attempt": {
+    "attempt_id": "CS-01-fresh-A-u1-3",
+    "configuration": "config-A",
+    "variant": "u1",
+    "instruction_sha256": "fb878d3078d560eb43b7ba0a7e90ded0e7b2dc6cdc608fc7517884422f9aae9b",
+    "started_at": "2026-11-21T09:15:26.212Z",
+    "ended_at": "2026-11-21T09:24:55.789Z",
+    "wall_s": 569.577,
+    "turns": 27,
+    "tool_calls": 38,
+    "tokens": 3504563,
+    "ended": "finished",
+    "patch_sha256": "23636c06be689611e2473454aba05da07bc1ce80308fc0405d7a0d5d89293fad",
+    "run_record": "build-session:subagents/workflows/wf_91d22993-1c2/agent-a771c68378561dba5.jsonl",
+    "audit": {
+      "profile": "fresh-attempt:v1",
+      "passed": true,
+      "findings": [
+        "fresh-attempt audit: 1 exposure, no hit; read in the transcript",
+        "false positive: a harness notice named the session file that held the attempt's own oversized search result over its repo; the file was never opened, and the preview held only workspace paths",
+        "file tools and searches named only workspace paths; every shell command began with a cd into the workspace",
+        "verdict: passed, nothing outside the workspace was read"
+      ],
+      "audited_at": "2026-11-21T09:55:54Z",
+      "record": "data/fresh/fresh-v1/audit_CS-01.json"
+    }
+  }
+}

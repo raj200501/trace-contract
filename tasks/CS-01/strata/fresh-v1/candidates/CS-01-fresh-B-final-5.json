@@ -1,0 +1,38 @@
+{
+  "schema_version": "0.1.0",
+  "candidate_id": "CS-01-fresh-B-final-5",
+  "task_id": "CS-01",
+  "origin": "fresh_attempt",
+  "split": "eval",
+  "patch": "diff --git a/src/humanize/filesize.py b/src/humanize/filesize.py\nindex 386752b227ed3524eaab881cc50a351bee83e03c..800c9eee720d15c78f74cf3417cab148afaaa09b 100644\n--- a/src/humanize/filesize.py\n+++ b/src/humanize/filesize.py\n@@ -41,6 +41,7 @@ def naturalsize(\n     binary: bool = False,\n     gnu: bool = False,\n     format: str = \"%.1f\",\n+    strip_trailing_zero: bool = False,\n ) -> str:\n     \"\"\"Format a number of bytes like a human-readable filesize (e.g. 10 kB).\n \n@@ -66,6 +67,10 @@ def naturalsize(\n         '30000.0 QB'\n         >>> naturalsize(-4096, True)\n         '-4.0 KiB'\n+        >>> naturalsize(3000000, strip_trailing_zero=True)\n+        '3 MB'\n+        >>> naturalsize(1024, True, strip_trailing_zero=True)\n+        '1 KiB'\n \n         ```\n \n@@ -76,6 +81,9 @@ def naturalsize(\n         gnu (bool): If `True`, the binary argument is ignored and GNU-style\n             (`ls -sh` style) prefixes are used (K, M) with the 2**10 definition.\n         format (str): Custom formatter.\n+        strip_trailing_zero (bool): If `True`, a mantissa that formats as a\n+            whole number with a trailing `.0` (e.g. `3.0`) is written without\n+            it (`3`). Defaults to `False`, which keeps the output unchanged.\n \n     Returns:\n         str: Human readable representation of a filesize.\n@@ -107,5 +115,8 @@ def naturalsize(\n     if exp < len(suffix) and abs(float(format % (abs_bytes / (base**exp)))) >= base:\n         exp += 1\n     space = \"\" if gnu else \" \"\n-    ret: str = format % (bytes_ / (base**exp)) + space + _(suffix[exp - 1])\n+    number: str = format % (bytes_ / (base**exp))\n+    if strip_trailing_zero and number.endswith(\".0\"):\n+        number = number[:-2]\n+    ret: str = number + space + _(suffix[exp - 1])\n     return ret\n",
+  "patch_sha256": "21c633927400ea357a70566ccb8e5f74efb44f2e744024a9a421a1c4fb5a0a82",
+  "produced_by": "fresh-attempt:config-B",
+  "description": "",
+  "labels": [],
+  "attempt": {
+    "attempt_id": "CS-01-fresh-B-final-5",
+    "configuration": "config-B",
+    "variant": "final",
+    "instruction_sha256": "9ef4e7bac1fc64114ed3cbbfd9951d9ba5fe033cb837b93f41a18cff8adac143",
+    "started_at": "2026-11-21T09:41:57.185Z",
+    "ended_at": "2026-11-21T09:42:41.036Z",
+    "wall_s": 43.851,
+    "turns": 11,
+    "tool_calls": 14,
+    "tokens": 926159,
+    "ended": "finished",
+    "patch_sha256": "21c633927400ea357a70566ccb8e5f74efb44f2e744024a9a421a1c4fb5a0a82",
+    "run_record": "build-session:subagents/workflows/wf_91d22993-1c2/agent-a340feeedd627aa58.jsonl",
+    "audit": {
+      "profile": "fresh-attempt:v1",
+      "passed": true,
+      "findings": [
+        "fresh-attempt audit: no hit, no exposure",
+        "file tools and searches named only workspace paths; every shell command began with a cd into the workspace",
+        "verdict: passed, nothing outside the workspace was read"
+      ],
+      "audited_at": "2026-11-21T09:55:54Z",
+      "record": "data/fresh/fresh-v1/audit_CS-01.json"
+    }
+  }
+}

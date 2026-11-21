@@ -1,0 +1,39 @@
+{
+  "schema_version": "0.1.0",
+  "candidate_id": "CS-01-fresh-A-final-5",
+  "task_id": "CS-01",
+  "origin": "fresh_attempt",
+  "split": "eval",
+  "patch": "diff --git a/README.md b/README.md\nindex 81e8080175994f00a5e540c700d6381f3f402f79..81f8c8e1e17dfbd2ae5540efa2ef74407edb9b1a 100644\n--- a/README.md\n+++ b/README.md\n@@ -163,6 +163,8 @@ If seconds are too large, set `minimum_unit` to milliseconds or microseconds:\n '976.6 KiB'\n >>> humanize.naturalsize(1_000_000, gnu=True)\n '976.6K'\n+>>> humanize.naturalsize(1_000_000, strip_trailing_zero=True)\n+'1 MB'\n ```\n \n ### Human-readable floating point numbers\ndiff --git a/src/humanize/filesize.py b/src/humanize/filesize.py\nindex 386752b227ed3524eaab881cc50a351bee83e03c..03b993260361ff987040a0d210f451f312546c4b 100644\n--- a/src/humanize/filesize.py\n+++ b/src/humanize/filesize.py\n@@ -41,12 +41,15 @@ def naturalsize(\n     binary: bool = False,\n     gnu: bool = False,\n     format: str = \"%.1f\",\n+    *,\n+    strip_trailing_zero: bool = False,\n ) -> str:\n     \"\"\"Format a number of bytes like a human-readable filesize (e.g. 10 kB).\n \n     By default, decimal suffixes (kB, MB) are used.\n \n-    Non-GNU modes are compatible with jinja2's `filesizeformat` filter.\n+    Non-GNU modes are compatible with jinja2's `filesizeformat` filter, as long as\n+    `strip_trailing_zero` is left at its default of `False`.\n \n     Examples:\n         ```pycon\n@@ -66,6 +69,12 @@ def naturalsize(\n         '30000.0 QB'\n         >>> naturalsize(-4096, True)\n         '-4.0 KiB'\n+        >>> naturalsize(3000000, strip_trailing_zero=True)\n+        '3 MB'\n+        >>> naturalsize(1024, True, strip_trailing_zero=True)\n+        '1 KiB'\n+        >>> naturalsize(3000, True, strip_trailing_zero=True)\n+        '2.9 KiB'\n \n         ```\n \n@@ -76,6 +85,11 @@ def naturalsize(\n         gnu (bool): If `True`, the binary argument is ignored and GNU-style\n             (`ls -sh` style) prefixes are used (K, M) with the 2**10 definition.\n         format (str): Custom formatter.\n+        strip_trailing_zero (bool): If `True`, drop the decimal point and the\n+            digits after it when they are all zeros, so `3.0 MB` becomes `3 MB`\n+            (and `3.000 MB` from a `\"%.3f\"` format also becomes `3 MB`). Decimals\n+            that carry a value, as in `2.9 KiB` or `2.930K`, are kept unchanged.\n+            Keyword-only; defaults to `False`, which leaves the output unchanged.\n \n     Returns:\n         str: Human readable representation of a filesize.\n@@ -107,5 +121,12 @@ def naturalsize(\n     if exp < len(suffix) and abs(float(format % (abs_bytes / (base**exp)))) >= base:\n         exp += 1\n     space = \"\" if gnu else \" \"\n-    ret: str = format % (bytes_ / (base**exp)) + space + _(suffix[exp - 1])\n+    number = format % (bytes_ / (base**exp))\n+    if strip_trailing_zero:\n+        # Drop a fraction made only of zeros (\"3.0\" -> \"3\", \"-4.00\" -> \"-4\"), but\n+        # leave real decimals (\"2.9\", \"2.930\") and integers (\"10\", \"30000\") alone.\n+        integer, point, fraction = number.rpartition(\".\")\n+        if point and set(fraction) == {\"0\"}:\n+            number = integer\n+    ret: str = number + space + _(suffix[exp - 1])\n     return ret\n",
+  "patch_sha256": "25ab50c9bbdb7e24607aa91f81d54b416fcf0fc7fc1cd5e17a3aaa69588bc199",
+  "produced_by": "fresh-attempt:config-A",
+  "description": "",
+  "labels": [],
+  "attempt": {
+    "attempt_id": "CS-01-fresh-A-final-5",
+    "configuration": "config-A",
+    "variant": "final",
+    "instruction_sha256": "32d36190c49d87a9a49704834cdceb071f63f981ea68ffd0c4bde500d5fa132e",
+    "started_at": "2026-11-21T09:36:43.046Z",
+    "ended_at": "2026-11-21T09:43:29.689Z",
+    "wall_s": 406.643,
+    "turns": 24,
+    "tool_calls": 34,
+    "tokens": 2852663,
+    "ended": "finished",
+    "patch_sha256": "25ab50c9bbdb7e24607aa91f81d54b416fcf0fc7fc1cd5e17a3aaa69588bc199",
+    "run_record": "build-session:subagents/workflows/wf_91d22993-1c2/agent-a8c5e206e9328e0b6.jsonl",
+    "audit": {
+      "profile": "fresh-attempt:v1",
+      "passed": true,
+      "findings": [
+        "fresh-attempt audit: 2 hits, no exposure; read in the transcript",
+        "false positive: one command wrote two helper files into the workspace's scratch with heredocs; its redirection operators were parsed as paths from the shell's start directory, and it read nothing",
+        "file tools and searches named only workspace paths; every other shell command began with a cd into the workspace",
+        "verdict: passed, nothing outside the workspace was read"
+      ],
+      "audited_at": "2026-11-21T09:55:54Z",
+      "record": "data/fresh/fresh-v1/audit_CS-01.json"
+    }
+  }
+}
