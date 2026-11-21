@@ -1,0 +1,109 @@
+{
+  "exporter_version": "tc-harbor-export/0.2.0",
+  "harness_version": "tc-harness/0.3.3",
+  "harbor_version": "0.25.0",
+  "lint_rc": 0,
+  "trials": {
+    "oracle-reference": {
+      "reward": 1.0,
+      "R1": 1.0
+    },
+    "oracle-wrong": {
+      "reward": 0.0,
+      "R1": 0.0
+    },
+    "nop-trial": {
+      "reward": 0.0,
+      "R1": 0.0
+    },
+    "probe-timeout": null,
+    "probe-collect": null
+  },
+  "outcomes": {
+    "oracle-reference": {
+      "rewards": {
+        "reward": 1.0,
+        "R1": 1.0
+      },
+      "exception": null
+    },
+    "oracle-wrong": {
+      "rewards": {
+        "reward": 0.0,
+        "R1": 0.0
+      },
+      "exception": null
+    },
+    "nop-trial": {
+      "rewards": {
+        "reward": 0.0,
+        "R1": 0.0
+      },
+      "exception": null
+    },
+    "probe-timeout": {
+      "rewards": null,
+      "exception": "RewardFileNotFoundError"
+    },
+    "probe-collect": {
+      "rewards": null,
+      "exception": "RewardFileNotFoundError"
+    }
+  },
+  "expected": {
+    "oracle-reference": {
+      "reward": 1.0,
+      "R1": 1.0
+    },
+    "oracle-wrong": {
+      "reward": 0.0,
+      "R1": 0.0
+    },
+    "nop-trial": {
+      "reward": 0.0,
+      "R1": 0.0
+    },
+    "probe-timeout": null,
+    "probe-collect": null
+  },
+  "control": {
+    "exporter_revision": "c5ede4c",
+    "trials": {
+      "control-probe-timeout": {
+        "reward": 1.0,
+        "R1": 1.0
+      },
+      "control-probe-collect": {
+        "reward": 1.0,
+        "R1": 1.0
+      }
+    },
+    "outcomes": {
+      "control-probe-timeout": {
+        "rewards": {
+          "reward": 1.0,
+          "R1": 1.0
+        },
+        "exception": null
+      },
+      "control-probe-collect": {
+        "rewards": {
+          "reward": 1.0,
+          "R1": 1.0
+        },
+        "exception": null
+      }
+    },
+    "expected": {
+      "control-probe-timeout": {
+        "reward": 1.0,
+        "R1": 1.0
+      },
+      "control-probe-collect": {
+        "reward": 1.0,
+        "R1": 1.0
+      }
+    }
+  },
+  "as_expected": true
+}
