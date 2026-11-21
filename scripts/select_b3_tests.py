@@ -8,8 +8,8 @@ files and not frozen, was graded after it was built: R1 to R3 are three single g
 candidate and N a single grade of its development no-op, each the JSON that ``tracecontract grade`` prints without
 ``--repeats``. Single grades are needed because a repeated grade keeps the check statuses of its last run only. Both
 candidates are in the development split. (Protocol §19.7 names the gradings made before building stops: the audit
-loops, the reference checks and the labeler. The decision-log entry that fixes the natural recipe, planned as D61,
-counts these selection grades as development grading under it.)
+loops, the reference checks and the labeler. The decision-log entry that is to fix the natural recipe counts these
+selection grades as development grading under it.)
 
 The rule, per test: it is kept if and only if its status is ``passed`` in each of the three reference grades and
 ``failed`` or ``error`` in the no-op grade. Every other test is removed, located with the ``ast`` module: its function
@@ -27,8 +27,36 @@ why. If writing fails partway, every file written is put back as it was and no r
 diagnostics are never copied: the record holds test ids, statuses, outcomes and hashes. Then the host rebuilds the
 spec, confirms with the reference (``--repeats 3``) and the development no-op, and freezes.
 
-If no test is kept, the tests are left as they are, so that no verifier without checks is made; ``selection.json``
-records that B3 is unavailable for the family, and the exit status is 3. That verifier is not frozen.
+If no test is kept, B3 is unavailable for the family (protocol §15.6) and the exit status is 3. The tests are left as
+they are, so that no verifier without checks is made, and the verifier is taken out of the run in the same step:
+* its entry in ``task.json``'s verifiers is dropped (``task.json`` is rewritten as ``build-verifier`` writes it);
+* then its spec is frozen where it lies (``verifier.freeze``, at the selection's time). Frozen, it is never rebuilt or
+  changed under its id: ``build-verifier`` and ``freeze`` refuse it, as they refuse every frozen verifier, so the
+  ordinary steps cannot bring back a B3 the rule rejected. Unregistered, no run grades it: evaluate and the pre-flight
+  read the verifiers that ``task.json`` and ``verifiers_extra.json`` register. The spec keeps the B3 generator's
+  generation record (its cost, a §15.6 estimand) where every verifier's spec is: whatever collects generation records
+  from ``verifiers/*/spec.json`` finds it there;
+* ``unavailable.json`` beside the tests records why (how many tests fail each part of the rule), the sha256 of the
+  selection's inputs (the grades, the tests, the spec as graded and ``task.json``), the time, what was taken out
+  (``task.json``'s entries and its sha256 afterwards, the spec and its sha256 frozen), and the selection record by its
+  sha256; ``selection.json`` (schema ``b3-selection:v2``, which adds ``withdrawn`` and ``unavailable_record``) records
+  the selection as above, with ``b3_available`` false.
+
+The pre-flight (``scripts/preflight_final_run.py``) reads ``selection.json`` and notes B3 as unavailable for the family
+instead of failing on a missing condition; evaluate grades only the verifiers a task registers, so the run grades no B3
+for the family. A selection beside an ``unavailable.json`` is refused, whether it keeps tests or not (it would contradict
+the record), unless it finishes the withdrawal that the record belongs to (below); after a finished withdrawal nothing
+is left to select.
+
+The order of the step is fixed so that no interruption leaves a B3 that a run grades: first the two records (each
+complete or absent: written to a temporary file and linked into place), then ``task.json``, then the spec. On a failure
+``task.json`` is put back, the records the step wrote are removed and the spec, replaced last, is as it was. A step
+killed part-way leaves the records with B3 still registered and unfrozen, which the pre-flight fails (pointing here), or
+unregistered and not yet frozen. Running the same command again, with the same grade files, finishes it: the records
+must be those that this selection writes (made from the same grades and tests, at the time they record), the spec the
+one graded, and ``task.json`` as it was or as the step leaves it; then what is left is done, as of the recorded time,
+and the exit status is 3. Do not freeze such a verifier with ``tracecontract freeze``: frozen in ``task.json``, a B3 the
+rule rejected would be graded. A dry run is refused wherever the run is, and writes and takes out nothing.
 
 Each grade is checked before it is used:
 * a repeated grade is refused when it shows it: an unresolved outcome (its runs disagreed) or a diagnostic of a run
@@ -48,9 +76,13 @@ that is frozen, not diff_derived or not process-separated, or whose content hash
 a grade that is not of this task and verifier, or of another harness version, or refused as above; grades whose
 checks differ from the tests; a reference grade of a candidate that is not the development reference, or a no-op
 grade of a candidate that is not the development no-op; a ``CHECK_REQUIREMENTS`` that cannot be edited by its syntax
-tree; a result that refers to a removed test or does not lint clean; an existing selection record; a record location
-(``--out``) in a verifiers directory other than the default place, or in the repository where git does not ignore it
-(the record holds generated test ids).
+tree; a result that refers to a removed test or does not lint clean; an existing selection record (other than that of
+an interrupted withdrawal of the same selection); a record location (``--out``) in a verifiers directory other than the
+default place, or in the repository where git does not ignore it (the record holds generated test ids); a selection
+beside an ``unavailable.json`` (other than one that finishes its withdrawal), or after B3 was taken out of the run; and
+a selection that keeps no test with its record (``--out``) elsewhere than the default place, where the pre-flight reads
+it, or of a verifier that ``verifiers_extra.json`` registers (a B3 verifier is registered in ``task.json``; the
+sidecar holds label-support verifiers, which the run grades whatever this step does to ``task.json``).
 """
 
 from __future__ import annotations
@@ -62,6 +94,7 @@ import hashlib
 import json
 import os
 import re
+import secrets
 import shutil
 import subprocess
 import symtable
@@ -76,6 +109,7 @@ from typing import Any
 from pydantic import BaseModel, ValidationError
 
 from tracecontract import roots
+from tracecontract.evaluate import EXTRA_VERIFIERS, extra_verifier_paths
 from tracecontract.sandbox.docker_runner import HARNESS_VERSION
 from tracecontract.schemas import (
     Candidate,
@@ -95,8 +129,11 @@ from tracecontract.verifier import (
     lint_process_separated,
     requirement_map_from_tests,
 )
+from tracecontract.verifier import freeze as freeze_spec
 
-SCHEMA = "b3-selection:v1"
+# v2 adds "withdrawn" and "unavailable_record": a selection that keeps no test takes the verifier out of the run (v1 left
+# its spec registered; no v1 record of a B3 selection exists).
+SCHEMA = "b3-selection:v2"
 N_REFERENCE = 3
 PASS_ON_REFERENCE = "passed"
 FAIL_ON_NOOP = ("failed", "error")
@@ -104,6 +141,23 @@ RULE = ("a test is kept iff its status is passed in each of three single grades 
         "failed or error in a single grade of the development no-op; every other test is removed with its "
         "CHECK_REQUIREMENTS key")
 ACCEPT_WITHOUT_STATUSES = "--accept-grades-without-statuses"
+NOT_ON_REFERENCE = "not passed in every reference grade"  # why a test is removed (its record's "why")
+NOT_ON_NOOP = "not failed (or error) on the development no-op"
+SPEC = "spec.json"
+SELECTION = "selection.json"  # beside the spec: the selection record, which the pre-flight reads (b3_available)
+UNAVAILABLE = "unavailable.json"  # beside the tests of a verifier taken out of the run: why B3 is unavailable
+UNAVAILABLE_SCHEMA = "verifier-unavailable:v1"
+NEXT_KEPT = ("rebuild the spec from the selected tests (build-verifier), confirm with a grade of the reference with "
+             "--repeats 3 and a grade of the development no-op, then freeze")
+NEXT_UNAVAILABLE = ("no test is kept: B3 is unavailable for this family. The tests were left as they were and the "
+                    "verifier was taken out of the run: its entry in task.json was dropped and its spec frozen where it "
+                    f"lies, so that no run grades it and build-verifier and freeze refuse it; {UNAVAILABLE} beside the "
+                    "tests records why. Nothing is left to do for B3 in this family: the pre-flight notes it as "
+                    "unavailable. If this step stopped part-way, run the same command again to finish it; do not freeze "
+                    "the verifier")
+NEXT_UNAVAILABLE_DRY_RUN = ("no test is kept: B3 is unavailable for this family; without --dry-run the tests are left as "
+                            "they are and the verifier is taken out of the run (its task.json entry dropped, its spec "
+                            f"frozen where it lies, {UNAVAILABLE} written)")
 _REPEATED_RUN = re.compile(r"^\[run [1-9]\d*\] ")
 _FUNCS = (ast.FunctionDef, ast.AsyncFunctionDef)
 
@@ -276,9 +330,9 @@ def select(v: Verifier, refs: list[Grade], noop: Grade) -> list[dict[str, Any]]:
         st = noop.statuses.get(cid)
         why = []
         if any(s != PASS_ON_REFERENCE for s in ref):
-            why.append("not passed in every reference grade")
+            why.append(NOT_ON_REFERENCE)
         if st not in FAIL_ON_NOOP:
-            why.append("not failed (or error) on the development no-op")
+            why.append(NOT_ON_NOOP)
         rows.append({"check_id": cid, "reference": ref, "noop": st, "kept": not why, "why": why})
     return rows
 
@@ -605,6 +659,279 @@ def apply(v: Verifier, new: dict[str, bytes], after: str, target: Path, record_t
         raise WrittenError(f"{why}; {state}; {record}") from None
 
 
+# --------------------------------------------------------------------------- without a kept test: out of the run
+
+
+@dataclass(frozen=True)
+class Withdrawal:
+    """What taking a B3 verifier out of the run changes (:func:`withdraw`), as read before anything is written."""
+
+    task_dir: Path
+    spec: Path  # verifiers/<id>/spec.json, frozen where it lies
+    spec_bytes: bytes  # the spec as read (as graded)
+    frozen_bytes: bytes  # the spec frozen (verifier.freeze) at the selection's time, as store.dump writes it
+    task_json: Path
+    task_bytes: bytes  # task.json as read
+    new_task_bytes: bytes  # task.json without the entries of its verifiers that name the spec
+    dropped: tuple[str, ...]  # those entries
+    record: Path  # verifiers/<id>/unavailable.json
+
+    def rel(self, path: Path) -> str:
+        return path.relative_to(self.task_dir).as_posix()
+
+
+def _names(task_dir: Path, rel: str, spec: Path) -> bool:
+    """Whether the registered path ``rel`` (of ``task.json`` or ``verifiers_extra.json``) names ``spec``."""
+    return (task_dir / rel).resolve() == spec.resolve()
+
+
+def plan_withdrawal(v: Verifier, target: Path, default: Path, now: str) -> Withdrawal:
+    """How ``v``, whose selection keeps no test, is taken out of the run, read before anything is written; refused
+    (:class:`SelectionError`) when it cannot be: the selection record (``target``) must go in its default place
+    (``default``), where the pre-flight reads it; and ``verifiers_extra.json`` may not register the verifier, since the
+    run grades what the sidecar registers whatever this step does to ``task.json`` (a B3 verifier is registered in
+    ``task.json``, where ``build-verifier`` registers it). ``now`` is the selection's time, at which the spec is frozen."""
+    if target != default:
+        raise SelectionError(f"no test is kept, so B3 is unavailable for {v.task.task_id}: the record of such a selection "
+                             f"goes in its default place ({SELECTION} beside the verifier's spec), where the pre-flight "
+                             "reads it; run again without --out")
+    spec = v.tests.parent / SPEC
+    try:
+        sidecar = [rel for rel in extra_verifier_paths(v.task_dir) if _names(v.task_dir, rel, spec)]
+    except (OSError, ValueError, AttributeError) as exc:
+        raise SelectionError(f"{EXTRA_VERIFIERS}: not readable ({exc.__class__.__name__})") from None
+    if sidecar:
+        raise SelectionError(f"{EXTRA_VERIFIERS} registers {sidecar[0]}, which a run grades whatever task.json says, so "
+                             "taking B3 out of the run cannot be done here; a B3 verifier is registered in task.json (the "
+                             "sidecar holds label-support verifiers)")
+    task_json = v.task_dir / "task.json"
+    try:
+        task_bytes, spec_bytes = task_json.read_bytes(), spec.read_bytes()
+        m = TaskManifest.model_validate_json(task_bytes)
+        graded = VerifierSpec.model_validate_json(spec_bytes)
+    except (OSError, ValidationError) as exc:
+        raise SelectionError(f"task.json or {SPEC}: not readable ({exc.__class__.__name__})") from None
+    if graded != v.spec:
+        raise SelectionError(f"{SPEC} changed while the selection ran (a concurrent change?)")
+    try:  # as `tracecontract freeze` freezes it, at the selection's time
+        frozen = freeze_spec(graded, v.task_dir).model_copy(update={"frozen_at": now})
+    except ValueError as exc:
+        raise SelectionError(f"{v.spec.verifier_id}: cannot be frozen ({exc})") from None
+    dropped = tuple(rel for rel in m.verifiers if _names(v.task_dir, rel, spec))
+    new_task_bytes = task_bytes
+    if dropped:  # as build-verifier writes task.json (store.dump)
+        rest = m.model_copy(update={"verifiers": [rel for rel in m.verifiers if rel not in dropped]})
+        new_task_bytes = (rest.model_dump_json(indent=2) + "\n").encode("utf-8")
+    return Withdrawal(v.task_dir, spec, spec_bytes, (frozen.model_dump_json(indent=2) + "\n").encode("utf-8"), task_json,
+                      task_bytes, new_task_bytes, dropped, v.tests.parent / UNAVAILABLE)
+
+
+def _sha256(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
+
+
+def _json_object(data: bytes) -> dict[str, Any] | None:
+    try:
+        obj = json.loads(data)
+    except ValueError:
+        return None
+    return obj if isinstance(obj, dict) else None
+
+
+def taken_out_problem(vdir: Path) -> str | None:
+    """Why nothing is left to select for the verifier in ``vdir``: an ``unavailable.json`` lies beside its tests and its
+    spec is frozen or gone (the withdrawal finished; or, when ``task.json`` registers that frozen spec, it was frozen
+    against this script's advice). None when there is no such record, or when the spec is still unfrozen: a withdrawal
+    that was interrupted, which :func:`run` finishes or refuses."""
+    record = vdir / UNAVAILABLE
+    if not (record.exists() or record.is_symlink()):
+        return None
+    spec, td = vdir / SPEC, vdir.parent.parent
+    try:
+        frozen: bool | None = load(spec, VerifierSpec).frozen
+    except (OSError, ValueError):  # missing, or not a readable spec (a pydantic ValidationError is a ValueError)
+        frozen = None
+    if frozen is False:
+        return None
+    try:
+        registered = [rel for rel in load(td / "task.json", TaskManifest).verifiers if _names(td, rel, spec)]
+    except (OSError, ValueError):
+        registered = []
+    if frozen and registered:
+        return (f"{UNAVAILABLE} beside the tests records B3 as unavailable for this family, yet task.json registers "
+                f"{registered[0]} and that spec is frozen: a run would grade a verifier whose selection kept no test. Drop "
+                "that entry from task.json; nothing is left to select (protocol §15.6)")
+    state = "frozen where it lies" if frozen else "not a readable spec" if spec.exists() else "gone"
+    return (f"B3 was already taken out of the run for this family: {UNAVAILABLE} beside the tests records it as "
+            f"unavailable and its spec is {state}; nothing is left to select (protocol §15.6)")
+
+
+@dataclass(frozen=True)
+class Journal:
+    """The records of a withdrawal found before a selection that keeps no test: an earlier run of the same selection
+    that stopped part-way wrote them (:func:`withdraw` writes ``selection.json``, then ``unavailable.json``)."""
+
+    selection: bytes | None  # selection.json, as found
+    unavailable: bytes | None  # unavailable.json, as found
+    selected_at: str | None  # the selection's time, as selection.json records it
+
+    @property
+    def record(self) -> dict[str, Any]:
+        return _json_object(self.unavailable or b"") or {}
+
+
+def read_journal(vdir: Path) -> Journal:
+    """The records in ``vdir`` (:class:`Journal`); refused when they cannot be those of an interrupted withdrawal."""
+    found: dict[str, bytes | None] = {}
+    for name in (SELECTION, UNAVAILABLE):
+        path = vdir / name
+        if path.is_symlink() or (path.exists() and not path.is_file()):
+            raise SelectionError(f"{name} beside the tests is not a regular file")
+        found[name] = path.read_bytes() if path.exists() else None
+    sel, unav = found[SELECTION], found[UNAVAILABLE]
+    selected_at = None
+    if sel is not None:
+        rec = _json_object(sel) or {}
+        selected_at = rec.get("selected_at")
+        if rec.get("schema") != SCHEMA or rec.get("withdrawn") is not True or not isinstance(selected_at, str):
+            raise SelectionError(f"{SELECTION} exists: a selection was already made for this verifier")
+    if unav is not None and (sel is None or _json_object(unav) is None):
+        raise SelectionError(f"{UNAVAILABLE} exists beside the tests " + (
+            f"without {SELECTION}" if sel is None else "but is not a readable record") + ": B3 was recorded unavailable "
+            "for this family, and no selection can be made beside that record")
+    return Journal(sel, unav, selected_at)
+
+
+def journal_problems(j: Journal, v: Verifier, w: Withdrawal, selection_text: str) -> list[str]:
+    """Why the records ``j`` are not those of this selection's withdrawal, interrupted with the spec as graded and
+    ``task.json`` as it was or as the step leaves it; empty when they are (what is left is then done)."""
+    if j.selection is not None and j.selection != selection_text.encode("utf-8"):
+        return [f"{SELECTION} records another selection (other grades, tests or time)"]
+    if j.unavailable is None:
+        return []
+    rec, out = j.record, []
+    want = {"schema": UNAVAILABLE_SCHEMA, "task_id": v.task.task_id, "verifier_id": v.spec.verifier_id,
+            "condition": v.spec.condition.value, "available": False}
+    out += [f"{UNAVAILABLE} gives {k} {rec.get(k)!r}, not {x!r}" for k, x in want.items() if rec.get(k) != x]
+    selection = rec.get("selection") if isinstance(rec.get("selection"), dict) else {}
+    inputs = rec.get("inputs") if isinstance(rec.get("inputs"), dict) else {}
+    taken = rec.get("taken_out") if isinstance(rec.get("taken_out"), dict) else {}
+    if selection.get("sha256") != _sha256(selection_text.encode("utf-8")):
+        out.append(f"{UNAVAILABLE} names another selection record")
+    if inputs.get("spec_sha256") != _sha256(w.spec_bytes):
+        out.append(f"{SPEC} is not the spec that was graded")
+    current = _sha256(w.task_bytes)
+    if current == inputs.get("task_json_sha256"):  # not rewritten yet: this run must rewrite it as the step would have
+        if _sha256(w.new_task_bytes) != taken.get("task_json_sha256_after"):
+            out.append("task.json would not be rewritten as the record says")
+    elif current != taken.get("task_json_sha256_after"):
+        out.append("task.json is neither as it was nor as the step leaves it")
+    if taken.get("spec_sha256_after") != _sha256(w.frozen_bytes):
+        out.append("the spec would not be frozen as the record says")
+    return out
+
+
+def unavailable_reason(rows: list[dict[str, Any]], without: list[Grade]) -> str:
+    """Why the selection keeps no test: how many tests fail each part of the rule (no test id, no message)."""
+    n_ref = sum(NOT_ON_REFERENCE in r["why"] for r in rows)
+    n_noop = sum(NOT_ON_NOOP in r["why"] for r in rows)
+    text = (f"the B3 selection keeps no test: of the {len(rows)} diff-derived tests, {n_ref} did not pass in every "
+            f"reference grade and {n_noop} did not fail (or error) on the development no-op")
+    if without:
+        text += (f"; {', '.join(g.name for g in without)} had no check statuses ({ACCEPT_WITHOUT_STATUSES}), so no test "
+                 "passed its part of the rule")
+    return text
+
+
+def unavailable_record(v: Verifier, w: Withdrawal, grades: list[Grade], rows: list[dict[str, Any]], without: list[Grade],
+                       selection: Path, selection_text: str, now: str) -> dict[str, Any]:
+    """``unavailable.json``: that B3 is unavailable for the family and why, the sha256 of the selection's inputs, the
+    time, the selection record (by sha256), and what was taken out of the run: ``task.json``'s entries (and its sha256
+    afterwards) and the spec, frozen where it lies with the generator's generation record (and its sha256 frozen)."""
+    return {
+        "schema": UNAVAILABLE_SCHEMA, "task_id": v.task.task_id, "verifier_id": v.spec.verifier_id,
+        "condition": v.spec.condition.value, "available": False, "reason": unavailable_reason(rows, without),
+        "rule": RULE, "recorded_at": now, "recorded_by": "scripts/select_b3_tests.py",
+        "selection": {"record": w.rel(selection), "sha256": _sha256(selection_text.encode("utf-8"))},
+        "inputs": {"grades": [{"role": g.role, "n": g.n, "file_sha256": g.sha256} for g in grades],
+                   "tests_dir": v.spec.test_dir, "tests_sha256": v.spec.content_sha256,
+                   "spec_sha256": _sha256(w.spec_bytes), "task_json_sha256": _sha256(w.task_bytes)},
+        "taken_out": {"task_json_entries": list(w.dropped), "task_json_sha256_after": _sha256(w.new_task_bytes),
+                      "spec": w.rel(w.spec), "spec_frozen_at": now, "spec_sha256_after": _sha256(w.frozen_bytes)},
+    }
+
+
+def _claim(path: Path, text: str) -> None:
+    """Create ``path`` holding ``text``, whole or not at all: the text is written to a new temporary file beside it,
+    which is then linked to ``path``; refused (:class:`SelectionError`) when ``path`` exists."""
+    while True:
+        tmp = path.parent / f".b3_select_{secrets.token_hex(8)}"
+        try:
+            fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o666)
+            break
+        except FileExistsError:
+            continue
+    try:
+        with os.fdopen(fd, "wb") as fh:
+            fh.write(text.encode("utf-8"))
+        try:
+            os.link(tmp, path)
+        except FileExistsError:
+            raise SelectionError(f"{path.name} exists: a selection was already made for this verifier") from None
+    finally:
+        with contextlib.suppress(OSError):
+            os.unlink(tmp)
+
+
+def withdraw(v: Verifier, w: Withdrawal, target: Path, record_text: str, unavailable_text: str, *,
+             written: tuple[bool, bool] = (False, False)) -> None:
+    """Take ``v`` out of the run as one step (``w``), in this order: the selection record (``target``) and
+    ``unavailable.json`` (each claimed whole, :func:`_claim`); then ``task.json`` without the spec's entries; then the
+    spec frozen where it lies (each through a temporary file and a rename). Frozen only once ``task.json`` no longer
+    registers it, the spec is never a frozen B3 that a run would grade; and while the spec is unfrozen and registered, the
+    pre-flight fails on it. ``written`` says which of the two records an earlier, interrupted run of this selection
+    wrote (:func:`journal_problems` checked them): those are kept, and the rest of the step is done.
+
+    On any failure, and when ``task.json``, ``spec.json`` or the tests changed since they were read, ``task.json`` is put
+    back, the records this call wrote are removed and the spec, replaced last, is as it was (:class:`WrittenError`,
+    which says so)."""
+    claimed: list[Path] = []
+    replaced = False
+    try:
+        for path, text, done in ((target, record_text, written[0]), (w.record, unavailable_text, written[1])):
+            if not done:
+                _claim(path, text)
+                claimed.append(path)
+        if (w.task_json.read_bytes() != w.task_bytes or w.spec.read_bytes() != w.spec_bytes
+                or hash_test_dir(v.tests) != v.spec.content_sha256):
+            raise WrittenError("task.json, spec.json or the tests changed while the selection ran (a concurrent change?)")
+        if w.dropped:
+            _replace(w.task_json, w.new_task_bytes, v.task_dir)
+            replaced = True
+        _replace(w.spec, w.frozen_bytes, w.spec.parent)  # outside the hashed tests
+    except BaseException as exc:
+        left = []
+        if replaced:
+            try:
+                _replace(w.task_json, w.task_bytes, v.task_dir)
+            except OSError:
+                left.append("task.json")
+        for path in claimed:
+            with contextlib.suppress(OSError):
+                path.unlink()
+        if not isinstance(exc, (OSError, WrittenError)):
+            raise
+        why = str(exc) if isinstance(exc, WrittenError) else f"writing failed ({exc.__class__.__name__}: {exc})"
+        state = (f"{' and '.join(left)} could not be put back: restore by hand" if left else
+                 "task.json and spec.json are as they were")
+        stray = [p.name for p in claimed if p.exists()]
+        earlier = [p.name for p, done in ((target, written[0]), (w.record, written[1])) if done]
+        record = (f"the unfinished record(s) {', '.join(stray)} could not be removed: remove them" if stray else
+                  f"the record(s) {', '.join(earlier)} of the earlier run stay: run the same command again to finish"
+                  if earlier else "no record was written")
+        raise WrittenError(f"{why}; {state}; {record}") from None
+
+
 # --------------------------------------------------------------------------- command line
 
 
@@ -612,26 +939,13 @@ def _now() -> str:
     return datetime.now(UTC).isoformat(timespec="seconds")
 
 
-def run(tests: Path, reference: list[Path], noop: Path, *, out: Path | None = None, dry_run: bool = False,
-        accept_without_statuses: bool = False) -> tuple[int, dict]:
-    """Select and (unless ``dry_run``) apply; returns the exit status and the selection record."""
-    tests = tests.resolve()
-    default = tests.parent / "selection.json"
-    target = out.resolve() if out is not None else default
-    problem = record_location_problem(target, default)
-    if problem:
-        raise SelectionError(problem)
-    if not dry_run and (target.exists() or (out is not None and out.is_symlink())):
-        raise SelectionError(f"{target.name} exists: a selection was already made for this verifier")
-    v = load_verifier(tests)
-    refs = [load_grade(p, "reference", n) for n, p in enumerate(reference, 1)]
-    nop = load_grade(noop, "noop", 1)
-    without = check_grades(v, refs, nop, accept_without_statuses=accept_without_statuses)
-    rows = select(v, refs, nop)
+def selection_record(v: Verifier, refs: list[Grade], nop: Grade, without: list[Grade], rows: list[dict[str, Any]], *,
+                     after: str, withdrawal: Withdrawal | None, dry_run: bool, now: str) -> dict[str, Any]:
+    """``selection.json``: the rule, the grades by sha256, every test's statuses, what was kept and removed and why, and,
+    for a selection that keeps no test (``withdrawal``), that the verifier was taken out of the run."""
     kept = [r["check_id"] for r in rows if r["kept"]]
-    removed = [r["check_id"] for r in rows if not r["kept"]]
-    new, after = edited_files(v, rows) if kept else ({}, v.spec.content_sha256)
-    record = {
+    withdrawn = withdrawal is not None and not dry_run
+    return {
         "schema": SCHEMA, "rule": RULE, "task_id": v.task.task_id, "verifier_id": v.spec.verifier_id,
         "condition": v.spec.condition.value, "tests_dir": v.spec.test_dir,
         "tests_sha256_before": v.spec.content_sha256, "tests_sha256_after": after,
@@ -641,17 +955,76 @@ def run(tests: Path, reference: list[Path], noop: Path, *, out: Path | None = No
                     "harness_version": g.result.harness_version, "log_sha256": g.result.log_sha256,
                     "n_statuses": len(g.result.checks)} for g in refs + [nop]],
         "grades_without_statuses": [g.name for g in without],
-        "tests": rows, "kept": kept, "removed": removed,
-        "applied": bool(kept) and not dry_run, "b3_available": bool(kept), "selected_at": _now(),
-        "next": ("rebuild the spec from the selected tests (build-verifier), confirm with a grade of the reference "
-                 "with --repeats 3 and a grade of the development no-op, then freeze" if kept else
-                 "no test is kept: B3 is unavailable for this family; the tests were left as they were; do not freeze "
-                 "this verifier, which fails the selection rule, and keep it out of the run"),
+        "tests": rows, "kept": kept, "removed": [r["check_id"] for r in rows if not r["kept"]],
+        "applied": bool(kept) and not dry_run, "b3_available": bool(kept),
+        "withdrawn": withdrawn, "unavailable_record": withdrawal.rel(withdrawal.record) if withdrawn else None,
+        "selected_at": now, "next": NEXT_KEPT if kept else NEXT_UNAVAILABLE_DRY_RUN if dry_run else NEXT_UNAVAILABLE,
     }
+
+
+def _dumps(obj: dict[str, Any]) -> str:
+    return json.dumps(obj, indent=2, sort_keys=True) + "\n"
+
+
+def run(tests: Path, reference: list[Path], noop: Path, *, out: Path | None = None, dry_run: bool = False,
+        accept_without_statuses: bool = False) -> tuple[int, dict, bool]:
+    """Select and (unless ``dry_run``) apply, or, when no test is kept, take the verifier out of the run (:func:`withdraw`)
+    or finish the withdrawal that an interrupted run of the same selection began. Returns the exit status, the selection
+    record, and whether an interrupted withdrawal is (or, in a dry run, would be) finished. A dry run is refused wherever
+    the run is."""
+    tests = tests.resolve()
+    vdir = tests.parent
+    default = vdir / SELECTION
+    target = out.resolve() if out is not None else default
+    problem = record_location_problem(target, default) or taken_out_problem(vdir)
+    if problem:
+        raise SelectionError(problem)
+    if target.exists() or target.is_symlink() or (out is not None and out.is_symlink()):
+        # Only the record of a withdrawal, in its default place, can be that of an interrupted run (read_journal).
+        ours = (target == default and target.is_file() and not target.is_symlink()
+                and (_json_object(target.read_bytes()) or {}).get("withdrawn") is True)
+        if not ours:
+            raise SelectionError(f"{target.name} exists: a selection was already made for this verifier")
+    v = load_verifier(tests)
+    refs = [load_grade(p, "reference", n) for n, p in enumerate(reference, 1)]
+    nop = load_grade(noop, "noop", 1)
+    without = check_grades(v, refs, nop, accept_without_statuses=accept_without_statuses)
+    rows = select(v, refs, nop)
+    if any(r["kept"] for r in rows):
+        unavailable = vdir / UNAVAILABLE
+        if unavailable.exists() or unavailable.is_symlink():
+            raise SelectionError(f"{UNAVAILABLE} beside the tests records B3 as unavailable for this family (an earlier "
+                                 "selection of its tests kept none): a selection that keeps tests would contradict it")
+        if target.exists():
+            raise SelectionError(f"{target.name} exists: a selection was already made for this verifier")
+        new, after = edited_files(v, rows)
+        record = selection_record(v, refs, nop, without, rows, after=after, withdrawal=None, dry_run=dry_run, now=_now())
+        if not dry_run:
+            target.parent.mkdir(parents=True, exist_ok=True)
+            apply(v, new, after, target, _dumps(record))
+        return 0, record, False
+    # No test is kept: the verifier is taken out of the run. Whatever prevents that is refused here, before any write.
+    journal = read_journal(vdir)
+    now = journal.selected_at or _now()  # an interrupted withdrawal is finished as of its own time
+    w = plan_withdrawal(v, target, default, now)
+    text = _dumps(selection_record(v, refs, nop, without, rows, after=v.spec.content_sha256, withdrawal=w, dry_run=False,
+                                   now=now))
+    problems = journal_problems(journal, v, w, text)
+    if problems:
+        found = " and ".join(name for name, data in ((SELECTION, journal.selection), (UNAVAILABLE, journal.unavailable))
+                             if data is not None)
+        raise SelectionError(f"{found} beside the tests record a withdrawal of this verifier that this selection cannot "
+                             "finish: " + "; ".join(problems) + ". To finish an interrupted withdrawal, run the command "
+                             "that began it again, with the same grade files")
+    unavailable_text = (journal.unavailable.decode("utf-8") if journal.unavailable is not None else
+                        _dumps(unavailable_record(v, w, refs + [nop], rows, without, target, text, now)))
+    resumed = journal.selection is not None
+    record = json.loads(text) if not dry_run else selection_record(
+        v, refs, nop, without, rows, after=v.spec.content_sha256, withdrawal=w, dry_run=True, now=now)
     if not dry_run:
-        target.parent.mkdir(parents=True, exist_ok=True)
-        apply(v, new, after, target, json.dumps(record, indent=2, sort_keys=True) + "\n")
-    return (0 if kept else 3), record
+        withdraw(v, w, target, text, unavailable_text,
+                 written=(journal.selection is not None, journal.unavailable is not None))
+    return 3, record, resumed
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -667,8 +1040,8 @@ def main(argv: list[str] | None = None) -> int:
                          "unavailable) instead of refusing it")
     a = ap.parse_args(argv)
     try:
-        status, record = run(a.tests, a.reference, a.noop, out=a.out, dry_run=a.dry_run,
-                             accept_without_statuses=a.accept_without_statuses)
+        status, record, resumed = run(a.tests, a.reference, a.noop, out=a.out, dry_run=a.dry_run,
+                                      accept_without_statuses=a.accept_without_statuses)
     except SelectionError as exc:
         print(f"select_b3_tests: refused, nothing written: {exc}", file=sys.stderr)
         return 2
@@ -682,12 +1055,22 @@ def main(argv: list[str] | None = None) -> int:
         print(f"select_b3_tests: {name} has no check statuses ({ACCEPT_WITHOUT_STATUSES}), so no test passes its part "
               "of the rule", file=sys.stderr)
     if not record["b3_available"]:
-        print(f"select_b3_tests: no test is kept, so B3 is unavailable for {record['task_id']}: do not freeze "
-              f"{record['verifier_id']}", file=sys.stderr)
+        vid = record["verifier_id"]
+        if resumed:
+            print(f"select_b3_tests: an earlier run of this selection stopped part-way after writing its records; "
+                  f"{'without --dry-run, this run would finish' if a.dry_run else 'this run finished'} the withdrawal of "
+                  f"{vid}", file=sys.stderr)
+        print(f"select_b3_tests: no test is kept, so B3 is unavailable for {record['task_id']}: " + (
+              f"{vid} was taken out of the run: its task.json entry dropped and its spec frozen where it lies "
+              f"({record['unavailable_record']} records why), so that no run grades it and build-verifier and freeze "
+              "refuse it; nothing is left to do for B3 in this family" if record["withdrawn"] else
+              f"without --dry-run, {vid} is taken out of the run (its task.json entry dropped, its spec frozen where it "
+              f"lies, {UNAVAILABLE} written)"), file=sys.stderr)
     print(json.dumps({"task_id": record["task_id"], "verifier_id": record["verifier_id"], "kept": len(record["kept"]),
                       "removed": len(record["removed"]), "applied": record["applied"],
-                      "b3_available": record["b3_available"], "dry_run": a.dry_run,
-                      **({"tests": record["tests"]} if a.dry_run else {}), "next": record["next"]}, indent=2))
+                      "b3_available": record["b3_available"], "withdrawn": record["withdrawn"], "resumed": resumed,
+                      "dry_run": a.dry_run, **({"tests": record["tests"]} if a.dry_run else {}), "next": record["next"]},
+                     indent=2))
     return status
 
 

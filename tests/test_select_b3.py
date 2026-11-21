@@ -3,8 +3,17 @@
 A synthetic natural task holds a diff_derived verifier of eight tests in two files and the four S10 candidates. The
 grade results are fixture JSONs in the form ``tracecontract grade`` prints, with check messages that must never be
 copied into the selection record; some are made by ``docker_runner.verify_candidate`` itself, with the container
-replaced, so that their diagnostics are those of real single and repeated grades. No process starts here but git's
-ignore check.
+replaced, so that their diagnostics are those of real single and repeated grades.
+
+When no test is kept, B3 is unavailable for the family and the verifier is taken out of the run: ``unavailable.json``
+records it, ``task.json`` loses its entry and the spec is frozen where it lies, so build-verifier and freeze refuse it;
+on any failure nothing changes, and a step killed part-way is finished by the same command. A selection beside
+``unavailable.json`` is refused, and a dry run is refused wherever the run is. The pipeline tests then follow such a
+family on: the whole pre-flight passes on a complete family and notes B3 as unavailable, before and after the ordinary
+steps are tried on it (tests/test_preflight_natural.py's family), and evaluate grades every other verifier and no B3
+for it, beside a family whose B3 keeps its test (tests/natural_task_layout.py, with Docker replaced by stubs). No
+process starts here but git's: its ignore check, and in the pipeline tests the scratch repository's own git. Synthetic
+data only; not research evidence.
 """
 
 from __future__ import annotations
@@ -22,6 +31,9 @@ from pathlib import Path
 
 import pytest
 
+from natural_task_layout import NATURAL_TASKS, build_natural_task, init_git, use_layout
+from tracecontract import cli
+from tracecontract.analysis import analyze
 from tracecontract.sandbox import docker_runner
 from tracecontract.sandbox.docker_runner import HARNESS_VERSION
 from tracecontract.schemas import (
@@ -38,7 +50,7 @@ from tracecontract.schemas import (
     VerifierSpec,
     sha256_text,
 )
-from tracecontract.store import dump, load
+from tracecontract.store import dump, load, write_json
 from tracecontract.verifier import (
     build_spec,
     discover_checks,
@@ -170,6 +182,9 @@ REF = [{**dict.fromkeys(ALL, "passed"), K2: "skipped"},
        dict.fromkeys(ALL, "passed")]
 NOOP = {D1: "failed", D2: "passed", D3: "failed", D4: "error", K1: "failed", K2: "failed", G1: "passed", TOP: "failed"}
 KEPT = [D1, D4, K1, TOP]
+NOOP_PASSES = dict.fromkeys(ALL, "passed")  # the development no-op passes every test: none is kept, B3 is unavailable
+B1_SPEC, B3_SPEC = "verifiers/repo_tests/spec.json", "verifiers/diff_derived/spec.json"  # task.json's entries
+_REAL_RUN = subprocess.run  # before any test replaces it
 
 
 def _load():
@@ -199,9 +214,17 @@ def _candidate(cid: str, origin: CandidateOrigin, split: Split, patch: str = "")
                      produced_by="fixture")
 
 
+def _generation():
+    """The generation record of the B3 generator's run (synthetic)."""
+    return generation_record(run_id="wf_0a1b2c3d-4e5/diff-derived", config="config-A", prompt_sha256="ab" * 32,
+                             started_at="2026-11-19T10:00:00Z", ended_at="2026-11-19T10:10:00Z", wall_s=600.0,
+                             tool_calls=20, turns=12, run_record="build-session:subagents/workflows/x/agent-y.jsonl")
+
+
 def world(root: Path, files: dict[str, str] | None = None, **spec_update) -> Path:
-    """A natural task with the four S10 candidates and a built, unfrozen diff_derived verifier; returns its tests dir.
-    Its spec.json was written at ``BUILT``, before every grade of these tests."""
+    """A natural task with the four S10 candidates and a built, unfrozen diff_derived verifier, registered in task.json
+    after B1 as build-verifier registers it; returns its tests dir. Its spec.json was written at ``BUILT``, before every
+    grade of these tests."""
     td = root / "tasks" / T
     tests = td / "verifiers" / "diff_derived" / "tests"
     tests.mkdir(parents=True)
@@ -217,12 +240,10 @@ def world(root: Path, files: dict[str, str] | None = None, **spec_update) -> Pat
     dump(TaskManifest(task_id=T, family_id=T, population=Population.natural_pr_review, status="pending_review",
                       provenance="provenance.json", snapshot_source=SnapshotSource(repo_url="https://example.invalid/x",
                                                                                    commit="0" * 40),
-                      env_requirements=[], candidates=[f"candidates/{c.candidate_id}.json" for c in cands]), td / "task.json")
-    gen = generation_record(run_id="wf_0a1b2c3d-4e5/diff-derived", config="config-A", prompt_sha256="ab" * 32,
-                            started_at="2026-11-19T10:00:00Z", ended_at="2026-11-19T10:10:00Z", wall_s=600.0,
-                            tool_calls=20, turns=12, run_record="build-session:subagents/workflows/x/agent-y.jsonl")
+                      env_requirements=[], verifiers=[B1_SPEC, B3_SPEC],
+                      candidates=[f"candidates/{c.candidate_id}.json" for c in cands]), td / "task.json")
     spec = build_spec(verifier_id="diff_derived", task_id=T, condition=VerifierCondition.diff_derived, test_dir=tests,
-                      task_dir=td, requirement_map=requirement_map_from_tests(tests), generation=gen,
+                      task_dir=td, requirement_map=requirement_map_from_tests(tests), generation=_generation(),
                       require_generation=True)
     path = td / "verifiers" / "diff_derived" / "spec.json"
     dump(spec.model_copy(update=spec_update), path)
@@ -237,12 +258,12 @@ def _outcome(statuses: dict[str, str]) -> Outcome:  # as docker_runner.aggregate
     return Outcome.task_failure if "failed" in values else Outcome.passed
 
 
-def grade(path: Path, candidate: str, statuses: dict[str, str], *, n: int = 0, **update) -> Path:
-    """A grade result as ``tracecontract grade`` prints it."""
+def grade(path: Path, candidate: str, statuses: dict[str, str], *, n: int = 0, task: str = T, **update) -> Path:
+    """A grade result as ``tracecontract grade`` prints it (of task ``task``'s diff_derived verifier)."""
     checks = [CheckResult(check_id=c, status=s, duration_s=0.1, message="" if s == "passed" else f"{SECRET} {c}")
               for c, s in statuses.items()]
     outcome = update.pop("outcome", _outcome(statuses))
-    res = VerificationResult(run_id="adhoc", task_id=T, verifier_id="diff_derived", candidate_id=candidate,
+    res = VerificationResult(run_id="adhoc", task_id=task, verifier_id="diff_derived", candidate_id=candidate,
                              outcome=outcome, reward=1.0 if outcome == Outcome.passed else 0.0, checks=checks,
                              diagnostics=update.pop("diagnostics", [f"[run 0] {SECRET}"]),
                              started_at=f"2026-11-22T11:0{n}:00+00:00", finished_at=f"2026-11-22T11:0{n}:30+00:00",
@@ -302,6 +323,15 @@ def _state(tests: Path) -> tuple[str, bool]:
     return hash_test_dir(tests), (tests.parent / "selection.json").exists()
 
 
+def _files(task_dir: Path) -> dict[str, bytes]:
+    """Every file of the task directory, by its path there: what a refused or undone step must leave as it was."""
+    return {p.relative_to(task_dir).as_posix(): p.read_bytes() for p in sorted(task_dir.rglob("*")) if p.is_file()}
+
+
+def _sha(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
+
+
 # --------------------------------------------------------------------------- selection
 
 
@@ -309,8 +339,11 @@ def test_the_kept_tests_are_exactly_those_that_pass_on_the_reference_and_fail_on
     tests = world(tmp_path)
     before = hash_test_dir(tests)
     mapping = requirement_map_from_tests(tests)
+    task_bytes = (tests.parents[2] / "task.json").read_bytes()
     code, summary, _ = run(capsys, tests, *grades(tmp_path))
     assert code == 0 and summary["kept"] == 4 and summary["removed"] == 4 and summary["b3_available"] is True
+    assert summary["withdrawn"] is False and summary["resumed"] is False
+    assert (tests.parents[2] / "task.json").read_bytes() == task_bytes  # the verifier stays registered, as it was
     assert discover_checks(tests) == KEPT
     # removed: the functions with their decorators, attached comments and blank lines, an emptied class, their keys;
     # everything else stays as written (the comment inside the requirement dict included)
@@ -319,8 +352,10 @@ def test_the_kept_tests_are_exactly_those_that_pass_on_the_reference_and_fail_on
     assert requirement_map_from_tests(tests) == {c: mapping[c] for c in KEPT}
     assert lint_process_separated(tests) == []
     record = json.loads((tests.parent / "selection.json").read_text())
+    assert record["schema"] == "b3-selection:v2"
     assert record["kept"] == KEPT and record["removed"] == [D2, D3, K2, G1]
     assert record["applied"] is True and record["b3_available"] is True and record["grades_without_statuses"] == []
+    assert record["withdrawn"] is False and record["unavailable_record"] is None and record["next"] == sel.NEXT_KEPT
     assert record["tests_sha256_before"] == before and record["tests_sha256_after"] == hash_test_dir(tests)
     assert (record["reference_candidate"], record["noop_candidate"]) == (f"{T}-reference", f"{T}-noop-dev")
     why = {r["check_id"]: r["why"] for r in record["tests"]}
@@ -349,16 +384,87 @@ def test_the_kept_tests_are_exactly_those_that_pass_on_the_reference_and_fail_on
     assert code == 2 and "already made" in err
 
 
-def test_without_a_kept_test_the_tests_stay_and_b3_is_unavailable(tmp_path, capsys):
+def test_without_a_kept_test_b3_is_unavailable_and_the_verifier_is_taken_out_of_the_run(tmp_path, capsys):
     tests = world(tmp_path)
+    vdir, td = tests.parent, tests.parents[2]
     before = hash_test_dir(tests)
-    code, summary, err = run(capsys, tests, *grades(tmp_path, noop=dict.fromkeys(ALL, "passed")))
+    spec_bytes, task_bytes = (vdir / "spec.json").read_bytes(), (td / "task.json").read_bytes()
+    code, summary, err = run(capsys, tests, *grades(tmp_path, noop=NOOP_PASSES))
     assert code == 3 and summary["kept"] == 0 and summary["b3_available"] is False and summary["applied"] is False
+    assert summary["withdrawn"] is True and summary["resumed"] is False
+    assert "B3 is unavailable" in err and "diff_derived was taken out of the run" in err
+    assert "build-verifier and freeze refuse it" in err and "nothing is left to do for B3" in err
+    # The tests stay as they were, so that no verifier without checks is made. task.json lost its entry and nothing else
+    # (written as build-verifier writes it), and no temporary file is left.
     assert hash_test_dir(tests) == before
-    assert "B3 is unavailable" in err and "do not freeze diff_derived" in err
-    record = json.loads((tests.parent / "selection.json").read_text())
-    assert record["kept"] == [] and record["removed"] == ALL
-    assert "unavailable" in record["next"] and "do not freeze" in record["next"] and "D61" not in record["next"]
+    assert sorted(p.name for p in vdir.iterdir()) == ["selection.json", "spec.json", "tests", "unavailable.json"]
+    old = TaskManifest.model_validate_json(task_bytes)
+    assert old.verifiers == [B1_SPEC, B3_SPEC]
+    rest = old.model_copy(update={"verifiers": [B1_SPEC]})
+    assert (td / "task.json").read_text() == rest.model_dump_json(indent=2) + "\n"
+    assert sorted(p.name for p in td.iterdir()) == ["candidates", "task.json", "verifiers"]
+    # The selection record, which the pre-flight reads: b3_available false.
+    selection = json.loads((vdir / "selection.json").read_text())
+    assert selection["schema"] == "b3-selection:v2"
+    assert selection["kept"] == [] and selection["removed"] == ALL and selection["condition"] == "diff_derived"
+    assert selection["b3_available"] is False and selection["applied"] is False and selection["withdrawn"] is True
+    assert selection["unavailable_record"] == "verifiers/diff_derived/unavailable.json"
+    assert selection["next"] == sel.NEXT_UNAVAILABLE and "D61" not in selection["next"]
+    # The spec stays where every spec is, frozen as `tracecontract freeze` freezes it, at the selection's time, with the
+    # generator's generation record: its cost is found where every verifier's is (verifiers/*/spec.json).
+    graded, frozen = VerifierSpec.model_validate_json(spec_bytes), load(vdir / "spec.json", VerifierSpec)
+    assert frozen.frozen is True and frozen.frozen_at == selection["selected_at"] and frozen.checks_sha256 is not None
+    assert frozen.model_copy(update={"frozen": False, "frozen_at": None, "checks_sha256": None}) == graded
+    assert frozen.generation is not None and frozen.generation.run_id == "wf_0a1b2c3d-4e5/diff-derived"
+    assert vdir / "spec.json" in td.glob("verifiers/*/spec.json")
+    # unavailable.json: why, the sha256 of the selection's inputs, the time and what was taken out.
+    rec = json.loads((vdir / "unavailable.json").read_text())
+    assert {k: rec[k] for k in ("schema", "task_id", "verifier_id", "condition", "available", "rule", "recorded_by")} == {
+        "schema": "verifier-unavailable:v1", "task_id": T, "verifier_id": "diff_derived", "condition": "diff_derived",
+        "available": False, "rule": sel.RULE, "recorded_by": "scripts/select_b3_tests.py"}
+    assert rec["reason"] == ("the B3 selection keeps no test: of the 8 diff-derived tests, 2 did not pass in every "
+                             "reference grade and 8 did not fail (or error) on the development no-op")
+    assert rec["recorded_at"] == selection["selected_at"]
+    assert rec["selection"] == {"record": "verifiers/diff_derived/selection.json",
+                                "sha256": _sha((vdir / "selection.json").read_bytes())}
+    assert rec["inputs"] == {"grades": [{k: g[k] for k in ("role", "n", "file_sha256")} for g in selection["grades"]],
+                             "tests_dir": "verifiers/diff_derived/tests", "tests_sha256": before,
+                             "spec_sha256": _sha(spec_bytes), "task_json_sha256": _sha(task_bytes)}
+    assert rec["taken_out"] == {"task_json_entries": [B3_SPEC], "task_json_sha256_after": _sha((td / "task.json").read_bytes()),
+                                "spec": B3_SPEC, "spec_frozen_at": selection["selected_at"],
+                                "spec_sha256_after": _sha((vdir / "spec.json").read_bytes())}
+    assert SECRET not in json.dumps(rec) + json.dumps(selection)  # no check message or diagnostic is copied
+    assert "D61" not in json.dumps(rec) and "decision" not in rec["reason"]
+    # The ordinary steps cannot bring the verifier back (the reviewer's case): build-verifier and freeze refuse it, as a
+    # frozen verifier, and leave every file as it was.
+    files = _files(td)
+    gen = tmp_path / "gen.json"
+    gen.write_text(_generation().model_dump_json(indent=2), encoding="utf-8")
+    with pytest.raises(SystemExit, match="build-verifier refused: diff_derived is frozen"):
+        cli.main(["build-verifier", str(td), "diff_derived", "--condition", "diff_derived", "--generation-record", str(gen)])
+    with pytest.raises(ValueError, match="already frozen"):
+        cli.main(["freeze", str(td), "diff_derived"])
+    capsys.readouterr()
+    assert _files(td) == files
+    # A second selection, or its dry run, is refused: B3 was taken out of the run.
+    for dry in ((), ("--dry-run",)):
+        code, _, err = run(capsys, tests, *grades(tmp_path, noop=NOOP_PASSES), *dry)
+        assert code == 2 and "B3 was already taken out of the run" in err and "nothing is left to select" in err
+    assert _files(td) == files
+    # frozen against the script's advice while still registered: refused, and the message says what is wrong
+    dump(old, td / "task.json")
+    code, _, err = run(capsys, tests, *grades(tmp_path, noop=NOOP_PASSES))
+    assert code == 2 and f"task.json registers {B3_SPEC} and that spec is frozen" in err
+
+
+def test_a_dry_run_without_a_kept_test_takes_nothing_out(tmp_path, capsys):
+    tests = world(tmp_path)
+    td = tests.parents[2]
+    files, written = _files(td), (tests.parent / "spec.json").stat().st_mtime_ns
+    code, summary, err = run(capsys, tests, *grades(tmp_path, noop=NOOP_PASSES), "--dry-run")
+    assert code == 3 and summary["dry_run"] is True and summary["b3_available"] is False and summary["withdrawn"] is False
+    assert summary["next"] == sel.NEXT_UNAVAILABLE_DRY_RUN and "without --dry-run, diff_derived is taken out" in err
+    assert _files(td) == files and (tests.parent / "spec.json").stat().st_mtime_ns == written
 
 
 def test_when_every_test_qualifies_nothing_is_edited(tmp_path, capsys):
@@ -455,6 +561,111 @@ def test_written_tests_that_do_not_hash_as_checked_are_put_back(tmp_path, capsys
     assert "changed since the spec was built" in run(capsys, tests, *grades(tmp_path))[2]
 
 
+def test_a_failed_withdrawal_puts_task_json_and_the_spec_back_and_leaves_no_record(tmp_path, capsys, monkeypatch):
+    """The disk fills while the second record, task.json or the frozen spec is written: task.json and spec.json are as
+    they were (the spec with its times, which date its build for the grades), neither record nor a temporary file is
+    left, and a later selection with the same grades takes the verifier out."""
+    real = {"_claim": sel._claim, "_replace": sel._replace}
+
+    def full_disk_at(name: str):
+        """The writer of ``name`` (``_claim`` for a record, ``_replace`` for task.json and the spec), failing there."""
+        attr = "_claim" if name == "unavailable.json" else "_replace"
+
+        def fake(path, *rest):
+            if path.name == name:
+                raise OSError(28, "No space left on device")
+            real[attr](path, *rest)
+        return attr, fake
+
+    for name in ("unavailable.json", "task.json", "spec.json"):
+        tests = world(tmp_path / name)
+        td, spec = tests.parents[2], tests.parent / "spec.json"
+        files, written = _files(td), spec.stat().st_mtime_ns
+        attr, fake = full_disk_at(name)
+        monkeypatch.setattr(sel, attr, fake)
+        code, out, err = run(capsys, tests, *grades(tmp_path / name, noop=NOOP_PASSES))
+        assert code == 2 and out is None, err
+        assert "writing failed (OSError" in err and "task.json and spec.json are as they were" in err, err
+        assert "no record was written" in err
+        assert _files(td) == files and spec.stat().st_mtime_ns == written, name
+        assert not [p for p in td.rglob(".b3_select_*")], name  # no temporary file is left
+        monkeypatch.setattr(sel, attr, real[attr])
+        assert run(capsys, tests, *grades(tmp_path / name, noop=NOOP_PASSES))[0] == 3
+        assert load(spec, VerifierSpec).frozen and (tests.parent / "unavailable.json").is_file()
+        assert load(td / "task.json", TaskManifest).verifiers == [B1_SPEC]
+
+
+def test_a_withdrawal_whose_files_changed_meanwhile_takes_nothing_out(tmp_path):
+    """task.json, the spec or the tests changed between the reading and the writing (a concurrent change): nothing is
+    taken out and no record is left; the change itself stays."""
+    changes = {
+        "task.json": lambda td, tests: (td / "task.json").write_text(
+            (td / "task.json").read_text(encoding="utf-8") + "\n", encoding="utf-8"),
+        "spec.json": lambda td, tests: (tests.parent / "spec.json").write_text(
+            (tests.parent / "spec.json").read_text(encoding="utf-8") + "\n", encoding="utf-8"),
+        "the tests": lambda td, tests: (tests / "test_new.py").write_text("x = 1\n", encoding="utf-8"),
+    }
+    for n, (what, change) in enumerate(changes.items()):
+        tests = world(tmp_path / str(n))
+        td, target = tests.parents[2], tests.parent / "selection.json"
+        v = sel.load_verifier(tests)
+        w = sel.plan_withdrawal(v, target, target, "2026-11-22T12:00:00+00:00")
+        change(td, tests)
+        files = _files(td)
+        with pytest.raises(sel.WrittenError, match="changed while the selection ran.*as they were; no record was written"):
+            sel.withdraw(v, w, target, "{}\n", "{}\n")
+        assert _files(td) == files, what
+
+
+def test_an_interrupted_withdrawal_is_finished_by_running_the_same_command_again(tmp_path, capsys):
+    """A withdrawal killed part-way (records written; task.json not yet rewritten, or the spec not yet frozen) is not
+    refused as a selection already made: the same command finishes it, ending byte for byte where an uninterrupted step
+    ends, and its dry run says so and writes nothing. Other grades cannot finish it."""
+    tests = world(tmp_path)
+    vdir, td = tests.parent, tests.parents[2]
+    args = grades(tmp_path, noop=NOOP_PASSES)
+    task_bytes, spec_bytes = (td / "task.json").read_bytes(), (vdir / "spec.json").read_bytes()
+    assert run(capsys, tests, *args)[0] == 3
+    done = _files(td)
+
+    def interrupted(*, registered: bool, unavailable: bool) -> None:
+        """The state of a step killed after its records (or the first of them), before the spec was frozen: task.json
+        as it was (``registered``) or rewritten, and the spec as graded, never rewritten before the last step."""
+        (td / "task.json").write_bytes(task_bytes if registered else done["task.json"])
+        (vdir / "spec.json").write_bytes(spec_bytes)
+        os.utime(vdir / "spec.json", (BUILT, BUILT))
+        if not unavailable:
+            (vdir / "unavailable.json").unlink()
+
+    for k, state in enumerate([dict(registered=True, unavailable=False), dict(registered=True, unavailable=True),
+                               dict(registered=False, unavailable=True)]):
+        interrupted(**state)
+        before = _files(td)
+        # still registered and unfrozen, or unregistered and unfrozen: not what the records say yet
+        assert load(vdir / "spec.json", VerifierSpec).frozen is False
+        assert (B3_SPEC in load(td / "task.json", TaskManifest).verifiers) is state["registered"]
+        code, summary, err = run(capsys, tests, *args, "--dry-run")
+        assert code == 3 and summary["resumed"] is True and summary["withdrawn"] is False, err
+        assert "stopped part-way" in err and _files(td) == before, k
+        code, summary, err = run(capsys, tests, *args)
+        assert code == 3 and summary["resumed"] is True and summary["withdrawn"] is True, err
+        assert "finished the withdrawal" in err
+        assert _files(td) == done, k  # the records, task.json and the frozen spec, as the uninterrupted step left them
+    # Other grades (here also keeping no test) cannot finish another selection's withdrawal: refused, nothing changes.
+    interrupted(registered=True, unavailable=True)
+    before = _files(td)
+    (tmp_path / "other").mkdir()
+    other = grades(tmp_path / "other", ref=[dict.fromkeys(ALL, "passed")] * 3, noop={**NOOP_PASSES, D1: "skipped"})
+    code, _, err = run(capsys, tests, *other)
+    assert code == 2 and "refused, nothing written" in err and "records another selection" in err
+    assert "run the command that began it again, with the same grade files" in err
+    assert _files(td) == before
+    # Grades that keep tests are refused beside those records: they would contradict them.
+    (tmp_path / "keeps").mkdir()
+    code, _, err = run(capsys, tests, *grades(tmp_path / "keeps"))
+    assert code == 2 and "would contradict it" in err and _files(td) == before
+
+
 def test_the_record_goes_beside_the_spec_or_outside_every_verifiers_directory_and_git(tmp_path, capsys):
     tests = world(tmp_path)
     args = grades(tmp_path)
@@ -498,10 +709,12 @@ def test_a_grade_without_check_statuses_is_refused_unless_accepted(tmp_path, cap
     args = grades(tmp_path / "b")
     killed = real_grade(monkeypatch, tmp_path, tests, f"{T}-noop-dev", ["no results"], name="killed")
     code, summary, err = run(capsys, tests, *args[:4], "--noop", killed, sel.ACCEPT_WITHOUT_STATUSES)
-    assert code == 3 and summary["kept"] == 0 and summary["b3_available"] is False
-    assert "noop grade 1 has no check statuses" in err and "do not freeze" in err
+    assert code == 3 and summary["kept"] == 0 and summary["b3_available"] is False and summary["withdrawn"] is True
+    assert "noop grade 1 has no check statuses" in err and "nothing is left to do for B3" in err
     record = json.loads((tests.parent / "selection.json").read_text())
     assert record["grades_without_statuses"] == ["noop grade 1"] and record["grades"][3]["n_statuses"] == 0
+    assert json.loads((tests.parent / "unavailable.json").read_text())["reason"].endswith(
+        f"; noop grade 1 had no check statuses ({sel.ACCEPT_WITHOUT_STATUSES}), so no test passed its part of the rule")
     # an environment failure is refused even then: grade again
     tests = world(tmp_path / "c")
     args = grades(tmp_path / "c")
@@ -613,6 +826,56 @@ def test_a_verifier_that_is_not_an_unfrozen_b3_built_from_these_tests_is_refused
     assert "must be <task>/verifiers" in _refused(capsys, loose, *grades(tmp_path / "loose"))
 
 
+def _refused_whole(capsys, tests: Path, *argv) -> str:
+    """As :func:`_refused`, with every file of the task as it was (task.json and spec.json above all)."""
+    files = _files(tests.parents[2])
+    err = _refused(capsys, tests, *argv)
+    assert _files(tests.parents[2]) == files
+    return err
+
+
+def test_taking_b3_out_of_the_run_is_refused_where_it_cannot_be_done(tmp_path, capsys):
+    """Refused before anything is written, when no test is kept, and so is its dry run, which never promises what the
+    run refuses: a record elsewhere than beside the spec, where the pre-flight reads it; an unavailable.json there
+    without the selection it belongs to; and a verifier that verifiers_extra.json registers, which the run grades
+    whatever task.json says."""
+    for dry in ((), ("--dry-run",)):
+        root = tmp_path / ("dry" if dry else "run")
+        tests = world(root / "out")
+        elsewhere = root / "runrec" / "b3-selection.json"
+        err = _refused_whole(capsys, tests, *grades(root / "out", noop=NOOP_PASSES), "--out", elsewhere, *dry)
+        assert "goes in its default place" in err and "run again without --out" in err and not elsewhere.exists()
+        tests = world(root / "again")
+        (tests.parent / "unavailable.json").write_text("{}\n", encoding="utf-8")
+        err = _refused_whole(capsys, tests, *grades(root / "again", noop=NOOP_PASSES), *dry)
+        assert "unavailable.json exists beside the tests without selection.json" in err
+        tests = world(root / "sidecar")
+        write_json({"verifiers": [B3_SPEC]}, tests.parents[2] / "verifiers_extra.json")
+        err = _refused_whole(capsys, tests, *grades(root / "sidecar", noop=NOOP_PASSES), *dry)
+        assert f"verifiers_extra.json registers {B3_SPEC}" in err
+
+
+def test_a_selection_beside_an_unavailable_record_is_refused(tmp_path, capsys):
+    """After a withdrawal, the spec rebuilt from the same tests (by hand: build-verifier refuses the frozen spec), the
+    selection record deleted and the tests graded again: a selection that keeps tests, or its dry run, is refused, and
+    so is one that keeps none, since either would contradict unavailable.json (the reviewer's case)."""
+    tests = world(tmp_path)
+    vdir, td = tests.parent, tests.parents[2]
+    assert run(capsys, tests, *grades(tmp_path, noop=NOOP_PASSES))[0] == 3
+    dump(build_spec(verifier_id="diff_derived", task_id=T, condition=VerifierCondition.diff_derived, test_dir=tests,
+                    task_dir=td, requirement_map=requirement_map_from_tests(tests), generation=_generation()),
+         vdir / "spec.json")
+    os.utime(vdir / "spec.json", (BUILT, BUILT))
+    (vdir / "selection.json").unlink()
+    (tmp_path / "again").mkdir()
+    for dry in ((), ("--dry-run",)):
+        err = _refused_whole(capsys, tests, *grades(tmp_path / "again"), *dry)
+        assert "unavailable.json beside the tests records B3 as unavailable" in err and "would contradict it" in err
+        err = _refused_whole(capsys, tests, *grades(tmp_path / "again", noop=NOOP_PASSES), *dry)
+        assert "unavailable.json exists beside the tests without selection.json" in err
+    assert sorted(p.name for p in vdir.iterdir()) == ["spec.json", "tests", "unavailable.json"]
+
+
 def test_a_result_that_cannot_be_edited_or_does_not_lint_clean_is_refused(tmp_path, capsys):
     not_literal = B3.replace("CHECK_REQUIREMENTS = {", "CHECK_REQUIREMENTS = dict(**{").replace('["D4"],\n}', '["D4"],\n})')
     tests = world(tmp_path / "a", {"test_b3.py": not_literal, "test_classes.py": CLASSES})
@@ -621,3 +884,167 @@ def test_a_result_that_cannot_be_edited_or_does_not_lint_clean_is_refused(tmp_pa
                           "    r = run_python(_code(\"mod.flag()\"))\n    assert r.ok\n")
     tests = world(tmp_path / "b", {"test_b3.py": unlinted, "test_classes.py": CLASSES})
     assert "do not lint clean" in _refused(capsys, tests, *grades(tmp_path / "b"))
+
+
+# --------------------------------------------------------------------------- the rest of the pipeline
+
+# The B3 test of a family of tests/natural_task_layout.py: a missing second argument counts as zero.
+B3_NATURAL = textwrap.dedent('''\
+    """B3 test of a synthetic natural family."""
+    from tc_sandbox import run_python
+
+    CHECK_REQUIREMENTS = {"test_second_missing_value": ["D1"]}
+
+
+    def test_second_missing_value():
+        r = run_python("from fxnat.mod import add\\nresult = add(2, None)")
+        assert r.ok and r.value == 2
+''')
+
+
+@pytest.fixture()
+def scratch_git(monkeypatch):
+    """For the pipeline tests: git answers in the scratch repository (init, commit, show, check-ignore, rev-parse), the
+    host is idle and its tree clean (``docker ps`` and ``git status`` answer nothing, as in the pre-flight's own tests),
+    and no other process starts (Docker is replaced by stubs)."""
+
+    def guarded(cmd, *a, **kw):
+        if list(cmd[:2]) in (["docker", "ps"], ["git", "status"]):
+            return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+        if list(cmd[:1]) == ["git"]:
+            return _REAL_RUN(cmd, *a, **kw)
+        raise AssertionError(f"no process but git may start in these tests: {list(cmd[:1])}")
+    monkeypatch.setattr(subprocess, "run", guarded)
+
+
+def _module(name: str, path: Path):
+    spec = importlib.util.spec_from_file_location(name, path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def _b3_grades(root: Path, task: str, check: str, noop: str) -> list[str]:
+    """The selection's grades of ``task``'s one B3 test ``check``: passed in three single grades of the reference, and
+    ``noop`` in a single grade of the development no-op."""
+    root.mkdir(parents=True, exist_ok=True)
+    refs = [str(grade(root / f"{task}-ref-{n}.json", f"{task}-reference", {check: "passed"}, n=n, task=task))
+            for n in (1, 2, 3)]
+    return ["--reference", *refs, "--noop",
+            str(grade(root / f"{task}-noop.json", f"{task}-noop-dev", {check: noop}, n=5, task=task))]
+
+
+def _main(capsys, entry, *argv) -> int | str:
+    """``entry(argv)`` (a script's or the CLI's main) and its exit code; what it prints is read and dropped."""
+    try:
+        code = entry([str(a) for a in argv])
+    except SystemExit as exc:
+        code = exc.code
+    capsys.readouterr()
+    return 0 if code is None else code
+
+
+def test_the_whole_pre_flight_passes_and_notes_b3_as_unavailable(tmp_path, tmp_path_factory, capsys, scratch_git):
+    """The complete family of the pre-flight's own tests (tests/test_preflight_natural.py), whose B3 is, as the
+    selection finds it, built from its tests and not frozen: the pre-flight fails on that verifier. Once the selection
+    keeps no test, the whole pre-flight passes with one note: B3 is unavailable for the family. The ordinary steps that
+    follow a selection that keeps tests, build-verifier and freeze, are then refused and change nothing, so the
+    pre-flight still notes B3 as unavailable (before, they put a frozen B3 of the rejected tests back into task.json, and
+    the pre-flight passed with no note)."""
+    family = _module("preflight_natural_world", R / "tests" / "test_preflight_natural.py")
+    pf = _module("preflight_final_run", R / "scripts" / "preflight_final_run.py")
+    pf.R = tmp_path  # the scratch repository, as the pre-flight's own tests set it
+    td = family.build(tmp_path)
+    tid, tests = family.TID, td / "verifiers" / "diff_derived" / "tests"
+    dump(build_spec(verifier_id="diff_derived", task_id=tid, condition=VerifierCondition.diff_derived, test_dir=tests,
+                    task_dir=td, requirement_map=requirement_map_from_tests(tests), generation=_generation()),
+         tests.parent / "spec.json")
+    os.utime(tests.parent / "spec.json", (BUILT, BUILT))
+
+    def preflight() -> tuple[int, list[str], list[str]]:
+        code = pf.main(str(td), *family.RUN)
+        lines = capsys.readouterr().out.splitlines()
+        fails, notes = ([ln[len(kind) + 2:] for ln in lines if ln.startswith(f"{kind}: ")] for kind in ("FAIL", "NOTE"))
+        return code, fails, notes
+
+    code, fails, _ = preflight()
+    assert code == 1 and f"{tid}: verifier diff_derived not frozen" in fails
+    (check,) = discover_checks(tests)
+    runrec = tmp_path_factory.mktemp("runrec")
+    assert _main(capsys, sel.main, tests, *_b3_grades(runrec, tid, check, "passed")) == 3
+    code, fails, notes = preflight()
+    assert (code, fails) == (0, []) and len(notes) == 1, (fails, notes)
+    unavailable_note = (f"{tid}: B3 (diff_derived) is unavailable for this family: its test selection kept no test "
+                        "(verifiers/diff_derived/selection.json, b3_available false")
+    assert notes[0].startswith(unavailable_note)
+    files = {p: p.read_bytes() for p in sorted(td.rglob("*")) if p.is_file()}
+    gen = runrec / "diff-derived.json"
+    gen.write_text(_generation().model_dump_json(indent=2), encoding="utf-8")
+    refused = _main(capsys, cli.main, "build-verifier", td, "diff_derived", "--condition", "diff_derived",
+                    "--generation-record", gen)
+    assert isinstance(refused, str) and "diff_derived is frozen" in refused
+    with pytest.raises(ValueError, match="already frozen"):
+        cli.main(["freeze", str(td), "diff_derived"])
+    capsys.readouterr()
+    assert {p: p.read_bytes() for p in sorted(td.rglob("*")) if p.is_file()} == files
+    code, fails, notes = preflight()
+    assert (code, fails) == (0, []) and len(notes) == 1 and notes[0].startswith(unavailable_note), (fails, notes)
+
+
+def test_after_b3_is_taken_out_the_run_grades_no_b3_for_the_family_and_the_analysis_runs(tmp_path, capsys, monkeypatch,
+                                                                                         scratch_git):
+    """One run of two accepted families with B3 among its conditions: NP-90, whose B3 selection kept no test, and NP-91,
+    whose B3 kept its test and was frozen. Before the selection, evaluate refuses the run on the unfrozen B3 in
+    task.json; after it, evaluate refuses nothing, grades B1 and no B3 for NP-90 (its B3 is frozen where it lies but
+    registered nowhere), and records the verifiers it graded; the analysis of the run has B3 rows for NP-91.
+
+    What says that NP-90's B3 is unavailable, rather than missing for another reason, is the family's records beside
+    its tests (selection.json, unavailable.json), which the pre-flight reads. evaluate's manifest and the analysis do not
+    read them yet: reporting B3 as unavailable there is left to those modules (outside this script), so nothing here
+    takes NP-90's missing B3 rows for that report."""
+    root, runrec = tmp_path / "repo", tmp_path / "runrec"
+    root.mkdir()
+    init_git(root)
+    gone, kept = build_natural_task(root, "NP-90"), build_natural_task(root, "NP-91")
+    calls = use_layout(monkeypatch, root)
+    runrec.mkdir()
+    gen = runrec / "diff-derived.json"
+    gen.write_text(_generation().model_dump_json(indent=2), encoding="utf-8")
+    for nt in (gone, kept):
+        assert _main(capsys, cli.main, "freeze", nt.task_dir, "repo_tests") == 0
+        tests = nt.task_dir / "verifiers" / "diff_derived" / "tests"
+        tests.mkdir(parents=True)
+        (tests / "test_b3.py").write_text(B3_NATURAL, encoding="utf-8")
+        assert _main(capsys, cli.main, "build-verifier", nt.task_dir, "diff_derived", "--condition", "diff_derived",
+                     "--generation-record", gen) == 0
+        assert load(nt.task_dir / "task.json", TaskManifest).verifiers == [B1_SPEC, B3_SPEC]
+        os.utime(tests.parent / "spec.json", (BUILT, BUILT))
+    out_root = root / "data" / "natural" / "runs"
+    evaluate = ["evaluate", gone.task_dir, kept.task_dir, "--run-id", "natural-test", "--pilot", "--conditions",
+                "repo_tests", "diff_derived", "--out-root", out_root]
+    refused = _main(capsys, cli.main, *evaluate)
+    assert isinstance(refused, str) and "diff_derived is not frozen" in refused and not out_root.exists()
+    for nt, noop in ((gone, "passed"), (kept, "failed")):
+        tests = nt.task_dir / "verifiers" / "diff_derived" / "tests"
+        (check,) = discover_checks(tests)
+        assert _main(capsys, sel.main, tests, *_b3_grades(runrec, nt.task_id, check, noop)) == (3 if nt is gone else 0)
+    assert _main(capsys, cli.main, "freeze", kept.task_dir, "diff_derived") == 0
+    assert load(gone.task_dir / "task.json", TaskManifest).verifiers == [B1_SPEC]
+    assert _main(capsys, cli.main, *evaluate) == 0
+    run_dir = out_root / "natural-test"
+    m = json.loads((run_dir / "manifest.json").read_text(encoding="utf-8"))
+    assert m["conditions"] == ["repo_tests", "diff_derived"]
+    assert {t["task_id"]: sorted(t["verifiers"]) for t in m["tasks"]} == {"NP-90": ["repo_tests"],
+                                                                          "NP-91": ["diff_derived", "repo_tests"]}
+    assert sorted({(c["task_dir"].name, c["verifier_id"]) for c in calls}) == [
+        ("NP-90", "repo_tests"), ("NP-91", "diff_derived"), ("NP-91", "repo_tests")]
+    # NP-90's records, which say why the run has no B3 verdict for it
+    vdir = gone.task_dir / "verifiers" / "diff_derived"
+    selection, unavailable = (json.loads((vdir / name).read_text(encoding="utf-8"))
+                              for name in ("selection.json", "unavailable.json"))
+    assert selection["b3_available"] is False and selection["withdrawn"] is True and unavailable["available"] is False
+    assert load(vdir / "spec.json", VerifierSpec).frozen and unavailable["taken_out"]["task_json_entries"] == [B3_SPEC]
+    a = analyze(run_dir, root / NATURAL_TASKS, allow_proposed=True, n_boot=50)
+    assert list(a["conditions"]) == ["repo_tests", "diff_derived"]
+    assert a["per_task"]["NP-90"]["repo_tests"] and a["per_task"]["NP-91"]["diff_derived"]
+    assert (run_dir / "analysis.md").is_file()
