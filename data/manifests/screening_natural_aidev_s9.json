@@ -1,0 +1,6061 @@
+{
+  "schema": "tracecontract/natural-screening-s9/v1",
+  "population": "natural:pr-review",
+  "stratum": "natural-pr-v1",
+  "stage": "S9",
+  "decision_log": [
+    "D47",
+    "D48",
+    "D50"
+  ],
+  "protocol": "experiments/protocol.md §15.6 (v0.7, sha256 46bfa7a3468976b1a24d5e8dcc39421d20e2aa28389e4cd47b629c87508ea5fe)",
+  "created_utc": "2026-11-21T05:04:53Z",
+  "corrected_utc": "2026-11-21T05:58:09Z",
+  "generator": "S9 aggregation step of the round-4 workflow (not a repository script), corrected by its batch-7 re-judgment step (correction, D50); every derived field follows the rules below",
+  "privacy": "ids, SHAs, categorical judgments, counts and checked model-written paraphrases only: no login, mention handle, e-mail address, URL, repository name, model identifier or verbatim comment, PR or issue text",
+  "inputs": {
+    "sample_manifest": {
+      "path": "data/manifests/screening_natural_aidev.json",
+      "sha256": "92ed61d19b4005d13f95202f41c802cb69f197234c14b559c8b23018f9e1beae",
+      "rows": 150
+    },
+    "fetch_record": {
+      "path": "/home/user/ext/aidev-v5-work/s9_fetch_record.json",
+      "in_repo": false,
+      "sha256": "05cddf6ac6e6ca283423a71a6632f9e4e39b4c5bdf9066f03d325db33ce85083",
+      "schema": "tracecontract/s9-fetch-record/v1",
+      "in_repo_record": "aidev-v5-s9-repo-fetches"
+    },
+    "correction_record": {
+      "path": "/home/user/ext/aidev-v5-work/s9_correction_record.json",
+      "in_repo": false,
+      "sha256": "0bf4eb0f1c00d631aba8149f7f9bd78230e37f43df1609beb08491d1d882eb89",
+      "schema": "tracecontract/s9-correction-record/v1",
+      "use": "the diffs of the 12 comments re-judged in batch 7 (s9_diffs_v2/) to the first later commit of the PR head that touches the commented file, that commit's S8a attribution, and batch_7.jsonl"
+    },
+    "judgment_batches": [
+      {
+        "batch": 1,
+        "comments": 25,
+        "first_comment_id": 1904732964,
+        "last_comment_id": 2150362939,
+        "sha256": "1093e3d56334516cb359ba3f8d28d509969396178360608c0268c316fb9cba06"
+      },
+      {
+        "batch": 2,
+        "comments": 25,
+        "first_comment_id": 2156570999,
+        "last_comment_id": 2202317717,
+        "sha256": "adaa8efedac3e9e3a6139baa94d13c8575eafae4b4de37816aa4cbd9421ca2e4"
+      },
+      {
+        "batch": 3,
+        "comments": 25,
+        "first_comment_id": 2202736609,
+        "last_comment_id": 2214277783,
+        "sha256": "6a0c32709d53c0a89468b3cc590b792c092b9c61d781323b2c44fc0812285edc"
+      },
+      {
+        "batch": 4,
+        "comments": 25,
+        "first_comment_id": 2214774126,
+        "last_comment_id": 2277957986,
+        "sha256": "69ac340b6b8c6ce1ecea714f9a63973c3336efcc678d73a836d11f0d31f6e201"
+      },
+      {
+        "batch": 5,
+        "comments": 25,
+        "first_comment_id": 2279614274,
+        "last_comment_id": 2406291283,
+        "sha256": "ca62a622a529eb69d9ead17f1e8f680b001e8ed68d1f8e4bc135caf0a9d29a97"
+      },
+      {
+        "batch": 6,
+        "comments": 25,
+        "first_comment_id": 2415830344,
+        "last_comment_id": 3072702941,
+        "sha256": "2bdea7653a180d35ad047a4ba4e552fe66a64f16b084abc4584530994307f21e"
+      },
+      {
+        "batch": 7,
+        "comments": 12,
+        "first_comment_id": 2110886365,
+        "last_comment_id": 2477327497,
+        "sha256": "2058ddf01df5f37d296ff1370de098ef50ca70725165d6f4cc08697d5bfa3428",
+        "source": "correction record"
+      }
+    ],
+    "judgments": {
+      "records": 12,
+      "record_unit": "one batch and one judge: 6 batches x 2 judges, 25 comments each",
+      "sha256_canonical": "01ecc5be486138a113b41287399ceb4793713f6bba83e631fedc8561c3ecc5b4",
+      "canonical_form": "json.dumps(records, sort_keys=True, separators=(',', ':'), ensure_ascii=False), UTF-8, of the list as the workflow passed it (comment ids as strings)",
+      "superseded": "the 24 judgments of the 12 comments re-judged in batch 7 (2 judges each) are superseded; they stay in each row's superseded key and no count uses them"
+    },
+    "judgments_batch_7": {
+      "records": 2,
+      "record_unit": "one judge: batch 7, 2 judges, 12 comments each",
+      "sha256_canonical": "496054a51f8ba191151efb8ffc381c6a7e6d76ec9cc9c450440f707a8be0ba80",
+      "canonical_form": "json.dumps(records, sort_keys=True, separators=(',', ':'), ensure_ascii=False), UTF-8, of the list as the workflow passed it (records {judge, result: {judgments}}, comment ids as strings)"
+    }
+  },
+  "judges": {
+    "number": 2,
+    "kind": "model agents; protocol §15.6 calls for two independent configuration-A agents. Their outputs reached this step from the workflow, for batch 7 as for batches 1 to 6, as judge 1 and judge 2; model identifiers stay in private run records",
+    "inputs": "batches 1 to 6 of the fetch record: per comment the pseudonymised comment text, diff hunk, PR title, linked issue title and body, and the pseudonymised diff of the commented file between original_commit_id and later_commit_sha (none where the commits could not be fetched). Batch 7 of the correction record, for the 12 comments whose diff was empty: the same text fields (2 model identifiers in one issue body masked) and the pseudonymised diff between original_commit_id and diff_commit, the first later commit of the PR head that touches the commented file (still empty for the one comment where no such commit exists)",
+    "fields": {
+      "request_type": [
+        "behaviour_change",
+        "defect_report",
+        "refactor_design",
+        "removal_cleanup",
+        "style_lint_docs",
+        "tests_only",
+        "question_unclear",
+        "process_other"
+      ],
+      "addressed": [
+        "yes",
+        "partly",
+        "no",
+        "unclear"
+      ],
+      "testable_offline": [
+        "yes",
+        "no",
+        "na"
+      ],
+      "confidence": [
+        "high",
+        "medium",
+        "low"
+      ]
+    },
+    "standing": "model proposals, not human labels; queued for human coding"
+  },
+  "rules": {
+    "judge_verdict": "qualifies when the judge's request_type is behaviour_change or defect_report, its addressed is yes and its testable_offline is yes; fails otherwise",
+    "qualifies": "both judges' verdicts are qualifies; both commits were reachable in the S9 fetch: original_commit_id and the commit used (the sample's later_commit_sha, or diff_commit on a row re-judged in batch 7); and the commit used is agent-attributed under the S8a rule of scripts/screen_aidev.py (true by construction for the sample's later commit, which passed S8a; applied anew to each diff_commit)",
+    "failure_reason": [
+      "null: the comment qualifies",
+      "commits_not_fetchable: a commit was not reachable because its repository could not be fetched; the comment fails S9 with this reason whatever the judgments",
+      "addressing_commit_not_agent_attributed: the commit used is not agent-attributed under the S8a rule; the comment fails S9 with this reason whatever the judgments (no row has it)",
+      "judges_disagree: one verdict is qualifies and the other fails; the comment is excluded and counted separately, not as a failure",
+      "otherwise both verdicts fail, and the reason is the first failed condition in the order of the protocol's criteria: not_behaviour_change_or_defect, not_addressed, not_testable_offline"
+    ],
+    "failed_conditions": "every condition not met, in the order commits_reachable, commit_agent_attributed, request_type, addressed, testable_offline; a judged condition is not met when at least one judge says so (the rule is a conjunction over both judges), so for a disagreement it lists what the dissenting judge rejected; commit_agent_attributed does not apply where no later commit touches the file",
+    "judges_agree": "the two judges' verdicts are the same",
+    "agent": "the S9 sample's agent attribution",
+    "fetch_status": "the repository's status in the fetch record: fetched, clone_failed or over_cap",
+    "diff_status": "ok: non-empty diff of the commented file between original_commit_id and the commit used (later_commit_sha; diff_commit on a row re-judged in batch 7); empty: the commit used does not change the file, which after the correction holds only for the row where no later commit of the PR head changes it; unavailable: not fetched",
+    "diff_commit": "only on the 12 rows re-judged in batch 7: the commit the batch-7 diff was computed against (correction record), the first later commit of the PR head that touches the commented file, found by walking the PR head's history from original_commit_id along the ancestry path; null when no later commit touches the file. diff_commit_agent_attributed: the S8a rule applied to that commit's AIDev pr_commits row (bot author account or agent co-author trailer); null when there is no commit. On every other row the commit used is the sample's later_commit_sha",
+    "superseded": "a row re-judged in batch 7 keeps its batch, diff commit, diff status, judgments and outcome from batches 1 to 6 under superseded, with the reason; every count, kappa, list and paraphrase uses the current values",
+    "kappa": "Cohen's kappa, (p_o - p_e) / (1 - p_e), with p_e from each judge's own marginals; request_type collapsed to behaviour_or_defect (behaviour_change, defect_report) versus other; addressed and testable_offline on their recorded categories; on the current judgments (batch 7 for the 12 re-judged comments)",
+    "verification": "for the 30 comments that at least one judge qualified in batches 1 to 6, both commits were confirmed as commit objects in the bare clones (git cat-file with every transport protocol disallowed, so nothing was fetched), the later commit's only parent is original_commit_id, and the diff file matches its sha256 in the fetch record. For the 12 rows re-judged in batch 7, with transports disallowed in the same way: original_commit_id and the PR head ref are commits in the bare clone; for the 11 with a diff_commit, it is a commit, a descendant of original_commit_id and an ancestor of the PR head, the first commit that git rev-list --ancestry-path lists for the commented path, every commit before it on the ancestry path leaves the file's blob as reviewed, its blob is the correction record's, and the diff file matches its sha256 and size in the correction record; for the other one, git rev-list lists no commit after original_commit_id on the PR head for the path, and the blob at the PR head equals the reviewed one",
+    "s11_families": "protocol §15.6, families and stopping: a family is one PR with a qualifying comment, and its earliest qualifying comment (AIDev created_at, then the lowest id) becomes the task's correction; at most 2 families come from one repository, its earliest PRs by creation time (AIDev pull_request created_at, then the lowest PR id). Applied here to the S9 survivors, before S10"
+  },
+  "paraphrase_policy": {
+    "stored": "only for qualifying comments: judge 1's requirement_paraphrase, after the checks below; null otherwise",
+    "checks": [
+      "no login: whole-word, case-insensitive match against the logins of every participant of the sampled PRs (PR authors, review-comment authors on those PRs, linked-issue authors, commit authors and committers) and the repositories' owner names, read from the AIDev files in memory only",
+      "no mention handle and no e-mail address (the patterns of scripts/scan_tracked_files.py)",
+      "no URL and no domain name",
+      "no quoted text: no quotation marks or backticks, and no run of 6 or more consecutive words shared with the raw review comment, PR title, PR body, linked issue title or issue body",
+      "no pseudonymisation placeholder (role label or removed-address marker)"
+    ],
+    "result": "31 of 31 paraphrases passed; longest shared word run 5"
+  },
+  "summary": {
+    "comments": 150,
+    "qualifying": 31,
+    "excluded_judges_disagree": 2,
+    "failed": 117,
+    "failed_by_reason": {
+      "commits_not_fetchable": 19,
+      "addressing_commit_not_agent_attributed": 0,
+      "not_behaviour_change_or_defect": 92,
+      "not_addressed": 6,
+      "not_testable_offline": 0
+    },
+    "failed_conditions_among_failed": {
+      "commits_reachable": 19,
+      "commit_agent_attributed": 0,
+      "request_type": 108,
+      "addressed": 47,
+      "testable_offline": 108
+    },
+    "judges_agree": 148,
+    "commits_reachable": 131,
+    "by_fetch_status": {
+      "fetched": 131,
+      "clone_failed": 17,
+      "over_cap": 2
+    },
+    "by_diff_status": {
+      "ok": 130,
+      "empty": 1,
+      "unavailable": 19
+    },
+    "qualifying_distinct_prs": 25,
+    "qualifying_distinct_repositories": 14,
+    "s11_families": {
+      "rule": "see rules.s11_families",
+      "standing": "provisional: computed on the S9 survivors before S10 has run. S10 can lower this count but not raise it; if S10 rejects a family in a repository with more than 2 qualifying PRs, that repository's next PR by creation time takes its place. The stop at 30 accepted tasks is not reached",
+      "families": 20,
+      "repositories": 14,
+      "qualifying_prs_beyond_the_cap": 5,
+      "repositories_with_more_than_2_qualifying_prs": 2,
+      "prs_with_several_qualifying_comments": 4,
+      "by_agent": {
+        "Claude_Code": 0,
+        "Copilot": 17,
+        "Devin": 3
+      },
+      "family_prs": [
+        {
+          "pr_id": 3078187008,
+          "repo_id": 4127088,
+          "correction_comment_id": 2100781832,
+          "other_qualifying_comment_ids": []
+        },
+        {
+          "pr_id": 3159178442,
+          "repo_id": 4127088,
+          "correction_comment_id": 2156570999,
+          "other_qualifying_comment_ids": [
+            2156572320
+          ]
+        },
+        {
+          "pr_id": 3486247989,
+          "repo_id": 12830126,
+          "correction_comment_id": 2406291283,
+          "other_qualifying_comment_ids": []
+        },
+        {
+          "pr_id": 3224735740,
+          "repo_id": 60844169,
+          "correction_comment_id": 2202272312,
+          "other_qualifying_comment_ids": [
+            2202282242
+          ]
+        },
+        {
+          "pr_id": 3226556821,
+          "repo_id": 60844169,
+          "correction_comment_id": 2203471019,
+          "other_qualifying_comment_ids": []
+        },
+        {
+          "pr_id": 4095008687,
+          "repo_id": 133100880,
+          "correction_comment_id": 2953438776,
+          "other_qualifying_comment_ids": []
+        },
+        {
+          "pr_id": 3108908027,
+          "repo_id": 136202695,
+          "correction_comment_id": 2121219198,
+          "other_qualifying_comment_ids": []
+        },
+        {
+          "pr_id": 3128687696,
+          "repo_id": 136202695,
+          "correction_comment_id": 2134827481,
+          "other_qualifying_comment_ids": []
+        },
+        {
+          "pr_id": 3715789527,
+          "repo_id": 139199684,
+          "correction_comment_id": 2607658018,
+          "other_qualifying_comment_ids": []
+        },
+        {
+          "pr_id": 3848411760,
+          "repo_id": 139199684,
+          "correction_comment_id": 2726163260,
+          "other_qualifying_comment_ids": []
+        },
+        {
+          "pr_id": 3090570894,
+          "repo_id": 172703996,
+          "correction_comment_id": 2110886365,
+          "other_qualifying_comment_ids": []
+        },
+        {
+          "pr_id": 3113782046,
+          "repo_id": 174629277,
+          "correction_comment_id": 2128276190,
+          "other_qualifying_comment_ids": []
+        },
+        {
+          "pr_id": 3181433167,
+          "repo_id": 174629277,
+          "correction_comment_id": 2172100116,
+          "other_qualifying_comment_ids": []
+        },
+        {
+          "pr_id": 3497926869,
+          "repo_id": 184555939,
+          "correction_comment_id": 2415830344,
+          "other_qualifying_comment_ids": []
+        },
+        {
+          "pr_id": 3185333353,
+          "repo_id": 224148738,
+          "correction_comment_id": 2173524848,
+          "other_qualifying_comment_ids": []
+        },
+        {
+          "pr_id": 3392393778,
+          "repo_id": 369428935,
+          "correction_comment_id": 2331433642,
+          "other_qualifying_comment_ids": []
+        },
+        {
+          "pr_id": 3392399944,
+          "repo_id": 369428935,
+          "correction_comment_id": 2331247278,
+          "other_qualifying_comment_ids": []
+        },
+        {
+          "pr_id": 3564611876,
+          "repo_id": 587050620,
+          "correction_comment_id": 2477327497,
+          "other_qualifying_comment_ids": []
+        },
+        {
+          "pr_id": 2771538261,
+          "repo_id": 879473096,
+          "correction_comment_id": 1904742061,
+          "other_qualifying_comment_ids": []
+        },
+        {
+          "pr_id": 3418238442,
+          "repo_id": 898171798,
+          "correction_comment_id": 2349474352,
+          "other_qualifying_comment_ids": []
+        }
+      ],
+      "pr_ids_beyond_the_cap": [
+        3193634550,
+        3257632101,
+        3230529031,
+        3244901827,
+        3250824111
+      ]
+    },
+    "qualifying_with_different_request_types_in_the_set": 0,
+    "excluded_judges_disagree_comment_ids": [
+      2228642990,
+      2228645887
+    ],
+    "by_request_type": {
+      "behaviour_change": {
+        "judge_1": 36,
+        "judge_2": 38,
+        "both_judges": 35,
+        "qualifying": 28
+      },
+      "defect_report": {
+        "judge_1": 5,
+        "judge_2": 5,
+        "both_judges": 5,
+        "qualifying": 3
+      },
+      "refactor_design": {
+        "judge_1": 45,
+        "judge_2": 46,
+        "both_judges": 44,
+        "qualifying": 0
+      },
+      "removal_cleanup": {
+        "judge_1": 12,
+        "judge_2": 13,
+        "both_judges": 10,
+        "qualifying": 0
+      },
+      "style_lint_docs": {
+        "judge_1": 18,
+        "judge_2": 13,
+        "both_judges": 13,
+        "qualifying": 0
+      },
+      "tests_only": {
+        "judge_1": 23,
+        "judge_2": 24,
+        "both_judges": 23,
+        "qualifying": 0
+      },
+      "question_unclear": {
+        "judge_1": 7,
+        "judge_2": 7,
+        "both_judges": 7,
+        "qualifying": 0
+      },
+      "process_other": {
+        "judge_1": 4,
+        "judge_2": 4,
+        "both_judges": 4,
+        "qualifying": 0
+      }
+    },
+    "by_agent": {
+      "Claude_Code": {
+        "comments": 6,
+        "commits_reachable": 6,
+        "qualifying": 0,
+        "excluded_judges_disagree": 0,
+        "failed": 6,
+        "qualifying_prs": 0,
+        "qualifying_repositories": 0
+      },
+      "Copilot": {
+        "comments": 132,
+        "commits_reachable": 113,
+        "qualifying": 28,
+        "excluded_judges_disagree": 2,
+        "failed": 102,
+        "qualifying_prs": 22,
+        "qualifying_repositories": 12
+      },
+      "Devin": {
+        "comments": 12,
+        "commits_reachable": 12,
+        "qualifying": 3,
+        "excluded_judges_disagree": 0,
+        "failed": 9,
+        "qualifying_prs": 3,
+        "qualifying_repositories": 2
+      }
+    },
+    "agreement": {
+      "population": "all 150 comments judged by both judges, with the batch-7 judgments for the 12 re-judged comments, including the 19 whose commits could not be fetched (judged without a diff)",
+      "request_type_collapsed": {
+        "n": 150,
+        "categories": [
+          "behaviour_or_defect",
+          "other"
+        ],
+        "agree": 146,
+        "observed_agreement": 0.9733,
+        "expected_agreement": 0.5967,
+        "kappa": 0.9339,
+        "table_judge_1_rows_judge_2_columns": {
+          "behaviour_or_defect": {
+            "behaviour_or_defect": 40,
+            "other": 1
+          },
+          "other": {
+            "behaviour_or_defect": 3,
+            "other": 106
+          }
+        }
+      },
+      "addressed": {
+        "n": 150,
+        "categories": [
+          "yes",
+          "partly",
+          "no",
+          "unclear"
+        ],
+        "agree": 146,
+        "observed_agreement": 0.9733,
+        "expected_agreement": 0.5186,
+        "kappa": 0.9446,
+        "table_judge_1_rows_judge_2_columns": {
+          "yes": {
+            "yes": 103,
+            "partly": 1,
+            "no": 0,
+            "unclear": 1
+          },
+          "partly": {
+            "yes": 0,
+            "partly": 5,
+            "no": 1,
+            "unclear": 0
+          },
+          "no": {
+            "yes": 0,
+            "partly": 0,
+            "no": 16,
+            "unclear": 0
+          },
+          "unclear": {
+            "yes": 0,
+            "partly": 0,
+            "no": 1,
+            "unclear": 22
+          }
+        }
+      },
+      "testable_offline": {
+        "n": 150,
+        "categories": [
+          "yes",
+          "no",
+          "na"
+        ],
+        "agree": 146,
+        "observed_agreement": 0.9733,
+        "expected_agreement": 0.5949,
+        "kappa": 0.9342,
+        "table_judge_1_rows_judge_2_columns": {
+          "yes": {
+            "yes": 40,
+            "no": 0,
+            "na": 1
+          },
+          "no": {
+            "yes": 0,
+            "no": 0,
+            "na": 0
+          },
+          "na": {
+            "yes": 2,
+            "no": 1,
+            "na": 106
+          }
+        }
+      },
+      "secondary": {
+        "note": "not requested by the protocol; reported for reading the main values",
+        "verdict": {
+          "n": 150,
+          "categories": [
+            "qualifies",
+            "fails"
+          ],
+          "agree": 148,
+          "observed_agreement": 0.9867,
+          "expected_agreement": 0.6643,
+          "kappa": 0.9603
+        },
+        "request_type_all_categories": {
+          "n": 150,
+          "categories": [
+            "behaviour_change",
+            "defect_report",
+            "refactor_design",
+            "removal_cleanup",
+            "style_lint_docs",
+            "tests_only",
+            "question_unclear",
+            "process_other"
+          ],
+          "agree": 141,
+          "observed_agreement": 0.94,
+          "expected_agreement": 0.1987,
+          "kappa": 0.9251
+        },
+        "addressed_yes_vs_other": {
+          "n": 150,
+          "categories": [
+            "yes",
+            "other"
+          ],
+          "agree": 148,
+          "observed_agreement": 0.9867,
+          "expected_agreement": 0.5747,
+          "kappa": 0.9687
+        },
+        "testable_offline_yes_vs_other": {
+          "n": 150,
+          "categories": [
+            "yes",
+            "other"
+          ],
+          "agree": 147,
+          "observed_agreement": 0.98,
+          "expected_agreement": 0.5997,
+          "kappa": 0.95
+        },
+        "commits_reachable_only": {
+          "n": 131,
+          "request_type_collapsed": {
+            "n": 131,
+            "categories": [
+              "behaviour_or_defect",
+              "other"
+            ],
+            "agree": 127,
+            "observed_agreement": 0.9695,
+            "expected_agreement": 0.5817,
+            "kappa": 0.927
+          },
+          "addressed": {
+            "n": 131,
+            "categories": [
+              "yes",
+              "partly",
+              "no",
+              "unclear"
+            ],
+            "agree": 127,
+            "observed_agreement": 0.9695,
+            "expected_agreement": 0.65,
+            "kappa": 0.9128
+          },
+          "testable_offline": {
+            "n": 131,
+            "categories": [
+              "yes",
+              "no",
+              "na"
+            ],
+            "agree": 127,
+            "observed_agreement": 0.9695,
+            "expected_agreement": 0.5795,
+            "kappa": 0.9274
+          }
+        }
+      }
+    }
+  },
+  "caveats": [
+    {
+      "topic": "empty diffs (corrected)",
+      "text": "12 comments had an empty diff in batches 1 to 6: the sample's later commit (the next commit of the PR's list) does not change the commented file, so the judges saw no change, whereas criterion 2 refers to the first later commit that touches the file. They were re-judged in batch 7 (correction, D50) on the diff to that commit, found by walking each PR head's history from the reviewed commit. 11 have one: at ancestry position 2 in 10 and 3 in 1 (behind a merge that leaves the file as reviewed); none is a merge, and each diff equals that commit's own change of the file. For 2180011139 no later commit of the PR head changes the file, so criterion 2 cannot hold on that head; it was judged again on the empty diff and fails on its request type. The earlier values of each row are kept under superseded. 3 of the 12 now qualify, and 2202777769, which had also failed only on addressed, still does (both judges: not addressed by that commit); before the correction 28 comments qualified, in 23 PRs and 12 repositories",
+      "comment_ids_rejudged": [
+        2110886365,
+        2110888713,
+        2150362939,
+        2180011139,
+        2180489628,
+        2198324593,
+        2202777769,
+        2218983090,
+        2258637033,
+        2339584267,
+        2438453364,
+        2477327497
+      ],
+      "comment_ids_now_qualifying": [
+        2110886365,
+        2198324593,
+        2477327497
+      ],
+      "comment_ids_without_a_later_commit_touching_the_file": [
+        2180011139
+      ]
+    },
+    {
+      "topic": "commits not fetchable",
+      "text": "19 comments in 4 repositories fail S9 because their commits could not be fetched: 17 in 3 repositories whose clone the session's GitHub proxy refused (HTTP 401), and 2 in 1 repository over the 300,000,000-byte cap. Both judges judged them without a diff; 3 of them fail on addressed only (unclear), besides the fetch.",
+      "comment_ids_failing_only_on_fetch_and_addressed": [
+        2146961131,
+        2279614274,
+        2279617881
+      ],
+      "comment_ids_over_cap": [
+        2243466254,
+        2573329874
+      ]
+    },
+    {
+      "topic": "attribution of the commit used",
+      "text": "under the S8a rule all 11 batch-7 diff commits are agent-attributed, each through a bot author and none through a co-author trailer, and each is in its PR's AIDev commit list after the reviewed commit. For 2258637033 the bot is the CI automation bot account (GitHub Actions), not a coding-agent account, and the commit is a linter's automatic fix rather than the agent's response to the review. It passes S8a as written, which counts any bot account; the comment fails S9 on its judgments (refactor_design, not addressed), so this changes no count here",
+      "comment_ids_attributed_through_a_non_agent_bot": [
+        2258637033
+      ]
+    },
+    {
+      "topic": "masked model identifiers",
+      "text": "the batch-7 text of 2477327497 replaces the 2 model identifiers of its issue body (in a code snippet) with a placeholder, so that no model identifier is written into any file; batch 6 keeps the original, and the correction record holds its sha256. The batch-7 judges saw the masked text; every other batch-7 text field equals its earlier batch",
+      "comment_ids": [
+        2477327497
+      ]
+    },
+    {
+      "topic": "standing",
+      "text": "the judgments are model proposals, not human labels, and are queued for human coding (protocol §15.6). The S10 checks and the stop at 30 tasks are not applied here. The cap of 2 families per repository is applied only in summary.s11_families, to the S9 survivors before S10"
+    }
+  ],
+  "rows": [
+    {
+      "comment_id": 1904732964,
+      "pr_id": 2771599553,
+      "repo_id": 879473096,
+      "agent": "Devin",
+      "batch": 1,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "style_lint_docs",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "style_lint_docs",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 1904733243,
+      "pr_id": 2771599553,
+      "repo_id": 879473096,
+      "agent": "Devin",
+      "batch": 1,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "style_lint_docs",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "style_lint_docs",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 1904742061,
+      "pr_id": 2771538261,
+      "repo_id": 879473096,
+      "agent": "Devin",
+      "batch": 1,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "defect_report",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "low",
+        "verdict": "qualifies"
+      },
+      "judge_2": {
+        "request_type": "defect_report",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "medium",
+        "verdict": "qualifies"
+      },
+      "judges_agree": true,
+      "qualifies": true,
+      "failure_reason": null,
+      "failed_conditions": [],
+      "requirement_paraphrase": "Hashing a user function must support type-annotated parameters without dropping the special handling that the existing dataset-library pickler provides for caching.",
+      "paraphrase_check": {
+        "passed": true,
+        "failed_checks": [],
+        "longest_word_run_shared_with_source_texts": 2
+      }
+    },
+    {
+      "comment_id": 2100781832,
+      "pr_id": 3078187008,
+      "repo_id": 4127088,
+      "agent": "Copilot",
+      "batch": 1,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "medium",
+        "verdict": "qualifies"
+      },
+      "judge_2": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "medium",
+        "verdict": "qualifies"
+      },
+      "judges_agree": true,
+      "qualifies": true,
+      "failure_reason": null,
+      "failed_conditions": [],
+      "requirement_paraphrase": "When listing ownership fails, the exception should be logged at debug level before being re-raised, instead of not being logged at all.",
+      "paraphrase_check": {
+        "passed": true,
+        "failed_checks": [],
+        "longest_word_run_shared_with_source_texts": 4
+      }
+    },
+    {
+      "comment_id": 2103779608,
+      "pr_id": 3084794817,
+      "repo_id": 174629277,
+      "agent": "Copilot",
+      "batch": 1,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2103968133,
+      "pr_id": 3085398469,
+      "repo_id": 136202695,
+      "agent": "Copilot",
+      "batch": 1,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "style_lint_docs",
+        "addressed": "no",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "style_lint_docs",
+        "addressed": "no",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "addressed",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2107050515,
+      "pr_id": 3090570894,
+      "repo_id": 172703996,
+      "agent": "Copilot",
+      "batch": 1,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "tests_only",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "tests_only",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2107724486,
+      "pr_id": 3090570894,
+      "repo_id": 172703996,
+      "agent": "Copilot",
+      "batch": 1,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "tests_only",
+        "addressed": "no",
+        "testable_offline": "na",
+        "confidence": "low",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "tests_only",
+        "addressed": "no",
+        "testable_offline": "na",
+        "confidence": "low",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "addressed",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2110886365,
+      "pr_id": 3090570894,
+      "repo_id": 172703996,
+      "agent": "Copilot",
+      "batch": 7,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "diff_commit": "78065af3d27e11de9da84172382fbbf07744d890",
+      "diff_commit_agent_attributed": true,
+      "judge_1": {
+        "request_type": "defect_report",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "high",
+        "verdict": "qualifies"
+      },
+      "judge_2": {
+        "request_type": "defect_report",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "high",
+        "verdict": "qualifies"
+      },
+      "judges_agree": true,
+      "qualifies": true,
+      "failure_reason": null,
+      "failed_conditions": [],
+      "requirement_paraphrase": "Validation should fail whenever an undefined symbol would become a parameter of the generated code, rather than letting code generation and compilation proceed.",
+      "paraphrase_check": {
+        "passed": true,
+        "failed_checks": [],
+        "longest_word_run_shared_with_source_texts": 3
+      },
+      "superseded": {
+        "reason": "judged on the next commit's empty diff; criterion 2 refers to the first later commit that touches the file (correction, D50)",
+        "batch": 1,
+        "diff_commit": "a60684655c3d4534af502da8ca6a63d5d1687b2d",
+        "diff_status": "empty",
+        "judge_1": {
+          "request_type": "defect_report",
+          "addressed": "no",
+          "testable_offline": "yes",
+          "confidence": "medium",
+          "verdict": "fails"
+        },
+        "judge_2": {
+          "request_type": "defect_report",
+          "addressed": "no",
+          "testable_offline": "yes",
+          "confidence": "medium",
+          "verdict": "fails"
+        },
+        "judges_agree": true,
+        "qualifies": false,
+        "failure_reason": "not_addressed",
+        "failed_conditions": [
+          "addressed"
+        ]
+      }
+    },
+    {
+      "comment_id": 2110888713,
+      "pr_id": 3090570894,
+      "repo_id": 172703996,
+      "agent": "Copilot",
+      "batch": 7,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "diff_commit": "78065af3d27e11de9da84172382fbbf07744d890",
+      "diff_commit_agent_attributed": true,
+      "judge_1": {
+        "request_type": "process_other",
+        "addressed": "no",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "process_other",
+        "addressed": "no",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "addressed",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null,
+      "superseded": {
+        "reason": "judged on the next commit's empty diff; criterion 2 refers to the first later commit that touches the file (correction, D50)",
+        "batch": 1,
+        "diff_commit": "a60684655c3d4534af502da8ca6a63d5d1687b2d",
+        "diff_status": "empty",
+        "judge_1": {
+          "request_type": "process_other",
+          "addressed": "unclear",
+          "testable_offline": "na",
+          "confidence": "low",
+          "verdict": "fails"
+        },
+        "judge_2": {
+          "request_type": "question_unclear",
+          "addressed": "unclear",
+          "testable_offline": "na",
+          "confidence": "medium",
+          "verdict": "fails"
+        },
+        "judges_agree": true,
+        "qualifies": false,
+        "failure_reason": "not_behaviour_change_or_defect",
+        "failed_conditions": [
+          "request_type",
+          "addressed",
+          "testable_offline"
+        ]
+      }
+    },
+    {
+      "comment_id": 2110894936,
+      "pr_id": 3090570894,
+      "repo_id": 172703996,
+      "agent": "Copilot",
+      "batch": 1,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "behaviour_change",
+        "addressed": "no",
+        "testable_offline": "yes",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "behaviour_change",
+        "addressed": "no",
+        "testable_offline": "yes",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_addressed",
+      "failed_conditions": [
+        "addressed"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2110930786,
+      "pr_id": 3090570894,
+      "repo_id": 172703996,
+      "agent": "Copilot",
+      "batch": 1,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "removal_cleanup",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "removal_cleanup",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2110935514,
+      "pr_id": 3090570894,
+      "repo_id": 172703996,
+      "agent": "Copilot",
+      "batch": 1,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "behaviour_change",
+        "addressed": "no",
+        "testable_offline": "yes",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "behaviour_change",
+        "addressed": "no",
+        "testable_offline": "yes",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_addressed",
+      "failed_conditions": [
+        "addressed"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2110941229,
+      "pr_id": 3090570894,
+      "repo_id": 172703996,
+      "agent": "Copilot",
+      "batch": 1,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "behaviour_change",
+        "addressed": "no",
+        "testable_offline": "yes",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "behaviour_change",
+        "addressed": "no",
+        "testable_offline": "yes",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_addressed",
+      "failed_conditions": [
+        "addressed"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2110945045,
+      "pr_id": 3090570894,
+      "repo_id": 172703996,
+      "agent": "Copilot",
+      "batch": 1,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "behaviour_change",
+        "addressed": "partly",
+        "testable_offline": "yes",
+        "confidence": "low",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "tests_only",
+        "addressed": "no",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "addressed",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2121219198,
+      "pr_id": 3108908027,
+      "repo_id": 136202695,
+      "agent": "Copilot",
+      "batch": 1,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "high",
+        "verdict": "qualifies"
+      },
+      "judge_2": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "high",
+        "verdict": "qualifies"
+      },
+      "judges_agree": true,
+      "qualifies": true,
+      "failure_reason": null,
+      "failed_conditions": [],
+      "requirement_paraphrase": "Notebook trace-viewer detection should inspect only HTML outputs and ignore other output content types.",
+      "paraphrase_check": {
+        "passed": true,
+        "failed_checks": [],
+        "longest_word_run_shared_with_source_texts": 2
+      }
+    },
+    {
+      "comment_id": 2125344495,
+      "pr_id": 3085398469,
+      "repo_id": 136202695,
+      "agent": "Copilot",
+      "batch": 1,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "process_other",
+        "addressed": "unclear",
+        "testable_offline": "na",
+        "confidence": "low",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "process_other",
+        "addressed": "unclear",
+        "testable_offline": "na",
+        "confidence": "low",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "addressed",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2128276190,
+      "pr_id": 3113782046,
+      "repo_id": 174629277,
+      "agent": "Copilot",
+      "batch": 1,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "high",
+        "verdict": "qualifies"
+      },
+      "judge_2": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "high",
+        "verdict": "qualifies"
+      },
+      "judges_agree": true,
+      "qualifies": true,
+      "failure_reason": null,
+      "failed_conditions": [],
+      "requirement_paraphrase": "Address prefixes given as a list-literal string, comma-separated string or list should become stripped non-empty strings; other types should raise an error.",
+      "paraphrase_check": {
+        "passed": true,
+        "failed_checks": [],
+        "longest_word_run_shared_with_source_texts": 2
+      }
+    },
+    {
+      "comment_id": 2132969579,
+      "pr_id": 3125531606,
+      "repo_id": 4127088,
+      "agent": "Copilot",
+      "batch": 1,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "style_lint_docs",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "style_lint_docs",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2132969684,
+      "pr_id": 3125531606,
+      "repo_id": 4127088,
+      "agent": "Copilot",
+      "batch": 1,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "removal_cleanup",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "removal_cleanup",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2134826679,
+      "pr_id": 3128687723,
+      "repo_id": 136202695,
+      "agent": "Copilot",
+      "batch": 1,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "tests_only",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "tests_only",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2134827481,
+      "pr_id": 3128687696,
+      "repo_id": 136202695,
+      "agent": "Copilot",
+      "batch": 1,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "medium",
+        "verdict": "qualifies"
+      },
+      "judge_2": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "medium",
+        "verdict": "qualifies"
+      },
+      "judges_agree": true,
+      "qualifies": true,
+      "failure_reason": null,
+      "failed_conditions": [],
+      "requirement_paraphrase": "Converting traced message objects to dictionaries should keep every available attribute, including fields added in newer library versions, without filtering.",
+      "paraphrase_check": {
+        "passed": true,
+        "failed_checks": [],
+        "longest_word_run_shared_with_source_texts": 2
+      }
+    },
+    {
+      "comment_id": 2146961131,
+      "pr_id": 3145372553,
+      "repo_id": 464577591,
+      "agent": "Copilot",
+      "batch": 1,
+      "fetch_status": "clone_failed",
+      "commits_reachable": false,
+      "diff_status": "unavailable",
+      "judge_1": {
+        "request_type": "behaviour_change",
+        "addressed": "unclear",
+        "testable_offline": "yes",
+        "confidence": "low",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "behaviour_change",
+        "addressed": "unclear",
+        "testable_offline": "yes",
+        "confidence": "low",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "commits_not_fetchable",
+      "failed_conditions": [
+        "commits_reachable",
+        "addressed"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2147011985,
+      "pr_id": 3146305288,
+      "repo_id": 201991558,
+      "agent": "Copilot",
+      "batch": 1,
+      "fetch_status": "clone_failed",
+      "commits_reachable": false,
+      "diff_status": "unavailable",
+      "judge_1": {
+        "request_type": "refactor_design",
+        "addressed": "unclear",
+        "testable_offline": "na",
+        "confidence": "low",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "refactor_design",
+        "addressed": "unclear",
+        "testable_offline": "na",
+        "confidence": "low",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "commits_not_fetchable",
+      "failed_conditions": [
+        "commits_reachable",
+        "request_type",
+        "addressed",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2150362939,
+      "pr_id": 3147153408,
+      "repo_id": 679017521,
+      "agent": "Devin",
+      "batch": 7,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "diff_commit": "52ce3d4392282a3cfcfd59dce763d0936a9bc645",
+      "diff_commit_agent_attributed": true,
+      "judge_1": {
+        "request_type": "question_unclear",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "question_unclear",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null,
+      "superseded": {
+        "reason": "judged on the next commit's empty diff; criterion 2 refers to the first later commit that touches the file (correction, D50)",
+        "batch": 1,
+        "diff_commit": "f5d493514bf416829693fda34bd9a290ff661f81",
+        "diff_status": "empty",
+        "judge_1": {
+          "request_type": "question_unclear",
+          "addressed": "no",
+          "testable_offline": "na",
+          "confidence": "medium",
+          "verdict": "fails"
+        },
+        "judge_2": {
+          "request_type": "question_unclear",
+          "addressed": "no",
+          "testable_offline": "na",
+          "confidence": "medium",
+          "verdict": "fails"
+        },
+        "judges_agree": true,
+        "qualifies": false,
+        "failure_reason": "not_behaviour_change_or_defect",
+        "failed_conditions": [
+          "request_type",
+          "addressed",
+          "testable_offline"
+        ]
+      }
+    },
+    {
+      "comment_id": 2156570999,
+      "pr_id": 3159178442,
+      "repo_id": 4127088,
+      "agent": "Copilot",
+      "batch": 2,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "medium",
+        "verdict": "qualifies"
+      },
+      "judge_2": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "medium",
+        "verdict": "qualifies"
+      },
+      "judges_agree": true,
+      "qualifies": true,
+      "failure_reason": null,
+      "failed_conditions": [],
+      "requirement_paraphrase": "When loading cloud metadata fails, the warning-level log message must contain no interpolated parameters, in particular not the metadata URL.",
+      "paraphrase_check": {
+        "passed": true,
+        "failed_checks": [],
+        "longest_word_run_shared_with_source_texts": 2
+      }
+    },
+    {
+      "comment_id": 2156572320,
+      "pr_id": 3159178442,
+      "repo_id": 4127088,
+      "agent": "Copilot",
+      "batch": 2,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "medium",
+        "verdict": "qualifies"
+      },
+      "judge_2": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "medium",
+        "verdict": "qualifies"
+      },
+      "judges_agree": true,
+      "qualifies": true,
+      "failure_reason": null,
+      "failed_conditions": [],
+      "requirement_paraphrase": "When parsing a job resource fails, the info-level log message must not interpolate any parameter such as the serialized resource.",
+      "paraphrase_check": {
+        "passed": true,
+        "failed_checks": [],
+        "longest_word_run_shared_with_source_texts": 1
+      }
+    },
+    {
+      "comment_id": 2157441300,
+      "pr_id": 3160949988,
+      "repo_id": 464577591,
+      "agent": "Copilot",
+      "batch": 2,
+      "fetch_status": "clone_failed",
+      "commits_reachable": false,
+      "diff_status": "unavailable",
+      "judge_1": {
+        "request_type": "refactor_design",
+        "addressed": "unclear",
+        "testable_offline": "na",
+        "confidence": "low",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "refactor_design",
+        "addressed": "unclear",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "commits_not_fetchable",
+      "failed_conditions": [
+        "commits_reachable",
+        "request_type",
+        "addressed",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2157441911,
+      "pr_id": 3160949988,
+      "repo_id": 464577591,
+      "agent": "Copilot",
+      "batch": 2,
+      "fetch_status": "clone_failed",
+      "commits_reachable": false,
+      "diff_status": "unavailable",
+      "judge_1": {
+        "request_type": "refactor_design",
+        "addressed": "unclear",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "refactor_design",
+        "addressed": "unclear",
+        "testable_offline": "na",
+        "confidence": "low",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "commits_not_fetchable",
+      "failed_conditions": [
+        "commits_reachable",
+        "request_type",
+        "addressed",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2157459507,
+      "pr_id": 3160949988,
+      "repo_id": 464577591,
+      "agent": "Copilot",
+      "batch": 2,
+      "fetch_status": "clone_failed",
+      "commits_reachable": false,
+      "diff_status": "unavailable",
+      "judge_1": {
+        "request_type": "refactor_design",
+        "addressed": "unclear",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "refactor_design",
+        "addressed": "unclear",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "commits_not_fetchable",
+      "failed_conditions": [
+        "commits_reachable",
+        "request_type",
+        "addressed",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2166103518,
+      "pr_id": 3174604777,
+      "repo_id": 174629277,
+      "agent": "Copilot",
+      "batch": 2,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "removal_cleanup",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "low",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "no",
+        "confidence": "low",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2172100116,
+      "pr_id": 3181433167,
+      "repo_id": 174629277,
+      "agent": "Copilot",
+      "batch": 2,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "medium",
+        "verdict": "qualifies"
+      },
+      "judge_2": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "medium",
+        "verdict": "qualifies"
+      },
+      "judges_agree": true,
+      "qualifies": true,
+      "failure_reason": null,
+      "failed_conditions": [],
+      "requirement_paraphrase": "Unified performance metric names emitted for fio results must include the disk setup type when that field is provided.",
+      "paraphrase_check": {
+        "passed": true,
+        "failed_checks": [],
+        "longest_word_run_shared_with_source_texts": 2
+      }
+    },
+    {
+      "comment_id": 2173524848,
+      "pr_id": 3185333353,
+      "repo_id": 224148738,
+      "agent": "Copilot",
+      "batch": 2,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "low",
+        "verdict": "qualifies"
+      },
+      "judge_2": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "low",
+        "verdict": "qualifies"
+      },
+      "judges_agree": true,
+      "qualifies": true,
+      "failure_reason": null,
+      "failed_conditions": [],
+      "requirement_paraphrase": "A non-numeric default pad label must raise ValueError stating it must be a number and showing the received value in double quotes.",
+      "paraphrase_check": {
+        "passed": true,
+        "failed_checks": [],
+        "longest_word_run_shared_with_source_texts": 4
+      }
+    },
+    {
+      "comment_id": 2173530542,
+      "pr_id": 3185333353,
+      "repo_id": 224148738,
+      "agent": "Copilot",
+      "batch": 2,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "tests_only",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "tests_only",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2179835220,
+      "pr_id": 3195573803,
+      "repo_id": 60844169,
+      "agent": "Copilot",
+      "batch": 2,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2179884594,
+      "pr_id": 3195573803,
+      "repo_id": 60844169,
+      "agent": "Copilot",
+      "batch": 2,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2180011139,
+      "pr_id": 3195788503,
+      "repo_id": 60844169,
+      "agent": "Copilot",
+      "batch": 7,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "empty",
+      "diff_commit": null,
+      "diff_commit_agent_attributed": null,
+      "judge_1": {
+        "request_type": "style_lint_docs",
+        "addressed": "unclear",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "style_lint_docs",
+        "addressed": "no",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "addressed",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null,
+      "superseded": {
+        "reason": "judged on the next commit's empty diff; criterion 2 refers to the first later commit that touches the file (correction, D50)",
+        "batch": 2,
+        "diff_commit": "678e078d3bc141df7e1cb8ead7299753f5c895ac",
+        "diff_status": "empty",
+        "judge_1": {
+          "request_type": "style_lint_docs",
+          "addressed": "unclear",
+          "testable_offline": "na",
+          "confidence": "medium",
+          "verdict": "fails"
+        },
+        "judge_2": {
+          "request_type": "style_lint_docs",
+          "addressed": "unclear",
+          "testable_offline": "na",
+          "confidence": "high",
+          "verdict": "fails"
+        },
+        "judges_agree": true,
+        "qualifies": false,
+        "failure_reason": "not_behaviour_change_or_defect",
+        "failed_conditions": [
+          "request_type",
+          "addressed",
+          "testable_offline"
+        ]
+      }
+    },
+    {
+      "comment_id": 2180446598,
+      "pr_id": 3193524394,
+      "repo_id": 60844169,
+      "agent": "Copilot",
+      "batch": 2,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "tests_only",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "tests_only",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2180489055,
+      "pr_id": 3196295632,
+      "repo_id": 898171798,
+      "agent": "Copilot",
+      "batch": 2,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2180489628,
+      "pr_id": 3196295632,
+      "repo_id": 898171798,
+      "agent": "Copilot",
+      "batch": 7,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "diff_commit": "5cf122864fd902e20a79480e1b32ab52b821e67e",
+      "diff_commit_agent_attributed": true,
+      "judge_1": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null,
+      "superseded": {
+        "reason": "judged on the next commit's empty diff; criterion 2 refers to the first later commit that touches the file (correction, D50)",
+        "batch": 2,
+        "diff_commit": "73a374b65a34a50a7512cce172d92f0c697043dd",
+        "diff_status": "empty",
+        "judge_1": {
+          "request_type": "refactor_design",
+          "addressed": "no",
+          "testable_offline": "na",
+          "confidence": "high",
+          "verdict": "fails"
+        },
+        "judge_2": {
+          "request_type": "refactor_design",
+          "addressed": "no",
+          "testable_offline": "na",
+          "confidence": "high",
+          "verdict": "fails"
+        },
+        "judges_agree": true,
+        "qualifies": false,
+        "failure_reason": "not_behaviour_change_or_defect",
+        "failed_conditions": [
+          "request_type",
+          "addressed",
+          "testable_offline"
+        ]
+      }
+    },
+    {
+      "comment_id": 2180492928,
+      "pr_id": 3193524394,
+      "repo_id": 60844169,
+      "agent": "Copilot",
+      "batch": 2,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2182619523,
+      "pr_id": 3199112507,
+      "repo_id": 60844169,
+      "agent": "Copilot",
+      "batch": 2,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "style_lint_docs",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "style_lint_docs",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2183958883,
+      "pr_id": 3200874762,
+      "repo_id": 205439527,
+      "agent": "Copilot",
+      "batch": 2,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "tests_only",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "tests_only",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2188085388,
+      "pr_id": 3206231176,
+      "repo_id": 172733314,
+      "agent": "Copilot",
+      "batch": 2,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "style_lint_docs",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2198255936,
+      "pr_id": 3193634550,
+      "repo_id": 4127088,
+      "agent": "Copilot",
+      "batch": 2,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "medium",
+        "verdict": "qualifies"
+      },
+      "judge_2": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "medium",
+        "verdict": "qualifies"
+      },
+      "judges_agree": true,
+      "qualifies": true,
+      "failure_reason": null,
+      "failed_conditions": [],
+      "requirement_paraphrase": "The ImportError raised when an optional dependency is missing must not prefix its message with an info-level tag.",
+      "paraphrase_check": {
+        "passed": true,
+        "failed_checks": [],
+        "longest_word_run_shared_with_source_texts": 2
+      }
+    },
+    {
+      "comment_id": 2198324593,
+      "pr_id": 3193634550,
+      "repo_id": 4127088,
+      "agent": "Copilot",
+      "batch": 7,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "diff_commit": "ef418165b3649ffd4b6a89d7ddb66ed7c244723a",
+      "diff_commit_agent_attributed": true,
+      "judge_1": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "high",
+        "verdict": "qualifies"
+      },
+      "judge_2": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "high",
+        "verdict": "qualifies"
+      },
+      "judges_agree": true,
+      "qualifies": true,
+      "failure_reason": null,
+      "failed_conditions": [],
+      "requirement_paraphrase": "Importing the red-team subpackage should not print a missing-dependency message; its optional classes should load lazily and fail only when actually accessed.",
+      "paraphrase_check": {
+        "passed": true,
+        "failed_checks": [],
+        "longest_word_run_shared_with_source_texts": 3
+      },
+      "superseded": {
+        "reason": "judged on the next commit's empty diff; criterion 2 refers to the first later commit that touches the file (correction, D50)",
+        "batch": 2,
+        "diff_commit": "549202cc2703766e7575cf951ee5de2035fe314e",
+        "diff_status": "empty",
+        "judge_1": {
+          "request_type": "behaviour_change",
+          "addressed": "no",
+          "testable_offline": "yes",
+          "confidence": "high",
+          "verdict": "fails"
+        },
+        "judge_2": {
+          "request_type": "behaviour_change",
+          "addressed": "no",
+          "testable_offline": "yes",
+          "confidence": "medium",
+          "verdict": "fails"
+        },
+        "judges_agree": true,
+        "qualifies": false,
+        "failure_reason": "not_addressed",
+        "failed_conditions": [
+          "addressed"
+        ]
+      }
+    },
+    {
+      "comment_id": 2201256959,
+      "pr_id": 3223461985,
+      "repo_id": 464577591,
+      "agent": "Copilot",
+      "batch": 2,
+      "fetch_status": "clone_failed",
+      "commits_reachable": false,
+      "diff_status": "unavailable",
+      "judge_1": {
+        "request_type": "refactor_design",
+        "addressed": "unclear",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "refactor_design",
+        "addressed": "unclear",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "commits_not_fetchable",
+      "failed_conditions": [
+        "commits_reachable",
+        "request_type",
+        "addressed",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2202272312,
+      "pr_id": 3224735740,
+      "repo_id": 60844169,
+      "agent": "Copilot",
+      "batch": 2,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "medium",
+        "verdict": "qualifies"
+      },
+      "judge_2": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "medium",
+        "verdict": "qualifies"
+      },
+      "judges_agree": true,
+      "qualifies": true,
+      "failure_reason": null,
+      "failed_conditions": [],
+      "requirement_paraphrase": "The cache file must be written as compact JSON, without indentation or extra whitespace after separators.",
+      "paraphrase_check": {
+        "passed": true,
+        "failed_checks": [],
+        "longest_word_run_shared_with_source_texts": 2
+      }
+    },
+    {
+      "comment_id": 2202282242,
+      "pr_id": 3224735740,
+      "repo_id": 60844169,
+      "agent": "Copilot",
+      "batch": 2,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "medium",
+        "verdict": "qualifies"
+      },
+      "judge_2": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "medium",
+        "verdict": "qualifies"
+      },
+      "judges_agree": true,
+      "qualifies": true,
+      "failure_reason": null,
+      "failed_conditions": [],
+      "requirement_paraphrase": "Loading the cache must handle errors raised while opening the cache file, logging them instead of letting the exception propagate.",
+      "paraphrase_check": {
+        "passed": true,
+        "failed_checks": [],
+        "longest_word_run_shared_with_source_texts": 2
+      }
+    },
+    {
+      "comment_id": 2202317717,
+      "pr_id": 3223461985,
+      "repo_id": 464577591,
+      "agent": "Copilot",
+      "batch": 2,
+      "fetch_status": "clone_failed",
+      "commits_reachable": false,
+      "diff_status": "unavailable",
+      "judge_1": {
+        "request_type": "tests_only",
+        "addressed": "unclear",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "tests_only",
+        "addressed": "unclear",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "commits_not_fetchable",
+      "failed_conditions": [
+        "commits_reachable",
+        "request_type",
+        "addressed",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2202736609,
+      "pr_id": 3225037054,
+      "repo_id": 60844169,
+      "agent": "Copilot",
+      "batch": 3,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2202747627,
+      "pr_id": 3225037054,
+      "repo_id": 60844169,
+      "agent": "Copilot",
+      "batch": 3,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2202777769,
+      "pr_id": 3225486077,
+      "repo_id": 60844169,
+      "agent": "Copilot",
+      "batch": 7,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "diff_commit": "f870a9a650006d8622d767c63ee92edea18d6fcc",
+      "diff_commit_agent_attributed": true,
+      "judge_1": {
+        "request_type": "behaviour_change",
+        "addressed": "no",
+        "testable_offline": "yes",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "behaviour_change",
+        "addressed": "no",
+        "testable_offline": "yes",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_addressed",
+      "failed_conditions": [
+        "addressed"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null,
+      "superseded": {
+        "reason": "judged on the next commit's empty diff; criterion 2 refers to the first later commit that touches the file (correction, D50)",
+        "batch": 3,
+        "diff_commit": "445f73a5b42771d2543a8379824166bee1332b30",
+        "diff_status": "empty",
+        "judge_1": {
+          "request_type": "behaviour_change",
+          "addressed": "no",
+          "testable_offline": "yes",
+          "confidence": "medium",
+          "verdict": "fails"
+        },
+        "judge_2": {
+          "request_type": "behaviour_change",
+          "addressed": "no",
+          "testable_offline": "yes",
+          "confidence": "medium",
+          "verdict": "fails"
+        },
+        "judges_agree": true,
+        "qualifies": false,
+        "failure_reason": "not_addressed",
+        "failed_conditions": [
+          "addressed"
+        ]
+      }
+    },
+    {
+      "comment_id": 2202784976,
+      "pr_id": 3225037054,
+      "repo_id": 60844169,
+      "agent": "Copilot",
+      "batch": 3,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "removal_cleanup",
+        "addressed": "no",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "removal_cleanup",
+        "addressed": "no",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "addressed",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2203059156,
+      "pr_id": 3225037054,
+      "repo_id": 60844169,
+      "agent": "Copilot",
+      "batch": 3,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "behaviour_change",
+        "addressed": "partly",
+        "testable_offline": "yes",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "behaviour_change",
+        "addressed": "partly",
+        "testable_offline": "yes",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_addressed",
+      "failed_conditions": [
+        "addressed"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2203212538,
+      "pr_id": 3226175596,
+      "repo_id": 60844169,
+      "agent": "Copilot",
+      "batch": 3,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "style_lint_docs",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "style_lint_docs",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2203217709,
+      "pr_id": 3226175596,
+      "repo_id": 60844169,
+      "agent": "Copilot",
+      "batch": 3,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2203224834,
+      "pr_id": 3226175596,
+      "repo_id": 60844169,
+      "agent": "Copilot",
+      "batch": 3,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2203471019,
+      "pr_id": 3226556821,
+      "repo_id": 60844169,
+      "agent": "Copilot",
+      "batch": 3,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "medium",
+        "verdict": "qualifies"
+      },
+      "judge_2": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "medium",
+        "verdict": "qualifies"
+      },
+      "judges_agree": true,
+      "qualifies": true,
+      "failure_reason": null,
+      "failed_conditions": [],
+      "requirement_paraphrase": "Updating a record should call the acceleration-domain modify action with the domain name, zone id and origin info set to the new address.",
+      "paraphrase_check": {
+        "passed": true,
+        "failed_checks": [],
+        "longest_word_run_shared_with_source_texts": 1
+      }
+    },
+    {
+      "comment_id": 2206177284,
+      "pr_id": 3230529031,
+      "repo_id": 60844169,
+      "agent": "Copilot",
+      "batch": 3,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "high",
+        "verdict": "qualifies"
+      },
+      "judge_2": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "high",
+        "verdict": "qualifies"
+      },
+      "judges_agree": true,
+      "qualifies": true,
+      "failure_reason": null,
+      "failed_conditions": [],
+      "requirement_paraphrase": "When only one configuration is loaded and its run fails, the program should exit with a non-zero status.",
+      "paraphrase_check": {
+        "passed": true,
+        "failed_checks": [],
+        "longest_word_run_shared_with_source_texts": 1
+      }
+    },
+    {
+      "comment_id": 2206402641,
+      "pr_id": 3230759504,
+      "repo_id": 464577591,
+      "agent": "Copilot",
+      "batch": 3,
+      "fetch_status": "clone_failed",
+      "commits_reachable": false,
+      "diff_status": "unavailable",
+      "judge_1": {
+        "request_type": "tests_only",
+        "addressed": "unclear",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "tests_only",
+        "addressed": "unclear",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "commits_not_fetchable",
+      "failed_conditions": [
+        "commits_reachable",
+        "request_type",
+        "addressed",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2206418067,
+      "pr_id": 3230759504,
+      "repo_id": 464577591,
+      "agent": "Copilot",
+      "batch": 3,
+      "fetch_status": "clone_failed",
+      "commits_reachable": false,
+      "diff_status": "unavailable",
+      "judge_1": {
+        "request_type": "tests_only",
+        "addressed": "unclear",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "tests_only",
+        "addressed": "unclear",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "commits_not_fetchable",
+      "failed_conditions": [
+        "commits_reachable",
+        "request_type",
+        "addressed",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2206456310,
+      "pr_id": 3230759504,
+      "repo_id": 464577591,
+      "agent": "Copilot",
+      "batch": 3,
+      "fetch_status": "clone_failed",
+      "commits_reachable": false,
+      "diff_status": "unavailable",
+      "judge_1": {
+        "request_type": "style_lint_docs",
+        "addressed": "unclear",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "removal_cleanup",
+        "addressed": "unclear",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "commits_not_fetchable",
+      "failed_conditions": [
+        "commits_reachable",
+        "request_type",
+        "addressed",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2207947605,
+      "pr_id": 3230529031,
+      "repo_id": 60844169,
+      "agent": "Copilot",
+      "batch": 3,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "high",
+        "verdict": "qualifies"
+      },
+      "judge_2": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "high",
+        "verdict": "qualifies"
+      },
+      "judges_agree": true,
+      "qualifies": true,
+      "failure_reason": null,
+      "failed_conditions": [],
+      "requirement_paraphrase": "Fall back to the debug DNS provider only when debug mode is on and no configuration file path was given.",
+      "paraphrase_check": {
+        "passed": true,
+        "failed_checks": [],
+        "longest_word_run_shared_with_source_texts": 1
+      }
+    },
+    {
+      "comment_id": 2210039632,
+      "pr_id": 3235347485,
+      "repo_id": 60844169,
+      "agent": "Copilot",
+      "batch": 3,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "style_lint_docs",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "style_lint_docs",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2210062649,
+      "pr_id": 3230529031,
+      "repo_id": 60844169,
+      "agent": "Copilot",
+      "batch": 3,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "medium",
+        "verdict": "qualifies"
+      },
+      "judge_2": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "medium",
+        "verdict": "qualifies"
+      },
+      "judges_agree": true,
+      "qualifies": true,
+      "failure_reason": null,
+      "failed_conditions": [],
+      "requirement_paraphrase": "Logging should be configured from the global log settings rather than from the first loaded configuration.",
+      "paraphrase_check": {
+        "passed": true,
+        "failed_checks": [],
+        "longest_word_run_shared_with_source_texts": 4
+      }
+    },
+    {
+      "comment_id": 2210110813,
+      "pr_id": 3235347485,
+      "repo_id": 60844169,
+      "agent": "Copilot",
+      "batch": 3,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "tests_only",
+        "addressed": "partly",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "tests_only",
+        "addressed": "partly",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "addressed",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2210142881,
+      "pr_id": 3235347485,
+      "repo_id": 60844169,
+      "agent": "Copilot",
+      "batch": 3,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2210147596,
+      "pr_id": 3235347485,
+      "repo_id": 60844169,
+      "agent": "Copilot",
+      "batch": 3,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "tests_only",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "tests_only",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2210150383,
+      "pr_id": 3235347485,
+      "repo_id": 60844169,
+      "agent": "Copilot",
+      "batch": 3,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "tests_only",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "tests_only",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2210194155,
+      "pr_id": 3235347485,
+      "repo_id": 60844169,
+      "agent": "Copilot",
+      "batch": 3,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "tests_only",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "tests_only",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2210230251,
+      "pr_id": 3235347485,
+      "repo_id": 60844169,
+      "agent": "Copilot",
+      "batch": 3,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "tests_only",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "tests_only",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2210238358,
+      "pr_id": 3235347485,
+      "repo_id": 60844169,
+      "agent": "Copilot",
+      "batch": 3,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "tests_only",
+        "addressed": "partly",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "tests_only",
+        "addressed": "partly",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "addressed",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2210251095,
+      "pr_id": 3230529031,
+      "repo_id": 60844169,
+      "agent": "Copilot",
+      "batch": 3,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "high",
+        "verdict": "qualifies"
+      },
+      "judge_2": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "high",
+        "verdict": "qualifies"
+      },
+      "judges_agree": true,
+      "qualifies": true,
+      "failure_reason": null,
+      "failed_conditions": [],
+      "requirement_paraphrase": "When exactly one configuration is loaded, logging setup should also use that configuration file's settings in addition to command-line and environment values.",
+      "paraphrase_check": {
+        "passed": true,
+        "failed_checks": [],
+        "longest_word_run_shared_with_source_texts": 2
+      }
+    },
+    {
+      "comment_id": 2214277783,
+      "pr_id": 3240066109,
+      "repo_id": 464577591,
+      "agent": "Copilot",
+      "batch": 3,
+      "fetch_status": "clone_failed",
+      "commits_reachable": false,
+      "diff_status": "unavailable",
+      "judge_1": {
+        "request_type": "refactor_design",
+        "addressed": "unclear",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "refactor_design",
+        "addressed": "unclear",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "commits_not_fetchable",
+      "failed_conditions": [
+        "commits_reachable",
+        "request_type",
+        "addressed",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2214774126,
+      "pr_id": 3241598089,
+      "repo_id": 60844169,
+      "agent": "Copilot",
+      "batch": 4,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "refactor_design",
+        "addressed": "no",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "refactor_design",
+        "addressed": "no",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "addressed",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2215696512,
+      "pr_id": 3241734959,
+      "repo_id": 60844169,
+      "agent": "Copilot",
+      "batch": 4,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "behaviour_change",
+        "addressed": "no",
+        "testable_offline": "yes",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "behaviour_change",
+        "addressed": "no",
+        "testable_offline": "yes",
+        "confidence": "low",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_addressed",
+      "failed_conditions": [
+        "addressed"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2215701118,
+      "pr_id": 3241734959,
+      "repo_id": 60844169,
+      "agent": "Copilot",
+      "batch": 4,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2217286054,
+      "pr_id": 3244901827,
+      "repo_id": 60844169,
+      "agent": "Copilot",
+      "batch": 4,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "refactor_design",
+        "addressed": "partly",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "refactor_design",
+        "addressed": "partly",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "addressed",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2217298215,
+      "pr_id": 3244901827,
+      "repo_id": 60844169,
+      "agent": "Copilot",
+      "batch": 4,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "low",
+        "verdict": "qualifies"
+      },
+      "judge_2": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "medium",
+        "verdict": "qualifies"
+      },
+      "judges_agree": true,
+      "qualifies": true,
+      "failure_reason": null,
+      "failed_conditions": [],
+      "requirement_paraphrase": "The provider HTTP helper should let exceptions from the request call propagate unchanged instead of wrapping them in a generic runtime error.",
+      "paraphrase_check": {
+        "passed": true,
+        "failed_checks": [],
+        "longest_word_run_shared_with_source_texts": 2
+      }
+    },
+    {
+      "comment_id": 2217299540,
+      "pr_id": 3244901827,
+      "repo_id": 60844169,
+      "agent": "Copilot",
+      "batch": 4,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2218983090,
+      "pr_id": 3246587900,
+      "repo_id": 60844169,
+      "agent": "Copilot",
+      "batch": 7,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "diff_commit": "b85085b1719cb333252cbf815b0b2022b02652a6",
+      "diff_commit_agent_attributed": true,
+      "judge_1": {
+        "request_type": "tests_only",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "tests_only",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null,
+      "superseded": {
+        "reason": "judged on the next commit's empty diff; criterion 2 refers to the first later commit that touches the file (correction, D50)",
+        "batch": 4,
+        "diff_commit": "22ef898857597976addcf7936624326e77ade14d",
+        "diff_status": "empty",
+        "judge_1": {
+          "request_type": "tests_only",
+          "addressed": "no",
+          "testable_offline": "na",
+          "confidence": "high",
+          "verdict": "fails"
+        },
+        "judge_2": {
+          "request_type": "tests_only",
+          "addressed": "no",
+          "testable_offline": "na",
+          "confidence": "medium",
+          "verdict": "fails"
+        },
+        "judges_agree": true,
+        "qualifies": false,
+        "failure_reason": "not_behaviour_change_or_defect",
+        "failed_conditions": [
+          "request_type",
+          "addressed",
+          "testable_offline"
+        ]
+      }
+    },
+    {
+      "comment_id": 2220018704,
+      "pr_id": 3214122373,
+      "repo_id": 172703996,
+      "agent": "Copilot",
+      "batch": 4,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "tests_only",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "tests_only",
+        "addressed": "partly",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "addressed",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2222823720,
+      "pr_id": 3250824111,
+      "repo_id": 60844169,
+      "agent": "Copilot",
+      "batch": 4,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "medium",
+        "verdict": "qualifies"
+      },
+      "judge_2": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "medium",
+        "verdict": "qualifies"
+      },
+      "judges_agree": true,
+      "qualifies": true,
+      "failure_reason": null,
+      "failed_conditions": [],
+      "requirement_paraphrase": "The task status check should also detect and report installation under the fallback scheduler, not only under the primary scheduler.",
+      "paraphrase_check": {
+        "passed": true,
+        "failed_checks": [],
+        "longest_word_run_shared_with_source_texts": 2
+      }
+    },
+    {
+      "comment_id": 2226682791,
+      "pr_id": 3257632101,
+      "repo_id": 4127088,
+      "agent": "Copilot",
+      "batch": 4,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "medium",
+        "verdict": "qualifies"
+      },
+      "judge_2": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "high",
+        "verdict": "qualifies"
+      },
+      "judges_agree": true,
+      "qualifies": true,
+      "failure_reason": null,
+      "failed_conditions": [],
+      "requirement_paraphrase": "With a claims challenge, the raised error should tell the user to run the account-connect command with the claims value as its claims-challenge argument.",
+      "paraphrase_check": {
+        "passed": true,
+        "failed_checks": [],
+        "longest_word_run_shared_with_source_texts": 2
+      }
+    },
+    {
+      "comment_id": 2226952312,
+      "pr_id": 3250546916,
+      "repo_id": 201991558,
+      "agent": "Copilot",
+      "batch": 4,
+      "fetch_status": "clone_failed",
+      "commits_reachable": false,
+      "diff_status": "unavailable",
+      "judge_1": {
+        "request_type": "refactor_design",
+        "addressed": "unclear",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "refactor_design",
+        "addressed": "unclear",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "commits_not_fetchable",
+      "failed_conditions": [
+        "commits_reachable",
+        "request_type",
+        "addressed",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2228632901,
+      "pr_id": 3257741269,
+      "repo_id": 4127088,
+      "agent": "Copilot",
+      "batch": 4,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "style_lint_docs",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "style_lint_docs",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2228642990,
+      "pr_id": 3257632101,
+      "repo_id": 4127088,
+      "agent": "Copilot",
+      "batch": 4,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "style_lint_docs",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "medium",
+        "verdict": "qualifies"
+      },
+      "judges_agree": false,
+      "qualifies": false,
+      "failure_reason": "judges_disagree",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2228645887,
+      "pr_id": 3257632101,
+      "repo_id": 4127088,
+      "agent": "Copilot",
+      "batch": 4,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "style_lint_docs",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "medium",
+        "verdict": "qualifies"
+      },
+      "judges_agree": false,
+      "qualifies": false,
+      "failure_reason": "judges_disagree",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2228648714,
+      "pr_id": 3257632101,
+      "repo_id": 4127088,
+      "agent": "Copilot",
+      "batch": 4,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "tests_only",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "tests_only",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2229250252,
+      "pr_id": 3260530232,
+      "repo_id": 464577591,
+      "agent": "Copilot",
+      "batch": 4,
+      "fetch_status": "clone_failed",
+      "commits_reachable": false,
+      "diff_status": "unavailable",
+      "judge_1": {
+        "request_type": "question_unclear",
+        "addressed": "unclear",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "question_unclear",
+        "addressed": "unclear",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "commits_not_fetchable",
+      "failed_conditions": [
+        "commits_reachable",
+        "request_type",
+        "addressed",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2229869738,
+      "pr_id": 3261572196,
+      "repo_id": 136202695,
+      "agent": "Copilot",
+      "batch": 4,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "tests_only",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "tests_only",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2241170862,
+      "pr_id": 3257741269,
+      "repo_id": 4127088,
+      "agent": "Copilot",
+      "batch": 4,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2243466254,
+      "pr_id": 3277927878,
+      "repo_id": 12888993,
+      "agent": "Copilot",
+      "batch": 4,
+      "fetch_status": "over_cap",
+      "commits_reachable": false,
+      "diff_status": "unavailable",
+      "judge_1": {
+        "request_type": "refactor_design",
+        "addressed": "unclear",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "refactor_design",
+        "addressed": "unclear",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "commits_not_fetchable",
+      "failed_conditions": [
+        "commits_reachable",
+        "request_type",
+        "addressed",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2258613125,
+      "pr_id": 3298481835,
+      "repo_id": 948169755,
+      "agent": "Copilot",
+      "batch": 4,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "removal_cleanup",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "removal_cleanup",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2258621018,
+      "pr_id": 3298481835,
+      "repo_id": 948169755,
+      "agent": "Copilot",
+      "batch": 4,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "removal_cleanup",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "removal_cleanup",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2258637033,
+      "pr_id": 3298481835,
+      "repo_id": 948169755,
+      "agent": "Copilot",
+      "batch": 7,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "diff_commit": "2a6d7a6533210caaec6dd5ff1efed923788895b2",
+      "diff_commit_agent_attributed": true,
+      "judge_1": {
+        "request_type": "refactor_design",
+        "addressed": "no",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "refactor_design",
+        "addressed": "no",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "addressed",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null,
+      "superseded": {
+        "reason": "judged on the next commit's empty diff; criterion 2 refers to the first later commit that touches the file (correction, D50)",
+        "batch": 4,
+        "diff_commit": "02e18d0e1bc2955379efd5815f88aec039766874",
+        "diff_status": "empty",
+        "judge_1": {
+          "request_type": "refactor_design",
+          "addressed": "no",
+          "testable_offline": "na",
+          "confidence": "medium",
+          "verdict": "fails"
+        },
+        "judge_2": {
+          "request_type": "refactor_design",
+          "addressed": "no",
+          "testable_offline": "na",
+          "confidence": "medium",
+          "verdict": "fails"
+        },
+        "judges_agree": true,
+        "qualifies": false,
+        "failure_reason": "not_behaviour_change_or_defect",
+        "failed_conditions": [
+          "request_type",
+          "addressed",
+          "testable_offline"
+        ]
+      }
+    },
+    {
+      "comment_id": 2275609809,
+      "pr_id": 3312673456,
+      "repo_id": 8941695,
+      "agent": "Copilot",
+      "batch": 4,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "question_unclear",
+        "addressed": "unclear",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "question_unclear",
+        "addressed": "unclear",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "addressed",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2276358935,
+      "pr_id": 3321819058,
+      "repo_id": 60844169,
+      "agent": "Copilot",
+      "batch": 4,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "removal_cleanup",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "removal_cleanup",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2277957986,
+      "pr_id": 3237622389,
+      "repo_id": 992876953,
+      "agent": "Copilot",
+      "batch": 4,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2279614274,
+      "pr_id": 3323769162,
+      "repo_id": 201991558,
+      "agent": "Copilot",
+      "batch": 5,
+      "fetch_status": "clone_failed",
+      "commits_reachable": false,
+      "diff_status": "unavailable",
+      "judge_1": {
+        "request_type": "defect_report",
+        "addressed": "unclear",
+        "testable_offline": "yes",
+        "confidence": "low",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "defect_report",
+        "addressed": "unclear",
+        "testable_offline": "yes",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "commits_not_fetchable",
+      "failed_conditions": [
+        "commits_reachable",
+        "addressed"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2279617881,
+      "pr_id": 3323770528,
+      "repo_id": 201991558,
+      "agent": "Copilot",
+      "batch": 5,
+      "fetch_status": "clone_failed",
+      "commits_reachable": false,
+      "diff_status": "unavailable",
+      "judge_1": {
+        "request_type": "defect_report",
+        "addressed": "unclear",
+        "testable_offline": "yes",
+        "confidence": "low",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "defect_report",
+        "addressed": "unclear",
+        "testable_offline": "yes",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "commits_not_fetchable",
+      "failed_conditions": [
+        "commits_reachable",
+        "addressed"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2282900309,
+      "pr_id": 3331243871,
+      "repo_id": 917852255,
+      "agent": "Copilot",
+      "batch": 5,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2282901584,
+      "pr_id": 3331243871,
+      "repo_id": 917852255,
+      "agent": "Copilot",
+      "batch": 5,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2285797080,
+      "pr_id": 3334924512,
+      "repo_id": 156401841,
+      "agent": "Copilot",
+      "batch": 5,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "question_unclear",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "question_unclear",
+        "addressed": "unclear",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "addressed",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2288127486,
+      "pr_id": 3336975392,
+      "repo_id": 918224983,
+      "agent": "Copilot",
+      "batch": 5,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "removal_cleanup",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2288923303,
+      "pr_id": 3335197686,
+      "repo_id": 917852255,
+      "agent": "Copilot",
+      "batch": 5,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "question_unclear",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "question_unclear",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2289129011,
+      "pr_id": 3339114394,
+      "repo_id": 917852255,
+      "agent": "Copilot",
+      "batch": 5,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "removal_cleanup",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "removal_cleanup",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2311786626,
+      "pr_id": 3298481835,
+      "repo_id": 948169755,
+      "agent": "Copilot",
+      "batch": 5,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "question_unclear",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "question_unclear",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2311789718,
+      "pr_id": 3298481835,
+      "repo_id": 948169755,
+      "agent": "Copilot",
+      "batch": 5,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2312205243,
+      "pr_id": 3369544533,
+      "repo_id": 948169755,
+      "agent": "Copilot",
+      "batch": 5,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "tests_only",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "tests_only",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2320071825,
+      "pr_id": 3377250259,
+      "repo_id": 898171798,
+      "agent": "Copilot",
+      "batch": 5,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "refactor_design",
+        "addressed": "no",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "refactor_design",
+        "addressed": "no",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "addressed",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2331247278,
+      "pr_id": 3392399944,
+      "repo_id": 369428935,
+      "agent": "Copilot",
+      "batch": 5,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "high",
+        "verdict": "qualifies"
+      },
+      "judge_2": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "medium",
+        "verdict": "qualifies"
+      },
+      "judges_agree": true,
+      "qualifies": true,
+      "failure_reason": null,
+      "failed_conditions": [],
+      "requirement_paraphrase": "Each spectral index transform should take an explicit keepdim flag defaulting to false instead of forwarding arbitrary keyword arguments to its parent.",
+      "paraphrase_check": {
+        "passed": true,
+        "failed_checks": [],
+        "longest_word_run_shared_with_source_texts": 3
+      }
+    },
+    {
+      "comment_id": 2331431679,
+      "pr_id": 3392393778,
+      "repo_id": 369428935,
+      "agent": "Copilot",
+      "batch": 5,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "removal_cleanup",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "removal_cleanup",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2331433642,
+      "pr_id": 3392393778,
+      "repo_id": 369428935,
+      "agent": "Copilot",
+      "batch": 5,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "medium",
+        "verdict": "qualifies"
+      },
+      "judge_2": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "low",
+        "verdict": "qualifies"
+      },
+      "judges_agree": true,
+      "qualifies": true,
+      "failure_reason": null,
+      "failed_conditions": [],
+      "requirement_paraphrase": "The cloud download function should no longer accept an MD5 argument or verify the downloaded file's checksum.",
+      "paraphrase_check": {
+        "passed": true,
+        "failed_checks": [],
+        "longest_word_run_shared_with_source_texts": 2
+      }
+    },
+    {
+      "comment_id": 2338280918,
+      "pr_id": 3404386266,
+      "repo_id": 136202695,
+      "agent": "Copilot",
+      "batch": 5,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "tests_only",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "tests_only",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2339584267,
+      "pr_id": 3405228167,
+      "repo_id": 100315955,
+      "agent": "Copilot",
+      "batch": 7,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "diff_commit": "af7787e2b465c7186a52395b974674c228116e36",
+      "diff_commit_agent_attributed": true,
+      "judge_1": {
+        "request_type": "style_lint_docs",
+        "addressed": "no",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "style_lint_docs",
+        "addressed": "no",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "addressed",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null,
+      "superseded": {
+        "reason": "judged on the next commit's empty diff; criterion 2 refers to the first later commit that touches the file (correction, D50)",
+        "batch": 5,
+        "diff_commit": "ef49e6a934d118e6de02fdfbd954520b8325699b",
+        "diff_status": "empty",
+        "judge_1": {
+          "request_type": "style_lint_docs",
+          "addressed": "unclear",
+          "testable_offline": "na",
+          "confidence": "low",
+          "verdict": "fails"
+        },
+        "judge_2": {
+          "request_type": "style_lint_docs",
+          "addressed": "unclear",
+          "testable_offline": "na",
+          "confidence": "medium",
+          "verdict": "fails"
+        },
+        "judges_agree": true,
+        "qualifies": false,
+        "failure_reason": "not_behaviour_change_or_defect",
+        "failed_conditions": [
+          "request_type",
+          "addressed",
+          "testable_offline"
+        ]
+      }
+    },
+    {
+      "comment_id": 2349474352,
+      "pr_id": 3418238442,
+      "repo_id": 898171798,
+      "agent": "Copilot",
+      "batch": 5,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "high",
+        "verdict": "qualifies"
+      },
+      "judge_2": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "medium",
+        "verdict": "qualifies"
+      },
+      "judges_agree": true,
+      "qualifies": true,
+      "failure_reason": null,
+      "failed_conditions": [],
+      "requirement_paraphrase": "Publishing an item should not take a return-response flag; API responses should instead be stored in a workspace responses dictionary initialised to None.",
+      "paraphrase_check": {
+        "passed": true,
+        "failed_checks": [],
+        "longest_word_run_shared_with_source_texts": 3
+      }
+    },
+    {
+      "comment_id": 2353959643,
+      "pr_id": 3424154725,
+      "repo_id": 136202695,
+      "agent": "Copilot",
+      "batch": 5,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "removal_cleanup",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "low",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "removal_cleanup",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "low",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2357403579,
+      "pr_id": 3428441045,
+      "repo_id": 136202695,
+      "agent": "Copilot",
+      "batch": 5,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "removal_cleanup",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "removal_cleanup",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2361947652,
+      "pr_id": 3433057940,
+      "repo_id": 136202695,
+      "agent": "Copilot",
+      "batch": 5,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "style_lint_docs",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "style_lint_docs",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2365393909,
+      "pr_id": 3436799116,
+      "repo_id": 974445592,
+      "agent": "Copilot",
+      "batch": 5,
+      "fetch_status": "clone_failed",
+      "commits_reachable": false,
+      "diff_status": "unavailable",
+      "judge_1": {
+        "request_type": "style_lint_docs",
+        "addressed": "unclear",
+        "testable_offline": "na",
+        "confidence": "low",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "removal_cleanup",
+        "addressed": "unclear",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "commits_not_fetchable",
+      "failed_conditions": [
+        "commits_reachable",
+        "request_type",
+        "addressed",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2375253177,
+      "pr_id": 3448564799,
+      "repo_id": 987744903,
+      "agent": "Copilot",
+      "batch": 5,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "refactor_design",
+        "addressed": "partly",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "refactor_design",
+        "addressed": "partly",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "addressed",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2396290882,
+      "pr_id": 3475441504,
+      "repo_id": 974445592,
+      "agent": "Copilot",
+      "batch": 5,
+      "fetch_status": "clone_failed",
+      "commits_reachable": false,
+      "diff_status": "unavailable",
+      "judge_1": {
+        "request_type": "process_other",
+        "addressed": "unclear",
+        "testable_offline": "na",
+        "confidence": "low",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "process_other",
+        "addressed": "unclear",
+        "testable_offline": "na",
+        "confidence": "low",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "commits_not_fetchable",
+      "failed_conditions": [
+        "commits_reachable",
+        "request_type",
+        "addressed",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2406291283,
+      "pr_id": 3486247989,
+      "repo_id": 12830126,
+      "agent": "Copilot",
+      "batch": 5,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "high",
+        "verdict": "qualifies"
+      },
+      "judge_2": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "high",
+        "verdict": "qualifies"
+      },
+      "judges_agree": true,
+      "qualifies": true,
+      "failure_reason": null,
+      "failed_conditions": [],
+      "requirement_paraphrase": "The grouped pinyin function should accept a string or a list of strings, and skip word segmentation when given a list.",
+      "paraphrase_check": {
+        "passed": true,
+        "failed_checks": [],
+        "longest_word_run_shared_with_source_texts": 2
+      }
+    },
+    {
+      "comment_id": 2415830344,
+      "pr_id": 3497926869,
+      "repo_id": 184555939,
+      "agent": "Copilot",
+      "batch": 6,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "high",
+        "verdict": "qualifies"
+      },
+      "judge_2": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "medium",
+        "verdict": "qualifies"
+      },
+      "judges_agree": true,
+      "qualifies": true,
+      "failure_reason": null,
+      "failed_conditions": [],
+      "requirement_paraphrase": "The combined plot-adjustment function should accept a single soft-fail flag that applies to both the legend and text rescaling steps.",
+      "paraphrase_check": {
+        "passed": true,
+        "failed_checks": [],
+        "longest_word_run_shared_with_source_texts": 3
+      }
+    },
+    {
+      "comment_id": 2415893643,
+      "pr_id": 3497926869,
+      "repo_id": 184555939,
+      "agent": "Copilot",
+      "batch": 6,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2438453364,
+      "pr_id": 3524575578,
+      "repo_id": 948169755,
+      "agent": "Copilot",
+      "batch": 7,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "diff_commit": "9b1677b464f3a4361d845784f9109c45a8872d60",
+      "diff_commit_agent_attributed": true,
+      "judge_1": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null,
+      "superseded": {
+        "reason": "judged on the next commit's empty diff; criterion 2 refers to the first later commit that touches the file (correction, D50)",
+        "batch": 6,
+        "diff_commit": "725bbb232139bfdbb7cd5542ee2c5f2c75d193d2",
+        "diff_status": "empty",
+        "judge_1": {
+          "request_type": "refactor_design",
+          "addressed": "no",
+          "testable_offline": "na",
+          "confidence": "high",
+          "verdict": "fails"
+        },
+        "judge_2": {
+          "request_type": "refactor_design",
+          "addressed": "no",
+          "testable_offline": "na",
+          "confidence": "medium",
+          "verdict": "fails"
+        },
+        "judges_agree": true,
+        "qualifies": false,
+        "failure_reason": "not_behaviour_change_or_defect",
+        "failed_conditions": [
+          "request_type",
+          "addressed",
+          "testable_offline"
+        ]
+      }
+    },
+    {
+      "comment_id": 2477327497,
+      "pr_id": 3564611876,
+      "repo_id": 587050620,
+      "agent": "Copilot",
+      "batch": 7,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "diff_commit": "6da81b36cca2b1c91c4452a9c0b71cf13b9e97cf",
+      "diff_commit_agent_attributed": true,
+      "judge_1": {
+        "request_type": "defect_report",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "medium",
+        "verdict": "qualifies"
+      },
+      "judge_2": {
+        "request_type": "defect_report",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "medium",
+        "verdict": "qualifies"
+      },
+      "judges_agree": true,
+      "qualifies": true,
+      "failure_reason": null,
+      "failed_conditions": [],
+      "requirement_paraphrase": "Converted image content for the responses endpoint should follow its documented image-input format, with the image URL as a direct field.",
+      "paraphrase_check": {
+        "passed": true,
+        "failed_checks": [],
+        "longest_word_run_shared_with_source_texts": 5
+      },
+      "superseded": {
+        "reason": "judged on the next commit's empty diff; criterion 2 refers to the first later commit that touches the file (correction, D50)",
+        "batch": 6,
+        "diff_commit": "43c8fc922eeb43b2e040867a8e5588a9a165dd49",
+        "diff_status": "empty",
+        "judge_1": {
+          "request_type": "defect_report",
+          "addressed": "no",
+          "testable_offline": "yes",
+          "confidence": "low",
+          "verdict": "fails"
+        },
+        "judge_2": {
+          "request_type": "question_unclear",
+          "addressed": "no",
+          "testable_offline": "na",
+          "confidence": "medium",
+          "verdict": "fails"
+        },
+        "judges_agree": true,
+        "qualifies": false,
+        "failure_reason": "not_behaviour_change_or_defect",
+        "failed_conditions": [
+          "request_type",
+          "addressed",
+          "testable_offline"
+        ]
+      }
+    },
+    {
+      "comment_id": 2504524300,
+      "pr_id": 3575054853,
+      "repo_id": 182067506,
+      "agent": "Copilot",
+      "batch": 6,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "tests_only",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "tests_only",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2513276195,
+      "pr_id": 3600457266,
+      "repo_id": 66776276,
+      "agent": "Copilot",
+      "batch": 6,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2513344996,
+      "pr_id": 3600457266,
+      "repo_id": 66776276,
+      "agent": "Copilot",
+      "batch": 6,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2573329874,
+      "pr_id": 3677083241,
+      "repo_id": 12888993,
+      "agent": "Copilot",
+      "batch": 6,
+      "fetch_status": "over_cap",
+      "commits_reachable": false,
+      "diff_status": "unavailable",
+      "judge_1": {
+        "request_type": "style_lint_docs",
+        "addressed": "unclear",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "style_lint_docs",
+        "addressed": "unclear",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "commits_not_fetchable",
+      "failed_conditions": [
+        "commits_reachable",
+        "request_type",
+        "addressed",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2577219382,
+      "pr_id": 3626906682,
+      "repo_id": 148077512,
+      "agent": "Copilot",
+      "batch": 6,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2607658018,
+      "pr_id": 3715789527,
+      "repo_id": 139199684,
+      "agent": "Devin",
+      "batch": 6,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "high",
+        "verdict": "qualifies"
+      },
+      "judge_2": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "high",
+        "verdict": "qualifies"
+      },
+      "judges_agree": true,
+      "qualifies": true,
+      "failure_reason": null,
+      "failed_conditions": [],
+      "requirement_paraphrase": "If a successful token response lacks an access token, raise a clear, user-friendly error instead of an unhandled missing-key failure.",
+      "paraphrase_check": {
+        "passed": true,
+        "failed_checks": [],
+        "longest_word_run_shared_with_source_texts": 3
+      }
+    },
+    {
+      "comment_id": 2651335907,
+      "pr_id": 3767792571,
+      "repo_id": 139199684,
+      "agent": "Devin",
+      "batch": 6,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2666115515,
+      "pr_id": 3786070623,
+      "repo_id": 139199684,
+      "agent": "Devin",
+      "batch": 6,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2666116325,
+      "pr_id": 3786070623,
+      "repo_id": 139199684,
+      "agent": "Devin",
+      "batch": 6,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "refactor_design",
+        "addressed": "no",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "refactor_design",
+        "addressed": "no",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "addressed",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2713012806,
+      "pr_id": 3838546999,
+      "repo_id": 139199684,
+      "agent": "Devin",
+      "batch": 6,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "style_lint_docs",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "style_lint_docs",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2726163260,
+      "pr_id": 3848411760,
+      "repo_id": 139199684,
+      "agent": "Devin",
+      "batch": 6,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "medium",
+        "verdict": "qualifies"
+      },
+      "judge_2": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "medium",
+        "verdict": "qualifies"
+      },
+      "judges_agree": true,
+      "qualifies": true,
+      "failure_reason": null,
+      "failed_conditions": [],
+      "requirement_paraphrase": "The incoming-events websocket endpoint should always perform the standard socket acceptance and authentication handshake, with no separate plain-accept path when authentication is unset.",
+      "paraphrase_check": {
+        "passed": true,
+        "failed_checks": [],
+        "longest_word_run_shared_with_source_texts": 3
+      }
+    },
+    {
+      "comment_id": 2790329439,
+      "pr_id": 3914019120,
+      "repo_id": 35178170,
+      "agent": "Claude_Code",
+      "batch": 6,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "tests_only",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "tests_only",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2799907135,
+      "pr_id": 3932480484,
+      "repo_id": 139199684,
+      "agent": "Devin",
+      "batch": 6,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "removal_cleanup",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2879970487,
+      "pr_id": 4017319060,
+      "repo_id": 139199684,
+      "agent": "Devin",
+      "batch": 6,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "question_unclear",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "question_unclear",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2880014194,
+      "pr_id": 3980680252,
+      "repo_id": 1101139767,
+      "agent": "Claude_Code",
+      "batch": 6,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2880019224,
+      "pr_id": 3980680252,
+      "repo_id": 1101139767,
+      "agent": "Claude_Code",
+      "batch": 6,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "refactor_design",
+        "addressed": "no",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "refactor_design",
+        "addressed": "no",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "addressed",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2927487935,
+      "pr_id": 4067244689,
+      "repo_id": 33884891,
+      "agent": "Claude_Code",
+      "batch": 6,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "refactor_design",
+        "addressed": "no",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "refactor_design",
+        "addressed": "no",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "addressed",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2928001989,
+      "pr_id": 4066972680,
+      "repo_id": 33884891,
+      "agent": "Claude_Code",
+      "batch": 6,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 2953438776,
+      "pr_id": 4095008687,
+      "repo_id": 133100880,
+      "agent": "Copilot",
+      "batch": 6,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "high",
+        "verdict": "qualifies"
+      },
+      "judge_2": {
+        "request_type": "behaviour_change",
+        "addressed": "yes",
+        "testable_offline": "yes",
+        "confidence": "high",
+        "verdict": "qualifies"
+      },
+      "judges_agree": true,
+      "qualifies": true,
+      "failure_reason": null,
+      "failed_conditions": [],
+      "requirement_paraphrase": "When provided input artifacts block local execution, the raised error message should name the offending artifact arguments.",
+      "paraphrase_check": {
+        "passed": true,
+        "failed_checks": [],
+        "longest_word_run_shared_with_source_texts": 3
+      }
+    },
+    {
+      "comment_id": 2953438785,
+      "pr_id": 4095008687,
+      "repo_id": 133100880,
+      "agent": "Copilot",
+      "batch": 6,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "process_other",
+        "addressed": "unclear",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "process_other",
+        "addressed": "unclear",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "addressed",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    },
+    {
+      "comment_id": 3072702941,
+      "pr_id": 4124128098,
+      "repo_id": 1085158702,
+      "agent": "Claude_Code",
+      "batch": 6,
+      "fetch_status": "fetched",
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "judge_1": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
+      "qualifies": false,
+      "failure_reason": "not_behaviour_change_or_defect",
+      "failed_conditions": [
+        "request_type",
+        "testable_offline"
+      ],
+      "requirement_paraphrase": null,
+      "paraphrase_check": null
+    }
+  ]
+}

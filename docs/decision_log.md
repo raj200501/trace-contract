@@ -1391,3 +1391,52 @@ not adopted. A later protocol version must adopt it before any confirmatory run.
   with one natural negative per family. This exceeds the cap of 30 tasks in §15.6:
   with 30, power is 0.45 at a difference of 0.20 and 0.87 at 0.35. The cap stays as
   hashed; the natural arm remains a pilot.
+
+### D50. Stage S9 of the natural PR-review screen; a corrected deviation; local workspaces sealed
+**S9** (protocol §15.6; `data/manifests/screening_natural_aidev_s9.json`). Of the 150
+sampled comments:
+* 19 could not be judged, because their repositories could not be fetched here. This
+  environment's GitHub proxy refused 3 repositories (17 comments), and 1 repository
+  went over the 300 MB cap (2 comments).
+* The other 131 were judged by two independent model agents, from pseudonymised text
+  and the diff of the reviewed commit against the first later commit that touches the
+  commented file.
+
+**Qualifying comments.** A comment qualifies when both judges say it requests a behaviour
+change or reports a defect, that the commit addressed it, and that it is testable
+offline. 31 comments qualify: 20.7% of the 150 sampled (Wilson 95% interval 15.0% to
+27.8%), or 23.7% of the 131 judged (17.2% to 31.6%). They come from 25 PRs in 14
+repositories. These rates are model proposals, not human coding. Of the comments that
+do not qualify, 92 ask for refactoring, style, tests or process, and 6 were not
+addressed. The judges disagreed on 2 comments, which are excluded. Agreement between the
+judges was κ = 0.93 for "behaviour or defect", 0.94 for "addressed" and 0.93 for
+"testable offline".
+
+**Families.** With at most 2 per repository, taking each repository's earliest PRs,
+there are 20 provisional families: 17 Copilot and 3 Devin. S10 can only lower this
+number.
+
+**Deviation, corrected.** The first judging pass showed 12 comments the diff to the
+PR's next commit. That commit does not change the commented file, so the diff was
+empty. Criterion 2 of §15.6 refers to the first later commit that touches the file.
+The 12 were re-judged by two new judges on compliant diffs. Three of them now qualify,
+none dropped out, and the count rose from 28 to 31. The earlier judgments are kept in
+each row under `superseded`. One addressing commit counts as agent-attributed under
+S8a only because a CI bot made it; that comment fails on its judgments anyway. For one
+issue body, two third-party model identifiers were masked in the judges' copy.
+
+**Local workspaces sealed.** A verification by model agents found that every controlled
+session's first prompt names its workspace under `/home/user/cs_workspaces`. That
+directory still held the reference solution, the held-out pre-correction state and the
+raw transcript, so a fresh agent given U1 could have found them. Four local
+directories (`cs_workspaces`, `gen_workspaces`, `tc_review`, `tc_review_dl`) were
+therefore archived as tar.gz files into the sealed directory. File counts were checked
+against each directory, and the archives' sha256 values are recorded next to them. The
+directories were then removed. Before any fresh attempt, the instructions substitute
+the old workspace paths with those of the new workspace, as recorded in a protocol
+amendment (§15.4 requires U1 verbatim otherwise).
+
+**Disclosure.** Commit `577860c` wrote rule:v1 triage proposals into
+`tasks/CS-0*/provenance.json`, contrary to D47's statement that frozen task files are
+not edited. These files are not hashed inputs of the analysis. The proposals are being
+moved to sidecar files, and the four records restored.
