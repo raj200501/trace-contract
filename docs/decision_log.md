@@ -1927,3 +1927,60 @@ are descriptive, not inferential. The fresh attempts are natural negatives and p
 which no generator wrote. They measure information lost when a task is reconstructed
 from the initial request alone, not the skill of an agent that was never told the
 correction.
+
+### D62. fresh-v1: independent recomputation, error analysis, and corrections to D58 and §18.2
+**Recomputation.** An agent recomputed the run's numbers with its own scripts, without
+importing the package. It matches `analysis.json`, `analysis.md`,
+`analysis_sensitivity.md` and D61 in 4,763 fields and 3,332 rendered cells.
+
+**Error analysis.** Read-only, from the patches, the verifier tests and the grader's
+per-check output; the full write-up is kept for the manuscript.
+1. **CS-01: a loud inversion.** C1 and C2 encode the initial request that the correction
+   retracted: by default, drop a trailing ".0".
+   * They fail the reference on 12 of their 14 checks, pass only the checks of the one
+     requirement the correction kept, and accept all 10 `u1` attempts.
+   * This gives 10 of C1's 24 false acceptances and 10 of its 13 false rejections.
+   * A rule that a verifier must pass its reference would catch it. In the oracle-gated
+     view C1 has FA 14/19 and FR 3/40.
+   * In CS-03 and CS-04 the loss is silent: C1 passes both references and accepts 14 of
+     the 17 correction-violating attempts, against 0 of 17 for C3.
+2. **CS-02: two label artefacts.** D19 labels CS-02-fresh-A-u1-4 and -u1-5 invalid only
+   through the regression norm.
+   * The one failing base test asserts on a private attribute that both attempts
+     deliberately removed. Both pass all 28 reference checks and the labeler.
+   * So C3, C4 and B2 accept none of the 27 correction-violating attempts. Their FA of
+     2/29 under D19 is these two attempts.
+   * No CS-02 `u1` attempt violates a correction requirement (0/10).
+3. **CS-03: the audit added false rejections.** C4's 6 false rejections that C3 does not
+   make come from 2 checks that its single audit revision added.
+   * The checks fix the answers of one development attack, and of the reference, to
+     edge cases the contracts leave open: contractions, digits and underscores in
+     all-caps words.
+   * The audit record shows no findings after one iteration and does not show that
+     checks were added.
+   * On this stratum the audit removed no false acceptance.
+4. **B1: the session agent's own tests.** All 34 of B1's false rejections come from the
+   40 checks that the session agent added to the reference state's test files. None
+   comes from the repository's earlier tests, and none from the environment. The base
+   tests alone accept 17 of 29 invalid attempts and reject no valid one; under D19 they
+   cannot reject one, since they are the regression norm.
+
+**Corrections.**
+* D58 says the 29 invalid `u1` attempts are natural correction-violating negatives. Only
+  27 are; the other 2 are the CS-02 attempts of item 2.
+* §18.2 says that every attempt's context included the task-list reminders. The CS-04
+  audit records them in 16 of its 20 attempts.
+* The environment block also named the build session's scratch directory, as a place
+  for temporary files; the four audits' notes record this. CS-02-fresh-A-final-1 wrote
+  three helper files there and read them back, which is why the reviewed audit excludes
+  it. The exclusion reason in `analysis.md`, "a read of forbidden material", is the
+  generic text. The attempt opened nothing there but its own files.
+* `analysis.md` does not state the number of unresolved pairs (§15.3). It is 0: all 672
+  logs hold three runs with identical summaries (D61).
+* Audit records:
+  * CS-01's `initial_audited` spec names 5 of the 12 failing checks, because the
+    message is cut at five.
+  * CS-03's `full_audited` record does not show the 2 checks its revision added.
+
+  The recorded files stay as they are. For new audits, the record is to keep every
+  failing check and the checks each revision added or removed.
