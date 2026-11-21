@@ -1488,3 +1488,81 @@ verifier under v0.7: sha256
   and 2 issue bodies keep a link that names a person.
 * D34: "user-rejected pre-correction states" should read "states before a scripted
   correction".
+
+### D52. Fixes from the verification of round 4 (commit `a0542bb`)
+Four model agents made these fixes, on disjoint files. Each defect was reproduced before
+it was fixed.
+* **Harness 0.3.5** (protocol §16.1).
+  * A result whose first JSON encoding fails is converted by trusted code that calls no
+    candidate method. This covers mixed or tuple keys, cycles, nesting deeper than 100
+    levels, dict subclasses whose methods raise, and type names that fail to format.
+    Placeholders name the type.
+  * A last-resort payload keeps `ok` and the error type, so a successful call is never
+    reported as failed and no call is left without a result.
+  * Two further behaviours apply only where 0.3.3 left a call without a result: a
+    fallback for messages longer than the 199,921 characters the grader can read back,
+    and a guarded output flush.
+  * 17 new probe checks fail under 0.3.4 and pass under 0.3.5. All 19 Docker tests pass.
+  * PR_SET_NO_NEW_PRIVS was not added to the harness, because that would be a second
+    difference from 0.3.3. TraceContract's own runner already sets no-new-privileges.
+* **Harbor exporter 0.3.0.**
+  * It refuses every task the acceptance gate refuses, a rejected source included.
+  * Its last-resort cleanup works on a bind-mounted `/logs/verifier`, which the old
+    rename fallback could not handle.
+  * The exported verifier image has no setuid or setgid binaries (the base image has
+    11).
+  * Re-validated with Harbor 0.25.0 under harness 0.3.5: oracle 1.0, wrong 0.0, nop
+    0.0, and no reward on either planted-reward probe. The control run with the
+    `c5ede4c` exporter still gives 1.0 on both probes.
+* **Reconstruction check v2.**
+  * The result is rolled up per changed file. A file without a passed or explained
+    first-edit or base-read item makes the report incomplete, which is how a leak
+    masked by an unrecognised shell command now shows.
+  * One implementation of the Edit tool's semantics is shared with the replay
+    (`ingest/edit_tool.py`, checked against the installed tool), with differential
+    tests.
+  * Restores keep the files the session created. Shell writes to a directory, the root
+    or a glob are lost, not kept. Here-strings are not read as heredocs.
+  * CS-01 to CS-04 still pass, with every changed file attested.
+* **Builds, gate and preflight.**
+  * New builds record no leakage check, then run the reconstruction check.
+  * The acceptance gate and the preflight require a passed reconstruction record whose
+    inputs match the current files.
+  * The preflight requires `--repeats 3` and harness 0.3.5 or later for new runs.
+  * `reconstruction-check` exits 2 when its result is incomplete.
+* **Schema, labels, analysis and report.**
+  * New identifiers (§16.3), with attempt records for fresh attempts. The pilot's
+    records re-serialise byte for byte.
+  * D19 applies its natural-candidate rule to the natural origins. A pre-review state
+    that passes the reference checks is labelled ambiguous. Stratum candidates can be
+    labelled in their own files.
+  * New runs, those graded with harness 0.3.4 or later, get the reporting rules of
+    §15.7 and §16.6 (`stats.py`). Fresh attempts without a passed audit are excluded,
+    and the exclusion is reported.
+  * The report names each run's populations and never pools them silently.
+  * The frozen pilot's analysis and report regenerate identically.
+* **Strata.** Symbolic links are refused. `add-stratum-candidate` registers a candidate
+  without touching `task.json`.
+* **Fresh-agent workspaces and audit.**
+  * Every text written into a workspace is checked for outside paths.
+  * The path substitution of §16.2 is recorded in each workspace manifest, together with
+    the instruction's sha256.
+  * The wrappers are checked and smoke-tested in Docker, and git runs with an
+    allowlisted environment.
+  * The fresh-attempt audit profile forbids everything outside the attempt's workspace,
+    in tool inputs and outputs alike.
+  * Subagents' shell commands start in the study repository. Attempts must therefore
+    use absolute paths, and the audit excludes any attempt that does not.
+* **Records.**
+  * The rule:v1 triage proposals moved to `tasks/<id>/triage.json`. The four provenance
+    records are restored byte for byte to `c5ede4c`, and the frozen-input check no
+    longer whitelists them.
+  * The 117 S9 failures are now rows of the rejection ledger.
+  * The privacy scan loads 119 logins and names tied to the sampled PRs, and checks
+    @handles in `tasks/` and `data/`.
+  * A pseudonymizer for the later natural stages (`ingest/pseudonymize_pr.py`) masks
+    repository owners, links to person accounts and model identifiers.
+* **Tests and frozen inputs.** 373 tests pass, offline and Docker.
+  `scripts/verify_frozen_inputs.py` reports OK.
+* **Reliability re-grade.** The re-grade of `pilot-v0.3.3` under 0.3.5 (§15.3, §16.1)
+  started at 2026-11-21T07:22Z as run `pilot-v0.3.5-regrade`, with three repeats.
