@@ -13,6 +13,11 @@ Definitions (fixed in experiments/protocol.md before the main experiment):
 
 Uncertainty: percentile intervals from a cluster bootstrap that resamples task
 families (the independent unit), never individual candidates or mutants.
+
+Each row carries its task's population and its candidate's stratum. The functions
+here pool whatever rows they are given; the analysis refuses rows from more than one
+population unless pooling is asked for, and then also reports each population on its
+own rows (``analysis.MixedPopulations``).
 """
 
 from __future__ import annotations
@@ -36,6 +41,8 @@ class Row:
     label: str | None  # "valid" | "invalid" | "ambiguous" | None
     origin: str = ""
     negative_type: str = ""  # e.g. "correction_violating", "other_invalid"
+    population: str = ""  # the task's Population: "natural" | "controlled" | "fixture" ("" if not recorded)
+    stratum: str = ""  # candidate stratum: "task" for the task's own candidates, else a stratum name ("" if not recorded)
 
 
 @dataclass

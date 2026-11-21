@@ -13,7 +13,9 @@ module never treats a proposal as ground truth. It provides:
 * :func:`validate_contract` - structural / temporal / evidence checks;
 * :func:`acceptance_gate` - what must hold before a contract can enter a benchmark
   (no unresolved conflicts, human review of uncertain requirements, observable
-  checks for scored requirements);
+  checks for scored requirements, user evidence for explicit ones);
+* :func:`task_gate` - the same for a whole task directory: its status, provenance
+  eligibility and every contract (``tracecontract accept-task`` and ``evaluate``);
 * :func:`render_instruction` - a task statement for agents, built only from
   active requirements (never from hidden tests or reference patches);
 * :func:`propose_correction_events` - a transparent rule heuristic that flags user
@@ -25,19 +27,25 @@ from __future__ import annotations
 import re
 import unicodedata
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any, Iterable
 
 from .schemas import (
     ContractVariant,
+    Eligibility,
     EventKind,
     EvidenceSpan,
+    ProvenanceRecord,
     Requirement,
     RequirementKind,
     RequirementStatus,
+    Review,
     ReviewerKind,
     Session,
     TaskContract,
+    TaskManifest,
 )
+from .store import load
 
 # ---------------------------------------------------------------------------
 # Evidence alignment
@@ -287,6 +295,7 @@ def validate_contract(contract: TaskContract, session: Session) -> list[Issue]:
     if contract.session_id != session.session_id:
         issues.append(Issue("error", "session_mismatch", "contract refers to another session"))
     order = {e.event_id: e.index for e in session.events}
+    kinds = {e.event_id: e.kind for e in session.events}
     by_id = {r.req_id: r for r in contract.requirements}
     first = first_user_prompt(session).event_id if session.user_prompts() else None
     for r in contract.requirements:
@@ -296,8 +305,12 @@ def validate_contract(contract: TaskContract, session: Session) -> list[Issue]:
         for sp in r.evidence:
             if not span_is_valid(session, sp):
                 issues.append(Issue("error", "bad_evidence", f"{r.req_id}: evidence span does not match event text"))
-            elif order.get(sp.event_id, -1) > order[r.introduced_at]:
+                continue
+            if order[sp.event_id] > order[r.introduced_at]:
                 issues.append(Issue("error", "evidence_after_introduction", f"{r.req_id}: evidence is later than introduced_at"))
+            if r.status == RequirementStatus.explicit and kinds[sp.event_id] != EventKind.user_prompt:
+                issues.append(Issue("warning", "non_user_evidence", f"{r.req_id}: explicit requirement quotes "
+                                    f"{sp.event_id} ({kinds[sp.event_id].value}), not a user turn"))
         if r.superseded_by:
             new = by_id.get(r.superseded_by)
             if new is None:
@@ -309,7 +322,7 @@ def validate_contract(contract: TaskContract, session: Session) -> list[Issue]:
                 issues.append(Issue("error", "dangling_conflict", f"{r.req_id}: conflicts_with {c} missing"))
         if contract.variant == ContractVariant.initial_only and first and r.introduced_at != first:
             issues.append(Issue("error", "initial_only_leak", f"{r.req_id}: initial-only contract uses later information"))
-        if r.scored and r.active and not r.observable:
+        if r.scored and r.active and not r.observable.strip():
             issues.append(Issue("warning", "no_observable", f"{r.req_id}: scored requirement lacks an observable check"))
     # Unresolved conflicts between two active requirements.
     for r in contract.active():
@@ -320,28 +333,161 @@ def validate_contract(contract: TaskContract, session: Session) -> list[Issue]:
     return issues
 
 
-def _human_accepted(r: Requirement) -> bool:
+# Issues that validate_contract reports as warnings, because a contract under construction may
+# still have them, but that block acceptance: a scored requirement needs an observable check,
+# and an explicit requirement must quote the user's own turns.
+GATE_BLOCKING_WARNINGS = frozenset({"no_observable", "non_user_evidence"})
+
+
+def _deciding_reviews(r: Requirement) -> list[Review]:
+    """The human reviews that decide ``r``, in the order they were added.
+
+    All of them, or, once there is an adjudicated review, the ones added after the latest
+    adjudicated review (that review alone while there are none). A contract can change
+    after review (an ``edit``), so later reviews decide again; this is where contract
+    reviews differ from candidate labels, whose adjudicated label is final
+    (``Candidate.final_label``).
+    """
     human = [rv for rv in r.reviews if rv.reviewer_kind == ReviewerKind.human]
-    return bool(human) and human[-1].decision in ("accept", "edit")
+    adjudicated = [i for i, rv in enumerate(human) if rv.adjudicated]
+    if adjudicated:
+        return human[adjudicated[-1] + 1:] or [human[adjudicated[-1]]]
+    return human
+
+
+def human_decision(r: Requirement) -> str | None:
+    """The human decision on ``r``, or ``None`` when there is no human review or the reviewers disagree.
+
+    Only human reviews count; model and rule reviews are proposals. Each human reviewer's
+    latest decision counts, and reviewers whose latest decisions differ leave ``r``
+    without a decision until an adjudicated review settles it (:func:`_deciding_reviews`).
+    """
+    latest = {rv.reviewer: rv.decision for rv in _deciding_reviews(r)}  # each reviewer's latest decision
+    return next(iter(latest.values())) if len(set(latest.values())) == 1 else None
+
+
+def _review_problem(r: Requirement) -> tuple[str, str] | None:
+    """``(code, detail)`` saying why the human reviews of ``r`` do not accept it; ``None`` when they do.
+
+    ``edit`` and ``needs_discussion`` are not acceptance: the requirement counts as accepted
+    only once it has been re-reviewed (a later review by the same reviewer, or an
+    adjudicated one) and accepted.
+    """
+    latest = {rv.reviewer: rv.decision for rv in _deciding_reviews(r)}
+    if not latest:
+        return "needs_human_review", "no human review"
+    if len(set(latest.values())) > 1:
+        who = ", ".join(f"{k}: {v}" for k, v in sorted(latest.items()))
+        return "review_disagreement", f"human reviewers disagree ({who}); needs an adjudicated review"
+    decision = next(iter(latest.values()))
+    if decision == "accept":
+        return None
+    if decision == "reject":
+        return "rejected_in_review", "the human decision is 'reject'"
+    return "needs_re_review", f"the human decision is {decision!r}; the requirement must be re-reviewed"
 
 
 def acceptance_gate(contract: TaskContract, session: Session) -> tuple[bool, list[str]]:
-    """Benchmark acceptance: structural validity + human review of uncertain items.
+    """Benchmark acceptance of one contract: structural validity + human review of uncertain items.
 
-    * no validation errors;
+    * no validation error, and no ``no_observable`` (a scored requirement without an
+      observable check) or ``non_user_evidence`` (an explicit requirement quoting an event
+      that is not a user turn) issue;
     * no ``unresolved`` requirement remains (it must be resolved or dropped);
-    * every ``inferred`` requirement that is scored has a human accept/edit review;
-    * for the reference contract, every scored requirement has a human review.
+    * every scored ``inferred`` requirement, and in the reference contract every active
+      scored requirement, is accepted by human review (:func:`human_decision`): reviewers
+      who disagree need an adjudicated review, and ``edit`` or ``needs_discussion`` counts
+      only once the requirement has been re-reviewed and accepted;
+    * no other active scored requirement has human reviews that do not accept it.
     """
-    reasons = [f"{i.code}: {i.message}" for i in validate_contract(contract, session) if i.severity == "error"]
+    reasons = [f"{i.code}: {i.message}" for i in validate_contract(contract, session)
+               if i.severity == "error" or i.code in GATE_BLOCKING_WARNINGS]
+    reference = contract.variant == ContractVariant.reference
     for r in contract.requirements:
         if r.status == RequirementStatus.unresolved:
             reasons.append(f"unresolved: {r.req_id} must be resolved or removed")
-        if r.status == RequirementStatus.inferred and r.scored and not _human_accepted(r):
-            reasons.append(f"needs_human_review: inferred {r.req_id}")
-        if contract.variant == ContractVariant.reference and r.active and r.scored and not _human_accepted(r):
-            reasons.append(f"needs_human_review: reference requirement {r.req_id}")
+        if not (r.active and r.scored):
+            continue
+        inferred = r.status == RequirementStatus.inferred
+        if not (inferred or reference or any(rv.reviewer_kind == ReviewerKind.human for rv in r.reviews)):
+            continue
+        problem = _review_problem(r)
+        if problem is not None:
+            what = "inferred" if inferred else "reference requirement" if reference else "requirement"
+            reasons.append(f"{problem[0]}: {what} {r.req_id} ({problem[1]})")
     return (not reasons), reasons
+
+
+@dataclass
+class TaskGate:
+    """The acceptance gate of one task directory (:func:`task_gate`)."""
+
+    task_id: str
+    status: str  # TaskManifest.status
+    eligibility: str | None  # provenance eligibility; None when the record is missing
+    refusals: list[str] = field(default_factory=list)  # rejected task or source: never evaluated or exported
+    reasons: list[str] = field(default_factory=list)  # every reason the gate fails, refusals first
+
+    @property
+    def passed(self) -> bool:
+        return not self.reasons
+
+    @property
+    def accepted(self) -> bool:
+        """The gate passes and the task was accepted through it (``tracecontract accept-task``)."""
+        return self.passed and self.status == "accepted"
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"task_id": self.task_id, "status": self.status, "provenance_eligibility": self.eligibility,
+                "passed": self.passed, "accepted": self.accepted, "refused": bool(self.refusals),
+                "reasons": list(self.reasons)}
+
+
+def task_gate(task_dir: Path, repo_root: Path) -> TaskGate:
+    """The acceptance gate of a whole task: what must hold before it enters a benchmark.
+
+    * neither its status nor its provenance eligibility is ``rejected``; a rejected task is
+      refused outright (:attr:`TaskGate.refusals`), whatever the flags;
+    * its provenance record exists and is ``eligible`` (a reviewer has checked the source's
+      permission basis, licence and redaction; nothing here sets it);
+    * it has a reference contract, and every contract it lists exists and passes
+      :func:`acceptance_gate` against the task's session (read from ``repo_root``).
+
+    ``tracecontract accept-task`` sets the status to ``accepted`` only when the gate passes,
+    and ``tracecontract evaluate`` runs it again, so a task whose records changed after it
+    was accepted no longer counts as accepted.
+    """
+    from .tasks import session_for_task  # tasks imports this module
+
+    m = load(task_dir / "task.json", TaskManifest)
+    refusals: list[str] = []
+    reasons: list[str] = []
+    eligibility = None
+    if m.status == "rejected":
+        refusals.append("status: the task is rejected")
+    if not (task_dir / m.provenance).is_file():
+        reasons.append(f"provenance: no record at {m.provenance}")
+    else:
+        prov = load(task_dir / m.provenance, ProvenanceRecord)
+        eligibility = prov.eligibility.value
+        if prov.eligibility == Eligibility.rejected:
+            refusals.append("provenance: the source is rejected (see its rejection_reasons)")
+        elif prov.eligibility != Eligibility.eligible:
+            reasons.append(f"provenance: eligibility is {eligibility!r}; a reviewer must find the source eligible")
+    if "reference" not in m.contracts:
+        reasons.append("contract: the task has no reference contract")
+    try:
+        session: Session | None = session_for_task(task_dir, repo_root)
+    except FileNotFoundError:
+        session = None
+        reasons.append("session: transcript not found, so the contracts cannot be checked")
+    for variant, rel in m.contracts.items():
+        if not (task_dir / rel).is_file():
+            reasons.append(f"contract {variant}: {rel} missing (sealed or not built)")
+        elif session is not None:
+            reasons += [f"contract {variant}: {w}" for w in acceptance_gate(load(task_dir / rel, TaskContract), session)[1]]
+    return TaskGate(task_id=m.task_id, status=m.status, eligibility=eligibility, refusals=refusals,
+                    reasons=refusals + reasons)
 
 
 # ---------------------------------------------------------------------------

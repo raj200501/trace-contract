@@ -1,0 +1,370 @@
+{
+  "bash_effects": [],
+  "checks": [
+    {
+      "approximations": [],
+      "check_id": "a_written_files_changed",
+      "items": [
+        {
+          "path": "docs/changelog.rst",
+          "reason": "differs between the base and the final state",
+          "status": "passed",
+          "written_by": [
+            "CS-02-session/L000142.00",
+            "CS-02-session/L000225.00"
+          ]
+        },
+        {
+          "path": "docs/usage.rst",
+          "reason": "differs between the base and the final state",
+          "status": "passed",
+          "written_by": [
+            "CS-02-session/L000144.00",
+            "CS-02-session/L000223.00"
+          ]
+        },
+        {
+          "path": "tests/test_storages.py",
+          "reason": "differs between the base and the final state",
+          "status": "passed",
+          "written_by": [
+            "CS-02-session/L000094.00",
+            "CS-02-session/L000096.00",
+            "CS-02-session/L000100.00",
+            "CS-02-session/L000102.00",
+            "CS-02-session/L000104.00",
+            "CS-02-session/L000199.00",
+            "CS-02-session/L000201.00"
+          ]
+        },
+        {
+          "path": "tinydb/storages.py",
+          "reason": "differs between the base and the final state",
+          "status": "passed",
+          "written_by": [
+            "CS-02-session/L000059.00",
+            "CS-02-session/L000061.00",
+            "CS-02-session/L000064.00",
+            "CS-02-session/L000066.00",
+            "CS-02-session/L000068.00",
+            "CS-02-session/L000080.00",
+            "CS-02-session/L000082.00",
+            "CS-02-session/L000084.00",
+            "CS-02-session/L000086.00",
+            "CS-02-session/L000167.00",
+            "CS-02-session/L000169.00",
+            "CS-02-session/L000171.00",
+            "CS-02-session/L000175.00",
+            "CS-02-session/L000177.00",
+            "CS-02-session/L000179.00"
+          ]
+        }
+      ],
+      "reason": "4 item(s) passed",
+      "status": "passed",
+      "title": "Files written through Edit/MultiEdit/Write differ between base and final state, or are explained"
+    },
+    {
+      "approximations": [],
+      "check_id": "b_first_edit_strings",
+      "items": [
+        {
+          "event_id": "CS-02-session/L000059.00",
+          "from": "session start",
+          "new_occurrences_outside_old": 0,
+          "old_occurrences": 1,
+          "path": "tinydb/storages.py",
+          "reason": "old_string occurs as the Edit tool requires and new_string does not occur",
+          "replace_all": false,
+          "status": "passed",
+          "tool": "Edit"
+        },
+        {
+          "event_id": "CS-02-session/L000094.00",
+          "from": "session start",
+          "new_occurrences_outside_old": 0,
+          "old_occurrences": 1,
+          "path": "tests/test_storages.py",
+          "reason": "old_string occurs as the Edit tool requires and new_string does not occur",
+          "replace_all": false,
+          "status": "passed",
+          "tool": "Edit"
+        },
+        {
+          "event_id": "CS-02-session/L000142.00",
+          "from": "session start",
+          "new_occurrences_outside_old": 0,
+          "old_occurrences": 1,
+          "path": "docs/changelog.rst",
+          "reason": "old_string occurs as the Edit tool requires and new_string does not occur",
+          "replace_all": false,
+          "status": "passed",
+          "tool": "Edit"
+        },
+        {
+          "event_id": "CS-02-session/L000144.00",
+          "from": "session start",
+          "new_occurrences_outside_old": 0,
+          "old_occurrences": 1,
+          "path": "docs/usage.rst",
+          "reason": "old_string occurs as the Edit tool requires and new_string does not occur",
+          "replace_all": false,
+          "status": "passed",
+          "tool": "Edit"
+        }
+      ],
+      "reason": "4 item(s) passed",
+      "status": "passed",
+      "title": "At each first edit from the base, old_string is in the base and new_string is not"
+    },
+    {
+      "approximations": [],
+      "check_id": "c_reads_match_base",
+      "items": [
+        {
+          "event_id": "CS-02-session/L000010.00",
+          "lines": "1-181",
+          "lines_compared": 181,
+          "mismatches": [],
+          "n_mismatches": 0,
+          "path": "tinydb/storages.py",
+          "reason": "matches the base content",
+          "source": "Bash cat -n",
+          "state": "base",
+          "status": "passed"
+        },
+        {
+          "event_id": "CS-02-session/L000057.00",
+          "lines": "1-35",
+          "lines_compared": 35,
+          "mismatches": [],
+          "n_mismatches": 0,
+          "path": "tinydb/storages.py",
+          "reason": "matches the base content",
+          "source": "Read",
+          "state": "base",
+          "status": "passed"
+        },
+        {
+          "event_id": "CS-02-session/L000138.00",
+          "lines": "16-23",
+          "lines_compared": 8,
+          "mismatches": [],
+          "n_mismatches": 0,
+          "path": "docs/changelog.rst",
+          "reason": "matches the base content",
+          "source": "Read",
+          "state": "base",
+          "status": "passed"
+        },
+        {
+          "event_id": "CS-02-session/L000139.00",
+          "lines": "640-647",
+          "lines_compared": 8,
+          "mismatches": [],
+          "n_mismatches": 0,
+          "path": "docs/usage.rst",
+          "reason": "matches the base content",
+          "source": "Read",
+          "state": "base",
+          "status": "passed"
+        }
+      ],
+      "reason": "4 item(s) passed",
+      "status": "passed",
+      "title": "File contents the session saw while a file was in its base state equal the base"
+    },
+    {
+      "approximations": [],
+      "check_id": "d_start_manifest",
+      "items": [
+        {
+          "manifest_sha256": "8f30c35e16795f234c71e7b6945a6355ca0b4d139feda3b36642ea01e3b8d64b",
+          "reason": "agrees with the recorded start-of-session manifest",
+          "source": "workspace record printed at CS-02-session/L000009.00",
+          "status": "passed"
+        },
+        {
+          "overlays": [],
+          "reason": "the rebuilt base equals the start-of-session manifest",
+          "rebuilt_manifest_sha256": "8f30c35e16795f234c71e7b6945a6355ca0b4d139feda3b36642ea01e3b8d64b",
+          "rebuilt_without_overlays_sha256": "8f30c35e16795f234c71e7b6945a6355ca0b4d139feda3b36642ea01e3b8d64b",
+          "source": "provenance.json notes: workspace_snapshot_manifest",
+          "start_manifest_sha256": "8f30c35e16795f234c71e7b6945a6355ca0b4d139feda3b36642ea01e3b8d64b",
+          "status": "passed"
+        }
+      ],
+      "reason": "2 item(s) passed",
+      "status": "passed",
+      "title": "The rebuilt base manifest equals the start-of-session manifest after overlays"
+    },
+    {
+      "approximations": [],
+      "check_id": "e_no_stale_copies",
+      "items": [
+        {
+          "changed_modules": [
+            "docs/changelog.rst",
+            "docs/usage.rst",
+            "tests/test_storages.py",
+            "tinydb/storages.py"
+          ],
+          "other_artifacts": [],
+          "reason": "no such copy of a changed module",
+          "status": "passed"
+        }
+      ],
+      "reason": "1 item(s) passed",
+      "status": "passed",
+      "title": "No .git, __pycache__, .pyc, .orig, .rej or backup copy of a changed module in the base"
+    },
+    {
+      "approximations": [],
+      "check_id": "f_replay_matches_states",
+      "items": [
+        {
+          "event_id": "CS-02-session/L000072.00",
+          "kind": "read",
+          "lines": "96-259",
+          "lines_compared": 164,
+          "mismatches": [],
+          "n_mismatches": 0,
+          "path": "tinydb/storages.py",
+          "reason": "matches the replayed content",
+          "source": "Bash sed -n",
+          "state": "replayed",
+          "status": "passed"
+        },
+        {
+          "event_id": "CS-02-session/L000197.00",
+          "kind": "read",
+          "lines": "86-165",
+          "lines_compared": 80,
+          "mismatches": [],
+          "n_mismatches": 0,
+          "path": "tests/test_storages.py",
+          "reason": "matches the replayed content",
+          "source": "Read",
+          "state": "replayed",
+          "status": "passed"
+        },
+        {
+          "event_id": "CS-02-session/L000219.00",
+          "kind": "read",
+          "lines": "645-654",
+          "lines_compared": 10,
+          "mismatches": [],
+          "n_mismatches": 0,
+          "path": "docs/usage.rst",
+          "reason": "matches the replayed content",
+          "source": "Read",
+          "state": "replayed",
+          "status": "passed"
+        },
+        {
+          "event_id": "CS-02-session/L000221.00",
+          "kind": "read",
+          "lines": "22-30",
+          "lines_compared": 9,
+          "mismatches": [],
+          "n_mismatches": 0,
+          "path": "docs/changelog.rst",
+          "reason": "matches the replayed content",
+          "source": "Read",
+          "state": "replayed",
+          "status": "passed"
+        },
+        {
+          "kind": "state",
+          "path": "docs/changelog.rst",
+          "reason": "the replay reproduces the captured pre-correction content",
+          "state": "pre-correction",
+          "status": "passed"
+        },
+        {
+          "kind": "state",
+          "path": "docs/usage.rst",
+          "reason": "the replay reproduces the captured pre-correction content",
+          "state": "pre-correction",
+          "status": "passed"
+        },
+        {
+          "kind": "state",
+          "path": "tests/test_storages.py",
+          "reason": "the replay reproduces the captured pre-correction content",
+          "state": "pre-correction",
+          "status": "passed"
+        },
+        {
+          "kind": "state",
+          "path": "tinydb/storages.py",
+          "reason": "the replay reproduces the captured pre-correction content",
+          "state": "pre-correction",
+          "status": "passed"
+        },
+        {
+          "kind": "state",
+          "path": "docs/changelog.rst",
+          "reason": "the replay reproduces the captured final content",
+          "state": "final",
+          "status": "passed"
+        },
+        {
+          "kind": "state",
+          "path": "docs/usage.rst",
+          "reason": "the replay reproduces the captured final content",
+          "state": "final",
+          "status": "passed"
+        },
+        {
+          "kind": "state",
+          "path": "tests/test_storages.py",
+          "reason": "the replay reproduces the captured final content",
+          "state": "final",
+          "status": "passed"
+        },
+        {
+          "kind": "state",
+          "path": "tinydb/storages.py",
+          "reason": "the replay reproduces the captured final content",
+          "state": "final",
+          "status": "passed"
+        }
+      ],
+      "reason": "12 item(s) passed",
+      "status": "passed",
+      "title": "Replaying the session's writes on the base reproduces the captured states (additional)"
+    }
+  ],
+  "inputs": {
+    "base_manifest_sha256": "8f30c35e16795f234c71e7b6945a6355ca0b4d139feda3b36642ea01e3b8d64b",
+    "base_n_files": 65,
+    "correction_turn_event": "CS-02-session/L000160.00",
+    "pre_correction_candidate": "CS-02-pre-correction",
+    "pre_correction_patch_sha256": "13f070f6e873fbab7bcde2bd7aebc5df6b4a85037729672dc8c5e63e084a778d",
+    "reference_candidate": "CS-02-reference",
+    "reference_patch_sha256": "18317acd6aa9e4379bf3e7f6a2dca2299bce1fab255fa58eaf840da6aeaa93ba",
+    "transcript_matches_provenance": true,
+    "transcript_sha256": "e99d0aeae64eab5759bd8f7ec92a12e77fb293b5376f2a0b1d6066c720383ea8",
+    "workspace_root_from": "scenario"
+  },
+  "legacy_leakage_check": {
+    "note": "tasks.compile_controlled_task calls leakage_check(base, ref.patch) without reference_base, so the snapshot and the reference base are the same directory: a changed file would have to differ from the base and equal it at once. As recorded, the check can flag only a .git directory, which a git archive export does not have; it passes even when the base already holds the solution.",
+    "recorded": {
+      "checked_paths": [
+        "docs/changelog.rst",
+        "docs/usage.rst",
+        "tests/test_storages.py",
+        "tinydb/storages.py"
+      ],
+      "leaked_paths": [],
+      "method": "post-image-equality",
+      "passed": true
+    }
+  },
+  "method": "reconstruction:v1",
+  "notes": [],
+  "passed": true,
+  "status": "passed",
+  "task_id": "CS-02"
+}

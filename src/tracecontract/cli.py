@@ -61,31 +61,45 @@ def cmd_lint(a) -> None:
 
 
 def cmd_build_verifier(a) -> None:
-    from .verifier import build_spec, lint_process_separated, requirement_map_from_tests
-    from .schemas import GenerationRecord
+    """Build a verifier spec; record it only with a complete generation record (B1, the repository's tests, needs none)."""
+    from .verifier import build_spec, generation_record, lint_process_separated, requirement_map_from_tests
 
     tdir, m = _task(a.task)
     vdir = tdir / "verifiers" / a.verifier_id
     tests = vdir / a.test_subdir
     iso = Isolation(a.isolation)
-    gen = None
-    if a.generator:
-        gen = GenerationRecord(generator=a.generator, run_id=a.gen_run_id or "unrecorded",
-                               prompt_sha256=a.prompt_sha256 or "", created_at=a.created_at or "")
+    cond = VerifierCondition(a.condition)
+    sp = _spec_path(tdir, a.verifier_id)
+    if not a.dry_run and sp.exists() and load(sp, VerifierSpec).frozen:
+        raise SystemExit(f"build-verifier refused: {a.verifier_id} is frozen; build a new version under a new verifier id")
+    run = dict(run_id=a.gen_run_id, config=a.config, prompt_sha256=a.prompt_sha256, started_at=a.started_at,
+               ended_at=a.ended_at, wall_s=a.wall_s, tool_calls=a.tool_calls, run_record=a.run_record, turns=a.turns,
+               tokens=a.tokens)
+    need = cond != VerifierCondition.repo_tests  # B1 is the repository's own tests: no agent run wrote them
+    gen, record = None, "not needed (repository tests)"
+    if need or any(v is not None for v in run.values()):
+        try:
+            gen, record = generation_record(**run), "complete"
+        except ValueError as exc:
+            record = str(exc)
+            if not a.dry_run:
+                raise SystemExit(f"build-verifier refused, nothing recorded: {a.verifier_id}: {record}. A generated verifier "
+                                 "needs the record of the run that wrote it; --dry-run builds and lints without recording") from None
     check_ids = None
     if a.check_ids:
         check_ids = json.loads(Path(a.check_ids).read_text())
-    spec = build_spec(verifier_id=a.verifier_id, task_id=m.task_id, condition=VerifierCondition(a.condition),
+    spec = build_spec(verifier_id=a.verifier_id, task_id=m.task_id, condition=cond,
                       test_dir=tests, task_dir=tdir, isolation=iso, contract_id=a.contract_id,
                       requirement_map=requirement_map_from_tests(tests) if iso == Isolation.process_separated else {},
-                      generation=gen, check_ids=check_ids)
+                      generation=gen, check_ids=check_ids, require_generation=need and not a.dry_run)
     issues = lint_process_separated(tests) if iso == Isolation.process_separated else []
-    dump(spec, _spec_path(tdir, a.verifier_id))
     rel = f"verifiers/{a.verifier_id}/spec.json"
-    if rel not in m.verifiers:
-        dump(m.model_copy(update={"verifiers": m.verifiers + [rel]}), tdir / "task.json")
-    _out({"spec": rel, "n_checks": len(spec.checks), "unmapped_checks": [c.check_id for c in spec.checks if not c.requirement_ids],
-          "lint": [i.__dict__ for i in issues]})
+    if not a.dry_run:
+        dump(spec, sp)
+        if rel not in m.verifiers:
+            dump(m.model_copy(update={"verifiers": m.verifiers + [rel]}), tdir / "task.json")
+    _out({"spec": rel, "recorded": not a.dry_run, "generation_record": record, "n_checks": len(spec.checks),
+          "unmapped_checks": [c.check_id for c in spec.checks if not c.requirement_ids], "lint": [i.__dict__ for i in issues]})
 
 
 def _grader(tdir: Path, m: TaskManifest):
@@ -161,7 +175,8 @@ def cmd_freeze(a) -> None:
     sp = _spec_path(tdir, a.verifier_id)
     spec = freeze(load(sp, VerifierSpec), tdir)
     dump(spec, sp)
-    _out({"verifier_id": spec.verifier_id, "frozen": spec.frozen, "content_sha256": spec.content_sha256})
+    _out({"verifier_id": spec.verifier_id, "frozen": spec.frozen, "frozen_at": spec.frozen_at,
+          "content_sha256": spec.content_sha256, "checks_sha256": spec.checks_sha256})
 
 
 def cmd_validate_task(a) -> None:
@@ -206,6 +221,20 @@ def cmd_validate_task(a) -> None:
                                                                       else checks_sha256(s) == s.checks_sha256),
                                               "n_checks": len(s.checks), "lint_issues": len(lint)}
     _out(report)
+
+
+def cmd_accept_task(a) -> None:
+    """Run the task acceptance gate; set the task's status to 'accepted' only if it passes (exit 1 otherwise)."""
+    from .contract import task_gate
+
+    tdir, m = _task(a.task)
+    gate = task_gate(tdir, REPO)
+    previous = gate.status
+    if gate.passed and gate.status != "accepted" and not a.dry_run:
+        dump(m.model_copy(update={"status": "accepted"}), tdir / "task.json")
+        gate = task_gate(tdir, REPO)
+    _out({**gate.to_dict(), "previous_status": previous, "dry_run": a.dry_run})
+    sys.exit(0 if gate.passed else 1)
 
 
 def cmd_ingest(a) -> None:
@@ -391,21 +420,35 @@ def cmd_merge_reviews(a) -> None:
 
 
 def cmd_evaluate(a) -> None:
-    from .evaluate import run_matrix
+    from .evaluate import TaskRefused, run_matrix
     from .schemas import Split
+    from .strata import StratumError
 
-    out = run_matrix([Path(t).resolve() for t in a.tasks], run_id=a.run_id, out_root=REPO / "results" / "runs",
-                     cache_dir=CACHE / "images", snapshot_root=SNAPSHOTS, split=Split(a.split),
-                     conditions=a.conditions or None, repeats=a.repeats, require_frozen=not a.allow_unfrozen, repo_root=REPO)
+    try:
+        out = run_matrix([Path(t).resolve() for t in a.tasks], run_id=a.run_id, out_root=REPO / "results" / "runs",
+                         cache_dir=CACHE / "images", snapshot_root=SNAPSHOTS, split=Split(a.split),
+                         conditions=a.conditions or None, repeats=a.repeats, require_frozen=not a.allow_unfrozen,
+                         repo_root=REPO, pilot=a.pilot, strata=a.strata, only_strata=a.only_strata)
+    except TaskRefused as exc:  # nothing was written
+        raise SystemExit(f"evaluate refused by the acceptance gate:\n{exc}") from None
+    except StratumError as exc:  # nothing was written
+        raise SystemExit(f"evaluate refused: {exc}") from None
     _out({"run_dir": str(out)})
 
 
 def cmd_analyze(a) -> None:
-    from .analysis import analyze
+    from .analysis import MixedPopulations, analyze
+    from .strata import StratumError
 
-    res = analyze(Path(a.run_dir), REPO / "tasks", allow_proposed=a.allow_proposed_labels, n_boot=a.n_boot)
+    try:
+        res = analyze(Path(a.run_dir), REPO / "tasks", allow_proposed=a.allow_proposed_labels, n_boot=a.n_boot,
+                      pool_populations=a.pool_populations)
+    except (MixedPopulations, StratumError) as exc:  # nothing was written
+        raise SystemExit(f"analyze refused: {exc}") from None
+    pooled = {"population_pooling": res["meta"]["population_pooling"]} if "population_pooling" in res["meta"] else {}
     _out({"analysis": str(Path(a.run_dir) / "analysis.json"), "markdown": str(Path(a.run_dir) / "analysis.md"),
-          "conditions": {c: {"fa": d["false_acceptance"]["rate"], "fr": d["false_rejection"]["rate"]} for c, d in res["conditions"].items()}})
+          "conditions": {c: {"fa": d["false_acceptance"]["rate"], "fr": d["false_rejection"]["rate"]} for c, d in res["conditions"].items()},
+          **pooled})
 
 
 def cmd_report(a) -> None:
@@ -413,6 +456,19 @@ def cmd_report(a) -> None:
 
     out = build_report(Path(a.run_dir), REPO / "tasks", REPO, Path(a.out))
     _out({"report": str(out)})
+
+
+def cmd_reconstruction_check(a) -> None:
+    """Check a task's base snapshot against its session (reconstruction:v1); exit 1 if a check fails."""
+    from .reconstruction import check_task
+    from .store import write_json
+
+    tdir = Path(a.task).resolve()
+    rep = check_task(tdir, REPO, SNAPSHOTS).to_dict()
+    if a.write:
+        write_json(rep, tdir / "reconstruction_check.json")
+    _out(rep)
+    sys.exit(1 if rep["status"] == "failed" else 0)
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -426,8 +482,16 @@ def main(argv: list[str] | None = None) -> None:
     p = sub.add_parser("build-verifier", help="build/refresh a verifier spec from its test directory")
     p.add_argument("task"); p.add_argument("verifier_id"); p.add_argument("--condition", required=True)
     p.add_argument("--isolation", default="process_separated"); p.add_argument("--test-subdir", default="tests")
-    p.add_argument("--contract-id"); p.add_argument("--generator"); p.add_argument("--gen-run-id")
-    p.add_argument("--prompt-sha256"); p.add_argument("--created-at"); p.add_argument("--check-ids")
+    p.add_argument("--contract-id"); p.add_argument("--check-ids")
+    p.add_argument("--dry-run", action="store_true", help="build and lint only; record nothing (no generation record needed)")
+    g = p.add_argument_group("generation record (required to record a generated verifier; never a model identifier)")
+    g.add_argument("--gen-run-id", help="run id of the agent run that wrote the tests")
+    g.add_argument("--config", help="configuration label of that run, e.g. config-A")
+    g.add_argument("--prompt-sha256", help="sha256 of the prompt the run was given")
+    g.add_argument("--started-at"); g.add_argument("--ended-at", help="ISO 8601 times with a time zone")
+    g.add_argument("--turns", type=int); g.add_argument("--tokens", type=int, help="turns or tokens (or both)")
+    g.add_argument("--tool-calls", type=int); g.add_argument("--wall-s", type=float, help="wall time in seconds")
+    g.add_argument("--run-record", help="pointer to the private run record, kept outside the repository")
     p.set_defaults(fn=cmd_build_verifier)
     p = sub.add_parser("grade", help="grade one candidate with one verifier (sandboxed)")
     p.add_argument("task"); p.add_argument("verifier_id"); p.add_argument("candidate_id")
@@ -451,6 +515,9 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--show-candidates", action="store_true",
                    help="list each candidate's origin and labels (coordinator only; reviewers must not see them)")
     p.set_defaults(fn=cmd_validate_task)
+    p = sub.add_parser("accept-task", help="run the task acceptance gate; set the status to 'accepted' only if it passes")
+    p.add_argument("task"); p.add_argument("--dry-run", action="store_true", help="report the gate; never change the task")
+    p.set_defaults(fn=cmd_accept_task)
     p = sub.add_parser("ingest", help="parse a Claude Code JSONL transcript")
     p.add_argument("transcript"); p.add_argument("--population", default="fixture"); p.add_argument("--source", default="cli")
     p.add_argument("--out"); p.set_defaults(fn=cmd_ingest)
@@ -491,12 +558,26 @@ def main(argv: list[str] | None = None) -> None:
     p = sub.add_parser("evaluate", help="score every frozen verifier on every evaluation candidate (sandboxed)")
     p.add_argument("tasks", nargs="+"); p.add_argument("--run-id", required=True); p.add_argument("--split", default="eval")
     p.add_argument("--conditions", nargs="*"); p.add_argument("--repeats", type=int, default=1)
-    p.add_argument("--allow-unfrozen", action="store_true"); p.set_defaults(fn=cmd_evaluate)
+    p.add_argument("--allow-unfrozen", action="store_true")
+    p.add_argument("--pilot", action="store_true", help="automated pilot only: also evaluate tasks that have not passed the "
+                   "acceptance gate (recorded in the run manifest); rejected tasks are always refused")
+    p.add_argument("--strata", nargs="+", metavar="NAME", help="also grade the candidates of these candidate strata "
+                   "(tasks/<id>/strata/<name>.json); task.json and the task's candidate files are never changed")
+    p.add_argument("--only-strata", action="store_true", help="with --strata: grade the strata's candidates instead of the "
+                   "task's own (the task's reference solution is still graded as the sanity check)")
+    p.set_defaults(fn=cmd_evaluate)
     p = sub.add_parser("analyze", help="compute FA/FR, paired comparisons and tables for a run")
     p.add_argument("run_dir"); p.add_argument("--allow-proposed-labels", action="store_true", help="automated pilot only")
-    p.add_argument("--n-boot", type=int, default=2000); p.set_defaults(fn=cmd_analyze)
+    p.add_argument("--n-boot", type=int, default=2000)
+    p.add_argument("--pool-populations", action="store_true", help="analyse a run whose tasks come from more than one "
+                   "population (natural, controlled, fixture): the pooled tables are marked and each population is also "
+                   "reported separately; without it such a run is refused")
+    p.set_defaults(fn=cmd_analyze)
     p = sub.add_parser("report", help="static HTML report for a run (from recorded artifacts only)")
     p.add_argument("run_dir"); p.add_argument("--out", required=True); p.set_defaults(fn=cmd_report)
+    p = sub.add_parser("reconstruction-check", help="check a task's base snapshot against its session transcript and captured states")
+    p.add_argument("task"); p.add_argument("--write", action="store_true", help="write tasks/<id>/reconstruction_check.json")
+    p.set_defaults(fn=cmd_reconstruction_check)
 
     a = ap.parse_args(argv)
     a.fn(a)

@@ -1,0 +1,236 @@
+{
+  "bash_effects": [],
+  "checks": [
+    {
+      "approximations": [],
+      "check_id": "a_written_files_changed",
+      "items": [
+        {
+          "path": "inflection/__init__.py",
+          "reason": "differs between the base and the final state",
+          "status": "passed",
+          "written_by": [
+            "CS-03-session/L000029.00",
+            "CS-03-session/L000031.00",
+            "CS-03-session/L000033.00",
+            "CS-03-session/L000076.00",
+            "CS-03-session/L000078.00",
+            "CS-03-session/L000080.00",
+            "CS-03-session/L000082.00"
+          ]
+        },
+        {
+          "path": "test_inflection.py",
+          "reason": "differs between the base and the final state",
+          "status": "passed",
+          "written_by": [
+            "CS-03-session/L000037.00",
+            "CS-03-session/L000084.00",
+            "CS-03-session/L000086.00"
+          ]
+        }
+      ],
+      "reason": "2 item(s) passed",
+      "status": "passed",
+      "title": "Files written through Edit/MultiEdit/Write differ between base and final state, or are explained"
+    },
+    {
+      "approximations": [],
+      "check_id": "b_first_edit_strings",
+      "items": [
+        {
+          "event_id": "CS-03-session/L000029.00",
+          "from": "session start",
+          "new_occurrences_outside_old": 0,
+          "old_occurrences": 1,
+          "path": "inflection/__init__.py",
+          "reason": "old_string occurs as the Edit tool requires and new_string does not occur",
+          "replace_all": false,
+          "status": "passed",
+          "tool": "Edit"
+        },
+        {
+          "event_id": "CS-03-session/L000037.00",
+          "from": "session start",
+          "new_occurrences_outside_old": 0,
+          "old_occurrences": 1,
+          "path": "test_inflection.py",
+          "reason": "old_string occurs as the Edit tool requires and new_string does not occur",
+          "replace_all": false,
+          "status": "passed",
+          "tool": "Edit"
+        }
+      ],
+      "reason": "2 item(s) passed",
+      "status": "passed",
+      "title": "At each first edit from the base, old_string is in the base and new_string is not"
+    },
+    {
+      "approximations": [],
+      "check_id": "c_reads_match_base",
+      "items": [
+        {
+          "event_id": "CS-03-session/L000009.00",
+          "lines": "1-430",
+          "lines_compared": 430,
+          "mismatches": [],
+          "n_mismatches": 0,
+          "path": "inflection/__init__.py",
+          "reason": "matches the base content",
+          "source": "Read",
+          "state": "base",
+          "status": "passed"
+        },
+        {
+          "event_id": "CS-03-session/L000011.00",
+          "lines": "1-436",
+          "lines_compared": 436,
+          "mismatches": [],
+          "n_mismatches": 0,
+          "path": "test_inflection.py",
+          "reason": "matches the base content",
+          "source": "Read",
+          "state": "base",
+          "status": "passed"
+        }
+      ],
+      "reason": "2 item(s) passed",
+      "status": "passed",
+      "title": "File contents the session saw while a file was in its base state equal the base"
+    },
+    {
+      "approximations": [],
+      "check_id": "d_start_manifest",
+      "items": [
+        {
+          "manifest_sha256": "7e61aca7b70ce1b5b5ba314144454dd0cbbfc26619e0ac5ca17e2ae03e29d80e",
+          "reason": "agrees with the recorded start-of-session manifest",
+          "source": "workspace record printed at CS-03-session/L000007.00",
+          "status": "passed"
+        },
+        {
+          "overlays": [],
+          "reason": "the rebuilt base equals the start-of-session manifest",
+          "rebuilt_manifest_sha256": "7e61aca7b70ce1b5b5ba314144454dd0cbbfc26619e0ac5ca17e2ae03e29d80e",
+          "rebuilt_without_overlays_sha256": "7e61aca7b70ce1b5b5ba314144454dd0cbbfc26619e0ac5ca17e2ae03e29d80e",
+          "source": "provenance.json notes: workspace_snapshot_manifest",
+          "start_manifest_sha256": "7e61aca7b70ce1b5b5ba314144454dd0cbbfc26619e0ac5ca17e2ae03e29d80e",
+          "status": "passed"
+        }
+      ],
+      "reason": "2 item(s) passed",
+      "status": "passed",
+      "title": "The rebuilt base manifest equals the start-of-session manifest after overlays"
+    },
+    {
+      "approximations": [],
+      "check_id": "e_no_stale_copies",
+      "items": [
+        {
+          "changed_modules": [
+            "inflection/__init__.py",
+            "test_inflection.py"
+          ],
+          "other_artifacts": [],
+          "reason": "no such copy of a changed module",
+          "status": "passed"
+        }
+      ],
+      "reason": "1 item(s) passed",
+      "status": "passed",
+      "title": "No .git, __pycache__, .pyc, .orig, .rej or backup copy of a changed module in the base"
+    },
+    {
+      "approximations": [],
+      "check_id": "f_replay_matches_states",
+      "items": [
+        {
+          "event_id": "CS-03-session/L000072.00",
+          "kind": "read",
+          "lines": "355-457",
+          "lines_compared": 103,
+          "mismatches": [],
+          "n_mismatches": 0,
+          "path": "inflection/__init__.py",
+          "reason": "matches the replayed content",
+          "source": "Read",
+          "state": "replayed",
+          "status": "passed"
+        },
+        {
+          "event_id": "CS-03-session/L000074.00",
+          "kind": "read",
+          "lines": "118-209",
+          "lines_compared": 92,
+          "mismatches": [],
+          "n_mismatches": 0,
+          "path": "test_inflection.py",
+          "reason": "matches the replayed content",
+          "source": "Read",
+          "state": "replayed",
+          "status": "passed"
+        },
+        {
+          "kind": "state",
+          "path": "inflection/__init__.py",
+          "reason": "the replay reproduces the captured pre-correction content",
+          "state": "pre-correction",
+          "status": "passed"
+        },
+        {
+          "kind": "state",
+          "path": "test_inflection.py",
+          "reason": "the replay reproduces the captured pre-correction content",
+          "state": "pre-correction",
+          "status": "passed"
+        },
+        {
+          "kind": "state",
+          "path": "inflection/__init__.py",
+          "reason": "the replay reproduces the captured final content",
+          "state": "final",
+          "status": "passed"
+        },
+        {
+          "kind": "state",
+          "path": "test_inflection.py",
+          "reason": "the replay reproduces the captured final content",
+          "state": "final",
+          "status": "passed"
+        }
+      ],
+      "reason": "6 item(s) passed",
+      "status": "passed",
+      "title": "Replaying the session's writes on the base reproduces the captured states (additional)"
+    }
+  ],
+  "inputs": {
+    "base_manifest_sha256": "7e61aca7b70ce1b5b5ba314144454dd0cbbfc26619e0ac5ca17e2ae03e29d80e",
+    "base_n_files": 17,
+    "correction_turn_event": "CS-03-session/L000056.00",
+    "pre_correction_candidate": "CS-03-pre-correction",
+    "pre_correction_patch_sha256": "77b76ab362c0dd432caf1ba87bc500edf741fbb8a6e738ac6d84baf668f752a4",
+    "reference_candidate": "CS-03-reference",
+    "reference_patch_sha256": "24d6f7d5057674e4e466d326420b4f2215d01a47c63af799928f7fed069b3d13",
+    "transcript_matches_provenance": true,
+    "transcript_sha256": "fa3824d00a50e82714935fa58e59d22bfc7e4e6047cd8b4e01a463e2e49380e7",
+    "workspace_root_from": "scenario"
+  },
+  "legacy_leakage_check": {
+    "note": "tasks.compile_controlled_task calls leakage_check(base, ref.patch) without reference_base, so the snapshot and the reference base are the same directory: a changed file would have to differ from the base and equal it at once. As recorded, the check can flag only a .git directory, which a git archive export does not have; it passes even when the base already holds the solution.",
+    "recorded": {
+      "checked_paths": [
+        "inflection/__init__.py",
+        "test_inflection.py"
+      ],
+      "leaked_paths": [],
+      "method": "post-image-equality",
+      "passed": true
+    }
+  },
+  "method": "reconstruction:v1",
+  "notes": [],
+  "passed": true,
+  "status": "passed",
+  "task_id": "CS-03"
+}

@@ -24,8 +24,10 @@ from __future__ import annotations
 import ast
 import hashlib
 import json
+import re
 import sys
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 
 from .schemas import CheckSpec, GenerationRecord, Isolation, VerifierCondition, VerifierSpec
@@ -135,6 +137,100 @@ def _only_ok_check(expr: ast.expr) -> bool:
     return False
 
 
+# --------------------------------------------------------------------------- generation records
+
+# What a generation record of a new run keeps in ``budget``: the run's times, its costs and
+# where its private record is kept (protocol v0.7 §15.4, §15.6; decision log D42).
+GENERATION_RUN_KEYS = ("started_at", "ended_at", "wall_s", "turns", "tokens", "tool_calls", "run_record")
+CONFIG_LABEL = re.compile(r"config-[A-Za-z0-9][A-Za-z0-9_-]{0,31}")
+_SHA256 = re.compile(r"[0-9a-f]{64}")
+_SESSION_ID = re.compile(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
+_SESSION_LOCAL = ("/tmp/claude-", "/.claude/")
+
+
+def generation_record(*, run_id: str | None, config: str | None, prompt_sha256: str | None, started_at: str | None,
+                      ended_at: str | None, wall_s: float | None, tool_calls: int | None, run_record: str | None,
+                      turns: int | None = None, tokens: int | None = None, notes: str = "") -> GenerationRecord:
+    """The generation record of one agent run; ``ValueError`` unless it is complete (:func:`generation_record_problems`).
+
+    Model identifiers are never written into the repository. ``config`` is a configuration
+    label (``config-A``), stored as the record's ``generator``, and ``run_record`` points to
+    the private run record, which says which model the configuration was. The times and
+    costs of the run go into ``budget`` (``GENERATION_RUN_KEYS``); ``created_at`` is the end.
+    """
+    budget = {"started_at": started_at, "ended_at": ended_at, "wall_s": wall_s, "turns": turns, "tokens": tokens,
+              "tool_calls": tool_calls, "run_record": run_record}
+    rec = GenerationRecord(generator=config or "", run_id=run_id or "", prompt_sha256=prompt_sha256 or "",
+                           created_at=ended_at or "", budget={k: v for k, v in budget.items() if v is not None}, notes=notes)
+    problems = generation_record_problems(rec)
+    if problems:
+        raise ValueError("incomplete generation record: " + "; ".join(problems))
+    return rec
+
+
+def _time(value) -> datetime | None:
+    try:
+        t = datetime.fromisoformat(value) if isinstance(value, str) else None
+    except ValueError:
+        return None
+    return t if t is not None and t.tzinfo is not None else None
+
+
+def _count(value) -> bool:
+    return isinstance(value, int) and not isinstance(value, bool) and value >= 0
+
+
+def generation_record_problems(rec: GenerationRecord | None) -> list[str]:
+    """What keeps ``rec`` from being a complete generation record of a new run (empty if it is complete).
+
+    A complete record holds a run id; a configuration label (``config-<id>``, so never a model
+    identifier); the prompt's sha256; start and end times (ISO 8601 with a time zone, the end
+    not before the start, ``created_at`` a time too); turns or tokens; tool calls; the wall time
+    (positive, and not longer than the time from start to end); and a pointer to the private
+    run record. ``budget`` holds nothing else, and no field holds a session id or a
+    session-local path. The pilot's records (run id "unrecorded", no hash, empty budget) are
+    not complete; they are kept as recorded.
+    """
+    if rec is None:
+        return ["no generation record"]
+    out = []
+    b = rec.budget
+    if not rec.run_id.strip() or rec.run_id == "unrecorded" or any(c.isspace() for c in rec.run_id):
+        out.append("run id missing (or 'unrecorded', or with whitespace)")
+    if not CONFIG_LABEL.fullmatch(rec.generator):
+        out.append(f"configuration label must look like 'config-A' (got {rec.generator!r}); model identifiers stay "
+                   "in the private run record")
+    if not _SHA256.fullmatch(rec.prompt_sha256):
+        out.append("prompt sha256 missing or not 64 lowercase hex digits")
+    start, end = _time(b.get("started_at")), _time(b.get("ended_at"))
+    if start is None or end is None:
+        out.append("start and end times must be ISO 8601 times with a time zone")
+    elif end < start:
+        out.append("the end time is before the start time")
+    if _time(rec.created_at) is None:
+        out.append("created_at must be an ISO 8601 time with a time zone")
+    present = [k for k in ("turns", "tokens") if k in b]
+    if not present:
+        out.append("turns or tokens missing")
+    out += [f"{k} must be a non-negative integer" for k in present if not _count(b[k])]
+    if not _count(b.get("tool_calls")):
+        out.append("tool calls missing or not a non-negative integer")
+    wall = b.get("wall_s")
+    if not isinstance(wall, (int, float)) or isinstance(wall, bool) or wall <= 0:
+        out.append("wall time missing or not positive")
+    elif start is not None and end is not None and end >= start and wall > (end - start).total_seconds() + 1:
+        out.append("the wall time is longer than the time from start to end")
+    if not isinstance(b.get("run_record"), str) or not b["run_record"].strip():
+        out.append("pointer to the private run record missing")
+    extra = sorted(set(b) - set(GENERATION_RUN_KEYS))
+    if extra:
+        out.append(f"budget holds unknown keys {extra}")
+    texts = [rec.run_id, rec.generator, rec.notes, *(str(v) for v in b.values())]
+    if any(_SESSION_ID.search(t) or any(m in t for m in _SESSION_LOCAL) for t in texts):
+        out.append("a field holds a session id or a session-local path")
+    return out
+
+
 def build_spec(
     *,
     verifier_id: str,
@@ -147,7 +243,14 @@ def build_spec(
     requirement_map: dict[str, list[str]] | None = None,
     generation: GenerationRecord | None = None,
     check_ids: list[str] | None = None,
+    require_generation: bool = False,
 ) -> VerifierSpec:
+    """A spec for the tests in ``test_dir``. With ``require_generation`` an incomplete generation record is refused
+    (``ValueError``, :func:`generation_record_problems`); ``build-verifier`` requires one for every generated verifier."""
+    if require_generation:
+        problems = generation_record_problems(generation)
+        if problems:
+            raise ValueError(f"{verifier_id}: no complete generation record: " + "; ".join(problems))
     ids = check_ids if check_ids is not None else discover_checks(test_dir)
     requirement_map = requirement_map or {}
     return VerifierSpec(

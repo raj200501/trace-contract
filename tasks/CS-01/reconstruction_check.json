@@ -1,0 +1,595 @@
+{
+  "bash_effects": [
+    {
+      "action": "write",
+      "event_id": "CS-01-session/L000067.00",
+      "paths": [
+        "tests/test_filesize.py"
+      ],
+      "reason": "python3 code on the host writes files it names"
+    },
+    {
+      "action": "restore",
+      "event_id": "CS-01-session/L000128.00",
+      "paths": [
+        "README.md",
+        "src/humanize/filesize.py",
+        "tests/test_filesize.py",
+        "tests/test_i18n.py"
+      ],
+      "reason": "git checkout resets the named paths to HEAD"
+    }
+  ],
+  "checks": [
+    {
+      "approximations": [],
+      "check_id": "a_written_files_changed",
+      "items": [
+        {
+          "path": "README.md",
+          "reason": "the final state equals the base: the Bash command at CS-01-session/L000128.00 restored it to the base",
+          "status": "explained",
+          "written_by": [
+            "CS-01-session/L000085.00"
+          ]
+        },
+        {
+          "path": "src/humanize/filesize.py",
+          "reason": "differs between the base and the final state",
+          "status": "passed",
+          "written_by": [
+            "CS-01-session/L000055.00",
+            "CS-01-session/L000057.00",
+            "CS-01-session/L000059.00",
+            "CS-01-session/L000134.00",
+            "CS-01-session/L000136.00",
+            "CS-01-session/L000138.00",
+            "CS-01-session/L000140.00"
+          ]
+        },
+        {
+          "path": "tests/test_filesize.py",
+          "reason": "differs between the base and the final state",
+          "status": "passed",
+          "written_by": [
+            "CS-01-session/L000075.00",
+            "CS-01-session/L000150.00"
+          ]
+        },
+        {
+          "path": "tests/test_i18n.py",
+          "reason": "the final state equals the base: the Bash command at CS-01-session/L000128.00 restored it to the base",
+          "status": "explained",
+          "written_by": [
+            "CS-01-session/L000083.00"
+          ]
+        }
+      ],
+      "reason": "4 item(s) passed (2 explained)",
+      "status": "passed",
+      "title": "Files written through Edit/MultiEdit/Write differ between base and final state, or are explained"
+    },
+    {
+      "approximations": [],
+      "check_id": "b_first_edit_strings",
+      "items": [
+        {
+          "event_id": "CS-01-session/L000055.00",
+          "from": "session start",
+          "new_occurrences_outside_old": 0,
+          "old_occurrences": 1,
+          "path": "src/humanize/filesize.py",
+          "reason": "old_string occurs as the Edit tool requires and new_string does not occur",
+          "replace_all": false,
+          "status": "passed",
+          "tool": "Edit"
+        },
+        {
+          "event_id": "CS-01-session/L000075.00",
+          "from": "session start",
+          "path": "tests/test_filesize.py",
+          "reason": "the file was not in its base state before this edit (CS-01-session/L000067.00: python3 code on the host writes files it names)",
+          "replace_all": false,
+          "status": "not_checkable",
+          "tool": "Edit"
+        },
+        {
+          "event_id": "CS-01-session/L000083.00",
+          "from": "session start",
+          "new_occurrences_outside_old": 0,
+          "old_occurrences": 1,
+          "path": "tests/test_i18n.py",
+          "reason": "old_string occurs as the Edit tool requires and new_string does not occur",
+          "replace_all": false,
+          "status": "passed",
+          "tool": "Edit"
+        },
+        {
+          "event_id": "CS-01-session/L000085.00",
+          "from": "session start",
+          "new_occurrences_outside_old": 0,
+          "old_occurrences": 1,
+          "path": "README.md",
+          "reason": "old_string occurs as the Edit tool requires and new_string does not occur",
+          "replace_all": false,
+          "status": "passed",
+          "tool": "Edit"
+        },
+        {
+          "event_id": "CS-01-session/L000134.00",
+          "from": "restore at CS-01-session/L000128.00",
+          "new_occurrences_outside_old": 0,
+          "old_occurrences": 1,
+          "path": "src/humanize/filesize.py",
+          "reason": "old_string occurs as the Edit tool requires and new_string does not occur",
+          "replace_all": false,
+          "status": "passed",
+          "tool": "Edit"
+        },
+        {
+          "event_id": "CS-01-session/L000150.00",
+          "from": "restore at CS-01-session/L000128.00",
+          "new_occurrences_outside_old": 0,
+          "old_occurrences": 1,
+          "path": "tests/test_filesize.py",
+          "reason": "old_string occurs as the Edit tool requires and new_string does not occur",
+          "replace_all": false,
+          "status": "passed",
+          "tool": "Edit"
+        }
+      ],
+      "reason": "5 item(s) passed; 1 not checkable",
+      "status": "passed",
+      "title": "At each first edit from the base, old_string is in the base and new_string is not"
+    },
+    {
+      "approximations": [],
+      "check_id": "c_reads_match_base",
+      "items": [
+        {
+          "event_id": "CS-01-session/L000010.00",
+          "lines": "all",
+          "lines_compared": 111,
+          "mismatches": [],
+          "n_mismatches": 0,
+          "path": "src/humanize/filesize.py",
+          "reason": "matches the base content",
+          "source": "Bash cat",
+          "state": "base",
+          "status": "passed"
+        },
+        {
+          "event_id": "CS-01-session/L000015.00",
+          "lines": "all",
+          "lines_compared": 103,
+          "mismatches": [],
+          "n_mismatches": 0,
+          "path": "tests/test_filesize.py",
+          "reason": "matches the base content",
+          "source": "Bash cat",
+          "state": "base",
+          "status": "passed"
+        },
+        {
+          "event_id": "CS-01-session/L000021.00",
+          "lines": "3-3",
+          "lines_compared": 1,
+          "mismatches": [],
+          "n_mismatches": 0,
+          "path": "docs/filesize.md",
+          "reason": "matches the base content",
+          "source": "Grep",
+          "state": "base",
+          "status": "passed"
+        },
+        {
+          "event_id": "CS-01-session/L000021.00",
+          "lines": "7-7",
+          "lines_compared": 1,
+          "mismatches": [],
+          "n_mismatches": 0,
+          "path": "docs/index.md",
+          "reason": "matches the base content",
+          "source": "Grep",
+          "state": "base",
+          "status": "passed"
+        },
+        {
+          "event_id": "CS-01-session/L000021.00",
+          "lines": "22-22",
+          "lines_compared": 1,
+          "mismatches": [],
+          "n_mismatches": 0,
+          "path": "mkdocs.yml",
+          "reason": "matches the base content",
+          "source": "Grep",
+          "state": "base",
+          "status": "passed"
+        },
+        {
+          "event_id": "CS-01-session/L000021.00",
+          "lines": "64-65",
+          "lines_compared": 2,
+          "mismatches": [],
+          "n_mismatches": 0,
+          "path": "tests/test_benchmarks.py",
+          "reason": "matches the base content",
+          "source": "Grep",
+          "state": "base",
+          "status": "passed"
+        },
+        {
+          "event_id": "CS-01-session/L000021.00",
+          "lines": "313-330",
+          "lines_compared": 4,
+          "mismatches": [],
+          "n_mismatches": 0,
+          "path": "tests/test_i18n.py",
+          "reason": "matches the base content",
+          "source": "Grep",
+          "state": "base",
+          "status": "passed"
+        },
+        {
+          "event_id": "CS-01-session/L000021.00",
+          "lines": "39-106",
+          "lines_compared": 18,
+          "mismatches": [],
+          "n_mismatches": 0,
+          "path": "src/humanize/filesize.py",
+          "reason": "matches the base content",
+          "source": "Grep",
+          "state": "base",
+          "status": "passed"
+        },
+        {
+          "event_id": "CS-01-session/L000021.00",
+          "lines": "7-52",
+          "lines_compared": 3,
+          "mismatches": [],
+          "n_mismatches": 0,
+          "path": "src/humanize/__init__.py",
+          "reason": "matches the base content",
+          "source": "Grep",
+          "state": "base",
+          "status": "passed"
+        },
+        {
+          "event_id": "CS-01-session/L000021.00",
+          "lines": "160-164",
+          "lines_compared": 4,
+          "mismatches": [],
+          "n_mismatches": 0,
+          "path": "README.md",
+          "reason": "matches the base content",
+          "source": "Grep",
+          "state": "base",
+          "status": "passed"
+        },
+        {
+          "event_id": "CS-01-session/L000021.00",
+          "lines": "1-103",
+          "lines_compared": 41,
+          "mismatches": [],
+          "n_mismatches": 0,
+          "path": "tests/test_filesize.py",
+          "reason": "matches the base content",
+          "source": "Grep",
+          "state": "base",
+          "status": "passed"
+        },
+        {
+          "event_id": "CS-01-session/L000025.00",
+          "lines": "280-340",
+          "lines_compared": 61,
+          "mismatches": [],
+          "n_mismatches": 0,
+          "path": "tests/test_i18n.py",
+          "reason": "matches the base content",
+          "source": "Bash sed -n",
+          "state": "base",
+          "status": "passed"
+        },
+        {
+          "event_id": "CS-01-session/L000036.00",
+          "lines": "3-3",
+          "lines_compared": 1,
+          "mismatches": [],
+          "n_mismatches": 0,
+          "path": "src/humanize/_version.py",
+          "reason": "matches the base content",
+          "source": "Grep",
+          "state": "base",
+          "status": "passed"
+        },
+        {
+          "event_id": "CS-01-session/L000036.00",
+          "lines": "43-106",
+          "lines_compared": 7,
+          "mismatches": [],
+          "n_mismatches": 0,
+          "path": "src/humanize/filesize.py",
+          "reason": "matches the base content",
+          "source": "Grep",
+          "state": "base",
+          "status": "passed"
+        },
+        {
+          "event_id": "CS-01-session/L000036.00",
+          "lines": "224-595",
+          "lines_compared": 11,
+          "mismatches": [],
+          "n_mismatches": 0,
+          "path": "src/humanize/number.py",
+          "reason": "matches the base content",
+          "source": "Grep",
+          "state": "base",
+          "status": "passed"
+        },
+        {
+          "event_id": "CS-01-session/L000036.00",
+          "lines": "325-683",
+          "lines_compared": 4,
+          "mismatches": [],
+          "n_mismatches": 0,
+          "path": "src/humanize/time.py",
+          "reason": "matches the base content",
+          "source": "Grep",
+          "state": "base",
+          "status": "passed"
+        },
+        {
+          "event_id": "CS-01-session/L000053.00",
+          "lines": "39-110",
+          "lines_compared": 72,
+          "mismatches": [],
+          "n_mismatches": 0,
+          "path": "src/humanize/filesize.py",
+          "reason": "matches the base content",
+          "source": "Read",
+          "state": "base",
+          "status": "passed"
+        },
+        {
+          "event_id": "CS-01-session/L000079.00",
+          "lines": "305-312",
+          "lines_compared": 8,
+          "mismatches": [],
+          "n_mismatches": 0,
+          "path": "tests/test_i18n.py",
+          "reason": "matches the base content",
+          "source": "Read",
+          "state": "base",
+          "status": "passed"
+        },
+        {
+          "event_id": "CS-01-session/L000081.00",
+          "lines": "156-165",
+          "lines_compared": 10,
+          "mismatches": [],
+          "n_mismatches": 0,
+          "path": "README.md",
+          "reason": "matches the base content",
+          "source": "Read",
+          "state": "base",
+          "status": "passed"
+        },
+        {
+          "event_id": "CS-01-session/L000092.00",
+          "lines": "44-86",
+          "lines_compared": 12,
+          "mismatches": [],
+          "n_mismatches": 0,
+          "path": "src/humanize/i18n.py",
+          "reason": "matches the base content",
+          "source": "Grep",
+          "state": "base",
+          "status": "passed"
+        },
+        {
+          "event_id": "CS-01-session/L000094.00",
+          "lines": "44-58",
+          "lines_compared": 15,
+          "mismatches": [],
+          "n_mismatches": 0,
+          "path": "src/humanize/i18n.py",
+          "reason": "matches the base content",
+          "source": "Read",
+          "state": "base",
+          "status": "passed"
+        },
+        {
+          "event_id": "CS-01-session/L000132.00",
+          "lines": "39-111",
+          "lines_compared": 73,
+          "mismatches": [],
+          "n_mismatches": 0,
+          "path": "src/humanize/filesize.py",
+          "reason": "matches the base content",
+          "source": "Read",
+          "state": "base",
+          "status": "passed"
+        },
+        {
+          "event_id": "CS-01-session/L000148.00",
+          "lines": "92-103",
+          "lines_compared": 12,
+          "mismatches": [],
+          "n_mismatches": 0,
+          "path": "tests/test_filesize.py",
+          "reason": "matches the base content",
+          "source": "Read",
+          "state": "base",
+          "status": "passed"
+        }
+      ],
+      "reason": "23 item(s) passed",
+      "status": "passed",
+      "title": "File contents the session saw while a file was in its base state equal the base"
+    },
+    {
+      "approximations": [
+        "controlled.prepare_workspace records the manifest that build_snapshot computes before it writes the overlays, so no start-of-session hash covers the overlay content (src/humanize/_version.py); task.json holds that content as read from the workspace when the task was compiled.",
+        "src/humanize/_version.py: listed in 4 tool result(s); the session saw 1 of its 4 line(s) (3), matching the overlay; the rest of its content is not attested by the session."
+      ],
+      "check_id": "d_start_manifest",
+      "items": [
+        {
+          "overlay_evidence": {
+            "src/humanize/_version.py": {
+              "content_seen_in": [
+                "CS-01-session/L000036.00"
+              ],
+              "lines_seen": [
+                3
+              ],
+              "listed_in": [
+                "CS-01-session/L000009.00",
+                "CS-01-session/L000116.00",
+                "CS-01-session/L000162.00",
+                "CS-01-session/L000166.00"
+              ],
+              "n_lines": 4
+            }
+          },
+          "overlays": [
+            "src/humanize/_version.py"
+          ],
+          "reason": "the recorded start-of-session manifest covers the tree before the overlays were written; the rebuilt base without the overlay files equals it exactly",
+          "rebuilt_manifest_sha256": "0e87b6c1b51f5c87ce008d9a1145a9a38543fc92299a356f587a72ed8a229179",
+          "rebuilt_without_overlays_sha256": "04e12206f5c1e0e03657194d2660ebdb80547ac1b76ca95af8a7fc5a3f789e30",
+          "source": "provenance.json notes: workspace_snapshot_manifest",
+          "start_manifest_sha256": "04e12206f5c1e0e03657194d2660ebdb80547ac1b76ca95af8a7fc5a3f789e30",
+          "status": "explained"
+        }
+      ],
+      "reason": "1 item(s) passed (1 explained); the overlay content is recorded as an approximation",
+      "status": "passed",
+      "title": "The rebuilt base manifest equals the start-of-session manifest after overlays"
+    },
+    {
+      "approximations": [],
+      "check_id": "e_no_stale_copies",
+      "items": [
+        {
+          "changed_modules": [
+            "README.md",
+            "src/humanize/filesize.py",
+            "tests/test_filesize.py",
+            "tests/test_i18n.py"
+          ],
+          "other_artifacts": [],
+          "reason": "no such copy of a changed module",
+          "status": "passed"
+        }
+      ],
+      "reason": "1 item(s) passed",
+      "status": "passed",
+      "title": "No .git, __pycache__, .pyc, .orig, .rej or backup copy of a changed module in the base"
+    },
+    {
+      "approximations": [],
+      "check_id": "f_replay_matches_states",
+      "items": [
+        {
+          "event_id": "CS-01-session/L000073.00",
+          "kind": "read",
+          "path": "tests/test_filesize.py",
+          "reason": "the file's content at this point is unknown (CS-01-session/L000067.00: python3 code on the host writes files it names)",
+          "source": "Read",
+          "status": "not_checkable"
+        },
+        {
+          "kind": "state",
+          "path": "README.md",
+          "reason": "the replay reproduces the captured pre-correction content",
+          "state": "pre-correction",
+          "status": "passed"
+        },
+        {
+          "kind": "state",
+          "path": "src/humanize/filesize.py",
+          "reason": "the replay reproduces the captured pre-correction content",
+          "state": "pre-correction",
+          "status": "passed"
+        },
+        {
+          "kind": "state",
+          "path": "tests/test_filesize.py",
+          "reason": "the replay cannot follow it (CS-01-session/L000067.00: python3 code on the host writes files it names)",
+          "state": "pre-correction",
+          "status": "not_checkable"
+        },
+        {
+          "kind": "state",
+          "path": "tests/test_i18n.py",
+          "reason": "the replay reproduces the captured pre-correction content",
+          "state": "pre-correction",
+          "status": "passed"
+        },
+        {
+          "kind": "state",
+          "path": "README.md",
+          "reason": "the replay reproduces the captured final content",
+          "state": "final",
+          "status": "passed"
+        },
+        {
+          "kind": "state",
+          "path": "src/humanize/filesize.py",
+          "reason": "the replay reproduces the captured final content",
+          "state": "final",
+          "status": "passed"
+        },
+        {
+          "kind": "state",
+          "path": "tests/test_filesize.py",
+          "reason": "the replay reproduces the captured final content",
+          "state": "final",
+          "status": "passed"
+        },
+        {
+          "kind": "state",
+          "path": "tests/test_i18n.py",
+          "reason": "the replay reproduces the captured final content",
+          "state": "final",
+          "status": "passed"
+        }
+      ],
+      "reason": "7 item(s) passed; 2 not checkable",
+      "status": "passed",
+      "title": "Replaying the session's writes on the base reproduces the captured states (additional)"
+    }
+  ],
+  "inputs": {
+    "base_manifest_sha256": "0e87b6c1b51f5c87ce008d9a1145a9a38543fc92299a356f587a72ed8a229179",
+    "base_n_files": 90,
+    "correction_turn_event": "CS-01-session/L000125.00",
+    "pre_correction_candidate": "CS-01-pre-correction",
+    "pre_correction_patch_sha256": "d0d74c86e5a29202635fe9f76217794ba8c0e9a3c3d316e8fd1e2b7bca37bf0e",
+    "reference_candidate": "CS-01-reference",
+    "reference_patch_sha256": "2f917455ac18afcdb63b6015fbec947fb1fb30cd044031e291ca170fa3da4465",
+    "transcript_matches_provenance": true,
+    "transcript_sha256": "616efec6133540758fe889e3517ecfbbd4a66c66ecb4e54eb9d409dcc5f5ce5d",
+    "workspace_root_from": "scenario"
+  },
+  "legacy_leakage_check": {
+    "note": "tasks.compile_controlled_task calls leakage_check(base, ref.patch) without reference_base, so the snapshot and the reference base are the same directory: a changed file would have to differ from the base and equal it at once. As recorded, the check can flag only a .git directory, which a git archive export does not have; it passes even when the base already holds the solution.",
+    "recorded": {
+      "checked_paths": [
+        "src/humanize/filesize.py",
+        "tests/test_filesize.py"
+      ],
+      "leaked_paths": [],
+      "method": "post-image-equality",
+      "passed": true
+    }
+  },
+  "method": "reconstruction:v1",
+  "notes": [
+    "snapshot.json gives n_files 89, but the rebuilt base it hashes has 90 files; n_files counts the tree before the overlays"
+  ],
+  "passed": true,
+  "status": "passed",
+  "task_id": "CS-01"
+}

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 
@@ -142,3 +143,115 @@ def test_scratch_reads_are_attributed_to_their_writer(tmp_path):
     assert {(o["op"], o["path"].rsplit("/", 1)[-1], o["last_written_by"]) for o in others} >= {
         ("read", "a.txt", "agent-A"), ("search", "shared", "agent-A")}
     assert n_own >= 1
+
+
+# --------------------------------------------------------------------------- tool outputs (A6)
+
+
+def _session(path: Path, calls: list[tuple[str, dict, str]]) -> None:
+    """A transcript in which each call (tool, input, output text) has a tool_use and a tool_result row."""
+    rows = [{"type": "user", "uuid": "u0", "parentUuid": None, "sessionId": "s", "timestamp": "2026-01-01T00:00:00Z",
+             "message": {"role": "user", "content": "go"}}]
+    for i, (tool, ti, out) in enumerate(calls):
+        ts = f"2026-01-01T00:00:{i + 1:02d}"
+        rows.append({"type": "assistant", "uuid": f"a{i}", "parentUuid": "u0", "sessionId": "s", "timestamp": ts + ".000Z",
+                     "message": {"role": "assistant", "content": [{"type": "tool_use", "id": f"t{i}", "name": tool, "input": ti}]}})
+        rows.append({"type": "user", "uuid": f"r{i}", "parentUuid": f"a{i}", "sessionId": "s", "timestamp": ts + ".500Z",
+                     "message": {"role": "user", "content": [{"type": "tool_result", "tool_use_id": f"t{i}", "content": out,
+                                                              "is_error": out.startswith("cat:")}]}})
+    path.write_text("".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
+
+
+def _exposed(path: Path, **kw) -> set[tuple[str, str]]:
+    reads, exposures = audit_generator_transcript_strict(path, task="CS-01", own=OWN, outputs=True, **kw)
+    assert reads == audit_generator_transcript_strict(path, task="CS-01", own=OWN, **kw)  # reads do not change
+    return {(x["path"].removeprefix(REPO + "/"), x["why"]) for x in exposures}
+
+
+def test_tool_outputs_are_reported_apart_from_reads(tmp_path):
+    t = tmp_path / "t.jsonl"
+    _session(t, [
+        ("Bash", {"command": "git status --short"}, " M src/humanize/filesize.py\n?? tasks/CS-01/candidates/CS-01-eval-alt-1.json\n"),
+        ("Bash", {"command": f"ls {OWN}"}, "nm1\nnm2\nreference.diff\n"),
+        ("Read", {"file_path": f"{OWN}/notes.txt"}, f"     1\tsee {REPO}/tasks/CS-01/verifiers/full_plain/tests/test_a.py\n"),
+        ("Bash", {"command": "cat x.py"}, f"cat: {REPO}/results/runs/pilot-v0.3.3/x: No such file or directory"),
+    ])
+    reads, exposures = audit_generator_transcript_strict(t, task="CS-01", own=OWN, outputs=True)
+    assert [h["path"] for h in reads] == [REPO]  # the git listing over the repository is a read; the outputs are not
+    assert {(x["path"].removeprefix(REPO + "/"), x["why"]) for x in exposures} == {
+        ("tasks/CS-01/candidates/CS-01-eval-alt-1.json", "shown in a tool output: inside forbidden material"),
+        ("CS-01-eval-alt-1", "held-out candidate named in a tool output"),
+        ("tasks/CS-01/verifiers/full_plain/tests/test_a.py", "shown in a tool output: inside forbidden material"),
+        ("results/runs/pilot-v0.3.3/x", "shown in a tool output: inside forbidden material"),
+    }
+    first = next(x for x in exposures if x["path"] == "CS-01-eval-alt-1")
+    assert first["text"] == "?? tasks/CS-01/candidates/CS-01-eval-alt-1.json"  # the output line that showed it
+    assert first["call"].endswith("/L000002.00") and first["event_id"].endswith("/L000003.00") and first["tool"] == "Bash"
+    assert first["ts"] == "2026-01-01T00:00:01.500Z"
+
+
+def test_own_candidates_and_own_writes_are_not_exposures(tmp_path):
+    t = tmp_path / "t.jsonl"
+    _session(t, [
+        ("Bash", {"command": ".venv/bin/tracecontract add-candidate tasks/CS-01 CS-01-eval-nm-1 --patch nm1.diff"},
+         '{"candidate": "candidates/CS-01-eval-nm-1.json", "patch_lines": 12}'),
+        # a shell function registers ids built from a variable: they are the agent's own too
+        ("Bash", {"command": 'reg() {\n  .venv/bin/tracecontract add-candidate tasks/CS-01 "CS-01-eval-pre-$1" --patch x\n}\nreg 2'},
+         "=== CS-01-eval-pre-2"),
+        ("Bash", {"command": "git status --short"},
+         "?? tasks/CS-01/candidates/CS-01-eval-nm-1.json\n?? tasks/CS-01/candidates/CS-01-eval-alt-2.json\n"),
+        ("Write", {"file_path": f"{SCRATCH}/check.py", "content": "x"}, f"File created successfully at: {SCRATCH}/check.py"),
+    ])
+    assert _exposed(t, extra_forbidden=(SCRATCH,)) == {
+        ("tasks/CS-01/candidates/CS-01-eval-alt-2.json", "shown in a tool output: inside forbidden material"),
+        ("CS-01-eval-alt-2", "held-out candidate named in a tool output"),
+    }
+
+
+def test_relative_paths_in_outputs_resolve_from_where_the_command_ends(tmp_path):
+    cases = [
+        ("Bash", {"command": f"cd {OWN}/base && find . -name '*.md'"}, "./README.md\n./docs/index.md\n", set()),
+        ("Bash", {"command": "cd tasks/CS-01 && ls -R"}, "./verifiers/full_plain/tests:\ntest_a.py\n",
+         {("tasks/CS-01/verifiers/full_plain/tests", "shown in a tool output: inside forbidden material")}),
+        ("Bash", {"command": "cat README.md"}, "Labels: see docs/annotation_guide.md.\n",
+         {("docs/annotation_guide.md", "shown in a tool output: inside forbidden material")}),
+        # relative paths in other tools' outputs (file contents) are not resolved; absolute ones are
+        ("Read", {"file_path": f"{REPO}/README.md"}, "     1\tsee docs/annotation_guide.md\n", set()),
+        ("Glob", {"pattern": "*.py", "path": OWN}, f"{OWN}/nm1/x.py\n{REPO}/data/controlled/transcripts/CS-01.jsonl\n",
+         {("data/controlled/transcripts/CS-01.jsonl", "shown in a tool output: inside forbidden material")}),
+        ("Bash", {"command": "ls"}, "listing of /tmp/x/scratchpad/sealed/y\n",
+         {("/tmp/x/scratchpad/sealed/y", "shown in a tool output: sealed material")}),
+    ]
+    for i, (tool, ti, out, expect) in enumerate(cases):
+        t = tmp_path / f"o{i}.jsonl"
+        _session(t, [(tool, ti, out)])
+        assert _exposed(t) == expect, (ti, out)
+
+
+def test_reaudit_writes_output_exposures_apart_and_leaves_the_audit_record_unchanged(tmp_path):
+    sr = _load_strict_reaudit()
+    root, tdir = tmp_path / "repo", tmp_path / "transcripts"
+    tdir.mkdir()
+    b = tdir / "agent-B.jsonl"
+    _session(b, [("Bash", {"command": f"echo y > {SCRATCH}/shared/b.txt"}, ""),
+                 ("Bash", {"command": f"ls {SCRATCH}/shared"}, f"{SCRATCH}/shared/a.txt\n{SCRATCH}/shared/b.txt\n"),
+                 ("Bash", {"command": "git status --short"}, "?? tasks/CS-01/candidates/CS-01-eval-alt-1.json\n")])
+    a = tdir / "agent-A.jsonl"
+    _transcript(a, [{"command": f"mkdir -p {SCRATCH}/shared && echo x > {SCRATCH}/shared/a.txt"}])
+    a.write_text(a.read_text().replace("2026-01-01T00:00:", "2025-12-31T23:00:"))  # A wrote before B
+    audit = root / "tasks" / "CS-01" / "labels" / "generator_audit.json"
+    audit.parent.mkdir(parents=True)
+    audit.write_text(json.dumps({"eval-nm": {"transcript_sha256": hashlib.sha256(b.read_bytes()).hexdigest()}}))
+    sr.R = root
+    assert sr.main(["--transcripts", str(tdir), "--scratch", SCRATCH, "--write"]) == 0
+    recorded = audit.read_bytes()
+    report = tmp_path / "outputs.json"
+    assert sr.main(["--transcripts", str(tdir), "--scratch", SCRATCH, "--write", "--outputs", str(report)]) == 0
+    assert audit.read_bytes() == recorded  # the output scan never enters the audit record
+    entry = json.loads(report.read_text())["transcripts"]["CS-01"]["eval-nm"]["main"]
+    assert {x["path"] for x in entry["output_exposures"]} == {f"{REPO}/tasks/CS-01/candidates/CS-01-eval-alt-1.json",
+                                                              "CS-01-eval-alt-1"}
+    assert [(x["path"], x["last_written_by"]) for x in entry["output_scratch_not_attributed_to_the_agent"]] == [
+        ("<scratchpad>/shared/a.txt", "agent-A")]  # redacted, attributed to its writer
+    assert entry["output_scratch_own"] == 1  # b.txt, written by the agent itself
+    assert SCRATCH not in report.read_text()

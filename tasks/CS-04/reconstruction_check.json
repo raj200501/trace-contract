@@ -1,0 +1,459 @@
+{
+  "bash_effects": [],
+  "checks": [
+    {
+      "approximations": [],
+      "check_id": "a_written_files_changed",
+      "items": [
+        {
+          "path": "docs/api.rst",
+          "reason": "differs between the base and the final state",
+          "status": "passed",
+          "written_by": [
+            "CS-04-session/L000077.00"
+          ]
+        },
+        {
+          "path": "docs/versions.rst",
+          "reason": "differs between the base and the final state",
+          "status": "passed",
+          "written_by": [
+            "CS-04-session/L000079.00"
+          ]
+        },
+        {
+          "path": "more_itertools/more.py",
+          "reason": "differs between the base and the final state",
+          "status": "passed",
+          "written_by": [
+            "CS-04-session/L000056.00",
+            "CS-04-session/L000058.00",
+            "CS-04-session/L000060.00",
+            "CS-04-session/L000122.00",
+            "CS-04-session/L000124.00"
+          ]
+        },
+        {
+          "path": "more_itertools/more.pyi",
+          "reason": "differs between the base and the final state",
+          "status": "passed",
+          "written_by": [
+            "CS-04-session/L000063.00"
+          ]
+        },
+        {
+          "path": "tests/test_more.py",
+          "reason": "differs between the base and the final state",
+          "status": "passed",
+          "written_by": [
+            "CS-04-session/L000069.00",
+            "CS-04-session/L000135.00",
+            "CS-04-session/L000137.00"
+          ]
+        }
+      ],
+      "reason": "5 item(s) passed",
+      "status": "passed",
+      "title": "Files written through Edit/MultiEdit/Write differ between base and final state, or are explained"
+    },
+    {
+      "approximations": [],
+      "check_id": "b_first_edit_strings",
+      "items": [
+        {
+          "event_id": "CS-04-session/L000056.00",
+          "from": "session start",
+          "new_occurrences_outside_old": 0,
+          "old_occurrences": 1,
+          "path": "more_itertools/more.py",
+          "reason": "old_string occurs as the Edit tool requires and new_string does not occur",
+          "replace_all": false,
+          "status": "passed",
+          "tool": "Edit"
+        },
+        {
+          "event_id": "CS-04-session/L000063.00",
+          "from": "session start",
+          "new_occurrences_outside_old": 0,
+          "old_occurrences": 1,
+          "path": "more_itertools/more.pyi",
+          "reason": "old_string occurs as the Edit tool requires and new_string does not occur",
+          "replace_all": false,
+          "status": "passed",
+          "tool": "Edit"
+        },
+        {
+          "event_id": "CS-04-session/L000069.00",
+          "from": "session start",
+          "new_occurrences_outside_old": 0,
+          "old_occurrences": 1,
+          "path": "tests/test_more.py",
+          "reason": "old_string occurs as the Edit tool requires and new_string does not occur",
+          "replace_all": false,
+          "status": "passed",
+          "tool": "Edit"
+        },
+        {
+          "event_id": "CS-04-session/L000077.00",
+          "from": "session start",
+          "new_occurrences_outside_old": 0,
+          "old_occurrences": 1,
+          "path": "docs/api.rst",
+          "reason": "old_string occurs as the Edit tool requires and new_string does not occur",
+          "replace_all": false,
+          "status": "passed",
+          "tool": "Edit"
+        },
+        {
+          "event_id": "CS-04-session/L000079.00",
+          "from": "session start",
+          "new_occurrences_outside_old": 0,
+          "old_occurrences": 1,
+          "path": "docs/versions.rst",
+          "reason": "old_string occurs as the Edit tool requires and new_string does not occur",
+          "replace_all": false,
+          "status": "passed",
+          "tool": "Edit"
+        }
+      ],
+      "reason": "5 item(s) passed",
+      "status": "passed",
+      "title": "At each first edit from the base, old_string is in the base and new_string is not"
+    },
+    {
+      "approximations": [],
+      "check_id": "c_reads_match_base",
+      "items": [
+        {
+          "event_id": "CS-04-session/L000011.00",
+          "lines": "54-783",
+          "lines_compared": 3,
+          "mismatches": [],
+          "n_mismatches": 0,
+          "path": "docs/versions.rst",
+          "reason": "matches the base content",
+          "source": "Grep",
+          "state": "base",
+          "status": "passed"
+        },
+        {
+          "event_id": "CS-04-session/L000011.00",
+          "lines": "161-161",
+          "lines_compared": 1,
+          "mismatches": [],
+          "n_mismatches": 0,
+          "path": "docs/api.rst",
+          "reason": "matches the base content",
+          "source": "Grep",
+          "state": "base",
+          "status": "passed"
+        },
+        {
+          "event_id": "CS-04-session/L000011.00",
+          "lines": "80-2896",
+          "lines_compared": 5,
+          "mismatches": [],
+          "n_mismatches": 0,
+          "path": "more_itertools/more.py",
+          "reason": "matches the base content",
+          "source": "Grep",
+          "state": "base",
+          "status": "passed"
+        },
+        {
+          "event_id": "CS-04-session/L000011.00",
+          "lines": "53-596",
+          "lines_compared": 2,
+          "mismatches": [],
+          "n_mismatches": 0,
+          "path": "more_itertools/more.pyi",
+          "reason": "matches the base content",
+          "source": "Grep",
+          "state": "base",
+          "status": "passed"
+        },
+        {
+          "event_id": "CS-04-session/L000011.00",
+          "lines": "78-78",
+          "lines_compared": 1,
+          "mismatches": [],
+          "n_mismatches": 0,
+          "path": "README.rst",
+          "reason": "matches the base content",
+          "source": "Grep",
+          "state": "base",
+          "status": "passed"
+        },
+        {
+          "event_id": "CS-04-session/L000011.00",
+          "lines": "3719-3740",
+          "lines_compared": 3,
+          "mismatches": [],
+          "n_mismatches": 0,
+          "path": "tests/test_more.py",
+          "reason": "matches the base content",
+          "source": "Grep",
+          "state": "base",
+          "status": "passed"
+        },
+        {
+          "event_id": "CS-04-session/L000014.00",
+          "lines": "2840-2919",
+          "lines_compared": 80,
+          "mismatches": [],
+          "n_mismatches": 0,
+          "path": "more_itertools/more.py",
+          "reason": "matches the base content",
+          "source": "Read",
+          "state": "base",
+          "status": "passed"
+        },
+        {
+          "event_id": "CS-04-session/L000016.00",
+          "lines": "585-609",
+          "lines_compared": 25,
+          "mismatches": [],
+          "n_mismatches": 0,
+          "path": "more_itertools/more.pyi",
+          "reason": "matches the base content",
+          "source": "Read",
+          "state": "base",
+          "status": "passed"
+        },
+        {
+          "event_id": "CS-04-session/L000018.00",
+          "lines": "3705-3754",
+          "lines_compared": 50,
+          "mismatches": [],
+          "n_mismatches": 0,
+          "path": "tests/test_more.py",
+          "reason": "matches the base content",
+          "source": "Read",
+          "state": "base",
+          "status": "passed"
+        },
+        {
+          "event_id": "CS-04-session/L000024.00",
+          "lines": "1-41",
+          "lines_compared": 26,
+          "mismatches": [],
+          "n_mismatches": 0,
+          "path": "tests/test_more.py",
+          "reason": "matches the base content",
+          "source": "Grep",
+          "state": "base",
+          "status": "passed"
+        },
+        {
+          "event_id": "CS-04-session/L000073.00",
+          "lines": "159-162",
+          "lines_compared": 4,
+          "mismatches": [],
+          "n_mismatches": 0,
+          "path": "docs/api.rst",
+          "reason": "matches the base content",
+          "source": "Read",
+          "state": "base",
+          "status": "passed"
+        },
+        {
+          "event_id": "CS-04-session/L000075.00",
+          "lines": "8-13",
+          "lines_compared": 6,
+          "mismatches": [],
+          "n_mismatches": 0,
+          "path": "docs/versions.rst",
+          "reason": "matches the base content",
+          "source": "Read",
+          "state": "base",
+          "status": "passed"
+        }
+      ],
+      "reason": "12 item(s) passed",
+      "status": "passed",
+      "title": "File contents the session saw while a file was in its base state equal the base"
+    },
+    {
+      "approximations": [],
+      "check_id": "d_start_manifest",
+      "items": [
+        {
+          "manifest_sha256": "23d3be29cf4ba18308a6db7658382cdb9d20184d556646d7d854675531f92c2f",
+          "reason": "agrees with the recorded start-of-session manifest",
+          "source": "workspace record printed at CS-04-session/L000010.00",
+          "status": "passed"
+        },
+        {
+          "overlays": [],
+          "reason": "the rebuilt base equals the start-of-session manifest",
+          "rebuilt_manifest_sha256": "23d3be29cf4ba18308a6db7658382cdb9d20184d556646d7d854675531f92c2f",
+          "rebuilt_without_overlays_sha256": "23d3be29cf4ba18308a6db7658382cdb9d20184d556646d7d854675531f92c2f",
+          "source": "provenance.json notes: workspace_snapshot_manifest",
+          "start_manifest_sha256": "23d3be29cf4ba18308a6db7658382cdb9d20184d556646d7d854675531f92c2f",
+          "status": "passed"
+        }
+      ],
+      "reason": "2 item(s) passed",
+      "status": "passed",
+      "title": "The rebuilt base manifest equals the start-of-session manifest after overlays"
+    },
+    {
+      "approximations": [],
+      "check_id": "e_no_stale_copies",
+      "items": [
+        {
+          "changed_modules": [
+            "docs/api.rst",
+            "docs/versions.rst",
+            "more_itertools/more.py",
+            "more_itertools/more.pyi",
+            "tests/test_more.py"
+          ],
+          "other_artifacts": [],
+          "reason": "no such copy of a changed module",
+          "status": "passed"
+        }
+      ],
+      "reason": "1 item(s) passed",
+      "status": "passed",
+      "title": "No .git, __pycache__, .pyc, .orig, .rej or backup copy of a changed module in the base"
+    },
+    {
+      "approximations": [],
+      "check_id": "f_replay_matches_states",
+      "items": [
+        {
+          "event_id": "CS-04-session/L000120.00",
+          "kind": "read",
+          "lines": "2888-2927",
+          "lines_compared": 40,
+          "mismatches": [],
+          "n_mismatches": 0,
+          "path": "more_itertools/more.py",
+          "reason": "matches the replayed content",
+          "source": "Read",
+          "state": "replayed",
+          "status": "passed"
+        },
+        {
+          "event_id": "CS-04-session/L000133.00",
+          "kind": "read",
+          "lines": "3746-3775",
+          "lines_compared": 30,
+          "mismatches": [],
+          "n_mismatches": 0,
+          "path": "tests/test_more.py",
+          "reason": "matches the replayed content",
+          "source": "Read",
+          "state": "replayed",
+          "status": "passed"
+        },
+        {
+          "kind": "state",
+          "path": "docs/api.rst",
+          "reason": "the replay reproduces the captured pre-correction content",
+          "state": "pre-correction",
+          "status": "passed"
+        },
+        {
+          "kind": "state",
+          "path": "docs/versions.rst",
+          "reason": "the replay reproduces the captured pre-correction content",
+          "state": "pre-correction",
+          "status": "passed"
+        },
+        {
+          "kind": "state",
+          "path": "more_itertools/more.py",
+          "reason": "the replay reproduces the captured pre-correction content",
+          "state": "pre-correction",
+          "status": "passed"
+        },
+        {
+          "kind": "state",
+          "path": "more_itertools/more.pyi",
+          "reason": "the replay reproduces the captured pre-correction content",
+          "state": "pre-correction",
+          "status": "passed"
+        },
+        {
+          "kind": "state",
+          "path": "tests/test_more.py",
+          "reason": "the replay reproduces the captured pre-correction content",
+          "state": "pre-correction",
+          "status": "passed"
+        },
+        {
+          "kind": "state",
+          "path": "docs/api.rst",
+          "reason": "the replay reproduces the captured final content",
+          "state": "final",
+          "status": "passed"
+        },
+        {
+          "kind": "state",
+          "path": "docs/versions.rst",
+          "reason": "the replay reproduces the captured final content",
+          "state": "final",
+          "status": "passed"
+        },
+        {
+          "kind": "state",
+          "path": "more_itertools/more.py",
+          "reason": "the replay reproduces the captured final content",
+          "state": "final",
+          "status": "passed"
+        },
+        {
+          "kind": "state",
+          "path": "more_itertools/more.pyi",
+          "reason": "the replay reproduces the captured final content",
+          "state": "final",
+          "status": "passed"
+        },
+        {
+          "kind": "state",
+          "path": "tests/test_more.py",
+          "reason": "the replay reproduces the captured final content",
+          "state": "final",
+          "status": "passed"
+        }
+      ],
+      "reason": "12 item(s) passed",
+      "status": "passed",
+      "title": "Replaying the session's writes on the base reproduces the captured states (additional)"
+    }
+  ],
+  "inputs": {
+    "base_manifest_sha256": "23d3be29cf4ba18308a6db7658382cdb9d20184d556646d7d854675531f92c2f",
+    "base_n_files": 39,
+    "correction_turn_event": "CS-04-session/L000107.00",
+    "pre_correction_candidate": "CS-04-pre-correction",
+    "pre_correction_patch_sha256": "c3b478ab4d71cdf82312ebc88d879e3a042acffb4bd0874e39312c87d1fa88d4",
+    "reference_candidate": "CS-04-reference",
+    "reference_patch_sha256": "7b5c874389eff6d0c4f6ce3d1d3655bbc427ac5577f84f4e645fb855a286ef96",
+    "transcript_matches_provenance": true,
+    "transcript_sha256": "6700812096e3ae6063d0c03a705fad7acbca69d72acbfc00f24c423cfaea8ba1",
+    "workspace_root_from": "scenario"
+  },
+  "legacy_leakage_check": {
+    "note": "tasks.compile_controlled_task calls leakage_check(base, ref.patch) without reference_base, so the snapshot and the reference base are the same directory: a changed file would have to differ from the base and equal it at once. As recorded, the check can flag only a .git directory, which a git archive export does not have; it passes even when the base already holds the solution.",
+    "recorded": {
+      "checked_paths": [
+        "docs/api.rst",
+        "docs/versions.rst",
+        "more_itertools/more.py",
+        "more_itertools/more.pyi",
+        "tests/test_more.py"
+      ],
+      "leaked_paths": [],
+      "method": "post-image-equality",
+      "passed": true
+    }
+  },
+  "method": "reconstruction:v1",
+  "notes": [],
+  "passed": true,
+  "status": "passed",
+  "task_id": "CS-04"
+}

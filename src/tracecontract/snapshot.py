@@ -102,6 +102,13 @@ def leakage_check(snapshot_dir: Path, reference_patch: str, reference_base: Path
     A changed file *leaks* if the snapshot already contains its post-image while the
     reference patch actually changes it (i.e. post-image differs from the base).
     Also flags any ``.git`` directory in the snapshot.
+
+    Note: without an independent ``reference_base`` the base *is* ``snapshot_dir``, so
+    ``post != pre and cur == post`` can never hold and only ``.git`` can be flagged.
+    :func:`tasks.compile_controlled_task` calls it that way (with a reference patch diffed
+    against this same base), so the ``leakage_check`` recorded in each ``snapshot.json`` is
+    vacuous: it passes even when the base already holds the solution. See
+    :mod:`tracecontract.reconstruction` for a check against the session transcript.
     """
     base = reference_base or snapshot_dir
     images = post_images(reference_patch, base)

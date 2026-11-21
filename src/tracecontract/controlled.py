@@ -17,6 +17,7 @@ import re
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Literal, overload
 
 from .patches import diff_dirs
 from .schemas import Candidate, CandidateOrigin, EventKind, Label, Session, Split, sha256_text
@@ -228,6 +229,8 @@ _WRAPPERS = {"env", "timeout", "sudo", "nice", "nohup", "stdbuf", "command", "ex
 _GIT_LISTING = {"status", "ls-files", "ls-tree", "grep", "diff", "show", "blame", "archive", "stash", "log", "whatchanged"}
 _EXCLUSION_ARG = re.compile(r"(?:-i?path|-wholename|--exclude(?:-dir)?|--ignore(?:-dir)?)(?:=|\s+)\S+")
 _LITERAL_PATH = re.compile(r"(?<![\w$}{])(?:~|\.\.?)?/?(?:[\w.@%+=,-]+/)+[\w.@%+=,*?-]*")
+_ANY_VAR = re.compile(r"\$\{\w+\}|\$[A-Za-z_]\w*|\$[0-9]")  # a shell variable or positional parameter
+_WRITE_TOOLS = {"Write", "Edit", "MultiEdit", "NotebookEdit"}  # their output confirms the write of their input path
 
 
 def _strip_heredocs(cmd: str) -> str:
@@ -428,10 +431,22 @@ def _scan_command(cmd: str, start: str, norm) -> tuple[list, list, str]:
     return checks, unresolved, state["cwd"]
 
 
+@overload
+def audit_generator_transcript_strict(path: Path, *, task: str, own: str, extra_allowed: tuple[str, ...] = ...,
+                                      extra_forbidden: tuple[str, ...] = ..., repo_root: str = ..., home: str = ...,
+                                      outputs: Literal[False] = ...) -> list[dict]: ...
+
+
+@overload
+def audit_generator_transcript_strict(path: Path, *, task: str, own: str, extra_allowed: tuple[str, ...] = ...,
+                                      extra_forbidden: tuple[str, ...] = ..., repo_root: str = ..., home: str = ...,
+                                      outputs: Literal[True]) -> tuple[list[dict], list[dict]]: ...
+
+
 def audit_generator_transcript_strict(path: Path, *, task: str, own: str, extra_allowed: tuple[str, ...] = (),
                                       extra_forbidden: tuple[str, ...] = (), repo_root: str = "/home/user/trace-contract",
-                                      home: str = "/home/user") -> list[dict]:
-    """A stricter re-audit of a generator transcript's tool inputs (decision log D44, D46).
+                                      home: str = "/home/user", outputs: bool = False):
+    """A stricter re-audit of a generator transcript's tool inputs and, with ``outputs``, its tool outputs (D44, D46).
 
     It combines three checks, so that it flags at least what the first audit flags:
 
@@ -461,7 +476,24 @@ def audit_generator_transcript_strict(path: Path, *, task: str, own: str, extra_
     and ``extra_forbidden`` (session-local directories, such as the builder's scratch
     directory, whose path must not be written into the repository). ``extra_allowed`` names
     directories a role was asked to write (the reference-check directory for its writer).
-    Tool outputs are not inspected, and a hit is a lead for a manual reading, not a finding.
+
+    By default the result is the list of hits in tool inputs, exactly as before tool outputs
+    were scanned, so the recorded audits reproduce. With ``outputs=True`` the result is
+    ``(hits, exposures)``: ``exposures`` lists what the tool outputs (listings, ``git status``
+    output, error messages, file contents) showed the agent, reported apart from its reads:
+
+    * a path inside forbidden material: an absolute path, or, in the output of a shell
+      command, a relative path resolved from the directory the command ends in (from the
+      repository root, and from the directory the previous call ended in). Relative paths in
+      other tools' outputs are not resolved;
+    * a held-out candidate id of the task (``<task>-eval-...``, ``<task>-pre-correction``),
+      except the agent's own: the ids it registered with ``add-candidate`` (a shell variable
+      in such an id stands for any suffix), whose candidate files are not reported either.
+
+    The outputs of the write tools (Write, Edit) are skipped: they confirm the write of the
+    path in the call's input. Each exposure carries the tool result's event id and time, the
+    event id of the call that produced it (``call``) and the line of the output that showed
+    it. A hit or an exposure is a lead for a manual reading, not a finding.
     """
     import os
 
@@ -498,6 +530,8 @@ def audit_generator_transcript_strict(path: Path, *, task: str, own: str, extra_
     s = parse_claude_code_jsonl(path, population=Population.controlled, source="audit", include_sidechains=True)
     hits = []
     carried = repo_root
+    calls: dict = {}  # tool_call_id -> (tool, call event id, directories a shell command may end in)
+    own_ids: set = set()  # patterns of the candidate ids the agent registered itself
     for ev in s.events:
         if ev.kind != EventKind.tool_call:
             continue
@@ -554,6 +588,7 @@ def audit_generator_transcript_strict(path: Path, *, task: str, own: str, extra_
                     resolved = [norm(tok, b) for b in bases]
                     if all(classify(r, False) for r in resolved):
                         literal.append((resolved[0], ctx))
+        calls[ev.tool_call_id] = (ev.tool_name, ev.event_id, list(dict.fromkeys([end, carried_next])) if cmd else [])
         if cmd:
             carried = carried_next
         seen = set()
@@ -575,6 +610,10 @@ def audit_generator_transcript_strict(path: Path, *, task: str, own: str, extra_
                     if re.fullmatch(rf"{re.escape(task)}-(?:eval-[\w-]+|pre-correction)", w):
                         hits.append({"event_id": ev.event_id, "tool": ev.tool_name, "path": w,
                                      "why": "held-out candidate named in a CLI command", "text": seg[:300]})
+            elif words and os.path.basename(words[0]) == "tracecontract":
+                # A variable in the registered id (a loop or a shell function) stands for any suffix.
+                own_ids.update(r"[\w-]+".join(map(re.escape, _ANY_VAR.split(w))) for w in words[2:]
+                               if re.fullmatch(rf"{re.escape(task)}-(?:eval-[\w-]+|pre-correction)", _ANY_VAR.sub("0", w)))
     # The first audit's substring rule, so that this audit flags everything that one does.
     v1 = audit_generator_transcript(path, forbidden=(f"tasks/{task}/verifiers", f"tasks/{task}/candidates", "trace-contract/results",
                                                      "trace-contract/data", "trace-contract/docs", "cs_workspaces",
@@ -586,4 +625,38 @@ def audit_generator_transcript_strict(path: Path, *, task: str, own: str, extra_
         if not any(x["event_id"] == h["event_id"] for x in hits):
             hits.append({"event_id": h["event_id"], "tool": h["tool"], "path": h["match"], "why": "substring match (first audit's rule)",
                          "text": h["text"]})
-    return hits
+    if not outputs:
+        return hits
+    # What the tool outputs showed the agent, reported apart from its reads.
+    heldout = re.compile(rf"(?<![\w-]){re.escape(task)}-(?:eval-[\w-]+|pre-correction)")
+    own_re = re.compile("|".join(sorted(own_ids)) or r"(?!)")
+    candidates = f"{repo_root}/tasks/{task}/candidates/"
+    exposures: list[dict] = []
+    for ev in s.events:
+        if ev.kind != EventKind.tool_result or not ev.text:
+            continue
+        tool, call_id, ends = calls.get(ev.tool_call_id, (None, None, []))
+        if tool in _WRITE_TOOLS:
+            continue  # it only confirms the write of the path in its input, which the reads above cover
+        found: dict = {}  # (path or id, why) -> its first match in the output
+        for m in _LITERAL_PATH.finditer(ev.text):
+            tok = m.group(0).rstrip(".,:;")
+            for p in [norm(tok, repo_root)] if tok.startswith(("/", "~")) else [norm(tok, e) for e in ends]:
+                why = classify(p, False)
+                if why and not (p.startswith(candidates) and own_re.fullmatch(p[len(candidates):].removesuffix(".json"))):
+                    found.setdefault((p, "shown in a tool output: " + why), m)
+                    break
+        for m in heldout.finditer(ev.text):
+            if not own_re.fullmatch(m.group(0).rstrip("-")):
+                found.setdefault((m.group(0).rstrip("-"), "held-out candidate named in a tool output"), m)
+        for (p, why), m in found.items():
+            exposures.append({"event_id": ev.event_id, "ts": ev.timestamp, "call": call_id, "tool": tool, "path": p,
+                              "why": why, "text": _output_line(ev.text, m)})
+    return hits, exposures
+
+
+def _output_line(text: str, m: re.Match, width: int = 150) -> str:
+    """The line of a tool output that holds a match, cut to ``width`` characters on either side of it."""
+    a = max(text.rfind("\n", 0, m.start()) + 1, m.start() - width)
+    b = text.find("\n", m.end())
+    return text[a:min(len(text) if b < 0 else b, m.end() + width)]

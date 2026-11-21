@@ -21,7 +21,7 @@ import json
 from enum import Enum
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, SerializerFunctionWrapHandler, model_serializer, model_validator
 
 SCHEMA_VERSION = "0.1.0"
 
@@ -208,6 +208,17 @@ class Review(_Model):
     decision: Literal["accept", "reject", "edit", "needs_discussion"]
     timestamp: str
     note: str = ""
+    # A human review that settles a disagreement between reviewers (contract.human_decision).
+    # Omitted from the JSON while false, so records written before the field existed
+    # re-serialize byte for byte.
+    adjudicated: bool = False
+
+    @model_serializer(mode="wrap")
+    def _omit_unadjudicated(self, handler: SerializerFunctionWrapHandler) -> dict[str, Any]:
+        data = handler(self)
+        if not self.adjudicated:
+            data.pop("adjudicated", None)
+        return data
 
 
 class Requirement(_Model):

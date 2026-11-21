@@ -6,6 +6,11 @@ Fails (exit 1) unless, for every task given:
   misses) and every held-out candidate has a D19 proposal (or a human label);
 * every constructed held-out candidate's generator transcript was audited, with no
   forbidden read left unassessed;
+* no candidate's patch adds or modifies a top-level module or package named like a
+  standard-library module that the grader's wrapper relies on (``ast``, ``unicodedata``,
+  ``linecache``, ``tokenize``, ``traceback``, ``encodings``, ``json``, ``hmac``,
+  ``hashlib``, ``os``, ``sys``), in the working tree or in an entry of the task's
+  ``candidate_pythonpath`` (``tracecontract.shadowing``; decision log D36, D40, D44);
 * the base snapshot exists and matches its recorded manifest;
 * no other sandbox container is running and the git working tree is clean.
 
@@ -27,10 +32,18 @@ from pathlib import Path
 
 from tracecontract.analysis import PILOT_LABELER
 from tracecontract.schemas import Candidate, CandidateOrigin, TaskManifest, VerifierSpec
+from tracecontract.shadowing import shadowing_files
 from tracecontract.store import load
 from tracecontract.verifier import check_frozen
 
 R = Path(__file__).resolve().parents[1]
+
+
+def shadowing_problems(m: TaskManifest, cands: list[Candidate]) -> list[str]:
+    """One problem per candidate file that is a top-level module or package named like a guarded standard-library module."""
+    return [f"{m.task_id}: {c.candidate_id} ships {path}, a top-level module named like the standard library's "
+            f"`{mod}`; rejected before grading (tracecontract.shadowing)"
+            for c in cands for path, mod in shadowing_files(c.patch, m.candidate_pythonpath)]
 
 
 def main(*task_dirs: str) -> int:
@@ -47,6 +60,7 @@ def main(*task_dirs: str) -> int:
             except Exception as exc:  # noqa: BLE001
                 problems.append(f"{m.task_id}: verifier {s.verifier_id} changed after freezing: {exc}")
         cands = [load(td / p, Candidate) for p in m.candidates]
+        problems += shadowing_problems(m, cands)
         held = [c for c in cands if c.split.value == "eval" and c.origin not in (CandidateOrigin.noop, CandidateOrigin.reference)]
         by_origin = {o: sum(c.origin == o for c in held) for o in CandidateOrigin}
         if by_origin[CandidateOrigin.observed_pre_correction] != 1 or by_origin[CandidateOrigin.valid_alternative] != 2 \

@@ -2,10 +2,11 @@
 
 Usage: python scripts/strict_reaudit.py --transcripts <dir> [--transcripts <dir> ...]
                                         [--extra <transcript.jsonl> ...] --scratch <dir> [--write]
+                                        [--outputs <report.json>]
 
 For every record in ``tasks/*/labels/generator_audit.json`` it finds the transcript(s) the
 record names by sha256 among the ``agent-*.jsonl`` files under the ``--transcripts``
-directories, and runs two checks on each:
+directories, and runs two checks on each, and a third with ``--outputs``:
 
 1. :func:`tracecontract.controlled.audit_generator_transcript_strict`, which resolves the
    paths in tool inputs instead of matching substrings. The agent's own workspace is the
@@ -24,14 +25,23 @@ directories, and runs two checks on each:
    code created). Every access to the scratch directory itself (listing, search, read, or
    inline code given its path) is listed separately. Paths that inline code builds at run
    time are not resolved.
+3. With ``--outputs``: what the tool outputs (listings, ``git status`` output, error
+   messages, file contents) showed the agent, the output scan of
+   ``audit_generator_transcript_strict(..., outputs=True)``: paths inside forbidden
+   material and held-out candidate ids other than the agent's own. Scratch paths among
+   them are classified against the write index as reads are in check 2: a path the agent
+   wrote last itself is counted as its own, and the others are listed with the agent that
+   wrote them last. These exposures are printed apart from the reads and written, per task,
+   role and transcript, to the ``--outputs`` file only. They never enter
+   ``generator_audit.json``, so the recorded audits stay as they are.
 
-Session ids and session-local paths are redacted in the output (decision log D21). With
-``--write`` the results go into each record's ``strict_reaudit`` block; a manual
-``assessment`` already there is kept when the hits and scratch findings are unchanged.
-Tool outputs are not inspected by the checks. The accesses they flag were assessed by
-reading the transcripts, tool outputs included; for a file without a recorded writer, the
-writer was found by reading the agent's tool inputs. The other assessments restate the
-classification.
+Session ids and session-local paths are redacted in the output (decision log D21), and
+e-mail addresses in the ``--outputs`` report. With ``--write`` the results of checks 1 and
+2 go into each record's ``strict_reaudit`` block; a manual ``assessment`` already there is
+kept when the hits and scratch findings are unchanged. Checks 1 and 2 do not inspect tool
+outputs. The accesses they flag were assessed by reading the transcripts, tool outputs
+included; for a file without a recorded writer, the writer was found by reading the
+agent's tool inputs. The other assessments restate the classification.
 """
 
 from __future__ import annotations
@@ -46,6 +56,7 @@ import sys
 from pathlib import Path
 
 from tracecontract.controlled import _VAR, _command_words, _shell_segments, audit_generator_transcript_strict
+from tracecontract.ingest.claude_code import _redact_emails
 
 R = Path(__file__).resolve().parents[1]
 REPO, HOME = "/home/user/trace-contract", "/home/user"
@@ -192,6 +203,18 @@ def _redact(x, scratch: str):
     return x
 
 
+def _redact_output(x, scratch: str):
+    """:func:`_redact`, and e-mail addresses too: tool outputs can show any text (e.g. ``git log``)."""
+    x = _redact(x, scratch)
+    if isinstance(x, str):
+        return _redact_emails(x, {})
+    if isinstance(x, list):
+        return [_redact_output(v, scratch) for v in x]
+    if isinstance(x, dict):
+        return {k: _redact_output(v, scratch) for k, v in x.items()}
+    return x
+
+
 def classify_scratch(path: Path, scratch: str, writes: list[dict]) -> tuple[list, list, int]:
     """Classify one transcript's accesses to the shared scratch directory against the write index.
 
@@ -230,14 +253,43 @@ def classify_scratch(path: Path, scratch: str, writes: list[dict]) -> tuple[list
     return roots, others, n_own
 
 
+def classify_scratch_outputs(exposures: list[dict], agent: str, scratch: str, writes: list[dict]) -> tuple[list, list, int]:
+    """Split one transcript's tool-output exposures by the shared scratch directory and the write index.
+
+    Returns ``(outside, not_attributed, n_own)``: the exposures outside the scratch directory, the
+    scratch paths that the agent (``agent``, the transcript's stem) did not write last itself before
+    the output, with the agent that did (``null`` for the directory itself or without a recorded
+    write), and the number of scratch paths it did write last, as for reads in :func:`classify_scratch`.
+    """
+    under = lambda p, d: p == d or p.startswith(d + "/")
+    outside, others, n_own = [], [], 0
+    for x in exposures:
+        if not under(x["path"], scratch):
+            outside.append(x)
+            continue
+        before = [w for w in writes if w["ts"] <= (x.get("ts") or "") and w["path"] != scratch]
+        exact = [w for w in before if under(w["path"], x["path"])]  # the path itself, or files inside it
+        upper = [w for w in before if under(x["path"], w["path"]) and w["path"] != x["path"]]
+        last = (exact or upper or [None])[-1] if x["path"] != scratch else None
+        if last is not None and last["agent"] == agent:
+            n_own += 1
+        else:
+            others.append({**x, "last_written_by": last["agent"] if last else None,
+                           "last_written_at": last["ts"] if last else None})
+    return outside, others, n_own
+
+
 def main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--transcripts", action="append", required=True)
     ap.add_argument("--extra", action="append", default=[])
     ap.add_argument("--scratch", required=True)
     ap.add_argument("--write", action="store_true")
+    ap.add_argument("--outputs", metavar="FILE", help="also scan tool outputs and write what they showed each agent to FILE "
+                    "(JSON), apart from its reads; generator_audit.json never receives them")
     a = ap.parse_args(argv)
     scratch = os.path.normpath(a.scratch)
+    report: dict = {}
     files = sorted({p for d in a.transcripts for p in Path(d).rglob("agent-*.jsonl")}) + [Path(x) for x in a.extra]
     by_sha = {hashlib.sha256(p.read_bytes()).hexdigest(): p for p in files}
     writes = sorted(({**o, "agent": p.stem} for p in files for o in _scratch_ops(p, scratch) if o["op"] == "write"),
@@ -256,11 +308,22 @@ def main(argv: list[str]) -> int:
                 if p is None:
                     print(f"{task} {role} {sub}: transcript {sha[:12]} not found")
                     block[sub] = {"error": "transcript not found"}
+                    if a.outputs:
+                        report.setdefault(task, {}).setdefault(role, {})[sub] = {"error": "transcript not found"}
                     continue
                 m = _OUT.search(_prompt_text(p))
                 own = m.group(1) if m else f"{HOME}/gen_workspaces/{task}/{role}"
                 extra = (f"{REPO}/tasks/{task}/verifiers/reference_check",) if role == "refcheck" else ()
-                hits = audit_generator_transcript_strict(p, task=task, own=own, extra_allowed=extra, extra_forbidden=(scratch,))
+                if a.outputs:
+                    hits, exposures = audit_generator_transcript_strict(p, task=task, own=own, extra_allowed=extra,
+                                                                        extra_forbidden=(scratch,), outputs=True)
+                    outside, foreign, n_own_out = classify_scratch_outputs(exposures, p.stem, scratch, writes)
+                    report.setdefault(task, {}).setdefault(role, {})[sub] = _redact_output(
+                        {"agent": p.stem.removeprefix("agent-"), "own_workspace": own, "extra_allowed": list(extra),
+                         "output_exposures": outside, "output_scratch_not_attributed_to_the_agent": foreign,
+                         "output_scratch_own": n_own_out}, scratch)
+                else:
+                    hits = audit_generator_transcript_strict(p, task=task, own=own, extra_allowed=extra, extra_forbidden=(scratch,))
                 hits = [h for h in hits if not under(h["path"], scratch)]  # scratch accesses are classified below
                 roots, others, n_own = classify_scratch(p, scratch, writes)
                 entry = {"agent": p.stem.removeprefix("agent-"), "own_workspace": own, "extra_allowed": list(extra),
@@ -275,6 +338,15 @@ def main(argv: list[str]) -> int:
                     print("    scratch directory:", r["op"], r["ts"], _redact(r["text"], scratch)[:120])
                 for o in others:
                     print("    scratch:", o["op"], _redact(o["path"], scratch), "| last written by", o["last_written_by"], o.get("last_written_at", ""))
+                if a.outputs:
+                    shown = report[task][role][sub]
+                    print(f"{task} {role} {sub}: tool outputs (not reads): {len(shown['output_exposures'])} exposure(s) outside "
+                          f"the scratch directory, {len(shown['output_scratch_not_attributed_to_the_agent'])} scratch path(s) "
+                          f"not attributed to the agent, {shown['output_scratch_own']} own")
+                    for x in shown["output_exposures"]:
+                        print("    output:", x["why"], "|", x["text"][:150])
+                    for x in shown["output_scratch_not_attributed_to_the_agent"]:
+                        print("    output, scratch:", x["path"], "| last written by", x["last_written_by"], x["last_written_at"] or "")
             old = rec.get("strict_reaudit", {})
             new = {"script": "scripts/strict_reaudit.py", "transcripts": block}
             same = {k: {kk: vv for kk, vv in v.items() if kk != "assessment"} for k, v in old.get("transcripts", {}).items()} == block
@@ -283,6 +355,12 @@ def main(argv: list[str]) -> int:
             rec["strict_reaudit"] = new
         if a.write:
             f.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+    if a.outputs:
+        out = {"script": "scripts/strict_reaudit.py --outputs",
+               "scope": "tool outputs only: paths inside forbidden material and held-out candidate ids other than the "
+                        "agent's own that a tool output showed the agent; reads are in generator_audit.json",
+               "transcripts": report}
+        Path(a.outputs).write_text(json.dumps(out, indent=2) + "\n", encoding="utf-8")
     return 0
 
 
