@@ -666,3 +666,36 @@ Every rejection, and every replacement, is written to the ledger.
   and file hashes, together with the run records and the analyses.
 * Whether generated tests, contracts or texts derived from the threads may be published
   is the owner's decision (D47).
+
+## 18. Amendments in v0.10 (the fresh-v1 audit rule, D57; before any fresh-v1 grading)
+
+This section makes the protocol v0.10. The version line at the top of the file is left as
+it was. It is fixed after the 80 attempts ran, and before any of them is graded or
+labelled.
+
+**18.1 Audit rule (§16.2).**
+* The automated fresh-attempt audit flags possible accesses outside the attempt's
+  workspace. Each flag is reviewed by reading the transcript at that point.
+* An attempt is excluded when the review confirms that it read, listed or searched
+  material outside its workspace: anything under the study repository, the sealed
+  directory, `/home/user/ext`, another workspace, or the build session's records.
+* These do not exclude an attempt:
+  * use of system locations (interpreters, system libraries, the container's
+    temporary directory);
+  * a harness notice that names a file the attempt never opened;
+  * tokens that the audit's parser resolved against the wrong directory, when the
+    transcript shows the attempt never touched that path.
+* The primary analysis uses the reviewed verdicts. A sensitivity analysis instead
+  excludes every attempt the automated audit flagged. Both are reported.
+
+**18.2 Disclosures.**
+* Every attempt's context included harness material that is neither a tool input nor a
+  tool output: task-list reminders with the build session's task titles, and an
+  environment block naming the study repository as the working directory. It holds no
+  reference, transcript, verifier, candidate or label.
+* One configuration-B attempt (CS-04-fresh-B-final-1) tried to call an unrelated
+  session-management tool. The permission system denied the call, so it had no effect.
+  It reports this itself, and it is not an exclusion criterion.
+
+**18.3 Later attempts.** Fresh attempts in later rounds run with a restricted tool set
+and without harness task lists, where the agent tool allows it.

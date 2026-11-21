@@ -1678,3 +1678,25 @@ records. Attempts run as subagents of the build session. Their shell starts in t
 study repository, so the instructions and the fresh-attempt audit (§16.2) require
 absolute paths inside the workspace, and the audit excludes any attempt that reads
 outside it.
+
+### D57. fresh-v1 attempts run; protocol v0.10 (audit rule) hashed before grading
+**Attempts.** The 80 attempts (D56) ran on 2026-11-21 from 09:06Z, as four workflows of
+20, one per family. They were interleaved by repeat, variant and configuration. All
+those finished so far ended normally (finished; none gave up or errored).
+* CS-01 is registered: 20 stratum candidates with 20 distinct patches, under
+  `tasks/CS-01/strata/fresh-v1`, without changing `task.json`.
+* The automated fresh-attempt audit flagged 6 CS-01 attempts. Read by hand, all six
+  flags are false positives of four kinds:
+  * a harness notice naming a tool-results file that was never opened;
+  * tokens of an attempt's own printed output resolved against the study repository;
+  * heredoc operators parsed as paths;
+  * sed expressions that start with "/" read as paths.
+
+**Protocol v0.10** (`experiments/protocol.md` §18), hashed at 2026-11-21T10:04:22Z before any fresh-v1
+attempt was graded or labelled: sha256 `957717e50a77a22fcf1f7586c8e3816c0ea7f0ffb9c96ce1a22ca24ad5b8b4c3`. It covers three things:
+* how a flag is confirmed;
+* a sensitivity analysis that excludes every flagged attempt;
+* disclosures of harness context present in every attempt (the build session's task
+  titles, and a working-directory line naming the study repository; no reference,
+  verifier, candidate or label material), and of one denied, unrelated tool call by a
+  configuration-B attempt.
