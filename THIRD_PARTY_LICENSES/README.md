@@ -3,7 +3,9 @@
 This repository redistributes code from four upstream projects: the source
 repositories of the controlled tasks. All four are under the MIT licence, which
 requires its copyright notice and permission notice to be included in all copies or
-substantial portions of the software.
+substantial portions of the software. It redistributes no code of the repositories of
+the natural PR-review arm and no verbatim text of the dataset it screens; see the last
+two sections.
 
 Each `.txt` file in this folder is that project's licence file, copied byte for byte
 from the pinned commit in `tasks/<id>/task.json` (`snapshot_source`) with
@@ -42,3 +44,42 @@ These licences cover only the upstream code. Study-authored files (contracts,
 generated verifier tests, labels, transcripts as a whole, scripts and the package)
 are not covered by them. The repository's own licence is still to be decided (see
 `STATUS.md`).
+
+## Dataset of the natural PR-review arm
+
+The natural PR-review arm screens AIDev v5. The dataset's files stay outside the
+repository (`data/manifests/third_party_downloads.json`, records `aidev-v5-*`); git
+holds only what was extracted from them.
+
+| Dataset | Revision | Licence (SPDX) | Licence text | Attribution | Changes |
+| --- | --- | --- | --- | --- | --- |
+| AIDev v5 (`hao-li/AIDev`, https://huggingface.co/datasets/hao-li/AIDev) | tag v5 = `b37f9fd1613cfec55886105bb76721918d015dc7` | CC-BY-4.0 | https://creativecommons.org/licenses/by/4.0/ | AIDev v5: the Hugging Face dataset hao-li/AIDev at tag v5, released with Li, Zhang and Hassan, arXiv:2507.15003 and arXiv:2602.09185; licensed under CC BY 4.0 | Extracted, not copied: pull-request, review-comment, issue and repository ids; commit SHAs and pull-request head refs; repository URLs (owners that act as accounts in AIDev masked as `{owner}`) and SPDX licence values; the commented files' paths; counts, sha256 hashes of texts and the categorical verdicts of model judges. Added: 120 model-written paraphrases of qualifying review comments (31 of the first sample, 89 of the extension), each checked against the source texts. No verbatim comment, pull-request or issue text of the dataset is in git (decision log D47) |
+
+Where the extracted material is: `data/manifests/screening_natural_aidev.json`
+(funnel and sample), `screening_natural_aidev_s9.json` and
+`screening_natural_aidev_s9x.json` (stage S9 and its extension, with the
+paraphrases), `rejection_ledger.json`, `natural_tasks_index.json` and
+`third_party_downloads.json`. The CC BY 4.0 licence covers the compilation and
+disclaims warranties. The dataset card says that each source repository keeps its
+original copyright and licence. The comment, pull-request and issue texts are written
+by GitHub users and are not re-licensed by the repository licences; they stay out of
+git (decision log D47).
+
+## Repositories of the natural PR-review arm
+
+The natural PR-review tasks are built from public GitHub repositories found through
+AIDev v5. Each keeps its own licence: AIDev's SPDX value for each fetched repository
+is in the fetch records of `data/manifests/third_party_downloads.json`, and the licence
+identified from the LICENSE file at each family's base, with that file's sha256, is in
+`data/manifests/natural_tasks_index.json`.
+
+**No upstream code of a natural repository is in git.** The base snapshots, the B1
+and base-test overlays, the candidate patches, generated tests that copy upstream code,
+and the run logs, tracebacks, check messages and HTML reports of natural runs stay
+under `data/natural/`, which git ignores (protocol §17.4); the clones stay under
+`/home/user/ext/`, outside the repository. What git holds about these repositories is
+their ids and URLs (in the fetch records), commit SHAs, licence identifiers, the
+commented files' paths, counts, outcomes and sha256 hashes. This folder therefore
+holds no licence file for these repositories. Before any file with code of a natural
+repository is committed, that repository's licence notice must be added here, as for
+the four controlled projects.

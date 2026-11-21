@@ -3673,6 +3673,371 @@
       "third_party_personal_data": "yes: commit author and committer names and e-mail addresses in git metadata (every commit of the cloned branches, tags and PR heads); fetched source files may also name their authors",
       "retention": "kept outside the repository (/home/user/ext/aidev-v5-repos); never committed; deletion is an owner decision",
       "in_repo": false
+    },
+    {
+      "id": "aidev-v5-s10-repo-fetches",
+      "kind": "git_partial_fetch",
+      "source": "blobs fetched on demand from GitHub into 14 of the bare partial clones of stage S9 (record aidev-v5-s9-repo-fetches, which lists each repository by URL) while the first sample's families were compiled at stage S10; listed by AIDev repository id in repositories",
+      "version": "blobs of the trees at the commits each family records (SHAs per family in data/manifests/natural_tasks_index.json, field commits)",
+      "license": "NOASSERTION",
+      "license_note": "each repository keeps its own licence: AIDev's SPDX value per repository is in the S9 record, and the SPDX id identified from the LICENSE file at each family's base, with that file's sha256, is in data/manifests/natural_tasks_index.json",
+      "size_bytes": 576602531,
+      "size_note": "bytes this stage added: the sum of bytes_after minus bytes_before (du -sb of the clone around each operation) over the 88 operations of the fetch log; per repository below. The 14 clones held 841,667,379 bytes after the stage. bytes_before is a clone's size at its first operation of this stage; over the 14 clones it exceeds the sizes that aidev-v5-s9-repo-fetches lists (measured by 2026-11-21T03:52:06Z) by 607,315 bytes. Those blobs were fetched between the two stages, and no record here lists them: 18,124 bytes on demand by the diffs of the S9 correction (2026-11-21T05:21Z; 37,525 bytes into 8 clones in all) and 589,191 bytes by the git commands of the D53 scout (2026-11-21T06:30Z to 07:29Z). Both are recorded outside the repository (see documented_in). With them, all clones together held 486,384,626 bytes before this stage and 1,062,987,157 bytes after it (D59's 1.06 GB)",
+      "fetched_utc": "2026-11-21T07:43:57Z to 2026-11-21T11:35:02Z",
+      "local_path": "/home/user/ext/aidev-v5-repos/<AIDev repo id>.git",
+      "documented_in": [
+        "docs/decision_log.md D53, D59",
+        "experiments/protocol.md §15.6, §17",
+        "src/tracecontract/ingest/github_pr.py (BareClone: the caps, the watchdog and the fetch log)",
+        "src/tracecontract/natural_pr.py (materialize_base: the base's blobs fetched by id, then git archive)",
+        "data/natural/s10_fetch_log.jsonl (git-ignored; one line per operation: repository id, git subcommand, bytes before and after, time)",
+        "/home/user/ext/aidev-v5-work/s9_correction_record.json (outside the repository: the S9 correction's on-demand blob fetches per repository, see size_note)",
+        "/home/user/ext/aidev-v5-work/s10_scout/ (outside the repository: the D53 scout's records half_1.json and half_2.json, with the bytes its git commands added per repository, see size_note)"
+      ],
+      "purpose": "stage S10 of the natural PR-review screen for the first sample's families (NP-01 to NP-25; protocol §15.6, §17; D59): the blobs of each base tree, for the base snapshots, and the licence, dependency-declaration, path-requirement, changed-code and diff blobs that natural_pr.compile_pr_task reads; and, through one git archive run before a compiler fix, 75,508,199 bytes of blobs of a monorepo commit outside the package it archived (see contents_note)",
+      "contents_note": "84 explicit fetches of blobs by id (git fetch origin --filter=blob:none --stdin) and 4 lazy fetches of missing blobs from the promisor remote by commands that read them: 1 by a git cat-file probe, the stage's first operation (90 blobs, 1,602,446 bytes), and 3 by git archive of a base. One of the 3 archived a monorepo package's base in repository 4127088 as the commit with the package's directory as a pathspec, before D59's compiler fix. On a blob-less partial clone that form fetches every missing blob of the whole commit: here 75,508,199 bytes (13.1% of this stage and 98.7% of what it added to that clone), nearly all outside the package, whose 75 blobs had been fetched by id just before (257,961 bytes). Since the fix, a monorepo package's base is archived as its subtree (D59), and the later archives in that repository fetched nothing. The other 2 archived bases that are not monorepo packages and fetched 1,214 and 1,253 bytes, consistent with the blobs of symbolic links: natural_pr.materialize_base fetches only regular files' blobs by id before it archives. Every operation exited 0. The 14 repositories are those of the first sample's 25 families; the 6 accepted families come from 5 of them. Every operation but the first ran under a watchdog that polls the clone's size every second against the caps of 300,000,000 bytes per repository and 5,000,000,000 in all (du -sb, both stages counted); the first, the cat-file probe, ran outside it, as its log line says. One repository went over the per-repository cap (status over_cap). D59's 574.6 MB matches the 31 operations from 08:59Z, when its run began (574,566,108 bytes); the 57 operations before it, from 2026-11-21T07:43:57Z to 2026-11-21T08:27:41Z (2 probes, then licence, declaration, path-requirement and changed-code blobs, without base trees), add 2,036,423 bytes. The base snapshots made from these blobs are in data/natural/snapshots/, and the S10 work trees in data/natural/s10_work/, both git-ignored. S10 of the extension's families (from NP-26) is not included. This record carries no task id and no time per repository: its rows are listed by repository id in ascending order (D63). It does not link a repository to a task by itself; data/manifests/natural_tasks_index.json does, through each task's repo_id, and aidev-v5-s9-repo-fetches gives each repository's URL",
+      "repositories": [
+        {
+          "aidev_repo_id": 4127088,
+          "status": "fetched",
+          "bytes_before": 104839159,
+          "bytes_added": 76524654,
+          "size_bytes": 181363813,
+          "operations": {
+            "archive": 1,
+            "fetch": 17
+          },
+          "note": "75,508,199 of the bytes added came from one git archive of a monorepo package's base with a pathspec, before D59's compiler fix (see contents_note)"
+        },
+        {
+          "aidev_repo_id": 12830126,
+          "status": "fetched",
+          "bytes_before": 697868,
+          "bytes_added": 1912745,
+          "size_bytes": 2610613,
+          "operations": {
+            "archive": 1,
+            "fetch": 5
+          }
+        },
+        {
+          "aidev_repo_id": 60844169,
+          "status": "fetched",
+          "bytes_before": 1326059,
+          "bytes_added": 298186,
+          "size_bytes": 1624245,
+          "operations": {
+            "fetch": 11
+          }
+        },
+        {
+          "aidev_repo_id": 133100880,
+          "status": "fetched",
+          "bytes_before": 19041231,
+          "bytes_added": 410886,
+          "size_bytes": 19452117,
+          "operations": {
+            "fetch": 3
+          }
+        },
+        {
+          "aidev_repo_id": 136202695,
+          "status": "over_cap",
+          "bytes_before": 34448709,
+          "bytes_added": 284343292,
+          "size_bytes": 318792001,
+          "operations": {
+            "fetch": 8
+          },
+          "note": "over the cap of 300,000,000 bytes per repository: the last fetch finished between two polls of the watchdog, so the clone holds 318,792,001 bytes (D59)"
+        },
+        {
+          "aidev_repo_id": 139199684,
+          "status": "fetched",
+          "bytes_before": 45763121,
+          "bytes_added": 27282432,
+          "size_bytes": 73045553,
+          "operations": {
+            "fetch": 8
+          }
+        },
+        {
+          "aidev_repo_id": 172703996,
+          "status": "fetched",
+          "bytes_before": 26952949,
+          "bytes_added": 25866470,
+          "size_bytes": 52819419,
+          "operations": {
+            "fetch": 5
+          }
+        },
+        {
+          "aidev_repo_id": 174629277,
+          "status": "fetched",
+          "bytes_before": 11101405,
+          "bytes_added": 2878273,
+          "size_bytes": 13979678,
+          "operations": {
+            "fetch": 2
+          }
+        },
+        {
+          "aidev_repo_id": 184555939,
+          "status": "fetched",
+          "bytes_before": 1000133,
+          "bytes_added": 2503677,
+          "size_bytes": 3503810,
+          "operations": {
+            "fetch": 3
+          }
+        },
+        {
+          "aidev_repo_id": 224148738,
+          "status": "fetched",
+          "bytes_before": 2582158,
+          "bytes_added": 39526954,
+          "size_bytes": 42109112,
+          "operations": {
+            "fetch": 3
+          }
+        },
+        {
+          "aidev_repo_id": 369428935,
+          "status": "fetched",
+          "bytes_before": 5617654,
+          "bytes_added": 96681737,
+          "size_bytes": 102299391,
+          "operations": {
+            "archive": 1,
+            "fetch": 8
+          }
+        },
+        {
+          "aidev_repo_id": 587050620,
+          "status": "fetched",
+          "bytes_before": 8690035,
+          "bytes_added": 16262066,
+          "size_bytes": 24952101,
+          "operations": {
+            "fetch": 4
+          }
+        },
+        {
+          "aidev_repo_id": 879473096,
+          "status": "fetched",
+          "bytes_before": 1569812,
+          "bytes_added": 1719619,
+          "size_bytes": 3289431,
+          "operations": {
+            "cat-file": 1,
+            "fetch": 3
+          }
+        },
+        {
+          "aidev_repo_id": 898171798,
+          "status": "fetched",
+          "bytes_before": 1434555,
+          "bytes_added": 391540,
+          "size_bytes": 1826095,
+          "operations": {
+            "fetch": 4
+          }
+        }
+      ],
+      "third_party_personal_data": "yes: the fetched files can name their authors, with e-mail addresses (copyright headers, package metadata); the clones' git metadata holds commit author and committer names and e-mail addresses (see aidev-v5-s9-repo-fetches)",
+      "retention": "kept outside the repository (/home/user/ext/aidev-v5-repos), and in the base snapshots made from it (data/natural/snapshots/, git-ignored); never committed; deletion is an owner decision",
+      "in_repo": false
+    },
+    {
+      "id": "pypi-natural-s10-wheelhouses",
+      "kind": "pypi_wheels",
+      "source": "https://pypi.org/ (pip download --only-binary)",
+      "version": "the closure pinned for each family at S10 (environment.pins in data/natural/tasks/<task id>/s10.json, with each file's name, URL and sha256 in environment.files)",
+      "license": "NOASSERTION",
+      "license_note": "each wheel keeps the licence its METADATA declares; the licences are not tabulated here, because the wheel names stay in s10.json (a closure can name its own repository's packages)",
+      "size_bytes": 1253266833,
+      "size_note": "the wheel files of the 16 wheelhouses below: 1,311 wheels. For the 14 wheelhouses of the families built at S10, size_bytes is s10.json environment.wheelhouse_bytes (1,047,079,307 bytes); for the 2 superseded builds, which no s10.json refers to, it is the size of their wheel files on disk (206,187,526 bytes). Both equal the files on disk on 2026-11-21. It includes the 7 wheels built from sdists in the sandbox (404,841 bytes), which were not downloaded",
+      "fetched_utc": "2026-11-21T09:07:56Z to 2026-11-21T11:35:43Z (when each wheelhouse was completed)",
+      "local_path": "/root/.cache/tracecontract/images/wheelhouse-<image hash>",
+      "documented_in": [
+        "docs/decision_log.md D53, D59",
+        "experiments/protocol.md §17.1",
+        "src/tracecontract/natural_env.py (resolve_with_sdists, build_image)",
+        "data/natural/tasks/<task id>/s10.json (git-ignored; environment: pins, files with sha256, sdist_builds, image and image_id)",
+        "/home/user/ext/aidev-v5-work/s10_scout/ (outside the repository: the D53 scout's records half_1.json and half_2.json, with its PyPI downloads, which are not included here)"
+      ],
+      "purpose": "offline wheelhouses for the grading images of the natural families built at S10 of the first sample (tc-env:<hash>, built offline by docker_runner.build_env_image; protocol §17.1)",
+      "contents_note": "One wheelhouse per image, filled by pip download --no-deps --only-binary=:all: of the pinned closure for CPython 3.12 on x86_64 Linux (21 manylinux platform tags and any), with the wheels built from pure-Python sdists in the sandbox without network (§17.1). 14 belong to the images of the families built at S10, and 2 to builds that were superseded when two families were re-run after compiler fixes (D59; matched to their families by wheel file names). The images of the rejected families and the two superseded images were removed after the stage (D59); their wheelhouses remain. No wheelhouse was made for NP-07, NP-08 and NP-12 (rejected before the environment step), NP-10, NP-13, NP-16 and NP-17 (no resolvable closure), or NP-15, whose 3.15 GB closure was refused from the index's file sizes before any wheel was downloaded (§17.1); NP-23 to NP-25 were not built. Also downloaded at S10, into data/natural/s10_work/<task id>/ (git-ignored): 10 sdists (714,962 bytes) and 15 build-backend wheels (5,197,695 bytes) for the sdist builds of NP-02, NP-06, NP-13, NP-19 and NP-20, and the HTTP caches of pip's dry-run resolver (8,190 files, 201,365,672 bytes: index pages and package metadata). This record does not cover what the D53 scout fetched from PyPI before S10 (index pages, metadata files, JSON API documents and 7 small wheels; at most 571,770,688 bytes, D53's 572 MB); the scout's records are outside the repository (see documented_in). Wheel names, versions and sha256 stay in s10.json",
+      "images": [
+        {
+          "image": "tc-env:bb9008ea08186cd1",
+          "image_id": "sha256:b4ba037a91fde78e17597255b4b953ab433e894bde43ba40214874a22164637b",
+          "family": "NP-01",
+          "s10_outcome": "rejected",
+          "wheels": 24,
+          "built_from_sdists": 0,
+          "size_bytes": 7578138,
+          "image_status": "removed after S10 (D59)"
+        },
+        {
+          "image": "tc-env:ded342b263b34a9c",
+          "image_id": "sha256:b4054396c98b7295382d038369af30bcf7fa371ee0f5da72479995b1af6aabcc",
+          "family": "NP-02",
+          "s10_outcome": "rejected",
+          "wheels": 95,
+          "built_from_sdists": 1,
+          "size_bytes": 118575331,
+          "image_status": "removed after S10 (D59)"
+        },
+        {
+          "image": "tc-env:194753a0231b93b4",
+          "image_id": null,
+          "family": "NP-02",
+          "s10_outcome": "superseded",
+          "wheels": 94,
+          "built_from_sdists": 0,
+          "size_bytes": 92483480,
+          "image_status": "removed after S10 (D59)",
+          "note": "an earlier build of NP-02's closure, superseded when the family was re-run after a compiler fix (D59); no s10.json refers to it. All of its 94 wheel file names are in NP-02's current wheelhouse, which holds 1 more"
+        },
+        {
+          "image": "tc-env:c7b06491cbe03e15",
+          "image_id": "sha256:e64fde265f6286dbe9dec056f0eae5f41ac4f71e846b7587b54c257feea26baa",
+          "family": "NP-03",
+          "s10_outcome": "passed",
+          "wheels": 73,
+          "built_from_sdists": 0,
+          "size_bytes": 47066276,
+          "image_status": "kept: an accepted family's grading image"
+        },
+        {
+          "image": "tc-env:bad629bd447b5dde",
+          "image_id": "sha256:4c723b54c31a78e99b02c0c31be361ec542fa7c7a330fab4af6c1173f413ed2d",
+          "family": "NP-04",
+          "s10_outcome": "passed",
+          "wheels": 17,
+          "built_from_sdists": 0,
+          "size_bytes": 4399824,
+          "image_status": "kept: an accepted family's grading image"
+        },
+        {
+          "image": "tc-env:6e35a40e852b04b4",
+          "image_id": "sha256:70f5b91fd6f23b73d5df3bb1707325e2900687ace4aa53424289e61864b465a8",
+          "family": "NP-05",
+          "s10_outcome": "passed",
+          "wheels": 17,
+          "built_from_sdists": 0,
+          "size_bytes": 4400382,
+          "image_status": "kept: an accepted family's grading image"
+        },
+        {
+          "image": "tc-env:c4df3444e4613be9",
+          "image_id": "sha256:e7d7d56005ec686d5cb6b0fed659353048b4090f4e4fddf691bfb2d95e8cf26f",
+          "family": "NP-06",
+          "s10_outcome": "rejected",
+          "wheels": 92,
+          "built_from_sdists": 3,
+          "size_bytes": 21839530,
+          "image_status": "removed after S10 (D59)"
+        },
+        {
+          "image": "tc-env:c6747cd1cfbec87a",
+          "image_id": "sha256:635cc7d4b256c4fd77377164fdd2e5c223372b57792b44d0b0961484cd016e60",
+          "family": "NP-09",
+          "s10_outcome": "rejected",
+          "wheels": 146,
+          "built_from_sdists": 0,
+          "size_bytes": 113924120,
+          "image_status": "removed after S10 (D59)"
+        },
+        {
+          "image": "tc-env:cd71dd867af14486",
+          "image_id": null,
+          "family": "NP-09",
+          "s10_outcome": "superseded",
+          "wheels": 145,
+          "built_from_sdists": 0,
+          "size_bytes": 113704046,
+          "image_status": "removed after S10 (D59)",
+          "note": "an earlier build of NP-09's closure, superseded when the family was re-run after a compiler fix (D59); no s10.json refers to it. 144 of its 145 wheel file names are in NP-09's current wheelhouse, which holds 2 more"
+        },
+        {
+          "image": "tc-env:7d1d926d9dd4f7b6",
+          "image_id": "sha256:5d440843debf8f59ecffe639ad0b6e33b7c037d5ee159c491a7e6627ccb4070b",
+          "family": "NP-11",
+          "s10_outcome": "rejected",
+          "wheels": 80,
+          "built_from_sdists": 0,
+          "size_bytes": 108696736,
+          "image_status": "removed after S10 (D59)"
+        },
+        {
+          "image": "tc-env:d505688c06f7dd41",
+          "image_id": "sha256:f186e7d8313f9b1df48a32b39a285d3b6b2bc6c65f37473249d3312912757a4f",
+          "family": "NP-14",
+          "s10_outcome": "rejected",
+          "wheels": 52,
+          "built_from_sdists": 0,
+          "size_bytes": 114336824,
+          "image_status": "removed after S10 (D59)"
+        },
+        {
+          "image": "tc-env:62b89214c85f0c2e",
+          "image_id": "sha256:0675e80acb7e9b5f6c1d9a0661de082d697a647686fb96564c17889f2eb04394",
+          "family": "NP-18",
+          "s10_outcome": "passed",
+          "wheels": 144,
+          "built_from_sdists": 0,
+          "size_bytes": 153799186,
+          "image_status": "kept: an accepted family's grading image",
+          "note": "holds 2 wheels whose only platform tags are manylinux_2_27 or manylinux_2_28, which docker_runner.ensure_wheelhouse (manylinux2014, manylinux_2_17 and any) does not request: only the S10 environment step (natural_env.build_image) can fill this wheelhouse again, so it and the image are kept until the natural run ends"
+        },
+        {
+          "image": "tc-env:bd42c3aa6cc4924c",
+          "image_id": "sha256:5504bfa0bda529ff42d8dbac0cbdce78e65c2db58e787b5153285c4f121da3cb",
+          "family": "NP-19",
+          "s10_outcome": "passed",
+          "wheels": 106,
+          "built_from_sdists": 1,
+          "size_bytes": 123974893,
+          "image_status": "kept: an accepted family's grading image",
+          "note": "holds 1 wheel built from an sdist in the sandbox: only the S10 environment step (natural_env.build_image) can fill this wheelhouse again, so it and the image are kept until the natural run ends"
+        },
+        {
+          "image": "tc-env:5b7498cba09dc276",
+          "image_id": "sha256:afc3509134ab600f10226acda5b3a84316d02bd0f657e1008643f2a6655841d4",
+          "family": "NP-20",
+          "s10_outcome": "passed",
+          "wheels": 71,
+          "built_from_sdists": 2,
+          "size_bytes": 48804268,
+          "image_status": "kept: an accepted family's grading image",
+          "note": "holds 2 wheels built from sdists in the sandbox: only the S10 environment step (natural_env.build_image) can fill this wheelhouse again, so it and the image are kept until the natural run ends"
+        },
+        {
+          "image": "tc-env:6a7dc1f7a4266559",
+          "image_id": "sha256:d7231e0af884c88813674ea413672be784bab9a294b24ce8cb45cefc0e824e77",
+          "family": "NP-21",
+          "s10_outcome": "rejected",
+          "wheels": 123,
+          "built_from_sdists": 0,
+          "size_bytes": 75076606,
+          "image_status": "removed after S10 (D59)"
+        },
+        {
+          "image": "tc-env:97800d81a374dde4",
+          "image_id": "sha256:df0147d351a4d018ff6c020991101ad6876b7f712cda29e5d189ef84d281c998",
+          "family": "NP-22",
+          "s10_outcome": "rejected",
+          "wheels": 32,
+          "built_from_sdists": 0,
+          "size_bytes": 104607193,
+          "image_status": "removed after S10 (D59)"
+        }
+      ],
+      "third_party_personal_data": "none beyond author, maintainer or contributor names that the source itself publishes",
+      "retention": "kept outside the repository, in the image cache; never committed. The six accepted families' grading images are built from these wheelhouses, and both are kept until the natural run ends. docker_runner.ensure_wheelhouse could download 5 of the 16 again from their pins (NP-01, NP-03, NP-04, NP-05 and NP-11); the other 11 hold wheels built from sdists or wheels with platform tags it does not request, and only the S10 environment step can fill them again (for the accepted families, see each image's note). Deleting any is an owner decision; no wheelhouse was deleted",
+      "in_repo": false
     }
   ]
 }
