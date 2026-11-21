@@ -83,6 +83,30 @@ def test_only_files_with_stages_are_funnels_and_s9_failures_enter_the_ledger(tmp
     assert "its S9 sample of 5 has no result in this ledger yet" in ledger2["note"]
 
 
+S9X = {"schema": "tracecontract/natural-screening-s9/v1", "population": "natural:pr-review", "stage": "S9",
+       "sample": {"id": "extension", "name": "the S9 extension (protocol §19.2)"},
+       "summary": {"comments": 4, "qualifying": 1, "failed": 3, "excluded_judges_disagree": 0},
+       "rows": [_row(21, True, None, diff_commit="c" * 40), _row(22, False, "fetch_over_the_caps", commits_reachable=False),
+                _row(23, False, "no_later_commit_changes_the_commented_file", diff_commit=None),  # failed before judging
+                _row(24, False, "not_addressed", diff_commit="d" * 40)]}
+
+
+def test_the_s9_extension_enters_the_ledger_beside_the_first_sample(tmp_path):
+    # Two stage results with the same stage (S9 and its extension, §19.2): each keeps its own counts in the note.
+    first = bm.build(_repo(tmp_path / "a", extra={"screening_natural_aidev.json": FUNNEL, "screening_natural_aidev_s9.json": S9}))[1]
+    both = bm.build(_repo(tmp_path / "b", extra={"screening_natural_aidev.json": FUNNEL, "screening_natural_aidev_s9.json": S9,
+                                                 "screening_natural_aidev_s9x.json": S9X}))[1]
+    assert both["rejections"][:len(first["rejections"])] == first["rejections"]  # the first sample's rows are unchanged
+    ext = both["rejections"][len(first["rejections"]):]
+    assert [(r["comment_id"], r["stage"], r["reasons"]) for r in ext] == [
+        (22, "S9", ["fetch_over_the_caps"]), (23, "S9", [bm.NO_LATER_COMMIT]), (24, "S9", ["not_addressed"])]
+    clause = "of the 5 sampled for S9, 1 qualify, 3 fail (in this ledger with stage S9 and their reasons) and 1 are excluded"
+    assert clause in first["note"] and clause in both["note"]
+    assert ("of the 4 in the S9 extension (protocol §19.2), 1 qualify, 3 fail (in this ledger with stage S9 and their reasons) "
+            "and 0 are excluded") in both["note"]
+    assert "never copied" not in json.dumps(both)
+
+
 def test_a_file_that_is_neither_a_funnel_nor_a_stage_result_is_refused(tmp_path):
     with pytest.raises(ValueError, match="neither a screening funnel"):
         bm.build(_repo(tmp_path, extra={"screening_natural_other.json": {"population": "natural:pr-review", "rows": []}}))
@@ -97,4 +121,8 @@ def test_the_committed_manifests_regenerate():
     assert json.loads((R / "data" / "manifests" / "provenance_index.json").read_text()) == index
     assert json.loads((R / "data" / "manifests" / "rejection_ledger.json").read_text()) == ledger
     s9 = json.loads((R / "data" / "manifests" / "screening_natural_aidev_s9.json").read_text())
-    assert sum(r.get("stage") == "S9" for r in ledger["rejections"]) == s9["summary"]["failed"]
+    s9x_path = R / "data" / "manifests" / "screening_natural_aidev_s9x.json"  # the S9 extension (§19.2), when present
+    s9x = json.loads(s9x_path.read_text()) if s9x_path.is_file() else {"summary": {"failed": 0}, "rows": []}
+    assert sum(r.get("stage") == "S9" for r in ledger["rejections"]) == s9["summary"]["failed"] + s9x["summary"]["failed"]
+    failed = {r["comment_id"] for d in (s9, s9x) for r in d["rows"] if not r["qualifies"] and r["failure_reason"] != "judges_disagree"}
+    assert {r["comment_id"] for r in ledger["rejections"] if r.get("stage") == "S9"} == failed

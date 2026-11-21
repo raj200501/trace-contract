@@ -284,17 +284,28 @@ class Family:
 
 
 def load_families(path: str | Path = QUALIFYING) -> list[Family]:
-    """The S11 families of ``s9_qualifying.json`` as NP-01 ... in the file's order, then the reserves (§17.3)."""
+    """The S11 families of ``s9_qualifying.json`` as NP-01 ... in the file's order, then the reserves (§17.3).
+
+    A file whose PRs carry explicit ``task_id`` and ``role`` (``s9_qualifying_combined.json``, the families of both samples,
+    §19.3) gives those instead: its PRs with a task id, in the order of their ids; a PR whose task id is null (no family is
+    built for it) is left out."""
     q = json.loads(Path(path).read_text(encoding="utf-8"))
     comments = {int(c["comment_id"]): c for c in q["comments"]}
-    order = [p for p in q["prs"] if p.get("s11_family")] + [p for p in q["prs"] if not p.get("s11_family")]
+    explicit = any("task_id" in p for p in q["prs"])
+    if explicit:
+        order = sorted((p for p in q["prs"] if p.get("task_id")), key=lambda p: _num(str(p["task_id"])))
+        if len({p["task_id"] for p in order}) != len(order):
+            raise ValueError(f"{path}: a task id is given to more than one PR")
+    else:
+        order = [p for p in q["prs"] if p.get("s11_family")] + [p for p in q["prs"] if not p.get("s11_family")]
     out = []
     for k, p in enumerate(order, 1):
         c = comments[int(p["earliest_qualifying_comment_id"])]
         judges = tuple({x: (c.get(j) or {}).get(x) for x in ("request_type", "addressed", "testable_offline", "confidence")}
                        for j in ("judge_1", "judge_2"))
         out.append(Family(
-            task_id=f"NP-{k:02d}", role="family" if p.get("s11_family") else "reserve", pr_id=int(p["pr_id"]),
+            task_id=str(p["task_id"]) if explicit else f"NP-{k:02d}",
+            role=str(p["role"]) if explicit else "family" if p.get("s11_family") else "reserve", pr_id=int(p["pr_id"]),
             repo_id=int(p["repo_id"]), pr_number=int(p["pr_number"]), pr_created_at=str(p["pr_created_at"]), agent=str(p["agent"]),
             comment_id=int(c["comment_id"]),
             other_qualifying_comment_ids=tuple(sorted(int(x) for x in p["qualifying_comment_ids"] if int(x) != int(c["comment_id"]))),

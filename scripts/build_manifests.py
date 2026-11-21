@@ -10,11 +10,13 @@ Inputs:
 * screening funnels: the files ``data/manifests/screening_natural_*.json`` that have a ``stages``
   list (deterministic stages, counts only, no per-candidate rows);
 * stage results: the files ``data/manifests/screening_natural_*.json`` that have a ``stage`` and
-  per-candidate ``rows`` (``screening_natural_aidev_s9.json``). Every failure of such a stage
-  becomes one ledger row with the stage and its reason, keyed by ids only (comment, PR and
-  repository ids). A comment the judges disagree on is excluded and counted, not a failure. A
+  per-candidate ``rows`` (``screening_natural_aidev_s9.json``, and the S9 extension of protocol
+  v0.11 §19.2, ``screening_natural_aidev_s9x.json``, whose ``sample`` names it). Every failure of
+  such a stage becomes one ledger row with the stage and its reason, keyed by ids only (comment, PR
+  and repository ids). A comment the judges disagree on is excluded and counted, not a failure. A
   comment whose PR has no later commit that changes the commented file also gets the reason
-  "no later commit changes the commented file" (§16.4);
+  "no later commit changes the commented file" (§16.4); one that failed for that reason before it
+  was judged (the extension) gets that reason alone;
 * the index of the natural PR-review tasks, ``data/manifests/natural_tasks_index.json`` (written by
   ``tracecontract natural-index``, protocol v0.9 §17.4): every family it records as rejected at S10
   becomes one ledger row with stage S10 and its reason, keyed by ids only, with the reserve that takes
@@ -39,6 +41,7 @@ _FIELDS = ("record_id", "session_id", "population", "source_id", "repo_url", "ba
            "trace_sha256", "snapshot_manifest_sha256", "capture_method", "redaction_status", "task_family_id", "eligibility",
            "rejection_reasons", "triage", "accessed")
 NO_LATER_COMMIT = "no later commit changes the commented file"  # protocol v0.8 §16.4
+NO_LATER_COMMIT_UNJUDGED = "no_later_commit_changes_the_commented_file"  # its failure_reason before judging (§19.2)
 _EXCLUDED = "judges_disagree"  # excluded and counted, not a failure (protocol §15.6)
 NATURAL_INDEX = "natural_tasks_index.json"  # natural PR-review tasks: S10 outcomes (protocol v0.9 §17.4)
 
@@ -77,7 +80,9 @@ def stage_rejections(result: dict[str, Any]) -> list[dict[str, Any]]:
         if r.get("qualifies") or reason in (None, _EXCLUDED):
             continue
         reasons = [reason]
-        if "diff_commit" in r and r["diff_commit"] is None and r.get("commits_reachable"):
+        if reason == NO_LATER_COMMIT_UNJUDGED:
+            reasons = [NO_LATER_COMMIT]
+        elif "diff_commit" in r and r["diff_commit"] is None and r.get("commits_reachable"):
             reasons.insert(0, NO_LATER_COMMIT)
         out.append({"source_id": f"comment:{r['comment_id']}", "population": result["population"], "stage": result["stage"],
                     "reasons": reasons, "comment_id": r["comment_id"], "pr_id": r["pr_id"], "repo_id": r["repo_id"]})
@@ -123,14 +128,16 @@ def _stage_part(result: dict[str, Any], failed: int) -> str:
         if key in summary and summary[key] != n:
             raise ValueError(f"{result['stage']} result: its summary says {key} = {summary[key]}, its rows give {n}")
     st = result["stage"]
-    return (f"of the {len(rows)} sampled for {st}, {qualify} qualify, {failed} fail (in this ledger with stage {st} and "
-            f"their reasons) and {excluded} are excluded because the judges disagree")
+    name = (result.get("sample") or {}).get("name")
+    return (f"of the {len(rows)} " + (f"in {name}" if name else f"sampled for {st}") + f", {qualify} qualify, {failed} fail "
+            f"(in this ledger with stage {st} and their reasons) and {excluded} are excluded because the judges disagree")
 
 
 def ledger_note(screened: list[dict[str, Any]], funnels: Sequence[tuple[str, dict]] = (),
                 stages: Sequence[tuple[str, dict]] = (), failed: dict[tuple[str, str], int] | None = None,
                 s10: dict[str, Any] | None = None) -> str:
-    """One clause per population: what its screening rows, funnels and stage results record."""
+    """One clause per population: what its screening rows, funnels and stage results record. ``failed``: the ledger rows of
+    each stage result, by (population, file name), and of S10, by (population, "S10")."""
     failed = failed or {}
     pops: dict[str, dict[str, Any]] = {}
 
@@ -154,7 +161,7 @@ def ledger_note(screened: list[dict[str, Any]], funnels: Sequence[tuple[str, dic
     for name, s in stages:
         p = pop(str(s.get("population")))
         p["sources"].append(name)
-        p["parts"].append(_stage_part(s, failed.get((str(s.get("population")), s["stage"]), 0)))
+        p["parts"].append(_stage_part(s, failed.get((str(s.get("population")), name), 0)))
     if s10 is not None:
         p = pop(str(s10.get("population")))
         p["sources"].append(NATURAL_INDEX)
@@ -194,9 +201,9 @@ def build(root: Path) -> tuple[dict[str, Any], dict[str, Any]]:
             ledger.append({"source_id": row.get("source_id"), "population": row.get("population"),
                            "reasons": row.get("rejection_reasons")})
     failed: dict[tuple[str, str], int] = {}
-    for _, s in stages:
+    for name, s in stages:  # by file: two results can share a stage (S9 and its extension)
         rows = stage_rejections(s)
-        failed[(str(s.get("population")), s["stage"])] = len(rows)
+        failed[(str(s.get("population")), name)] = len(rows)
         ledger += rows
     s10 = json.loads((manifests / NATURAL_INDEX).read_text(encoding="utf-8")) if (manifests / NATURAL_INDEX).is_file() else None
     if s10 is not None:

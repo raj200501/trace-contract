@@ -81,6 +81,34 @@ def test_families_follow_the_s11_order_then_the_reserves(built):
         npr.find_family(fams, 1)
 
 
+def test_explicit_task_ids_are_used_and_the_first_samples_families_are_unchanged(built, tmp_path):
+    w, fams, _, _ = built
+    q = json.loads(w.qualifying.read_text())
+    assert not any("task_id" in p for p in q["prs"]) and npr.load_families(w.qualifying) == fams  # the old file loads as before
+    # The combined input of both samples (§19.3), with the PRs in another order: every PR names its task id and role; the first
+    # sample's keep theirs, the new families are numbered from NP-26, then a reserve; a PR beyond the cap has no task id.
+    ids = {f.pr_id: (f.task_id, f.role) for f in fams}
+    prs = [{**p, "task_id": ids[p["pr_id"]][0], "role": ids[p["pr_id"]][1], "sample": "first"} for p in reversed(q["prs"])]
+    c0, p0 = q["comments"][0], q["prs"][0]
+    comments = [*q["comments"]]
+    for pr_id, cids, tid, role in ((9103, [8203], None, "beyond_the_cap"), (9102, [8202], "NP-27", "reserve"),
+                                   (9101, [8211, 8201], "NP-26", "family")):
+        comments += [{**c0, "comment_id": cid, "pr_id": pr_id, "sample": "extension"} for cid in cids]
+        prs.insert(0, {**p0, "pr_id": pr_id, "qualifying_comment_ids": cids, "earliest_qualifying_comment_id": min(cids),
+                       "s11_family": role == "family", "task_id": tid, "role": role, "sample": "extension"})
+    path = tmp_path / "s9_qualifying_combined.json"
+    path.write_text(json.dumps({**q, "comments": comments, "prs": prs}, indent=1))
+    loaded = npr.load_families(path)
+    assert loaded[:len(fams)] == fams  # the first sample's families: the same ids, PRs, corrections and every other field
+    new = [(f.task_id, f.role, f.pr_id, f.comment_id, f.other_qualifying_comment_ids) for f in loaded[len(fams):]]
+    assert new == [("NP-26", "family", 9101, 8201, (8211,)), ("NP-27", "reserve", 9102, 8202, ())]
+    assert npr.find_family(loaded, 9101).task_id == "NP-26" and 9103 not in {f.pr_id for f in loaded}
+    prs[0]["task_id"] = "NP-27"  # a task id given twice is refused
+    path.write_text(json.dumps({**q, "comments": comments, "prs": prs}, indent=1))
+    with pytest.raises(ValueError, match="more than one PR"):
+        npr.load_families(path)
+
+
 def test_outcomes_of_every_family(built):
     _, _, _, res = built
     assert {t: r["outcome"] for t, r in res.items()} == {

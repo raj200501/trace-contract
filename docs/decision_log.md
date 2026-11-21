@@ -1984,3 +1984,55 @@ per-check output; the full write-up is kept for the manuscript.
 
   The recorded files stay as they are. For new audits, the record is to keep every
   failing check and the checks each revision added or removed.
+
+### D63. S9 extension screened (protocol §19.2); families over both samples; decisions before S10 of the new families
+**S9 of the extension** (2026-11-21, about 12:45-16:10Z; private records under
+`/home/user/ext/aidev-v5-work/s9x_*`; repository manifest
+`data/manifests/screening_natural_aidev_s9x.json`).
+* The 534 S8a comments not in the first sample were recomputed with
+  `scripts/screen_aidev.py`'s own functions, which reproduce the first sample exactly.
+  Their pseudonymised texts were made by the same code.
+* 134 failed before judging:
+  * 65 over the per-repository cap: two repositories, one of them a clone that grew
+    past the cap in the first sample's S10 (D59);
+  * 56 whose commits could not be fetched: the proxy refused 3 repositories, the same
+    3 as in the first sample;
+  * 13 with no later commit that changes the commented file.
+* Two new configuration-A judges per batch judged the other 400, on diffs to the first
+  later commit that touches the file (§16.4).
+* 91 qualify: 17.0% of 534 (Wilson 95% interval 14.1% to 20.5%), or 22.8% of the 400
+  judged. They come from 42 PRs in 19 repositories.
+* 10 disagreements are excluded. Agreement: kappa 0.95 (behaviour or defect), 0.89
+  (addressed) and 0.94 (testable offline).
+* These are model proposals, not human coding. Clones of both samples total 1.44 GB
+  of the 5 GB cap.
+
+**Families** (§19.3; formed by one agent and recomputed independently by another,
+with no difference).
+* There are 19 new families, NP-26 to NP-44, and 4 reserves, NP-45 to NP-48. Together
+  with the first sample's they fill 19 of the 42 open places in 24 repositories.
+* The repository of NP-04 and NP-05 already has its 2 accepted families. Its 7 new
+  qualifying PRs therefore get no family, and NP-23 to NP-25 stay unbuilt.
+
+**Decisions** (builder defaults, recorded before S10 of the new families):
+* **Corrections of first-sample families.** For six first-sample PRs, an extension
+  comment that qualifies was created before the comment the family uses as its
+  correction. Only NP-05 is affected among the built families. A first-sample family
+  keeps the correction it was built with: §19.3 keeps its id and place, and changing a
+  built family's correction would mean rebuilding it under another correction after
+  S10. The extension's qualifying comments on these PRs are recorded as other
+  qualifying comments.
+* **Download records.** The extension's download record lists the 57 fetched
+  repositories by URL, as the first sample's record does (D50). The owners that act as
+  accounts in AIDev are masked as {owner}. No record links a repository to a task,
+  comment or person. Whether these URLs stay before publication is the owner's
+  decision.
+* **A deviation, corrected.** The over-cap clone's 57 comments were failed without
+  checking what the existing clone already holds, although §19.2 reuses existing
+  clones. For 5 of them, both commits and both file blobs are already on disk, so their
+  diff needs no fetch. These 5 are judged under the same rules, by new judges, with no
+  fetch. The other 52 still fail: 8 would need a blob fetch, and 44 lack a commit or the
+  PR head.
+* A repository whose first-sample clone had already been stopped at the cap was cloned
+  again in the extension (about 312 MB, then removed). It made no difference to any
+  outcome; it is disclosed here.
