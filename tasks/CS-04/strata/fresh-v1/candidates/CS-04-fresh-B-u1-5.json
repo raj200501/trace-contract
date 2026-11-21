@@ -1,0 +1,39 @@
+{
+  "schema_version": "0.1.0",
+  "candidate_id": "CS-04-fresh-B-u1-5",
+  "task_id": "CS-04",
+  "origin": "fresh_attempt",
+  "split": "eval",
+  "patch": "diff --git a/docs/versions.rst b/docs/versions.rst\nindex a70fbd2880f8fcd73959f0a5f485b0b244daa422..bda876bad58d1b4e597921494afed5d57c714193 100644\n--- a/docs/versions.rst\n+++ b/docs/versions.rst\n@@ -9,6 +9,7 @@ Unreleased\n ----------\n \n * Updated functions:\n+    * :func:`consecutive_groups` was updated with a *step* parameter to find runs that increase by a fixed amount.\n     * :func:`peekable` was updated to avoid caching the entire iterable when sliced with a negative step and omitted *stop*.\n \n 11.2.1\ndiff --git a/more_itertools/more.py b/more_itertools/more.py\nindex 068ed68d258574ca1b5638a2c000bb406029082c..458b8ac78008cfcc72707d6c0595b498e9b976fe 100755\n--- a/more_itertools/more.py\n+++ b/more_itertools/more.py\n@@ -2858,11 +2858,20 @@ def always_reversible(iterable):\n         return reversed(list(iterable))\n \n \n-def consecutive_groups(iterable, ordering=None):\n+def consecutive_groups(iterable, ordering=None, *, step=1):\n     \"\"\"Yield groups of consecutive items using :func:`itertools.groupby`.\n     The *ordering* function determines whether two items are adjacent by\n     returning their position.\n \n+    By default, adjacent items must differ in position by 1. Set *step* to\n+    find runs whose positions go up (or down, if negative) by a fixed amount:\n+\n+        >>> iterable = [2, 4, 6, 10, 12]\n+        >>> for group in consecutive_groups(iterable, step=2):\n+        ...     print(list(group))\n+        [2, 4, 6]\n+        [10, 12]\n+\n     By default, the ordering function is the identity function. This is\n     suitable for finding runs of numbers:\n \n@@ -2900,9 +2909,9 @@ def consecutive_groups(iterable, ordering=None):\n \n     \"\"\"\n     if ordering is None:\n-        key = lambda x: x[0] - x[1]\n+        key = lambda x: x[0] * step - x[1]\n     else:\n-        key = lambda x: x[0] - ordering(x[1])\n+        key = lambda x: x[0] * step - ordering(x[1])\n \n     for k, g in groupby(enumerate(iterable), key=key):\n         yield map(itemgetter(1), g)\n",
+  "patch_sha256": "9849833132579e19575df401b7076bd26eb72003a80dcc636e264a187bda3e73",
+  "produced_by": "fresh-attempt:config-B",
+  "description": "",
+  "labels": [],
+  "attempt": {
+    "attempt_id": "CS-04-fresh-B-u1-5",
+    "configuration": "config-B",
+    "variant": "u1",
+    "instruction_sha256": "50af9695ce1e84a266569c2791fb9a7d31bfa6c61e1e787ae2d6fe7d6ce4f3e5",
+    "started_at": "2026-11-21T09:45:21.954Z",
+    "ended_at": "2026-11-21T09:46:25.970Z",
+    "wall_s": 64.016,
+    "turns": 6,
+    "tool_calls": 6,
+    "tokens": 492682,
+    "ended": "finished",
+    "patch_sha256": "9849833132579e19575df401b7076bd26eb72003a80dcc636e264a187bda3e73",
+    "run_record": "build-session:subagents/workflows/wf_59b07014-7c5/agent-a27030c445dc46c36.jsonl",
+    "audit": {
+      "profile": "fresh-attempt:v1",
+      "passed": true,
+      "findings": [
+        "fresh-attempt audit: no hit, no exposure",
+        "file tools (Read) named only workspace paths; every shell command began with a cd into the workspace",
+        "the host's python3 (a system location) was run on workspace files only",
+        "verdict: passed, nothing outside the workspace was read"
+      ],
+      "audited_at": "2026-11-21T10:13:44Z",
+      "record": "data/fresh/fresh-v1/audit_CS-04.json"
+    }
+  }
+}

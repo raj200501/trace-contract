@@ -1,0 +1,39 @@
+{
+  "schema_version": "0.1.0",
+  "candidate_id": "CS-04-fresh-B-u1-1",
+  "task_id": "CS-04",
+  "origin": "fresh_attempt",
+  "split": "eval",
+  "patch": "diff --git a/more_itertools/more.py b/more_itertools/more.py\nindex 068ed68d258574ca1b5638a2c000bb406029082c..135b821b0a167938364c491064f2b693523bd5bd 100755\n--- a/more_itertools/more.py\n+++ b/more_itertools/more.py\n@@ -2858,7 +2858,7 @@ def always_reversible(iterable):\n         return reversed(list(iterable))\n \n \n-def consecutive_groups(iterable, ordering=None):\n+def consecutive_groups(iterable, ordering=None, *, step=1):\n     \"\"\"Yield groups of consecutive items using :func:`itertools.groupby`.\n     The *ordering* function determines whether two items are adjacent by\n     returning their position.\n@@ -2898,11 +2898,22 @@ def consecutive_groups(iterable, ordering=None):\n         >>> saved_groups\n         [[1, 2], [11, 12], [21, 22]]\n \n+    The *step* keyword argument sets the difference required between adjacent\n+    items. For example, to find runs of items that increase by 2:\n+\n+        >>> iterable = [2, 4, 6, 10, 12]\n+        >>> for group in consecutive_groups(iterable, step=2):\n+        ...     print(list(group))\n+        [2, 4, 6]\n+        [10, 12]\n+\n     \"\"\"\n     if ordering is None:\n-        key = lambda x: x[0] - x[1]\n-    else:\n-        key = lambda x: x[0] - ordering(x[1])\n+        ordering = lambda x: x\n+\n+    # Items at position i that are exactly *step* apart in value share the\n+    # same value of (ordering(item) - step * position).\n+    key = lambda x: ordering(x[1]) - step * x[0]\n \n     for k, g in groupby(enumerate(iterable), key=key):\n         yield map(itemgetter(1), g)\n",
+  "patch_sha256": "9a529046df4e8c835d2bd9ddf38a86ebf6a76f0abeca50c43116cd675df10121",
+  "produced_by": "fresh-attempt:config-B",
+  "description": "",
+  "labels": [],
+  "attempt": {
+    "attempt_id": "CS-04-fresh-B-u1-1",
+    "configuration": "config-B",
+    "variant": "u1",
+    "instruction_sha256": "ad270df1a1228490fc68f98d873200d5b766d7e5878560bfcca425f3e6bb3b49",
+    "started_at": "2026-11-21T08:58:32.513Z",
+    "ended_at": "2026-11-21T09:00:25.666Z",
+    "wall_s": 113.153,
+    "turns": 8,
+    "tool_calls": 8,
+    "tokens": 665821,
+    "ended": "finished",
+    "patch_sha256": "9a529046df4e8c835d2bd9ddf38a86ebf6a76f0abeca50c43116cd675df10121",
+    "run_record": "build-session:subagents/workflows/wf_59b07014-7c5/agent-ae93b717512bde674.jsonl",
+    "audit": {
+      "profile": "fresh-attempt:v1",
+      "passed": true,
+      "findings": [
+        "fresh-attempt audit: no hit, no exposure",
+        "file tools (Read) named only workspace paths; every shell command began with a cd into the workspace",
+        "the host's python3 (a system location) was run on workspace files only",
+        "verdict: passed, nothing outside the workspace was read"
+      ],
+      "audited_at": "2026-11-21T10:13:44Z",
+      "record": "data/fresh/fresh-v1/audit_CS-04.json"
+    }
+  }
+}

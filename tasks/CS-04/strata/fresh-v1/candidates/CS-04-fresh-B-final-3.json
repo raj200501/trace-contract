@@ -1,0 +1,39 @@
+{
+  "schema_version": "0.1.0",
+  "candidate_id": "CS-04-fresh-B-final-3",
+  "task_id": "CS-04",
+  "origin": "fresh_attempt",
+  "split": "eval",
+  "patch": "diff --git a/docs/api.rst b/docs/api.rst\nindex 7b40a8ec1283d4da97203fc9ebb9f36d5f6edeb4..d2051b79d1dd56c2967fc69498692fc2b5795d03 100644\n--- a/docs/api.rst\n+++ b/docs/api.rst\n@@ -158,7 +158,7 @@ These tools return summarized or aggregated data from an iterable.\n .. autofunction:: ilen\n .. autofunction:: unique_to_each\n .. autofunction:: sample(iterable, k=1, weights=None)\n-.. autofunction:: consecutive_groups(iterable, ordering=lambda x: x)\n+.. autofunction:: consecutive_groups(iterable, ordering=lambda x: x, *, step=None)\n .. autoclass:: run_length\n .. autofunction:: map_reduce\n .. autofunction:: join_mappings\ndiff --git a/more_itertools/more.py b/more_itertools/more.py\nindex 068ed68d258574ca1b5638a2c000bb406029082c..ed03446148622b85dfb06532b934ce2580bf20d5 100755\n--- a/more_itertools/more.py\n+++ b/more_itertools/more.py\n@@ -2858,7 +2858,7 @@ def always_reversible(iterable):\n         return reversed(list(iterable))\n \n \n-def consecutive_groups(iterable, ordering=None):\n+def consecutive_groups(iterable, ordering=None, *, step=None):\n     \"\"\"Yield groups of consecutive items using :func:`itertools.groupby`.\n     The *ordering* function determines whether two items are adjacent by\n     returning their position.\n@@ -2887,6 +2887,24 @@ def consecutive_groups(iterable, ordering=None):\n         ['i']\n         ['l', 'm', 'n', 'o', 'p']\n \n+    To find runs that go up (or down) by a fixed amount, pass a non-zero\n+    *step*. Two adjacent items belong to the same group only when the\n+    difference of their (ordered) positions equals *step*.\n+\n+        >>> iterable = [2, 4, 6, 10, 12]\n+        >>> for group in consecutive_groups(iterable, step=2):\n+        ...     print(list(group))\n+        [2, 4, 6]\n+        [10, 12]\n+\n+        >>> iterable = [9, 8, 7, 3, 2]\n+        >>> for group in consecutive_groups(iterable, step=-1):\n+        ...     print(list(group))\n+        [9, 8, 7]\n+        [3, 2]\n+\n+    A *step* of ``0`` raises :exc:`ValueError`.\n+\n     Each group of consecutive items is an iterator that shares its source with\n     *iterable*. When an output group is advanced, the previous group is\n     no longer available unless its elements are copied (e.g., into a ``list``).\n@@ -2899,11 +2917,24 @@ def consecutive_groups(iterable, ordering=None):\n         [[1, 2], [11, 12], [21, 22]]\n \n     \"\"\"\n-    if ordering is None:\n-        key = lambda x: x[0] - x[1]\n+    if step is None:\n+        if ordering is None:\n+            key = lambda x: x[0] - x[1]\n+        else:\n+            key = lambda x: x[0] - ordering(x[1])\n     else:\n-        key = lambda x: x[0] - ordering(x[1])\n+        if step == 0:\n+            raise ValueError('step must be non-zero')\n+        if ordering is None:\n+            ordering = lambda x: x\n+        # Within a run, ordering(item) - step * index is constant, so equal\n+        # keys of adjacent items mean they differ by exactly *step*.\n+        key = lambda x: ordering(x[1]) - step * x[0]\n+\n+    return _consecutive_groups(iterable, key)\n+\n \n+def _consecutive_groups(iterable, key):\n     for k, g in groupby(enumerate(iterable), key=key):\n         yield map(itemgetter(1), g)\n \n",
+  "patch_sha256": "ab750161c062033a92363a56b43473f647c50164264f5c98b1887b9bbf2b04f0",
+  "produced_by": "fresh-attempt:config-B",
+  "description": "",
+  "labels": [],
+  "attempt": {
+    "attempt_id": "CS-04-fresh-B-final-3",
+    "configuration": "config-B",
+    "variant": "final",
+    "instruction_sha256": "d3630f3d4c2e0fe71c4f03e6429f09d0dc42ea934ddc2d67458853e7751e01cd",
+    "started_at": "2026-11-21T09:29:56.530Z",
+    "ended_at": "2026-11-21T09:31:17.375Z",
+    "wall_s": 80.845,
+    "turns": 7,
+    "tool_calls": 7,
+    "tokens": 580719,
+    "ended": "finished",
+    "patch_sha256": "ab750161c062033a92363a56b43473f647c50164264f5c98b1887b9bbf2b04f0",
+    "run_record": "build-session:subagents/workflows/wf_59b07014-7c5/agent-aa67d94158ef6cdbe.jsonl",
+    "audit": {
+      "profile": "fresh-attempt:v1",
+      "passed": true,
+      "findings": [
+        "fresh-attempt audit: no hit, no exposure",
+        "no file tool was used; the first shell command printed the instruction file by its absolute workspace path; every other shell command began with a cd into the workspace",
+        "the host's python3 (a system location) was run on workspace files only",
+        "verdict: passed, nothing outside the workspace was read"
+      ],
+      "audited_at": "2026-11-21T10:13:44Z",
+      "record": "data/fresh/fresh-v1/audit_CS-04.json"
+    }
+  }
+}

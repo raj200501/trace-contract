@@ -1,0 +1,38 @@
+{
+  "schema_version": "0.1.0",
+  "candidate_id": "CS-04-fresh-B-final-5",
+  "task_id": "CS-04",
+  "origin": "fresh_attempt",
+  "split": "eval",
+  "patch": "diff --git a/docs/api.rst b/docs/api.rst\nindex 7b40a8ec1283d4da97203fc9ebb9f36d5f6edeb4..0d0613f464016fca927bde08463e2416e87a1656 100644\n--- a/docs/api.rst\n+++ b/docs/api.rst\n@@ -158,7 +158,7 @@ These tools return summarized or aggregated data from an iterable.\n .. autofunction:: ilen\n .. autofunction:: unique_to_each\n .. autofunction:: sample(iterable, k=1, weights=None)\n-.. autofunction:: consecutive_groups(iterable, ordering=lambda x: x)\n+.. autofunction:: consecutive_groups(iterable, ordering=lambda x: x, *, step=1)\n .. autoclass:: run_length\n .. autofunction:: map_reduce\n .. autofunction:: join_mappings\ndiff --git a/more_itertools/more.py b/more_itertools/more.py\nindex 068ed68d258574ca1b5638a2c000bb406029082c..68d1a7c082a2a168869d61d5c4dd73ed7d843c9f 100755\n--- a/more_itertools/more.py\n+++ b/more_itertools/more.py\n@@ -2858,7 +2858,7 @@ def always_reversible(iterable):\n         return reversed(list(iterable))\n \n \n-def consecutive_groups(iterable, ordering=None):\n+def consecutive_groups(iterable, ordering=None, *, step=1):\n     \"\"\"Yield groups of consecutive items using :func:`itertools.groupby`.\n     The *ordering* function determines whether two items are adjacent by\n     returning their position.\n@@ -2887,6 +2887,21 @@ def consecutive_groups(iterable, ordering=None):\n         ['i']\n         ['l', 'm', 'n', 'o', 'p']\n \n+    The *step* keyword argument sets the fixed difference between adjacent\n+    positions. Use a negative step to find descending runs. A step of ``0``\n+    raises a ``ValueError``.\n+\n+        >>> iterable = [2, 4, 6, 10, 12]\n+        >>> for group in consecutive_groups(iterable, step=2):\n+        ...     print(list(group))\n+        [2, 4, 6]\n+        [10, 12]\n+        >>> iterable = [9, 8, 7, 3, 2]\n+        >>> for group in consecutive_groups(iterable, step=-1):\n+        ...     print(list(group))\n+        [9, 8, 7]\n+        [3, 2]\n+\n     Each group of consecutive items is an iterator that shares its source with\n     *iterable*. When an output group is advanced, the previous group is\n     no longer available unless its elements are copied (e.g., into a ``list``).\n@@ -2899,10 +2914,18 @@ def consecutive_groups(iterable, ordering=None):\n         [[1, 2], [11, 12], [21, 22]]\n \n     \"\"\"\n+    if step == 0:\n+        raise ValueError('step must not be zero')\n+\n+    return _consecutive_groups(iterable, ordering, step)\n+\n+\n+def _consecutive_groups(iterable, ordering, step):\n     if ordering is None:\n-        key = lambda x: x[0] - x[1]\n-    else:\n-        key = lambda x: x[0] - ordering(x[1])\n+        ordering = lambda x: x\n+\n+    # Within a run, ``index * step - ordering(value)`` stays constant.\n+    key = lambda x: x[0] * step - ordering(x[1])\n \n     for k, g in groupby(enumerate(iterable), key=key):\n         yield map(itemgetter(1), g)\n",
+  "patch_sha256": "6914b4bb4a26b98e76ee3560d9505821e8ce094601531b4fd999174fdc89454b",
+  "produced_by": "fresh-attempt:config-B",
+  "description": "",
+  "labels": [],
+  "attempt": {
+    "attempt_id": "CS-04-fresh-B-final-5",
+    "configuration": "config-B",
+    "variant": "final",
+    "instruction_sha256": "517969456184aef8d2d40322ff75c12b48cc1e4e8d16768f598d65910f0b306e",
+    "started_at": "2026-11-21T09:49:27.495Z",
+    "ended_at": "2026-11-21T09:50:47.205Z",
+    "wall_s": 79.71,
+    "turns": 8,
+    "tool_calls": 13,
+    "tokens": 678813,
+    "ended": "finished",
+    "patch_sha256": "6914b4bb4a26b98e76ee3560d9505821e8ce094601531b4fd999174fdc89454b",
+    "run_record": "build-session:subagents/workflows/wf_59b07014-7c5/agent-ac27552f96cb1fc97.jsonl",
+    "audit": {
+      "profile": "fresh-attempt:v1",
+      "passed": true,
+      "findings": [
+        "fresh-attempt audit: no hit, no exposure",
+        "file tools (Read, Edit) named only workspace paths; every shell command began with a cd into the workspace",
+        "verdict: passed, nothing outside the workspace was read"
+      ],
+      "audited_at": "2026-11-21T10:13:44Z",
+      "record": "data/fresh/fresh-v1/audit_CS-04.json"
+    }
+  }
+}

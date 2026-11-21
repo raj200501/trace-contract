@@ -1,0 +1,38 @@
+{
+  "schema_version": "0.1.0",
+  "candidate_id": "CS-04-fresh-A-u1-5",
+  "task_id": "CS-04",
+  "origin": "fresh_attempt",
+  "split": "eval",
+  "patch": "diff --git a/docs/api.rst b/docs/api.rst\nindex 7b40a8ec1283d4da97203fc9ebb9f36d5f6edeb4..0d0613f464016fca927bde08463e2416e87a1656 100644\n--- a/docs/api.rst\n+++ b/docs/api.rst\n@@ -158,7 +158,7 @@ These tools return summarized or aggregated data from an iterable.\n .. autofunction:: ilen\n .. autofunction:: unique_to_each\n .. autofunction:: sample(iterable, k=1, weights=None)\n-.. autofunction:: consecutive_groups(iterable, ordering=lambda x: x)\n+.. autofunction:: consecutive_groups(iterable, ordering=lambda x: x, *, step=1)\n .. autoclass:: run_length\n .. autofunction:: map_reduce\n .. autofunction:: join_mappings\ndiff --git a/docs/versions.rst b/docs/versions.rst\nindex a70fbd2880f8fcd73959f0a5f485b0b244daa422..cce6f7ea74af61348d196380b84cc55691d47e2f 100644\n--- a/docs/versions.rst\n+++ b/docs/versions.rst\n@@ -9,6 +9,7 @@ Unreleased\n ----------\n \n * Updated functions:\n+    * :func:`consecutive_groups` now accepts a *step* argument for finding runs that go up (or down) by a fixed amount other than 1.\n     * :func:`peekable` was updated to avoid caching the entire iterable when sliced with a negative step and omitted *stop*.\n \n 11.2.1\ndiff --git a/more_itertools/more.py b/more_itertools/more.py\nindex 068ed68d258574ca1b5638a2c000bb406029082c..4305f8e2bfb8b6f5c195efe880588fc48fc672ba 100755\n--- a/more_itertools/more.py\n+++ b/more_itertools/more.py\n@@ -2858,7 +2858,7 @@ def always_reversible(iterable):\n         return reversed(list(iterable))\n \n \n-def consecutive_groups(iterable, ordering=None):\n+def consecutive_groups(iterable, ordering=None, *, step=1):\n     \"\"\"Yield groups of consecutive items using :func:`itertools.groupby`.\n     The *ordering* function determines whether two items are adjacent by\n     returning their position.\n@@ -2887,6 +2887,24 @@ def consecutive_groups(iterable, ordering=None):\n         ['i']\n         ['l', 'm', 'n', 'o', 'p']\n \n+    By default, an item continues the current group when its position is\n+    exactly ``1`` more than the previous item's. Set *step* to find runs\n+    that go up by some other amount:\n+\n+        >>> iterable = [2, 4, 6, 10, 12]\n+        >>> for group in consecutive_groups(iterable, step=2):\n+        ...     print(list(group))\n+        [2, 4, 6]\n+        [10, 12]\n+\n+    A negative *step* finds runs that go down:\n+\n+        >>> iterable = [5, 4, 3, 10, 9]\n+        >>> for group in consecutive_groups(iterable, step=-1):\n+        ...     print(list(group))\n+        [5, 4, 3]\n+        [10, 9]\n+\n     Each group of consecutive items is an iterator that shares its source with\n     *iterable*. When an output group is advanced, the previous group is\n     no longer available unless its elements are copied (e.g., into a ``list``).\n@@ -2904,7 +2922,8 @@ def consecutive_groups(iterable, ordering=None):\n     else:\n         key = lambda x: x[0] - ordering(x[1])\n \n-    for k, g in groupby(enumerate(iterable), key=key):\n+    # Within a run, (index * step) - position is the same for every item\n+    for k, g in groupby(zip(count(0, step), iterable), key=key):\n         yield map(itemgetter(1), g)\n \n \ndiff --git a/more_itertools/more.pyi b/more_itertools/more.pyi\nindex ca5cf574d7a87f7575b73a2204eb35b561612bff..2c8382c60388238956b67cb75178bca83f33adc1 100644\n--- a/more_itertools/more.pyi\n+++ b/more_itertools/more.pyi\n@@ -594,7 +594,10 @@ class islice_extended(Generic[_T_co], Iterator[_T_co]):\n \n def always_reversible(iterable: Iterable[_T]) -> Iterator[_T]: ...\n def consecutive_groups(\n-    iterable: Iterable[_T], ordering: None | Callable[[_T], int] = ...\n+    iterable: Iterable[_T],\n+    ordering: None | Callable[[_T], int] = ...,\n+    *,\n+    step: int = ...,\n ) -> Iterator[Iterator[_T]]: ...\n @overload\n def difference(\n",
+  "patch_sha256": "d62686df2c1ee84fde95fb9aa3987418fb1f78298ff345f68815d15c6ba86de3",
+  "produced_by": "fresh-attempt:config-A",
+  "description": "",
+  "labels": [],
+  "attempt": {
+    "attempt_id": "CS-04-fresh-A-u1-5",
+    "configuration": "config-A",
+    "variant": "u1",
+    "instruction_sha256": "6ed474d32bb3fdea3a32c2a291e0a7400be2354aed0d1defcace97b80ecee894",
+    "started_at": "2026-11-21T09:42:00.374Z",
+    "ended_at": "2026-11-21T09:49:27.471Z",
+    "wall_s": 447.097,
+    "turns": 16,
+    "tool_calls": 30,
+    "tokens": 1802580,
+    "ended": "finished",
+    "patch_sha256": "d62686df2c1ee84fde95fb9aa3987418fb1f78298ff345f68815d15c6ba86de3",
+    "run_record": "build-session:subagents/workflows/wf_59b07014-7c5/agent-ae83ef3f18a5f4009.jsonl",
+    "audit": {
+      "profile": "fresh-attempt:v1",
+      "passed": true,
+      "findings": [
+        "fresh-attempt audit: no hit, no exposure",
+        "file tools (Read, Edit, Grep) named only workspace paths; every shell command began with a cd into the workspace",
+        "verdict: passed, nothing outside the workspace was read"
+      ],
+      "audited_at": "2026-11-21T10:13:44Z",
+      "record": "data/fresh/fresh-v1/audit_CS-04.json"
+    }
+  }
+}

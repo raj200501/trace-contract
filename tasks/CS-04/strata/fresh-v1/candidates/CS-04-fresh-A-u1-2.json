@@ -1,0 +1,40 @@
+{
+  "schema_version": "0.1.0",
+  "candidate_id": "CS-04-fresh-A-u1-2",
+  "task_id": "CS-04",
+  "origin": "fresh_attempt",
+  "split": "eval",
+  "patch": "diff --git a/docs/api.rst b/docs/api.rst\nindex 7b40a8ec1283d4da97203fc9ebb9f36d5f6edeb4..0d0613f464016fca927bde08463e2416e87a1656 100644\n--- a/docs/api.rst\n+++ b/docs/api.rst\n@@ -158,7 +158,7 @@ These tools return summarized or aggregated data from an iterable.\n .. autofunction:: ilen\n .. autofunction:: unique_to_each\n .. autofunction:: sample(iterable, k=1, weights=None)\n-.. autofunction:: consecutive_groups(iterable, ordering=lambda x: x)\n+.. autofunction:: consecutive_groups(iterable, ordering=lambda x: x, *, step=1)\n .. autoclass:: run_length\n .. autofunction:: map_reduce\n .. autofunction:: join_mappings\ndiff --git a/docs/versions.rst b/docs/versions.rst\nindex a70fbd2880f8fcd73959f0a5f485b0b244daa422..15e0fac4e2183936f4db846bb0ce64df3945d35f 100644\n--- a/docs/versions.rst\n+++ b/docs/versions.rst\n@@ -9,6 +9,7 @@ Unreleased\n ----------\n \n * Updated functions:\n+    * :func:`consecutive_groups` now accepts a *step* keyword argument for finding runs that go up (or down) by a fixed amount other than 1.\n     * :func:`peekable` was updated to avoid caching the entire iterable when sliced with a negative step and omitted *stop*.\n \n 11.2.1\ndiff --git a/more_itertools/more.py b/more_itertools/more.py\nindex 068ed68d258574ca1b5638a2c000bb406029082c..8bc07ece2c0db8ae805c07c69b12e34663030708 100755\n--- a/more_itertools/more.py\n+++ b/more_itertools/more.py\n@@ -2858,7 +2858,7 @@ def always_reversible(iterable):\n         return reversed(list(iterable))\n \n \n-def consecutive_groups(iterable, ordering=None):\n+def consecutive_groups(iterable, ordering=None, *, step=1):\n     \"\"\"Yield groups of consecutive items using :func:`itertools.groupby`.\n     The *ordering* function determines whether two items are adjacent by\n     returning their position.\n@@ -2887,6 +2887,19 @@ def consecutive_groups(iterable, ordering=None):\n         ['i']\n         ['l', 'm', 'n', 'o', 'p']\n \n+    By default, each item in a group has a position one greater than the\n+    item before it. Set *step* to find runs that go up by a different fixed\n+    amount:\n+\n+        >>> iterable = [2, 4, 6, 10, 12]\n+        >>> for group in consecutive_groups(iterable, step=2):\n+        ...     print(list(group))\n+        [2, 4, 6]\n+        [10, 12]\n+\n+    A negative *step* finds runs that go down instead, such as ``[5, 4, 3]``\n+    for ``step=-1``.\n+\n     Each group of consecutive items is an iterator that shares its source with\n     *iterable*. When an output group is advanced, the previous group is\n     no longer available unless its elements are copied (e.g., into a ``list``).\n@@ -2899,10 +2912,16 @@ def consecutive_groups(iterable, ordering=None):\n         [[1, 2], [11, 12], [21, 22]]\n \n     \"\"\"\n-    if ordering is None:\n+    # Within a run, index * step - position is the same for every item.\n+    # The step == 1 versions skip the multiplication for speed.\n+    if ordering is None and step == 1:\n         key = lambda x: x[0] - x[1]\n-    else:\n+    elif ordering is None:\n+        key = lambda x: x[0] * step - x[1]\n+    elif step == 1:\n         key = lambda x: x[0] - ordering(x[1])\n+    else:\n+        key = lambda x: x[0] * step - ordering(x[1])\n \n     for k, g in groupby(enumerate(iterable), key=key):\n         yield map(itemgetter(1), g)\ndiff --git a/more_itertools/more.pyi b/more_itertools/more.pyi\nindex ca5cf574d7a87f7575b73a2204eb35b561612bff..b15894ebcbe80a6f4d1dd49c601217a13d578414 100644\n--- a/more_itertools/more.pyi\n+++ b/more_itertools/more.pyi\n@@ -594,7 +594,10 @@ class islice_extended(Generic[_T_co], Iterator[_T_co]):\n \n def always_reversible(iterable: Iterable[_T]) -> Iterator[_T]: ...\n def consecutive_groups(\n-    iterable: Iterable[_T], ordering: None | Callable[[_T], int] = ...\n+    iterable: Iterable[_T],\n+    ordering: None | Callable[[_T], int] = ...,\n+    *,\n+    step: float = ...,\n ) -> Iterator[Iterator[_T]]: ...\n @overload\n def difference(\n",
+  "patch_sha256": "3d94c75b360260ac62c601854368f8a9e95cbe800df365a1c5e268e22261d047",
+  "produced_by": "fresh-attempt:config-A",
+  "description": "",
+  "labels": [],
+  "attempt": {
+    "attempt_id": "CS-04-fresh-A-u1-2",
+    "configuration": "config-A",
+    "variant": "u1",
+    "instruction_sha256": "92aff882aa030df082a7773cde891382f84f63650ab867d01fb34e1d16dc1119",
+    "started_at": "2026-11-21T09:09:26.661Z",
+    "ended_at": "2026-11-21T09:19:35.783Z",
+    "wall_s": 609.122,
+    "turns": 21,
+    "tool_calls": 39,
+    "tokens": 2648532,
+    "ended": "finished",
+    "patch_sha256": "3d94c75b360260ac62c601854368f8a9e95cbe800df365a1c5e268e22261d047",
+    "run_record": "build-session:subagents/workflows/wf_59b07014-7c5/agent-a5614386d2fd73258.jsonl",
+    "audit": {
+      "profile": "fresh-attempt:v1",
+      "passed": true,
+      "findings": [
+        "fresh-attempt audit: 4 exposures, no hit; read in the transcript",
+        "false positive: the attempt printed its own workspace's manifest with a shell command that began with a cd into the workspace; the flagged paths are the four old workspace paths that the manifest records as substituted in U1, shown in its text only; no tool input named or opened them",
+        "file tools (Read, Edit, Write, Grep) named only workspace paths; every shell command began with a cd into the workspace",
+        "it listed only its own workspace root, which is inside the workspace",
+        "verdict: passed, nothing outside the workspace was read"
+      ],
+      "audited_at": "2026-11-21T10:13:44Z",
+      "record": "data/fresh/fresh-v1/audit_CS-04.json"
+    }
+  }
+}

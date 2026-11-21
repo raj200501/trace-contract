@@ -1,0 +1,38 @@
+{
+  "schema_version": "0.1.0",
+  "candidate_id": "CS-04-fresh-B-u1-2",
+  "task_id": "CS-04",
+  "origin": "fresh_attempt",
+  "split": "eval",
+  "patch": "diff --git a/more_itertools/more.py b/more_itertools/more.py\nindex 068ed68d258574ca1b5638a2c000bb406029082c..0aaa4312bc2c486f9749c68a41abb9610551ff6f 100755\n--- a/more_itertools/more.py\n+++ b/more_itertools/more.py\n@@ -2858,7 +2858,7 @@ def always_reversible(iterable):\n         return reversed(list(iterable))\n \n \n-def consecutive_groups(iterable, ordering=None):\n+def consecutive_groups(iterable, ordering=None, step=1):\n     \"\"\"Yield groups of consecutive items using :func:`itertools.groupby`.\n     The *ordering* function determines whether two items are adjacent by\n     returning their position.\n@@ -2887,6 +2887,15 @@ def consecutive_groups(iterable, ordering=None):\n         ['i']\n         ['l', 'm', 'n', 'o', 'p']\n \n+    The *step* argument sets how far apart the positions of adjacent items\n+    must be. For example, to find runs that increase by 2:\n+\n+        >>> iterable = [2, 4, 6, 10, 12]\n+        >>> for group in consecutive_groups(iterable, step=2):\n+        ...     print(list(group))\n+        [2, 4, 6]\n+        [10, 12]\n+\n     Each group of consecutive items is an iterator that shares its source with\n     *iterable*. When an output group is advanced, the previous group is\n     no longer available unless its elements are copied (e.g., into a ``list``).\n@@ -2899,10 +2908,11 @@ def consecutive_groups(iterable, ordering=None):\n         [[1, 2], [11, 12], [21, 22]]\n \n     \"\"\"\n+    # Items i and i + 1 share a key exactly when their positions differ by step\n     if ordering is None:\n-        key = lambda x: x[0] - x[1]\n+        key = lambda x: x[0] * step - x[1]\n     else:\n-        key = lambda x: x[0] - ordering(x[1])\n+        key = lambda x: x[0] * step - ordering(x[1])\n \n     for k, g in groupby(enumerate(iterable), key=key):\n         yield map(itemgetter(1), g)\n",
+  "patch_sha256": "8b1856fea3ce4497d489dc309f9b0fdc49bf3ce0eee1849b10491689e99905a7",
+  "produced_by": "fresh-attempt:config-B",
+  "description": "",
+  "labels": [],
+  "attempt": {
+    "attempt_id": "CS-04-fresh-B-u1-2",
+    "configuration": "config-B",
+    "variant": "u1",
+    "instruction_sha256": "dc9280382227d99ad940100b01e6e06a1c12320ffafbe10b7e6904c49ce9ad77",
+    "started_at": "2026-11-21T09:10:17.625Z",
+    "ended_at": "2026-11-21T09:10:50.002Z",
+    "wall_s": 32.377,
+    "turns": 7,
+    "tool_calls": 10,
+    "tokens": 579912,
+    "ended": "finished",
+    "patch_sha256": "8b1856fea3ce4497d489dc309f9b0fdc49bf3ce0eee1849b10491689e99905a7",
+    "run_record": "build-session:subagents/workflows/wf_59b07014-7c5/agent-afc06700944b979ae.jsonl",
+    "audit": {
+      "profile": "fresh-attempt:v1",
+      "passed": true,
+      "findings": [
+        "fresh-attempt audit: no hit, no exposure",
+        "file tools (Read, Edit) named only workspace paths; every shell command began with a cd into the workspace",
+        "verdict: passed, nothing outside the workspace was read"
+      ],
+      "audited_at": "2026-11-21T10:13:44Z",
+      "record": "data/fresh/fresh-v1/audit_CS-04.json"
+    }
+  }
+}

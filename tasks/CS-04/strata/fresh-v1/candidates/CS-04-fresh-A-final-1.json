@@ -1,0 +1,41 @@
+{
+  "schema_version": "0.1.0",
+  "candidate_id": "CS-04-fresh-A-final-1",
+  "task_id": "CS-04",
+  "origin": "fresh_attempt",
+  "split": "eval",
+  "patch": "diff --git a/docs/api.rst b/docs/api.rst\nindex 7b40a8ec1283d4da97203fc9ebb9f36d5f6edeb4..f3bda508703536fb00f7e4f31f7fc1789d4c83ab 100644\n--- a/docs/api.rst\n+++ b/docs/api.rst\n@@ -158,7 +158,7 @@ These tools return summarized or aggregated data from an iterable.\n .. autofunction:: ilen\n .. autofunction:: unique_to_each\n .. autofunction:: sample(iterable, k=1, weights=None)\n-.. autofunction:: consecutive_groups(iterable, ordering=lambda x: x)\n+.. autofunction:: consecutive_groups(iterable, ordering=lambda x: x, step=1)\n .. autoclass:: run_length\n .. autofunction:: map_reduce\n .. autofunction:: join_mappings\ndiff --git a/docs/versions.rst b/docs/versions.rst\nindex a70fbd2880f8fcd73959f0a5f485b0b244daa422..4db37bbcb4aaa751386a21ac53648eb42b47548e 100644\n--- a/docs/versions.rst\n+++ b/docs/versions.rst\n@@ -9,6 +9,7 @@ Unreleased\n ----------\n \n * Updated functions:\n+    * :func:`consecutive_groups` now accepts a *step* argument for finding runs that change by a fixed amount, including descending runs with a negative *step*.\n     * :func:`peekable` was updated to avoid caching the entire iterable when sliced with a negative step and omitted *stop*.\n \n 11.2.1\ndiff --git a/more_itertools/more.py b/more_itertools/more.py\nindex 068ed68d258574ca1b5638a2c000bb406029082c..febb406f4c0479ac9697793c57b565ad29051160 100755\n--- a/more_itertools/more.py\n+++ b/more_itertools/more.py\n@@ -2858,7 +2858,7 @@ def always_reversible(iterable):\n         return reversed(list(iterable))\n \n \n-def consecutive_groups(iterable, ordering=None):\n+def consecutive_groups(iterable, ordering=None, step=1):\n     \"\"\"Yield groups of consecutive items using :func:`itertools.groupby`.\n     The *ordering* function determines whether two items are adjacent by\n     returning their position.\n@@ -2887,6 +2887,25 @@ def consecutive_groups(iterable, ordering=None):\n         ['i']\n         ['l', 'm', 'n', 'o', 'p']\n \n+    By default, each item in a group has a position one greater than the\n+    item before it. Use *step* to find runs whose positions change by some\n+    other fixed amount. A negative *step* finds descending runs:\n+\n+        >>> iterable = [2, 4, 6, 10, 12, 13]\n+        >>> for group in consecutive_groups(iterable, step=2):\n+        ...     print(list(group))\n+        [2, 4, 6]\n+        [10, 12]\n+        [13]\n+\n+        >>> iterable = [9, 8, 7, 3, 2]\n+        >>> for group in consecutive_groups(iterable, step=-1):\n+        ...     print(list(group))\n+        [9, 8, 7]\n+        [3, 2]\n+\n+    ``ValueError`` is raised if *step* is zero.\n+\n     Each group of consecutive items is an iterator that shares its source with\n     *iterable*. When an output group is advanced, the previous group is\n     no longer available unless its elements are copied (e.g., into a ``list``).\n@@ -2899,13 +2918,25 @@ def consecutive_groups(iterable, ordering=None):\n         [[1, 2], [11, 12], [21, 22]]\n \n     \"\"\"\n+    if step == 0:\n+        raise ValueError('step must not be zero')\n+\n     if ordering is None:\n         key = lambda x: x[0] - x[1]\n     else:\n         key = lambda x: x[0] - ordering(x[1])\n \n-    for k, g in groupby(enumerate(iterable), key=key):\n-        yield map(itemgetter(1), g)\n+    # Pair the i-th item with i * step. Along a run, positions also grow by\n+    # step at each item, so the key is the same for the whole run.\n+    offsets = count(0, step)\n+\n+    # A nested generator, so that a bad step raises at call time while the\n+    # iterable is only read once iteration starts.\n+    def groups():\n+        for k, g in groupby(zip(offsets, iterable), key=key):\n+            yield map(itemgetter(1), g)\n+\n+    return groups()\n \n \n def difference(iterable, func=sub, *, initial=None):\ndiff --git a/more_itertools/more.pyi b/more_itertools/more.pyi\nindex ca5cf574d7a87f7575b73a2204eb35b561612bff..4a3e331f45b534b1e67ddaf8488373be6acf4531 100644\n--- a/more_itertools/more.pyi\n+++ b/more_itertools/more.pyi\n@@ -594,7 +594,9 @@ class islice_extended(Generic[_T_co], Iterator[_T_co]):\n \n def always_reversible(iterable: Iterable[_T]) -> Iterator[_T]: ...\n def consecutive_groups(\n-    iterable: Iterable[_T], ordering: None | Callable[[_T], int] = ...\n+    iterable: Iterable[_T],\n+    ordering: None | Callable[[_T], int] = ...,\n+    step: int = ...,\n ) -> Iterator[Iterator[_T]]: ...\n @overload\n def difference(\n",
+  "patch_sha256": "41e0131c32f8e6c693e782414d8c5eb5ce42adb849a95e3137666bb76e1d3bd8",
+  "produced_by": "fresh-attempt:config-A",
+  "description": "",
+  "labels": [],
+  "attempt": {
+    "attempt_id": "CS-04-fresh-A-final-1",
+    "configuration": "config-A",
+    "variant": "final",
+    "instruction_sha256": "dcc1e0bb07fd26db1531384665d305fc87d43515f04b6e2b76ce88fe4db22ad0",
+    "started_at": "2026-11-21T09:00:25.682Z",
+    "ended_at": "2026-11-21T09:10:17.613Z",
+    "wall_s": 591.931,
+    "turns": 28,
+    "tool_calls": 41,
+    "tokens": 3641592,
+    "ended": "finished",
+    "patch_sha256": "41e0131c32f8e6c693e782414d8c5eb5ce42adb849a95e3137666bb76e1d3bd8",
+    "run_record": "build-session:subagents/workflows/wf_59b07014-7c5/agent-ad78dd53a807cc247.jsonl",
+    "audit": {
+      "profile": "fresh-attempt:v1",
+      "passed": true,
+      "findings": [
+        "fresh-attempt audit: 1 hit, no exposure; read in the transcript",
+        "false positive: the flagged token is a sed address range (two regular expressions between slashes), taken for an absolute path; the command began with a cd into the workspace's repo, piped the base version of the repo's own module (git show) through sed and wrote only into the workspace's scratch",
+        "file tools (Read, Edit, Grep) named only workspace paths; every shell command began with a cd into the workspace",
+        "it listed only its own workspace root, as the parent of its repo",
+        "the host's python3 (a system location) was run on workspace files only",
+        "verdict: passed, nothing outside the workspace was read"
+      ],
+      "audited_at": "2026-11-21T10:13:44Z",
+      "record": "data/fresh/fresh-v1/audit_CS-04.json"
+    }
+  }
+}

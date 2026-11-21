@@ -1,0 +1,39 @@
+{
+  "schema_version": "0.1.0",
+  "candidate_id": "CS-04-fresh-A-final-5",
+  "task_id": "CS-04",
+  "origin": "fresh_attempt",
+  "split": "eval",
+  "patch": "diff --git a/docs/api.rst b/docs/api.rst\nindex 7b40a8ec1283d4da97203fc9ebb9f36d5f6edeb4..0d0613f464016fca927bde08463e2416e87a1656 100644\n--- a/docs/api.rst\n+++ b/docs/api.rst\n@@ -158,7 +158,7 @@ These tools return summarized or aggregated data from an iterable.\n .. autofunction:: ilen\n .. autofunction:: unique_to_each\n .. autofunction:: sample(iterable, k=1, weights=None)\n-.. autofunction:: consecutive_groups(iterable, ordering=lambda x: x)\n+.. autofunction:: consecutive_groups(iterable, ordering=lambda x: x, *, step=1)\n .. autoclass:: run_length\n .. autofunction:: map_reduce\n .. autofunction:: join_mappings\ndiff --git a/docs/versions.rst b/docs/versions.rst\nindex a70fbd2880f8fcd73959f0a5f485b0b244daa422..f86ce3d6a4178bb0709a88d60c5fa4b4af3d8aab 100644\n--- a/docs/versions.rst\n+++ b/docs/versions.rst\n@@ -9,6 +9,7 @@ Unreleased\n ----------\n \n * Updated functions:\n+    * :func:`consecutive_groups` now accepts a *step* keyword argument for finding runs that advance by amounts other than 1, including descending runs.\n     * :func:`peekable` was updated to avoid caching the entire iterable when sliced with a negative step and omitted *stop*.\n \n 11.2.1\ndiff --git a/more_itertools/more.py b/more_itertools/more.py\nindex 068ed68d258574ca1b5638a2c000bb406029082c..656ca52a8014a7b6d8967dde0e7de41f1a1e431e 100755\n--- a/more_itertools/more.py\n+++ b/more_itertools/more.py\n@@ -2858,7 +2858,7 @@ def always_reversible(iterable):\n         return reversed(list(iterable))\n \n \n-def consecutive_groups(iterable, ordering=None):\n+def consecutive_groups(iterable, ordering=None, *, step=1):\n     \"\"\"Yield groups of consecutive items using :func:`itertools.groupby`.\n     The *ordering* function determines whether two items are adjacent by\n     returning their position.\n@@ -2887,6 +2887,26 @@ def consecutive_groups(iterable, ordering=None):\n         ['i']\n         ['l', 'm', 'n', 'o', 'p']\n \n+    Two items are adjacent when the second one's position minus the first\n+    one's is equal to *step*, which defaults to 1. Set *step* to find runs\n+    with other spacings:\n+\n+        >>> iterable = [2, 4, 6, 10, 12]\n+        >>> for group in consecutive_groups(iterable, step=2):\n+        ...     print(list(group))\n+        [2, 4, 6]\n+        [10, 12]\n+\n+    A negative *step* finds descending runs:\n+\n+        >>> iterable = [9, 8, 7, 3, 2]\n+        >>> for group in consecutive_groups(iterable, step=-1):\n+        ...     print(list(group))\n+        [9, 8, 7]\n+        [3, 2]\n+\n+    ``ValueError`` is raised if *step* is zero.\n+\n     Each group of consecutive items is an iterator that shares its source with\n     *iterable*. When an output group is advanced, the previous group is\n     no longer available unless its elements are copied (e.g., into a ``list``).\n@@ -2899,13 +2919,22 @@ def consecutive_groups(iterable, ordering=None):\n         [[1, 2], [11, 12], [21, 22]]\n \n     \"\"\"\n+    if step == 0:\n+        raise ValueError('step must not be zero')\n+\n     if ordering is None:\n         key = lambda x: x[0] - x[1]\n     else:\n         key = lambda x: x[0] - ordering(x[1])\n \n-    for k, g in groupby(enumerate(iterable), key=key):\n-        yield map(itemgetter(1), g)\n+    # step is validated eagerly above; the iterable isn't used until iteration\n+    def ret():\n+        # Pair items with 0, step, 2 * step, ...  Positions in a run also\n+        # advance by step, so the key (multiple minus position) is constant.\n+        for _, g in groupby(zip(count(0, step), iterable), key=key):\n+            yield map(itemgetter(1), g)\n+\n+    return ret()\n \n \n def difference(iterable, func=sub, *, initial=None):\ndiff --git a/more_itertools/more.pyi b/more_itertools/more.pyi\nindex ca5cf574d7a87f7575b73a2204eb35b561612bff..2c8382c60388238956b67cb75178bca83f33adc1 100644\n--- a/more_itertools/more.pyi\n+++ b/more_itertools/more.pyi\n@@ -594,7 +594,10 @@ class islice_extended(Generic[_T_co], Iterator[_T_co]):\n \n def always_reversible(iterable: Iterable[_T]) -> Iterator[_T]: ...\n def consecutive_groups(\n-    iterable: Iterable[_T], ordering: None | Callable[[_T], int] = ...\n+    iterable: Iterable[_T],\n+    ordering: None | Callable[[_T], int] = ...,\n+    *,\n+    step: int = ...,\n ) -> Iterator[Iterator[_T]]: ...\n @overload\n def difference(\n",
+  "patch_sha256": "989ae5c40eed045e39bc467f1ba8d1e9b624a1bc4e4caf7294ae376b2da1733c",
+  "produced_by": "fresh-attempt:config-A",
+  "description": "",
+  "labels": [],
+  "attempt": {
+    "attempt_id": "CS-04-fresh-A-final-5",
+    "configuration": "config-A",
+    "variant": "final",
+    "instruction_sha256": "4fb8258d608064aff44c5b2e997f583c9f8d34efc7b41ab2b0abb8cb52c4d941",
+    "started_at": "2026-11-21T09:46:25.986Z",
+    "ended_at": "2026-11-21T09:58:47.938Z",
+    "wall_s": 741.952,
+    "turns": 28,
+    "tool_calls": 39,
+    "tokens": 3636419,
+    "ended": "finished",
+    "patch_sha256": "989ae5c40eed045e39bc467f1ba8d1e9b624a1bc4e4caf7294ae376b2da1733c",
+    "run_record": "build-session:subagents/workflows/wf_59b07014-7c5/agent-a7bf7076ea362e666.jsonl",
+    "audit": {
+      "profile": "fresh-attempt:v1",
+      "passed": true,
+      "findings": [
+        "fresh-attempt audit: no hit, no exposure",
+        "file tools (Read, Edit) named only workspace paths; every shell command began with a cd into the workspace",
+        "it listed only its own workspace root, which is inside the workspace",
+        "verdict: passed, nothing outside the workspace was read"
+      ],
+      "audited_at": "2026-11-21T10:13:44Z",
+      "record": "data/fresh/fresh-v1/audit_CS-04.json"
+    }
+  }
+}
