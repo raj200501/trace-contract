@@ -3,11 +3,20 @@ writers of the independent labelers (§15.5).
 
 Usage: python scripts/strict_reaudit.py --transcripts <dir> [--transcripts <dir> ...]
                                         [--extra <transcript.jsonl> ...] --scratch <dir> [--write]
-                                        [--outputs <report.json>]
+                                        [--outputs <report.json>] [--tasks-root <dir>]
        python scripts/strict_reaudit.py --fresh <attempts.json> --transcripts <dir> [--transcripts <dir> ...]
                                         --report <report.json> [--scratch <dir>]
        python scripts/strict_reaudit.py --labeler <task>=<transcript> [--labeler ...] [--revision <task>=<transcript> ...]
                                         --report <report.json> [--transcripts <dir> ...] [--scratch <dir>]
+                                        [--tasks-root <dir>]
+
+``--tasks-root`` names the directory of the task directories (default: the repository's ``tasks/``); the natural
+PR-review tasks lie in ``data/natural/tasks`` (protocol §17.4). A report that covers a natural PR-review task
+(``--report``, ``--outputs``) holds excerpts of its thread and of upstream code, so it is refused inside the repository
+unless git ignores its path (:func:`private_report_problem`; ``data/natural/`` is ignored). A natural family is known by
+its population or its id (``NP-xx``), wherever it lies: the labeler mode refuses one without ``--tasks-root`` (the
+controlled layout would audit it against ``tasks/`` and ``snapshots/``), and the default mode applies the same guard to
+``--outputs``, and to ``--write`` on each ``generator_audit.json`` that holds a natural agent's record.
 
 **Labeler writers** (``--labeler``, ``--revision``; protocol §15.5, decision log D55). Each ``<transcript>`` is the
 path of a writer's transcript, or its sha256, looked up among the ``agent-*.jsonl`` files under the ``--transcripts``
@@ -31,6 +40,17 @@ transcript, not a finding. The report (``--report``) holds per transcript its la
 by tool, hits and exposures, with session ids and session-local paths redacted. Where the Claude session directories
 are is set in one place, :data:`SESSION_ROOTS` (:class:`SessionRoots`).
 
+The profile is parametrised by the family's layout (:class:`LabelerLayout`). By default it is the controlled tasks' of
+D55. With ``--tasks-root``, each family's task directory is ``<tasks root>/<task>`` and its base snapshot lies where
+``tracecontract.roots.snapshot_dir`` puts it; the content index covers the families of that root. A natural PR-review
+family's writer works in its own workspace, which the family's ``labels/generator_audit.json`` records for the
+transcript (``own_workspace``, written by ``scripts/audit_eval_generators.py --task-dir ... --profile natural``): the
+workspace's copies of its inputs are allowed, its ``tests/`` and ``scratch/`` are its own, and the other agents'
+workspaces, the private run records (``/home/user/nat_runrec``) and the natural arm's build records under
+``data/natural`` are forbidden too. Without such a record the task's ``verifiers/independent_label/tests/`` counts as
+its own and the transcript carries a note. A revision works in a workspace of its own too: the check names it may be
+told are those its writer wrote in the writer's workspace (from the writer's record).
+
 **Fresh attempts** (``--fresh``, protocol v0.8 §16.2). ``<attempts.json>`` holds the attempt
 records, a list (or ``{"attempts": [...]}``) of objects with ``attempt_id``, ``task_id``,
 ``workspace`` (the attempt's workspace, as ``scripts/make_agent_workspace.py`` printed it) and
@@ -49,15 +69,16 @@ directory and e-mail addresses redacted.
 
 **Generator transcripts** (the default).
 
-For every record in ``tasks/*/labels/generator_audit.json`` it finds the transcript(s) the
+For every record in ``<tasks root>/*/labels/generator_audit.json`` it finds the transcript(s) the
 record names by sha256 among the ``agent-*.jsonl`` files under the ``--transcripts``
 directories, and runs two checks on each, and a third with ``--outputs``:
 
 1. :func:`tracecontract.controlled.audit_generator_transcript_strict`, which resolves the
-   paths in tool inputs instead of matching substrings. The agent's own workspace is the
-   ``--out`` directory of the ``export-gen-workspace`` command in its prompt; a writer of
-   reference checks may also write the task's ``verifiers/reference_check``; and the
-   builder's scratch directory (``--scratch``) counts as forbidden.
+   paths in tool inputs instead of matching substrings. The agent's own workspace is the one
+   its record names (``own_workspace``), else the ``--out`` directory of the
+   ``export-gen-workspace`` command in its prompt; a writer of reference checks may also write
+   the task's ``verifiers/reference_check``; and the builder's scratch directory
+   (``--scratch``) counts as forbidden.
 2. Reads of the shared scratch directory. The build session's subagents shared one scratch
    directory with the builder and with each other. Every transcript given (``--extra``
    adds the builder's own) contributes to an index of the scratch paths each agent wrote,
@@ -80,10 +101,18 @@ directories, and runs two checks on each, and a third with ``--outputs``:
    role and transcript, to the ``--outputs`` file only. They never enter
    ``generator_audit.json``, so the recorded audits stay as they are.
 
+A record of a natural agent (``profile`` ``natural-agent:v1``, written by
+``scripts/audit_eval_generators.py --profile natural``) is re-audited with the natural-agent
+profile instead, :func:`tracecontract.controlled.audit_natural_agent_transcript`, in the
+workspace its record names. Everything outside that workspace is forbidden, the shared scratch
+directory included, so checks 2 and 3 do not apply: its scratch accesses are hits, and its
+entry holds the hits and the exposures, both of which flag it (with ``--outputs`` the
+exposures are written to that report too).
+
 Session ids and session-local paths are redacted in the output (decision log D21), and
-e-mail addresses in the ``--outputs`` report. With ``--write`` the results of checks 1 and
-2 go into each record's ``strict_reaudit`` block; a manual ``assessment`` already there is
-kept when the hits and scratch findings are unchanged. Checks 1 and 2 do not inspect tool
+e-mail addresses in the ``--outputs`` report and in the natural entries. With ``--write``
+the results of checks 1 and 2 go into each record's ``strict_reaudit`` block; a manual
+``assessment`` already there is kept when the hits and scratch findings are unchanged. Checks 1 and 2 do not inspect tool
 outputs. The accesses they flag were assessed by reading the transcripts, tool outputs
 included; for a file without a recorded writer, the writer was found by reading the
 agent's tool inputs. The other assessments restate the classification.
@@ -97,15 +126,17 @@ import json
 import os
 import re
 import shlex
+import subprocess
 import sys
 from pathlib import Path
 from typing import NamedTuple
 
 from tracecontract.controlled import (
-    _EXCLUSION_ARG, _LITERAL_PATH, _VAR, _command_words, _scan_command, _shell_segments, _split_unquoted,
-    audit_fresh_attempt_transcript, audit_generator_transcript_strict,
+    _EXCLUSION_ARG, _LITERAL_PATH, _VAR, NATURAL_PROFILE, _command_words, _scan_command, _shell_segments, _split_unquoted,
+    audit_fresh_attempt_transcript, audit_generator_transcript_strict, audit_natural_agent_transcript,
 )
 from tracecontract.ingest.claude_code import _redact_emails, parse_claude_code_jsonl
+from tracecontract.roots import is_natural_pr, snapshot_dir, snapshot_root
 from tracecontract.schemas import EventKind, Population
 
 R = Path(__file__).resolve().parents[1]
@@ -378,7 +409,8 @@ LABELER_PROFILE = (
     "and the harness context; a revision may be told only the names of the failing checks")
 _LABELER_SYSTEM = ("/usr", "/bin", "/sbin", "/lib", "/lib32", "/lib64", "/libx32", "/etc", "/dev", "/proc", "/sys", "/opt",
                    "/root/.local/bin")
-_GENERATED = ("reference_check", "repo_tests", "initial_plain", "full_plain", "llm_freeform", "initial_audited", "full_audited")
+_GENERATED = ("reference_check", "repo_tests", "initial_plain", "full_plain", "llm_freeform", "initial_audited", "full_audited",
+              "diff_derived")
 _AREAS = {"candidates": "a candidate", "strata": "a stratum candidate", "labels": "a label"}
 _SESSION_WHY = "a Claude session directory (the build session's records)"
 _EDIT_TOOLS = {"Write", "Edit", "MultiEdit", "NotebookEdit"}
@@ -390,7 +422,10 @@ _LINE_PREFIX = re.compile(r"^\s*\d+\t|^[\w./-]+:\d+[:-]|^\d+[:-]")  # Read's lin
 _TEST_NAME = re.compile(r"(?<![\w-])test_\w+")
 _CHECK_NAME = re.compile(r"[\w./-]+\.py::\w+(?:::\w+)?")
 _LISTED = re.compile(r"(?:(?P<kind>[A-Za-z][\w ]*?):\s+)?(?P<name>[\w./-]+\.py::\w+(?:::\w+)?|R-[\w.-]+)")
-_FRESH_ID = re.compile(r"(?<![\w-])CS-\d\d-fresh-[AB]-(?:u1|final)-\d+\b")
+_FRESH_ID = re.compile(r"(?<![\w-])(?:CS-\d\d|NP-\d{2,})-fresh-[AB]-(?:u1|final)-\d+\b")
+_NATURAL_ID = re.compile(r"NP-\d{2,}")  # the id of a natural PR-review family (protocol §15.6)
+# A candidate id of a controlled (CS-xx) or natural (NP-xx) family that only grading or forbidden material could show.
+_GRADED_ID = re.compile(r"(?<![\w-])(?:CS-\d\d|NP-\d{2,})-(?:reference|noop-\w+|eval-[\w-]+|pre-correction|pre-review)\b")
 # What grading output looks like, beyond the names of checks: messages, tracebacks, outcomes and counts.
 _GRADING = re.compile(r"Traceback|\b\w+Error\b|\bassert\b|\bPASSED\b|\bFAILED\b|\btask_failure\b|\brepeats?\b|\boutcome\b|"
                       r"\bstdout\b|\bstderr\b|\bnotes\b|\b\d+ (?:checks? )?(?:passed|failed)\b")
@@ -436,61 +471,148 @@ def _inside(p: str, root: str) -> bool:
     return p == root or p.startswith(root.rstrip("/") + "/")
 
 
-def labeler_allowed(task: str, repo: str = REPO) -> tuple[tuple[str, str], ...]:
+class LabelerLayout(NamedTuple):
+    """Where the labeler profile finds one family's material, as the agent's tool inputs name it (under :data:`REPO`).
+
+    The default (:func:`labeler_layout` without a task directory) is the controlled tasks' layout of D55: the task in
+    ``tasks/<id>``, its base snapshot in ``snapshots/<id>``, and the writer writes the task's
+    ``verifiers/independent_label/tests/``. A natural PR-review task (``natural``) lies in ``data/natural/tasks/<id>``
+    with its base snapshot under ``data/natural/snapshots`` (:mod:`tracecontract.roots`), and its labeler writer works in
+    a workspace of its own (``workspace``, from the agent's record in ``labels/generator_audit.json``): the workspace's
+    copies of its inputs are allowed, its ``tests/`` and ``scratch/`` are its own, and the other agents' workspaces, the
+    private run records and the natural arm's build records under ``data/natural`` are forbidden too.
+    """
+
+    task_dir: str  # the family's task directory
+    snapshots: str  # the root of the base snapshots: the family's base snapshot is <snapshots>/<task>
+    workspace: str | None = None  # the writer's own workspace (natural tasks)
+    natural: bool = False
+    repo: str = REPO
+
+    @property
+    def tasks(self) -> str:
+        """The directory that holds the family's task directory."""
+        return os.path.dirname(self.task_dir)
+
+    @property
+    def family_roots(self) -> tuple[str, ...]:
+        """The directories of families: the family's own tasks directory and, for a natural task, ``tasks/`` too."""
+        return tuple(dict.fromkeys((self.tasks, *((f"{self.repo}/tasks",) if self.natural else ()))))
+
+    @property
+    def snapshot_roots(self) -> tuple[str, ...]:
+        return tuple(dict.fromkeys((self.snapshots, *((f"{self.repo}/snapshots",) if self.natural else ()))))
+
+    @property
+    def other_workspaces(self) -> tuple[str, ...]:
+        """The directories that hold the other agents' workspaces: the one beside the writer's own and the one above."""
+        if not self.workspace:
+            return ()
+        group = os.path.dirname(self.workspace)
+        out = [group]
+        if os.path.dirname(group) not in ("/", HOME) and os.path.dirname(group).count("/") >= 2:
+            out.append(os.path.dirname(group))
+        return tuple(out)
+
+
+def labeler_layout(task: str, repo: str = REPO, *, task_dir: str | None = None, snapshot_root: str | None = None,
+                   workspace: str | None = None, natural: bool = False) -> LabelerLayout:
+    """The layout of one family for the labeler profile (:class:`LabelerLayout`); without ``task_dir`` and
+    ``snapshot_root``, the controlled tasks' (``<repo>/tasks/<task>``, ``<repo>/snapshots``)."""
+    return LabelerLayout(task_dir=os.path.normpath(task_dir or f"{repo}/tasks/{task}"),
+                         snapshots=os.path.normpath(snapshot_root or f"{repo}/snapshots"),
+                         workspace=os.path.normpath(workspace) if workspace else None, natural=natural, repo=repo)
+
+
+def labeler_allowed(task: str, repo: str = REPO, *, layout: LabelerLayout | None = None) -> tuple[tuple[str, str], ...]:
     """The inputs a labeler writer of ``task`` may read (protocol §15.5, D55), each with what it is."""
-    return ((f"{repo}/tasks/{task}/contracts/reference.json", "the reference contract"),
-            (f"{repo}/snapshots/{task}", "the base snapshot"),
-            (f"{repo}/src/tracecontract/sandbox/harness/tc_sandbox.py", "the harness API"),
-            (f"{repo}/src/tracecontract/verifier.py", "the lint rules"),
-            (f"{repo}/tests/fixtures/harbor_fx01/tasks/FX-01/verifiers/v1", "the synthetic example of the test format"))
+    lay = layout or labeler_layout(task, repo)
+    out: tuple[tuple[str, str], ...] = (
+        (f"{lay.task_dir}/contracts/reference.json", "the reference contract"),
+        (f"{lay.snapshots}/{task}", "the base snapshot"),
+        (f"{repo}/src/tracecontract/sandbox/harness/tc_sandbox.py", "the harness API"),
+        (f"{repo}/src/tracecontract/verifier.py", "the lint rules"),
+        (f"{repo}/tests/fixtures/harbor_fx01/tasks/FX-01/verifiers/v1", "the synthetic example of the test format"))
+    if lay.workspace:
+        out += ((lay.workspace, ("its workspace's copies of its inputs (the reference contract, the base snapshot and the "
+                                 "harness docs)")),)
+    return out
 
 
-def labeler_own(task: str, repo: str = REPO) -> str:
-    """The one directory a labeler writer of ``task`` may write (and read back)."""
-    return f"{repo}/tasks/{task}/verifiers/independent_label/tests"
+def labeler_own(task: str, repo: str = REPO, *, layout: LabelerLayout | None = None) -> str:
+    """The one directory a labeler writer of ``task`` may write (and read back): the task's
+    ``verifiers/independent_label/tests``, or a natural writer's ``<workspace>/tests``."""
+    lay = layout or labeler_layout(task, repo)
+    return f"{lay.workspace}/tests" if lay.workspace else f"{lay.task_dir}/verifiers/independent_label/tests"
 
 
-def _labeler_direct(p: str, task: str, repo: str, home: str, extra: tuple[str, ...]) -> tuple[str, str]:
+def _labeler_family(p: str, task: str, lay: LabelerLayout) -> tuple[str, str] | None:
+    """(category, why) of a path in a family's task directory (or deeper), or None."""
+    for troot in lay.family_roots:
+        if not _inside(p, troot) or p == troot:
+            continue
+        parts = os.path.relpath(p, troot).split("/")
+        if len(parts) < 2:
+            continue
+        fam, area = parts[0], parts[1]
+        mine = fam == task and troot == lay.tasks
+        other = "" if mine else " of another family"
+        if area == "candidates" and len(parts) > 2 and parts[2] == f"{fam}-reference.json":
+            return "forbidden", "the reference solution (the reference candidate and its patch)" + other
+        if area == "verifiers" and len(parts) > 2:
+            if parts[2] == "reference_check":
+                return "forbidden", "a reference check" + other
+            if parts[2] == "independent_label" and mine:
+                if parts[3:4] == ["status.json"]:
+                    return "forbidden", "the coordinator's grading status of the labeler"
+                return "outside", "the coordinator's record of the labeler (its spec)"
+            return "forbidden", "a generated verifier" + other
+        if area in _AREAS:
+            return "forbidden", _AREAS[area] + other
+        if area == "contracts" and len(parts) > 2 and parts[2].startswith("mapping"):
+            return "forbidden", "a mapping of a generated verifier's checks" + other
+        if area == "contracts":
+            return "outside", ("the contracts directory" if len(parts) == 2 else "another contract") + other
+        if area == "verifiers":
+            return "outside", "the verifiers directory" + other
+        return "outside", "task metadata (it lists the verifiers and candidates)" + other
+    return None
+
+
+_NATURAL_BUILD_WHY = "the natural arm's build records (S10 work trees with the reference state, the fetch log, run records)"
+_OTHER_WORKSPACE_WHY = "another agent's workspace"
+_RUN_RECORDS_WHY = "the natural agents' private run records (they hold grading output)"
+
+
+def _labeler_direct(p: str, task: str, repo: str, home: str, extra: tuple[str, ...],
+                    layout: LabelerLayout | None = None) -> tuple[str, str]:
     """(category, why) of the path ``p`` itself; see :func:`labeler_classify`."""
+    lay = layout or labeler_layout(task, repo)
     if SESSION_ROOTS.tmp in p or _inside(p, SESSION_ROOTS.records) or any(_inside(p, x) for x in extra):
         return "forbidden", _SESSION_WHY
     if any(m in p for m in ("scratchpad/sealed", "scratchpad/scenarios", "scratchpad/reference")):
         return "forbidden", "sealed material"
-    if _inside(p, labeler_own(task, repo)):
+    if _inside(p, labeler_own(task, repo, layout=lay)):
         return "own", "its own tests directory"
-    for root, why in labeler_allowed(task, repo):
+    if lay.workspace and _inside(p, f"{lay.workspace}/scratch"):
+        return "own", "its private scratch directory"
+    for root, why in labeler_allowed(task, repo, layout=lay):
         if _inside(p, root):
             return "allowed", why
     if _inside(p, repo):
+        fam = _labeler_family(p, task, lay)
+        if fam is not None:
+            return fam
         parts = os.path.relpath(p, repo).split("/")
-        if parts[0] == "tasks" and len(parts) >= 3:
-            fam, area = parts[1], parts[2]
-            other = "" if fam == task else " of another family"
-            if area == "candidates" and len(parts) > 3 and parts[3] == f"{fam}-reference.json":
-                return "forbidden", "the reference solution (the reference candidate and its patch)" + other
-            if area == "verifiers" and len(parts) > 3:
-                if parts[3] == "reference_check":
-                    return "forbidden", "a reference check" + other
-                if parts[3] == "independent_label" and fam == task:
-                    if parts[4:5] == ["status.json"]:
-                        return "forbidden", "the coordinator's grading status of the labeler"
-                    return "outside", "the coordinator's record of the labeler (its spec)"
-                return "forbidden", "a generated verifier" + other
-            if area in _AREAS:
-                return "forbidden", _AREAS[area] + other
-            if area == "contracts" and len(parts) > 3 and parts[3].startswith("mapping"):
-                return "forbidden", "a mapping of a generated verifier's checks" + other
-            if area == "contracts":
-                return "outside", ("the contracts directory" if len(parts) == 3 else "another contract") + other
-            if area == "verifiers":
-                return "outside", "the verifiers directory" + other
-            return "outside", "task metadata (it lists the verifiers and candidates)" + other
         if parts[:2] == ["data", "controlled"]:
             return "forbidden", "the controlled sessions' records (their transcripts hold the reference edits)"
         if parts[0] == "results":
             return "forbidden", "verdicts (results/)"
-        if parts[0] == "snapshots" and len(parts) > 1:
+        if any(_inside(p, r) and p != r for r in lay.snapshot_roots):
             return "outside", "another family's base snapshot"
+        if lay.natural and parts[:2] == ["data", "natural"] and not any(
+                _inside(p, r) for r in (*lay.family_roots, *lay.snapshot_roots)):
+            return "forbidden", _NATURAL_BUILD_WHY
         if parts[0] in ("docs", "paper", "experiments") or parts in (["README.md"], ["STATUS.md"]):
             return "doc", "documentation or paper text (judged by what it showed)"
         if parts[0] == ".venv":
@@ -502,6 +624,10 @@ def _labeler_direct(p: str, task: str, repo: str, home: str, extra: tuple[str, .
         return "forbidden", "third-party data"
     if any(_inside(p, f"{home}/{d}") for d in ("cs_workspaces", "gen_workspaces", "fresh_ws")):
         return "forbidden", "a workspace of the controlled sessions, the generators or the fresh attempts"
+    if any(_inside(p, w) for w in lay.other_workspaces):
+        return "forbidden", _OTHER_WORKSPACE_WHY
+    if lay.natural and _inside(p, f"{home}/nat_runrec"):
+        return "forbidden", _RUN_RECORDS_WHY
     if any(_inside(p, s) for s in _LABELER_SYSTEM):
         return "system", "a system location"
     if _inside(p, "/tmp"):
@@ -509,28 +635,35 @@ def _labeler_direct(p: str, task: str, repo: str, home: str, extra: tuple[str, .
     return "outside", "outside the allowed inputs"
 
 
-def _labeler_anchors(task: str, families: tuple[str, ...], repo: str, home: str, extra: tuple[str, ...]) -> list:
+def _labeler_anchors(task: str, families: tuple[str, ...], repo: str, home: str, extra: tuple[str, ...],
+                     layout: LabelerLayout | None = None) -> list:
     """Forbidden roots, for deciding whether a recursive search or a listing covers forbidden material."""
+    lay = layout or labeler_layout(task, repo)
     out = []
     for f in dict.fromkeys((task, *families)):
         o = "" if f == task else " of another family"
-        out += [(f"{repo}/tasks/{f}/verifiers/{v}", ("a reference check" if v == "reference_check" else "a generated verifier") + o)
+        t = f"{lay.tasks}/{f}"
+        out += [(f"{t}/verifiers/{v}", ("a reference check" if v == "reference_check" else "a generated verifier") + o)
                 for v in _GENERATED]
-        out.append((f"{repo}/tasks/{f}/verifiers/independent_label/status.json", "the coordinator's grading status of the labeler")
-                   if f == task else (f"{repo}/tasks/{f}/verifiers/independent_label", "a generated verifier" + o))
-        out += [(f"{repo}/tasks/{f}/{a}", why + o) for a, why in _AREAS.items()]
-        out.append((f"{repo}/tasks/{f}/contracts/mapping_full_session.json", "a mapping of a generated verifier's checks" + o))
+        out.append((f"{t}/verifiers/independent_label/status.json", "the coordinator's grading status of the labeler")
+                   if f == task else (f"{t}/verifiers/independent_label", "a generated verifier" + o))
+        out += [(f"{t}/{a}", why + o) for a, why in _AREAS.items()]
+        out.append((f"{t}/contracts/mapping_full_session.json", "a mapping of a generated verifier's checks" + o))
     out += [(f"{repo}/data/controlled", "the controlled sessions' records"), (f"{repo}/results", "verdicts (results/)"),
             (f"{home}/.tc_sealed", "sealed material"), (f"{home}/ext", "third-party data"),
             *[(f"{home}/{d}", "a workspace of the controlled sessions, the generators or the fresh attempts")
               for d in ("cs_workspaces", "gen_workspaces", "fresh_ws")],
             (SESSION_ROOTS.records, _SESSION_WHY), (SESSION_ROOTS.tmp + SESSION_ROOTS.uid, _SESSION_WHY),
             *[(x, _SESSION_WHY) for x in extra]]
+    if lay.natural:
+        out += [(f"{repo}/data/natural/s10_work", _NATURAL_BUILD_WHY), (f"{repo}/data/natural/runs", _NATURAL_BUILD_WHY),
+                (f"{home}/nat_runrec", _RUN_RECORDS_WHY), *[(w, _OTHER_WORKSPACE_WHY) for w in lay.other_workspaces]]
     return out
 
 
 def labeler_classify(p: str, task: str, *, op: str = "read", families: tuple[str, ...] = (), repo: str = REPO,
-                     home: str = HOME, extra_forbidden: tuple[str, ...] = (), pruned: tuple[str, ...] = ()) -> tuple[str, str]:
+                     home: str = HOME, extra_forbidden: tuple[str, ...] = (), pruned: tuple[str, ...] = (),
+                     layout: LabelerLayout | None = None) -> tuple[str, str]:
     """``(category, why)`` of one resolved path that a labeler writer of ``task`` reads, lists, searches, runs or writes.
 
     Categories: ``own`` (its tests directory), ``allowed`` (:func:`labeler_allowed`), ``system`` (system locations, the
@@ -540,12 +673,12 @@ def labeler_classify(p: str, task: str, *, op: str = "read", families: tuple[str
     material, third-party data, the old workspaces and every Claude session directory), ``doc`` (``docs/``, ``paper/``,
     ``experiments/``, ``README.md``, ``STATUS.md``: judged by what the read showed) and ``outside`` (everything else). A
     search (``op="search"``) or a listing (``op="list"``) whose root holds forbidden material that it does not prune is
-    forbidden too.
+    forbidden too. ``layout`` places the family's material (:class:`LabelerLayout`; by default the controlled tasks').
     """
     extra = tuple(os.path.normpath(x) for x in extra_forbidden)
-    cat, why = _labeler_direct(p, task, repo, home, extra)
+    cat, why = _labeler_direct(p, task, repo, home, extra, layout)
     if op in ("search", "list") and cat != "forbidden":
-        held = [w for a, w in _labeler_anchors(task, families, repo, home, extra)
+        held = [w for a, w in _labeler_anchors(task, families, repo, home, extra, layout)
                 if _inside(a, p) and a != p and not any(_inside(a, x) for x in pruned)]
         if held:
             lead = "recursive search over forbidden material" if op == "search" else "a listing of a directory that holds forbidden material"
@@ -664,7 +797,7 @@ def _lines_of(p: Path) -> set[str]:
     return {_norm_line(x) for t in texts for x in t.splitlines()}
 
 
-def labeler_index(root: Path, families: tuple[str, ...] | None = None) -> dict:
+def labeler_index(root: Path, families: tuple[str, ...] | None = None, *, tasks_root: Path | None = None) -> dict:
     """Fingerprints of the forbidden material in the checkout at ``root``, for the content scans of the labeler profile.
 
     * ``lines``: the distinctive lines (at least 24 characters, with a word of three letters, compared as
@@ -681,26 +814,38 @@ def labeler_index(root: Path, families: tuple[str, ...] | None = None) -> dict:
     forbidden for another, and a writer's own lines are told apart when the transcript is scanned), the candidates, the
     labels, the mappings of the contracts, and ``data/controlled``. ``results/`` and the strata are covered by the path
     rules only.
+
+    The families are the task directories under ``tasks_root`` (by default ``<root>/tasks``); with ``tasks_root``, each
+    family's base snapshot is where :func:`tracecontract.roots.snapshot_dir` puts it (``data/natural/snapshots/<id>`` for
+    a natural PR-review task).
     """
-    root = Path(root)
-    fams = families if families is not None else tuple(sorted(p.parent.name for p in root.glob("tasks/*/task.json")))
+    root = Path(root) if tasks_root is None else Path(root).resolve()
+    troot = Path(tasks_root).resolve() if tasks_root is not None else root / "tasks"
+    fams = families if families is not None else tuple(sorted(p.parent.name for p in troot.glob("*/task.json")))
     allowed_files: list[Path] = []
     for f in fams:
-        allowed_files += [root / "tasks" / f / "contracts" / "reference.json"]
-        allowed_files += [p for p in (root / "snapshots" / f).rglob("*") if p.is_file()]
+        allowed_files += [troot / f / "contracts" / "reference.json"]
+        snap = root / "snapshots" / f if tasks_root is None else snapshot_dir(troot / f, repo=root)
+        allowed_files += [p for p in snap.rglob("*") if p.is_file()]
     allowed_files += [root / "src/tracecontract/sandbox/harness/tc_sandbox.py", root / "src/tracecontract/verifier.py"]
     allowed_files += [p for p in (root / "tests/fixtures/harbor_fx01/tasks/FX-01/verifiers/v1").rglob("*") if p.is_file()]
+    # The candidate ids an allowed input names. An id matches only as a whole run of [\w-] characters, so one pass of the
+    # combined pattern over each file finds every id that a search of the files' concatenation would.
+    all_cands = sorted({p.stem for f in fams for p in (troot / f / "candidates").glob("*.json")})
+    cand_re = re.compile(rf"(?<![\w-])(?:{'|'.join(map(re.escape, sorted(all_cands, key=len, reverse=True)))})(?![\w-])")
     allowed_lines: set[str] = set()
-    allowed_text: list[str] = []
+    allowed_names: set[str] = set()
+    allowed_cands: set[str] = set()
     for p in allowed_files:
         if p.is_file():
             allowed_lines |= _lines_of(p)
-            allowed_text.append(_text_of(p) or "")
-    allowed_blob = "\n".join(allowed_text)
-    allowed_names = set(_TEST_NAME.findall(allowed_blob))
+            text = _text_of(p) or ""
+            allowed_names.update(_TEST_NAME.findall(text))
+            if all_cands:
+                allowed_cands.update(m.group(0) for m in cand_re.finditer(text))
     forbidden_files: list[Path] = []
     for f in fams:
-        t = root / "tasks" / f
+        t = troot / f
         forbidden_files += [p for p in (t / "verifiers").rglob("*") if p.is_file() and "__pycache__" not in p.parts]
         forbidden_files += [p for d in ("candidates", "labels") for p in (t / d).rglob("*") if p.is_file()]
         forbidden_files += sorted((t / "contracts").glob("mapping*.json"))
@@ -717,20 +862,20 @@ def labeler_index(root: Path, families: tuple[str, ...] | None = None) -> dict:
         for n in found:
             if n not in allowed_names:
                 names.setdefault(n, []).append(rel)
-    cands = sorted({p.stem for f in fams for p in (root / "tasks" / f / "candidates").glob("*.json")})
-    cands = [c for c in cands if not re.search(rf"(?<![\w-]){re.escape(c)}(?![\w-])", allowed_blob)]
+    cands = [c for c in all_cands if c not in allowed_cands]
     return {"families": list(fams), "lines": {k: sorted(set(v)) for k, v in lines.items()},
             "names": {k: sorted(set(v)) for k, v in names.items()}, "candidates": cands,
             "files": len(forbidden_files), "allowed_lines": allowed_lines}
 
 
-def _sources(srcs: list[str], task: str, names: bool = False) -> list[str]:
+def _sources(srcs: list[str], task: str, names: bool = False, task_rel: str | None = None) -> list[str]:
     """The forbidden files among ``srcs`` (repository-relative) for a writer of ``task``, most relevant first: its family
     before others, then reference checks, other verifiers, candidates, labels and the controlled sessions' records. The
     writer's own tests are not forbidden, and for test names neither is the coordinator's spec of its labeler, which
-    lists them."""
-    own = f"tasks/{task}/verifiers/independent_label/" + ("" if names else "tests/")
-    rank = lambda x: (not x.startswith(f"tasks/{task}/"), next((i for i, k in enumerate(  # noqa: E731
+    lists them. ``task_rel`` is the task directory relative to the checkout (by default ``tasks/<task>``)."""
+    tr = task_rel or f"tasks/{task}"
+    own = f"{tr}/verifiers/independent_label/" + ("" if names else "tests/")
+    rank = lambda x: (not x.startswith(f"{tr}/"), next((i for i, k in enumerate(  # noqa: E731
         ("/verifiers/reference_check/", "/verifiers/", "/candidates/", "/labels/", "data/controlled/")) if k in x), 5), x)
     return sorted((x for x in srcs if not x.startswith(own)), key=rank)
 
@@ -742,22 +887,24 @@ def _candidate_re(index: dict) -> re.Pattern:
 
 
 def _content_findings(text: str, index: dict, own_lines: set[str], own_names: set[str], task: str,
-                      cand: re.Pattern) -> list[tuple[str, str, int]]:
+                      cand: re.Pattern, layout: LabelerLayout | None = None) -> list[tuple[str, str, int]]:
     """Forbidden text in ``text``: ``(what, why, offset)`` for each distinctive line of a forbidden file, test name of a
     forbidden verifier and candidate id it holds, except what the agent's own text (``own_lines``, ``own_names``) or the
     own tests directory of ``task`` also holds."""
-    what = lambda rel: _labeler_direct(f"{REPO}/{rel}", task, REPO, HOME, ())[1]  # noqa: E731
+    lay = layout or labeler_layout(task, REPO)
+    tr = os.path.relpath(lay.task_dir, REPO)
+    what = lambda rel: _labeler_direct(f"{REPO}/{rel}", task, REPO, HOME, (), lay)[1]  # noqa: E731
     out, seen, pos = [], set(), 0
     for line in text.splitlines(keepends=True):
         s = _norm_line(line)
-        srcs = _sources(index["lines"].get(s, []), task) if s not in own_lines else []
+        srcs = _sources(index["lines"].get(s, []), task, task_rel=tr) if s not in own_lines else []
         if srcs and srcs[0] not in seen:
             seen.add(srcs[0])
             out.append((srcs[0], "text of " + what(srcs[0]), pos))
         pos += len(line)
     for m in _TEST_NAME.finditer(text):
         n = m.group(0)
-        srcs = _sources(index["names"].get(n, []), task, names=True)
+        srcs = _sources(index["names"].get(n, []), task, names=True, task_rel=tr)
         if srcs and n not in own_names and n not in seen:
             seen.add(n)
             out.append((n, f"the name of a test in {what(srcs[0])} ({srcs[0]})", m.start()))
@@ -828,7 +975,7 @@ def revision_input(prompt: str, writer_prompt: str, *, checks: set[str] | None, 
                 unknown.append(name)
             continue
         hits = [x.group(0) for x in _GRADING.finditer(s)] + _CHECK_NAME.findall(s) + _TEST_NAME.findall(s)
-        hits += _FRESH_ID.findall(s) + re.findall(r"(?<![\w-])CS-\d\d-(?:reference|noop-\w+|eval-[\w-]+|pre-correction)\b", s)
+        hits += _FRESH_ID.findall(s) + _GRADED_ID.findall(s)
         if hits:
             grading.append({"line": s[:300], "matched": sorted(set(hits))})
     return {"listed": items, "kinds": kinds, "unknown_names": unknown, "grading_text": grading,
@@ -850,25 +997,32 @@ def _user_texts(rows: list[dict]) -> tuple[list[str], list[str]]:
 
 def audit_labeler_transcript(path: Path, *, task: str, index: dict, round_no: int = 1, writer: Path | None = None,
                              families: tuple[str, ...] = (), requirements: set[str] | None = None, repo: str = REPO,
-                             home: str = HOME, extra_forbidden: tuple[str, ...] = ()) -> dict:
+                             home: str = HOME, extra_forbidden: tuple[str, ...] = (),
+                             layout: LabelerLayout | None = None, writer_own: str | None = None) -> dict:
     """The labeler-writer profile of the strict audit for one transcript (protocol §15.5, D55; see the module docstring).
 
     ``index`` is :func:`labeler_index` of the checkout. ``writer`` is, for a revision (``round_no`` 2), the transcript of
-    the same family's first round: its tool inputs count as the reviser's own text, the check ids it wrote are the names
-    the revision may be told, and its prompt is the baseline of :func:`revision_input`. The result holds the tool calls
+    the same family's first round: its tool inputs count as the reviser's own text, the check ids it wrote (in its own
+    tests directory, ``writer_own``; by default the revision's) are the names the revision may be told, and its prompt is
+    the baseline of :func:`revision_input`. A natural writer and its revision work in workspaces of their own, so
+    ``writer_own`` is the writer's ``<workspace>/tests``. The result holds the tool calls
     by tool, the prompt check, the hits in tool inputs (every access that is forbidden, documentation or outside the
     allowed inputs, reads and listings of ``/tmp`` other than of files the agent wrote there, writes outside the agent's
     own directory, CLI calls other than ``lint-tests``, searches rooted at an unresolved variable, tools other than the
     file tools and the shell, and forbidden material, documentation or a candidate id named anywhere in a tool input or
     in the final report), the exposures in tool outputs, the harness context, the counts of accesses by category, and,
-    as leads for the review, the agent's own text that also occurs in forbidden material.
+    as leads for the review, the agent's own text that also occurs in forbidden material. ``layout`` places the family's
+    material and the writer's own directory (:class:`LabelerLayout`; by default the controlled tasks' layout); for a
+    natural task the result also names the writer's workspace (``own_workspace``).
     """
     rows = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
     prompts, reminders = _user_texts(rows)
     prompt = prompts[0] if prompts else ""
     cand = _candidate_re(index)
+    lay = layout or labeler_layout(task, repo)
+    own_dir = labeler_own(task, repo, layout=lay)
     cls = lambda p, op="read", pruned=(): labeler_classify(p, task, op=op, families=families, repo=repo, home=home,  # noqa: E731
-                                                           extra_forbidden=extra_forbidden, pruned=pruned)
+                                                           extra_forbidden=extra_forbidden, pruned=pruned, layout=lay)
     own_lines: set[str] = set()
     own_names: set[str] = set()
 
@@ -880,12 +1034,12 @@ def audit_labeler_transcript(path: Path, *, task: str, index: dict, round_no: in
     if writer is not None:
         wrows = [json.loads(line) for line in writer.read_text(encoding="utf-8").splitlines() if line.strip()]
         writer_prompt = (_user_texts(wrows)[0] or [""])[0]
-        checks = _written_checks(writer, labeler_own(task, repo))
+        checks = _written_checks(writer, writer_own or own_dir)
         for _, _, _, ti in _tool_calls(writer):
             own_add(_own_text(ti))
         own_names.update(c.split("::")[-1] for c in checks)
     # The prompt: forbidden text in it, the paths it names, and for a revision what it told beyond names.
-    findings = _content_findings("\n".join(prompts), index, set(), own_names, task, cand)
+    findings = _content_findings("\n".join(prompts), index, set(), own_names, task, cand, lay)
     named = []
     for m in _LITERAL_PATH.finditer("\n".join(prompts)):
         tok = m.group(0).rstrip(".,:;")
@@ -911,7 +1065,7 @@ def audit_labeler_transcript(path: Path, *, task: str, index: dict, round_no: in
             harness["attachments"][kind] = harness["attachments"].get(kind, 0) + 1
             ctx += [(kind, s) for s in _json_strings(e.get("attachment"))]
     for kind, s in ctx:
-        for w, why, at in _content_findings(s, index, own_lines, own_names, task, cand):
+        for w, why, at in _content_findings(s, index, own_lines, own_names, task, cand, lay):
             harness["forbidden_content"].append({"what": w, "why": f"in the harness context ({kind}): {why}", "text": _excerpt(s, at)})
         for m in _LITERAL_PATH.finditer(s):
             p = _norm(m.group(0).rstrip(".,:;"), repo)
@@ -945,7 +1099,7 @@ def audit_labeler_transcript(path: Path, *, task: str, index: dict, round_no: in
                     if c == "forbidden":
                         found.setdefault((p, "shown in a tool output: " + why), m.start())
                         break
-            for w, why, at in _content_findings(ev.text, index, own_lines, own_names, task, cand):
+            for w, why, at in _content_findings(ev.text, index, own_lines, own_names, task, cand, lay):
                 found.setdefault((w, "shown in a tool output: " + why), at)
             for (p, why), at in found.items():
                 exposures.append({"event_id": ev.event_id, "ts": ev.timestamp, "call": call_id, "tool": tool, "path": p,
@@ -1043,21 +1197,25 @@ def audit_labeler_transcript(path: Path, *, task: str, index: dict, round_no: in
     # leaves text the agent wrote first aside).
     own_writing = "\n".join(_own_text(ti) for _, _, tool, ti in _tool_calls(path) if tool in _EDIT_TOOLS or tool == "Bash")
     coincide = {"lines": [], "test_names": []}
+    tr = os.path.relpath(lay.task_dir, REPO)
     for line in dict.fromkeys(_norm_line(x) for x in own_writing.splitlines()):
-        srcs = _sources(index["lines"].get(line, []), task)
+        srcs = _sources(index["lines"].get(line, []), task, task_rel=tr)
         if srcs:
             coincide["lines"].append({"line": line[:150], "also_in": srcs[:3], "files": len(srcs)})
-    for n in sorted({c.split("::")[-1] for c in _written_checks(path, labeler_own(task, repo))}):
-        srcs = _sources(index["names"].get(n, []), task, names=True)
+    for n in sorted({c.split("::")[-1] for c in _written_checks(path, own_dir)}):
+        srcs = _sources(index["names"].get(n, []), task, names=True, task_rel=tr)
         if srcs:
             coincide["test_names"].append({"name": n, "also_in": srcs[:3], "files": len(srcs)})
-    return {"task_id": task, "round": round_no, "transcript_sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
-            "tool_calls": dict(sorted(counts.items())), "tool_calls_total": sum(counts.values()),
-            "denied_calls": sum(1 for ev in s.events if ev.kind == EventKind.tool_result
-                                and "Permission for this action was denied" in (ev.text or "")[:300]),
-            "own_checks": sorted(_written_checks(path, labeler_own(task, repo))), "prompt": prompt_block,
-            "accesses": dict(sorted(accesses.items())), "hits": hits, "exposures": exposures, "harness_context": harness,
-            "own_text_also_in_forbidden_material": coincide, "flagged": flagged}
+    out = {"task_id": task, "round": round_no, "transcript_sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+           "tool_calls": dict(sorted(counts.items())), "tool_calls_total": sum(counts.values()),
+           "denied_calls": sum(1 for ev in s.events if ev.kind == EventKind.tool_result
+                               and "Permission for this action was denied" in (ev.text or "")[:300]),
+           "own_checks": sorted(_written_checks(path, own_dir)), "prompt": prompt_block,
+           "accesses": dict(sorted(accesses.items())), "hits": hits, "exposures": exposures, "harness_context": harness,
+           "own_text_also_in_forbidden_material": coincide, "flagged": flagged}
+    if lay.natural:
+        out = {**dict(list(out.items())[:2]), "own_workspace": lay.workspace, **dict(list(out.items())[2:])}
+    return out
 
 
 def _redact_labeler(x, scratch: str | None):
@@ -1086,11 +1244,53 @@ def _labeler_label(p: Path, task: str, round_no: int) -> str:
     return str(label) if label else f"L-{'write' if round_no == 1 else 'revise'}-{task}"
 
 
+def recorded_workspace(task_dir: Path, sha256: str) -> str | None:
+    """The own workspace that the task's ``labels/generator_audit.json`` records for the agent whose transcript has this
+    sha256 (``own_workspace``, as ``scripts/audit_eval_generators.py --task-dir`` writes it), or None."""
+    try:
+        data = json.loads((Path(task_dir) / "labels" / "generator_audit.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    for role, rec in data.items() if isinstance(data, dict) else ():
+        if role == "_rules" or not isinstance(rec, dict) or not isinstance(rec.get("own_workspace"), str):
+            continue
+        many = rec.get("transcripts_sha256")
+        shas = [rec.get("transcript_sha256"), rec.get("writer_transcript_sha256"), *(many.values() if isinstance(many, dict) else ())]
+        if sha256 in shas:
+            return rec["own_workspace"]
+    return None
+
+
+def _task_layout(root: Path, tasks_root: Path, task: str, workspace: str | None = None) -> LabelerLayout:
+    """The layout of the family ``task`` under ``tasks_root`` in the checkout at ``root``, as the agent saw it (under
+    :data:`REPO`): its task directory, its snapshot root (:func:`tracecontract.roots.snapshot_root`) and, for a natural
+    PR-review task, the writer's own ``workspace``."""
+    td = Path(tasks_root) / task
+    base = Path(root).resolve()
+    rel_td = os.path.relpath(td.resolve(), base)
+    rel_snap = os.path.relpath(snapshot_root(td, repo=base).resolve(), base)
+    if rel_td.startswith("..") or rel_snap.startswith(".."):
+        raise SystemExit(f"{td}: the task directory and its snapshot root must lie in the checkout {base}")
+    natural = is_natural_pr(td)
+    return labeler_layout(task, REPO, task_dir=f"{REPO}/{rel_td}", snapshot_root=f"{REPO}/{rel_snap}",
+                          workspace=workspace if natural else None, natural=natural)
+
+
+def _shown(p: str) -> str:
+    """A path of the rules as the report shows it: relative to the repository when inside it."""
+    return os.path.relpath(p, REPO) if _inside(p, REPO) else p
+
+
 def audit_labelers(writers: list[tuple[str, str]], revisions: list[tuple[str, str]], *, root: Path,
-                   transcripts: list[Path], scratch: str | None = None) -> dict:
-    """The labeler-writer report (see the module docstring): ``writers`` and ``revisions`` are ``(task, path or sha256)``."""
+                   transcripts: list[Path], scratch: str | None = None, tasks_root: Path | None = None) -> dict:
+    """The labeler-writer report (see the module docstring): ``writers`` and ``revisions`` are ``(task, path or sha256)``.
+
+    ``tasks_root`` is the directory of the families' task directories (by default ``<root>/tasks``); a natural PR-review
+    family's writer is audited in its own workspace, which the family's ``labels/generator_audit.json`` records for its
+    transcript (:func:`recorded_workspace`)."""
     by_sha = {hashlib.sha256(p.read_bytes()).hexdigest(): p for p in transcripts}
-    index = labeler_index(root)
+    troot = Path(tasks_root).resolve() if tasks_root is not None else None
+    index = labeler_index(root) if troot is None else labeler_index(root, tasks_root=troot)
     fams = tuple(index["families"])
     extra = (os.path.normpath(scratch),) if scratch else ()
 
@@ -1099,10 +1299,12 @@ def audit_labelers(writers: list[tuple[str, str]], revisions: list[tuple[str, st
             return by_sha.get(ref)
         return Path(ref) if Path(ref).is_file() else None
 
+    tasks = list(dict.fromkeys(t for t, _ in writers + revisions))
+    layouts = {t: None if troot is None else _task_layout(root, troot, t) for t in tasks}
     out: dict = {"script": "scripts/strict_reaudit.py --labeler", "profile": LABELER_PROFILE,
                  "rules": {
-                     "allowed": {t: [{"path": os.path.relpath(p, REPO), "what": w} for p, w in labeler_allowed(t)]
-                                 for t in dict.fromkeys(t for t, _ in writers + revisions)},
+                     "allowed": {t: [{"path": _shown(p), "what": w} for p, w in labeler_allowed(t, layout=layouts[t])]
+                                 for t in tasks},
                      "own": "tasks/<task>/verifiers/independent_label/tests/ (written and read back)",
                      "system": "system locations, the study's virtual environment, and /tmp outside the Claude session "
                                "directories (its reads and listings are flagged)",
@@ -1120,6 +1322,14 @@ def audit_labelers(writers: list[tuple[str, str]], revisions: list[tuple[str, st
                  "index": {"forbidden_files": index["files"], "distinctive_lines": len(index["lines"]),
                            "test_names": len(index["names"]), "candidate_ids": len(index["candidates"])},
                  "transcripts": {}, "families": {}, "flagged": [], "not_audited": []}
+    if any(lay is not None and lay.natural for lay in layouts.values()):
+        out["rules"]["natural"] = (
+            "a natural PR-review family lies in data/natural/tasks/<task>, its base snapshot in data/natural/snapshots; its "
+            "writer works in its own workspace (own_workspace, from the agent's record in labels/generator_audit.json), "
+            "whose copies of its inputs are allowed and whose tests/ and scratch/ are its own; the other agents' "
+            "workspaces (beside and above the own one), the private run records and the natural arm's build records "
+            "under data/natural are forbidden too; without a recorded workspace, the task's "
+            "verifiers/independent_label/tests/ counts as its own and the workspace is outside the allowed inputs")
     first: dict[str, Path] = {}
     for task, ref in writers:
         p = find(ref)
@@ -1139,19 +1349,102 @@ def audit_labelers(writers: list[tuple[str, str]], revisions: list[tuple[str, st
                 fam["flagged"].append(label)
                 out["flagged"].append(label)
                 continue
-            contract = root / "tasks" / task / "contracts" / "reference.json"
+            contract = (troot or root / "tasks") / task / "contracts" / "reference.json"
             try:
                 reqs = {r["req_id"] for r in json.loads(contract.read_text(encoding="utf-8")).get("requirements", [])}
             except (OSError, ValueError, KeyError, TypeError):
                 reqs = set()
-            rec = audit_labeler_transcript(p, task=task, index=index, round_no=round_no,
-                                           writer=first.get(task) if round_no > 1 else None, families=fams,
-                                           requirements=reqs, extra_forbidden=extra)
+            lay = layouts[task]
+            ws = None
+            writer = first.get(task) if round_no > 1 else None
+            writer_own, notes = None, []
+            if troot is not None and lay is not None and lay.natural:
+                ws = recorded_workspace(troot / task, hashlib.sha256(p.read_bytes()).hexdigest())
+                lay = _task_layout(root, troot, task, ws)
+                if ws is None:
+                    notes.append("no record in labels/generator_audit.json names this transcript, so its workspace is "
+                                 "unknown: audited with the task's verifiers/independent_label/tests/ as its own")
+                if writer is not None:
+                    # The writer worked in a workspace of its own: the check names it wrote are collected there.
+                    wws = recorded_workspace(troot / task, hashlib.sha256(writer.read_bytes()).hexdigest())
+                    writer_own = labeler_own(task, layout=_task_layout(root, troot, task, wws))
+                    if wws is None:
+                        notes.append("no record names the writer's transcript, so the check names it wrote were looked "
+                                     "for in the task's verifiers/independent_label/tests/")
+            rec = audit_labeler_transcript(p, task=task, index=index, round_no=round_no, writer=writer, families=fams,
+                                           requirements=reqs, extra_forbidden=extra, layout=lay, writer_own=writer_own)
+            if notes:
+                rec["note"] = "; ".join(notes)
             out["transcripts"][label] = rec
             if rec["flagged"]:
                 fam["flagged"].append(label)
                 out["flagged"].append(label)
     return _redact_labeler(out, scratch)
+
+
+def private_report_problem(path: str | Path, repo: Path | None = None) -> str | None:
+    """Why a report on natural PR-review tasks may not be written to ``path``, or None. Such a report holds excerpts of
+    the tasks' threads and of upstream code (tool inputs and outputs), which stay out of git (protocol §17.4, decision
+    log D47): it goes outside the repository, or inside it only where git ignores it (``data/natural/``)."""
+    root = (repo or R).resolve()
+    target = Path(path).resolve()
+    if target != root and root not in target.parents:
+        return None
+    ignored = subprocess.run(["git", "-C", str(root), "check-ignore", "-q", "--no-index", str(target)], capture_output=True,
+                             check=False)
+    if ignored.returncode == 0:
+        return None
+    return (f"{path}: a report on natural PR-review tasks holds thread text and upstream code; write it outside the "
+            "repository or under a git-ignored directory such as data/natural/")
+
+
+def _natural_tasks(tasks_root: Path | None, tasks: list[str] | None = None) -> list[str]:
+    """The natural PR-review tasks among ``tasks`` (by default every task under the tasks root): a task whose directory
+    under ``tasks_root`` (by default the repository's ``tasks/``) or under ``data/natural/tasks`` is a natural PR-review
+    task, or whose id is a natural family's (``NP-xx``), wherever it lies."""
+    roots = [Path(tasks_root) if tasks_root is not None else R / "tasks", R / "data" / "natural" / "tasks"]
+    names = tasks if tasks is not None else sorted(p.parent.name for p in roots[0].glob("*/task.json"))
+    return [t for t in dict.fromkeys(names) if _NATURAL_ID.fullmatch(t) or any(is_natural_pr(r / t) for r in roots)]
+
+
+def _natural_records(path: Path) -> bool:
+    """Whether a ``labels/generator_audit.json`` holds a record of a natural agent (``profile`` natural-agent:v1)."""
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return False
+    return isinstance(data, dict) and any(isinstance(r, dict) and r.get("profile") == NATURAL_PROFILE for r in data.values())
+
+
+def _natural_reaudit(p: Path, task: str, role: str, sub: str, rec: dict, scratch: str, report: dict | None) -> dict:
+    """The strict re-audit of a natural agent's record (``profile`` natural-agent:v1): the natural-agent profile
+    (:func:`tracecontract.controlled.audit_natural_agent_transcript`) in the agent's own workspace, as its record names it,
+    with the build session's scratch directory forbidden. Every access outside the workspace is a hit, the shared scratch
+    directory's included (natural agents have a private scratch directory in their workspace), so no scratch access is
+    attributed to its writer; the exposures are part of the entry, since the profile counts them as flags. With
+    ``report``, they also go to the ``--outputs`` report."""
+    own = rec.get("own_workspace")
+    if not isinstance(own, str) or not own:
+        print(f"{task} {role} {sub}: the record names no own workspace")
+        return {"error": "the record names no own workspace"}
+    try:
+        hits, exposures = audit_natural_agent_transcript(p, task=task, workspace=own, extra_forbidden=(scratch,),
+                                                         session_dirs=(SESSION_ROOTS.tmp, SESSION_ROOTS.records))
+    except ValueError as exc:
+        print(f"{task} {role} {sub}: {exc}")
+        return {"error": str(exc)}
+    agent = p.stem.removeprefix("agent-")
+    entry = _redact_labeler({"agent": agent, "profile": NATURAL_PROFILE, "own_workspace": own, "hits": hits,
+                             "exposures": exposures}, scratch)
+    if report is not None:
+        report.setdefault(task, {}).setdefault(role, {})[sub] = _redact_labeler(
+            {"agent": agent, "profile": NATURAL_PROFILE, "own_workspace": own, "output_exposures": exposures}, scratch)
+    print(f"{task} {role} {sub}: {len(hits)} hit(s), {len(exposures)} exposure(s) ({NATURAL_PROFILE})")
+    for h in entry["hits"]:
+        print("    hit:", h["why"], "|", str(h["text"])[:150])
+    for x in entry["exposures"]:
+        print("    output:", x["why"], "|", str(x["text"])[:150])
+    return entry
 
 
 def main(argv: list[str]) -> int:
@@ -1169,19 +1462,32 @@ def main(argv: list[str]) -> int:
                          "path or the sha256 of an agent-*.jsonl file under --transcripts (repeatable)")
     ap.add_argument("--revision", metavar="TASK_ID=TRANSCRIPT", action="append", default=[],
                     help="audit the single revision of TASK_ID's independent labeler, as --labeler (repeatable)")
+    ap.add_argument("--tasks-root", metavar="DIR", type=Path,
+                    help="the directory of the task directories (default: tasks/ of the repository; data/natural/tasks for "
+                         "the natural PR-review tasks); for generator transcripts and --labeler/--revision")
     a = ap.parse_args(argv)
+    if a.tasks_root is not None and not a.tasks_root.is_dir():
+        ap.error(f"--tasks-root {a.tasks_root} is not a directory")
     if a.labeler or a.revision:
         if not a.report or a.write or a.outputs or a.extra or a.fresh:
-            ap.error("--labeler and --revision take --report and optionally --transcripts and --scratch")
+            ap.error("--labeler and --revision take --report and optionally --transcripts, --scratch and --tasks-root")
         pairs = []
         for spec in (*a.labeler, *a.revision):
             task, sep, ref = spec.partition("=")
             if not sep or not task or not ref:
                 ap.error(f"expected TASK_ID=TRANSCRIPT, got {spec!r}")
             pairs.append((task, ref))
+        natural = _natural_tasks(a.tasks_root, [t for t, _ in pairs])
+        if natural and a.tasks_root is None:
+            # The controlled layout would look for them under tasks/ and snapshots/ and count their workspaces as outside.
+            ap.error(f"{', '.join(natural)}: natural PR-review task(s); give --tasks-root data/natural/tasks")
+        if natural:
+            problem = private_report_problem(a.report)
+            if problem:
+                ap.error(problem)
         files = sorted({p for d in a.transcripts or [] for p in Path(d).rglob("agent-*.jsonl")})
         rep = audit_labelers(pairs[:len(a.labeler)], pairs[len(a.labeler):], root=R, transcripts=files,
-                             scratch=os.path.normpath(a.scratch) if a.scratch else None)
+                             scratch=os.path.normpath(a.scratch) if a.scratch else None, tasks_root=a.tasks_root)
         Path(a.report).write_text(json.dumps(rep, indent=2) + "\n", encoding="utf-8")
         for label, rec in rep["transcripts"].items():
             if "error" in rec:
@@ -1200,7 +1506,7 @@ def main(argv: list[str]) -> int:
     if not a.transcripts:
         ap.error("the following arguments are required: --transcripts")
     if a.fresh:
-        if not a.report or a.write or a.outputs or a.extra:
+        if not a.report or a.write or a.outputs or a.extra or a.tasks_root:
             ap.error("--fresh takes --transcripts, --report and optionally --scratch")
         files = sorted({p for d in a.transcripts for p in Path(d).rglob("agent-*.jsonl")})
         fresh = audit_fresh(_attempt_records(Path(a.fresh)), files, os.path.normpath(a.scratch) if a.scratch else None)
@@ -1214,6 +1520,17 @@ def main(argv: list[str]) -> int:
         return 1 if fresh["not_audited"] else 0
     if not a.scratch:
         ap.error("--scratch is required for generator transcripts")
+    tasks_root = a.tasks_root if a.tasks_root is not None else R / "tasks"
+    audit_files = sorted(tasks_root.glob("*/labels/generator_audit.json"))
+    natural_files = [f for f in audit_files if _natural_tasks(tasks_root, [f.parent.parent.name]) or _natural_records(f)]
+    if a.outputs and (natural_files or _natural_tasks(a.tasks_root)):
+        problem = private_report_problem(a.outputs)
+        if problem:
+            ap.error(problem)
+    for f in natural_files if a.write else []:  # their records hold excerpts of natural agents' tool inputs
+        problem = private_report_problem(f)
+        if problem:
+            ap.error(f"--write: {problem}")
     scratch = os.path.normpath(a.scratch)
     report: dict = {}
     files = sorted({p for d in a.transcripts for p in Path(d).rglob("agent-*.jsonl")}) + [Path(x) for x in a.extra]
@@ -1221,7 +1538,7 @@ def main(argv: list[str]) -> int:
     writes = sorted(({**o, "agent": p.stem} for p in files for o in _scratch_ops(p, scratch) if o["op"] == "write"),
                     key=lambda o: o["ts"])
     under = lambda p, d: p == d or p.startswith(d + "/")
-    for f in sorted(R.glob("tasks/*/labels/generator_audit.json")):
+    for f in audit_files:
         task, data = f.parent.parent.name, json.loads(f.read_text(encoding="utf-8"))
         for role, rec in data.items():
             if role == "_rules":
@@ -1238,7 +1555,10 @@ def main(argv: list[str]) -> int:
                         report.setdefault(task, {}).setdefault(role, {})[sub] = {"error": "transcript not found"}
                     continue
                 m = _OUT.search(_prompt_text(p))
-                own = m.group(1) if m else f"{HOME}/gen_workspaces/{task}/{role}"
+                own = rec.get("own_workspace") or (m.group(1) if m else f"{HOME}/gen_workspaces/{task}/{role}")
+                if rec.get("profile") == NATURAL_PROFILE:
+                    block[sub] = _natural_reaudit(p, task, role, sub, rec, scratch, report if a.outputs else None)
+                    continue
                 extra = (f"{REPO}/tasks/{task}/verifiers/reference_check",) if role == "refcheck" else ()
                 if a.outputs:
                     hits, exposures = audit_generator_transcript_strict(p, task=task, own=own, extra_allowed=extra,

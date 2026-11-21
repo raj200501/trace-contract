@@ -33,6 +33,8 @@ CASES = [
     ({"file_path": f"{OWN}/contract.json"}, False),
     ({"command": "ls -la ~/gen_workspaces/CS-01/"}, True),
     ({"command": "cat ~/gen_workspaces/CS-02/eval-nm/x.py"}, False),  # another task's workspace is not this task's material
+    ({"command": "ls /home/user/ext/aidev-v5"}, True),  # the third-party data (and the natural arm's clones)
+    ({"file_path": "/home/user/ext/clones/fxnat.git/HEAD"}, True),
 ]
 
 
@@ -190,6 +192,16 @@ def test_tool_outputs_are_reported_apart_from_reads(tmp_path):
     assert first["text"] == "?? tasks/CS-01/candidates/CS-01-eval-alt-1.json"  # the output line that showed it
     assert first["call"].endswith("/L000002.00") and first["event_id"].endswith("/L000003.00") and first["tool"] == "Bash"
     assert first["ts"] == "2026-01-01T00:00:01.500Z"
+
+
+def test_the_natural_pre_review_state_is_a_held_out_id(tmp_path):
+    """``<task>-pre-review`` (origin natural_pre_review) is held out, like ``<task>-pre-correction``."""
+    t = tmp_path / "t.jsonl"
+    _session(t, [("Bash", {"command": ".venv/bin/tracecontract grade tasks/CS-01 full_plain CS-01-pre-review"}, ""),
+                 ("Bash", {"command": f"ls {OWN}"}, "CS-01-pre-review.json\nCS-01-pre-correction.json\n")])
+    reads, exposures = audit_generator_transcript_strict(t, task="CS-01", own=OWN, outputs=True)
+    assert ("CS-01-pre-review", "held-out candidate named in a CLI command") in {(h["path"], h["why"]) for h in reads}
+    assert [x["path"] for x in exposures] == ["CS-01-pre-review", "CS-01-pre-correction"]
 
 
 def test_own_candidates_and_own_writes_are_not_exposures(tmp_path):
