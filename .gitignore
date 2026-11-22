@@ -12,6 +12,11 @@ data/raw/
 data/gated/
 data/natural/
 *.parquet
+# Natural PR-review material outside data/natural/ (protocol §17.4): a natural task under tasks/, and a natural run's
+# private results and report under results/runs/ (scripts/publish_natural_run.py publishes the shareable files)
+tasks/NP-*/
+results/runs/natural-*/results.jsonl
+results/runs/natural-*/report.html
 
 # Large or regenerable artifacts
 results/runs/*/logs/
