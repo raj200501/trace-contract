@@ -44,6 +44,9 @@ file to the one the compiler rebuilds, and rewrites only ``reconstruction_check.
 :func:`write_natural_index` writes the committed index ``data/manifests/natural_tasks_index.json``: ids, SHAs,
 licences, file hashes, counts and S10 outcomes, each row's sample (§19.3) and the sanitize-natural:v1 counts of
 its session; no text. Directories of repository files or generated tests are one manifest hash and a file count.
+Its header holds the S9 record of both samples (``s9_complete``, :func:`s9_record`: per sample, the comments S9 has
+screened and the task ids of the sample's families and reserves), which the pre-flight's stop rule reads (§19.5). A
+rejected family's place goes to the next reserve of its repository and of its own sample (§17.3, §19.3).
 """
 
 from __future__ import annotations
@@ -288,7 +291,9 @@ def load_families(path: str | Path = QUALIFYING) -> list[Family]:
 
     A file whose PRs carry explicit ``task_id`` and ``role`` (``s9_qualifying_combined.json``, the families of both samples,
     §19.3) gives those instead: its PRs with a task id, in the order of their ids; a PR whose task id is null (no family is
-    built for it) is left out."""
+    built for it) is left out. There a first-sample PR's qualifying comments from the extension
+    (``extension_other_qualifying_comment_ids``) are among its other qualifying comments: recorded, never its correction,
+    which stays the first sample's (D63)."""
     q = json.loads(Path(path).read_text(encoding="utf-8"))
     comments = {int(c["comment_id"]): c for c in q["comments"]}
     explicit = any("task_id" in p for p in q["prs"])
@@ -303,12 +308,13 @@ def load_families(path: str | Path = QUALIFYING) -> list[Family]:
         c = comments[int(p["earliest_qualifying_comment_id"])]
         judges = tuple({x: (c.get(j) or {}).get(x) for x in ("request_type", "addressed", "testable_offline", "confidence")}
                        for j in ("judge_1", "judge_2"))
+        others = [*p["qualifying_comment_ids"], *((p.get("extension_other_qualifying_comment_ids") or []) if explicit else [])]
         out.append(Family(
             task_id=str(p["task_id"]) if explicit else f"NP-{k:02d}",
             role=str(p["role"]) if explicit else "family" if p.get("s11_family") else "reserve", pr_id=int(p["pr_id"]),
             repo_id=int(p["repo_id"]), pr_number=int(p["pr_number"]), pr_created_at=str(p["pr_created_at"]), agent=str(p["agent"]),
             comment_id=int(c["comment_id"]),
-            other_qualifying_comment_ids=tuple(sorted(int(x) for x in p["qualifying_comment_ids"] if int(x) != int(c["comment_id"]))),
+            other_qualifying_comment_ids=tuple(sorted({int(x) for x in others} - {int(c["comment_id"])})),
             path=c["path"], reviewed_commit=c["original_commit_id"], addressing_commit=c["later_commit_sha"],
             head_ref=c["pr_head_ref"], head_sha=c.get("pr_head_sha"), default_branch_ref=c.get("default_branch_ref"),
             first_commit=c["pr_commits_first_sha"], issue_id=c.get("issue_id"), issue_number=c.get("issue_number"),
@@ -1453,7 +1459,14 @@ def run_s10_environment(task_dir: str | Path, snapshot_root: str | Path, workdir
 
 
 # The committed index's header (write_natural_index).
-DECISION_LOG = [f"D{n}" for n in range(47, 61)]  # D47 to D60: the natural arm's entries up to protocol v0.11
+DECISION_LOG = [*(f"D{n}" for n in range(47, 61)), "D63"]  # D47 to D60 (the natural arm up to protocol v0.11) and D63 (§19.3)
+# The index's S9 record (s9_record), as scripts/preflight_final_run.py reads it (S9_RECORD, s9_problems): its inputs are the
+# two samples' S9 manifests (§15.6; §19.2) and the family file of both samples (§19.3), outside the repository.
+S9_RECORD = "s9_complete"
+S9_MANIFESTS = {"first": REPO / "data" / "manifests" / "screening_natural_aidev_s9.json",
+                "extension": REPO / "data" / "manifests" / "screening_natural_aidev_s9x.json"}
+COMBINED = Path(os.environ.get("TC_AIDEV_COMBINED", "/home/user/ext/aidev-v5-work/s9_qualifying_combined.json"))
+FAMILY_ROLES = ("family", "reserve")
 SOURCE = {
     "dataset": AIDEV_DATASET, "revision": AIDEV_REVISION, "url": f"https://huggingface.co/datasets/{AIDEV_DATASET}",
     "licence": "CC-BY-4.0", "licence_url": "https://creativecommons.org/licenses/by/4.0/",
@@ -1482,6 +1495,16 @@ FIELDS = {
                          "part of the thread (issue, pr_body, commits, hunk, review_comment, replies, metadata, repo_url; "
                          "an event of another form: its kind). session.json is never rewritten, and a handle counted can be "
                          "one of the pseudonymiser's own role labels"),
+    S9_RECORD: ("per S9 sample (first: §15.6, D47; extension: §19.2, D60): screened, the number of the sample's comments with an "
+                "S9 outcome in its S9 manifest (data/manifests/screening_natural_aidev_s9.json, screening_natural_aidev_s9x.json: "
+                "qualifies, fails, or excluded because the judges disagree); families, the task ids of the families and "
+                "reserves formed from the sample's qualifying comments (§15.6, §17.3, §19.3), from the family file of both "
+                "samples (s9_qualifying_combined.json, outside the repository), which must hold every qualifying comment of "
+                "both manifests. Absent when one of these files is missing. The pre-flight's stop rule reads it (§19.5)"),
+    "replaced_by": ("a family rejected at S10 gives its place to the next reserve of its repository and of its own sample that "
+                    "is not rejected (§17.3; §19.3 as D63 reads it): the first sample's reserves take only the first sample's "
+                    "families' places, the extension's only the extension's. A rejected first-sample family's place is filled by "
+                    "the extension's new families, which are families of their own (§19.3), not replacements"),
 }
 
 
@@ -1592,16 +1615,71 @@ def index_row(task_dir: Path | None, fam: Family | None) -> dict[str, Any]:
     return row
 
 
-def write_natural_index(tasks_root: str | Path, out: str | Path = INDEX, *, families: list[Family] | None = None) -> dict[str, Any]:
-    """Write the committed index of the natural PR-review tasks (``data/manifests/natural_tasks_index.json``)."""
+def _has_s9_outcome(row: dict[str, Any]) -> bool:
+    """A comment of an S9 manifest that S9 has screened: it qualifies, or it has a failure reason (it fails, or it is excluded
+    because the judges disagree)."""
+    return row.get("qualifies") is True or bool(row.get("failure_reason"))
+
+
+def s9_record(manifests: dict[str, str | Path] | None = None, combined: str | Path | None = None) -> dict[str, Any] | None:
+    """The index's S9 record (:data:`S9_RECORD`), in the form ``scripts/preflight_final_run.py`` reads (``S9_RECORD``,
+    ``s9_problems``): ``{sample: {"screened": n, "families": [task id, ...]}}`` for the first sample and the extension.
+
+    ``screened`` is the number of the sample's comments with an S9 outcome in its S9 manifest (``manifests``, by sample; default
+    :data:`S9_MANIFESTS`). ``families`` are the task ids of the families and reserves formed from the sample's qualifying
+    comments, in id order, from the family file of both samples (``combined``, default :data:`COMBINED`): its PRs of that
+    sample with a task id and the role family or reserve (a PR beyond the cap of a repository has no task id, §19.3). None
+    when a file is missing, so that no record claims what cannot be read. A ValueError when the files disagree: a manifest
+    that is not the sample's S9 result, a family file that does not hold exactly the qualifying comments of both manifests
+    (a first-sample PR holds its extension comments as ``extension_other_qualifying_comment_ids``), or a task id outside its
+    sample's range (:func:`sample_of`)."""
+    manifests = S9_MANIFESTS if manifests is None else manifests
+    combined = COMBINED if combined is None else Path(combined)
+    paths = {k: Path(v) for k, v in manifests.items()}
+    if not combined.is_file() or not all(p.is_file() for p in paths.values()):
+        return None
+    prs = json.loads(combined.read_text(encoding="utf-8")).get("prs") or []
+    record: dict[str, Any] = {}
+    for sample, path in paths.items():
+        m = json.loads(path.read_text(encoding="utf-8"))
+        named = (m.get("sample") or {}).get("id", "first")  # the first sample's manifest names no sample
+        if m.get("stage") != "S9" or m.get("population") != Population.natural_pr_review.value or named != sample:
+            raise ValueError(f"{path.name}: not the S9 result of the {sample} sample")
+        rows = m.get("rows") or []
+        qualifying = {int(r["comment_id"]) for r in rows if r.get("qualifies") is True}
+        mine = [p for p in prs if p.get("sample") == sample]
+        held = [int(x) for p in mine for x in p.get("qualifying_comment_ids") or []]
+        if sample == "extension":  # the extension's qualifying comments on the first sample's PRs (§19.3)
+            held += [int(x) for p in prs if p.get("sample") == "first" for x in p.get("extension_other_qualifying_comment_ids") or []]
+        if len(held) != len(set(held)) or set(held) != qualifying:
+            raise ValueError(f"{combined.name} does not hold the {len(qualifying)} qualifying comments of {path.name} exactly once "
+                             f"({len(set(held) & qualifying)} of them, {len(set(held) - qualifying)} others)")
+        families = sorted((str(p["task_id"]) for p in mine if p.get("task_id") and p.get("role") in FAMILY_ROLES), key=_num)
+        wrong = [t for t in families if sample_of(t) != sample]
+        if wrong:
+            raise ValueError(f"{combined.name}: task ids {wrong[:5]} of the {sample} sample are outside its range (§19.3)")
+        record[sample] = {"screened": sum(_has_s9_outcome(r) for r in rows), "families": families}
+    return record
+
+
+def write_natural_index(tasks_root: str | Path, out: str | Path = INDEX, *, families: list[Family] | None = None,
+                        s9_manifests: dict[str, str | Path] | None = None, combined: str | Path | None = None) -> dict[str, Any]:
+    """Write the committed index of the natural PR-review tasks (``data/manifests/natural_tasks_index.json``).
+
+    Its rows are the families given and the task directories under ``tasks_root``. Its header holds the S9 record of both
+    samples (:func:`s9_record`, from ``s9_manifests`` and ``combined``), when its files can be read. A family rejected at S10
+    is ``replaced_by`` the next reserve of its repository and of its own sample (:func:`sample_of`) that is not rejected
+    (§17.3; §19.3 as D63 reads it): a rejected first-sample family's place is filled by the extension's new families, not by
+    an extension reserve."""
     tasks_root = Path(tasks_root)
     known = {f.task_id: f for f in families or []}
     dirs = {d.name: d for d in tasks_root.glob("NP-*") if d.is_dir()} if tasks_root.is_dir() else {}
     rows = [index_row(dirs.get(t), known.get(t)) for t in sorted(set(known) | set(dirs), key=_num)]
     rejected = {r["task_id"] for r in rows if r["s10"]["outcome"] == "rejected"}
-    for r in rows:  # §17.3: a rejected family's place goes to the next reserve of its repository that is not rejected
+    for r in rows:  # §17.3: a rejected family's place goes to the next reserve of its repository and sample that is not rejected
         if r["task_id"] in rejected and r.get("role") == "family":
-            nxt = [f for f in families or [] if f.role == "reserve" and f.repo_id == r.get("repo_id") and f.task_id not in rejected]
+            nxt = [f for f in families or [] if f.role == "reserve" and f.repo_id == r.get("repo_id") and f.task_id not in rejected
+                   and sample_of(f.task_id) == r.get("sample")]
             taken = {x.get("replaced_by") for x in rows}
             nxt = [f for f in sorted(nxt, key=lambda f: f.rank_in_repository) if f.task_id not in taken]
             if nxt:
@@ -1614,15 +1692,16 @@ def write_natural_index(tasks_root: str | Path, out: str | Path = INDEX, *, fami
         counts[r["s10"]["outcome"]] = counts.get(r["s10"]["outcome"], 0) + 1
     counts["s11"] = sum(r["s11"] for r in rows)
     by_sample = {k: sum(bool(r["s11"]) for r in rows if r.get("sample") == k) for k in ("first", "extension")}
+    s9 = s9_record(s9_manifests, combined)
     index = {"schema": "tracecontract/natural-tasks-index/v1", "population": "natural:pr-review", "stratum": "natural-pr-v1",
              "protocol": "experiments/protocol.md §15.6, §16.4, §17, §19", "decision_log": DECISION_LOG, "source": SOURCE,
              "privacy": PRIVACY, "storage": "data/natural/tasks/<task id>/ and data/natural/snapshots/<task id>/",
              "compiler": COMPILER, "sample_rule": SAMPLE_RULE, "fields": FIELDS, "counts": dict(sorted(counts.items())),
-             "s11_by_sample": by_sample, "tasks": rows}
+             "s11_by_sample": by_sample, **({S9_RECORD: s9} if s9 is not None else {}), "tasks": rows}
     write_json(index, Path(out))
     return index
 
 
 __all__ = ["COMPILER", "Family", "INDEX", "PR_METHOD", "Refused", "Reject", "compile_pr_task", "find_family", "generated_material",
-           "load_families", "pr_recheck", "recorded_pr_check", "reject_task", "run_s10_environment", "sample_of",
+           "load_families", "pr_recheck", "recorded_pr_check", "reject_task", "run_s10_environment", "s9_record", "sample_of",
            "sanitizer_counts", "summary_dir", "write_natural_index"]

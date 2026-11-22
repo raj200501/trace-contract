@@ -2507,3 +2507,72 @@ is committed, the commit at a phase end is of a log instead.
 * Each phase is one workflow: preparation (the workspaces and prompts of the phase), the generators, then registration,
   with the loops of P3 and P5 inside their phase. A re-run's workspace and label carry the suffix `-r2`, so that its run
   id is unique.
+
+### D66. S9 extension corrected without a fetch; the build stops at a usage limit; unfinished packages kept as patches; the manuscript rebuilt around fresh-v1
+**S9 correction (protocol §19.2; corrects D63).** Of the comments that D63 left unjudged as over the caps, 5 had every
+object their diff needs already in the bare clones.
+* A step checked this without any fetch: a temporary view of each clone with no promisor remote and no remote, its
+  objects reached through alternates, transports disabled and lazy fetching off. Git's trace shows no child process, and
+  the clones are unchanged (paths, sizes, modification times and modes equal a baseline taken first).
+* The 5 were batched (batch 17) with the extension's own diff code. Two new configuration-A judges, with the extension's
+  templates, fail all 5 as asking for no behaviour change or defect fix, and agree on each. So the correction adds no
+  qualifying comment and no PR: the families NP-26 to NP-44 and the reserves NP-45 to NP-48 keep their ids, PRs and
+  corrections.
+* Corrected extension counts: 405 judged (D63: 400), 10 disagreements, 433 failed. Before judging, 129 fail (D63: 134):
+  59 over the caps (65), 56 not fetchable and 14 with no later commit (13). D63's "44 lack a commit or the PR head" reads:
+  43 lack both the reviewed commit and the PR head ref, and 1 fails criterion 2 (no later commit changes the commented
+  file). 91 of 534 comments qualify (17.0%), 91 of the 405 judged (22.5%, Wilson 18.7% to 26.8%; D63 gave 22.8%). κ is
+  0.9535, 0.893 and 0.9371. Both samples together hold 122 qualifying comments on 55 PRs.
+* D63 also says that only NP-05 is affected among the built families. The first-sample PRs with a qualifying extension
+  comment made before their correction are NP-05, NP-09, NP-10, NP-11, NP-24 and NP-25; NP-09 to NP-11 were built at S10
+  and rejected. NP-05 is the only accepted one, and the plan is unaffected, since first-sample families keep their
+  corrections.
+* Records: `screening_natural_aidev_s9x.json` (aggregated again); `rejection_ledger.json` (6 rows change their reasons;
+  550 S9 rows and 16 S10 rows); `natural_tasks_index.json` (48 rows: 6 passed, 16 rejected, 26 not built; 6 at S11). The
+  index writer (`natural_pr.write_natural_index`) now records both samples' S9 outcome in the index's header
+  (`s9_complete`, which the pre-flight's stop rule reads, §19.5), and gives a rejected family's place only to a reserve of
+  its own repository and its own sample (§17.3, §19.3 as D63 reads it). No row has `replaced_by`.
+* An independent read-only check confirmed the plan and the privacy of the five changed files.
+
+**The build stops at a usage limit.** At about 18:50Z on 2026-11-21 the build session's agents reached the account's
+weekly usage limit, which resets on 2026-11-25 at 07:00Z.
+* The S10 step of the extension had started and was stopped. It left 10 compiled task directories (NP-26 to NP-35)
+  under the git-ignored `data/natural/tasks/`, without their S10 outcome. The index does not record them, and they are to
+  be built again from the start.
+* The natural recipe (D64) has not started: no natural agent has run. F2 (D65) stands, and the six families' workspaces
+  and proposer prompts are ready.
+* The owner then asked the build session to wrap up. The natural arm is left at F2, with its results pending.
+
+**Unfinished packages kept as patches.** Two code packages for the natural arm were written and reviewed, but their fix
+rounds did not run: the analysis of natural runs (WP-G) and the privacy and publication tools (WP-H1).
+* WP-G's review found no high-severity defect and two medium ones, and 5 of its tests fail.
+* WP-H1's review judged it not ready as a privacy gate (one high-severity defect: a short thread text is never matched).
+* Neither is needed by a reported result. Both are kept as patches against `11d7996`, with their status and the open
+  findings, in `docs/wip/`, outside the code tree. WP-H1's three protective `.gitignore` rules are committed.
+* Both are to be finished before `natural-pr-v1` is analysed or published.
+
+**The scan's sample coverage.** The committed scan (`scripts/scan_tracked_files.py --aidev-logins`) loads the logins
+connected to the first S9 sample's 150 comments (119), not to the extension's 534. The independent check above found this.
+* A one-off scan that loaded both samples (219 logins and names) read the working tree and the commits a push would send.
+  It found no person's login. Its only findings, 195 lines, are one organisation account that the study names
+  independently of the natural sample, mostly inside URLs and citations.
+* A suppression option for such accounts was drafted and withdrawn: a scan that drops findings by a private list would
+  weaken the gate.
+* The committed scan is unchanged. Extending it to both samples needs a decision on organisation accounts, which is the
+  owner's. Every push so far was gated by the first-sample scan.
+
+**Manuscript.** The paper is rebuilt findings-first around fresh-v1, from a written plan.
+* Agents rewrote the abstract, introduction, related work, data, method and protocol sections before the limit, and
+  added table modes to `paper/make_tables.py` (`--fresh`, `--regrade`, `--natural`), `paper/make_figures.py` and an
+  evidence ledger for each.
+* The build session wrote the results sections (fresh-v1 first; the natural funnel, with every natural result marked
+  pending; the construction pilot as a development study, with the 0.3.5 re-grade), the fresh-v1 part of the qualitative
+  analysis (from D62), the stale statements of the limitations, ethics and reproducibility sections, and the appendix
+  tables.
+* Every number in the new text is a macro of the generated number files or a count recorded in the decision log.
+* Not done from the plan: a number checker for the text (`check_numbers.py`), the split of the appendix and the planned
+  length.
+
+**Still open.** The D64 citations in code (`NATURAL_DECISION` and the other places D64 lists) are to name D64 before any
+natural label is proposed. The natural recipe P1 to P7 for the six families, labels, the pre-flight, the run
+`natural-pr-v1` and its analysis follow D64 and D65 once agents can run again.

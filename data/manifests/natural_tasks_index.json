@@ -1,7 +1,7 @@
 {
   "compiler": "natural_pr:v1",
   "counts": {
-    "not built": 3,
+    "not built": 26,
     "passed": 6,
     "rejected": 16,
     "s11": 6
@@ -20,10 +20,13 @@
     "D57",
     "D58",
     "D59",
-    "D60"
+    "D60",
+    "D63"
   ],
   "fields": {
     "files": "sha256 of each task file by its task-relative path; a key ending in / is a directory, given as the manifest hash (path within the directory and sha256 of each file) and the number of its files",
+    "replaced_by": "a family rejected at S10 gives its place to the next reserve of its repository and of its own sample that is not rejected (\u00a717.3; \u00a719.3 as D63 reads it): the first sample's reserves take only the first sample's families' places, the extension's only the extension's. A rejected first-sample family's place is filled by the extension's new families, which are families of their own (\u00a719.3), not replacements",
+    "s9_complete": "per S9 sample (first: \u00a715.6, D47; extension: \u00a719.2, D60): screened, the number of the sample's comments with an S9 outcome in its S9 manifest (data/manifests/screening_natural_aidev_s9.json, screening_natural_aidev_s9x.json: qualifies, fails, or excluded because the judges disagree); families, the task ids of the families and reserves formed from the sample's qualifying comments (\u00a715.6, \u00a717.3, \u00a719.3), from the family file of both samples (s9_qualifying_combined.json, outside the repository), which must hold every qualifying comment of both manifests. Absent when one of these files is missing. The pre-flight's stop rule reads it (\u00a719.5)",
     "sanitize_natural": "what sanitize-natural:v1 replaces in the stored session.json, as counts only. pass: by kind, the counts of the v1 pass itself (sanitize_session), as an agent's sanitised copy gets them; the pass renders a commit event's text from its tool input, so a commit message is dropped there, not counted. counts and where: the v1 rules applied to every stored string (each event's text, a commit message included, and tool input, the metadata and the repository URL), by kind and by part of the thread (issue, pr_body, commits, hunk, review_comment, replies, metadata, repo_url; an event of another form: its kind). session.json is never rewritten, and a handle counted can be one of the pseudonymiser's own role labels"
   },
   "population": "natural:pr-review",
@@ -32,6 +35,66 @@
   "s11_by_sample": {
     "extension": 0,
     "first": 6
+  },
+  "s9_complete": {
+    "extension": {
+      "families": [
+        "NP-26",
+        "NP-27",
+        "NP-28",
+        "NP-29",
+        "NP-30",
+        "NP-31",
+        "NP-32",
+        "NP-33",
+        "NP-34",
+        "NP-35",
+        "NP-36",
+        "NP-37",
+        "NP-38",
+        "NP-39",
+        "NP-40",
+        "NP-41",
+        "NP-42",
+        "NP-43",
+        "NP-44",
+        "NP-45",
+        "NP-46",
+        "NP-47",
+        "NP-48"
+      ],
+      "screened": 534
+    },
+    "first": {
+      "families": [
+        "NP-01",
+        "NP-02",
+        "NP-03",
+        "NP-04",
+        "NP-05",
+        "NP-06",
+        "NP-07",
+        "NP-08",
+        "NP-09",
+        "NP-10",
+        "NP-11",
+        "NP-12",
+        "NP-13",
+        "NP-14",
+        "NP-15",
+        "NP-16",
+        "NP-17",
+        "NP-18",
+        "NP-19",
+        "NP-20",
+        "NP-21",
+        "NP-22",
+        "NP-23",
+        "NP-24",
+        "NP-25"
+      ],
+      "screened": 150
+    }
   },
   "sample_rule": "first: NP-01 to NP-25, the families and reserves of the first S9 sample; extension: from NP-26 on, the families of the S9 extension (\u00a719.2, \u00a719.3). The size rule of \u00a719.6 counts the S11 tasks of both samples together",
   "schema": "tracecontract/natural-tasks-index/v1",
@@ -2037,6 +2100,305 @@
       "s11": false,
       "sample": "first",
       "task_id": "NP-25"
+    },
+    {
+      "agent": "Copilot",
+      "comment_id": 2100668732,
+      "pr_id": 3078356584,
+      "repo_id": 174629277,
+      "role": "family",
+      "s10": {
+        "outcome": "not built"
+      },
+      "s11": false,
+      "sample": "extension",
+      "task_id": "NP-26"
+    },
+    {
+      "agent": "Copilot",
+      "comment_id": 2148892276,
+      "pr_id": 3148204191,
+      "repo_id": 172703996,
+      "role": "family",
+      "s10": {
+        "outcome": "not built"
+      },
+      "s11": false,
+      "sample": "extension",
+      "task_id": "NP-27"
+    },
+    {
+      "agent": "Copilot",
+      "comment_id": 2151280008,
+      "pr_id": 3150091151,
+      "repo_id": 648340231,
+      "role": "family",
+      "s10": {
+        "outcome": "not built"
+      },
+      "s11": false,
+      "sample": "extension",
+      "task_id": "NP-28"
+    },
+    {
+      "agent": "Devin",
+      "comment_id": 2164724099,
+      "pr_id": 3172939109,
+      "repo_id": 710601088,
+      "role": "family",
+      "s10": {
+        "outcome": "not built"
+      },
+      "s11": false,
+      "sample": "extension",
+      "task_id": "NP-29"
+    },
+    {
+      "agent": "Copilot",
+      "comment_id": 2172695029,
+      "pr_id": 3180363547,
+      "repo_id": 898171798,
+      "role": "family",
+      "s10": {
+        "outcome": "not built"
+      },
+      "s11": false,
+      "sample": "extension",
+      "task_id": "NP-30"
+    },
+    {
+      "agent": "Copilot",
+      "comment_id": 2180975437,
+      "pr_id": 3196772592,
+      "repo_id": 917852255,
+      "role": "family",
+      "s10": {
+        "outcome": "not built"
+      },
+      "s11": false,
+      "sample": "extension",
+      "task_id": "NP-31"
+    },
+    {
+      "agent": "Copilot",
+      "comment_id": 2188123031,
+      "pr_id": 3206231176,
+      "repo_id": 172733314,
+      "role": "family",
+      "s10": {
+        "outcome": "not built"
+      },
+      "s11": false,
+      "sample": "extension",
+      "task_id": "NP-32"
+    },
+    {
+      "agent": "Copilot",
+      "comment_id": 2193189967,
+      "pr_id": 3213367725,
+      "repo_id": 4127088,
+      "role": "family",
+      "s10": {
+        "outcome": "not built"
+      },
+      "s11": false,
+      "sample": "extension",
+      "task_id": "NP-33"
+    },
+    {
+      "agent": "Copilot",
+      "comment_id": 2220021072,
+      "pr_id": 3214122373,
+      "repo_id": 172703996,
+      "role": "family",
+      "s10": {
+        "outcome": "not built"
+      },
+      "s11": false,
+      "sample": "extension",
+      "task_id": "NP-34"
+    },
+    {
+      "agent": "Copilot",
+      "comment_id": 2228622913,
+      "pr_id": 3257741269,
+      "repo_id": 4127088,
+      "role": "family",
+      "s10": {
+        "outcome": "not built"
+      },
+      "s11": false,
+      "sample": "extension",
+      "task_id": "NP-35"
+    },
+    {
+      "agent": "Copilot",
+      "comment_id": 2311756283,
+      "pr_id": 3298481835,
+      "repo_id": 948169755,
+      "role": "family",
+      "s10": {
+        "outcome": "not built"
+      },
+      "s11": false,
+      "sample": "extension",
+      "task_id": "NP-36"
+    },
+    {
+      "agent": "Copilot",
+      "comment_id": 2282896968,
+      "pr_id": 3331243871,
+      "repo_id": 917852255,
+      "role": "family",
+      "s10": {
+        "outcome": "not built"
+      },
+      "s11": false,
+      "sample": "extension",
+      "task_id": "NP-37"
+    },
+    {
+      "agent": "Copilot",
+      "comment_id": 2293255710,
+      "pr_id": 3344793582,
+      "repo_id": 507861208,
+      "role": "family",
+      "s10": {
+        "outcome": "not built"
+      },
+      "s11": false,
+      "sample": "extension",
+      "task_id": "NP-38"
+    },
+    {
+      "agent": "Copilot",
+      "comment_id": 2373679646,
+      "pr_id": 3446770363,
+      "repo_id": 599293758,
+      "role": "family",
+      "s10": {
+        "outcome": "not built"
+      },
+      "s11": false,
+      "sample": "extension",
+      "task_id": "NP-39"
+    },
+    {
+      "agent": "Copilot",
+      "comment_id": 2381557320,
+      "pr_id": 3448386475,
+      "repo_id": 104857648,
+      "role": "family",
+      "s10": {
+        "outcome": "not built"
+      },
+      "s11": false,
+      "sample": "extension",
+      "task_id": "NP-40"
+    },
+    {
+      "agent": "Copilot",
+      "comment_id": 2413785736,
+      "pr_id": 3495062467,
+      "repo_id": 599950865,
+      "role": "family",
+      "s10": {
+        "outcome": "not built"
+      },
+      "s11": false,
+      "sample": "extension",
+      "task_id": "NP-41"
+    },
+    {
+      "agent": "Copilot",
+      "comment_id": 2513271446,
+      "pr_id": 3600457266,
+      "repo_id": 66776276,
+      "role": "family",
+      "s10": {
+        "outcome": "not built"
+      },
+      "s11": false,
+      "sample": "extension",
+      "task_id": "NP-42"
+    },
+    {
+      "agent": "Claude_Code",
+      "comment_id": 2504970715,
+      "pr_id": 3601217897,
+      "repo_id": 139199684,
+      "role": "family",
+      "s10": {
+        "outcome": "not built"
+      },
+      "s11": false,
+      "sample": "extension",
+      "task_id": "NP-43"
+    },
+    {
+      "agent": "Devin",
+      "comment_id": 2589283456,
+      "pr_id": 3692829920,
+      "repo_id": 139199684,
+      "role": "family",
+      "s10": {
+        "outcome": "not built"
+      },
+      "s11": false,
+      "sample": "extension",
+      "task_id": "NP-44"
+    },
+    {
+      "agent": "Copilot",
+      "comment_id": 2180460454,
+      "pr_id": 3196295632,
+      "repo_id": 898171798,
+      "role": "reserve",
+      "s10": {
+        "outcome": "not built"
+      },
+      "s11": false,
+      "sample": "extension",
+      "task_id": "NP-45"
+    },
+    {
+      "agent": "Copilot",
+      "comment_id": 2363922728,
+      "pr_id": 3395286450,
+      "repo_id": 898171798,
+      "role": "reserve",
+      "s10": {
+        "outcome": "not built"
+      },
+      "s11": false,
+      "sample": "extension",
+      "task_id": "NP-46"
+    },
+    {
+      "agent": "Devin",
+      "comment_id": 2666117490,
+      "pr_id": 3786070623,
+      "repo_id": 139199684,
+      "role": "reserve",
+      "s10": {
+        "outcome": "not built"
+      },
+      "s11": false,
+      "sample": "extension",
+      "task_id": "NP-47"
+    },
+    {
+      "agent": "Devin",
+      "comment_id": 2906792326,
+      "pr_id": 4046690450,
+      "repo_id": 139199684,
+      "role": "reserve",
+      "s10": {
+        "outcome": "not built"
+      },
+      "s11": false,
+      "sample": "extension",
+      "task_id": "NP-48"
     }
   ]
 }

@@ -15,12 +15,119 @@
     "D47",
     "D48",
     "D50",
-    "D60"
+    "D60",
+    "D63"
   ],
   "protocol": "experiments/protocol.md §15.6, §16.4 and §19.2 (v0.11, sha256 535a483f6d2506866a8a7bb31da50cf2271409a14060bf708e891a9cbe8ad6a0)",
-  "created_utc": "2026-11-21T16:34:12Z",
-  "generator": "S9-extension aggregation step of the natural arm's workflow (not a repository script); every derived field follows the rules below",
+  "created_utc": "2026-11-21T17:52:25Z",
+  "generator": "S9-extension aggregation step of the natural arm's workflow (not a repository script), in its D63 version; every derived field follows the rules below",
   "privacy": "ids, SHAs, categorical judgments, counts and checked model-written paraphrases only: no login, mention handle, e-mail address, URL, repository name, model identifier or verbatim comment, PR or issue text",
+  "correction": {
+    "decision_log": "D63 ('A deviation, corrected')",
+    "protocol": "experiments/protocol.md §19.2 (clones that exist are reused and not fetched again), §15.6 and §16.4",
+    "text": "the 57 comments of repository 136202695, whose existing clone is over the per-repository cap, had failed fetch_over_the_caps without a check of what the clone holds. The D63 step examined them from the clone's objects with no fetch: 5 are judged in batch 17 (by two new judges, under the same rules; none qualifies); 1 fails criterion 2 (§16.4) instead; 51 still fail fetch_over_the_caps. Every count, kappa and rule text here is recomputed from the rows with the rules of the version it replaces; only the rows of these 6 comments changed. D63's count of 44 that lack a commit or the PR head reads 43 that lack both the reviewed commit and the PR head ref, plus the criterion-2 failure",
+    "rows_changed": {
+      "judged_in_batch_17": [
+        2338281320,
+        2357402861,
+        2357403004,
+        2357404058,
+        2357405362
+      ],
+      "failure_reason_changed": [
+        {
+          "comment_id": 2230293580,
+          "before": "fetch_over_the_caps",
+          "after": "no_later_commit_changes_the_commented_file"
+        }
+      ]
+    },
+    "rows_unchanged": 528,
+    "counts_before": {
+      "comments": 534,
+      "judged": 400,
+      "qualifying": 91,
+      "excluded_judges_disagree": 10,
+      "failed": 433,
+      "failed_before_judging": 134,
+      "failed_by_reason": {
+        "fetch_over_the_caps": 65,
+        "commits_not_fetchable": 56,
+        "no_later_commit_changes_the_commented_file": 13,
+        "addressing_commit_not_agent_attributed": 1,
+        "not_behaviour_change_or_defect": 273,
+        "not_addressed": 23,
+        "not_testable_offline": 2
+      },
+      "judges_agree": 390,
+      "commits_reachable": 413,
+      "by_fetch_status": {
+        "fetched": 413,
+        "clone_failed": 56,
+        "over_cap": 65
+      },
+      "by_diff_status": {
+        "ok": 400,
+        "empty": 13,
+        "unavailable": 121
+      },
+      "qualifying_distinct_prs": 42,
+      "qualifying_distinct_repositories": 19
+    },
+    "counts_after": {
+      "comments": 534,
+      "judged": 405,
+      "qualifying": 91,
+      "excluded_judges_disagree": 10,
+      "failed": 433,
+      "failed_before_judging": 129,
+      "failed_by_reason": {
+        "fetch_over_the_caps": 59,
+        "commits_not_fetchable": 56,
+        "no_later_commit_changes_the_commented_file": 14,
+        "addressing_commit_not_agent_attributed": 1,
+        "not_behaviour_change_or_defect": 278,
+        "not_addressed": 23,
+        "not_testable_offline": 2
+      },
+      "judges_agree": 395,
+      "commits_reachable": 419,
+      "by_fetch_status": {
+        "fetched": 413,
+        "clone_failed": 56,
+        "over_cap": 65
+      },
+      "by_diff_status": {
+        "ok": 405,
+        "empty": 14,
+        "unavailable": 115
+      },
+      "qualifying_distinct_prs": 42,
+      "qualifying_distinct_repositories": 19
+    },
+    "kappa_before": {
+      "request_type_collapsed": 0.9532,
+      "addressed": 0.8917,
+      "testable_offline": 0.9367
+    },
+    "kappa_after": {
+      "request_type_collapsed": 0.9535,
+      "addressed": 0.893,
+      "testable_offline": 0.9371
+    },
+    "families": {
+      "same_as_before": true,
+      "renumbered": [],
+      "added_prs": [],
+      "removed_prs": [],
+      "families_changed": [],
+      "note": "formed again over both samples (§19.3 as D63 reads it); no comment of batch 17 qualifies, so no PR is added and no family, reserve or id changes"
+    },
+    "previous_version": {
+      "sha256": "0c8641045fb8218b757e43be260bc9717bdeb59508a86de2cbda973f35d19b08",
+      "created_utc": "2026-11-21T16:34:12Z"
+    }
+  },
   "inputs": {
     "sample_manifest": {
       "path": "data/manifests/screening_natural_aidev.json",
@@ -39,10 +146,10 @@
     "fetch_record": {
       "path": "/home/user/ext/aidev-v5-work/s9x_fetch_record.json",
       "in_repo": false,
-      "sha256": "fd762bdc89fc6d491e99595e0437ed30a95371093a6f0de1c8f5fc79329f427b",
+      "sha256": "33de0a504a44957c67c00f383d23da2c8e84665344802ace84cad42932989084",
       "schema": "tracecontract/s9x-fetch-record/v1",
       "in_repo_record": "aidev-v5-s9x-repo-fetches",
-      "use": "per comment: batch, reachability, the walk to the first later commit of the PR head that touches the commented file, the commit used's S8a attribution, the diff file and its sha256, the S9 failures before judging"
+      "use": "per comment: batch, reachability, the walk to the first later commit of the PR head that touches the commented file, the commit used's S8a attribution, the diff file and its sha256, the S9 failures before judging; as the D63 step left it (its section d63_correction)"
     },
     "judgment_batches": [
       {
@@ -156,18 +263,48 @@
         "first_comment_id": 2726154841,
         "last_comment_id": 3072680565,
         "sha256": "cddc417af0dc13cd59ae0d20d15040a2036d865cccc671742f38f19b31fcc26c"
+      },
+      {
+        "batch": 17,
+        "comments": 5,
+        "first_comment_id": 2338281320,
+        "last_comment_id": 2357405362,
+        "sha256": "5da53c045a2f1ee585a490a4eab670ba2aba5f5641405166276cea3941950928"
       }
     ],
     "judgments": {
       "path": "/home/user/ext/aidev-v5-work/s9x_judgments.json",
       "in_repo": false,
-      "sha256": "587bfd0bb3d5e28f4c7860c694e1f53952a1f6bfee17f0172d655676f740271d",
+      "sha256": "2db499fc0e43af488331bcd5bb2fe098d79f4a41f06c493b3314dc6cd0f0f704",
       "schema": "tracecontract/s9x-judgments/v1",
-      "records": 32,
-      "record_unit": "one batch and one judge: 16 batches x 2 judges, 25 comments each",
-      "sha256_canonical": "7fdd6592ed16553514d5d45d81c3671c0e63497f0edee1540ba27c576866ba9d",
+      "records": 34,
+      "record_unit": "one batch and one judge: 17 batches x 2 judges; 25 comments each in batches 1 to 16, 5 in batch 17 (D63)",
+      "sha256_canonical": "77253d53b5f977e68abfcdd150ff7f296119a99dc707aeab5eb8f0908130c3bd",
       "canonical_form": "json.dumps(records, sort_keys=True, separators=(',', ':'), ensure_ascii=False), UTF-8 (the first sample's canonical form)",
-      "use": "the raw judgments (judgment_records); every outcome here is recomputed from them and the fetch record, and equals the file's preliminary outcome for all 400 judged comments"
+      "use": "the raw judgments (judgment_records); every outcome here is recomputed from them and the fetch record, and equals the file's outcome for all 405 judged comments"
+    },
+    "d63_step": {
+      "code": {
+        "path": "/home/user/ext/aidev-v5-work/s9x_code/d63/d63_local.py",
+        "in_repo": false,
+        "sha256": "281c4ccc823ede185730a45bfe9ed2d3ef2f3484f0abb81b919cf0eabb15a28d"
+      },
+      "run_record": {
+        "path": "/home/user/ext/aidev-v5-work/s9x_code/d63/state/d63_run.json",
+        "in_repo": false,
+        "sha256": "dfb0f74ee2efb5dbd9ab762d096fd9036aa0b1e74d1950d549f446bf3799bbaf"
+      },
+      "judgment_step": {
+        "path": "/home/user/ext/aidev-v5-work/s9x_code/d63/judgments/s9x_judgments_d63.py",
+        "in_repo": false,
+        "sha256": "a204c6177dc97a65b1288640341e73134ae495f34e7178fb069e04acb57fe64c"
+      },
+      "aggregation_step": {
+        "path": "/home/user/ext/aidev-v5-work/s9x_code/d63/agg/build_d63.py",
+        "in_repo": false,
+        "sha256": "0202d25afa412925d9a089fd704db960578b5638279aceb7bd397f96649b362a"
+      },
+      "use": "sha256 only: the D63 correction (see correction)"
     },
     "texts": {
       "path": "/home/user/ext/aidev-v5-work/s9x_texts.jsonl",
@@ -201,8 +338,8 @@
   },
   "judges": {
     "number": 2,
-    "kind": "model agents; protocol §15.6 and §19.2 call for two independent configuration-A agents, new ones that do not see the first sample's judgments. Their outputs reached this step from the workflow as judge 1 and judge 2; model identifiers stay in private run records",
-    "inputs": "the 16 batch files of the fetch record: per comment the pseudonymised comment text, diff hunk, PR title, linked issue title and body, and the pseudonymised diff of the commented file between original_commit_id and the first later commit of the PR head that touches it",
+    "kind": "model agents; protocol §15.6 and §19.2 call for two independent configuration-A agents, new ones that do not see the first sample's judgments. Their outputs reached this step from the workflow as judge 1 and judge 2; model identifiers stay in private run records. Batch 17 (D63) was judged by two new judges, under the same rules",
+    "inputs": "the 17 batch files of the fetch record: per comment the pseudonymised comment text, diff hunk, PR title, linked issue title and body, and the pseudonymised diff of the commented file between original_commit_id and the first later commit of the PR head that touches it",
     "fields": {
       "request_type": [
         "behaviour_change",
@@ -237,7 +374,7 @@
   "rules": {
     "judge_verdict": "qualifies when the judge's request_type is behaviour_change or defect_report, its addressed is yes and its testable_offline is yes; fails otherwise",
     "qualifies": "both judges' verdicts are qualifies; both commits were reachable in the S9 fetch: original_commit_id (in the clone and in the PR head's history) and the commit used, diff_commit, the first later commit of the PR head that touches the commented file; and the commit used is agent-attributed under the S8a rule of scripts/screen_aidev.py (the fetch record's attribution of that commit's AIDev pr_commits row)",
-    "judged": "a comment was judged only when its reviewed commit is reachable and in the PR head's history and a later commit of the PR head changes the commented file, with a non-empty diff (the fetch record's rule). The 134 comments that fail before judging have batch, judge_1, judge_2 and judges_agree null; the first sample, by contrast, judged its comments in repositories that could not be fetched without a diff",
+    "judged": "a comment was judged only when its reviewed commit is reachable and in the PR head's history and a later commit of the PR head changes the commented file, with a non-empty diff (the fetch record's rule). The 129 comments that fail before judging have batch, judge_1, judge_2 and judges_agree null; the first sample, by contrast, judged its comments in repositories that could not be fetched without a diff. In the repository over the cap whose clone grew in S10 of the first sample, the 5 comments whose objects the clone already held were judged in batch 17, with no fetch (D63)",
     "failure_reason": [
       "null: the comment qualifies",
       "fetch_over_the_caps: the repository is over the 300,000,000-byte per-repository cap (§19.2: a clone that already exceeded it is not fetched into, and a clone that reaches it is stopped); the comment fails S9 before judging",
@@ -251,12 +388,12 @@
     "judges_agree": "the two judges' verdicts are the same; null for a comment that was not judged",
     "agent": "the S8a pool's agent attribution (pull_request.agent)",
     "fetch_status": "the repository's status in the fetch record: fetched, clone_failed or over_cap",
-    "commits_reachable": "original_commit_id is in the clone and in the PR head's history, and the commit used is in the clone; where no later commit touches the file, original_commit_id and the S7 later commit are (as for the first sample's one such comment); false where the repository could not be fetched or is over the cap",
-    "diff_status": "ok: non-empty diff of the commented file between original_commit_id and diff_commit; empty: no later commit of the PR head changes the file, so there is no diff to judge; unavailable: not fetched",
-    "diff_commit": "on every row whose PR head was walked (413): the commit used, the first later commit of the PR head that touches the commented file, found by walking the PR head's history from original_commit_id along the ancestry path (the rule of the first sample's correction, D50); null when no later commit touches the file. diff_commit_agent_attributed: the S8a rule applied to that commit's AIDev pr_commits row (bot author account or agent co-author trailer); null when there is no commit. Absent on the 121 rows whose repository could not be fetched or is over the cap. For 381 of the 400 judged comments it is the S7 later commit",
-    "kappa": "Cohen's kappa, (p_o - p_e) / (1 - p_e), with p_e from each judge's own marginals; request_type collapsed to behaviour_or_defect (behaviour_change, defect_report) versus other; addressed and testable_offline on their recorded categories, a value outside the first sample's lists added as a category (testable_offline unclear); over the 400 comments judged by both judges",
+    "commits_reachable": "original_commit_id is in the clone and in the PR head's history, and the commit used is in the clone; where no later commit touches the file, original_commit_id and the S7 later commit are (as for the first sample's one such comment); false where the repository could not be fetched, and false on every row that fails fetch_over_the_caps: in the repository whose existing clone is over the cap, a comment's objects were looked up in the clone with no fetch (D63), and the comments that fail there lack the reviewed commit and the PR head ref, or a blob of the commented file that the diff needs",
+    "diff_status": "ok: non-empty diff of the commented file between original_commit_id and diff_commit; empty: no later commit of the PR head changes the file, so there is no diff to judge; unavailable: not fetched, or (D63) not computable from the objects of a clone over the cap",
+    "diff_commit": "on every row whose PR head was walked to a result (419): the commit used, the first later commit of the PR head that touches the commented file, found by walking the PR head's history from original_commit_id along the ancestry path (the rule of the first sample's correction, D50); null when no later commit touches the file. diff_commit_agent_attributed: the S8a rule applied to that commit's AIDev pr_commits row (bot author account or agent co-author trailer); null when there is no commit. Absent on the 115 rows that fail fetch_over_the_caps or commits_not_fetchable (for 8 of them the D63 step's walk found the commit, but the diff would need a blob fetch; the fetch record has it). For 386 of the 405 judged comments it is the S7 later commit",
+    "kappa": "Cohen's kappa, (p_o - p_e) / (1 - p_e), with p_e from each judge's own marginals; request_type collapsed to behaviour_or_defect (behaviour_change, defect_report) versus other; addressed and testable_offline on their recorded categories, a value outside the first sample's lists added as a category (testable_offline unclear); over the 405 comments judged by both judges",
     "verification": "for the 101 comments that at least one judge qualified, with every transport protocol disallowed (so nothing was fetched; each clone's apparent size was the same before and after): original_commit_id and diff_commit are commit objects in the bare clone, diff_commit descends from original_commit_id and is an ancestor of the PR head ref, which resolves to the fetch record's head, and the diff file matches its sha256 in the fetch record. Every outcome was recomputed from the raw judgments and the fetch record with these rules and equals the judgment file's preliminary outcome",
-    "s11_families": "protocol §19.3 with §15.6 and §17.3, over the qualifying comments of both samples. The first sample's families and reserves NP-01 to NP-25 keep their ids, roles and places; a repository's accepted families are its S11 tasks in data/manifests/natural_tasks_index.json. A repository with 2 accepted families gets no new family. Elsewhere the new qualifying PRs of the repository (those not among the first sample's families and reserves), by creation time (AIDev pull_request created_at, then the lowest PR id), fill its open places (2 minus its accepted families) as families, each with its earliest qualifying comment (AIDev created_at, then the lowest id) as its correction and the others recorded; the next ones are its reserves (§17.3), used in order when a family of the repository is rejected at S10. Ids: the new families from NP-26 in order of PR creation time (S10 takes them in that order), then the reserves in the same order. A first-sample PR with qualifying comments in the extension keeps its id, role and correction; those comments are its other qualifying comments. Applied before S10"
+    "s11_families": "protocol §19.3 with §15.6 and §17.3, over the qualifying comments of both samples. The first sample's families and reserves NP-01 to NP-25 keep their ids, roles and places; a repository's accepted families are its S11 tasks in data/manifests/natural_tasks_index.json. A repository with 2 accepted families gets no new family. Elsewhere the new qualifying PRs of the repository (those not among the first sample's families and reserves), by creation time (AIDev pull_request created_at, then the lowest PR id), fill its open places (2 minus its accepted families) as families, each with its earliest qualifying comment (AIDev created_at, then the lowest id) as its correction and the others recorded; the next ones are its reserves (§17.3), used in order when a new family of the repository is rejected at S10 (a reserve takes the place of a family of its own sample only: the first sample's rejected families leave open places, which the new families fill, and the first sample's reserves take only the first sample's families' places). Ids: the new families from NP-26 in order of PR creation time (S10 takes them in that order), then the reserves in the same order. A first-sample PR with qualifying comments in the extension keeps its id, role and correction; those comments are its other qualifying comments. Applied before S10; formed again after the D63 correction, which added no qualifying comment"
   },
   "paraphrase_policy": {
     "stored": "only for qualifying comments: judge 1's requirement_paraphrase, after the checks below; null otherwise, and null where judge 1's paraphrase fails a check (no other paraphrase is substituted)",
@@ -275,38 +412,38 @@
   },
   "summary": {
     "comments": 534,
-    "judged": 400,
+    "judged": 405,
     "qualifying": 91,
     "excluded_judges_disagree": 10,
     "failed": 433,
-    "failed_before_judging": 134,
+    "failed_before_judging": 129,
     "failed_by_reason": {
-      "fetch_over_the_caps": 65,
+      "fetch_over_the_caps": 59,
       "commits_not_fetchable": 56,
-      "no_later_commit_changes_the_commented_file": 13,
+      "no_later_commit_changes_the_commented_file": 14,
       "addressing_commit_not_agent_attributed": 1,
-      "not_behaviour_change_or_defect": 273,
+      "not_behaviour_change_or_defect": 278,
       "not_addressed": 23,
       "not_testable_offline": 2
     },
     "failed_conditions_among_failed": {
-      "commits_reachable": 121,
+      "commits_reachable": 115,
       "commit_agent_attributed": 1,
-      "request_type": 274,
-      "addressed": 94,
-      "testable_offline": 279
+      "request_type": 279,
+      "addressed": 96,
+      "testable_offline": 284
     },
-    "judges_agree": 390,
-    "commits_reachable": 413,
+    "judges_agree": 395,
+    "commits_reachable": 419,
     "by_fetch_status": {
       "fetched": 413,
       "clone_failed": 56,
       "over_cap": 65
     },
     "by_diff_status": {
-      "ok": 400,
-      "empty": 13,
-      "unavailable": 121
+      "ok": 405,
+      "empty": 14,
+      "unavailable": 115
     },
     "qualifying_distinct_prs": 42,
     "qualifying_distinct_repositories": 19,
@@ -322,18 +459,18 @@
       },
       "of_judged_comments": {
         "k": 91,
-        "n": 400,
-        "rate": 0.2275,
+        "n": 405,
+        "rate": 0.2247,
         "wilson_95": [
-          0.1891,
-          0.2711
+          0.1867,
+          0.2678
         ]
       },
       "note": "model proposals, not human coding; Wilson score intervals"
     },
     "s11_families": {
       "rule": "see rules.s11_families",
-      "standing": "planned before S10 of the extension; S10 can lower the number of accepted tasks but not raise it. A family that S10 rejects is replaced by the next reserve of its repository by creation time (§17.3), still with at most 2 accepted families per repository; building stops at 30 accepted tasks in all, or when every family of both samples has been processed (§19.5)",
+      "standing": "planned before S10 of the extension; S10 can lower the number of accepted tasks but not raise it. A family that S10 rejects is replaced by the next reserve of its repository and of its own sample by creation time (§17.3), still with at most 2 accepted families per repository; building stops at 30 accepted tasks in all, or when every family of both samples has been processed (§19.5). Formed again after the D63 correction, which adds no qualifying comment: the families, reserves and their ids are the ones formed before it",
       "first_sample": {
         "families_and_reserves": 25,
         "task_ids": "NP-01 to NP-25, unchanged",
@@ -1007,9 +1144,9 @@
         "qualifying": 14
       },
       "refactor_design": {
-        "judge_1": 86,
-        "judge_2": 91,
-        "both_judges": 83,
+        "judge_1": 89,
+        "judge_2": 94,
+        "both_judges": 86,
         "qualifying": 0
       },
       "removal_cleanup": {
@@ -1019,9 +1156,9 @@
         "qualifying": 0
       },
       "style_lint_docs": {
-        "judge_1": 61,
-        "judge_2": 59,
-        "both_judges": 59,
+        "judge_1": 63,
+        "judge_2": 61,
+        "both_judges": 61,
         "qualifying": 0
       },
       "tests_only": {
@@ -1056,8 +1193,8 @@
       },
       "Copilot": {
         "comments": 482,
-        "judged": 350,
-        "commits_reachable": 361,
+        "judged": 355,
+        "commits_reachable": 367,
         "qualifying": 81,
         "excluded_judges_disagree": 10,
         "failed": 391,
@@ -1086,17 +1223,17 @@
       }
     },
     "agreement": {
-      "population": "the 400 comments judged by both judges (every comment of the 16 batches). The 134 comments that failed S9 before judging have no judgments and are not included; the first sample's kappa also counted its 19 comments whose repositories could not be fetched, which were judged without a diff",
+      "population": "the 405 comments judged by both judges (every comment of the 17 batches; batch 17: D63). The 129 comments that failed S9 before judging have no judgments and are not included; the first sample's kappa also counted its 19 comments whose repositories could not be fetched, which were judged without a diff",
       "request_type_collapsed": {
-        "n": 400,
+        "n": 405,
         "categories": [
           "behaviour_or_defect",
           "other"
         ],
-        "agree": 392,
-        "observed_agreement": 0.98,
-        "expected_agreement": 0.5722,
-        "kappa": 0.9532,
+        "agree": 397,
+        "observed_agreement": 0.9802,
+        "expected_agreement": 0.5751,
+        "kappa": 0.9535,
         "table_judge_1_rows_judge_2_columns": {
           "behaviour_or_defect": {
             "behaviour_or_defect": 120,
@@ -1104,32 +1241,32 @@
           },
           "other": {
             "behaviour_or_defect": 4,
-            "other": 272
+            "other": 277
           }
         }
       },
       "addressed": {
-        "n": 400,
+        "n": 405,
         "categories": [
           "yes",
           "partly",
           "no",
           "unclear"
         ],
-        "agree": 385,
-        "observed_agreement": 0.9625,
-        "expected_agreement": 0.6538,
-        "kappa": 0.8917,
+        "agree": 390,
+        "observed_agreement": 0.963,
+        "expected_agreement": 0.6539,
+        "kappa": 0.893,
         "table_judge_1_rows_judge_2_columns": {
           "yes": {
-            "yes": 316,
+            "yes": 320,
             "partly": 3,
             "no": 0,
             "unclear": 1
           },
           "partly": {
             "yes": 1,
-            "partly": 31,
+            "partly": 32,
             "no": 3,
             "unclear": 1
           },
@@ -1148,17 +1285,17 @@
         }
       },
       "testable_offline": {
-        "n": 400,
+        "n": 405,
         "categories": [
           "yes",
           "no",
           "na",
           "unclear"
         ],
-        "agree": 389,
-        "observed_agreement": 0.9725,
-        "expected_agreement": 0.5654,
-        "kappa": 0.9367,
+        "agree": 394,
+        "observed_agreement": 0.9728,
+        "expected_agreement": 0.5685,
+        "kappa": 0.9371,
         "table_judge_1_rows_judge_2_columns": {
           "yes": {
             "yes": 114,
@@ -1175,7 +1312,7 @@
           "na": {
             "yes": 4,
             "no": 0,
-            "na": 272,
+            "na": 277,
             "unclear": 0
           },
           "unclear": {
@@ -1189,18 +1326,18 @@
       "secondary": {
         "note": "not requested by the protocol; reported for reading the main values",
         "verdict": {
-          "n": 400,
+          "n": 405,
           "categories": [
             "qualifies",
             "fails"
           ],
-          "agree": 390,
-          "observed_agreement": 0.975,
-          "expected_agreement": 0.6352,
-          "kappa": 0.9315
+          "agree": 395,
+          "observed_agreement": 0.9753,
+          "expected_agreement": 0.6383,
+          "kappa": 0.9317
         },
         "request_type_all_categories": {
-          "n": 400,
+          "n": 405,
           "categories": [
             "behaviour_change",
             "defect_report",
@@ -1211,35 +1348,35 @@
             "question_unclear",
             "process_other"
           ],
-          "agree": 381,
-          "observed_agreement": 0.9525,
-          "expected_agreement": 0.1865,
-          "kappa": 0.9416
+          "agree": 386,
+          "observed_agreement": 0.9531,
+          "expected_agreement": 0.1868,
+          "kappa": 0.9423
         },
         "addressed_yes_vs_other": {
-          "n": 400,
+          "n": 405,
           "categories": [
             "yes",
             "other"
           ],
-          "agree": 393,
-          "observed_agreement": 0.9825,
+          "agree": 398,
+          "observed_agreement": 0.9827,
           "expected_agreement": 0.6785,
-          "kappa": 0.9456
+          "kappa": 0.9462
         },
         "testable_offline_yes_vs_other": {
-          "n": 400,
+          "n": 405,
           "categories": [
             "yes",
             "other"
           ],
-          "agree": 389,
-          "observed_agreement": 0.9725,
-          "expected_agreement": 0.581,
-          "kappa": 0.9344
+          "agree": 394,
+          "observed_agreement": 0.9728,
+          "expected_agreement": 0.584,
+          "kappa": 0.9347
         },
         "commits_reachable_only": {
-          "n": 400,
+          "n": 405,
           "note": "every judged comment's commits were reachable, so these values equal the main ones"
         }
       }
@@ -1248,7 +1385,7 @@
   "caveats": [
     {
       "topic": "failures before judging",
-      "text": "134 comments were not judged and fail S9 with the fetch record's reason. fetch_over_the_caps (65, 2 repositories): one repository's existing clone was already over the 300,000,000-byte cap, because it grew in S10 of the first sample (57 comments on 26 PRs; the repository of the first sample's NP-07 and NP-08), so nothing was fetched or diffed there; another went over the cap during its clone, as in the first sample (8 comments). commits_not_fetchable (56, 3 repositories): the clone was refused (HTTP 401 through the session's git proxy), as in the first sample. no_later_commit_changes_the_commented_file (13): no later commit of the PR head changes the commented file, so criterion 2 cannot hold (§16.4). The first sample judged its comments in repositories that could not be fetched without a diff and recorded its 2 over-cap comments as commits_not_fetchable (fetch_status over_cap); the extension judged only comments with a diff, as the fetch record's rule says, and gives the cap its own reason, the one §19.2 names",
+      "text": "129 comments were not judged and fail S9 with the fetch record's reason. fetch_over_the_caps (59, 2 repositories): one repository's existing clone was already over the 300,000,000-byte cap, because it grew in S10 of the first sample (the repository of the first sample's NP-07 and NP-08; 57 comments on 26 PRs), so nothing was fetched there. Its comments were first failed without a check of what the clone holds; after the D63 correction 5 are judged (batch 17), 1 fails criterion 2 (below) and 51 still fail here, 8 because the diff would need a blob fetch and 43 because the clone holds neither the reviewed commit nor the PR head ref (see the caveat on D63). Another repository went over the cap during its clone, as in the first sample (8 comments). commits_not_fetchable (56, 3 repositories): the clone was refused (HTTP 401 through the session's git proxy), as in the first sample. no_later_commit_changes_the_commented_file (14): no later commit of the PR head changes the commented file, so criterion 2 cannot hold (§16.4). The first sample judged its comments in repositories that could not be fetched without a diff and recorded its 2 over-cap comments as commits_not_fetchable (fetch_status over_cap); the extension judged only comments with a diff, as the fetch record's rule says, and gives the cap its own reason, the one §19.2 names",
       "comment_ids_over_cap_repository_grown_in_s10": [
         2113049513,
         2113049915,
@@ -1270,7 +1407,6 @@
         2159990459,
         2229893522,
         2230256992,
-        2230293580,
         2238535908,
         2247945835,
         2247946806,
@@ -1288,14 +1424,9 @@
         2299824618,
         2299850729,
         2299852707,
-        2338281320,
         2352082569,
         2352083865,
         2352088849,
-        2357402861,
-        2357403004,
-        2357404058,
-        2357405362,
         2357475047,
         2634403563,
         2719341346,
@@ -1326,6 +1457,7 @@
         2180006714,
         2183128241,
         2184132480,
+        2230293580,
         2271306101,
         2340320011,
         2790330511,
@@ -1565,6 +1697,75 @@
         139199684,
         172703996,
         174629277
+      ]
+    },
+    {
+      "topic": "D63: comments of the over-cap repository examined from its clone's objects",
+      "text": "the 57 comments of repository 136202695 had all failed fetch_over_the_caps without a check of what its existing clone holds, although §19.2 reuses existing clones (D63, 'A deviation, corrected'). The D63 step examined each from the clone's objects with no fetch of any kind: the comments whose PR head ref, reviewed commit, first later commit that changes the commented file and both blobs of that file are in the clone were diffed with the extension's own code and judged in batch 17 by two new judges, under the same rules (none qualifies); one has its PR head ref and reviewed commit in the clone, and no later commit on its PR head changes the commented file, so it fails criterion 2 (§16.4) instead; the others still fail fetch_over_the_caps, the fetch record giving what the clone lacks. D63's count of 44 that lack a commit or the PR head reads 43 that lack both the reviewed commit and the PR head ref, plus this criterion-2 failure. Their fetch_status stays over_cap, the repository's status",
+      "comment_ids_judged_in_batch_17": [
+        2338281320,
+        2357402861,
+        2357403004,
+        2357404058,
+        2357405362
+      ],
+      "comment_ids_failing_criterion_2": [
+        2230293580
+      ],
+      "comment_ids_diff_needs_a_blob_fetch": [
+        2120286998,
+        2120527553,
+        2120562230,
+        2120593117,
+        2125335705,
+        2229893522,
+        2230256992,
+        2357475047
+      ],
+      "comment_ids_clone_holds_neither_the_reviewed_commit_nor_the_pr_head_ref": [
+        2113049513,
+        2113049915,
+        2120534310,
+        2141913089,
+        2143049447,
+        2143112518,
+        2143976819,
+        2144002569,
+        2153866258,
+        2153889660,
+        2154349919,
+        2154544789,
+        2159990459,
+        2238535908,
+        2247945835,
+        2247946806,
+        2258702369,
+        2264679709,
+        2264679814,
+        2264680480,
+        2264682119,
+        2264682597,
+        2264684583,
+        2275320162,
+        2275462099,
+        2276126502,
+        2287430674,
+        2299824618,
+        2299850729,
+        2299852707,
+        2352082569,
+        2352083865,
+        2352088849,
+        2634403563,
+        2719341346,
+        2814679881,
+        2814679967,
+        2814680039,
+        2814727912,
+        2814739936,
+        2814753150,
+        2870863771,
+        3009091397
       ]
     },
     {
@@ -11593,15 +11794,17 @@
       "agent": "Copilot",
       "batch": null,
       "fetch_status": "over_cap",
-      "commits_reachable": false,
-      "diff_status": "unavailable",
+      "commits_reachable": true,
+      "diff_status": "empty",
+      "diff_commit": null,
+      "diff_commit_agent_attributed": null,
       "judge_1": null,
       "judge_2": null,
       "judges_agree": null,
       "qualifies": false,
-      "failure_reason": "fetch_over_the_caps",
+      "failure_reason": "no_later_commit_changes_the_commented_file",
       "failed_conditions": [
-        "commits_reachable"
+        "addressed"
       ],
       "requirement_paraphrase": null,
       "paraphrase_check": null
@@ -14625,17 +14828,32 @@
       "pr_id": 3404386266,
       "repo_id": 136202695,
       "agent": "Copilot",
-      "batch": null,
+      "batch": 17,
       "fetch_status": "over_cap",
-      "commits_reachable": false,
-      "diff_status": "unavailable",
-      "judge_1": null,
-      "judge_2": null,
-      "judges_agree": null,
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "diff_commit": "2fec7f71c2d241ea6ab99d06512525dc249e94a1",
+      "diff_commit_agent_attributed": true,
+      "judge_1": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
       "qualifies": false,
-      "failure_reason": "fetch_over_the_caps",
+      "failure_reason": "not_behaviour_change_or_defect",
       "failed_conditions": [
-        "commits_reachable"
+        "request_type",
+        "testable_offline"
       ],
       "requirement_paraphrase": null,
       "paraphrase_check": null
@@ -14727,17 +14945,32 @@
       "pr_id": 3428441045,
       "repo_id": 136202695,
       "agent": "Copilot",
-      "batch": null,
+      "batch": 17,
       "fetch_status": "over_cap",
-      "commits_reachable": false,
-      "diff_status": "unavailable",
-      "judge_1": null,
-      "judge_2": null,
-      "judges_agree": null,
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "diff_commit": "8a3987fd85e29359225c47bbb83a6c303e1201d6",
+      "diff_commit_agent_attributed": true,
+      "judge_1": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
       "qualifies": false,
-      "failure_reason": "fetch_over_the_caps",
+      "failure_reason": "not_behaviour_change_or_defect",
       "failed_conditions": [
-        "commits_reachable"
+        "request_type",
+        "testable_offline"
       ],
       "requirement_paraphrase": null,
       "paraphrase_check": null
@@ -14747,17 +14980,32 @@
       "pr_id": 3428441045,
       "repo_id": 136202695,
       "agent": "Copilot",
-      "batch": null,
+      "batch": 17,
       "fetch_status": "over_cap",
-      "commits_reachable": false,
-      "diff_status": "unavailable",
-      "judge_1": null,
-      "judge_2": null,
-      "judges_agree": null,
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "diff_commit": "8a3987fd85e29359225c47bbb83a6c303e1201d6",
+      "diff_commit_agent_attributed": true,
+      "judge_1": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "refactor_design",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
       "qualifies": false,
-      "failure_reason": "fetch_over_the_caps",
+      "failure_reason": "not_behaviour_change_or_defect",
       "failed_conditions": [
-        "commits_reachable"
+        "request_type",
+        "testable_offline"
       ],
       "requirement_paraphrase": null,
       "paraphrase_check": null
@@ -14767,17 +15015,33 @@
       "pr_id": 3428441045,
       "repo_id": 136202695,
       "agent": "Copilot",
-      "batch": null,
+      "batch": 17,
       "fetch_status": "over_cap",
-      "commits_reachable": false,
-      "diff_status": "unavailable",
-      "judge_1": null,
-      "judge_2": null,
-      "judges_agree": null,
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "diff_commit": "8a3987fd85e29359225c47bbb83a6c303e1201d6",
+      "diff_commit_agent_attributed": true,
+      "judge_1": {
+        "request_type": "style_lint_docs",
+        "addressed": "partly",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "style_lint_docs",
+        "addressed": "partly",
+        "testable_offline": "na",
+        "confidence": "medium",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
       "qualifies": false,
-      "failure_reason": "fetch_over_the_caps",
+      "failure_reason": "not_behaviour_change_or_defect",
       "failed_conditions": [
-        "commits_reachable"
+        "request_type",
+        "addressed",
+        "testable_offline"
       ],
       "requirement_paraphrase": null,
       "paraphrase_check": null
@@ -14787,17 +15051,32 @@
       "pr_id": 3428441045,
       "repo_id": 136202695,
       "agent": "Copilot",
-      "batch": null,
+      "batch": 17,
       "fetch_status": "over_cap",
-      "commits_reachable": false,
-      "diff_status": "unavailable",
-      "judge_1": null,
-      "judge_2": null,
-      "judges_agree": null,
+      "commits_reachable": true,
+      "diff_status": "ok",
+      "diff_commit": "8a3987fd85e29359225c47bbb83a6c303e1201d6",
+      "diff_commit_agent_attributed": true,
+      "judge_1": {
+        "request_type": "style_lint_docs",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judge_2": {
+        "request_type": "style_lint_docs",
+        "addressed": "yes",
+        "testable_offline": "na",
+        "confidence": "high",
+        "verdict": "fails"
+      },
+      "judges_agree": true,
       "qualifies": false,
-      "failure_reason": "fetch_over_the_caps",
+      "failure_reason": "not_behaviour_change_or_defect",
       "failed_conditions": [
-        "commits_reachable"
+        "request_type",
+        "testable_offline"
       ],
       "requirement_paraphrase": null,
       "paraphrase_check": null

@@ -4279,7 +4279,7 @@
       "population": "natural:pr-review",
       "stage": "S9",
       "reasons": [
-        "fetch_over_the_caps"
+        "no later commit changes the commented file"
       ],
       "comment_id": 2230293580,
       "pr_id": 3261572196,
@@ -5291,7 +5291,7 @@
       "population": "natural:pr-review",
       "stage": "S9",
       "reasons": [
-        "fetch_over_the_caps"
+        "not_behaviour_change_or_defect"
       ],
       "comment_id": 2338281320,
       "pr_id": 3404386266,
@@ -5346,7 +5346,7 @@
       "population": "natural:pr-review",
       "stage": "S9",
       "reasons": [
-        "fetch_over_the_caps"
+        "not_behaviour_change_or_defect"
       ],
       "comment_id": 2357402861,
       "pr_id": 3428441045,
@@ -5357,7 +5357,7 @@
       "population": "natural:pr-review",
       "stage": "S9",
       "reasons": [
-        "fetch_over_the_caps"
+        "not_behaviour_change_or_defect"
       ],
       "comment_id": 2357403004,
       "pr_id": 3428441045,
@@ -5368,7 +5368,7 @@
       "population": "natural:pr-review",
       "stage": "S9",
       "reasons": [
-        "fetch_over_the_caps"
+        "not_behaviour_change_or_defect"
       ],
       "comment_id": 2357404058,
       "pr_id": 3428441045,
@@ -5379,7 +5379,7 @@
       "population": "natural:pr-review",
       "stage": "S9",
       "reasons": [
-        "fetch_over_the_caps"
+        "not_behaviour_change_or_defect"
       ],
       "comment_id": 2357405362,
       "pr_id": 3428441045,
@@ -6535,5 +6535,5 @@
       "task_id": "NP-22"
     }
   ],
-  "note": "Natural-data screening (decision log D47): natural:chat (screen-trace-commons:v1; source revision 112ebd4d): 30 screened, 30 rejected, 0 pending review, 0 eligible; natural:pr-review (scripts/screen_aidev.py, screening_natural_aidev_s9.json, screening_natural_aidev_s9x.json, natural_tasks_index.json; source revision b37f9fd1): 684 review_comments on 190 PRs survive stage S8a (a funnel, not per-candidate rows), and of the 150 sampled for S9, 31 qualify, 117 fail (in this ledger with stage S9 and their reasons) and 2 are excluded because the judges disagree, and of the 534 in the S9 extension (protocol \u00a719.2), 91 qualify, 433 fail (in this ledger with stage S9 and their reasons) and 10 are excluded because the judges disagree, and of the 25 families and reserves of S10 in natural_tasks_index.json, 16 are rejected (in this ledger with stage S10 and their reasons) and 3 not built, 6 passed, 6 s11; SWE-chat: not screened (its dataset terms await the owner, D4)."
+  "note": "Natural-data screening (decision log D47): natural:chat (screen-trace-commons:v1; source revision 112ebd4d): 30 screened, 30 rejected, 0 pending review, 0 eligible; natural:pr-review (scripts/screen_aidev.py, screening_natural_aidev_s9.json, screening_natural_aidev_s9x.json, natural_tasks_index.json; source revision b37f9fd1): 684 review_comments on 190 PRs survive stage S8a (a funnel, not per-candidate rows), and of the 150 sampled for S9, 31 qualify, 117 fail (in this ledger with stage S9 and their reasons) and 2 are excluded because the judges disagree, and of the 534 in the S9 extension (protocol \u00a719.2), 91 qualify, 433 fail (in this ledger with stage S9 and their reasons) and 10 are excluded because the judges disagree, and of the 48 families and reserves of S10 in natural_tasks_index.json, 16 are rejected (in this ledger with stage S10 and their reasons) and 26 not built, 6 passed, 6 s11; SWE-chat: not screened (its dataset terms await the owner, D4)."
 }

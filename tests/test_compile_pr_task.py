@@ -67,6 +67,14 @@ def built(tmp_path_factory):
     return w, fams, aidev, results
 
 
+@pytest.fixture(autouse=True)
+def _no_real_s9_inputs(monkeypatch, tmp_path):
+    """The index's S9 record reads the repository's two S9 manifests and the family file outside it by default; here no
+    test reads them unless it passes its own (natural_pr.s9_record)."""
+    monkeypatch.setattr(npr, "S9_MANIFESTS", {s: tmp_path / "absent" / f"{s}.json" for s in ("first", "extension")})
+    monkeypatch.setattr(npr, "COMBINED", tmp_path / "absent" / "s9_qualifying_combined.json")
+
+
 def _git(repo: Path, *args: str) -> bytes:
     return subprocess.run(["git", "-C", str(repo), *args], capture_output=True, check=True).stdout
 
@@ -103,6 +111,16 @@ def test_explicit_task_ids_are_used_and_the_first_samples_families_are_unchanged
     new = [(f.task_id, f.role, f.pr_id, f.comment_id, f.other_qualifying_comment_ids) for f in loaded[len(fams):]]
     assert new == [("NP-26", "family", 9101, 8201, (8211,)), ("NP-27", "reserve", 9102, 8202, ())]
     assert npr.find_family(loaded, 9101).task_id == "NP-26" and 9103 not in {f.pr_id for f in loaded}
+    # A first-sample PR's qualifying comments from the extension are recorded among its other qualifying comments, never as
+    # its correction, even one created earlier (§19.3, D63): only that field of its family changes.
+    k = next(i for i, p in enumerate(prs) if p["pr_id"] == 9002)
+    prs[k] = {**prs[k], "extension_other_qualifying_comment_ids": [8302, 7999]}
+    path.write_text(json.dumps({**q, "comments": comments, "prs": prs}, indent=1))
+    again = npr.load_families(path)
+    f3 = npr.find_family(fams, 9002)
+    assert npr.find_family(again, 9002) == dataclasses.replace(f3, other_qualifying_comment_ids=(7999, 8302))
+    assert f3.comment_id == 8002 and f3.other_qualifying_comment_ids == ()
+    assert [f for f in again if f.pr_id != 9002] == [f for f in loaded if f.pr_id != 9002]
     prs[0]["task_id"] = "NP-27"  # a task id given twice is refused
     path.write_text(json.dumps({**q, "comments": comments, "prs": prs}, indent=1))
     with pytest.raises(ValueError, match="more than one PR"):
@@ -1403,7 +1421,8 @@ def test_the_index_header_rows_samples_and_sanitizer_counts(built, tmp_path):
     assert {t: r["sample"] for t, r in rows.items()} == {**{f.task_id: "first" for f in fams}, "NP-26": "extension"}
     assert (npr.sample_of("NP-25"), npr.sample_of("NP-26"), npr.sample_of("CS-01")) == ("first", "extension", None)
     assert idx["s11_by_sample"] == {"first": 0, "extension": 0} and idx["counts"]["s11"] == 0
-    assert idx["decision_log"] == [f"D{n}" for n in range(47, 61)] and "§19" in idx["protocol"]
+    assert idx["decision_log"] == [*(f"D{n}" for n in range(47, 61)), "D63"] and "§19" in idx["protocol"]
+    assert npr.S9_RECORD not in idx  # its inputs are not there (the module's own fixture): no record is claimed
     src = idx["source"]
     assert (src["licence"], src["url"], src["changes"]) == (
         "CC-BY-4.0", f"https://huggingface.co/datasets/{npr.AIDEV_DATASET}", "ids, SHAs, counts and hashes extracted; no text")
@@ -1412,3 +1431,138 @@ def test_the_index_header_rows_samples_and_sanitizer_counts(built, tmp_path):
     text = (tmp_path / "idx.json").read_text().lower()
     assert handle not in text and ip not in text and AT not in text and "github.com" not in text
     assert not [x for x in forbidden() if x.lower() in text]
+
+
+# --------------------------------------------------------------------------- both samples: the S9 record and the replacements
+
+
+def _preflight():
+    spec = importlib.util.spec_from_file_location("preflight_final_run_npr", REPO / "scripts" / "preflight_final_run.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def _s9_inputs(built, tmp_path: Path, *, prs_edit=None, first_rows_edit=None) -> tuple[dict, Path]:
+    """Synthetic S9 manifests of both samples, of the sizes §15.6 and §19.2 give (150 and 534 comments), and the family file of
+    both samples for the world's families. The first sample's qualifying comments are the world's eight corrections. The
+    extension's five are on two new PRs of repository 104, whose first-sample family NP-05 S10 rejects (NP-26, a family, with
+    two comments; NP-27, a reserve), on a PR with no task id (beyond the cap of its repository) and on NP-03's PR, where it is
+    recorded as an other qualifying comment (§19.3)."""
+    w, fams, _, _ = built
+    q = json.loads(w.qualifying.read_text())
+    ids = {f.pr_id: (f.task_id, f.role) for f in fams}
+    prs = [{**p, "task_id": ids[p["pr_id"]][0], "role": ids[p["pr_id"]][1], "sample": "first",
+            "extension_other_qualifying_comment_ids": [8302] if p["pr_id"] == 9002 else []} for p in q["prs"]]
+    c0, p0 = q["comments"][0], q["prs"][0]
+    comments = [{**c, "sample": "first"} for c in q["comments"]]
+    for pr_id, repo, cids, tid, role, rank in ((9101, 104, [8201, 8211], "NP-26", "family", 2),
+                                               (9102, 104, [8202], "NP-27", "reserve", 3),
+                                               (9103, 109, [8203], None, "beyond_the_cap", 1)):
+        comments += [{**c0, "comment_id": cid, "pr_id": pr_id, "repo_id": repo, "sample": "extension"} for cid in cids]
+        prs.append({**p0, "pr_id": pr_id, "repo_id": repo, "qualifying_comment_ids": cids, "earliest_qualifying_comment_id": cids[0],
+                    "rank_in_repository_by_creation": rank, "s11_family": role == "family", "task_id": tid, "role": role,
+                    "sample": "extension"})
+    if prs_edit:
+        prs_edit(prs)
+
+    def rows(qualifying: list[int], n: int, reason: str, base: int) -> list[dict]:
+        out = [{"comment_id": c, "qualifies": True, "failure_reason": None} for c in qualifying]
+        out += [{"comment_id": base + k, "qualifies": False, "failure_reason": reason} for k in range(n - len(qualifying) - 1)]
+        return out + [{"comment_id": base + n, "qualifies": False, "failure_reason": "judges_disagree"}]  # excluded, screened
+
+    first = {"population": "natural:pr-review", "stage": "S9", "rows": rows([f.comment_id for f in fams], 150, "not_addressed", 20000)}
+    ext = {"population": "natural:pr-review", "stage": "S9", "sample": {"id": "extension", "name": "the S9 extension"},
+           "rows": rows([8201, 8211, 8202, 8203, 8302], 534, "fetch_over_the_caps", 30000)}
+    if first_rows_edit:
+        first_rows_edit(first["rows"])
+    d = tmp_path / "s9_inputs"
+    d.mkdir(parents=True, exist_ok=True)
+    manifests = {"first": d / "screening_natural_aidev_s9.json", "extension": d / "screening_natural_aidev_s9x.json"}
+    manifests["first"].write_text(json.dumps(first))
+    manifests["extension"].write_text(json.dumps(ext))
+    combined = d / "s9_qualifying_combined.json"
+    combined.write_text(json.dumps({**q, "comments": comments, "prs": prs}, indent=1))
+    return manifests, combined
+
+
+S9_EXPECTED = {"first": {"screened": 150, "families": [f"NP-0{k}" for k in range(1, 9)]},
+               "extension": {"screened": 534, "families": ["NP-26", "NP-27"]}}
+
+
+def test_the_index_holds_the_s9_record_of_both_samples_that_the_preflight_reads(built, tmp_path):
+    """s9_complete (§19.5): per sample, the comments with an S9 outcome (an excluded disagreement counts) and the task ids of
+    its families and reserves, from the two S9 manifests and the family file; in exactly the form the pre-flight reads."""
+    w, fams, _, _ = built
+    manifests, combined = _s9_inputs(built, tmp_path)
+    assert npr.s9_record(manifests, combined) == S9_EXPECTED
+    families = npr.load_families(combined)
+    assert [f.task_id for f in families] == [*S9_EXPECTED["first"]["families"], "NP-26", "NP-27"]
+    assert npr.find_family(families, 9002).other_qualifying_comment_ids == (8302,)  # recorded, not the correction
+    out = tmp_path / "idx.json"
+    idx = npr.write_natural_index(w.out, out, families=families, s9_manifests=manifests, combined=combined)
+    assert idx[npr.S9_RECORD] == S9_EXPECTED and list(idx)[-2:] == [npr.S9_RECORD, "tasks"]
+    assert npr.S9_RECORD in idx["fields"] and "replaced_by" in idx["fields"]
+    pf = _preflight()
+    assert pf.S9_RECORD == npr.S9_RECORD and pf.S9_SAMPLE_SIZES == {s: v["screened"] for s, v in S9_EXPECTED.items()}
+    assert pf.s9_problems(json.loads(out.read_text())) == []  # the file as written: S9 is complete, every family has a row
+    # Rows from the first sample's file only: the extension's families have no row, so the record does not show completion.
+    idx1 = npr.write_natural_index(w.out, tmp_path / "idx1.json", families=fams, s9_manifests=manifests, combined=combined)
+    assert pf.s9_problems(idx1) == ["2 of the extension sample's families and reserves (s9_complete.extension.families) have "
+                                    "no row in the index (NP-26, NP-27)"]
+    # A comment without an S9 outcome is not screened.
+    m2, c2 = _s9_inputs(built, tmp_path, first_rows_edit=lambda rows: rows[-1].update(failure_reason=None))
+    idx2 = npr.write_natural_index(w.out, tmp_path / "idx2.json", families=families, s9_manifests=m2, combined=c2)
+    assert idx2[npr.S9_RECORD]["first"]["screened"] == 149
+    assert pf.s9_problems(idx2) == ["S9 has not screened the whole first sample (s9_complete.first.screened is 149, the sample "
+                                    "has 150 comments)"]
+    # Without the family file there is no record, and the pre-flight's stop rule cannot pass on its second branch.
+    idx3 = npr.write_natural_index(w.out, tmp_path / "idx3.json", families=families, s9_manifests=manifests,
+                                   combined=tmp_path / "missing.json")
+    assert npr.S9_RECORD not in idx3 and len(pf.s9_problems(idx3)) == 2
+    text = out.read_text().lower()
+    assert not [x for x in forbidden() if x.lower() in text] and "github.com" not in text and str(tmp_path).lower() not in text
+
+
+@pytest.mark.parametrize("edit, match", [
+    (lambda prs: prs[-3]["qualifying_comment_ids"].remove(8211), "does not hold the 5 qualifying comments"),
+    (lambda prs: prs[-2]["qualifying_comment_ids"].append(8201), "does not hold the 5 qualifying comments"),
+    (lambda prs: prs[0]["qualifying_comment_ids"].append(8999), "does not hold the 8 qualifying comments"),
+    (lambda prs: prs[-3].update(task_id="NP-12"), "outside its range"),
+])
+def test_the_s9_record_refuses_a_family_file_that_disagrees_with_the_manifests(built, tmp_path, edit, match):
+    manifests, combined = _s9_inputs(built, tmp_path, prs_edit=edit)
+    with pytest.raises(ValueError, match=match):
+        npr.s9_record(manifests, combined)
+    manifests, combined = _s9_inputs(built, tmp_path / "x")
+    with pytest.raises(ValueError, match="not the S9 result of the first sample"):
+        npr.s9_record({"first": manifests["extension"], "extension": manifests["first"]}, combined)
+
+
+def test_a_rejected_familys_place_goes_only_to_a_reserve_of_its_own_sample(built, tmp_path):
+    """§17.3 with §19.3 as D63 reads it: the first sample's rejected NP-05 leaves its place to the extension's new family
+    NP-26, not to the extension's reserve NP-27 of the same repository; NP-27 takes the place of NP-26 when S10 rejects it,
+    and the first sample's NP-02 still goes to the first sample's reserve NP-08."""
+    w, _, _, _ = built
+    manifests, combined = _s9_inputs(built, tmp_path)
+    families = npr.load_families(combined)
+    out = tmp_path / "tasks"
+    shutil.copytree(w.out, out)
+    (out / "NP-26").mkdir()
+    (out / "NP-26" / "rejection.json").write_text(json.dumps({
+        "schema": "tracecontract/natural-rejection/v1", "compiler": npr.COMPILER, "task_id": "NP-26", "pr_id": 9101, "repo_id": 104,
+        "comment_id": 8201, "stage": "S10", "reason": "base tests fail to collect", "details": {}, "at": "2026-01-01T00:00:00+00:00"}))
+    idx = npr.write_natural_index(out, tmp_path / "idx.json", families=families, s9_manifests=manifests, combined=combined)
+    rows = {r["task_id"]: r for r in idx["tasks"]}
+    assert {t: rows[t]["s10"]["outcome"] for t in ("NP-02", "NP-05", "NP-08", "NP-26", "NP-27")} == {
+        "NP-02": "rejected", "NP-05": "rejected", "NP-08": "built", "NP-26": "rejected", "NP-27": "not built"}
+    assert rows["NP-05"]["repo_id"] == rows["NP-26"]["repo_id"] == rows["NP-27"]["repo_id"] == 104
+    assert "replaced_by" not in rows["NP-05"]  # the old rule gave it NP-27, the extension's reserve
+    assert rows["NP-26"]["replaced_by"] == "NP-27" and rows["NP-02"]["replaced_by"] == "NP-08"
+    assert {t: r["replaced_by"] for t, r in rows.items() if "replaced_by" in r} == {"NP-02": "NP-08", "NP-26": "NP-27"}
+    root = tmp_path / "repo"
+    (root / "tasks").mkdir(parents=True)
+    (root / "data" / "manifests").mkdir(parents=True)
+    shutil.copy(tmp_path / "idx.json", root / "data" / "manifests" / "natural_tasks_index.json")
+    s10 = {r["task_id"]: r for r in _bm().build(root)[1]["rejections"] if r.get("stage") == "S10"}
+    assert s10["NP-26"]["replaced_by"] == "NP-27" and "replaced_by" not in s10["NP-05"]
