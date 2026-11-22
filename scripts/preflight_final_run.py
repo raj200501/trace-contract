@@ -131,8 +131,8 @@ differences and additions:
   ``scripts/select_b3_tests.py``) with ``b3_available`` false. Without such a record it fails. A B3
   verifier left unfrozen in ``task.json`` after a selection that kept no test fails as not frozen, with
   a hint that it must be kept out of the run;
-* ``labels/generator_audit.json`` audits every agent of the natural recipe (``NATURAL_AUDIT_ROLES``,
-  entries named after the agents' workspaces): the contract proposers, the generators, the revisers
+* ``labels/generator_audit.json`` audits every agent of the natural recipe (decision log D64;
+  ``NATURAL_AUDIT_ROLES``, entries named after the agents' workspaces): the contract proposers, the generators, the revisers
   of the audited verifiers (``revise-initial-<i>`` and ``revise-full-<i>``, as many as the verifier's
   audit record counts revisions), the reference-contract drafter, the reference-check writer and at
   least one reviewer (``refcheck-review-<r>``), the labeler writer and, when its ``status.json``
@@ -243,8 +243,8 @@ B3_SELECTION = "selection.json"  # beside a B3 verifier's spec: scripts/select_b
 # scripts/audit_eval_generators.py --profile natural, which strict_reaudit.py reads to re-audit with the same profile).
 NATURAL_AUDIT_PROFILE = "natural-agent:v1"
 # The entries of labels/generator_audit.json (each named after its agent's workspace) that a natural PR-review family
-# needs before its run: one audit of every agent of the natural recipe, by role (the natural recipe's decision-log entry
-# is to list the same). Further entries are needed where the family's records count further agents: a reviser per
+# needs before its run: one audit of every agent of the natural recipe (D64), by role, as D64's table of workspaces and
+# audit entries lists them. Further entries are needed where the family's records count further agents: a reviser per
 # revision of an audited verifier (REVISER, i = 1 .. its audit record's iterations), the labeler's revision
 # (LABELER_REVISION, when the labeler's status.json records round 2) and at least one reviewer of the reference checks
 # (REFCHECK_REVIEWER). Other entries (the fixers of the reference checks, whose rounds no record counts, and a checker)
@@ -971,7 +971,7 @@ def unavailable_baselines(td: Path, m: TaskManifest, missing: list[str]) -> list
 def natural_audits_missing(present: set[str], specs: list[VerifierSpec], labeler_round: int | None) -> list[str]:
     """The entries of ``labels/generator_audit.json`` that a natural PR-review family needs (:data:`NATURAL_AUDIT_ROLES`,
     the revisers its audited verifiers' audit records count, a reviewer of the reference checks, the labeler's revision
-    when ``labeler_round`` is 2 or more) and that are not ``present``, in the order of the recipe."""
+    when ``labeler_round`` is 2 or more) and that are not ``present``, in the order of the recipe (D64)."""
     roles = NATURAL_AUDIT_ROLES
     need = [*roles["contract proposers"], *roles["generators"]]
     for cond, variant in AUDITED_VARIANTS.items():
@@ -1288,7 +1288,7 @@ def main(*argv: str) -> int:
                 audit_problem(f"{m.task_id}: generator audit {ws} has no strict re-audit (scripts/strict_reaudit.py, D44)")
             elif not strict.get("assessment") or any("error" in t for t in strict.get("transcripts", {}).values()):
                 audit_problem(f"{m.task_id}: strict re-audit of {ws} is unassessed or lacks a transcript")
-        if natural:  # an audit of every agent of the natural recipe; those of the pool generators are pool problems
+        if natural:  # an audit of every agent of the natural recipe (D64); those of the pool generators are pool problems
             missing = natural_audits_missing(set(audit) - {"_rules"}, [*specs, *(s for _, s in side)], labeler_round)
             pool_roles = set(NATURAL_AUDIT_ROLES["pool generators"])
             own = [ws for ws in missing if ws not in pool_roles and not generates_held_out(ws, m.task_id, held)]

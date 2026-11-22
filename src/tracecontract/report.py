@@ -17,7 +17,16 @@ these features (``pilot-v0.3.3``) renders as it did.
 
 A run that graded the independent labeler shows its second labeling (``independent_labeling``) beside
 the primary labels, with the agreement between D19 and the labeler, and a label-support verifier's
-column is marked as such. When the run directory holds the sensitivity view of protocol §18.1
+column is marked as such.
+
+A natural PR-review run (``natural`` in the analysis; protocol §15.6, §19.6) also shows its banner (case-study mode
+or not, and its families against the committed index), the source-evidence block with each pre-review state, the
+natural families' flags and the cost per accepted task. B3 is shown apart from the primary conditions, as a secondary
+condition (``secondary``). In case-study mode (``meta.case_study.applies``: fewer than 10 accepted tasks) every table
+is per task family and nothing pooled is shown, since the analysis records no pooled rate, interval or p-value. With
+10 or more accepted tasks the reporting rules of a new run apply, with the exploratory view clustered by repository.
+
+When the run directory holds the sensitivity view of protocol §18.1
 (``analysis_sensitivity.json`` and ``.md``, written by ``tracecontract analyze --sensitivity-exclusions``),
 a banner links to it and says whether it was computed with the current ``analysis.json``.
 """
@@ -200,6 +209,10 @@ def _new_run_sections(analysis: dict) -> str:
     if o["comparisons"]:
         out.append(_signflip_table(o["comparisons"], "<h4>Oracle-gated paired comparisons</h4><p class='muted'>Same candidates, on "
                                                      "the tasks that both conditions keep.</p>"))
+    if o.get("secondary_comparisons"):  # B3 of a natural run: secondary, outside the primary null tally
+        out.append(_signflip_table(o["secondary_comparisons"], "<h4>Oracle-gated secondary paired comparisons (B3)</h4><p "
+                                                               "class='muted'>Same candidates, on the tasks that both "
+                                                               "conditions keep; secondary.</p>"))
     dp = analysis["distinct_patches"]
     groups = "".join(f"<li>{_e(g['task_id'])}: {_e(', '.join(g['members']))} count once, as {_e(g['representative'])} (label "
                      f"{_e(g['label'] or 'none')}{'' if g['labels_agree'] else '; the labels disagree'}"
@@ -254,6 +267,278 @@ def _source_section(s: dict) -> str:
 
 def _two_rates(d: dict) -> str:
     return f"<td>{_rate(d['false_acceptance'], False)}</td><td>{_rate(d['false_rejection'], False)}</td>"
+
+
+# --------------------------------------------------------------------------- natural PR-review runs (protocol §15.6, §19.6)
+
+
+def _family_key(f: str) -> tuple[int, str]:
+    """Natural family ids in their number's order (NP-03 before NP-26 before NP-100), as the analysis orders them."""
+    head, _, tail = f.rpartition("-")
+    return (int(tail), f) if head and tail.isdigit() else (10 ** 9, f)
+
+
+def _families(by_condition: dict) -> list[str]:
+    return sorted({f for d in by_condition.values() for f in d}, key=_family_key)
+
+
+def _num_den(x: dict | None, num: str, den: str) -> str:
+    return "—" if x is None else f"{x[num]}/{x[den]}"
+
+
+def _family_table(per_family: dict, name=_cname) -> str:
+    """FA and FR per condition, an FA and an FR column (num/den) per task family; no column pools the families."""
+    fams = _families(per_family)
+    out = ["<div class='scroll'><table><tr><th>Condition</th>"
+           + "".join(f"<th>{_e(f)} FA</th><th>{_e(f)} FR</th>" for f in fams) + "</tr>"]
+    for c, pf in _ordered(per_family):
+        cells = "".join(f"<td>{_num_den(pf.get(f), 'fa_num', 'fa_den')}</td><td>{_num_den(pf.get(f), 'fr_num', 'fr_den')}</td>"
+                        for f in fams)
+        out.append(f"<tr><td>{name(c)}</td>{cells}</tr>")
+    out.append("</table></div>")
+    return "".join(out)
+
+
+def _secondary_name(c: str) -> str:
+    return f"{_cname(c)} <span class='muted'>(secondary)</span>"
+
+
+def _natural_banner(analysis: dict) -> str:
+    """The banner of a natural run: case-study mode or not (§19.6), where its records were read, and its families against
+    the committed index (§19.7)."""
+    cs, nat = analysis["meta"].get("case_study", {}), analysis.get("natural", {})
+    if cs.get("applies"):
+        out = [(f"<div class='banner'><b>Exploratory case studies</b> (protocol §19.6): {_e(cs.get('why'))}. Every table below "
+                "is per task family: no pooled rate, interval or p-value is reported, and the tasks are exploratory case "
+                "studies.</div>")]
+    else:
+        out = [f"<div class='banner'><b>Natural PR-review arm</b> (protocol §15.6, §19.6): {_e(cs.get('why', 'not recorded'))}.</div>"]
+    rec, idx = nat.get("records", {}), nat.get("index", {})
+    if rec.get("basis") == "head":
+        out.append(f"<div class='banner'><b>Records read at HEAD</b>: {_e(rec.get('why'))}, so the natural index and the screening "
+                   "records are read as the HEAD commit holds them when the analysis runs.</div>")
+    if idx and not idx.get("matches"):
+        parts = ([f"the committed index cannot be read ({_e(idx.get('why'))})"] if not idx.get("readable") else []) + (
+            ["not accepted (S11) there: " + _e(", ".join(idx["run_families_not_s11"]))] if idx.get("run_families_not_s11") else []) + (
+            ["accepted families the run leaves out: " + _e(", ".join(idx["s11_not_in_run"]))] if idx.get("s11_not_in_run") else [])
+        out.append(f"<div class='banner'><b>The run's families against the committed index</b> ({_e(idx.get('source'))}): "
+                   + "; ".join(parts) + ". The run natural-pr-v1 grades every accepted family together (protocol §19.7).</div>")
+    return "".join(out)
+
+
+def _secondary_section(sec: dict, case_study: bool) -> str:
+    """B3, the secondary condition of a natural run (§15.6): its per-family table and, outside case-study mode, its pooled
+    rates and its paired comparisons, with their own null tally."""
+    out = [(f"<h3>Secondary condition: B3 (diff-derived)</h3><p class='muted'>{_e(_sentence(sec['rule']))}. (num/den) per "
+            "task family, each distinct graded patch once.</p>"), _family_table(sec["per_family"], _secondary_name)]
+    if not case_study:
+        out.append("<div class='scroll'><table><tr><th>Condition</th><th>False acceptance</th><th>False rejection</th></tr>")
+        for c, d in _ordered(sec.get("conditions", {})):
+            out.append(f"<tr><td>{_secondary_name(c)}</td>{_two_rates(d)}</tr>")
+        out.append("</table></div>")
+        if sec.get("comparisons"):
+            out.append(_signflip_table(sec["comparisons"], "<h4>Secondary paired comparisons (B3)</h4><p class='muted'>Same "
+                                                            "candidates, each distinct graded patch once; secondary, outside "
+                                                            "the primary null tally.</p>"))
+    return "".join(out)
+
+
+def _correction_cell(ids: list[str], observes) -> str:
+    """A family's correction requirements; with none, what that means (decision log D64, decision 14)."""
+    if ids:
+        return _e(", ".join(ids))
+    if observes is None:
+        return "none known (no reference contract)"
+    return "none: the reference contract does not observe the correction, and no near miss targets it"
+
+
+def _natural_source_section(s: dict, case_study: bool) -> str:
+    """The source-evidence block of a natural run: its banner, the pre-review states accepted per family and condition,
+    each pre-review state's D19 value, second-labeling label and reference-check outcome, and outside case-study mode
+    the pooled counts and the paired sign-flip comparisons."""
+    out = [f"<h3>Source-evidence labels (reported apart from D19)</h3><div class='banner'><b>{_e(_sentence(s['banner']))}</b>"
+           "</div>" + (f"<p class='muted'>{_e(_sentence(s['rule']))}.</p>" if s.get("rule") else "")]
+    rows = [(c, _cname(c), pf) for c, pf in _ordered(s.get("per_family", {}))] + [
+        (c, _secondary_name(c), pf) for c, pf in _ordered(s.get("secondary_per_family", {}))]
+    fams = _families({c: pf for c, _, pf in rows})
+    out.append("<p class='muted'>Pre-review states accepted, per task family and condition (invalid by source evidence; "
+               "accepted is a false acceptance under this labeling).</p><div class='scroll'><table><tr><th>Condition</th>"
+               + "".join(f"<th>{_e(f)}</th>" for f in fams) + "</tr>")
+    for _, name, pf in rows:
+        cells = []
+        for f in fams:
+            x = pf.get(f, {}).get("invalid")
+            cells.append("—" if not x or not x["n"] else ("accepted" if x["accepted"] else "rejected") if x["n"] == 1
+                         else f"{x['accepted']}/{x['n']} accepted")
+        out.append(f"<tr><td>{name}</td>" + "".join(f"<td>{c}</td>" for c in cells) + "</tr>")
+    out.append("</table></div><div class='scroll'><table><tr><th>Family</th><th>Candidate</th><th>Source evidence</th><th>D19</th>"
+               "<th>Independent labeler (outcome)</th><th>Reference checks in the run</th><th>Correction requirements</th></tr>")
+    for key, x in s.get("pre_review", {}).items():
+        second = ("left out (labeler not usable)" if x.get("independent_label_left_out") else
+                  "not graded" if x.get("independent_label_outcome") is None else
+                  f"{_e(x.get('independent_label'))} ({_e(x.get('independent_label_outcome'))})")
+        out.append(f"<tr><td>{_e(x.get('family_id'))}</td><td>{_e(key.split('/', 1)[-1])}</td><td>{_e(x.get('source_evidence'))}</td>"
+                   f"<td>{_e(x.get('d19'))}</td><td>{second}</td><td>{_e(x.get('reference_checks_outcome'))}</td>"
+                   f"<td>{_correction_cell(x.get('correction_requirements') or [], x.get('reference_observes_correction'))}</td></tr>")
+    out.append("</table></div>")
+    if not case_study and "conditions" in s:
+        out.append("<div class='scroll'><table><tr><th>Condition</th><th>Invalid by source evidence, accepted</th>"
+                   "<th>Valid by source evidence, rejected</th></tr>")
+        pooled = [(_cname(c), d) for c, d in _ordered(s["conditions"])] + [
+            (_secondary_name(c), d) for c, d in _ordered(s.get("secondary_conditions", {}))]
+        for name, d in pooled:
+            out.append(f"<tr><td>{name}</td><td>{d['invalid']['accepted']}/{d['invalid']['n']}</td>"
+                       f"<td>{d['valid']['rejected']}/{d['valid']['n']}</td></tr>")
+        out.append("</table></div>")
+        if s.get("comparisons"):
+            out.append(_signflip_table(s["comparisons"], "<h4>Paired comparisons under the source-evidence labels</h4><p "
+                                                         "class='muted'>The pre-review states, each once.</p>"))
+        if s.get("secondary_comparisons"):
+            out.append(_signflip_table(s["secondary_comparisons"], "<h4>Secondary paired comparisons (B3) under the "
+                                                                   "source-evidence labels</h4><p class='muted'>Secondary, "
+                                                                   "outside the primary null tally.</p>"))
+    return "".join(out)
+
+
+def _left_out(x: dict) -> str:
+    if not x.get("left_out"):
+        return ""
+    items = "".join(f"<li>{_e(t)}: {_e(d['why'])}</li>" for t, d in x["left_out"].items())
+    return (f"<p>Left out of the second labeling ({len(x['left_out'])}; their labeler is not usable, protocol §15.5):</p>"
+            f"<ul>{items}</ul>")
+
+
+def _agreement_line(title: str, g: dict) -> str:
+    rate = "n/a" if g["agreement"] is None else f"{g['agreement']:.2f}"
+    kappa = "n/a" if g["kappa"] is None else f"{g['kappa']:.2f}" + (" (degenerate)" if g["kappa_degenerate"] else "")
+    t = g["table"]
+    return (f"<p><b>{_e(title)}</b>: {g['n_units']} unit(s); both decide {g['n_decided_by_both']}: agree {g['agree']}, "
+            f"disagree {g['disagree']} (agreement {rate}, Cohen's κ {kappa}).</p><div class='scroll'><table>"
+            "<tr><th>D19 \\ independent</th><th>valid</th><th>invalid</th></tr>"
+            + "".join(f"<tr><td>{a}</td><td>{t[a]['valid']}</td><td>{t[a]['invalid']}</td></tr>" for a in ("valid", "invalid"))
+            + "</table></div>")
+
+
+def _independent_case_section(x: dict) -> str:
+    """The second labeling in case-study mode (§19.6): its labels, FA and FR under each labeling and its agreement with
+    D19, per task family only."""
+    sanity = "; ".join(f"{_e(t)} {_e(o)} {s['pass']}/{s['n']}" for t, d in x["sanity"].items() for o, s in d.items()) or "not graded"
+    out = [f"<h3>Independent labeler: a second labeling, per task family</h3><p class='muted'>{_e(_sentence(x['rule']))}. "
+           + (f"{_e(_sentence(x['natural_rule']))}. " if x.get("natural_rule") else "")
+           + f"Graded on {_e(', '.join(x['tasks']) or 'no task')}. The labeler passes on (sanity): {sanity}. "
+           f"Primary: {_e(x['primary_labels'])}.</p>", _left_out(x),
+           "<div class='scroll'><table><tr><th>Family</th><th>valid</th><th>invalid</th><th>ambiguous</th><th>not graded</th></tr>"]
+    out += [f"<tr><td>{_e(f)}</td><td>{d['valid']}</td><td>{d['invalid']}</td><td>{d['ambiguous']}</td><td>{d['not_graded']}</td></tr>"
+            for f, d in x["labels_per_family"].items()]
+    out.append("</table></div>")
+    fams = _families({c: {**d["primary"], **d["independent_label"]} for c, d in x["per_family"].items()})
+    out.append("<div class='scroll'><table><tr><th>Condition</th><th>Labeling</th>"
+               + "".join(f"<th>{_e(f)} FA</th><th>{_e(f)} FR</th>" for f in fams) + "</tr>")
+    for c, d in _ordered(x["per_family"]):
+        for labeling, key in (("primary", "primary"), ("independent", "independent_label")):
+            cells = "".join(f"<td>{_num_den(d[key].get(f), 'fa_num', 'fa_den')}</td><td>{_num_den(d[key].get(f), 'fr_num', 'fr_den')}</td>"
+                            for f in fams)
+            out.append(f"<tr><td>{_cname(c)}</td><td>{labeling}</td>{cells}</tr>")
+    out.append("</table></div>")
+    ag = x["agreement"]
+    out.append(f"<h4>Agreement between D19 and the independent labeler, per family</h4><p class='muted'>{_e(_sentence(ag['rule']))}.</p>")
+    out += [_agreement_line(f"Family {f}", g) for f, g in ag["per_family"].items()]
+    return "".join(out)
+
+
+def _case_study_summary(analysis: dict) -> str:
+    """The primary display of a natural run in case-study mode (§19.6): every table per task family, none pooled."""
+    sec = ", ".join(analysis["meta"].get("secondary_conditions", {}).get("conditions", [])) or "none"
+    out = [(f"<h2>Primary display: false acceptance and false rejection per task family</h2><p class='muted'>Tasks: "
+            f"{analysis['n_tasks']} · task families: {analysis['n_families']} · recorded verification results: "
+            f"{analysis['meta']['n_results']}. (num/den) per task family under D19, each distinct graded patch once; the "
+            f"reference solution and the no-op are excluded (sanity table below), and so is the secondary condition "
+            f"({_e(sec)}). No column pools the families (case-study mode, §19.6).</p>"), _family_table(analysis["per_family"])]
+    if analysis.get("secondary"):
+        out.append(_secondary_section(analysis["secondary"], case_study=True))
+    sanity = analysis.get("sanity_per_family", {})
+    fams = _families(sanity)
+    out.append("<h3>Sanity checks per family</h3><div class='scroll'><table><tr><th>Condition</th>"
+               + "".join(f"<th>{_e(f)} reference passes</th><th>{_e(f)} no-op passes</th>" for f in fams) + "</tr>")
+    for c, d in _ordered(sanity):
+        cells = "".join(f"<td>{_num_den(d.get(f, {}).get(o), 'pass', 'n')}</td>" for f in fams for o in ("reference", "noop"))
+        out.append(f"<tr><td>{_cname(c)}</td>{cells}</tr>")
+    out.append("</table></div>")
+    return "".join(out)
+
+
+def _case_study_sections(analysis: dict) -> str:
+    """The oracle-gated view, the distinct graded patches and the exploratory tables of a case-study analysis, per family."""
+    o = analysis["oracle_gated"]
+    out = [(f"<h3>Oracle-gated view per family (secondary)</h3><p class='muted'>{_e(_sentence(o['rule']))}.</p>"
+            "<div class='scroll'><table><tr><th>Condition</th><th>Cells kept</th><th>Dropped</th>"
+            "<th>Lost yield per family (invalid / valid)</th></tr>")]
+    for c, d in _ordered(o["conditions"]):
+        dropped = "; ".join(f"{_e(t)}: {_e(why)}" for t, why in d["dropped"].items()) or "—"
+        lost = ", ".join(f"{_e(f)} {x['invalid']} / {x['valid']}" for f, x in d["lost_yield_per_family"].items()) or "—"
+        out.append(f"<tr><td>{_cname(c)}</td><td>{d['cells_kept']}/{d['cells']}</td><td>{dropped}</td><td>{lost}</td></tr>")
+    out.append("</table></div><p class='muted'>False acceptance and false rejection on the cells kept:</p>"
+               + _family_table({c: d["per_family"] for c, d in o["conditions"].items()}))
+    dp = analysis["distinct_patches"]
+    groups = "".join(f"<li>{_e(g['task_id'])}: {_e(', '.join(g['members']))} count once, as {_e(g['representative'])}</li>"
+                     for g in dp["groups"])
+    out.append(f"<h3>Distinct graded patches</h3><p class='muted'>{dp['n_distinct']} distinct graded patches among "
+               f"{dp['n_heldout']} held-out candidates: {_e(dp['rule'])}.</p>" + (f"<ul>{groups}</ul>" if groups else ""))
+    for key, title in (("sensitivity_every_candidate_per_family", "Every held-out candidate (duplicates included)"),
+                       ("sensitivity_construction_labels_per_family", "Exploratory sensitivity: construction-intent labels"),
+                       ("sensitivity_check_labels_per_family", "Post hoc: the independent construction checks' labels"),
+                       ("sensitivity_without_duplicates_per_family", "Post hoc: without held-out duplicates")):
+        if analysis.get(key):
+            out.append(f"<h3>{_e(title)}, per family</h3>" + _family_table(analysis[key]))
+    return "".join(out)
+
+
+def _natural_sections(nat: dict) -> str:
+    """The natural families' flags and the cost per accepted task; the funnel and the reliability tables are in analysis.md."""
+    out = [("<h3>Natural families: sample, B1 and correction requirements</h3><div class='scroll'><table><tr><th>Family</th>"
+            "<th>Sample</th><th>S11</th><th>B1 available (S10)</th><th>B1 = D19 regression norm</th><th>Labeler</th>"
+            "<th>Correction requirements</th><th>Near misses on the correction</th></tr>")]
+    for t, f in nat.get("families", {}).items():
+        eq = f["b1_equals_regression_norm"]
+        same = "not known" if eq.get("equal") is None else "yes" if eq["equal"] else "no"
+        lab = f["labeler"]
+        nm = f["near_misses_on_correction"]
+        out.append(f"<tr><td>{_e(t)}</td><td>{_e(f.get('sample'))}</td><td>{_e(f.get('s11'))}</td><td>{_e(f['b1']['available'])}</td>"
+                   f"<td>{same}</td><td>{'usable' if lab['usable'] else 'not usable (' + _e(lab.get('status')) + ')'}</td>"
+                   f"<td>{_correction_cell(f['correction_requirements'], f['reference_observes_correction'])}</td>"
+                   f"<td>{len(nm['on_correction'])} of {nm['near_misses']}</td></tr>")
+    out.append("</table></div>")
+    c = nat.get("cost")
+    if c:
+        per, every = c["per_accepted_task"], c.get("s10_every_family", {})
+
+        def v(x) -> str:
+            return "n/a" if x is None else str(x)
+
+        out.append(f"<h3>Cost and time per accepted task</h3><p>Over the run's {c['n_families']} families, per accepted task: "
+                   f"{v(per['turns'])} agent turns, {v(per['tool_calls'])} tool calls, {v(per['wall_s'])} s of agent wall time, "
+                   f"{v(per['grading_wall_s'])} s of grading. S10, its time and its fetches counted on one basis (every family "
+                   f"S10 processed, rejected ones included: {every.get('n_processed', 'n/a')} families, a recorded time for "
+                   f"{every.get('n_families', 'n/a')}): {v(per['s10_seconds_every_family'])} s of build time, "
+                   f"{v(per['fetch_seconds_all_s10'])} s and {v(per['fetch_bytes_all_s10'])} bytes of fetches per accepted task; "
+                   f"the run's families' own S10 build time: {v(per['s10_seconds_run_families'])} s per accepted task.</p>"
+                   "<p class='muted'>Not recorded, so not counted: " + "; ".join(_e(x) for x in c["unrecorded"]) + ".</p>")
+    out.append("<p class='muted'>The funnel S1 to S11, build and replay reliability and the cost per family are in "
+               "<code>analysis.md</code>.</p>")
+    return "".join(out)
+
+
+def _repository_section(v: dict) -> str:
+    """The exploratory view clustered by repository of a natural run with 10 or more accepted tasks (D64, decision 10)."""
+    out = [(f"<h3>Exploratory view clustered by repository (not pre-specified)</h3><p class='muted'>{_e(_sentence(v['rule']))}. "
+            f"{len(v['clusters'])} cluster(s); the families of one repository: {_e(', '.join(v['shared']) or 'none')}.</p>"),
+           _family_table(v["per_cluster"])]
+    if v.get("comparisons"):
+        out.append(_signflip_table(v["comparisons"], "<h4>Paired comparisons over repositories (D19 labels)</h4>"))
+    if v.get("source_evidence_comparisons"):
+        out.append(_signflip_table(v["source_evidence_comparisons"], "<h4>Paired comparisons over repositories under the "
+                                                                     "source-evidence labels</h4>"))
+    return "".join(out)
 
 
 def _independent_section(x: dict) -> str:
@@ -332,6 +617,13 @@ def _bootstrap_appendix(analysis: dict) -> str:
         out.append(f"<tr><td>{_e(d['a'])}</td><td>{_e(d['b'])}</td><td>{d['metric'].upper()}</td><td>{diff}</td><td>{ci}</td>"
                    f"<td>{d['n_families']}</td></tr>")
     out.append("</table></div>")
+    if analysis.get("secondary"):  # B3 of a natural run: its own intervals, apart from the primary conditions
+        out.append("<p class='muted'>Secondary condition (B3):</p><div class='scroll'><table><tr><th>Condition</th>"
+                   "<th>False acceptance [95% bootstrap]</th><th>False rejection [95% bootstrap]</th></tr>")
+        for c, d in _ordered(analysis["secondary"].get("conditions", {})):
+            out.append(f"<tr><td>{_secondary_name(c)}</td><td>{_rate(d['false_acceptance'])}</td>"
+                       f"<td>{_rate(d['false_rejection'])}</td></tr>")
+        out.append("</table></div>")
     for title, key in (("By population", "by_population"), ("By candidate stratum", "by_stratum")):
         if analysis.get(key):
             out.append(_group_tables(f"{title} (bootstrap intervals)", "Groups with fewer than 10 task families are not inferential.",
@@ -382,7 +674,9 @@ def build_report(run_dir: Path, tasks_root: Path, repo_root: Path, out: Path) ->
     manifest = json.loads((run_dir / "manifest.json").read_text())
     results = read_jsonl(run_dir / "results.jsonl", VerificationResult)
     meta = analysis["meta"]
-    new = "reporting_rules" in meta  # a new run: the reporting rules of protocol §15.7
+    # A natural run in case-study mode (protocol §19.6) has per-family tables only: no pooled key to read.
+    case_study = bool(meta.get("case_study", {}).get("applies"))
+    new = "reporting_rules" in meta and not case_study  # a new run: the reporting rules of protocol §15.7
     pops = sorted(meta.get("populations") or {load(tasks_root / t["task_id"] / "task.json", TaskManifest).population.value
                                               for t in manifest["tasks"]})
     strata_of = {t["task_id"]: run_stratum_candidates(tasks_root / t["task_id"], t) for t in manifest["tasks"]}
@@ -405,59 +699,68 @@ def build_report(run_dir: Path, tasks_root: Path, repo_root: Path, out: Path) ->
     sensitivity = _sensitivity_banner(run_dir, out)  # '' unless the run directory holds the sensitivity view (§18.1)
     if sensitivity:  # never an empty part: the parts are joined by newlines, so the recorded reports stay byte for byte
         parts.append(sensitivity)
-    if new:
-        parts.append(_new_run_summary(analysis))
-        rates = ("Pooled rates with (num/den), each distinct graded patch once; the cluster-bootstrap intervals are in the "
-                 "appendix. The exact (Clopper-Pearson) interval ignores clustering and is a reference scale only. The macro rate is "
-                 "the mean of the per-family rates (primary display above).")
+    if analysis.get("natural"):  # a natural PR-review run: case-study mode or not, and the index check (§19.6, §19.7)
+        parts.append(_natural_banner(analysis))
+    if case_study:  # per-family tables only (§19.6): no pooled rate, interval or p-value
+        parts.append(_case_study_summary(analysis))
     else:
-        rates = ("Pooled rates with (num/den) and the 95% task-family bootstrap interval; * marks a degenerate interval (every "
-                 "family has the same rate, so resampling families cannot vary it). The exact (Clopper-Pearson) interval ignores "
-                 "clustering and is a reference scale only. The macro rate is the mean of the per-family rates (table below).")
-    parts.append(f"<h2>Summary by verifier condition</h2><p class='muted'>Tasks: {analysis['n_tasks']} · task families: "
-                 f"{analysis['n_families']} · recorded verification results: {meta['n_results']}. Reference solution and "
-                 f"no-op excluded from the rates (sanity table below). {rates}</p><div class='scroll'><table><tr><th>Condition</th>"
-                 "<th>False acceptance</th><th>FA exact 95%</th><th>FA macro</th><th>False rejection</th><th>FR exact 95%</th>"
-                 "<th>FR macro</th><th>Families with an accepted negative</th><th>Infrastructure outcomes</th>"
-                 "<th>Excluded (unlabeled/ambiguous)</th></tr>")
-    mac = lambda x: "—" if x.get("macro") is None else f"{x['macro']:.2f}"  # noqa: E731
-    for c, d in _ordered(analysis["conditions"]):
-        fa, fr = d["false_acceptance"], d["false_rejection"]
-        tn = d.get("tasks_with_any_accepted_negative", {"num": 0, "den": 0})
-        parts.append(f"<tr><td>{_cname(c)}</td><td>{_rate(fa, not new)}</td><td>{_iv(fa.get('exact95'))}</td><td>{mac(fa)}</td>"
-                     f"<td>{_rate(fr, not new)}</td><td>{_iv(fr.get('exact95'))}</td><td>{mac(fr)}</td><td>{tn['num']}/{tn['den']}</td>"
-                     f"<td>{d['infrastructure']['num']}/{d['infrastructure']['den']}</td><td>{d['excluded_unlabeled_or_ambiguous']}</td></tr>")
-    sanity_head = ("</table></div><h3>Sanity checks</h3><div class='scroll'><table><tr><th>Condition</th><th>Reference passes</th>"
-                   "<th>No-op passes</th></tr>")
-    if new:  # the per-family table is the primary display above
-        parts.append(sanity_head)
-    else:
-        fams = sorted(analysis.get("per_task", {}))
-        parts.append("</table></div><h3>Per-family rates behind the macro rates</h3><div class='scroll'><table><tr><th>Condition</th>"
-                     + "".join(f"<th>{_e(t)} FA</th><th>{_e(t)} FR</th>" for t in fams) + "</tr>")
+        if new:
+            parts.append(_new_run_summary(analysis))
+            rates = ("Pooled rates with (num/den), each distinct graded patch once; the cluster-bootstrap intervals are in the "
+                     "appendix. The exact (Clopper-Pearson) interval ignores clustering and is a reference scale only. The macro rate is "
+                     "the mean of the per-family rates (primary display above).")
+        else:
+            rates = ("Pooled rates with (num/den) and the 95% task-family bootstrap interval; * marks a degenerate interval (every "
+                     "family has the same rate, so resampling families cannot vary it). The exact (Clopper-Pearson) interval ignores "
+                     "clustering and is a reference scale only. The macro rate is the mean of the per-family rates (table below).")
+        parts.append(f"<h2>Summary by verifier condition</h2><p class='muted'>Tasks: {analysis['n_tasks']} · task families: "
+                     f"{analysis['n_families']} · recorded verification results: {meta['n_results']}. Reference solution and "
+                     f"no-op excluded from the rates (sanity table below). {rates}</p><div class='scroll'><table><tr><th>Condition</th>"
+                     "<th>False acceptance</th><th>FA exact 95%</th><th>FA macro</th><th>False rejection</th><th>FR exact 95%</th>"
+                     "<th>FR macro</th><th>Families with an accepted negative</th><th>Infrastructure outcomes</th>"
+                     "<th>Excluded (unlabeled/ambiguous)</th></tr>")
+        mac = lambda x: "—" if x.get("macro") is None else f"{x['macro']:.2f}"  # noqa: E731
         for c, d in _ordered(analysis["conditions"]):
-            pt = d.get("per_task_rates", {})
-            cells = "".join("<td>—</td><td>—</td>" if t not in pt else
-                            f"<td>{pt[t]['fa_num']}/{pt[t]['fa_den']}</td><td>{pt[t]['fr_num']}/{pt[t]['fr_den']}</td>" for t in fams)
-            parts.append(f"<tr><td>{_cname(c)}</td>{cells}</tr>")
-        parts.append(sanity_head)
-    for c, s in _ordered(analysis["sanity"]):
-        r, n = s.get("reference", {}), s.get("noop", {})
-        parts.append(f"<tr><td>{_cname(c)}</td><td>{r.get('pass', '-')}/{r.get('n', '-')}</td><td>{n.get('pass', '-')}/{n.get('n', '-')}</td></tr>")
-    if new:  # the exact tests are above, the bootstrap intervals in the appendix
-        parts.append("</table></div>")
-    else:
-        parts.append("</table></div><h3>Paired comparisons on the same candidates</h3><p class='muted'>n: labeled candidates for the "
-                     "metric (invalid for FA, valid for FR). * marks a degenerate interval (every family has the same difference). "
-                     "No comparison is tested for significance.</p><div class='scroll'><table><tr><th>A</th><th>B</th><th>Metric</th>"
-                     "<th>A − B</th><th>95% CI</th><th>n</th><th>families</th><th>A accepts, B rejects</th><th>A rejects, B accepts</th></tr>")
-        for d in analysis["comparisons"]:
-            diff = "n/a" if d["difference"] is None else f"{d['difference']:+.2f}"
-            ci = "n/a" if not d["ci95"] else f"[{d['ci95'][0]:+.2f}, {d['ci95'][1]:+.2f}]" + ("*" if d.get("ci95_degenerate") else "")
-            parts.append(f"<tr><td>{_e(d['a'])}</td><td>{_e(d['b'])}</td><td>{d['metric'].upper()}</td><td>{diff}</td><td>{ci}</td>"
-                         f"<td>{d.get('n_metric', d['n_common'])}</td><td>{d['n_families']}</td><td>{d['discordant']['a_accepts_b_rejects']}</td>"
-                         f"<td>{d['discordant']['a_rejects_b_accepts']}</td></tr>")
-        parts.append("</table></div>")
+            fa, fr = d["false_acceptance"], d["false_rejection"]
+            tn = d.get("tasks_with_any_accepted_negative", {"num": 0, "den": 0})
+            parts.append(f"<tr><td>{_cname(c)}</td><td>{_rate(fa, not new)}</td><td>{_iv(fa.get('exact95'))}</td><td>{mac(fa)}</td>"
+                         f"<td>{_rate(fr, not new)}</td><td>{_iv(fr.get('exact95'))}</td><td>{mac(fr)}</td><td>{tn['num']}/{tn['den']}</td>"
+                         f"<td>{d['infrastructure']['num']}/{d['infrastructure']['den']}</td><td>{d['excluded_unlabeled_or_ambiguous']}</td></tr>")
+        sanity_head = ("</table></div><h3>Sanity checks</h3><div class='scroll'><table><tr><th>Condition</th><th>Reference passes</th>"
+                       "<th>No-op passes</th></tr>")
+        if new:  # the per-family table is the primary display above
+            parts.append(sanity_head)
+        else:
+            fams = sorted(analysis.get("per_task", {}))
+            parts.append("</table></div><h3>Per-family rates behind the macro rates</h3><div class='scroll'><table><tr><th>Condition</th>"
+                         + "".join(f"<th>{_e(t)} FA</th><th>{_e(t)} FR</th>" for t in fams) + "</tr>")
+            for c, d in _ordered(analysis["conditions"]):
+                pt = d.get("per_task_rates", {})
+                cells = "".join("<td>—</td><td>—</td>" if t not in pt else
+                                f"<td>{pt[t]['fa_num']}/{pt[t]['fa_den']}</td><td>{pt[t]['fr_num']}/{pt[t]['fr_den']}</td>" for t in fams)
+                parts.append(f"<tr><td>{_cname(c)}</td>{cells}</tr>")
+            parts.append(sanity_head)
+        secondary = set(meta.get("secondary_conditions", {}).get("conditions", []))  # B3 of a natural run, marked as such
+        for c, s in _ordered(analysis["sanity"]):
+            r, n = s.get("reference", {}), s.get("noop", {})
+            name = _secondary_name(c) if c in secondary else _cname(c)
+            parts.append(f"<tr><td>{name}</td><td>{r.get('pass', '-')}/{r.get('n', '-')}</td><td>{n.get('pass', '-')}/{n.get('n', '-')}</td></tr>")
+        if new:  # the exact tests are above, the bootstrap intervals in the appendix
+            parts.append("</table></div>")
+        else:
+            parts.append("</table></div><h3>Paired comparisons on the same candidates</h3><p class='muted'>n: labeled candidates for the "
+                         "metric (invalid for FA, valid for FR). * marks a degenerate interval (every family has the same difference). "
+                         "No comparison is tested for significance.</p><div class='scroll'><table><tr><th>A</th><th>B</th><th>Metric</th>"
+                         "<th>A − B</th><th>95% CI</th><th>n</th><th>families</th><th>A accepts, B rejects</th><th>A rejects, B accepts</th></tr>")
+            for d in analysis["comparisons"]:
+                diff = "n/a" if d["difference"] is None else f"{d['difference']:+.2f}"
+                ci = "n/a" if not d["ci95"] else f"[{d['ci95'][0]:+.2f}, {d['ci95'][1]:+.2f}]" + ("*" if d.get("ci95_degenerate") else "")
+                parts.append(f"<tr><td>{_e(d['a'])}</td><td>{_e(d['b'])}</td><td>{d['metric'].upper()}</td><td>{diff}</td><td>{ci}</td>"
+                             f"<td>{d.get('n_metric', d['n_common'])}</td><td>{d['n_families']}</td><td>{d['discordant']['a_accepts_b_rejects']}</td>"
+                             f"<td>{d['discordant']['a_rejects_b_accepts']}</td></tr>")
+            parts.append("</table></div>")
+    if analysis.get("secondary") and not case_study:  # B3 of a natural run outside case-study mode: apart from the above
+        parts.append(_secondary_section(analysis["secondary"], case_study=False))
     hv = meta.get("harness_versions", {})
     if hv:
         parts.append("<p class='muted'>Grading harness: " + ", ".join(f"<code>{_e(k)}</code> ({v} results)" for k, v in hv.items()) + "</p>")
@@ -474,11 +777,19 @@ def build_report(run_dir: Path, tasks_root: Path, repo_root: Path, out: Path) ->
     if analysis.get("fresh_attempts"):
         parts.append(_fresh_section(analysis["fresh_attempts"]))
     if analysis.get("source_evidence"):
-        parts.append(_source_section(analysis["source_evidence"]))
+        s = analysis["source_evidence"]
+        parts.append(_natural_source_section(s, case_study) if "banner" in s else _source_section(s))
     if analysis.get("independent_labeling"):
-        parts.append(_independent_section(analysis["independent_labeling"]))
+        x = analysis["independent_labeling"]
+        parts.append(_independent_case_section(x) if case_study else _independent_section(x) + _left_out(x))
     if new:
         parts.append(_new_run_sections(analysis))
+    if case_study:
+        parts.append(_case_study_sections(analysis))
+    if analysis.get("repository_clustered"):  # a natural run with 10 or more accepted tasks (D64, decision 10)
+        parts.append(_repository_section(analysis["repository_clustered"]))
+    if analysis.get("natural"):
+        parts.append(_natural_sections(analysis["natural"]))
     sens = analysis.get("sensitivity_construction_labels")
     if sens:
         parts.append("<h3>Exploratory sensitivity: construction-intent labels</h3><p class='muted'>Not pre-specified (protocol v0.3). "

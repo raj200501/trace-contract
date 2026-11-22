@@ -1,4 +1,4 @@
-"""D19 labels, duplicates and the review packet of a natural PR-review task (plan WP-F; protocol §15.6, §17.2, §19.7; D61).
+"""D19 labels, duplicates and the review packet of a natural PR-review task (plan WP-F; protocol §15.6, §17.2, §19.7; D64).
 
 On a synthetic accepted family (``tests/natural_task_layout.py``: NP-90, whose task and base snapshot lie under a scratch
 repository's ``data/natural/``), given frozen synthetic reference checks and a small pool, with stubs in place of Docker:
@@ -258,7 +258,7 @@ def test_the_pre_review_state_is_ambiguous_when_the_reference_checks_pass(nat, m
     assert [lb.labeler_kind for lb in pre.labels] == [LabelerKind.source_evidence, LabelerKind.model]  # the evidence is kept
     entry = _log(nat)["candidates"][nat.candidate_id("pre-review")]
     assert (entry["refcheck_outcome"], entry["refcheck_failed"]) == ("pass", [])  # the checks' verdict on the state is logged
-    # Three repeats (D61): each held-out candidate's reference checks and regression norm graded three times, on the base
+    # Three repeats (D64): each held-out candidate's reference checks and regression norm graded three times, on the base
     # snapshot that roots.snapshot_root names (data/natural/snapshots), and the base tests run three times on the reference.
     held = {nat.candidate_id(k) for k in ("pre-review", "eval-alt-1", "eval-nm-1")}
     assert Counter((v, c) for v, c, _ in docker.grades) == {(v, c): 3 for v in ("reference_check", "regression_norm") for c in held}
@@ -285,6 +285,8 @@ def test_the_regression_norm_is_the_s10_subset_and_is_logged(nat, monkeypatch):
     assert _tree(overlay) == OVERLAY_TREE
     log = _log(nat)
     assert log["population"] == "natural:pr-review" and log["repeats"] == pl.NATURAL_REPEATS == 3
+    # The rule cites the natural recipe's entry, D64 (planned as D61, which is the fresh-v1 run).
+    assert log["rule"] == "D19, natural PR-review task (protocol §15.6; repeats: D64)"
     norm = log["regression_norm"]
     assert norm["base_test_paths"] == [SUBSET] and norm["source"] == pl.NATURAL_NORM_SOURCE
     assert norm["overlay"] == "labels/base_tests_overlay" and norm["overlay_n_files"] == 1
@@ -316,7 +318,7 @@ def test_a_natural_task_is_graded_three_times_only(nat, monkeypatch):
     docker = Docker(monkeypatch, nat)
     before = _tree(nat.root)
     for n in (1, 2, 5):
-        with pytest.raises(SystemExit, match=r"grades it 3 times \(D61\)"):
+        with pytest.raises(SystemExit, match=r"grades it 3 times \(D64\)"):
             pl.main(str(nat.task_dir), repeats=n)
     with pytest.raises(SystemExit, match="must be at least 1"):
         pl.main(str(nat.task_dir), repeats=0)

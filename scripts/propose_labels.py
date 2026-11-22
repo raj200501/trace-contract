@@ -34,7 +34,7 @@ candidate, two proposals with the same value and violated requirements differ in
 only when both are ambiguous, so the label is the one a comparison of the labels alone would
 give, and only the reason recorded for it differs. The regression norm's checks are then the
 base tests that pass on the reference in each of N runs. N is 1 by default, which is the rule
-as the pilot and fresh-v1 used it; a natural PR-review task is graded 3 times (D61), its
+as the pilot and fresh-v1 used it; a natural PR-review task is graded 3 times (D64), its
 default and the only value accepted for it.
 
 The reference checks must be the frozen ones: a frozen spec whose test files or check list
@@ -111,7 +111,7 @@ from tracecontract.tasks import verify_snapshot
 from tracecontract.verifier import check_frozen
 
 LABELER = "builder:refcheck+regression+construction:v1"
-NATURAL_REPEATS = 3  # D61: D19 grades a natural family's reference checks and regression norm three times (§15.3)
+NATURAL_REPEATS = 3  # D64: D19 grades a natural family's reference checks and regression norm three times (§15.3)
 NATURAL_NORM_SOURCE = "s10.json base_tests.subset (protocol §17.2)"
 OVERLAY = "labels/base_tests_overlay"
 # The repository under which roots.snapshot_root resolves a task's recorded snapshot root, and whose HEAD commit holds the
@@ -130,14 +130,14 @@ def refuse(why: str) -> SystemExit:
 
 
 def repeats_for(m: TaskManifest, repeats: int | None) -> int:
-    """The number of repeats: 1 by default, 3 for a natural PR-review task (D61), which accepts no other value."""
+    """The number of repeats: 1 by default, 3 for a natural PR-review task (D64), which accepts no other value."""
     natural = m.population == Population.natural_pr_review
     if repeats is None:
         return NATURAL_REPEATS if natural else 1
     if repeats < 1:
         raise refuse(f"--repeats must be at least 1 (got {repeats})")
     if natural and repeats != NATURAL_REPEATS:
-        raise refuse(f"{m.task_id} is a natural PR-review task: D19 grades it {NATURAL_REPEATS} times (D61), not {repeats}")
+        raise refuse(f"{m.task_id} is a natural PR-review task: D19 grades it {NATURAL_REPEATS} times (D64), not {repeats}")
     return repeats
 
 
@@ -338,7 +338,7 @@ def d19(origin: CandidateOrigin, construction: Label | None, *, infra: bool, rc_
 
 
 def combine_repeats(proposals: list[tuple[str, list[str], str]]) -> tuple[str, list[str], str]:
-    """D19 over repeated gradings (D61): the repeats' proposal when every repeat gives the same one (value, violated
+    """D19 over repeated gradings (D64): the repeats' proposal when every repeat gives the same one (value, violated
     requirements and reason), else a missing decision, so ambiguous. One repeat is D19 as it was."""
     first = proposals[0]
     if all(p == first for p in proposals[1:]):
@@ -482,7 +482,7 @@ def main(task_dir: str, *base_test_paths: str, stratum: str | None = None, repea
             log["regression_norm"] = norm
         if natural:
             snap = load(tdir / (m.snapshot or "snapshot.json"), Snapshot)
-            log.update(population=m.population.value, rule="D19, natural PR-review task (protocol §15.6; repeats: D61)",
+            log.update(population=m.population.value, rule="D19, natural PR-review task (protocol §15.6; repeats: D64)",
                        reference_check={"verifier_id": refcheck.verifier_id, "content_sha256": refcheck.content_sha256,
                                         "checks_sha256": refcheck.checks_sha256, "frozen_at": refcheck.frozen_at},
                        base_snapshot_manifest_sha256=snap.file_manifest_sha256, image={"tag": tag, "id": image_id})
@@ -507,7 +507,7 @@ def cli(argv: list[str] | None = None) -> None:
     ap.add_argument("--stratum", metavar="NAME", help="label the candidates of this candidate stratum instead of the task's own")
     ap.add_argument("--repeats", type=int, metavar="N", help="grade the reference checks and the regression norm N times and "
                     f"apply D19 to each; repeats that disagree are a missing decision (default 1; {NATURAL_REPEATS} for a "
-                    "natural PR-review task, the only value accepted there, D61)")
+                    "natural PR-review task, the only value accepted there, D64)")
     a = ap.parse_args(argv)
     main(a.task_dir, *a.base_test_paths, stratum=a.stratum, repeats=a.repeats)
 

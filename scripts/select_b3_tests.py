@@ -8,7 +8,7 @@ files and not frozen, was graded after it was built: R1 to R3 are three single g
 candidate and N a single grade of its development no-op, each the JSON that ``tracecontract grade`` prints without
 ``--repeats``. Single grades are needed because a repeated grade keeps the check statuses of its last run only. Both
 candidates are in the development split. (Protocol §19.7 names the gradings made before building stops: the audit
-loops, the reference checks and the labeler. The decision-log entry that is to fix the natural recipe counts these
+loops, the reference checks and the labeler. The natural recipe's decision-log entry, D64 (decision 6), counts these
 selection grades as development grading under it.)
 
 The rule, per test: it is kept if and only if its status is ``passed`` in each of the three reference grades and

@@ -1008,11 +1008,15 @@ def test_the_committed_index_is_read_as_the_acceptance_gate_reads_it(pf, tmp_pat
     assert index is None and why == pf.INDEX_NOT_SHOWN and "not a git repository" in why
 
 
-def test_the_preflight_cites_no_number_for_the_natural_recipe_s_decision_log_entry():
-    """D61 is the fresh-v1 run record, and the natural recipe's decision-log entry is not written yet, so the pre-flight
-    cites no entry after D60. Update this test when that entry is numbered and cited."""
+def test_the_preflight_cites_d64_for_the_natural_recipe():
+    """The natural recipe's decision-log entry is D64 (planned as D61, which is the fresh-v1 run record): the pre-flight's
+    natural rules cite D64 wherever they name the recipe, and no other entry after D60."""
     text = (R / "scripts" / "preflight_final_run.py").read_text(encoding="utf-8")
-    assert not re.findall(r"\bD(?:6[1-9]|[7-9]\d)\b", text)
+    assert set(re.findall(r"\bD(?:6[1-9]|[7-9]\d)\b", text)) == {"D64"}
+    mentions = list(re.finditer(r"\brecipe\b", text))
+    assert len(mentions) >= 4  # the audit rule's text and comments, and the order of the missing audits
+    for m in mentions:  # each names D64 right after the recipe
+        assert "D64" in text[m.end():m.end() + 20], text[m.start() - 60:m.end() + 40]
 
 
 def test_the_run_grades_every_accepted_family_and_no_other_population(pf, family, capsys):

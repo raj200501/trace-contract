@@ -901,7 +901,9 @@ def cmd_evaluate(a) -> None:
 
 
 def cmd_analyze(a) -> None:
-    from .analysis import SENSITIVITY_JSON, SENSITIVITY_MD, ConditionConflict, MixedPopulations, SensitivityExclusionsError, analyze
+    from .analysis import (
+        SENSITIVITY_JSON, SENSITIVITY_MD, ConditionConflict, MixedPopulations, NaturalRunError, SensitivityExclusionsError, analyze,
+    )
     from .strata import StratumError
 
     run = Path(a.run_dir)
@@ -910,7 +912,8 @@ def cmd_analyze(a) -> None:
         res = analyze(run, _tasks_root(a), allow_proposed=a.allow_proposed_labels, n_boot=a.n_boot,
                       pool_populations=a.pool_populations, rules=None if a.reporting_rules == "auto" else a.reporting_rules,
                       sensitivity_exclusions=exclusions)
-    except (MixedPopulations, StratumError, ConditionConflict, SensitivityExclusionsError) as exc:  # nothing was written
+    except (MixedPopulations, StratumError, ConditionConflict, SensitivityExclusionsError,
+            NaturalRunError) as exc:  # nothing was written
         raise SystemExit(f"analyze refused: {exc}") from None
     pooled = {"population_pooling": res["meta"]["population_pooling"]} if "population_pooling" in res["meta"] else {}
     rules = res["meta"].get("reporting_rules", {"rules": "pilot"})

@@ -35,7 +35,7 @@ transcript records, or a part of one. A workflow agent for which the workflow's 
 result has not finished (or was stopped); it is refused unless ``--unfinished`` is given, and then the notes say so.
 
 ``--combine``: one record for runs made one after another for one artifact, all in one configuration (an audited
-verifier: its generator, then its revisers, as the natural recipe's decision-log entry, planned as D61, asks). Each
+verifier: its generator, then its revisers, as the natural recipe's decision-log entry, D64, asks). Each
 RECORD is a complete record printed by this script. Turns, tool calls and wall time are summed; ``started_at`` is
 the earliest start and ``ended_at`` the latest end; the run ids are joined with ``+`` and the pointers with ``;``, in
 start order; ``prompt_sha256`` is that of the first run. The notes list every run with its own times, counts and
