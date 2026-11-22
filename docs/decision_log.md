@@ -2682,3 +2682,71 @@ records and becomes stronger for the natural ones.
   consecutive ones. The controlled audit records hold none.
 
 The full offline suite passes: 1090 tests, with the real natural data present.
+
+### D70. Round 5 closes at P4: what was built for the six families, and what the construction shows
+All six accepted families went through P1 to P4 of D64's recipe (2026-11-22, 01:55Z to 08:46Z). Each phase end is a line
+of `data/manifests/natural_phase_ends.jsonl`, committed and pushed before the family's next phase (D65).
+* For every family: the initial-only, full-session and reference contracts (F3, F5), and the seven verifiers.
+  * C1, C3 and B2 were frozen together (F4).
+  * C2 and C4 were audited and frozen.
+  * B3 was selected and frozen.
+  * B1 has been frozen since P0.
+* As D68 planned, P5 to P7, the extension's S10 and the run `natural-pr-v1` follow in a later window.
+* The round used about 37.2M reported agent tokens since the reset, within the plan of about 40M. Per family: P1 about
+  0.6M, P2 2.3M to 3.3M, P3 0.7M to 2.8M and P4 about 0.4M to 0.5M.
+
+**Counts** (no text; from the task directories):
+
+| Family | Reference contract: requirements / scored active / at the correction | Scored active, initial-only / full-session | Checks: C1, C3, C2, C4, B2, B3, B1 |
+| --- | --- | --- | --- |
+| NP-03 | 9 / 7 / 2 | 4 / 6 | 11, 14, 14, 15, 14, 11, 954 |
+| NP-04 | 5 / 4 / 2 | 3 / 3 | 11, 14, 12, 14, 11, 14, 34 |
+| NP-05 | 13 / 10 / 2 | 10 / 11 | 14, 14, 14, 15, 12, 14, 354 |
+| NP-18 | 5 / 4 / 2 | 5 / 3 | 12, 11, 12, 12, 12, 13, 26 |
+| NP-19 | 5 / 4 / 2 | 4 / 3 | 10, 11, 13, 15, 13, 8, 1 |
+| NP-20 | 16 / 12 / 5 | 3 / 5 | 12, 13, 13, 13, 12, 11, 48 |
+
+"At the correction" counts the scored active requirements introduced at the review comment or a reply. B3's per-test
+selection kept every test in all six families.
+
+**Audits (audit:v1) of the 12 audited verifiers.**
+
+| Family | C2: revisions, final result | C4: revisions, final result |
+| --- | --- | --- |
+| NP-03 | 2, passed | 3, failed (reference not passing) |
+| NP-04 | 3, failed (false rejection of the development alternative) | 0, passed |
+| NP-05 | 3, failed (false acceptance of a development attack) | 3, failed (false acceptance of a development attack) |
+| NP-18 | 1, passed | 1, passed |
+| NP-19 | 2, passed | 3, failed (reference not passing; the last revision changed nothing) |
+| NP-20 | 1, passed | 0, passed |
+
+* 22 revisions ran in all. Seven verifiers pass, and five are frozen with a failing audit after their third revision,
+  as D27 requires.
+* A revision that changed nothing was re-run once under D64's re-run rule, in NP-03, NP-05 and NP-19.
+
+**What the construction shows.** These are observations of the build, made by model agents and not reviewed by a person.
+They are not results of the natural arm, whose run has not been made.
+* The natural reference often fails the contracts recovered from its own thread.
+  * At iteration 0 the reference fails 9 of the 12 audited verifiers (`reference_not_passing`), in five of the six
+    families: all but NP-04.
+  * The P2 generators of NP-03, NP-18 and NP-19 had said so before any grade. One content type is left unconverted, a
+    requirement's wording is not met, or the fix does not take effect in the task's environment (NP-19).
+  * At iteration 0, C2 and C4 are byte copies of C1 and C3, so those audits grade the plain verifiers' own tests on the
+    reference, a development candidate. C1 fails the reference in five families (all but NP-04), and C3 in four
+    (NP-03, NP-05, NP-18 and NP-19). C1 and C3 are frozen as generated.
+* audit:v1 requires the reference to pass, so it pulls the audited verifiers toward the reference's behaviour.
+  * Several revisers relaxed checks the reference fails, for example to accept unconverted parts (NP-18) or a missing
+    return value (NP-20). C2 and C4 can then accept what the contract rules out.
+  * The audit's design (D24, D27) holds the reference to be valid. Where a natural reference and its contract
+    disagree, the audit settles the question for the reference.
+* Five audits still fail after three revisions.
+  * In three (NP-04 C2, NP-05 C2 and C4), a development attack or alternative cannot be told apart from the
+    reference on the requirement it targets, by the revisers' account. The attack's construction label is then in
+    doubt.
+  * In two (NP-03 C4, NP-19 C4) the reference still fails.
+* The pre-send hash check of D65 refused one prompt: NP-03's reference-contract prompt, which the coordinator returned
+  with an added newline. The coordinator resent it exactly. No unverified prompt reached an agent.
+* What these mean for the run: where the reference fails its own contract, the reference checks of P5 may be unusable
+  as D64 defines it, and D19's labels for that family would then be ambiguous. The source-evidence label of the
+  pre-review state does not depend on them (§15.6). The run reports each family as a case study, with these facts
+  beside its numbers.
