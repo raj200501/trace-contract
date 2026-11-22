@@ -2592,3 +2592,35 @@ entry relays the owner's latest message, here in two lines (487 characters), bef
   for that, and the analysis reports the turns, tool calls and wall time of every natural run (D64, "Agents").
 * The entry belongs with the harness context that D65 discloses (the environment block). Like the environment block,
   it cannot be removed where the agent tool gives no option to remove it.
+
+### D68. Round 5 under a usage cap: leaner host coordinators, a correction to D67, Docker restarted, and how far the round goes
+**The cap.** The owner asked the build session to use at most half of the plan's total usage in this round. The
+workflows' reported agent tokens give the measure. Last week's limit was reached at about 82M (2026-11-18T07:00Z to
+2026-11-21T18:55Z), so the round's natural work is planned at about 40M.
+* Measured per family: P1 about 0.6M and P2 about 2.4M (NP-04).
+* Most of P2's cost is cache reads of long contexts, and about half of it comes from the two host coordinators: some 85
+  turns each, on a context of about 250k tokens.
+
+**Leaner host coordinators.** From the phases launched after this entry, the coordinators run at a lower reasoning effort
+than the session's default. They also get one more rule: send long command output to files, print short summaries, do
+not re-read files, and combine a sub-step's commands in one logged helper script
+(`experiments/natural_workflow/natural_phase.js`). Coordinators are not generators: no template, prompt, agent option of
+a generator or step of the recipe changes. NP-04's P3 was launched before this change.
+
+**Correction to D67.** The relay of the owner's latest message is present only in workflows launched in a turn that
+answers an owner message. These are the P1 runs of the six families (their proposers and coordinators). The P2
+generators, launched in turns that answer task notifications, carry none (NP-04's P2 coordinator checked all eight).
+The natural-agent audit of P7 records it per transcript.
+
+**Docker.** The machine restarted at about 01:49Z, and the Docker daemon did not come back: the service script fails at
+a `ulimit` call in this container. NP-18's first P2 preparation found the daemon down and stopped at its first
+workspace, before building or rendering anything. The build session started the daemon at 02:21Z, its images
+unchanged, and the step ran again in a new workflow (`wf_e11328a2-e72`). The other families' preparations reached
+Docker after it was up.
+
+**How far the round goes.** Within the cap, the round runs P2 to P4 for the six families: every natural verifier and
+reference contract is frozen. P5 to P7, the extension's S10 and the run follow in a later window.
+* §19 bars grading a natural verifier on held-out candidates before building stops (30 accepted, or all families
+  processed). The extension's S10 is part of building, so `natural-pr-v1` waits for it in any case.
+* If the measured cost runs ahead of the plan, the round stops at the last completed phase boundary, with its phase-end
+  record committed.
