@@ -1,0 +1,16 @@
+\begin{table}[t]\centering\footnotesize
+\caption{Sensitivity view of run \texttt{fresh-v1} (protocol \S18.1): every attempt the automated audit flagged is excluded (25 beyond the primary analysis, plus the 1 excluded there), leaving 54 units (D19: 21 invalid, 33 valid; labeler: 20 invalid, 34 valid). Cells as in the per-family table: accepted/invalid $\cdot$ rejected/valid. Correction-violating \texttt{u1} attempts: 20/28; C1 accepts 18/20, C3 0/20. D19 and the labeler agree on 53/54 units ($\kappa$ = 0.96, model--model agreement). \textbf{All labels are model proposals; no human labels exist.} Four controlled families: descriptive, not inferential.}\label{tab:fresh-sensitivity}
+\begin{tabular}{llccccc}\toprule Condition & Labels & CS-01 & CS-02 & CS-03 & CS-04 & Pooled \\\midrule
+C1 initial, plain & D19 & 7/7 $\cdot$ 7/7 & 0/1 $\cdot$ 0/10 & 3/5 $\cdot$ 2/9 & 8/8 $\cdot$ 0/7 & 18/21 $\cdot$ 9/33 \\
+ & labeler & 7/7 $\cdot$ 7/7 & n/a $\cdot$ 1/11 & 3/5 $\cdot$ 2/9 & 8/8 $\cdot$ 0/7 & 18/20 $\cdot$ 10/34 \\\addlinespace
+C2 initial, audited & D19 & 7/7 $\cdot$ 7/7 & 0/1 $\cdot$ 0/10 & 3/5 $\cdot$ 2/9 & 8/8 $\cdot$ 0/7 & 18/21 $\cdot$ 9/33 \\
+ & labeler & 7/7 $\cdot$ 7/7 & n/a $\cdot$ 1/11 & 3/5 $\cdot$ 2/9 & 8/8 $\cdot$ 0/7 & 18/20 $\cdot$ 10/34 \\\addlinespace
+C3 full, plain & D19 & 0/7 $\cdot$ 0/7 & 1/1 $\cdot$ 0/10 & 0/5 $\cdot$ 0/9 & 0/8 $\cdot$ 0/7 & 1/21 $\cdot$ 0/33 \\
+ & labeler & 0/7 $\cdot$ 0/7 & n/a $\cdot$ 0/11 & 0/5 $\cdot$ 0/9 & 0/8 $\cdot$ 0/7 & 0/20 $\cdot$ 0/34 \\\addlinespace
+C4 full, audited & D19 & 0/7 $\cdot$ 0/7 & 1/1 $\cdot$ 0/10 & 0/5 $\cdot$ 5/9 & 0/8 $\cdot$ 0/7 & 1/21 $\cdot$ 5/33 \\
+ & labeler & 0/7 $\cdot$ 0/7 & n/a $\cdot$ 0/11 & 0/5 $\cdot$ 5/9 & 0/8 $\cdot$ 0/7 & 0/20 $\cdot$ 5/34 \\\addlinespace
+B2 full-session LLM & D19 & 0/7 $\cdot$ 0/7 & 1/1 $\cdot$ 0/10 & 0/5 $\cdot$ 2/9 & 0/8 $\cdot$ 0/7 & 1/21 $\cdot$ 2/33 \\
+ & labeler & 0/7 $\cdot$ 0/7 & n/a $\cdot$ 0/11 & 0/5 $\cdot$ 2/9 & 0/8 $\cdot$ 0/7 & 0/20 $\cdot$ 2/34 \\\addlinespace
+B1 repository tests & D19 & 0/7 $\cdot$ 5/7 & 0/1 $\cdot$ 10/10 & 0/5 $\cdot$ 7/9 & 0/8 $\cdot$ 0/7 & 0/21 $\cdot$ 22/33 \\
+ & labeler & 0/7 $\cdot$ 5/7 & n/a $\cdot$ 11/11 & 0/5 $\cdot$ 7/9 & 0/8 $\cdot$ 0/7 & 0/20 $\cdot$ 23/34 \\
+\bottomrule\end{tabular}\end{table}

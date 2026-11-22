@@ -1,0 +1,29 @@
+\begin{table}[t]\centering\scriptsize\setlength{\tabcolsep}{4pt}
+\caption{Stage S10 (replayability) of the first sample's 20 families and 5 reserves, from the committed task index. Fidelity: exact, or approximate with the number of approximations. Licence: the source repository's licence in AIDev; $^{\dagger}$: the LICENSE file at the base disagrees. Pins: the pinned dependency closure. Subset: test files in the base-test subset; base tests at the base: passed/failed/skipped/error. B1: the repository-test verifier is available. Reason: the S10 rejection category of the funnel table (no dependency closure: no resolvable dependency closure; fetch over the cap: fetch over the repository cap). Reserves are built only to replace a rejected family of their repository. The 23 families and reserves of the S9 extension (NP-26 to NP-48): \unfilled{pending: S10 of the S9 extension}.}\label{tab:natural-s10}
+\begin{tabular}{llllrrrlllc}\toprule Task & Role & Fidelity & Licence & Pins & Subset & Base tests & B1 & S10 & Reason & S11 \\\midrule
+NP-01 & family & approx.\ (1) & MIT & 24 & 1 & 0/0/0/1 & -- & rejected & base tests fail to collect & -- \\
+NP-02 & family & approx.\ (1) & MIT & 95 & 10 & 0/0/0/0 & -- & rejected & base tests fail to collect & -- \\
+NP-03 & family & approx.\ (1) & MIT & 73 & 14 & 954/10/2/0 & yes & passed & -- & yes \\
+NP-04 & family & exact & MIT & 17 & 1 & 33/0/0/0 & yes & passed & -- & yes \\
+NP-05 & family & exact & MIT & 17 & 16 & 354/5/0/0 & yes & passed & -- & yes \\
+NP-06 & family & approx.\ (1) & Apache-2.0 & 92 & 1 & 0/0/0/1 & -- & rejected & base tests fail to collect & -- \\
+NP-07 & family & -- & -- & -- & -- & -- & -- & rejected & empty base-test subset & -- \\
+NP-08 & family & -- & -- & -- & -- & -- & -- & rejected & fetch over the cap & -- \\
+NP-09 & family & approx.\ (1) & Apache-2.0 & 146 & 2 & 0/0/0/2 & -- & rejected & base tests fail to collect & -- \\
+NP-10 & family & approx.\ (1) & Apache-2.0 & -- & 22 & -- & -- & rejected & no dependency closure & -- \\
+NP-11 & family & approx.\ (2) & BSD-3-Clause & 80 & 42 & 0/0/0/23 & -- & rejected & base tests fail to collect & -- \\
+NP-12 & family & -- & -- & -- & -- & -- & -- & rejected & merge rule & -- \\
+NP-13 & family & exact & MIT & -- & 1 & -- & -- & rejected & no dependency closure & -- \\
+NP-14 & family & exact & MIT & 52 & 1 & 0/0/0/13 & -- & rejected & base tests fail to collect & -- \\
+NP-15 & family & approx.\ (1) & Apache-2.0 & 71 & 1 & -- & -- & rejected & environment too large & -- \\
+NP-16 & family & approx.\ (1) & MIT & -- & 17 & -- & -- & rejected & no dependency closure & -- \\
+NP-17 & family & approx.\ (1) & MIT & -- & 1 & -- & -- & rejected & no dependency closure & -- \\
+NP-18 & family & exact & MIT & 144 & 1 & 24/0/0/0 & yes & passed & -- & yes \\
+NP-19 & family & exact & Apache-2.0 & 106 & 2 & 1/5/0/3 & yes & passed & -- & yes \\
+NP-20 & family & exact & MIT & 71 & 3 & 48/0/0/0 & yes & passed & -- & yes \\
+NP-21 & reserve & approx.\ (1) & MIT & 123 & 50 & 0/0/0/0 & -- & rejected & base tests fail to collect & -- \\
+NP-22 & reserve & approx.\ (1) & MIT & 32 & 2 & 0/0/0/0 & -- & rejected & base tests fail to collect & -- \\
+NP-23 & reserve & -- & -- & -- & -- & -- & -- & not built & -- & -- \\
+NP-24 & reserve & -- & -- & -- & -- & -- & -- & not built & -- & -- \\
+NP-25 & reserve & -- & -- & -- & -- & -- & -- & not built & -- & -- \\
+\bottomrule\end{tabular}\end{table}

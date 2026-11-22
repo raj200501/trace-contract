@@ -1,0 +1,14 @@
+\begin{table}[t]\centering\footnotesize
+\caption{Reliability re-grade of the construction pilot (protocol \S15.3, \S16.1): run \texttt{pilot-v0.3.5-regrade} against the run it re-grades, on the pairs graded in both with an unchanged verifier (check-list hash). Pairs whose repeats disagree: n/a for a run graded once. Reward agreement is pass vs non-pass, outcome agreement the exact outcome. A reliability run, not a new pilot result.}\label{tab:regrade}
+\begin{tabular}{lll}\toprule  & \texttt{pilot-v0.3.5-regrade} & \texttt{pilot-v0.3.3} \\\midrule
+Harness & 0.3.5 & 0.3.3 \\
+Repeats per pair & 3 & 1 \\
+Graded on (UTC) & 2026-11-21 & 2026-11-18 \\
+\quad from--to & 07:21:53--08:18:38 & 17:56:44--18:11:58 \\
+Code revision & \texttt{a0542bb} & \texttt{c997779} \\
+Pairs graded & 240 & 240 \\
+Outcomes: pass/task failure/other & 112/128/0 & 112/128/0 \\
+Pairs whose repeats disagree & 0 & n/a \\
+Reward agreement with the re-grade & -- & 240/240 \\
+Outcome agreement with the re-grade & -- & 240/240 \\
+\bottomrule\end{tabular}\end{table}

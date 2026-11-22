@@ -1,33 +1,57 @@
-"""Generate LaTeX tables and the evidence ledger from recorded runs.
+"""Generate LaTeX tables and the evidence ledgers from recorded runs.
 
-Usage: python paper/make_tables.py results/runs/<final run> [--compare results/runs/<run> ...]
+Usage:
+  python paper/make_tables.py results/runs/<final run> [--compare results/runs/<run> ...]
+  python paper/make_tables.py --fresh results/runs/fresh-v1 [--regrade results/runs/pilot-v0.3.5-regrade] [--natural]
 
-Writes paper/generated/*.tex and paper/evidence_ledger.md. Every number printed in a
-table is listed in the ledger with its source file and JSON path. Nothing is entered
-by hand: tables come from task manifests, the controlled scenarios (hashed and logged
-locally before each session), verifier specs, the run's analysis.json and the
-run-comparison files written by scripts/compare_runs.py.
+The first form (the construction pilot) writes paper/generated/*.tex and
+paper/evidence_ledger.md. Every number printed in a table is listed in the ledger with
+its source file and JSON path. Nothing is entered by hand: tables come from task
+manifests, the controlled scenarios (hashed and logged locally before each session),
+verifier specs, the run's analysis.json and the run-comparison files written by
+scripts/compare_runs.py.
+
+The second form writes the tables of the new runs, each mode into its own subdirectory
+with its own ledger, and never touches the pilot's top-level tables or ledger:
+* ``--fresh RUN``: the fresh-agent stratum (analysis.json, analysis_sensitivity.json,
+  manifest.json and results.jsonl of the run; the attempt records under data/fresh/; the
+  B1 check-origin files of the tasks) -> paper/generated/fresh/*.tex, the number macros
+  paper/generated/fresh/numbers.tex and paper/evidence_ledger_fresh.md;
+* ``--regrade RUN`` (with ``--fresh``): the reliability re-grade of the pilot (its
+  compare_<run>.json, manifest.json and results.jsonl, and the compared run's) ->
+  paper/generated/fresh/regrade_reliability.tex, in the same ledger;
+* ``--natural``: the natural PR-review arm's screening funnel, its S10 table and the
+  Trace Commons screen (the manifests under data/manifests/) -> paper/generated/natural/*.tex,
+  paper/generated/natural/numbers.tex and paper/evidence_ledger_natural.md. Before anything
+  is written, every natural output is checked to hold no URL, owner placeholder, digit run
+  of 7 or more (an id), session-local path or agent product name.
+Both forms can be combined in one invocation.
 
 The arguments are parsed and checked before anything is written: every run directory
 must hold ``analysis.json`` and ``manifest.json``, and every ``--compare`` directory
-``results.jsonl``. The tables and the ledger are written to a temporary directory first.
+``results.jsonl``. The tables and the ledgers are written to a temporary directory first.
 Only when all of them have been written do they replace ``paper/generated/*.tex`` and
 the ledger, and a top-level table that this invocation did not write is then deleted, so
-a table whose inputs are missing cannot survive from an earlier run. ``--help``, a
-mistyped directory or a failure while generating leaves every file as it was; the
-subdirectory ``paper/generated/exploratory/`` (scripts/exploratory_reanalysis.py) is
-never touched.
+a table whose inputs are missing cannot survive from an earlier run. The same holds for
+each subdirectory a new-run mode writes. ``--help``, a mistyped directory or a failure
+while generating leaves every file as it was; the subdirectory
+``paper/generated/exploratory/`` (scripts/exploratory_reanalysis.py) is never touched.
 """
 
 from __future__ import annotations
 
 import argparse
 import ast
+import hashlib
 import json
+import math
 import os
+import re
 import shutil
+import statistics
 import sys
 import tempfile
+from collections import Counter
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -363,18 +387,1341 @@ def verifiers(run: Path, led: Ledger, out: Path) -> None:
         "tab:verifiers", "lccccccc", "Task & C1 & C2 & C3 & C4 & B2 & B1 & Ref.", rows, size="\\scriptsize"))
 
 
+# ----------------------------------------------------------------------------------------------------------------------
+# New runs (protocol v0.7 §15.7, v0.8 §16.6): the fresh-agent stratum (--fresh, --regrade) and the natural arm (--natural).
+# Each mode writes its own subdirectory of paper/generated/ and its own ledger, with one section per table and a section
+# "numbers" for the macros the prose uses (\fv{key}, \nat{key}). The pilot's outputs are never touched by these modes.
+# ----------------------------------------------------------------------------------------------------------------------
+
+SHORT = {"initial_plain": "C1", "initial_audited": "C2", "full_plain": "C3", "full_audited": "C4", "llm_freeform": "B2",
+         "repo_tests": "B1"}
+NO_HUMAN = "\\textbf{All labels are model proposals; no human labels exist.}"
+FOUR_FAMILIES = "Four controlled families: descriptive, not inferential."
+
+
+class SectionLedger:
+    """A ledger grouped by table. Every entry is ``- [table] what = value <- `file field```."""
+
+    def __init__(self, title: str, intro: str) -> None:
+        self.head = [f"# {title}", "", intro, ""]
+        self.sections: dict[str, list[str]] = {}
+
+    def add(self, table: str, what: str, value, src: str) -> None:
+        self.sections.setdefault(table, []).append(f"- [{table}] {what} = {value} <- `{src}`")
+
+    def __len__(self) -> int:
+        return sum(len(v) for v in self.sections.values())
+
+    def text(self) -> str:
+        out = list(self.head)
+        order = sorted(self.sections, key=lambda k: (k != "inputs", k == "numbers"))  # stable: inputs, tables, numbers
+        for name in order:
+            out += [f"## {name}", "", *self.sections[name], ""]
+        return "\n".join(out).rstrip("\n") + "\n"
+
+
+class Numbers:
+    """Number macros for the prose. ``numbers.tex`` stores each value as the control sequence ``\\csname <prefix>:<key>\\endcsname``
+    (a colon, not an at sign, so that no stored name looks like an e-mail address to scripts/scan_tracked_files.py); main.tex
+    defines the lookup ``\\<prefix>{key}``, which prints ``\\unfilled{missing number <key>}`` for a key that is not stored.
+    Every value is also a ledger entry (section ``numbers``)."""
+
+    KEY = re.compile(r"[a-z0-9]+(?:[.\-][a-z0-9]+)*")
+
+    def __init__(self, prefix: str, led: SectionLedger) -> None:
+        self.prefix, self.led, self.values = prefix, led, {}
+
+    def put(self, key: str, value, src: str, what: str = "") -> None:
+        if not self.KEY.fullmatch(key):
+            raise ValueError(f"number key {key!r}: lower-case letters and digits separated by '.' or '-' only")
+        if key in self.values:
+            raise ValueError(f"number key {key!r} is defined twice")
+        v = str(value)
+        if re.search(r"(?<!\\)[%#]", v) or v.count("{") != v.count("}"):
+            raise ValueError(f"number key {key!r}: value {v!r} is not safe inside a macro")
+        self.values[key] = v
+        self.led.add("numbers", f"\\{self.prefix}{{{key}}}" + (f" ({what})" if what else ""), v, src)
+
+    def tex(self, cmd: str) -> str:
+        p = self.prefix
+        lines = [f"% Generated by `{cmd}`; do not edit. Every value is listed in the ledger, section numbers.",
+                 f"% Each value is stored as \\csname {p}:<key>\\endcsname. The lookup that main.tex defines:",
+                 f"% \\newcommand{{\\{p}}}[1]{{\\ifcsname {p}:#1\\endcsname\\csname {p}:#1\\endcsname"
+                 f"\\else\\unfilled{{missing number #1}}\\fi}}"]
+        lines += [f"\\expandafter\\gdef\\csname {p}:{k}\\endcsname{{{v}}}" for k, v in sorted(self.values.items())]
+        return "\n".join(lines) + "\n"
+
+
+def _frac(num, den) -> str:
+    return "n/a" if not den else f"{num}/{den}"
+
+
+def _r2(x) -> str:
+    return "n/a" if x is None else f"{x:.2f}"
+
+
+def _signed(x, nd: int = 2) -> str:
+    """A signed number with a typographic sign that works in text and math; zero has no sign."""
+    if x is None:
+        return "n/a"
+    s = f"{abs(x):.{nd}f}"
+    if float(s) == 0:
+        return s
+    return ("\\ensuremath{+}" if x > 0 else "\\ensuremath{-}") + s
+
+
+def _p(p) -> str:
+    """An exact sign-flip p-value: these are multiples of 2^-k, so four significant digits print them exactly here."""
+    return "n/a" if p is None else f"{p:.4g}"
+
+
+def _int(n: int) -> str:
+    """An integer with thousands separators that is safe in text and in math."""
+    return f"{n:,}".replace(",", "{,}")
+
+
+def _pct(x: float, nd: int = 1) -> str:
+    return f"{100 * x:.{nd}f}\\%"
+
+
+def _iv(ci, nd: int = 2) -> str:
+    return "n/a" if not ci else f"[{ci[0]:.{nd}f}, {ci[1]:.{nd}f}]"
+
+
+def _iv_signed(ci, nd: int = 2) -> str:
+    """An interval of a difference, with typographic minus signs."""
+    return "n/a" if not ci else f"[{_signed(ci[0], nd)}, {_signed(ci[1], nd)}]"
+
+
+def _fk(task_id: str) -> str:
+    """The key form of a family id in number macros: CS-01 -> cs01, NP-03 -> np03."""
+    return task_id.lower().replace("-", "")
+
+
+def wilson(k: int, n: int, z: float = 1.959963984540054) -> tuple[float, float]:
+    """Wilson score interval (95%) of k successes in n."""
+    p = k / n
+    d = 1 + z * z / n
+    c = (p + z * z / (2 * n)) / d
+    h = z * math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / d
+    return c - h, c + h
+
+
+def _check_private(text: str, where: str, *, digit_runs: bool, names: tuple[str, ...] = ()) -> None:
+    """Refuse to write a URL, an owner placeholder, a session-local path, a model or agent-product name, or (natural
+    outputs) a digit run of 7 or more, which would be a PR, comment, issue or repository id."""
+    pats = [(r"https?:|github\.com|\{owner\}", "a URL or an owner placeholder"),
+            (r"/home/|/tmp/|/root/|scratchpad", "a session-local path"),
+            (r"\bclaude|\bopus\b|\bsonnet\b|\bhaiku\b|\bgemini\b|\bgpt-?\d", "a model or agent-product identifier")]
+    if digit_runs:
+        pats.append((r"\d{7,}", "a digit run of 7 or more (an id)"))
+    pats += [(r"\b" + re.escape(n) + r"\b", "an agent product name") for n in names]
+    for pat, why in pats:
+        hit = re.search(pat, text, re.I)
+        if hit:
+            raise ValueError(f"{where}: refusing to write {why}: {hit.group(0)!r}")
+
+
+def _fa_fr(d: dict) -> str:
+    return f"{_frac(d['fa_num'], d['fa_den'])} $\\cdot$ {_frac(d['fr_num'], d['fr_den'])}"
+
+
+# -- fresh-agent stratum ------------------------------------------------------------------------------------------------
+
+def fresh_inputs(run: Path) -> dict:
+    """Read a fresh-attempt run and the files its tables join with, and check what the captions take for granted."""
+    a = json.loads((run / "analysis.json").read_text())
+    s = json.loads((run / "analysis_sensitivity.json").read_text())
+    m = json.loads((run / "manifest.json").read_text())
+    rows = [json.loads(x) for x in (run / "results.jsonl").read_text().splitlines() if x.strip()]
+    src = rel(run / "analysis.json")
+    if "automated pilot" not in a["meta"]["label_policy"]:
+        raise ValueError(f"{src}: label policy {a['meta']['label_policy']!r}; the captions say every label is a model proposal")
+    for view, vsrc in ((a, src), (s, rel(run / "analysis_sensitivity.json"))):
+        if [c for c, _ in ordered(view["conditions"])] != ORDER:
+            raise ValueError(f"{vsrc}: conditions {sorted(view['conditions'])}, expected the six of the protocol")
+    fams = sorted(a["per_task"])
+    strata = sorted({k for t in a["meta"]["strata"].values() for k in t})
+    if len(strata) != 1:
+        raise ValueError(f"{src}: one candidate stratum expected, found {strata}")
+    if a["distinct_patches"]["groups"] or s["distinct_patches"]["groups"]:
+        raise ValueError(f"{src}: some units hold several attempts; the attempt-level tables assume one attempt per unit")
+    att, att_src, up, up_src = {}, {}, {}, {}
+    for t in fams:
+        p = ROOT / "data" / "fresh" / strata[0] / f"attempts_{t}.json"
+        f = json.loads(p.read_text())
+        if f["task_id"] != t or f["stratum"] != strata[0]:
+            raise ValueError(f"{rel(p)}: task {f['task_id']}, stratum {f['stratum']}; expected {t}, {strata[0]}")
+        att[t], att_src[t] = f, rel(p)
+        q = ROOT / "tasks" / t / "verifiers" / "repo_tests" / "upstream_check_ids.json"
+        up[t], up_src[t] = json.loads(q.read_text()), rel(q)
+    attempt = {x["id"]: dict(x, task_id=t) for t in fams for x in att[t]["attempts"]}
+    return {"a": a, "s": s, "m": m, "rows": rows, "fams": fams, "stratum": strata[0], "att": att, "att_src": att_src,
+            "attempt": attempt, "up": up, "up_src": up_src, "run_id": m["run_id"], "src": src,
+            "ssrc": rel(run / "analysis_sensitivity.json"), "msrc": rel(run / "manifest.json"),
+            "rsrc": rel(run / "results.jsonl")}
+
+
+def _units(view: dict, fams: list[str]) -> dict[tuple[str, str], dict]:
+    """The held-out units of a view by (task, candidate): label, negative type and the outcome under each condition."""
+    out: dict = {}
+    for t in fams:
+        for c in ORDER:
+            for r in view["per_task"][t][c]:
+                u = out.setdefault((t, r["candidate"]), {"label": r["label"], "negative_type": r["negative_type"], "outcome": {}})
+                if (u["label"], u["negative_type"]) != (r["label"], r["negative_type"]):
+                    raise ValueError(f"per_task.{t}: {r['candidate']} has different labels under different conditions")
+                u["outcome"][c] = r["outcome"]
+    return out
+
+
+def fresh_run_numbers(F: dict, led: SectionLedger, nums: Numbers) -> None:
+    """Run-level numbers: pairs, repeats, outcomes, harness, revision, time, attempts, units, exclusions, review queue."""
+    a, m, rows = F["a"], F["m"], F["rows"]
+    src, msrc, rsrc = F["src"], F["msrc"], F["rsrc"]
+    oc = Counter(r["outcome"] for r in rows)
+    harness = sorted({r["harness_version"] for r in rows})
+    if len(harness) != 1 or a["meta"]["harness_versions"] != {harness[0]: len(rows)}:
+        raise ValueError(f"{rsrc}: harness versions {harness} do not match {src} meta.harness_versions")
+    if a["meta"]["n_results"] != len(rows):
+        raise ValueError(f"{src}: meta.n_results {a['meta']['n_results']} but {len(rows)} rows in {rsrc}")
+    nums.put("run.pairs", _int(len(rows)), f"{rsrc} (rows; = {src} meta.n_results)", "graded pairs")
+    nums.put("run.repeats", m["repeats"], f"{msrc} repeats")
+    nums.put("run.pass", _int(oc["pass"]), f"{rsrc} outcome (count of pass)")
+    nums.put("run.taskfailure", _int(oc["task_failure"]), f"{rsrc} outcome (count of task_failure)")
+    nums.put("run.other", sum(v for k, v in oc.items() if k not in ("pass", "task_failure")),
+             f"{rsrc} outcome (count of any other outcome: infrastructure, unresolved)", "infrastructure or unresolved outcomes")
+    nums.put("run.unresolved", oc.get("unresolved", 0), f"{rsrc} outcome (count of unresolved)")
+    nums.put("run.harness", harness[0].split("/")[-1], f"{rsrc} harness_version (one value in every row)")
+    nums.put("run.revision", m["code_revision"][:7], f"{msrc} code_revision")
+    nums.put("run.date", m["started_at"][:10], f"{msrc} started_at")
+    nums.put("run.started", m["started_at"][11:19], f"{msrc} started_at", "UTC")
+    nums.put("run.finished", m["finished_at"][11:19], f"{msrc} finished_at", "UTC")
+    verifiers = Counter(r["verifier_id"] for r in rows)
+    nums.put("run.verifiers", len(verifiers), f"{rsrc} verifier_id (distinct values)", "verifiers graded: six conditions, reference checks, independent labeler")
+    per_v = sorted(set(verifiers.values()))
+    if len(per_v) != 1:
+        raise ValueError(f"{rsrc}: verifiers graded on different numbers of candidates: {dict(verifiers)}")
+    nums.put("run.candidates", per_v[0], f"{rsrc} verifier_id (rows per verifier)", "candidates per verifier: the attempts and the references")
+    n_att = sum(f["summary"]["attempts"] for f in F["att"].values())
+    nums.put("attempts", n_att, "; ".join(f"{F['att_src'][t]} summary.attempts" for t in F["fams"]))
+    fa = a["fresh_attempts"]
+    nums.put("attempts.excluded", fa["n_excluded"], f"{src} fresh_attempts.n_excluded")
+    if len(fa["excluded"]) != fa["n_excluded"]:
+        raise ValueError(f"{src}: fresh_attempts.excluded does not list n_excluded attempts")
+    for i, x in enumerate(fa["excluded"]):
+        nums.put(f"excluded.{i + 1}", tex(x["candidate_id"]), f"{src} fresh_attempts.excluded[{i}].candidate_id", "excluded attempt")
+    nums.put("units", a["distinct_patches"]["n_distinct"], f"{src} distinct_patches.n_distinct", "distinct graded patches")
+    nums.put("units.heldout", a["distinct_patches"]["n_heldout"], f"{src} distinct_patches.n_heldout")
+    dens = {(d["false_acceptance"]["den"], d["false_rejection"]["den"]) for d in a["conditions"].values()}
+    if len(dens) != 1:
+        raise ValueError(f"{src}: the conditions have different FA or FR denominators: {dens}")
+    inv, val = dens.pop()
+    nums.put("units.invalid", inv, f"{src} conditions.<every condition>.false_acceptance.den", "D19 invalid units")
+    nums.put("units.valid", val, f"{src} conditions.<every condition>.false_rejection.den", "D19 valid units")
+    lab = a["independent_labeling"]["labels"]
+    nums.put("il.units.invalid", lab["invalid"], f"{src} independent_labeling.labels.invalid")
+    nums.put("il.units.valid", lab["valid"], f"{src} independent_labeling.labels.valid")
+    nums.put("il.units.ambiguous", lab["ambiguous"], f"{src} independent_labeling.labels.ambiguous")
+    queued = sum(len(a["labels"][t]["strata"][F["stratum"]]["review_queue"]) for t in F["fams"])
+    nums.put("queue", queued, f"{src} labels.<task>.strata.{F['stratum']}.review_queue (lengths summed)", "units queued for human review")
+    flagged = {t: F["att"][t]["summary"]["flagged_by_the_audit_script"] for t in F["fams"]}
+    for t in F["fams"]:
+        nums.put(f"flagged.{_fk(t)}", flagged[t], f"{F['att_src'][t]} summary.flagged_by_the_audit_script")
+    nums.put("flagged", sum(flagged.values()), "; ".join(f"{F['att_src'][t]} summary.flagged_by_the_audit_script" for t in F["fams"]))
+    sens = F["s"]["meta"]["sensitivity"]
+    ids = [x["candidate_id"] for x in sens["excluded_here"] + sens["already_excluded"]]
+    if len(ids) != sum(flagged.values()):
+        raise ValueError(f"{F['ssrc']}: meta.sensitivity excludes {len(ids)} attempts, the audit script flagged {sum(flagged.values())}")
+    n_a = sum(F["attempt"][i]["configuration"] == "config-A" for i in ids)
+    nums.put("flagged.configa", n_a, f"{F['ssrc']} meta.sensitivity.excluded_here, already_excluded (candidate ids) joined with "
+             "attempts[].configuration of " + ", ".join(F["att_src"][t] for t in F["fams"]), "flagged attempts of configuration A")
+    for t in F["fams"]:
+        for c in (*ORDER, "reference_check", "independent_label"):
+            p = ROOT / "tasks" / t / "verifiers" / c / "spec.json"
+            if p.exists():
+                key = {"reference_check": "ref", "independent_label": "il"}.get(c, SHORT.get(c, c).lower())
+                nums.put(f"checks.{_fk(t)}.{key}", len(json.loads(p.read_text())["checks"]), f"{rel(p)} checks (count)")
+
+
+def fresh_per_family_table(F: dict, view: dict, vsrc: str, led: SectionLedger, nums: Numbers, *, name: str, label: str,
+                           p: str, caption: str) -> str:
+    """Per-family FA · FR under D19 and under the independent labeler, per condition, and pooled (the primary display)."""
+    fams = F["fams"]
+    rows = []
+    il = view["independent_labeling"]["conditions"]
+    for c in ORDER:
+        sh = SHORT[c].lower()
+        pf, lab = view["per_family"][c], il[c]["independent_label"]
+        if il[c]["primary"]["per_family"] != pf:
+            raise ValueError(f"{vsrc}: per_family.{c} differs from independent_labeling.conditions.{c}.primary.per_family")
+        fa, fr = view["conditions"][c]["false_acceptance"], view["conditions"][c]["false_rejection"]
+        for k, tot in (("fa_num", fa["num"]), ("fa_den", fa["den"]), ("fr_num", fr["num"]), ("fr_den", fr["den"])):
+            if sum(pf[t][k] for t in fams) != tot:
+                raise ValueError(f"{vsrc}: per_family.{c}.*.{k} does not sum to the pooled value {tot}")
+        lfa, lfr = lab["false_acceptance"], lab["false_rejection"]
+        dcells, lcells = [], []
+        for t in fams:
+            d, ll = pf[t], lab["per_family"][t]
+            dcells.append(_fa_fr(d))
+            lcells.append(_fa_fr(ll))
+            led.add(name, f"{c} {t} D19 FA; FR", f"{d['fa_num']}/{d['fa_den']}; {d['fr_num']}/{d['fr_den']}", f"{vsrc} per_family.{c}.{t}")
+            led.add(name, f"{c} {t} labeler FA; FR", f"{ll['fa_num']}/{ll['fa_den']}; {ll['fr_num']}/{ll['fr_den']}",
+                    f"{vsrc} independent_labeling.conditions.{c}.independent_label.per_family.{t}")
+            for m in ("fa", "fr"):
+                nums.put(f"{p}{sh}.{_fk(t)}.{m}", _frac(d[f"{m}_num"], d[f"{m}_den"]), f"{vsrc} per_family.{c}.{t}.{m}_num, .{m}_den")
+                nums.put(f"{p}il.{sh}.{_fk(t)}.{m}", _frac(ll[f"{m}_num"], ll[f"{m}_den"]),
+                         f"{vsrc} independent_labeling.conditions.{c}.independent_label.per_family.{t}.{m}_num, .{m}_den")
+        dcells.append(f"{_frac(fa['num'], fa['den'])} $\\cdot$ {_frac(fr['num'], fr['den'])}")
+        lcells.append(f"{_frac(lfa['num'], lfa['den'])} $\\cdot$ {_frac(lfr['num'], lfr['den'])}")
+        led.add(name, f"{c} pooled D19 FA; FR", f"{fa['num']}/{fa['den']}; {fr['num']}/{fr['den']}",
+                f"{vsrc} conditions.{c}.false_acceptance, .false_rejection (num, den)")
+        led.add(name, f"{c} pooled labeler FA; FR", f"{lfa['num']}/{lfa['den']}; {lfr['num']}/{lfr['den']}",
+                f"{vsrc} independent_labeling.conditions.{c}.independent_label.false_acceptance, .false_rejection (num, den)")
+        for m, x in (("fa", lfa), ("fr", lfr)):
+            key = "false_acceptance" if m == "fa" else "false_rejection"
+            nums.put(f"{p}il.{sh}.{m}", _frac(x["num"], x["den"]), f"{vsrc} independent_labeling.conditions.{c}.independent_label.{key}.num, .den")
+            nums.put(f"{p}il.{sh}.{m}.rate", _r2(x["rate"]), f"{vsrc} independent_labeling.conditions.{c}.independent_label.{key}.rate")
+        rows.append(f"{tex(COND_TEX[c])} & D19 & " + " & ".join(dcells) + " \\\\")
+        rows.append(" & labeler & " + " & ".join(lcells) + " \\\\" + ("" if c == ORDER[-1] else "\\addlinespace"))
+    return table(caption, label, "llccccc", "Condition & Labels & " + " & ".join(tex(t) for t in fams) + " & Pooled", rows,
+                 size="\\footnotesize")
+
+
+def fresh_tables(F: dict, led: SectionLedger, nums: Numbers, out: Path) -> None:
+    a, s, fams, run_id = F["a"], F["s"], F["fams"], F["run_id"]
+    src, ssrc, rsrc = F["src"], F["ssrc"], F["rsrc"]
+    run_tt = f"\\texttt{{{tex(run_id)}}}"
+    excl = [x["candidate_id"] for x in a["fresh_attempts"]["excluded"]]
+    excl_txt = ", ".join(f"\\texttt{{{tex(x)}}}" for x in excl) or "none"
+    n_units, lab = a["distinct_patches"]["n_distinct"], a["independent_labeling"]["labels"]
+    inv, val = a["conditions"]["initial_plain"]["false_acceptance"]["den"], a["conditions"]["initial_plain"]["false_rejection"]["den"]
+    for k in ("invalid", "valid"):
+        dens = {x["independent_label"]["false_acceptance" if k == "invalid" else "false_rejection"]["den"]
+                for x in a["independent_labeling"]["conditions"].values()}
+        if dens != {lab[k]}:
+            raise ValueError(f"{src}: independent_labeling.labels.{k} = {lab[k]} but the labeler's denominators are {dens}")
+
+    # (a) per family, the primary display
+    (out / "fresh_per_family.tex").write_text(fresh_per_family_table(
+        F, a, src, led, nums, name="fresh_per_family", label="tab:fresh-family", p="",
+        caption=f"Per-family false acceptance $\\cdot$ false rejection (accepted/invalid $\\cdot$ rejected/valid) on the fresh-agent "
+                f"stratum, run {run_tt}, the primary display (protocol \\S15.7). Each distinct graded patch counts once: {n_units} "
+                f"units; excluded by the reviewed audit: {excl_txt}. D19: rule-based label proposals ({inv} invalid, {val} valid); "
+                f"labeler: the independent labeler's verdicts, a second labeling ({lab['invalid']} invalid, {lab['valid']} valid). "
+                f"{NO_HUMAN} n/a: no invalid unit in that family under that labeling. {FOUR_FAMILIES}"))
+
+    # (a2) pooled rates
+    rows = []
+    for c in ORDER:
+        d, sh = a["conditions"][c], SHORT[c].lower()
+        cells = []
+        for m, key in (("fa", "false_acceptance"), ("fr", "false_rejection")):
+            x = d[key]
+            cells += [fmt_rate(x["rate"], x["num"], x["den"]), _iv(x["exact95"]), _r2(x["macro"])]
+            led.add("fresh_pooled", f"{c} {key} rate (num/den), exact95, macro",
+                    f"{x['rate']} ({x['num']}/{x['den']}), {x['exact95']}, {x['macro']}", f"{src} conditions.{c}.{key}")
+            nums.put(f"{sh}.{m}", _frac(x["num"], x["den"]), f"{src} conditions.{c}.{key}.num, .den")
+            nums.put(f"{sh}.{m}.rate", _r2(x["rate"]), f"{src} conditions.{c}.{key}.rate")
+            nums.put(f"{sh}.{m}.exact", _iv(x["exact95"]), f"{src} conditions.{c}.{key}.exact95")
+            nums.put(f"{sh}.{m}.macro", _r2(x["macro"]), f"{src} conditions.{c}.{key}.macro")
+        tn, infra = d["tasks_with_any_accepted_negative"], d["infrastructure"]
+        rows.append(f"{tex(COND_TEX[c])} & " + " & ".join(cells) + f" & {_signed(d['youden_j'])} & {tn['num']}/{tn['den']} & "
+                    f"{infra['num']}/{infra['den']} \\\\")
+        led.add("fresh_pooled", f"{c} youden_j; families with an accepted negative; infrastructure",
+                f"{d['youden_j']}; {tn['num']}/{tn['den']}; {infra['num']}/{infra['den']}",
+                f"{src} conditions.{c}.youden_j, .tasks_with_any_accepted_negative, .infrastructure")
+        nums.put(f"{sh}.j", _signed(d["youden_j"]), f"{src} conditions.{c}.youden_j")
+        nums.put(f"{sh}.famfa", f"{tn['num']}/{tn['den']}", f"{src} conditions.{c}.tasks_with_any_accepted_negative.num, .den")
+        nums.put(f"{sh}.infra", f"{infra['num']}/{infra['den']}", f"{src} conditions.{c}.infrastructure.num, .den")
+    (out / "fresh_pooled.tex").write_text(table(
+        f"Pooled rates on the fresh-agent stratum, run {run_tt}, D19 labels, each distinct graded patch once. {NO_HUMAN} Rate "
+        "(num/den), the exact binomial 95\\% interval (it ignores clustering by family; reference scale only) and the macro rate "
+        "(mean of the per-family rates). $J$ = (1$-$FR)$-$FA. Fam.\\ w/ FA: families with at least one accepted invalid unit. "
+        f"Infra: infrastructure outcomes. Cluster-bootstrap intervals are reported separately and are not inferential with "
+        f"{a['n_families']} families. {FOUR_FAMILIES}", "tab:fresh-pooled", "lrrrrrrrrr",
+        "Condition & FA & exact 95\\% & macro & FR & exact 95\\% & macro & $J$ & Fam.\\ w/ FA & Infra", rows,
+        size="\\scriptsize\\setlength{\\tabcolsep}{3.5pt}"))
+
+    # (a3) the pre-specified paired comparisons
+    rows, floors1, floors2, ptwo = [], set(), set(), []
+    for i, d in enumerate(a["comparisons"]):
+        sp, fm = d["signflip"]["pooled"], d["signflip"]["family_mean"]
+        floors1.add(sp["floor_one_sided"])
+        floors2.add(sp["floor_two_sided"])
+        ptwo.append(sp["p_two_sided"])
+        disc = d["discordant"]
+        pfd = [_signed(d["per_family_difference"].get(t)) for t in fams]
+        rows.append(f"{SHORT[d['a']]} & {SHORT[d['b']]} & {d['metric'].upper()} ({d['n_metric']}) & {_signed(d['difference'])} & "
+                    + " & ".join(pfd) + f" & {disc['a_accepts_b_rejects']}/{disc['a_rejects_b_accepts']} & {_p(sp['p_greater'])} & "
+                    f"{_p(sp['p_less'])} & {_p(sp['p_two_sided'])} & {_p(fm['p_two_sided'])} & {_p(sp['conditional_floor_one_sided'])} \\\\")
+        led.add("fresh_comparisons", f"comparisons[{i}] {d['a']} - {d['b']} {d['metric']}: difference, n, per-family differences, "
+                "discordant, pooled p_greater / p_less / p_two_sided / conditional floor, family-mean p_two_sided",
+                f"{d['difference']}, {d['n_metric']}, {d['per_family_difference']}, {disc}, {sp['p_greater']} / {sp['p_less']} / "
+                f"{sp['p_two_sided']} / {sp['conditional_floor_one_sided']}, {fm['p_two_sided']}",
+                f"{src} comparisons[{i}] (difference, n_metric, per_family_difference, discordant, signflip.pooled, signflip.family_mean)")
+        k = f"cmp.{SHORT[d['a']].lower()}-{SHORT[d['b']].lower()}.{d['metric']}"
+        base = f"{src} comparisons[{i}]"
+        nums.put(f"{k}.diff", _signed(d["difference"]), f"{base}.difference")
+        nums.put(f"{k}.n", d["n_metric"], f"{base}.n_metric")
+        nums.put(f"{k}.disc.ab", disc["a_accepts_b_rejects"], f"{base}.discordant.a_accepts_b_rejects", "A accepts, B rejects")
+        nums.put(f"{k}.disc.ba", disc["a_rejects_b_accepts"], f"{base}.discordant.a_rejects_b_accepts", "A rejects, B accepts")
+        nums.put(f"{k}.p.greater", _p(sp["p_greater"]), f"{base}.signflip.pooled.p_greater")
+        nums.put(f"{k}.p.less", _p(sp["p_less"]), f"{base}.signflip.pooled.p_less")
+        nums.put(f"{k}.p.two", _p(sp["p_two_sided"]), f"{base}.signflip.pooled.p_two_sided")
+        nums.put(f"{k}.floor", _p(sp["conditional_floor_one_sided"]), f"{base}.signflip.pooled.conditional_floor_one_sided")
+        nums.put(f"{k}.fm.p.two", _p(fm["p_two_sided"]), f"{base}.signflip.family_mean.p_two_sided")
+        nums.put(f"{k}.fm.p.greater", _p(fm["p_greater"]), f"{base}.signflip.family_mean.p_greater")
+        for t in fams:
+            nums.put(f"{k}.{_fk(t)}", _signed(d["per_family_difference"].get(t)), f"{base}.per_family_difference.{t}")
+    if len(floors1) != 1 or len(floors2) != 1:
+        raise ValueError(f"{src}: the comparisons have different unconditional floors {floors1}, {floors2}; the caption states one")
+    f1, f2 = floors1.pop(), floors2.pop()
+    nums.put("cmp.count", len(a["comparisons"]), f"{src} comparisons (count)")
+    nums.put("cmp.floor.one", _p(f1), f"{src} comparisons[*].signflip.pooled.floor_one_sided (one value)")
+    nums.put("cmp.floor.two", _p(f2), f"{src} comparisons[*].signflip.pooled.floor_two_sided (one value)")
+    nums.put("cmp.min.p.two", _p(min(ptwo)), f"{src} comparisons[*].signflip.pooled.p_two_sided (minimum)")
+    led.add("fresh_comparisons", "unconditional floors one-sided / two-sided (caption); smallest two-sided p (caption)",
+            f"{f1} / {f2}; {min(ptwo)}", f"{src} comparisons[*].signflip.pooled.floor_one_sided, .floor_two_sided, .p_two_sided")
+    (out / "fresh_comparisons.tex").write_text(table(
+        f"The {len(a['comparisons'])} pre-specified paired comparisons on the same units, run {run_tt}, D19 labels. {NO_HUMAN} "
+        "Metric (n): FA over the invalid or FR over the valid units. A$-$B: pooled difference; then the per-family differences. "
+        "Disc.: A accepts \\& B rejects / A rejects \\& B accepts. $p$: exact sign-flip randomization p-values over the "
+        f"{a['n_families']} families, on the pooled statistic ($>$: A$>$B, $<$: A$<$B, both one-sided; 2-s.: two-sided) and, "
+        f"last but one, two-sided on the family-mean statistic. With {a['n_families']} families no one-sided $p$ below {_p(f1)} "
+        f"and no two-sided $p$ below {_p(f2)} can occur; Floor: the smallest one-sided $p$ attainable given the families whose "
+        f"difference is zero. The smallest two-sided $p$ here is {_p(min(ptwo))}. Short names: C1--C4 contracts (initial or "
+        f"full, plain or audited), B2 full-session LLM, B1 repository tests. {FOUR_FAMILIES}", "tab:fresh-comparisons",
+        "lllr" + "r" * len(fams) + "rrrrrr",
+        "A & B & Metric (n) & A$-$B & " + " & ".join(tex(t) for t in fams) + " & Disc. & $p_{>}$ & $p_{<}$ & $p$ 2-s. & "
+        "$p$ 2-s.\\ (mean) & Floor", rows, size="\\scriptsize\\setlength{\\tabcolsep}{4pt}"))
+
+    # (b) correction-violating u1 attempts
+    units = _units(a, fams)
+    att = F["attempt"]
+    u1 = {t: [x for x in F["att"][t]["attempts"] if x["variant"] == "u1" and x["audit_passed"]] for t in fams}
+    cv_rec = a["fresh_attempts"]["u1_correction_violating"]
+    if sum(len(v) for v in u1.values()) != cv_rec["attempts"]:
+        raise ValueError(f"{src}: fresh_attempts.u1_correction_violating.attempts = {cv_rec['attempts']}, the attempt records hold "
+                         f"{sum(len(v) for v in u1.values())} u1 attempts that passed the audit")
+    viol = {t: sorted(cid for (tt, cid), u in units.items() if tt == t and u["negative_type"] == "correction_violating") for t in fams}
+    for t in fams:
+        for cid in viol[t]:
+            if att[cid]["variant"] != "u1":
+                raise ValueError(f"{cid}: a correction-violating unit that is not a u1 attempt")
+    if sum(len(v) for v in viol.values()) != cv_rec["correction_violating"]:
+        raise ValueError(f"{src}: per_task holds {sum(len(v) for v in viol.values())} correction-violating units, "
+                         f"fresh_attempts.u1_correction_violating.correction_violating = {cv_rec['correction_violating']}")
+    unspec = sorted(cid for (t, cid), u in units.items() if u["label"] == "invalid" and u["negative_type"] != "correction_violating")
+    violated = {x["candidate"]: x["violated"] for t in fams for x in a["labels"][t]["strata"][F["stratum"]]["candidates"]}
+    for cid in unspec:
+        if violated.get(cid) != ["REGRESSION"]:
+            raise ValueError(f"{src}: {cid} is invalid without a correction requirement, but labels...violated = {violated.get(cid)}; "
+                             "the table calls these units regression-only")
+    nt = {u["negative_type"] for u in units.values() if u["label"] == "invalid" and u["negative_type"] != "correction_violating"}
+    first = ["Correction-violating \\texttt{u1} attempts"]
+    for t in fams:
+        first.append(f"{len(viol[t])}/{len(u1[t])}")
+        led.add("fresh_correction_violating", f"{t} correction-violating u1 attempts / u1 attempts", f"{len(viol[t])}/{len(u1[t])}",
+                f"{src} per_task.{t}.*[].negative_type = correction_violating; {F['att_src'][t]} attempts[].variant = u1, audit_passed")
+        nums.put(f"cv.{_fk(t)}", f"{len(viol[t])}/{len(u1[t])}", f"{src} per_task.{t}.*[].negative_type; {F['att_src'][t]} attempts[].variant")
+        nums.put(f"cv.{_fk(t)}.n", len(viol[t]), f"{src} per_task.{t}.*[].negative_type = correction_violating (count)")
+    first.append(f"{cv_rec['correction_violating']}/{cv_rec['attempts']}")
+    first.append(str(len(unspec)))
+    led.add("fresh_correction_violating", "pooled correction-violating u1 attempts / u1 attempts; share",
+            f"{cv_rec['correction_violating']}/{cv_rec['attempts']}; {cv_rec['share']}",
+            f"{src} fresh_attempts.u1_correction_violating.correction_violating, .attempts, .share")
+    led.add("fresh_correction_violating", f"invalid units without a violated correction requirement (negative types {sorted(nt)}): "
+            "count; their violated requirements", f"{len(unspec)}: {', '.join(unspec)}; {['REGRESSION']}",
+            f"{src} per_task.*.*[].label, .negative_type; labels.<task>.strata.{F['stratum']}.candidates[].violated")
+    nums.put("cv", f"{cv_rec['correction_violating']}/{cv_rec['attempts']}",
+             f"{src} fresh_attempts.u1_correction_violating.correction_violating, .attempts")
+    nums.put("cv.n", cv_rec["correction_violating"], f"{src} fresh_attempts.u1_correction_violating.correction_violating")
+    nums.put("cv.attempts", cv_rec["attempts"], f"{src} fresh_attempts.u1_correction_violating.attempts")
+    nums.put("cv.share", f"{cv_rec['share']:.3f}", f"{src} fresh_attempts.u1_correction_violating.share")
+    nums.put("unspec.n", len(unspec), f"{src} per_task.*.*[] (invalid, negative_type not correction_violating; count)",
+             "invalid units with REGRESSION as their only violated requirement")
+    rows = [" & ".join(first) + " \\\\\\midrule"]
+    for c in ORDER:
+        sh, cells = SHORT[c].lower(), [tex(COND_TEX[c])]
+        for t in fams:
+            acc = sum(units[(t, cid)]["outcome"][c] == "pass" for cid in viol[t])
+            cells.append(f"{acc}/{len(viol[t])}" if viol[t] else "--")
+            nums.put(f"cv.{sh}.{_fk(t)}", _frac(acc, len(viol[t])), f"{src} per_task.{t}.{c}[] (correction_violating; outcome pass / all)")
+        bn = a["by_negative_type"][c]
+        cvb, usb = bn["correction_violating"], bn.get("unspecified", {"accepted": 0, "n": 0})
+        tot = sum(sum(units[(t, cid)]["outcome"][c] == "pass" for cid in viol[t]) for t in fams)
+        if (tot, sum(len(v) for v in viol.values())) != (cvb["accepted"], cvb["n"]):
+            raise ValueError(f"{src}: by_negative_type.{c}.correction_violating = {cvb}, per_task gives {tot} accepted")
+        if usb["n"] != len(unspec):
+            raise ValueError(f"{src}: by_negative_type.{c}.unspecified.n = {usb['n']}, per_task gives {len(unspec)}")
+        cells += [f"{cvb['accepted']}/{cvb['n']}", f"{usb['accepted']}/{usb['n']}"]
+        rows.append(" & ".join(cells) + " \\\\")
+        led.add("fresh_correction_violating", f"{c} accepted correction-violating per family; pooled; accepted regression-only",
+                ", ".join(c2 for c2 in cells[1:len(fams) + 1]) + f"; {cvb['accepted']}/{cvb['n']}; {usb['accepted']}/{usb['n']}",
+                f"{src} per_task.<task>.{c}[] (negative_type, outcome); by_negative_type.{c}.correction_violating, .unspecified")
+        nums.put(f"cv.{sh}", f"{cvb['accepted']}/{cvb['n']}", f"{src} by_negative_type.{c}.correction_violating.accepted, .n")
+        nums.put(f"cv.{sh}.accepted", cvb["accepted"], f"{src} by_negative_type.{c}.correction_violating.accepted")
+        nums.put(f"unspec.{sh}", f"{usb['accepted']}/{usb['n']}", f"{src} by_negative_type.{c}.unspecified.accepted, .n")
+    (out / "fresh_correction_violating.tex").write_text(table(
+        f"\\texttt{{u1}} attempts (given the first user request only) that violate a requirement the reference contract introduces "
+        f"after it, by family, and how many of them each condition accepts (accepted/violating), run {run_tt}, D19 labels. "
+        f"{NO_HUMAN} No generator wrote these negatives: agents that were not told the correction produced them. Last column: the "
+        "invalid units whose only violated requirement is the regression norm (accepted/total); they violate no correction "
+        f"requirement. {FOUR_FAMILIES}", "tab:fresh-cv", "l" + "r" * (len(fams) + 2),
+        " & " + " & ".join(tex(t) for t in fams) + " & Pooled & Regression only", rows, size="\\footnotesize"))
+
+    # (c) solve rates by configuration and variant
+    rows = []
+    bcv = a["fresh_attempts"]["by_configuration_variant"]
+    for key in sorted(bcv):
+        d = bcv[key]
+        cfg, var = d["configuration"].replace("config-", ""), d["variant"]
+        recs = [x for t in fams for x in F["att"][t]["attempts"] if x["configuration"] == d["configuration"] and x["variant"] == var
+                and x["audit_passed"]]
+        if len(recs) != d["attempts"]:
+            raise ValueError(f"{src}: fresh_attempts.by_configuration_variant.{key}.attempts = {d['attempts']}, the attempt records "
+                             f"hold {len(recs)}")
+        ended = [d["ended"].get(k, 0) for k in ("finished", "gave_up", "error")]
+        if sum(ended) != d["attempts"]:
+            raise ValueError(f"{src}: fresh_attempts.by_configuration_variant.{key}.ended has a value other than finished, gave_up, error")
+        dl = d["independent_label"]
+        rows.append(f"{cfg} & \\texttt{{{tex(var)}}} & D19 & {d['solved']}/{d['attempts']} & " +
+                    " & ".join(f"{d['per_family'][t]['solved']}/{d['per_family'][t]['attempts']}" for t in fams) +
+                    f" & {'/'.join(map(str, ended))} \\\\")
+        rows.append(" & & labeler & " + f"{dl['solved']}/{d['attempts']} & " +
+                    " & ".join(f"{dl['per_family'][t]['solved']}/{dl['per_family'][t]['attempts']}" for t in fams) + " & \\\\" +
+                    ("" if key == sorted(bcv)[-1] else "\\addlinespace"))
+        base = f"{src} fresh_attempts.by_configuration_variant.{key}"
+        led.add("fresh_solve_rates", f"{key} D19 solved/attempts; per family; ended finished/gave_up/error",
+                f"{d['solved']}/{d['attempts']}; {[(t, d['per_family'][t]['solved'], d['per_family'][t]['attempts']) for t in fams]}; "
+                f"{'/'.join(map(str, ended))}", f"{base} (solved, attempts, per_family, ended; an absent key of ended is 0)")
+        led.add("fresh_solve_rates", f"{key} labeler solved/attempts; per family",
+                f"{dl['solved']}/{d['attempts']}; {[(t, dl['per_family'][t]['solved'], dl['per_family'][t]['attempts']) for t in fams]}",
+                f"{base}.independent_label (solved, per_family)")
+        k = f"solve.{cfg.lower()}.{var}"
+        nums.put(k, f"{d['solved']}/{d['attempts']}", f"{base}.solved, .attempts")
+        nums.put(f"{k}.rate", _r2(d["rate"]), f"{base}.rate")
+        nums.put(f"il.{k}", f"{dl['solved']}/{d['attempts']}", f"{base}.independent_label.solved; {base}.attempts")
+        nums.put(f"{k}.finished", d["ended"].get("finished", 0), f"{base}.ended.finished")
+        for t in fams:
+            nums.put(f"{k}.{_fk(t)}", f"{d['per_family'][t]['solved']}/{d['per_family'][t]['attempts']}",
+                     f"{base}.per_family.{t}.solved, .attempts")
+    for var in sorted({d["variant"] for d in bcv.values()}):
+        for t in fams:
+            sv = sum(d["per_family"][t]["solved"] for d in bcv.values() if d["variant"] == var)
+            n = sum(d["per_family"][t]["attempts"] for d in bcv.values() if d["variant"] == var)
+            nums.put(f"solve.{var}.{_fk(t)}", f"{sv}/{n}", f"{src} fresh_attempts.by_configuration_variant.*/{var}.per_family.{t} "
+                     "(summed over the configurations)")
+    (out / "fresh_solve_rates.tex").write_text(table(
+        f"Solve rates of the fresh attempts (protocol \\S15.4, estimand 1), run {run_tt}: solved/attempts per configuration (A: the "
+        "build session's default agent model; B: the smallest model tier the agent tool offers; same template, tools and budget) and "
+        "instruction (\\texttt{u1}: the first user request only; \\texttt{final}: with the correction added), pooled and per family. "
+        "D19: solved when D19 labels the attempt valid (reference checks and regression norm); labeler: when the independent labeler "
+        f"passes it. {NO_HUMAN} Every attempt counts; the excluded one ({excl_txt}) counts nowhere. Ended: finished/gave up/error. "
+        "The \\texttt{u1}--\\texttt{final} contrast measures the information in the instruction, not the agents' capability.",
+        "tab:fresh-solve", "lll" + "r" * (len(fams) + 2),
+        "Config. & Instruction & Labels & Solved & " + " & ".join(tex(t) for t in fams) + " & Ended", rows, size="\\footnotesize"))
+
+    # (d) the sensitivity view (every flagged attempt excluded)
+    sm = s["meta"]["sensitivity"]
+    here, already = len(sm["excluded_here"]), len(sm["already_excluded"])
+    s_units, s_lab = s["distinct_patches"]["n_distinct"], s["independent_labeling"]["labels"]
+    s_inv, s_val = s["conditions"]["initial_plain"]["false_acceptance"]["den"], s["conditions"]["initial_plain"]["false_rejection"]["den"]
+    s_cv, s_ag = s["fresh_attempts"]["u1_correction_violating"], s["independent_labeling"]["agreement"]["by_stratum"][F["stratum"]]
+    g = s_cv["graded_by"]
+    nums.put("sens.excluded.here", here, f"{ssrc} meta.sensitivity.excluded_here (count)", "excluded beyond the primary analysis")
+    nums.put("sens.excluded.already", already, f"{ssrc} meta.sensitivity.already_excluded (count)")
+    nums.put("sens.excluded", here + already, f"{ssrc} meta.sensitivity.excluded_here, already_excluded (counts summed)")
+    nums.put("sens.units", s_units, f"{ssrc} distinct_patches.n_distinct")
+    nums.put("sens.units.invalid", s_inv, f"{ssrc} conditions.initial_plain.false_acceptance.den")
+    nums.put("sens.units.valid", s_val, f"{ssrc} conditions.initial_plain.false_rejection.den")
+    nums.put("sens.cv", f"{s_cv['correction_violating']}/{s_cv['attempts']}", f"{ssrc} fresh_attempts.u1_correction_violating.correction_violating, .attempts")
+    for c in ("initial_plain", "full_plain"):
+        nums.put(f"sens.cv.{SHORT[c].lower()}", f"{g[c]['accepted']}/{g[c]['n']}", f"{ssrc} fresh_attempts.u1_correction_violating.graded_by.{c}")
+    nums.put("sens.agree", f"{s_ag['agree']}/{s_ag['n_units']}", f"{ssrc} independent_labeling.agreement.by_stratum.{F['stratum']}.agree, .n_units")
+    nums.put("sens.kappa", _r2(s_ag["kappa"]), f"{ssrc} independent_labeling.agreement.by_stratum.{F['stratum']}.kappa")
+    for c in ORDER:
+        sh, d = SHORT[c].lower(), s["conditions"][c]
+        for m, key in (("fa", "false_acceptance"), ("fr", "false_rejection")):
+            nums.put(f"sens.{sh}.{m}", _frac(d[key]["num"], d[key]["den"]), f"{ssrc} conditions.{c}.{key}.num, .den")
+            nums.put(f"sens.{sh}.{m}.rate", _r2(d[key]["rate"]), f"{ssrc} conditions.{c}.{key}.rate")
+        nums.put(f"sens.{sh}.j", _signed(d["youden_j"]), f"{ssrc} conditions.{c}.youden_j")
+    led.add("fresh_sensitivity", "caption: excluded here / already; units (invalid, valid); labeler invalid / valid; correction-violating "
+            "u1 attempts; C1, C3 accept; agreement; kappa",
+            f"{here} / {already}; {s_units} ({s_inv}, {s_val}); {s_lab['invalid']} / {s_lab['valid']}; "
+            f"{s_cv['correction_violating']}/{s_cv['attempts']}; {g['initial_plain']['accepted']}/{g['initial_plain']['n']}, "
+            f"{g['full_plain']['accepted']}/{g['full_plain']['n']}; {s_ag['agree']}/{s_ag['n_units']}; {s_ag['kappa']}",
+            f"{ssrc} meta.sensitivity; distinct_patches.n_distinct; conditions.initial_plain (dens); independent_labeling.labels; "
+            "fresh_attempts.u1_correction_violating; independent_labeling.agreement.by_stratum")
+    (out / "fresh_sensitivity.tex").write_text(fresh_per_family_table(
+        F, s, ssrc, led, nums, name="fresh_sensitivity", label="tab:fresh-sensitivity", p="sens.",
+        caption=f"Sensitivity view of run {run_tt} (protocol \\S18.1): every attempt the automated audit flagged is excluded "
+                f"({here} beyond the primary analysis, plus the {already} excluded there), leaving {s_units} units (D19: {s_inv} "
+                f"invalid, {s_val} valid; labeler: {s_lab['invalid']} invalid, {s_lab['valid']} valid). Cells as in the per-family "
+                f"table: accepted/invalid $\\cdot$ rejected/valid. Correction-violating \\texttt{{u1}} attempts: "
+                f"{s_cv['correction_violating']}/{s_cv['attempts']}; C1 accepts {g['initial_plain']['accepted']}/{g['initial_plain']['n']}, "
+                f"C3 {g['full_plain']['accepted']}/{g['full_plain']['n']}. D19 and the labeler agree on {s_ag['agree']}/{s_ag['n_units']} "
+                f"units ($\\kappa$ = {_r2(s_ag['kappa'])}, model--model agreement). {NO_HUMAN} {FOUR_FAMILIES}"))
+
+    # (d2) the oracle-gated view (secondary)
+    og = a["oracle_gated"]
+    rows = []
+    for c in ORDER:
+        d, sh, ref = og["conditions"][c], SHORT[c].lower(), a["sanity"][c]["reference"]
+        dropped = ", ".join(tex(t) for t in sorted(d["dropped"])) or "--"
+        rows.append(f"{tex(COND_TEX[c])} & {ref['pass']}/{ref['n']} & {d['cells_kept']}/{d['cells']} & {dropped} & "
+                    f"{d['lost_yield']['invalid']}/{d['lost_yield']['valid']} & {fmt_rate(d['false_acceptance']['rate'], d['false_acceptance']['num'], d['false_acceptance']['den'])} & "
+                    f"{fmt_rate(d['false_rejection']['rate'], d['false_rejection']['num'], d['false_rejection']['den'])} \\\\")
+        led.add("fresh_oracle_gated", f"{c} reference passes; cells kept; dropped; lost yield invalid/valid; FA; FR",
+                f"{ref['pass']}/{ref['n']}; {d['cells_kept']}/{d['cells']}; {sorted(d['dropped'])}; {d['lost_yield']['invalid']}/"
+                f"{d['lost_yield']['valid']}; {d['false_acceptance']['num']}/{d['false_acceptance']['den']}; "
+                f"{d['false_rejection']['num']}/{d['false_rejection']['den']}",
+                f"{src} sanity.{c}.reference; oracle_gated.conditions.{c} (cells_kept, cells, dropped, lost_yield, false_acceptance, false_rejection)")
+        nums.put(f"ref.{sh}", f"{ref['pass']}/{ref['n']}", f"{src} sanity.{c}.reference.pass, .n", "reference solutions passed")
+        nums.put(f"og.{sh}.fa", _frac(d["false_acceptance"]["num"], d["false_acceptance"]["den"]), f"{src} oracle_gated.conditions.{c}.false_acceptance.num, .den")
+        nums.put(f"og.{sh}.fr", _frac(d["false_rejection"]["num"], d["false_rejection"]["den"]), f"{src} oracle_gated.conditions.{c}.false_rejection.num, .den")
+        nums.put(f"og.{sh}.fa.rate", _r2(d["false_acceptance"]["rate"]), f"{src} oracle_gated.conditions.{c}.false_acceptance.rate")
+        nums.put(f"og.{sh}.fr.rate", _r2(d["false_rejection"]["rate"]), f"{src} oracle_gated.conditions.{c}.false_rejection.rate")
+        nums.put(f"og.{sh}.lost.invalid", d["lost_yield"]["invalid"], f"{src} oracle_gated.conditions.{c}.lost_yield.invalid")
+        nums.put(f"og.{sh}.lost.valid", d["lost_yield"]["valid"], f"{src} oracle_gated.conditions.{c}.lost_yield.valid")
+        nums.put(f"og.{sh}.kept", f"{d['cells_kept']}/{d['cells']}", f"{src} oracle_gated.conditions.{c}.cells_kept, .cells")
+    gl = []
+    for i, d in enumerate(og["comparisons"]):
+        if (d["a"], d["b"]) != ("initial_plain", "full_plain"):
+            continue
+        sp, k = d["signflip"]["pooled"], f"og.cmp.c1-c3.{d['metric']}"
+        gl.append(f"{d['metric'].upper()} {_signed(d['difference'])} (disc.\\ {d['discordant']['a_accepts_b_rejects']}/"
+                  f"{d['discordant']['a_rejects_b_accepts']}, $p_{{>}}$ = {_p(sp['p_greater'])}, floor {_p(sp['conditional_floor_one_sided'])}, "
+                  f"{sp['k']} families)")
+        led.add("fresh_oracle_gated", f"gated comparisons[{i}] C1 - C3 {d['metric']}: difference; discordant; p_greater; conditional floor; k",
+                f"{d['difference']}; {d['discordant']}; {sp['p_greater']}; {sp['conditional_floor_one_sided']}; {sp['k']}",
+                f"{src} oracle_gated.comparisons[{i}]")
+        nums.put(f"{k}.diff", _signed(d["difference"]), f"{src} oracle_gated.comparisons[{i}].difference")
+        nums.put(f"{k}.p.greater", _p(sp["p_greater"]), f"{src} oracle_gated.comparisons[{i}].signflip.pooled.p_greater")
+        nums.put(f"{k}.floor", _p(sp["conditional_floor_one_sided"]), f"{src} oracle_gated.comparisons[{i}].signflip.pooled.conditional_floor_one_sided")
+        nums.put(f"{k}.k", sp["k"], f"{src} oracle_gated.comparisons[{i}].signflip.pooled.k", "families kept")
+    (out / "fresh_oracle_gated.tex").write_text(table(
+        f"Oracle-gated view of run {run_tt} (secondary, protocol \\S15.7): a verifier's cell of a family is dropped when the "
+        "verifier does not pass that family's reference solution, and the dropped cell's units are the lost yield (invalid/valid). "
+        f"D19 labels. {NO_HUMAN} Gated C1$-$C3: " + "; ".join(gl) + f". {FOUR_FAMILIES}", "tab:fresh-oracle", "lrrlrll",
+        "Condition & Ref.\\ passes & Cells kept & Dropped & Lost yield & FA & FR", rows, size="\\footnotesize"))
+
+    # (g) B1 split by the origin of its checks
+    up_ids = {t: set(F["up"][t]["upstream_check_ids"]) for t in fams}
+    for t in fams:
+        u = F["up"][t]
+        if len(up_ids[t]) != u["n_upstream"] or u["n_upstream"] + u["n_added_in_reference"] != u["n_b1_checks"]:
+            raise ValueError(f"{F['up_src'][t]}: n_upstream, n_added_in_reference and n_b1_checks do not add up")
+        if a["b1_upstream_only"]["n_checks"][t] != u["n_upstream"]:
+            raise ValueError(f"{src}: b1_upstream_only.n_checks.{t} differs from {F['up_src'][t]} n_upstream")
+    b1rows = {(r["task_id"], r["candidate_id"]): r for r in F["rows"] if r["verifier_id"] == "repo_tests"}
+
+    def b1_split(view: dict, vsrc: str) -> dict:
+        us = _units(view, fams)
+        res = {t: {"fa_all": [0, 0], "fa_up": [0, 0], "fr_all": [0, 0], "fr_up": [0, 0], "fr_added": 0, "fr_upcheck": 0,
+                   "fr_nocheck": 0, "u1_up_rej": [0, 0]} for t in fams}
+        for (t, cid), u in us.items():
+            r = b1rows[(t, cid)]
+            if r["outcome"] != u["outcome"]["repo_tests"]:
+                raise ValueError(f"{rsrc}: {cid} repo_tests outcome {r['outcome']} differs from {vsrc} per_task")
+            bad = [ch["check_id"] for ch in r["checks"] if ch["status"] != "passed"]
+            up_ok = not any(x in up_ids[t] for x in bad)  # the rule of analysis.py's b1_upstream_only
+            acc = r["outcome"] == "pass"
+            d = res[t]
+            if u["label"] == "invalid":
+                d["fa_all"][0] += acc
+                d["fa_all"][1] += 1
+                d["fa_up"][0] += up_ok
+                d["fa_up"][1] += 1
+            elif u["label"] == "valid":
+                d["fr_all"][0] += not acc
+                d["fr_all"][1] += 1
+                d["fr_up"][0] += not up_ok
+                d["fr_up"][1] += 1
+                if not acc:
+                    if any(x not in up_ids[t] for x in bad):
+                        d["fr_added"] += 1
+                    if any(x in up_ids[t] for x in bad):
+                        d["fr_upcheck"] += 1
+                    if not bad:
+                        d["fr_nocheck"] += 1
+            if F["attempt"][cid]["variant"] == "u1":
+                d["u1_up_rej"][0] += not up_ok
+                d["u1_up_rej"][1] += 1
+        rec = view["b1_upstream_only"]
+        tot = lambda k, i: sum(res[t][k][i] for t in fams)  # noqa: E731
+        if (tot("fa_up", 0), tot("fa_up", 1), tot("fr_up", 0), tot("fr_up", 1)) != (rec["fa_num"], rec["fa_den"], rec["fr_num"], rec["fr_den"]):
+            raise ValueError(f"the B1 split recomputed from {rsrc} does not reproduce {vsrc} b1_upstream_only")
+        cfa, cfr = view["conditions"]["repo_tests"]["false_acceptance"], view["conditions"]["repo_tests"]["false_rejection"]
+        if (tot("fa_all", 0), tot("fa_all", 1), tot("fr_all", 0), tot("fr_all", 1)) != (cfa["num"], cfa["den"], cfr["num"], cfr["den"]):
+            raise ValueError(f"the B1 rates recomputed from {rsrc} do not reproduce {vsrc} conditions.repo_tests")
+        return res
+
+    res = b1_split(a, src)
+    b1_split(s, ssrc)  # the sensitivity view must reproduce its own b1_upstream_only too
+    rec, srec = a["b1_upstream_only"], s["b1_upstream_only"]
+    tot = lambda r, k, i: sum(r[t][k][i] for t in fams)  # noqa: E731
+    lines = []
+
+    def line(text: str, cells: list[str], pooled: str, what: str, how: str, key: str | None = None) -> None:
+        lines.append(f"{text} & " + " & ".join(cells) + f" & {pooled} \\\\")
+        led.add("fresh_b1_split", what, ", ".join(cells) + f"; pooled {pooled}", how)
+        if key:
+            for t, cv in zip(fams, cells):
+                nums.put(f"{key}.{_fk(t)}", cv, how)
+            nums.put(key, pooled, how)
+
+    n_all = [F["up"][t]["n_b1_checks"] for t in fams]
+    n_up = [F["up"][t]["n_upstream"] for t in fams]
+    n_add = [F["up"][t]["n_added_in_reference"] for t in fams]
+    usrc = "tasks/<task>/verifiers/repo_tests/upstream_check_ids.json"
+    line("B1 checks", [_int(x) for x in n_all], _int(sum(n_all)), "B1 checks per family", f"{usrc} n_b1_checks", "b1.checks")
+    line("\\quad from the base commit's tests", [_int(x) for x in n_up], _int(sum(n_up)), "base-commit checks per family",
+         f"{usrc} n_upstream (= {src} b1_upstream_only.n_checks)", "b1.checks.base")
+    line("\\quad added by the session agent", [_int(x) for x in n_add], _int(sum(n_add)), "agent-added checks per family",
+         f"{usrc} n_added_in_reference", "b1.checks.added")
+    lines[-1] += "\\midrule"
+    how_rj = (f"computed from {rsrc} (repo_tests rows: outcome; checks[].check_id, .status != passed) joined with {src} per_task "
+              f"labels and {usrc} upstream_check_ids")
+    line("FA, all checks", [_frac(*res[t]["fa_all"]) for t in fams], _frac(tot(res, "fa_all", 0), tot(res, "fa_all", 1)),
+         "B1 FA (all checks) per family", how_rj, "b1.all.fa")
+    line("FA, base-commit checks only", [_frac(*res[t]["fa_up"]) for t in fams], _frac(rec["fa_num"], rec["fa_den"]),
+         "B1 FA (base-commit checks only) per family; pooled", how_rj + f"; pooled = {src} b1_upstream_only.fa_num, .fa_den", "b1.base.fa")
+    line("FR, all checks", [_frac(*res[t]["fr_all"]) for t in fams], _frac(tot(res, "fr_all", 0), tot(res, "fr_all", 1)),
+         "B1 FR (all checks) per family", how_rj, "b1.all.fr")
+    line("FR, base-commit checks only", [_frac(*res[t]["fr_up"]) for t in fams], _frac(rec["fr_num"], rec["fr_den"]),
+         "B1 FR (base-commit checks only) per family; pooled", how_rj + f"; pooled = {src} b1_upstream_only.fr_num, .fr_den", "b1.base.fr")
+    lines[-1] += "\\midrule"
+    line("False rejections failing an agent-added check", [str(res[t]["fr_added"]) for t in fams], str(sum(res[t]["fr_added"] for t in fams)),
+         "B1 false rejections with a failing agent-added check", how_rj, "b1.fr.added")
+    line("False rejections failing a base-commit check", [str(res[t]["fr_upcheck"]) for t in fams], str(sum(res[t]["fr_upcheck"] for t in fams)),
+         "B1 false rejections with a failing base-commit check", how_rj, "b1.fr.base")
+    line("\\texttt{u1} attempts rejected by base-commit checks", [_frac(*res[t]["u1_up_rej"]) for t in fams],
+         _frac(tot(res, "u1_up_rej", 0), tot(res, "u1_up_rej", 1)), "u1 attempts rejected by the base-commit checks alone",
+         how_rj + "; variant from " + ", ".join(F["att_src"][t] for t in fams) + " attempts[].variant", "b1.u1.base.rejected")
+    nocheck = sum(res[t]["fr_nocheck"] for t in fams)
+    led.add("fresh_b1_split", "B1 false rejections with no failing check recorded (must be 0 for the origin rows to be complete)", nocheck, how_rj)
+    if nocheck:
+        raise ValueError(f"{rsrc}: {nocheck} B1 false rejections record no failing check; the origin rows would be incomplete")
+    led.add("fresh_b1_split", "sensitivity view: B1 FA; FR (base-commit checks only), pooled",
+            f"{srec['fa_num']}/{srec['fa_den']}; {srec['fr_num']}/{srec['fr_den']}", f"{ssrc} b1_upstream_only")
+    nums.put("sens.b1.base.fa", _frac(srec["fa_num"], srec["fa_den"]), f"{ssrc} b1_upstream_only.fa_num, .fa_den")
+    nums.put("sens.b1.base.fr", _frac(srec["fr_num"], srec["fr_den"]), f"{ssrc} b1_upstream_only.fr_num, .fr_den")
+    nums.put("b1.base.fa.rate", _r2(rec["fa"]), f"{src} b1_upstream_only.fa")
+    (out / "fresh_b1_split.tex").write_text(table(
+        f"Repository tests (B1) split by the origin of their checks, run {run_tt}, D19 labels. {NO_HUMAN} The B1 suite is the "
+        "reference state's tests; ``base-commit checks'' exist in the base commit's own tests, the others were added by the session "
+        "agent. ``Base-commit checks only'' scores a unit on those checks alone (post hoc, as in the pilot). Under D19 the base "
+        "commit's tests are the regression norm, so that view cannot reject a valid unit (by construction). Origin rows: valid units that B1 rejects and that fail "
+        f"at least one check of that origin. Sensitivity view (every flagged attempt excluded): FA {srec['fa_num']}/{srec['fa_den']}, "
+        f"FR {srec['fr_num']}/{srec['fr_den']} on base-commit checks only. {FOUR_FAMILIES}", "tab:fresh-b1", "l" + "r" * (len(fams) + 1),
+        " & " + " & ".join(tex(t) for t in fams) + " & Pooled", lines, size="\\footnotesize"))
+
+    # (h) attempt cost and time
+    rows = []
+    budget_max = max(x["wall_s"] for t in fams for x in F["att"][t]["attempts"])
+    for key in sorted(bcv):
+        d = bcv[key]
+        cfg, var = d["configuration"], d["variant"]
+        xs = [x for t in fams for x in F["att"][t]["attempts"] if x["configuration"] == cfg and x["variant"] == var and x["audit_passed"]]
+        w = [x["wall_s"] for x in xs]
+        med = lambda k: statistics.median(x[k] for x in xs)  # noqa: E731
+        cells = [str(len(xs)), f"{statistics.median(w):.0f}", f"{min(w):.0f}--{max(w):.0f}", f"{med('turns'):g}", f"{med('tool_calls'):g}",
+                 f"{med('tokens') / 1e6:.2f}"]
+        rows.append(f"{cfg.replace('config-', '')} & \\texttt{{{tex(var)}}} & " + " & ".join(cells) + " \\\\")
+        how = (", ".join(F["att_src"][t] for t in fams) + f" attempts[] with configuration {cfg}, variant {var}, audit_passed true: "
+               "count; median, min, max of wall_s; median of turns, tool_calls, tokens")
+        led.add("fresh_attempt_costs", f"{cfg}/{var} n; wall_s median, min, max; turns, tool_calls, tokens median",
+                f"{len(xs)}; {statistics.median(w)}, {min(w)}, {max(w)}; {med('turns')}, {med('tool_calls')}, {med('tokens')}", how)
+        k = f"cost.{cfg.replace('config-', '').lower()}.{var}"
+        nums.put(f"{k}.n", len(xs), how)
+        nums.put(f"{k}.wall", f"{statistics.median(w):.0f}", how, "median wall time, s")
+        nums.put(f"{k}.wall.min", f"{min(w):.0f}", how)
+        nums.put(f"{k}.wall.max", f"{max(w):.0f}", how)
+        nums.put(f"{k}.turns", f"{med('turns'):g}", how)
+        nums.put(f"{k}.tools", f"{med('tool_calls'):g}", how)
+        nums.put(f"{k}.tokens", f"{med('tokens') / 1e6:.2f}", how, "median tokens, millions")
+    all_src = ", ".join(F["att_src"][t] for t in fams) + " attempts[].wall_s (maximum over every attempt)"
+    nums.put("cost.wall.max", f"{budget_max:.0f}", all_src, "longest attempt, s")
+    led.add("fresh_attempt_costs", "longest wall time over every attempt, excluded one included (caption)", budget_max, all_src)
+    (out / "fresh_attempt_costs.tex").write_text(table(
+        f"Time and size of the fresh attempts, run {run_tt}, per configuration and instruction (the attempts that count, i.e.\\ "
+        "without the excluded one): number of attempts, wall time (median and range, seconds), and the medians of turns, tool calls and "
+        "tokens. Tokens sum the input, cache-creation, cache-read and output tokens of every response, so they are not a cost; no money "
+        f"cost was recorded, and verifier generation cost was not recorded. The longest attempt took {budget_max:.0f} s.",
+        "tab:fresh-costs", "llrrrrrr", "Config. & Instruction & n & Wall (s) & Range (s) & Turns & Tool calls & Tokens (M)", rows,
+        size="\\footnotesize"))
+
+    # (i) agreement of D19 and the independent labeler
+    ag = a["independent_labeling"]["agreement"]["by_stratum"][F["stratum"]]
+    rows = []
+    for d19 in ("valid", "invalid"):
+        rows.append(f"D19 {d19} & {ag['table'][d19]['valid']} & {ag['table'][d19]['invalid']} & {s_ag['table'][d19]['valid']} & "
+                    f"{s_ag['table'][d19]['invalid']} \\\\")
+        for vw, x, xs in (("primary", ag, src), ("sensitivity", s_ag, ssrc)):
+            for lb in ("valid", "invalid"):
+                nums.put(f"{'' if vw == 'primary' else 'sens.'}agree.{d19}.{lb}", x["table"][d19][lb],
+                         f"{xs} independent_labeling.agreement.by_stratum.{F['stratum']}.table.{d19}.{lb}", f"D19 {d19}, labeler {lb}")
+    rows[-1] += "\\midrule"
+    rows.append(f"Agreement & \\multicolumn{{2}}{{c}}{{{ag['agree']}/{ag['n_units']} ({_r2(ag['agreement'])})}} & "
+                f"\\multicolumn{{2}}{{c}}{{{s_ag['agree']}/{s_ag['n_units']} ({_r2(s_ag['agreement'])})}} \\\\")
+    rows.append(f"Cohen's $\\kappa$ & \\multicolumn{{2}}{{c}}{{{_r2(ag['kappa'])}}} & \\multicolumn{{2}}{{c}}{{{_r2(s_ag['kappa'])}}} \\\\")
+    for vw, x, xs in (("fresh_agreement primary", ag, src), ("fresh_agreement sensitivity", s_ag, ssrc)):
+        led.add("fresh_agreement", f"{vw}: table D19 x labeler; agree/n_units; agreement; kappa; disagreements",
+                f"{x['table']}; {x['agree']}/{x['n_units']}; {x['agreement']}; {x['kappa']}; "
+                f"{[dd['representative'] for dd in x['disagreements']]}",
+                f"{xs} independent_labeling.agreement.by_stratum.{F['stratum']} (table, agree, n_units, agreement, kappa, disagreements)")
+    nums.put("agree", f"{ag['agree']}/{ag['n_units']}", f"{src} independent_labeling.agreement.by_stratum.{F['stratum']}.agree, .n_units")
+    nums.put("agree.n", ag["agree"], f"{src} independent_labeling.agreement.by_stratum.{F['stratum']}.agree")
+    nums.put("agree.rate", _r2(ag["agreement"]), f"{src} independent_labeling.agreement.by_stratum.{F['stratum']}.agreement")
+    nums.put("kappa", _r2(ag["kappa"]), f"{src} independent_labeling.agreement.by_stratum.{F['stratum']}.kappa")
+    nums.put("disagree", ag["disagree"], f"{src} independent_labeling.agreement.by_stratum.{F['stratum']}.disagree")
+    for i, dd in enumerate(ag["disagreements"]):
+        nums.put(f"disagree.{i + 1}", tex(dd["representative"]),
+                 f"{src} independent_labeling.agreement.by_stratum.{F['stratum']}.disagreements[{i}].representative")
+    ils = a["independent_labeling"]["sanity"]
+    refs = [ils[t]["reference"] for t in fams]
+    nums.put("il.ref", f"{sum(r['pass'] for r in refs)}/{sum(r['n'] for r in refs)}",
+             f"{src} independent_labeling.sanity.<task>.reference.pass, .n (summed)", "references the labeler passes")
+    (out / "fresh_agreement.tex").write_text(table(
+        f"D19 against the independent labeler on the units of run {run_tt}, each distinct graded patch once: the primary view and the "
+        f"sensitivity view (every flagged attempt excluded). Both labelings are model proposals, so this is agreement between two model "
+        f"labelings, not reviewer agreement; no human labels exist. The labeler has no regression part, so the disagreements on units "
+        f"that D19 labels invalid through the regression norm alone are structural.", "tab:fresh-agree", "lrrrr",
+        f" & \\multicolumn{{2}}{{c}}{{Primary ({ag['n_units']} units)}} & \\multicolumn{{2}}{{c}}{{Sensitivity ({s_ag['n_units']} units)}} \\\\"
+        "\\cmidrule(lr){2-3}\\cmidrule(lr){4-5} & labeler valid & labeler invalid & labeler valid & labeler invalid", rows,
+        size="\\footnotesize"))
+
+    # (j) the outcome matrix (longtable)
+    il_lab = a["independent_labeling"]["candidates"]
+    mark = lambda o: "\\checkmark" if o == "pass" else ("--" if o is None else "$\\times$")  # noqa: E731
+    ntype = {"correction_violating": "corr.", "unspecified": "regr.", "": "--"}
+    hdr = "Unit & Cfg. & Instr. & D19 & Type & Lab. & " + " & ".join(SHORT[c] for c in ORDER)
+    body = []
+    for t in fams:
+        for cid in sorted(cid for (tt, cid) in units if tt == t):
+            u, x = units[(t, cid)], att[cid]
+            ilv = il_lab[f"{t}/{cid}"]["label"]
+            body.append(f"\\texttt{{{tex(cid)}}} & {x['configuration'].replace('config-', '')} & {tex(x['variant'])} & {tex(u['label'])} & "
+                        f"{ntype.get(u['negative_type'], tex(u['negative_type']))} & {tex(ilv)} & " + " & ".join(mark(u['outcome'][c]) for c in ORDER) + " \\\\")
+    exrows = []
+    for cid in excl:
+        x = att[cid]
+        outs = {r["verifier_id"]: r["outcome"] for r in F["rows"] if r["candidate_id"] == cid}
+        exrows.append(f"\\texttt{{{tex(cid)}}} & {x['configuration'].replace('config-', '')} & {tex(x['variant'])} & "
+                      "\\multicolumn{3}{l}{excluded (reviewed audit)} & " + " & ".join(mark(outs.get(c)) for c in ORDER) + " \\\\")
+        led.add("fresh_outcome_matrix", f"excluded attempt {cid}: outcomes (graded, counted nowhere)", {c: outs.get(c) for c in ORDER},
+                f"{rsrc} rows of {cid}; {src} fresh_attempts.excluded")
+    led.add("fresh_outcome_matrix", "unit rows", len(body), f"{src} per_task; independent_labeling.candidates; attempts[] of "
+            + ", ".join(F["att_src"][t] for t in fams))
+    ncol = 6 + len(ORDER)
+    (out / "fresh_outcome_matrix.tex").write_text(
+        "\\begingroup\\scriptsize\n\\begin{longtable}{lllllc" + "c" * len(ORDER) + "}\n"
+        f"\\caption{{Outcome of every condition on every unit of run {run_tt} (\\checkmark{{}} pass, $\\times$ any non-pass outcome). "
+        "Cfg.: configuration; Instr.: instruction; D19: the primary label; Type: corr.\\ correction-violating, regr.\\ invalid through "
+        f"the regression norm only; Lab.: the independent labeler's verdict. {NO_HUMAN} The excluded attempt is listed last; it was "
+        "graded and counts in no rate.}\\label{tab:fresh-matrix}\\\\\n"
+        f"\\toprule {hdr} \\\\\\midrule\n\\endfirsthead\n\\toprule {hdr} \\\\\\midrule\n\\endhead\n"
+        f"\\midrule\\multicolumn{{{ncol}}}{{r}}{{continued}} \\\\\n\\endfoot\n\\bottomrule\n\\endlastfoot\n"
+        + "\n".join(body) + "\n\\midrule\n" + "\n".join(exrows) + "\n\\end{longtable}\n\\endgroup\n")
+
+    # (k) cluster-bootstrap intervals, not inferential
+    bmeta = a["meta"]["bootstrap"]
+    if bmeta["inferential"]:
+        raise ValueError(f"{src}: meta.bootstrap.inferential is true; the caption says the intervals are not inferential")
+    star = lambda x: "$^{*}$" if x.get("ci95_degenerate") else ""  # noqa: E731
+    rows = []
+    for c in ORDER:
+        d = a["conditions"][c]
+        cells = []
+        for key in ("false_acceptance", "false_rejection"):
+            x = d[key]
+            cells.append(_iv(x["ci95"]) + star(x))
+            led.add("fresh_bootstrap", f"{c} {key} ci95; degenerate", f"{x['ci95']}; {x.get('ci95_degenerate')}", f"{src} conditions.{c}.{key}.ci95, .ci95_degenerate")
+        rows.append(f"{tex(COND_TEX[c])} & " + " & ".join(cells) + " \\\\")
+    rows[-1] += "\\midrule"
+    rows.append("Paired difference A$-$B & FA & FR \\\\\\midrule")
+    pairs: dict = {}
+    for i, d in enumerate(a["comparisons"]):
+        pairs.setdefault((d["a"], d["b"]), {})[d["metric"]] = (i, d)
+        led.add("fresh_bootstrap", f"comparisons[{i}] {d['a']} - {d['b']} {d['metric']} ci95; degenerate", f"{d['ci95']}; {d.get('ci95_degenerate')}",
+                f"{src} comparisons[{i}].ci95, .ci95_degenerate")
+    for (ca, cb), ms in pairs.items():
+        cells = [(_iv_signed(ms[m][1]["ci95"]) + star(ms[m][1])) if m in ms else "--" for m in ("fa", "fr")]
+        rows.append(f"{SHORT[ca]}$-${SHORT[cb]} & " + " & ".join(cells) + " \\\\")
+    led.add("fresh_bootstrap", "families; inferential (caption)", f"{bmeta['n_families']}; {bmeta['inferential']}", f"{src} meta.bootstrap")
+    (out / "fresh_bootstrap.tex").write_text(table(
+        f"\\textbf{{Not inferential.}} Cluster-bootstrap 95\\% intervals over the {bmeta['n_families']} task families of run {run_tt} "
+        "(fewer than 10 families, protocol \\S15.7), for the pooled rates (top) and the paired differences (bottom), D19 labels; "
+        f"$^{{*}}$: degenerate, every resample gives the same value. {NO_HUMAN}", "tab:fresh-boot", "lll",
+        "Pooled rate & FA & FR", rows, size="\\footnotesize"))
+
+
+def regrade_table(regrade: Path, led: SectionLedger, nums: Numbers, out: Path) -> None:
+    """The reliability re-grade of the pilot under a later harness (protocol §15.3, §16.1): one column per run."""
+    m = json.loads((regrade / "manifest.json").read_text())
+    comps = sorted(regrade.glob("compare_*.json"))
+    if not comps:
+        raise ValueError(f"{rel(regrade)}: no compare_<run>.json (scripts/compare_runs.py)")
+    cols: list[dict[str, str]] = []
+
+    def run_col(run_dir: Path, run_id: str, agree: tuple[str, str] | None) -> None:
+        mm = json.loads((run_dir / "manifest.json").read_text())
+        rr = [json.loads(x) for x in (run_dir / "results.jsonl").read_text().splitlines() if x.strip()]
+        oc = Counter(r["outcome"] for r in rr)
+        hv = sorted({r["harness_version"].split("/")[-1] for r in rr})
+        other = sum(v for k, v in oc.items() if k not in ("pass", "task_failure"))
+        unres = oc.get("unresolved", 0) if mm["repeats"] > 1 else "n/a"
+        cols.append({"run": f"\\texttt{{{tex(run_id)}}}", "harness": ", ".join(hv), "repeats": str(mm["repeats"]),
+                     "date": mm["started_at"][:10], "time": f"{mm['started_at'][11:19]}--{mm['finished_at'][11:19]}",
+                     "revision": f"\\texttt{{{mm['code_revision'][:7]}}}", "pairs": str(len(rr)),
+                     "outcomes": f"{oc['pass']}/{oc['task_failure']}/{other}", "unresolved": str(unres),
+                     "reward": agree[0] if agree else "--", "outcome": agree[1] if agree else "--"})
+        led.add("regrade_reliability", f"{run_id}: harness; repeats; graded; revision; pairs; pass/task_failure/other; unresolved",
+                f"{hv}; {mm['repeats']}; {mm['started_at']} to {mm['finished_at']}; {mm['code_revision'][:7]}; {len(rr)}; "
+                f"{oc['pass']}/{oc['task_failure']}/{other}; {unres}",
+                f"{rel(run_dir / 'manifest.json')} repeats, started_at, finished_at, code_revision; {rel(run_dir / 'results.jsonl')} "
+                "(rows; outcome; harness_version)")
+        k = "rg" if run_dir == regrade else f"rg.{_fk(run_id).replace('.', '')}"
+        nums.put(f"{k}.pairs", len(rr), f"{rel(run_dir / 'results.jsonl')} (rows)")
+        nums.put(f"{k}.pass", oc["pass"], f"{rel(run_dir / 'results.jsonl')} outcome (count of pass)")
+        nums.put(f"{k}.taskfailure", oc["task_failure"], f"{rel(run_dir / 'results.jsonl')} outcome (count of task_failure)")
+        nums.put(f"{k}.repeats", mm["repeats"], f"{rel(run_dir / 'manifest.json')} repeats")
+        nums.put(f"{k}.harness", ", ".join(hv), f"{rel(run_dir / 'results.jsonl')} harness_version")
+        nums.put(f"{k}.revision", mm["code_revision"][:7], f"{rel(run_dir / 'manifest.json')} code_revision")
+        nums.put(f"{k}.date", mm["started_at"][:10], f"{rel(run_dir / 'manifest.json')} started_at")
+        nums.put(f"{k}.started", mm["started_at"][11:19], f"{rel(run_dir / 'manifest.json')} started_at", "UTC")
+        nums.put(f"{k}.finished", mm["finished_at"][11:19], f"{rel(run_dir / 'manifest.json')} finished_at", "UTC")
+        if run_dir == regrade:
+            nums.put("rg.unresolved", unres, f"{rel(run_dir / 'results.jsonl')} outcome (count of unresolved)")
+
+    run_col(regrade, m["run_id"], None)
+    crit = set()
+    for p in comps:
+        d = json.loads(p.read_text())
+        if d["new_run"] != m["run_id"]:
+            raise ValueError(f"{rel(p)}: new_run {d['new_run']}, expected {m['run_id']}")
+        old = regrade.parent / d["old_run"]
+        n = d["pairs_same_verifier"]
+        if n != d["pairs_in_both"] or d["pairs_changed_verifier"] or d["only_in_old"] or d["only_in_new"]:
+            raise ValueError(f"{rel(p)}: the table assumes every pair graded in both runs with an unchanged verifier")
+        rd, od = len(d["reward_discordant"]), len(d["outcome_discordant"])
+        crit |= set(d["check_list_criterion"])
+        run_col(old, d["old_run"], (f"{n - rd}/{n}", f"{n - od}/{n}"))
+        led.add("regrade_reliability", f"{d['old_run']} vs {d['new_run']}: pairs; reward agreement; outcome agreement; criterion",
+                f"{n}; {n - rd}/{n}; {n - od}/{n}; {d['check_list_criterion']}",
+                f"{rel(p)} pairs_same_verifier, reward_discordant, outcome_discordant, check_list_criterion")
+        k = f"rg.vs.{_fk(d['old_run']).replace('.', '')}"
+        nums.put(f"{k}.reward", f"{n - rd}/{n}", f"{rel(p)} pairs_same_verifier, reward_discordant (count)")
+        nums.put(f"{k}.outcome", f"{n - od}/{n}", f"{rel(p)} pairs_same_verifier, outcome_discordant (count)")
+    lines = [("Harness", "harness"), ("Repeats per pair", "repeats"), ("Graded on (UTC)", "date"), ("\\quad from--to", "time"),
+             ("Code revision", "revision"), ("Pairs graded", "pairs"), ("Outcomes: pass/task failure/other", "outcomes"),
+             ("Pairs whose repeats disagree", "unresolved"), ("Reward agreement with the re-grade", "reward"),
+             ("Outcome agreement with the re-grade", "outcome")]
+    rows = [f"{text} & " + " & ".join(c[key] for c in cols) + " \\\\" for text, key in lines]
+    (out / "regrade_reliability.tex").write_text(table(
+        f"Reliability re-grade of the construction pilot (protocol \\S15.3, \\S16.1): run \\texttt{{{tex(m['run_id'])}}} against the "
+        "run it re-grades, on the pairs graded in both with an unchanged verifier (" + ", ".join(sorted(tex(c) for c in crit)) +
+        "). Pairs whose repeats disagree: n/a for a run graded once. Reward agreement is pass vs non-pass, outcome agreement the "
+        "exact outcome. A reliability run, not a new pilot result.", "tab:regrade", "l" + "l" * len(cols),
+        " & " + " & ".join(c["run"] for c in cols), rows, size="\\footnotesize"))
+
+
+# -- natural PR-review arm and the Trace Commons screen -----------------------------------------------------------------
+
+NATURAL_INPUTS = {"M0": "data/manifests/screening_natural_aidev.json", "M9": "data/manifests/screening_natural_aidev_s9.json",
+                  "M9x": "data/manifests/screening_natural_aidev_s9x.json", "NI": "data/manifests/natural_tasks_index.json",
+                  "RL": "data/manifests/rejection_ledger.json", "TC": "data/manifests/screening_natural.json"}
+STAGE_TEXT = {"S1": "Agent-authored pull requests (AIDev v5)",
+              "S2": "Python repository; MIT, Apache-2.0 or BSD licence; not a fork",
+              "S3": "Inline review comments on these PRs",
+              "S4": "Written by a person, starts a thread, not by the PR's author",
+              "S5": "On a \\texttt{.py} file, with a diff hunk",
+              "S6": "Commented code changed afterwards (a proxy)",
+              "S7": "Reviewed commit in the PR's commit list; a later commit exists",
+              "S8": "PR linked to an issue written by a person",
+              "S8a": "First later commit attributed to an agent"}
+# (key in summary.failed_by_reason, row text, macro key)
+S9_REASONS = [("fetch_over_the_caps", "repository over the fetch cap", "cap"), ("commits_not_fetchable", "commits not fetchable", "fetch"),
+              ("no_later_commit_changes_the_commented_file", "no later commit changes the commented file", "nolater"),
+              ("addressing_commit_not_agent_attributed", "addressing commit not agent-attributed", "agent"),
+              ("not_behaviour_change_or_defect", "not a behaviour change or defect", "behaviour"),
+              ("not_addressed", "not addressed by the later commit", "addressed"),
+              ("not_testable_offline", "not testable offline", "offline")]
+# (category, prefix of the recorded reason, macro key)
+S10_REASONS = [("base tests fail to collect", "base tests fail to collect", "collect"),
+               ("no resolvable dependency closure", "no resolvable closure", "closure"),
+               ("environment too large", "environment too large", "toolarge"),
+               ("empty base-test subset", "base tests: the base-test subset is empty", "emptysubset"),
+               ("fetch over the repository cap", "fetch over the caps", "fetchcap"),
+               ("merge rule", "a merge between the base and the addressing commit", "merge")]
+# The S10 table's shorter form of a category (the funnel prints the category itself).
+S10_SHORT = {"no resolvable dependency closure": "no dependency closure", "fetch over the repository cap": "fetch over the cap"}
+TC_REASONS = [("no recoverable base commit", "no recoverable base commit", "basecommit"),
+              ("replay: unreconstructable without a base tree", "replay: unreconstructable", "replay"),
+              ("no code licence identified", "no code licence identified", "licence"),
+              ("no correction candidate under the correction-cue rule", "no correction candidate", "correction"),
+              ("unsuitable task", "unsuitable_task", "unsuitable"), ("unsupported transcript format", "format:", "format"),
+              ("environment failure", "environment_failure", "environment")]
+PENDING_S10 = "\\unfilled{pending: S10 of the S9 extension}"
+
+
+def _category(reason: str, table_: list[tuple[str, str, str]], where: str) -> str:
+    hits = [cat for cat, prefix, _ in table_ if reason.startswith(prefix)]
+    if len(hits) != 1:
+        raise ValueError(f"{where}: reason {reason[:60]!r}... matches {len(hits)} categories; extend the category list")
+    return hits[0]
+
+
+def natural_inputs() -> dict:
+    N = {k: json.loads((ROOT / p).read_text()) for k, p in NATURAL_INPUTS.items()}
+    N["sha256"] = {k: hashlib.sha256((ROOT / p).read_bytes()).hexdigest() for k, p in NATURAL_INPUTS.items()}
+    names = set()
+    for st in N["M0"]["stages"]:
+        for k in st.get("by_agent", {}):
+            names |= {k, k.replace("_", " ")} | {part for part in k.split("_") if len(part) >= 5}
+    N["agent_names"] = tuple(sorted(names))
+    return N
+
+
+def natural_tables(N: dict, led: SectionLedger, nums: Numbers, out: Path) -> None:
+    src = NATURAL_INPUTS
+    for k, p in src.items():
+        led.add("inputs", f"{p} sha256", N["sha256"][k], p)
+    # (e) the funnel
+    stages = {st["id"]: st for st in N["M0"]["stages"]}
+    missing = [s for s in (*STAGE_TEXT, "S8'", "S8a'") if s not in stages]
+    if missing:
+        raise ValueError(f"{src['M0']}: stages {missing} missing")
+    rows1 = []
+    for sid, text in STAGE_TEXT.items():
+        st = stages[sid]
+        comments = _int(st["count"]) if st["unit"] == "review_comment" else "--"
+        if st["unit"] == "pull_request" and st["count"] != st["prs"]:
+            raise ValueError(f"{src['M0']}: stage {sid} counts PRs but count != prs")
+        rows1.append(f"{sid} & {text} & {comments} & {_int(st['prs'])} & {_int(st['repos'])} \\\\")
+        led.add("natural_funnel", f"{sid} comments / PRs / repositories", f"{st['count'] if st['unit'] == 'review_comment' else '--'} / "
+                f"{st['prs']} / {st['repos']}", f"{src['M0']} stages[id={sid}] (unit, count, prs, repos)")
+        k = f"aidev.{sid.lower()}"
+        if st["unit"] == "review_comment":
+            nums.put(f"{k}.comments", _int(st["count"]), f"{src['M0']} stages[id={sid}].count")
+        nums.put(f"{k}.prs", _int(st["prs"]), f"{src['M0']} stages[id={sid}].prs")
+        nums.put(f"{k}.repos", _int(st["repos"]), f"{src['M0']} stages[id={sid}].repos")
+    for sid, key in (("S8'", "s8p"), ("S8a'", "s8ap")):
+        nums.put(f"aidev.{key}.comments", _int(stages[sid]["count"]), f"{src['M0']} stages[id={sid}].count",
+                 "without the linked-issue requirement")
+        led.add("natural_funnel", f"{sid} comments (without the linked-issue requirement; caption)", stages[sid]["count"],
+                f"{src['M0']} stages[id={sid}].count")
+    ck = N["M0"]["checks"]
+    nums.put("aidev.check.join", _pct(ck["comment_to_pr"]["all_comments"]["match_rate"], 2),
+             f"{src['M0']} checks.comment_to_pr.all_comments.match_rate", "comments joined to their PR")
+    nums.put("aidev.check.order", _int(ck["commit_order"]["commit_id_after_original_in_row_order"]),
+             f"{src['M0']} checks.commit_order.commit_id_after_original_in_row_order")
+    nums.put("aidev.check.order.of", _int(ck["commit_order"]["s6_commit_id_and_original_both_listed"]),
+             f"{src['M0']} checks.commit_order.s6_commit_id_and_original_both_listed")
+    nums.put("aidev.check.missing", _pct(ck["commit_order"]["s6_original_commit_missing_rate"]),
+             f"{src['M0']} checks.commit_order.s6_original_commit_missing_rate", "S6 comments whose reviewed commit is missing")
+
+    samples = (("first", N["M9"], src["M9"]), ("ext", N["M9x"], src["M9x"]))
+    rows2 = []
+
+    def row(text: str, cells: list[str], what: str, how: list[str], key: str | None = None, values: list | None = None) -> None:
+        rows2.append(f"{text} & " + " & ".join(cells) + " \\\\")
+        led.add("natural_funnel", what, " | ".join(cells), " | ".join(how))
+        if key:
+            for (name, _, _), v, h in zip(samples, values if values is not None else cells, how):
+                if v is not None:
+                    nums.put(f"s9.{name}.{key}", v, h)
+
+    S = {name: m["summary"] for name, m, _ in samples}
+    for name, m, p in samples:
+        s = S[name]
+        if s["comments"] != s["qualifying"] + s["excluded_judges_disagree"] + s["failed"]:
+            raise ValueError(f"{p}: comments != qualifying + excluded + failed")
+        if sum(s["failed_by_reason"].values()) != s["failed"]:
+            raise ValueError(f"{p}: summary.failed_by_reason does not sum to summary.failed")
+        if len(m["rows"]) != s["comments"]:
+            raise ValueError(f"{p}: {len(m['rows'])} rows, summary.comments = {s['comments']}")
+    judged = {n: S[n]["agreement"]["request_type_collapsed"]["n"] for n in S}
+    if S["ext"]["judged"] != judged["ext"] or S["ext"]["comments"] - S["ext"]["failed_before_judging"] != judged["ext"]:
+        raise ValueError(f"{src['M9x']}: summary.judged, failed_before_judging and the agreement population disagree")
+    overcap = {}
+    for name, _, p in samples:
+        s = S[name]
+        overcap[name] = s["comments"] - s["commits_reachable"] - s["by_fetch_status"]["clone_failed"]
+    if overcap["first"] != S["first"]["by_fetch_status"]["over_cap"] or overcap["ext"] != S["ext"]["failed_by_reason"]["fetch_over_the_caps"]:
+        raise ValueError("the comments without reachable commits do not split into clone refusals and over-cap repositories")
+    hw = lambda f: [f"{p} summary.{f}" for _, _, p in samples]  # noqa: E731
+    row("Comments screened", [_int(S[n]["comments"]) for n in S], "comments screened", hw("comments"), "comments")
+    row("\\quad commits reachable (diff computable)", [_int(S[n]["commits_reachable"]) for n in S], "commits reachable",
+        hw("commits_reachable"), "reachable")
+    row("\\quad clone refused by the session's proxy", [_int(S[n]["by_fetch_status"]["clone_failed"]) for n in S], "clone refused",
+        hw("by_fetch_status.clone_failed"), "refused")
+    row("\\quad repository over the fetch cap", [_int(overcap[n]) for n in S], "over the cap, commits not reachable",
+        [f"{src['M9']} summary.by_fetch_status.over_cap", f"{src['M9x']} summary.failed_by_reason.fetch_over_the_caps "
+         "(= comments - commits_reachable - clone_failed)"], "overcap")
+    row("Judged by both judges", [_int(judged[n]) for n in S], "judged by both judges",
+        hw("agreement.request_type_collapsed.n"), "judged")
+    row("\\quad on a non-empty diff", [_int(S[n]["by_diff_status"]["ok"]) for n in S], "judged on a non-empty diff",
+        hw("by_diff_status.ok"), "judged.diff")
+    row("Failed before judging", [_int(S[n]["comments"] - judged[n]) for n in S], "failed before judging",
+        [f"{src['M9']} summary.comments - agreement.request_type_collapsed.n", f"{src['M9x']} summary.failed_before_judging"],
+        "failedbefore")
+    q = {n: S[n]["qualifying"] for n in S}
+    cells, vals = [], []
+    for n in S:
+        lo, hi = wilson(q[n], S[n]["comments"])
+        cells.append(f"{q[n]} ({_pct(q[n] / S[n]['comments'])}; {_pct(lo)}--{_pct(hi)})")
+        vals.append(q[n])
+        nums.put(f"s9.{n}.rate", _pct(q[n] / S[n]["comments"]), f"{src['M9' if n == 'first' else 'M9x']} summary.qualifying / summary.comments")
+        nums.put(f"s9.{n}.wilson", f"{_pct(lo)}--{_pct(hi)}", f"Wilson 95% computed from {src['M9' if n == 'first' else 'M9x']} "
+                 "summary.qualifying, summary.comments")
+    rec = S["ext"]["qualifying_rate"]["of_extension_comments"]
+    lo, hi = wilson(rec["k"], rec["n"])
+    if (round(lo, 4), round(hi, 4)) != tuple(rec["wilson_95"]) or abs(rec["rate"] - q["ext"] / S["ext"]["comments"]) > 5e-5:
+        raise ValueError(f"{src['M9x']}: the recorded qualifying_rate does not match the Wilson interval computed here")
+    row("Qualifying (share of screened; Wilson 95\\%)", cells, "qualifying (share of screened; Wilson 95%)", hw("qualifying, comments"),
+        "qualifying", vals)
+    cells = []
+    for n in S:
+        k, nn = q[n], S[n]["commits_reachable"]
+        lo, hi = wilson(k, nn)
+        cells.append(f"{_pct(k / nn)} ({_pct(lo)}--{_pct(hi)})")
+        nums.put(f"s9.{n}.rate.reachable", _pct(k / nn), f"{src['M9' if n == 'first' else 'M9x']} summary.qualifying / summary.commits_reachable")
+        nums.put(f"s9.{n}.wilson.reachable", f"{_pct(lo)}--{_pct(hi)}", f"Wilson 95% computed from "
+                 f"{src['M9' if n == 'first' else 'M9x']} summary.qualifying, summary.commits_reachable")
+    row("\\quad share of comments with reachable commits", cells, "qualifying, share of comments with reachable commits (Wilson 95%)",
+        hw("qualifying, commits_reachable"))
+    jr = S["ext"]["qualifying_rate"]["of_judged_comments"]
+    if jr["n"] != judged["ext"] or jr["k"] != q["ext"]:
+        raise ValueError(f"{src['M9x']}: qualifying_rate.of_judged_comments does not match summary")
+    nums.put("s9.ext.rate.judged", _pct(jr["rate"]), f"{src['M9x']} summary.qualifying_rate.of_judged_comments.rate")
+    nums.put("s9.ext.wilson.judged", f"{_pct(jr['wilson_95'][0])}--{_pct(jr['wilson_95'][1])}",
+             f"{src['M9x']} summary.qualifying_rate.of_judged_comments.wilson_95")
+    led.add("natural_funnel", "extension: qualifying share of the judged comments, Wilson 95% (caption)",
+            f"{jr['k']}/{jr['n']} = {jr['rate']}, {jr['wilson_95']}", f"{src['M9x']} summary.qualifying_rate.of_judged_comments")
+    row("Excluded: the judges disagree", [str(S[n]["excluded_judges_disagree"]) for n in S], "excluded, judges disagree",
+        hw("excluded_judges_disagree"), "disagree")
+    row("Failed (one primary reason each)", [_int(S[n]["failed"]) for n in S], "failed", hw("failed"), "failed")
+    for key, text, mk in S9_REASONS:
+        vals = [S[n]["failed_by_reason"].get(key) for n in S]
+        row(f"\\quad {text}", ["--" if v is None else _int(v) for v in vals], f"failed: {key}",
+            hw(f"failed_by_reason.{key}"), f"fail.{mk}", [None if v is None else _int(v) for v in vals])
+    row("Qualifying PRs / repositories", [f"{S[n]['qualifying_distinct_prs']} / {S[n]['qualifying_distinct_repositories']}" for n in S],
+        "qualifying distinct PRs / repositories", hw("qualifying_distinct_prs, qualifying_distinct_repositories"))
+    for n in S:
+        nums.put(f"s9.{n}.prs", S[n]["qualifying_distinct_prs"], f"{src['M9' if n == 'first' else 'M9x']} summary.qualifying_distinct_prs")
+        nums.put(f"s9.{n}.repos", S[n]["qualifying_distinct_repositories"],
+                 f"{src['M9' if n == 'first' else 'M9x']} summary.qualifying_distinct_repositories")
+    kap = {}
+    for n in S:
+        ag = S[n]["agreement"]
+        kap[n] = [ag[k]["kappa"] for k in ("request_type_collapsed", "addressed", "testable_offline")]
+        for k, kk in zip(("behaviour", "addressed", "testable"), kap[n]):
+            nums.put(f"s9.{n}.kappa.{k}", _r2(kk), f"{src['M9' if n == 'first' else 'M9x']} summary.agreement."
+                     f"{dict(behaviour='request_type_collapsed', addressed='addressed', testable='testable_offline')[k]}.kappa")
+    row("Judge $\\kappa$: behaviour or defect; addressed; testable offline",
+        ["; ".join(_r2(x) for x in kap[n]) + f" (n = {judged[n]})" for n in S], "judge kappas (behaviour or defect; addressed; testable offline)",
+        hw("agreement.request_type_collapsed.kappa, addressed.kappa, testable_offline.kappa"))
+    sec = S["first"]["agreement"]["secondary"]["commits_reachable_only"]
+    sk = [sec[k]["kappa"] for k in ("request_type_collapsed", "addressed", "testable_offline")]
+    for k, kk in zip(("behaviour", "addressed", "testable"), sk):
+        nums.put(f"s9.first.kappa.reachable.{k}", _r2(kk), f"{src['M9']} summary.agreement.secondary.commits_reachable_only."
+                 f"{dict(behaviour='request_type_collapsed', addressed='addressed', testable='testable_offline')[k]}.kappa")
+    led.add("natural_funnel", "first sample: judge kappas over the comments with reachable commits (caption)",
+            f"{sk} (n = {sec['n']})", f"{src['M9']} summary.agreement.secondary.commits_reachable_only")
+    rows2[-1] += "\\midrule"
+
+    ni = N["NI"]
+    tasks = ni["tasks"]
+    by = {n: [t for t in tasks if t["sample"] == ("first" if n == "first" else "extension")] for n in S}
+    fam = {n: sum(t["role"] == "family" for t in by[n]) for n in S}
+    res = {n: sum(t["role"] == "reserve" for t in by[n]) for n in S}
+    if fam["first"] != N["M9"]["summary"]["s11_families"]["families"] or fam["ext"] != N["M9x"]["summary"]["s11_families"]["families"] \
+            or res["ext"] != N["M9x"]["summary"]["s11_families"]["reserves"]:
+        raise ValueError(f"{src['NI']} families and reserves disagree with the S9 manifests' s11_families")
+    row("Families + reserves (at most 2 per repository)", [f"{fam[n]} + {res[n]}" for n in S], "families + reserves",
+        [f"{src['NI']} tasks[].sample, .role (count; = {src['M9']} summary.s11_families.families)",
+         f"{src['NI']} tasks[].sample, .role (count; = {src['M9x']} summary.s11_families.families, .reserves)"])
+    for n in S:
+        nums.put(f"fam.{n}", fam[n], f"{src['NI']} tasks[] with sample {'first' if n == 'first' else 'extension'}, role family (count)")
+        nums.put(f"fam.{n}.reserves", res[n], f"{src['NI']} tasks[] with sample {'first' if n == 'first' else 'extension'}, role reserve (count)")
+    first = by["first"]
+    processed = [t for t in first if (t.get("s10") or {}).get("outcome") in ("passed", "rejected")]
+    passed = [t for t in processed if t["s10"]["outcome"] == "passed"]
+    rejected = [t for t in processed if t["s10"]["outcome"] == "rejected"]
+    if any((t.get("s10") or {}).get("outcome") in ("passed", "rejected") for t in by["ext"]):
+        raise ValueError(f"{src['NI']}: an extension family has an S10 outcome; the funnel prints S10 of the extension as pending")
+    cats = Counter(_category(t["s10"]["reason"], S10_REASONS, f"{src['NI']} tasks[{t['task_id']}].s10.reason") for t in rejected)
+    row("S10 processed / passed / rejected", [f"{len(processed)} / {len(passed)} / {len(rejected)}",
+                                              "\\parbox[t]{\\linewidth}{\\raggedright " + PENDING_S10 + "}"],
+        "S10 processed / passed / rejected (first sample)", [f"{src['NI']} tasks[] (sample first).s10.outcome", "pending"])
+    nums.put("s10.first.processed", len(processed), f"{src['NI']} tasks[] (sample first) with s10.outcome passed or rejected (count)")
+    nums.put("s10.first.passed", len(passed), f"{src['NI']} tasks[] (sample first) with s10.outcome passed (count)")
+    nums.put("s10.first.rejected", len(rejected), f"{src['NI']} tasks[] (sample first) with s10.outcome rejected (count)")
+    nums.put("s10.first.yield", _pct(len(passed) / S["first"]["comments"]), f"{src['NI']} s10 passed (count) / {src['M9']} summary.comments")
+    for cat, _, mk in S10_REASONS:
+        row(f"\\quad rejected: {cat}", [str(cats.get(cat, 0)), "\\unfilled{pending}"], f"S10 rejected (first sample): {cat}",
+            [f"{src['NI']} tasks[] (sample first, s10.outcome rejected).s10.reason, by category", "pending"])
+        nums.put(f"s10.first.reject.{mk}", cats.get(cat, 0), f"{src['NI']} tasks[] (sample first).s10.reason (category {cat!r}, count)")
+    s11 = ni["s11_by_sample"]
+    if s11["first"] != len(passed) or sum(t["s11"] for t in first) != len(passed):
+        raise ValueError(f"{src['NI']}: s11_by_sample.first and the passed first-sample tasks disagree")
+    row("S11 accepted for building", [str(s11["first"]), "\\unfilled{pending}"], "S11 accepted (first sample)",
+        [f"{src['NI']} s11_by_sample.first", "pending"])
+    nums.put("s11.first", s11["first"], f"{src['NI']} s11_by_sample.first")
+    nums.put("s11.ids", ", ".join(t["task_id"] for t in passed), f"{src['NI']} tasks[] with s11 true (task_id)")
+    exact = sum(t["fidelity"] == "exact" for t in passed)
+    nums.put("s11.exact", exact, f"{src['NI']} tasks[] (s11).fidelity = exact (count)")
+    nums.put("s11.approximate", len(passed) - exact, f"{src['NI']} tasks[] (s11).fidelity = approximate (count)")
+    pins = [t["s10"]["pins"] for t in passed]
+    nums.put("s11.pins.min", min(pins), f"{src['NI']} tasks[] (s11).s10.pins (minimum)")
+    nums.put("s11.pins.max", max(pins), f"{src['NI']} tasks[] (s11).s10.pins (maximum)")
+    lic = Counter(t["licence"]["aidev"] for t in passed)
+    for k, v in sorted(lic.items()):
+        nums.put(f"lic.{k.lower().replace('-', '').replace('.', '')}", v, f"{src['NI']} tasks[] (s11).licence.aidev = {k} (count)")
+    nums.put("lic.agree", f"{sum(t['licence']['agrees'] for t in passed)}/{len(passed)}", f"{src['NI']} tasks[] (s11).licence.agrees (count)")
+    nums.put("ni.rows", len(tasks), f"{src['NI']} tasks (count)")
+    for k, v in sorted(ni["counts"].items()):
+        nums.put(f"ni.{k.replace(' ', '')}", v, f"{src['NI']} counts.{k}")
+    # Cross-checks with the rejection ledger (every reason, multi-valued).
+    rl = N["RL"]["rejections"]
+    ids = {n: {r["comment_id"] for r in m["rows"]} for n, m, _ in samples}
+    s9rows = [r for r in rl if r.get("population") == "natural:pr-review" and r.get("stage") == "S9"]
+    for n in S:
+        rr = [r for r in s9rows if r.get("comment_id") in ids[n]]
+        if len(rr) != S[n]["failed"]:
+            raise ValueError(f"{src['RL']}: {len(rr)} S9 rows of the {n} sample, its manifest says {S[n]['failed']} failed")
+        led.add("natural_funnel", f"rejection ledger cross-check, {n} sample: S9 rows; every reason (multi-valued)",
+                f"{len(rr)}; {dict(sorted(Counter(x for r in rr for x in r['reasons']).items()))}",
+                f"{src['RL']} rejections[] (population natural:pr-review, stage S9, comment_id in the sample)")
+    s10rows = [r for r in rl if r.get("population") == "natural:pr-review" and r.get("stage") == "S10"]
+    if sorted(r["task_id"] for r in s10rows) != sorted(t["task_id"] for t in rejected):
+        raise ValueError(f"{src['RL']}: the S10 rows do not list the rejected tasks of {src['NI']}")
+    led.add("natural_funnel", "rejection ledger cross-check: S10 rows", len(s10rows), f"{src['RL']} rejections[] (stage S10)")
+    (out / "natural_funnel.tex").write_text(
+        "\\begin{table}[t]\\centering\\footnotesize\n"
+        "\\caption{Screening funnel of the natural PR-review arm (AIDev v5). Top: the deterministic stages S1--S8a; S1 and S2 count "
+        "PRs. Without the linked-issue requirement of S8, " + _int(stages["S8'"]["count"]) + " comments would pass S8 and " +
+        _int(stages["S8a'"]["count"]) + " would pass S8a. Bottom: S9 for the first sample (a random sample of the S8a comments) and for the "
+        "extension (every other S8a comment, decided after the first sample's S10 yield was known, protocol \\S19), then families, "
+        "S10 (replayability) and S11. \\textbf{The S9 verdicts are model proposals of two judges, not human coding.} In the first "
+        "sample the comments without reachable commits were judged without a diff and failed as not fetchable; in the extension they "
+        "failed before judging. Extension, share of the judged comments: " + f"{_pct(jr['rate'])} ({_pct(jr['wilson_95'][0])}--"
+        f"{_pct(jr['wilson_95'][1])}). First sample, judge $\\kappa$ over the {sec['n']} comments with reachable commits: "
+        + "; ".join(_r2(x) for x in sk) + ". No natural verifier, label or run exists yet.}\\label{tab:natural-funnel}\n"
+        "\\begin{tabular}{llrrr}\\toprule Stage & Rule & Comments & PRs & Repositories \\\\\\midrule\n" + "\n".join(rows1) +
+        "\n\\bottomrule\\end{tabular}\n\n\\medskip\n"
+        "\\begin{tabular}{p{0.42\\linewidth}p{0.22\\linewidth}p{0.22\\linewidth}}\\toprule S9 to S11 & First sample & Extension "
+        "\\\\\\midrule\n" + "\n".join(rows2) + "\n\\bottomrule\\end{tabular}\\end{table}\n")
+
+    # (e2) S10 per family of the first sample
+    rows = []
+    for t in first:
+        s10 = t.get("s10") or {}
+        bt = s10.get("base_tests")
+        out_ = s10.get("outcome", "not built")
+        reason = _category(s10["reason"], S10_REASONS, f"{src['NI']} tasks[{t['task_id']}].s10.reason") if out_ == "rejected" else "--"
+        reason = S10_SHORT.get(reason, reason)
+        fid = t.get("fidelity") or "--"
+        if fid == "approximate":
+            fid = f"approx.\\ ({t['approximations']})"
+        licence = t.get("licence") or {}
+        lic_txt = "--" if not licence else tex(licence["aidev"]) + ("" if licence["agrees"] else "$^{\\dagger}$")
+        cells = [tex(t["task_id"]), tex(t["role"]), fid, lic_txt, "--" if s10.get("pins") is None else str(s10["pins"]),
+                 "--" if s10.get("base_test_subset") is None else str(s10["base_test_subset"]),
+                 "--" if not bt else f"{bt['passed']}/{bt['failed']}/{bt['skipped']}/{bt['error']}",
+                 "yes" if s10.get("b1") == "available" else "--", tex(out_), reason, "yes" if t["s11"] else "--"]
+        rows.append(" & ".join(cells) + " \\\\")
+        led.add("natural_s10", f"{t['task_id']}: role; fidelity (approximations); licence (agrees); pins; subset files; base tests "
+                "passed/failed/skipped/error; B1; S10 outcome; reason category; S11", "; ".join(cells[1:]),
+                f"{src['NI']} tasks[{t['task_id']}] (role, fidelity, approximations, licence, s10.pins, s10.base_test_subset, "
+                "s10.base_tests, s10.b1, s10.outcome, s10.reason, s11)")
+    n_ext = len(by["ext"])
+    ext_ids = sorted(t["task_id"] for t in by["ext"])
+    (out / "natural_s10.tex").write_text(table(
+        f"Stage S10 (replayability) of the first sample's {fam['first']} families and {res['first']} reserves, from the committed task "
+        "index. Fidelity: exact, or approximate with the number of approximations. Licence: the source repository's licence in AIDev; "
+        "$^{\\dagger}$: the LICENSE file at the base disagrees. Pins: the pinned dependency closure. Subset: test files in the base-test "
+        "subset; base tests at the base: passed/failed/skipped/error. B1: the repository-test verifier is available. Reason: the S10 "
+        "rejection category of the funnel table (no dependency closure: no resolvable dependency closure; fetch over the cap: fetch "
+        "over the repository cap). Reserves are built "
+        f"only to replace a rejected family of their repository. The {n_ext} families and reserves of the S9 extension "
+        f"({tex(ext_ids[0])} to {tex(ext_ids[-1])}): {PENDING_S10}.", "tab:natural-s10", "llllrrrlllc",
+        "Task & Role & Fidelity & Licence & Pins & Subset & Base tests & B1 & S10 & Reason & S11", rows,
+        size="\\scriptsize\\setlength{\\tabcolsep}{4pt}"))
+    nums.put("ni.ext.rows", n_ext, f"{src['NI']} tasks[] with sample extension (count)")
+    nums.put("ni.ext.first", tex(ext_ids[0]), f"{src['NI']} tasks[] with sample extension (first task_id)")
+    nums.put("ni.ext.last", tex(ext_ids[-1]), f"{src['NI']} tasks[] with sample extension (last task_id)")
+
+    # (e3) the Trace Commons screen
+    tc = N["TC"]
+    tcr = [r for r in N["RL"]["rejections"] if r.get("population") == "natural:chat"]
+    by_id = {r["source_id"]: r for r in tc}
+    if len(tcr) != len(tc) or any(by_id.get(r["source_id"], {}).get("rejection_reasons") != r["reasons"] for r in tcr):
+        raise ValueError(f"{src['RL']} natural:chat rows and {src['TC']} rejection_reasons disagree")
+    elig = Counter(r["eligibility"] for r in tc)
+    cat_sessions: Counter = Counter()
+    detail: dict[str, Counter] = {}
+    for r in tc:
+        seen = set()
+        for x in r["rejection_reasons"]:
+            cat = _category(x, TC_REASONS, f"{src['TC']} {r['record_id']}")
+            if cat in ("no recoverable base commit", "unsuitable task"):
+                det = x.split("(", 1)[1].rstrip(")") if cat == "no recoverable base commit" else x.split(":", 1)[1].strip()
+                detail.setdefault(cat, Counter())[det] += 1
+            seen.add(cat)
+        cat_sessions.update(seen)
+    rows = []
+    for cat, _, mk in TC_REASONS:
+        rows.append(f"{tex(cat)} & {cat_sessions.get(cat, 0)} \\\\")
+        led.add("trace_commons", f"sessions with a reason of category {cat!r}", cat_sessions.get(cat, 0),
+                f"{src['TC']} [].rejection_reasons (= {src['RL']} natural:chat rows reasons), by category, each session once")
+        nums.put(f"tc.{mk}", cat_sessions.get(cat, 0), f"{src['TC']} [].rejection_reasons (category {cat!r}, sessions)")
+        for det, v in sorted(detail.get(cat, {}).items(), key=lambda kv: (-kv[1], kv[0])):
+            shown = f"\\texttt{{{tex(det)}}}" if cat == "no recoverable base commit" else tex(det)
+            rows.append(f"\\quad {shown} & {v} \\\\")
+            led.add("trace_commons", f"{cat}: {det}", v, f"{src['TC']} [].rejection_reasons")
+    nums.put("tc.screened", len(tc), f"{src['TC']} (records)")
+    nums.put("tc.rejected", elig.get("rejected", 0), f"{src['TC']} [].eligibility = rejected (count)")
+    led.add("trace_commons", "sessions screened; eligibility", f"{len(tc)}; {dict(elig)}", f"{src['TC']} [].eligibility")
+    (out / "trace_commons.tex").write_text(table(
+        f"The Trace Commons screen (population natural:chat): {len(tc)} donated sessions screened, {elig.get('rejected', 0)} rejected, "
+        f"{elig.get('eligible', 0)} eligible. Reasons are multi-valued; each session counts once per category. Indented rows: "
+        "sessions per recorded detail; a session can carry several details of one category, so these rows can sum to more than "
+        "the category. No task was built from this source.", "tab:trace-commons", "lr", "Rejection reason & Sessions", rows,
+        size="\\footnotesize"))
+
+
 def parse_args(argv: list[str]) -> argparse.Namespace:
     """Parse and check the arguments; nothing is read beyond the directories' listings, and nothing is written."""
     ap = argparse.ArgumentParser(
         prog="paper/make_tables.py",
-        description="Generate paper/generated/*.tex and paper/evidence_ledger.md from recorded runs. The outputs "
-                    "are replaced only after every table has been written; on any error every file is left as it was.")
-    ap.add_argument("runs", nargs="+", metavar="RUN_DIR",
-                    help="run directory with analysis.json and manifest.json, e.g. results/runs/pilot-v0.3.3")
+        description="Generate paper/generated/*.tex and paper/evidence_ledger.md from recorded runs (the construction pilot), "
+                    "and, with --fresh, --regrade and --natural, the tables of the new runs in paper/generated/fresh/ and "
+                    "paper/generated/natural/ with their own ledgers. The outputs are replaced only after every table has been "
+                    "written; on any error every file is left as it was.")
+    ap.add_argument("runs", nargs="*", metavar="RUN_DIR",
+                    help="pilot run directory with analysis.json and manifest.json, e.g. results/runs/pilot-v0.3.3 (optional "
+                         "only when --fresh or --natural is given)")
     ap.add_argument("--compare", nargs="+", default=[], metavar="OLD_RUN_DIR",
                     help="earlier run directories (with results.jsonl) for the reliability table; it uses the "
                          "compare_<run>.json files that scripts/compare_runs.py wrote into the run directory")
+    ap.add_argument("--fresh", metavar="RUN_DIR",
+                    help="fresh-attempt run (analysis.json, analysis_sensitivity.json, manifest.json, results.jsonl), e.g. "
+                         "results/runs/fresh-v1: writes paper/generated/fresh/ and paper/evidence_ledger_fresh.md")
+    ap.add_argument("--regrade", metavar="RUN_DIR",
+                    help="with --fresh: a reliability re-grade of the pilot (manifest.json, results.jsonl, compare_<run>.json), "
+                         "e.g. results/runs/pilot-v0.3.5-regrade: adds paper/generated/fresh/regrade_reliability.tex")
+    ap.add_argument("--natural", action="store_true",
+                    help="the natural arm's screening tables from data/manifests/: writes paper/generated/natural/ and "
+                         "paper/evidence_ledger_natural.md")
     a = ap.parse_args(argv)
+    if not (a.runs or a.fresh or a.natural):
+        ap.error("give a pilot RUN_DIR, --fresh RUN_DIR or --natural")
+    if a.compare and not a.runs:
+        ap.error("--compare needs a pilot RUN_DIR")
     for rd in a.runs:
         missing = [f for f in ("analysis.json", "manifest.json") if not (Path(rd) / f).is_file()]
         if missing:
@@ -382,6 +1729,21 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     for od in a.compare:
         if not (Path(od) / "results.jsonl").is_file():
             ap.error(f"--compare {od}: no results.jsonl; not a run directory")
+    if a.regrade and not a.fresh:
+        ap.error("--regrade writes into paper/generated/fresh/ and its ledger, so it needs --fresh")
+    if a.fresh:
+        missing = [f for f in ("analysis.json", "analysis_sensitivity.json", "manifest.json", "results.jsonl")
+                   if not (Path(a.fresh) / f).is_file()]
+        if missing:
+            ap.error(f"--fresh {a.fresh}: no {', '.join(missing)}")
+    if a.regrade:
+        missing = [f for f in ("manifest.json", "results.jsonl") if not (Path(a.regrade) / f).is_file()]
+        if missing or not list(Path(a.regrade).glob("compare_*.json")):
+            ap.error(f"--regrade {a.regrade}: needs manifest.json, results.jsonl and a compare_<run>.json")
+    if a.natural:
+        missing = [p for p in NATURAL_INPUTS.values() if not (ROOT / p).is_file()]
+        if missing:
+            ap.error(f"--natural: missing {', '.join(missing)}")
     return a
 
 
@@ -398,26 +1760,102 @@ def _replace_outputs(tmp_gen: Path, tmp_ledger: Path) -> int:
     return len(new)
 
 
+def _replace_subdir(tmp_sub: Path, dest: Path, tmp_ledger: Path, ledger: Path) -> int:
+    """Move a new-run mode's outputs into its own subdirectory and its ledger into place; delete the files of that
+    subdirectory this invocation did not write. Nothing outside the subdirectory and the ledger is touched."""
+    new = {p.name: p for p in tmp_sub.iterdir() if p.is_file()}
+    dest.mkdir(parents=True, exist_ok=True)
+    for old in dest.iterdir():
+        if old.is_file() and old.name not in new:
+            old.unlink()
+    for name, p in sorted(new.items()):
+        os.replace(p, dest / name)
+    os.replace(tmp_ledger, ledger)
+    return len(new)
+
+
+def _cmd(parts: list[str]) -> str:
+    return " ".join(["python", "paper/make_tables.py", *parts])
+
+
 def main(argv: list[str]) -> None:
     a = parse_args(argv)  # --help and argument errors exit here, before anything is written
-    led = Ledger(argv)
+    new_modes = bool(a.fresh or a.natural)
+    # The pilot ledger names the pilot command only, so that adding a new-run mode never changes it.
+    pilot_argv = argv if not new_modes else [*a.runs, *(["--compare", *a.compare] if a.compare else [])]
+    led = Ledger(pilot_argv)
     LEDGER.parent.mkdir(parents=True, exist_ok=True)
     # The temporary directory sits next to the outputs, so os.replace never crosses a file system.
     tmp = Path(tempfile.mkdtemp(prefix=".make_tables-", dir=LEDGER.parent))
+    done = []
     try:
-        out = tmp / "generated"
-        out.mkdir()
-        olds = [Path(x) for x in a.compare]
-        tasks_and_scenarios(led, out)
-        for rd in a.runs:
-            results(Path(rd), led, out)
-            verifiers(Path(rd), led, out)
-            comparisons(Path(rd), olds, led, out)
-        (tmp / "evidence_ledger.md").write_text("\n".join(led.lines) + "\n")
-        n = _replace_outputs(out, tmp / "evidence_ledger.md")
+        if a.runs:
+            out = tmp / "generated"
+            out.mkdir()
+            olds = [Path(x) for x in a.compare]
+            tasks_and_scenarios(led, out)
+            for rd in a.runs:
+                results(Path(rd), led, out)
+                verifiers(Path(rd), led, out)
+                comparisons(Path(rd), olds, led, out)
+            (tmp / "evidence_ledger.md").write_text("\n".join(led.lines) + "\n")
+        subs = []
+        if a.fresh:
+            cmd = _cmd(["--fresh", rel(Path(a.fresh).resolve()), *(["--regrade", rel(Path(a.regrade).resolve())] if a.regrade else [])])
+            fled = SectionLedger("Evidence ledger (fresh-agent stratum and the pilot's re-grade)",
+                                 "Every number in `paper/generated/fresh/*.tex` (the tables and the number macros of `numbers.tex`, "
+                                 "used in the text as `\\fv{key}`), with the file and field it is read from or computed from. "
+                                 f"Generated by `{cmd}`; nothing is entered by hand. All labels are model proposals (D19 and the "
+                                 "independent labeler); no human labels exist.")
+            fnums = Numbers("fv", fled)
+            fout = tmp / "fresh"
+            fout.mkdir()
+            F = fresh_inputs(Path(a.fresh))
+            fresh_run_numbers(F, fled, fnums)
+            fresh_tables(F, fled, fnums, fout)
+            if a.regrade:
+                regrade_table(Path(a.regrade), fled, fnums, fout)
+            (fout / "numbers.tex").write_text(fnums.tex(cmd))
+            (tmp / "evidence_ledger_fresh.md").write_text(fled.text())
+            subs.append(("fresh", fout, len(fled)))
+        if a.natural:
+            cmd = _cmd(["--natural"])
+            nled = SectionLedger("Evidence ledger (natural arm: screening, S10 and the Trace Commons screen)",
+                                 "Every number in `paper/generated/natural/*.tex` (the tables and the number macros of `numbers.tex`, "
+                                 "used in the text as `\\nat{key}`), with the file and field it is read from or computed from. "
+                                 f"Generated by `{cmd}`; nothing is entered by hand. The S9 verdicts are model proposals, not human "
+                                 "coding. No natural verifier, label or run exists yet; those results are pending.")
+            nnums = Numbers("nat", nled)
+            nout = tmp / "natural"
+            nout.mkdir()
+            N = natural_inputs()
+            natural_tables(N, nled, nnums, nout)
+            (nout / "numbers.tex").write_text(nnums.tex(cmd))
+            (tmp / "evidence_ledger_natural.md").write_text(nled.text())
+            subs.append(("natural", nout, len(nled)))
+        # Privacy: nothing a new-run mode writes may hold a URL, an owner placeholder, a session-local path or a model or
+        # agent-product name; natural outputs may not hold a digit run of 7 or more (an id) either. The ledger's input
+        # hashes are exempt from the digit rule only.
+        for name, sub, _ in subs:
+            names = N["agent_names"] if name == "natural" else ()
+            for f in sorted(sub.iterdir()):
+                _check_private(f.read_text(), f"{name}/{f.name}", digit_runs=name == "natural", names=names)
+            text = (tmp / f"evidence_ledger_{name}.md").read_text()
+            _check_private(text, f"evidence_ledger_{name}.md", digit_runs=False, names=names)
+            if name == "natural":
+                _check_private("\n".join(x for x in text.splitlines() if not x.startswith("- [inputs]")),
+                               "evidence_ledger_natural.md", digit_runs=True, names=names)
+        # Every output has been written: replace them.
+        if a.runs:
+            n = _replace_outputs(out, tmp / "evidence_ledger.md")
+            done.append(f"wrote {n} tables to {rel(GEN)}; ledger with {len(led.lines) - 4} entries")
+        for name, sub, n_led in subs:
+            ledger = LEDGER.parent / f"evidence_ledger_{name}.md"
+            n = _replace_subdir(sub, GEN / name, tmp / f"evidence_ledger_{name}.md", ledger)
+            done.append(f"wrote {n} files to {rel(GEN / name)}; {rel(ledger)} with {n_led} entries")
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
-    print(f"wrote {n} tables to {rel(GEN)}; ledger with {len(led.lines) - 4} entries")
+    print("\n".join(done))
 
 
 if __name__ == "__main__":

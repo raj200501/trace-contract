@@ -1,0 +1,10 @@
+\begin{table}[t]\centering\scriptsize\setlength{\tabcolsep}{3.5pt}
+\caption{Pooled rates on the fresh-agent stratum, run \texttt{fresh-v1}, D19 labels, each distinct graded patch once. \textbf{All labels are model proposals; no human labels exist.} Rate (num/den), the exact binomial 95\% interval (it ignores clustering by family; reference scale only) and the macro rate (mean of the per-family rates). $J$ = (1$-$FR)$-$FA. Fam.\ w/ FA: families with at least one accepted invalid unit. Infra: infrastructure outcomes. Cluster-bootstrap intervals are reported separately and are not inferential with 4 families. Four controlled families: descriptive, not inferential.}\label{tab:fresh-pooled}
+\begin{tabular}{lrrrrrrrrr}\toprule Condition & FA & exact 95\% & macro & FR & exact 95\% & macro & $J$ & Fam.\ w/ FA & Infra \\\midrule
+C1 initial, plain & 0.83 (24/29) & [0.64, 0.94] & 0.64 & 0.26 (13/50) & [0.15, 0.40] & 0.31 & \ensuremath{-}0.09 & 3/4 & 0/79 \\
+C2 initial, audited & 0.83 (24/29) & [0.64, 0.94] & 0.64 & 0.26 (13/50) & [0.15, 0.40] & 0.31 & \ensuremath{-}0.09 & 3/4 & 0/79 \\
+C3 full, plain & 0.07 (2/29) & [0.01, 0.23] & 0.25 & 0.00 (0/50) & [0.00, 0.07] & 0.00 & \ensuremath{+}0.93 & 1/4 & 0/79 \\
+C4 full, audited & 0.07 (2/29) & [0.01, 0.23] & 0.25 & 0.12 (6/50) & [0.05, 0.24] & 0.12 & \ensuremath{+}0.81 & 1/4 & 0/79 \\
+B2 full-session LLM & 0.07 (2/29) & [0.01, 0.23] & 0.25 & 0.04 (2/50) & [0.00, 0.14] & 0.04 & \ensuremath{+}0.89 & 1/4 & 0/79 \\
+B1 repository tests & 0.00 (0/29) & [0.00, 0.12] & 0.00 & 0.68 (34/50) & [0.53, 0.80] & 0.62 & \ensuremath{+}0.32 & 0/4 & 0/79 \\
+\bottomrule\end{tabular}\end{table}

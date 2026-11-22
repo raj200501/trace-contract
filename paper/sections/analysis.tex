@@ -1,5 +1,20 @@
 \section{Qualitative analysis}
 \label{sec:analysis}
+\subsection{Fresh-agent attempts (\texttt{\FRESHRUN})}
+\label{sec:analysis-fresh}
+% Source: docs/decision_log.md D62 (error analysis read from the patches, the verifier tests and the grader's per-check output).
+\paragraph{A loud inversion and a silent loss.} In CS-01, C1 and C2 encode the request that the correction retracted: drop a trailing ``.0'' by default. They fail the reference on 12 of their 14 checks, pass only the checks of the one requirement the correction kept, and accept all 10 \texttt{u1} attempts; this gives 10 of C1's 24 false acceptances and 10 of its 13 false rejections (D62). A rule that a verifier must pass its reference would catch this case, which is the oracle-gated view of \S\ref{sec:results-fresh}. In CS-03 and CS-04 the loss is silent: C1 passes both references and still accepts 14 of the 17 correction-violating attempts there, against 0 of 17 for C3.
+
+\paragraph{Two label artefacts.} In CS-02, D19 labels two \texttt{u1} attempts invalid only through the regression norm: the one failing base test asserts on a private attribute that both attempts deliberately removed, and both pass all 28 reference checks and the independent labeler. They are the whole false acceptance of C3, C4 and B2 (2 of 29 invalid units each); no CS-02 \texttt{u1} attempt violates a correction requirement (D62).
+
+\paragraph{The audit over-specifies.} In CS-03 the single audit revision of C4 added two checks that fix the answers of one development attack, and of the reference, on edge cases that the contracts leave open (contractions, digits and underscores in all-caps words). They cause all 6 of C4's false rejections that C3 does not make. The audit record showed no findings after one iteration and did not show that checks were added; audit records now keep every failing check and every check a revision adds or removes (D62).
+
+\paragraph{Repository tests carry the session agent's tests.} All 34 of B1's false rejections come from the 40 checks that the session agent added to the reference state's test files; none comes from the base commit's tests or from the environment. The base tests alone accept 17 of the 29 invalid attempts and, being D19's regression norm, cannot reject a valid one (D62).
+
+\paragraph{What survives if the improvement is zero.} The information-loss contrast is mechanical and does not depend on the audit; on this stratum the audit is a cost; B2 equals C3 and C4 on false acceptance; and the B1 result is about agent-added tests. C3's false acceptance is also only as low as the labels let it be: a violation that no reference check exercises is labelled valid under D19, so no verifier is ever charged with accepting it.
+
+\subsection{Construction pilot (\texttt{\PILOTRUN})}
+\label{sec:analysis-pilot}
 \paragraph{Reward inversion when a correction retracts a request (\texttt{humanize}).} The first request asked \texttt{naturalsize} to drop a trailing ``.0'' by default. The correction kept the default output unchanged and made trimming opt-in. The initial-only contract faithfully encodes the first request, and four of its five scored requirements contradict the reference. The verifiers built from it therefore:
 \begin{itemize}
 \item reward the agent's own pre-correction state, the state before the scripted correction;

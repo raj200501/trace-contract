@@ -23,3 +23,25 @@ Table~\ref{tab:verifiers} lists the scored checks of every verifier, the audit r
 The reference contract therefore contains five intended requirements, and the default-trimming requirement of the first request is \emph{superseded}. The initial-only contract keeps it, so its verifiers reward the pre-correction state and reject every candidate that honours the correction (Table~\ref{tab:matrix}). The correction-aware contract marks it superseded and scores the opt-in, keep-meaningful-decimals and unchanged-output requirements.
 
 \IfFileExists{generated/outcome_matrix.tex}{\input{generated/outcome_matrix.tex}}{\unfilled{outcome matrix}}
+
+\section{Tasks}
+\IfFileExists{generated/tasks_table.tex}{\input{generated/tasks_table.tex}}{\unfilled{tasks table}}
+
+\section{Fresh-agent stratum: detail tables}
+\label{app:fresh}
+These tables complete \S\ref{sec:results-fresh}. Every number is in \texttt{paper/evidence\_ledger\_fresh.md}; all labels are model proposals.
+\IfFileExists{generated/fresh/fresh_pooled.tex}{\input{generated/fresh/fresh_pooled.tex}}{}
+\IfFileExists{generated/figures/fresh_fr_by_family.tex}{\input{generated/figures/fresh_fr_by_family.tex}}{}
+\IfFileExists{generated/fresh/fresh_agreement.tex}{\input{generated/fresh/fresh_agreement.tex}}{}
+\IfFileExists{generated/fresh/fresh_sensitivity.tex}{\input{generated/fresh/fresh_sensitivity.tex}}{}
+\IfFileExists{generated/fresh/fresh_oracle_gated.tex}{\input{generated/fresh/fresh_oracle_gated.tex}}{}
+\IfFileExists{generated/fresh/fresh_solve_rates.tex}{\input{generated/fresh/fresh_solve_rates.tex}}{}
+\IfFileExists{generated/fresh/fresh_attempt_costs.tex}{\input{generated/fresh/fresh_attempt_costs.tex}}{}
+\IfFileExists{generated/fresh/fresh_bootstrap.tex}{\input{generated/fresh/fresh_bootstrap.tex}}{}
+\clearpage
+\IfFileExists{generated/fresh/fresh_outcome_matrix.tex}{\input{generated/fresh/fresh_outcome_matrix.tex}}{}
+
+\section{Natural PR-review arm: replay and the Trace Commons screen}
+\label{app:natural}
+\IfFileExists{generated/natural/natural_s10.tex}{\input{generated/natural/natural_s10.tex}}{}
+\IfFileExists{generated/natural/trace_commons.tex}{\input{generated/natural/trace_commons.tex}}{}

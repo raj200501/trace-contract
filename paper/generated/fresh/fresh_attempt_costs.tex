@@ -1,0 +1,8 @@
+\begin{table}[t]\centering\footnotesize
+\caption{Time and size of the fresh attempts, run \texttt{fresh-v1}, per configuration and instruction (the attempts that count, i.e.\ without the excluded one): number of attempts, wall time (median and range, seconds), and the medians of turns, tool calls and tokens. Tokens sum the input, cache-creation, cache-read and output tokens of every response, so they are not a cost; no money cost was recorded, and verifier generation cost was not recorded. The longest attempt took 1139 s.}\label{tab:fresh-costs}
+\begin{tabular}{llrrrrrr}\toprule Config. & Instruction & n & Wall (s) & Range (s) & Turns & Tool calls & Tokens (M) \\\midrule
+A & \texttt{final} & 19 & 709 & 407--1098 & 24 & 34 & 3.64 \\
+A & \texttt{u1} & 20 & 591 & 414--1139 & 24.5 & 36.5 & 3.10 \\
+B & \texttt{final} & 20 & 61 & 44--97 & 13 & 14 & 1.11 \\
+B & \texttt{u1} & 20 & 51 & 32--207 & 11 & 12 & 0.96 \\
+\bottomrule\end{tabular}\end{table}

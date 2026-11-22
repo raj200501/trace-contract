@@ -7,15 +7,26 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{longtable}
 \usepackage[hidelinks]{hyperref}
 \usepackage[style=numeric,sorting=none,maxbibnames=6]{biblatex}
 \addbibresource{references.bib}
 
 \newcommand{\RUNID}{pilot-v0.3.3}
+\newcommand{\PILOTRUN}{pilot-v0.3.3}
+\newcommand{\REGRADERUN}{pilot-v0.3.5-regrade}
+\newcommand{\FRESHRUN}{fresh-v1}
+\newcommand{\NATURALRUN}{natural-pr-v1}
 \newcommand{\todo}[1]{\textcolor{red}{[TODO: #1]}}
 \newcommand{\unfilled}[1]{\textcolor{orange}{[UNFILLED: #1]}}
+% Number lookups for the generated number files (paper/generated/fresh/numbers.tex, paper/generated/natural/numbers.tex).
+\newcommand{\fv}[1]{\ifcsname fv:#1\endcsname\csname fv:#1\endcsname\else\unfilled{missing number #1}\fi}
+\newcommand{\nat}[1]{\ifcsname nat:#1\endcsname\csname nat:#1\endcsname\else\unfilled{missing number #1}\fi}
+\IfFileExists{generated/fresh/numbers.tex}{\input{generated/fresh/numbers.tex}}{}
+\IfFileExists{generated/natural/numbers.tex}{\input{generated/natural/numbers.tex}}{}
 
-\title{From Corrections to Contracts: Measuring Reward Fidelity\\in Trace-Derived Coding Tasks\\[4pt]\large Working draft --- not peer reviewed; automated pilot without human labels}
+\title{From Corrections to Contracts: Measuring Reward Fidelity\\in Trace-Derived Coding Tasks\\[4pt]\large Working draft --- not peer reviewed; automated study with model-proposed labels, no human labels}
 \author{\todo{authors and affiliations to be decided by the human authors}}
 \date{\today}
 
