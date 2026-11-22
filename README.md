@@ -11,17 +11,73 @@ account of those corrections can go wrong in two ways:
 
 TraceContract measures both directly.
 
-> **Status: research prototype, automated pilot only.**
-> * No human labels exist yet; candidate labels are proposals from a pre-specified rule.
-> * All four sessions are *controlled*: real agent runs with user turns scripted by
->   the study's AI agent, not natural user traffic. No natural task has been built:
->   Trace Commons was screened (all 30 sessions rejected), and AIDev v5 is being
->   screened (see Limitations).
+> **Status: research prototype; an automated study with model-proposed labels.**
+> * No human labels exist. Every rate rests on labels proposed by a pre-specified rule (D19); for the fresh
+>   attempts an independent model labeler gives a second labeling.
+> * The verifier results are on four *controlled* task families: real agent runs with user turns scripted by
+>   the study's AI agent, not natural user traffic.
+> * A natural PR-review arm (AIDev v5) has a recorded screening funnel and six accepted tasks. Its recipe is
+>   fixed (D64, D65), but its verifiers, labels and run have not been made. Trace Commons was screened, and all
+>   30 sessions were rejected.
 > * Nothing here is peer reviewed.
 >
 > See [STATUS.md](STATUS.md).
 
-## Pilot results (automated labels, four controlled task families)
+## Results
+
+### Fresh-agent attempts (`fresh-v1`), the lead result
+
+Run `results/runs/fresh-v1` (decision log D61, D62):
+* 80 new agent attempts on the four controlled tasks, in two agent configurations, each given the first request
+  only (`u1`) or the first request with its correction (`final`), 5 attempts per cell;
+* 1 attempt excluded after the reviewed audit, so 79 distinct graded patches: 29 invalid, 50 valid (D19);
+* harness 0.3.5, every pair graded 3 times, no unresolved outcome.
+
+The analysis is `results/runs/fresh-v1/analysis.md`; the paper's section 6.1 reports it.
+
+| Condition | False acceptance | False rejection |
+| --- | --- | --- |
+| C1 initial-only, plain | 24/29 | 13/50 |
+| C2 initial-only, audited | 24/29 | 13/50 |
+| C3 correction-aware, plain | 2/29 | 0/50 |
+| C4 correction-aware, audited | 2/29 | 6/50 |
+| B2 full-session LLM | 2/29 | 2/50 |
+| B1 repository tests (reference state) | 0/29 | 34/50 |
+
+How to read this:
+
+* **Initial-only verifiers accept what the correction ruled out.** Of the 40 `u1` attempts, 27 violate the
+  correction. C1 and C2 accept 24 of them; C3, C4, B2 and B1 accept none.
+* **The tests of the proposed machinery are null or negative.**
+  * The audit removed no false acceptance. It added 6 false rejections, all in CS-03, where its revision fixes
+    answers that the contract leaves open.
+  * The full-session LLM baseline (B2) matches C3 and C4 on false acceptance.
+* **B1's false rejections come from the session agent's tests.** All 34 come from the 40 checks that the session
+  agent added to the reference state. The base commit's tests reject none, and alone they would accept 17 of the
+  29 invalid attempts.
+* **The effect is concentrated and partly mechanical.**
+  * C1's false acceptances come from three families. In CS-01, C1 also fails its own reference.
+  * The 2/29 of C3, C4 and B2 are two CS-02 attempts that are invalid only through the regression norm (D62).
+* **Robustness.**
+  * The independent labeler agrees with D19 on 77 of 79 units (κ 0.94).
+  * Excluding all 26 attempts that the audit flagged leaves the ordering: C1 accepts 18 of 21 invalid units, C3 1.
+* **Uncertainty.** With four families no two-sided exact sign-flip p below 0.125 is possible, and none of the 14
+  pre-specified comparisons reaches its floor. fresh-v1 reuses the pilot's families and frozen verifiers, so it
+  adds held-out candidates, not families.
+
+  **These are descriptive numbers on model-proposed labels, not evidence of an effect beyond these tasks.**
+
+### Natural PR-review arm: status
+
+* **Screening.** 684 review comments pass the deterministic stages S1 to S8a. At stage S9, model judges find that
+  31 of 150 comments (first sample) and 91 of 534 (extension) qualify (D48, D50, D63, D66).
+* **Replay.** At S10, 6 of the first sample's 22 families are accepted: NP-03, NP-04, NP-05, NP-18, NP-19 and
+  NP-20. The extension's replay is pending.
+* **Recipe.** The generation recipe is fixed (D64), and the six families' rendered inputs and proposer prompts are
+  logged (D65). Generation stopped at a usage limit before the first natural agent ran (D66).
+* Every natural result is pending.
+
+## Construction pilot (`pilot-v0.3.3`), a development study since protocol v0.7
 
 Run `results/runs/pilot-v0.3.3`:
 * 4 tasks × 6 conditions × 10 candidates = 240 graded pairs;
@@ -391,7 +447,8 @@ pushed, still hold material that has since been removed; STATUS.md lists it.
 
 * No human labels. The labels are rule-based proposals, and an independent model
   check disputes some of them.
-* Controlled sessions only, with scripted corrections designed by the study.
+* The verifier results are on controlled sessions only, with scripted corrections designed by the study.
+  fresh-v1 reuses the pilot's four families and frozen verifiers.
 * One model family produced the scenarios and reference contracts that define the
   labels (written by the study's AI agent, the same model as the session agent), the
   sessions, contracts, verifiers, candidates, label proposals, checks and both
@@ -425,16 +482,15 @@ pushed, still hold material that has since been removed; STATUS.md lists it.
     which CS-01's alternatives and reference checks also used;
   * CS-04's B1 was re-selected after its pool existed;
   * the hash of each scored check list was added only after the run `pilot-v0.3`.
-* No natural task yet. SWE-chat is blocked on its access terms, which only the owner
-  can accept (D4). Two ungated, openly licensed sources were taken up for screening as
-  separate populations (D47):
+* No natural result yet. SWE-chat is blocked on its access terms, which only the owner can accept (D4). Two
+  ungated, openly licensed sources were taken up for screening as separate populations (D47):
   * Trace Commons: all 30 sessions were screened and rejected, none reconstructable;
-  * AIDev v5 pull-request review threads: the deterministic stages S1 to S8a leave 684
-    review comments, and of a random sample of 150, 31 qualify at stage S9 by two
-    model judges (model proposals, not human coding; D48, D50). Stage S10
-    (replayability) is under way and has no recorded result yet.
-
-  No natural task has been built.
+  * AIDev v5 pull-request review threads, screened as above: 6 tasks are accepted. Their recipe is fixed, but no
+    natural contract, verifier, held-out candidate or label exists. Two code packages that the natural run needs
+    are kept as unfinished patches (`docs/wip/`).
+  * The committed scan's `--aidev-logins` mode loads the logins connected to the first S9 sample only. A one-off
+    scan with both samples found no person's login (D66); extending the committed scan needs the owner's decision
+    on organisation accounts.
 
 ## Layout
 

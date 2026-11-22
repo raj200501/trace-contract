@@ -1,13 +1,46 @@
 # Status
 
-Last updated: 2026-11-21 (UTC), in part: round 4 is in progress (decision log D47
-onwards). Milestone: **M2 complete** (automated pilot on four controlled task
-families). **M3** (human labels, natural data) needs the repository owner for the
-human labels and for SWE-chat. Two ungated, openly licensed natural sources were taken
-up for screening without that: Trace Commons was screened (all 30 sessions rejected),
-and in AIDev v5 stage S9 is done (31 of 150 sampled review comments qualify, as model
-proposals) and stage S10 is under way. No natural task has been built yet (D47, D48,
-D50). Nothing here is peer reviewed, and no human labels exist.
+Last updated: 2026-11-22 (UTC), at the wrap-up of round 4 (decision log D47 to D66). Nothing here is peer reviewed, and
+no human labels exist.
+
+## Where the study stands
+
+* **Lead result: fresh-agent attempts (`fresh-v1`, D61, D62).** 80 new agent attempts on the four controlled tasks,
+  79 distinct graded patches, harness 0.3.5 with 3 repeats. Of the 40 attempts that saw only the first request, 27
+  violate the correction. The initial-only verifiers (C1, C2) accept 24 of them; C3, C4, B2 and B1 accept none.
+  * The audit removed no false acceptance and added 6 false rejections (C4, CS-03).
+  * B2 matches C3 and C4 on false acceptance.
+  * All 34 of B1's false rejections come from tests the session agent added.
+  * Labels are model proposals: the independent labeler agrees with D19 on 77 of 79 units. The study has four
+    families, so no two-sided p below 0.125 is possible, and the result is descriptive.
+* **Construction pilot (`pilot-v0.3.3`).** A development study since protocol v0.7. Its re-grade under harness 0.3.5
+  gives the same outcome on all 240 pairs (D54).
+* **Natural PR-review arm (`natural-pr-v1`).**
+  * Screening is done for both samples: 31 of 150 and 91 of 534 comments qualify at S9 (model-judged; D63, D66).
+  * S10 is done for the first sample, with 6 of 22 families accepted. The extension's S10 was stopped and is to be
+    redone.
+  * The recipe is fixed (D64), and the six families' inputs and proposer prompts are logged (D65).
+  * No natural agent has run, and every natural result is pending.
+* **Manuscript (`paper/`).** Rebuilt findings-first around fresh-v1 (D66). It compiles, and every number in it is a
+  generated macro with a ledger entry, or a decision-log count. Natural results are marked `UNFILLED`. Authors are a
+  TODO for the human authors.
+
+## Why the work stopped, and how to resume
+
+* **Usage limit.** The build session's agents reached the account's weekly usage limit at about 18:50Z on 2026-11-21
+  (it resets on 2026-11-25 at 07:00Z). The owner then asked for a wrap-up (D66).
+* **To resume the natural arm,** after the reset, in this order:
+  1. Finish the two packages kept in `docs/wip/`: the analysis of natural runs (WP-G) and the privacy and publication
+     tools (WP-H1). Fix their review findings and their tests.
+  2. Rename the code's citations of the recipe from D61 to D64 (D64, "References to this entry").
+  3. Redo the extension's S10.
+  4. Run D64's phases P1 to P7 for each accepted family, committing `data/manifests/natural_phase_ends.jsonl` after
+     each phase (`scripts/record_phase_end.py`, D65).
+  5. Propose the D19 labels, run the pre-flight, then the run `natural-pr-v1` and its analysis.
+* **Owner decisions pending.**
+  * Deviation (i) and the other builder decisions of D64.
+  * How the scan treats organisation accounts, before its `--aidev-logins` mode loads both S9 samples (D66).
+  * The human labels, and SWE-chat's access terms (below).
 
 ## Completed
 
