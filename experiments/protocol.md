@@ -764,3 +764,42 @@ both samples has been processed.
 
 **19.8 Independent labelers of natural tasks (§15.5).** The single revision is told only
 the bare names of the failing checks (D58).
+
+## 20. Amendments in v0.12 (the natural arm's runs by sample; before any natural held-out candidate exists)
+
+This section makes the protocol v0.12. The version line at the top of the file is left as
+it was. It was fixed after phases P1 to P4 of the natural recipe (decision log D64) had run
+for the six accepted families of the first sample (D70). At that time P5 to P7 had not run,
+no natural held-out candidate existed, and no natural verifier had been graded on any
+candidate except the development reference, no-op, attacks and alternatives of the audit
+loops.
+
+**20.1 Reason.** §19.5 stops building at 30 accepted tasks, or when every family of both
+samples has been processed, and §19.7 has one run grade all accepted families together. The
+extension's S10 and the building of its families need about a week of agent usage beyond the
+current budget (D68, D70). The owner asked for the paper to be completed with the natural
+arm's results.
+
+**20.2 Two runs.**
+* `natural-pr-v1` grades the accepted families of the first sample (§15.6): NP-03, NP-04,
+  NP-05, NP-18, NP-19 and NP-20. Building has stopped for this sample. S9 is complete for it,
+  and every family and reserve of a repository with an open place has an S10 outcome: the
+  pre-flight's rule of §19.5, restricted to the first sample.
+* `natural-pr-v2` grades the accepted families of the extension (§19.2, §19.3), once the
+  extension's S10 and building have stopped: 30 accepted tasks in all, or every family of the
+  extension processed. It follows the same recipe (D64) unchanged; any change is a deviation,
+  logged before its use.
+* No natural verifier is graded on a held-out candidate of a family before that family's run.
+  §19.7 is otherwise unchanged.
+
+**20.3 Reporting.**
+* Each run is reported on its own. `natural-pr-v1` has 6 tasks, so it is reported as
+  exploratory case studies (§19.6: per-family tables only, with no pooled rate, interval or
+  p-value).
+* A combined report over both runs applies §19.6's size rule to their union and reports each
+  task's sample and run. It uses each run's grades as they are.
+* The results of `natural-pr-v1` will be known when the extension's families are built. This
+  is disclosed with the results of `natural-pr-v2`.
+
+**20.4 Unchanged:** the recipe (D64, D65), D19's labels, the source-evidence label of the
+pre-review state (§15.6), §19.8, and the pre-flight's other checks.

@@ -2750,3 +2750,19 @@ They are not results of the natural arm, whose run has not been made.
   as D64 defines it, and D19's labels for that family would then be ambiguous. The source-evidence label of the
   pre-review state does not depend on them (§15.6). The run reports each family as a case study, with these facts
   beside its numbers.
+
+### D71. Protocol v0.12 (§20): the natural arm's runs by sample, hashed before any natural held-out candidate exists
+`experiments/protocol.md` with §20 appended has sha256 `cc53d24fec68888096dfb8a8bc6d7394d6dd4e707d25f13619f88e326f547068` (computed at 2026-11-22T23:34:57Z).
+* **The owner's instruction.** Asked whether to amend §19's stopping rule so that the paper could report the first
+  sample's natural families before the extension is built, and given the cost of each path, the owner replied: "keep
+  goign until you achieve that". The build session takes this as approval of the recommended path, including the
+  amendment.
+* **State when it was fixed.** P1 to P4 had run for the six families (D70). No P5, P6 or P7 step had run, no natural
+  held-out candidate existed, and no natural verifier had been graded on any candidate except the development ones of
+  the audit loops.
+* **What §20 changes.** `natural-pr-v1` grades the first sample's six accepted families once their recipe is complete.
+  `natural-pr-v2` grades the extension's accepted families after their S10 and building, with the same recipe. Each
+  run is reported on its own, `natural-pr-v1` as case studies (§19.6). A combined report applies the size rule to
+  their union.
+* **To do before the run.** The pre-flight still implements §19.5 and §19.7 for a single run `natural-pr-v1` over both
+  samples. It is to implement §20.2 before `natural-pr-v1` is graded, with tests, in an entry of its own.
