@@ -800,7 +800,9 @@ def test_a_frozen_verifier_keeps_its_record(world):
 
 def test_recorded_specs_load_and_reserialise_byte_for_byte():
     """The new fields are optional and omitted while empty: every recorded spec, the pilot's audited ones included,
-    re-serialises unchanged, and an audit record written the old way serialises as before."""
+    re-serialises unchanged, and an audit record written the old way serialises as before. The controlled tasks' audit
+    records predate the fields and hold none; a natural task's audit is recorded with all its iterations (D64), so its
+    history runs from iteration 0 to ``iterations``, with one revision between consecutive iterations."""
     paths = sorted(REPO.glob("tasks/*/verifiers/*/spec.json")) + sorted(REPO.glob("data/natural/tasks/*/verifiers/*/spec.json"))
     assert len([p for p in paths if p.parts[-5] == "tasks" and p.parts[-4].startswith("CS-")]) >= 32
     audited = 0
@@ -810,7 +812,11 @@ def test_recorded_specs_load_and_reserialise_byte_for_byte():
         assert spec.model_dump_json(indent=2) + "\n" == raw, p
         if spec.audit is not None:
             audited += 1
-            assert spec.audit.history == [] and spec.audit.revisions == []
+            if "natural" in p.parts:
+                assert [h.iteration for h in spec.audit.history] == list(range(spec.audit.iterations + 1)), p
+                assert len(spec.audit.revisions) == spec.audit.iterations, p
+            else:
+                assert spec.audit.history == [] and spec.audit.revisions == []
     assert audited >= 8
     plain = AuditRecord(procedure="audit:v1", iterations=2, passed=True)
     assert list(json.loads(plain.model_dump_json())) == ["procedure", "iterations", "passed", "findings", "dev_candidate_ids"]

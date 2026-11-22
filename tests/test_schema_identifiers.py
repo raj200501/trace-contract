@@ -20,10 +20,28 @@ from pathlib import Path
 import pytest
 
 from tracecontract.schemas import (
-    CONFIG_LABEL, CONSTRUCTED_ORIGINS, NATURAL_ORIGINS, AttemptAudit, AttemptRecord, Candidate, CandidateOrigin, ContractVariant,
-    GenerationRecord, Label, LabelerKind, Population, ProvenanceRecord, Snapshot, Split, TaskContract, TaskManifest,
-    VerifierCondition, VerifierSpec, sha256_text,
+    CONFIG_LABEL,
+    CONSTRUCTED_ORIGINS,
+    NATURAL_ORIGINS,
+    AttemptAudit,
+    AttemptRecord,
+    Candidate,
+    CandidateOrigin,
+    ContractVariant,
+    GenerationRecord,
+    Label,
+    LabelerKind,
+    Population,
+    ProvenanceRecord,
+    Snapshot,
+    Split,
+    TaskContract,
+    TaskManifest,
+    VerifierCondition,
+    VerifierSpec,
+    sha256_text,
 )
+from tracecontract.verifier import generation_record_problems
 
 ROOT = Path(__file__).resolve().parents[1]
 T0 = "2026-11-22T10:00:00+00:00"
@@ -146,13 +164,19 @@ def _recorded_contract_and_candidate_files() -> list[tuple[type, Path]]:
 @pytest.mark.skipif(not (ROOT / "tasks" / "CS-01" / "task.json").is_file(), reason="the pilot tasks are not in this checkout")
 def test_every_recorded_contract_and_candidate_reserialises_byte_for_byte():
     """The generation fields (TaskContract.generation, Candidate.generation) change no recorded file: each re-serialises
-    exactly, and none holds the new key."""
+    exactly. The files recorded before the fields existed hold no generation record: the controlled tasks', their
+    strata's, and the natural tasks' S10 candidates (reference, pre-review state, no-op). Every natural contract and every
+    constructed natural candidate comes from the natural recipe, which gives each a complete record (D64)."""
     files = _recorded_contract_and_candidate_files()
     for cls, f in files:
         raw = f.read_text(encoding="utf-8")
         model = cls.model_validate_json(raw)
         assert model.model_dump_json(indent=2) + "\n" == raw, f
-        assert model.generation is None, f
+        generated = "natural" in f.parts and (cls is TaskContract or model.origin in CONSTRUCTED_ORIGINS)
+        if generated:
+            assert model.generation is not None and not generation_record_problems(model.generation), f
+        else:
+            assert model.generation is None, f
     kinds = {(cls.__name__, "strata" in f.parts) for cls, f in files}
     assert {("TaskContract", False), ("Candidate", False), ("Candidate", True)} <= kinds
     assert sum(cls is Candidate and "strata" in f.parts for cls, f in files) >= 80  # the fresh-v1 stratum
