@@ -2576,3 +2576,19 @@ connected to the first S9 sample's 150 comments (119), not to the extension's 53
 **Still open.** The D64 citations in code (`NATURAL_DECISION` and the other places D64 lists) are to name D64 before any
 natural label is proposed. The natural recipe P1 to P7 for the six families, labels, the pre-flight, the run
 `natural-pr-v1` and its analysis follow D64 and D65 once agents can run again.
+
+### D67. Harness context of the natural agents: the owner's latest message is relayed before the computed task
+The natural arm's generation started on 2026-11-22 at about 01:55Z, after the usage limit reset (D66). The owner asked
+the build session to keep going while using at most half of the plan's total usage. The P1 coordinators of NP-04 and
+NP-19 found that each workflow agent's context begins with a harness entry, `[Workflow harness — user request]`. The
+entry relays the owner's latest message, here in two lines (487 characters), before the computed task.
+* The entry lies outside the template and outside the prompt hash. `render --verify` and `scripts/agent_run_record.py`
+  read the computed task, so every prompt check of D65 holds.
+* The entry is not new. Every agent of the controlled generate workflow (`wf_b796bb4f-1dd`, 20 of 20) and of the
+  held-out workflow (`wf_b428f318-391`, 11 of 11) carried one, relaying the owner's message of that day. The labeler
+  workflow (`wf_5db2f657-fdf`) and the fresh-v1 attempts carried none.
+* The natural agents of this round therefore see the owner's message about the usage budget. It names no task, input
+  or output. It could still nudge an agent toward less work, so the natural-agent audit of P7 assesses each transcript
+  for that, and the analysis reports the turns, tool calls and wall time of every natural run (D64, "Agents").
+* The entry belongs with the harness context that D65 discloses (the environment block). Like the environment block,
+  it cannot be removed where the agent tool gives no option to remove it.
