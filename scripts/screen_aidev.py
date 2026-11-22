@@ -43,6 +43,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import random
 import re
 import sys
@@ -340,7 +341,7 @@ def sample_rows(con, picked: list[tuple[int, str]]) -> list[dict]:
 
 
 def _owner_pattern(owner: str) -> re.Pattern:
-    return re.compile(rf"(?<![a-z0-9-]){re.escape(owner)}(?![a-z0-9-])", re.I)
+    return re.compile(rf"(?<![a-z0-9-]){re.escape(owner)}(?![a-z0-9-])", re.IGNORECASE)
 
 
 def mask_owners_in_paths(con, rows: list[dict]) -> dict:
@@ -401,7 +402,7 @@ class Pseudonymizer:
         names = sorted(set(self.roles) | self.others, key=len, reverse=True)
         known = r"|(?<![A-Za-z0-9_@-])(?P<known>" + "|".join(map(re.escape, names)) + r")(?![A-Za-z0-9_-])" if names else ""
         self._re = re.compile(rf"(?P<email>{_EMAIL})|(?P<profile>{_PROFILE})|(?<![A-Za-z0-9._%+/-])@(?P<handle>{_LOGIN})"
-                              + known, re.I)
+                              + known, re.IGNORECASE)
 
     def label(self, login: str) -> str:
         h = login.lower()
@@ -541,13 +542,19 @@ def screen(data: Path) -> tuple[dict, duckdb.DuckDBPyConnection]:
     return manifest, con
 
 
+def inside_repository(path: Path, root: Path) -> bool:
+    """Whether ``path`` lies in the repository ``root``, as written or once resolved: a path through a link inside the
+    repository that leads out of it (a linked ``data/natural``) is inside it too."""
+    return any(p.is_relative_to(root) for p in (Path(os.path.abspath(path)), path.resolve()))
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n", 1)[0])
     ap.add_argument("--data", type=Path, required=True)
     ap.add_argument("--out", type=Path, default=DEFAULT_OUT)
     ap.add_argument("--texts-out", type=Path)
     a = ap.parse_args(argv)
-    if a.texts_out is not None and a.texts_out.resolve().is_relative_to(R):
+    if a.texts_out is not None and inside_repository(a.texts_out, R):
         ap.error("--texts-out must lie outside the repository: it holds third-party text")
     manifest, con = screen(a.data)
     a.out.parent.mkdir(parents=True, exist_ok=True)

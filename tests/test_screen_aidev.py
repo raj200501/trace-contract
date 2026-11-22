@@ -211,6 +211,21 @@ def test_texts_are_refused_inside_the_repository(population, tmp_path):
     assert not (tmp_path / "m.json").exists()
 
 
+def test_texts_are_refused_through_a_link_inside_the_repository(population, tmp_path, monkeypatch):
+    """A --texts-out path inside the repository is refused even where a link there leads out of it (a data/natural
+    linked from another checkout): resolving the link alone would let the texts through to the link's target."""
+    repo, outside = tmp_path / "repo", tmp_path / "outside"
+    (repo / "data").mkdir(parents=True)
+    outside.mkdir()
+    (repo / "data" / "natural").symlink_to(outside, target_is_directory=True)
+    monkeypatch.setattr(sa, "R", repo)
+    with pytest.raises(SystemExit):
+        sa.main(["--data", str(population), "--out", str(tmp_path / "m.json"),
+                 "--texts-out", str(repo / "data" / "natural" / "texts.jsonl")])
+    assert not (tmp_path / "m.json").exists() and list(outside.iterdir()) == []
+    assert not sa.inside_repository(outside / "texts.jsonl", repo)
+
+
 def test_seeded_sample_is_deterministic():
     ids = list(range(1000, 4000, 3))
     a = sa.draw_sample(ids, [])
