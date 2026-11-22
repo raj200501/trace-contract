@@ -30,9 +30,9 @@ no human labels exist.
 * **Usage limit.** The build session's agents reached the account's weekly usage limit at about 18:50Z on 2026-11-21
   (it resets on 2026-11-25 at 07:00Z). The owner then asked for a wrap-up (D66).
 * **To resume the natural arm,** after the reset, in this order:
-  1. Finish the two packages kept in `docs/wip/`: the analysis of natural runs (WP-G) and the privacy and publication
-     tools (WP-H1). Fix their review findings and their tests.
-  2. Rename the code's citations of the recipe from D61 to D64 (D64, "References to this entry").
+  1. Done in round 5 (D69): the analysis of natural runs (WP-G) and the privacy and publication tools (WP-H1) are
+     finished and merged.
+  2. Done in round 5 (D69): the code's citations of the recipe name D64.
   3. Redo the extension's S10.
   4. Run D64's phases P1 to P7 for each accepted family, committing `data/manifests/natural_phase_ends.jsonl` after
      each phase (`scripts/record_phase_end.py`, D65).

@@ -2624,3 +2624,61 @@ reference contract is frozen. P5 to P7, the extension's S10 and the run follow i
   processed). The extension's S10 is part of building, so `natural-pr-v1` waits for it in any case.
 * If the measured cost runs ahead of the plan, the round stops at the last completed phase boundary, with its phase-end
   record committed.
+
+### D69. The natural analysis (WP-G) and the privacy and publication tools (WP-H1) finished and merged
+Both packages kept as patches in D66 were finished in isolated worktrees, each with one review and, for WP-H1, one more
+fix round. They are merged as finished, and `docs/wip/` is removed.
+
+**WP-G (analysis of natural runs).**
+* The two medium findings are fixed.
+  * The cost per accepted task counts S10's build time, fetch seconds and fetch bytes on one basis: every family S10
+    processed, rejected ones included, per accepted task. The accepted families' own S10 time is reported beside it.
+  * `report.py` builds a case-study report (fewer than 10 S11 tasks): per-family tables, no pooled rate, interval or p.
+* The low findings are fixed. Five tests the patch had left stale are reconciled: in each, the implementation was right.
+* The recipe's citations name D64, as D64's "References to this entry" asks: `NATURAL_DECISION`, `propose_labels.py`
+  (whose rule text now reads "repeats: D64"), the docstrings of `select_b3_tests.py` and `agent_run_record.py`, and
+  the pre-flight's natural rules with their tests.
+* The recorded runs regenerate as before. `analysis.md` and `report.html` of all seven runs are byte-identical under the
+  old and new code, and `analysis.json` differs only in code hashes and the revision. `verify_frozen_inputs.py` passes.
+* The second review found no high or medium defect. Its low findings stay open:
+  * the HTML report leaves out two natural caveats that `analysis.md` gives;
+  * some HTML cells do not mark B3 as secondary;
+  * the not-recorded note on costs does not yet cover the extension families to be rebuilt (D66).
+
+**WP-H1 (privacy and publication tools).**
+* Both reviews' high and medium findings are fixed, each with a test:
+  * a short thread text is matched whole;
+  * the export guard no longer aborts on its own words;
+  * traceback frames of a task's own package are kept;
+  * check ids and the code of patches, verifiers and base snapshots are checked outside the publisher too;
+  * every task directory is read, and an unreadable file fails closed;
+  * the publisher fails closed when its code check cannot run.
+* `--aidev-logins` is unchanged (the first S9 sample, D66). Without the new flags the scan's output is byte-identical to
+  before.
+* **Builder defaults, pending the owner's review:**
+  * the minimum for a whole-text match: 3 words, with a letter in at least two tokens, and 12 characters; or 8
+    characters of a script without spaces;
+  * whole matching of every author's texts and of contract quotes;
+  * traceback header lines cut as tool output;
+  * the own-package rule for traceback frames;
+  * the bare-name scope: the natural arm's own files within `tasks/`, `data/`, `results/` and `experiments/`;
+  * the code-line exemptions: `src/`, `scripts/`, `tests/`, `tasks/CS-*`, `data/controlled/` and `paper/*.py`, plus
+    `docs/wip/*.patch`, which holds nothing now. A code line also needs a word of 4 or more characters;
+  * a base-snapshot line counts if one of its words occurs in at most one line of the corpus from before the natural
+    arm. It is not reported in the study's code or the controlled arm's outputs, and the publisher checks every line;
+  * the screening texts are optional in the scan and required by the export guard and the publisher. Requiring them
+    in the scan reports texts that the controlled arm's own records already held.
+* **Known gaps.**
+  * A repository name that is also an ordinary word is not reported in `docs/`, `paper/`, `src/` or commit messages.
+  * The repositories of NP-07, NP-08 and NP-12, and of the screened comments never built, are unknown to the scan.
+* From this entry, the pre-push scan also runs with `--natural-texts data/natural/tasks`. At this commit it finds
+  nothing over 32 tasks, in 95 s.
+
+**Two tests that assumed no natural record existed are narrowed.** Each check stays as strong for the controlled
+records and becomes stronger for the natural ones.
+* `tests/test_schema_identifiers.py`: a natural contract or constructed natural candidate must carry a complete
+  generation record (D64). S10's candidates and the controlled records carry none.
+* `tests/test_audit_record.py`: a natural audit record holds every iteration from 0, with one revision between
+  consecutive ones. The controlled audit records hold none.
+
+The full offline suite passes: 1090 tests, with the real natural data present.

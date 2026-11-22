@@ -485,9 +485,8 @@ pushed, still hold material that has since been removed; STATUS.md lists it.
 * No natural result yet. SWE-chat is blocked on its access terms, which only the owner can accept (D4). Two
   ungated, openly licensed sources were taken up for screening as separate populations (D47):
   * Trace Commons: all 30 sessions were screened and rejected, none reconstructable;
-  * AIDev v5 pull-request review threads, screened as above: 6 tasks are accepted. Their recipe is fixed, but no
-    natural contract, verifier, held-out candidate or label exists. Two code packages that the natural run needs
-    are kept as unfinished patches (`docs/wip/`).
+  * AIDev v5 pull-request review threads, screened as above: 6 tasks are accepted. Round 5 (D65 to D69) is
+    building their contracts and verifiers under the fixed recipe. No natural label, held-out pool or run exists yet.
   * The committed scan's `--aidev-logins` mode loads the logins connected to the first S9 sample only. A one-off
     scan with both samples found no person's login (D66); extending the committed scan needs the owner's decision
     on organisation accounts.
