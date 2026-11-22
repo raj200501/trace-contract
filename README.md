@@ -73,9 +73,13 @@ How to read this:
   31 of 150 comments (first sample) and 91 of 534 (extension) qualify (D48, D50, D63, D66).
 * **Replay.** At S10, 6 of the first sample's 22 families are accepted: NP-03, NP-04, NP-05, NP-18, NP-19 and
   NP-20. The extension's replay is pending.
-* **Recipe.** The generation recipe is fixed (D64), and the six families' rendered inputs and proposer prompts are
-  logged (D65). Generation stopped at a usage limit before the first natural agent ran (D66).
-* Every natural result is pending.
+* **Construction.** The recipe is fixed (D64, D65). Round 5 has built, for all six families, the three contracts and
+  the seven frozen verifiers (phases P1 to P4; D70).
+  * At its first audit, the natural reference fails 9 of the 12 audited verifiers. C1 fails it in five families, C3
+    in four.
+  * audit:v1's revisers loosened checks toward the reference, and five audits stay failing after three revisions.
+* **Still to come:** the reference checks, the labeler and the held-out pool (P5 to P7), the extension's replay, and
+  the run. Every natural result is pending.
 
 ## Construction pilot (`pilot-v0.3.3`), a development study since protocol v0.7
 
@@ -485,8 +489,8 @@ pushed, still hold material that has since been removed; STATUS.md lists it.
 * No natural result yet. SWE-chat is blocked on its access terms, which only the owner can accept (D4). Two
   ungated, openly licensed sources were taken up for screening as separate populations (D47):
   * Trace Commons: all 30 sessions were screened and rejected, none reconstructable;
-  * AIDev v5 pull-request review threads, screened as above: 6 tasks are accepted. Round 5 (D65 to D69) is
-    building their contracts and verifiers under the fixed recipe. No natural label, held-out pool or run exists yet.
+  * AIDev v5 pull-request review threads, screened as above: 6 tasks are accepted, with their contracts and verifiers
+    built and frozen (D70). No natural label, held-out pool or run exists yet.
   * The committed scan's `--aidev-logins` mode loads the logins connected to the first S9 sample only. A one-off
     scan with both samples found no person's login (D66); extending the committed scan needs the owner's decision
     on organisation accounts.

@@ -19,24 +19,32 @@ no human labels exist.
   * Screening is done for both samples: 31 of 150 and 91 of 534 comments qualify at S9 (model-judged; D63, D66).
   * S10 is done for the first sample, with 6 of 22 families accepted. The extension's S10 was stopped and is to be
     redone.
-  * The recipe is fixed (D64), and the six families' inputs and proposer prompts are logged (D65).
-  * No natural agent has run, and every natural result is pending.
+  * The recipe is fixed (D64, D65). Round 5 ran its phases P1 to P4 for all six families: the three contracts and the
+    seven verifiers are frozen, and each phase end is committed (D70).
+  * At the first audit, the natural reference fails 9 of the 12 audited verifiers. Five audits stay failing after
+    three revisions (D27).
+  * Every natural result is pending: P5 to P7, the extension's S10 and the run come next.
 * **Manuscript (`paper/`).** Rebuilt findings-first around fresh-v1 (D66). It compiles, and every number in it is a
   generated macro with a ledger entry, or a decision-log count. Natural results are marked `UNFILLED`. Authors are a
   TODO for the human authors.
 
-## Why the work stopped, and how to resume
+## Where round 5 stopped, and how to resume
 
-* **Usage limit.** The build session's agents reached the account's weekly usage limit at about 18:50Z on 2026-11-21
-  (it resets on 2026-11-25 at 07:00Z). The owner then asked for a wrap-up (D66).
-* **To resume the natural arm,** after the reset, in this order:
-  1. Done in round 5 (D69): the analysis of natural runs (WP-G) and the privacy and publication tools (WP-H1) are
-     finished and merged.
-  2. Done in round 5 (D69): the code's citations of the recipe name D64.
-  3. Redo the extension's S10.
-  4. Run D64's phases P1 to P7 for each accepted family, committing `data/manifests/natural_phase_ends.jsonl` after
-     each phase (`scripts/record_phase_end.py`, D65).
-  5. Propose the D19 labels, run the pre-flight, then the run `natural-pr-v1` and its analysis.
+* **Usage cap.** After the reset of 2026-11-22, the owner asked the build session to keep going while using at most half
+  of the plan's total usage. Round 5 used about 37M reported agent tokens against a plan of about 40M, and stops at the
+  end of P4 for all six families (D68, D70).
+* **To resume the natural arm,** in this order:
+  1. For each family, run D64's phases P5 to P7: reference checks and labeler, held-out pool, mappers and audits. Use
+     `experiments/natural_workflow/natural_phase.js` with args `{task, phase, transcripts, config_b_model}`. After
+     each phase, run `scripts/record_phase_end.py` and commit the log alone. The P5 line must be pushed before P6 starts
+     (F7).
+  2. Redo the extension's S10 (19 families, D66). §19 bars grading held-out candidates before building stops, and the
+     extension's S10 is part of building. Build the newly accepted families through P1 to P7.
+  3. Propose the D19 labels, run the pre-flight and the run `natural-pr-v1`, then analyse it (WP-G) and publish it
+     (WP-H1).
+  4. Before the first natural results, read D70's observations: the natural reference often fails its own contract.
+* **Done in round 5:** the natural analysis and the privacy tools (D69); the recipe's citations of D64; P1 to P4 for the
+  six families (D70); a phase-end log with each line committed and pushed (D65).
 * **Owner decisions pending.**
   * Deviation (i) and the other builder decisions of D64.
   * How the scan treats organisation accounts, before its `--aidev-logins` mode loads both S9 samples (D66).
