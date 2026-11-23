@@ -26,12 +26,21 @@ and the whole pre-flight passes on it. Each test then breaks one rule:
 * building has stopped for the run's sample by the committed index (§20.2): for ``natural-pr-v1``, the S9 record shows the
   first sample screened with every family in the index, all processed, whatever the extension's state; for
   ``natural-pr-v2``, 30 accepted in all, or the same for the extension. A repository's open places are counted over both
-  samples. §19.5's rule over both samples is kept for a run id that names neither run (and for the label proposer).
+  samples. Failing closed, a family that the S9 record lists for a sample needs a row that names that sample, and a row
+  that names neither sample counts for both. §19.5's rule over both samples is kept for a run id that names neither run
+  (the label proposer applies the rule of each family's own sample, D73, with the pre-flight's own functions for the
+  accepted families of a sample and the rows that name no sample);
+* every natural family the run grades has the lines of its phases P1 to P7 in the committed phase-end log, in order (D65,
+  D73): the log of the HEAD commit only (not the working tree's, and no ``GIT_*`` variable redirects git); a log that git
+  does not give, or one line that is not a phase-end record, fails the run; lines of other tasks do not count; the log
+  that ``scripts/record_phase_end.py`` writes is read as it is written; and the docstrings say that the time condition
+  of the order is the pre-flight's own reading and that the order of the log's commits stays the builder's record.
 
-Controlled tasks are not affected: the existing pre-flight tests stay as they are, and a run of the four pilot tasks
-never reads the natural index. Docker and ``git status`` are not asked (the host is idle and clean); the scratch
-repository's own git answers ``git show``. Every text is synthetic, with no login, handle, e-mail address or model
-identifier. These tests check code behaviour and are not research evidence.
+Controlled tasks are not affected: the existing pre-flight tests stay as they are, and neither a run of the four pilot
+tasks nor a run of a synthetic task of another population reads the natural index or the phase-end log. Docker and ``git
+status`` are not asked (the host is idle and clean); the scratch repository's own git answers ``git show``. Every text is
+synthetic, with no login, handle, e-mail address or model identifier. These tests check code behaviour and are not
+research evidence.
 """
 
 from __future__ import annotations
@@ -45,6 +54,15 @@ import subprocess
 from pathlib import Path
 
 import pytest
+from natural_task_layout import (
+    PHASE_END_SCHEMA,
+    PHASE_ENDS,
+    PHASES,
+    commit_file,
+    phase_end_line,
+    phase_ends,
+    write_phase_ends,
+)
 
 from tracecontract import natural_pr as npr
 from tracecontract import roots
@@ -343,6 +361,7 @@ def build(root: Path) -> Path:
     write_json(same_code_duplicates(td, root / "data" / "natural" / "snapshots"), td / "labels" / "duplicates.json")
     write_audits(td, AUDITS)
     write_index(root)
+    write_phase_ends(root, phase_ends(TID))  # the end of each of its phases P1 to P7, committed (D65)
     return td
 
 
@@ -389,6 +408,22 @@ def drop_candidate(td: Path, kind: str) -> None:
 
 def drop_verifier(td: Path, vid: str) -> None:
     edit(td / "task.json", lambda m: m["verifiers"].remove(f"verifiers/{vid}/spec.json"))
+
+
+def fixture_task(root: Path) -> Path:
+    """FX-PF under ``root / "tasks"``: a task of the fixture population with a no-op only, as in
+    tests/test_preflight_run_rules.py."""
+    other = root / "tasks" / "FX-PF"
+    noop = Candidate(candidate_id="FX-PF-noop-eval", task_id="FX-PF", origin=CandidateOrigin.noop, split=Split.eval, patch="",
+                     patch_sha256=sha256_text(""), produced_by="base snapshot")
+    dump(noop, other / "candidates" / "noop.json")
+    dump(TaskManifest(task_id="FX-PF", family_id="FX-PF", population=Population.fixture, status="pending_review",
+                      provenance="provenance.json", snapshot_source=SnapshotSource(repo_url="https://example.invalid/x",
+                                                                                     commit="0" * 40),
+                      env_requirements=[], candidates=["candidates/noop.json"]), other / "task.json")
+    write_json({"snapshot_id": "FX-PF", "task_id": "FX-PF", "repo_url": "x", "base_commit": "0" * 40, "fidelity": "exact",
+                "file_manifest_sha256": "0" * 64, "n_files": 0}, other / "snapshot.json")
+    return other
 
 
 def run(pf, root: Path, *argv: str, tasks: list[Path] | None = None, capsys) -> tuple[int, list[str], list[str]]:
@@ -938,7 +973,8 @@ def test_the_pool_checks_of_a_natural_family_are_notes_with_only_strata(pf, fami
 
 # --- building has stopped, and the run grades every accepted family of its sample --------------------------------------
 
-# §19.5 over both samples: the rule without a sample, kept for a run id that names neither run and for the label proposer.
+# §19.5 over both samples: the rule without a sample, kept for a run id that names neither run (the label proposer applies
+# the rule of the family's own sample, D73).
 STOP = ("natural: building has not stopped by the committed index: it counts {n} accepted task(s) of both samples, and "
         "protocol §19.5 stops building at 30 or when every family of both samples has been processed; {why}. No natural "
         "verifier is graded on a held-out candidate before building stops (§19.7)")
@@ -953,6 +989,13 @@ STOP_EXTENSION = ("natural: building has not stopped for the extension by the co
                   "natural verifier is graded on a held-out candidate of a family before that family's run (§20.2)")
 NO_S9 = ("S9 is not recorded as complete for the {sample} sample (s9_complete.{sample} in the index is {what}, not the number "
          "of its comments screened and the task ids of its families and reserves)")
+
+
+def listed_elsewhere(sample: str, ids: str) -> str:
+    """s9_problems' reason for the families that the S9 record lists for ``sample`` whose rows name the other sample or
+    neither."""
+    return (f"{len(ids.split(', '))} of the {sample} sample's families and reserves (s9_complete.{sample}.families) have a "
+            f"row in the index that names the other sample or neither ({ids})")
 
 
 def test_building_stops_at_30_accepted_tasks_or_when_every_family_was_processed(pf):
@@ -971,7 +1014,8 @@ def test_building_stops_at_30_accepted_tasks_or_when_every_family_was_processed(
     assert pf.building_problems({"tasks": rows, "s9_complete": done}, None) == []
     assert pf.building_problems(None, "a reason") == [
         ("natural: the committed index (data/manifests/natural_tasks_index.json in the HEAD commit) cannot be read (a "
-         "reason), so nothing shows that building has stopped or which families are accepted (protocol §16.4, §19.5)")]
+         "reason), so nothing shows that building has stopped or which families are accepted (protocol §16.4, §19.5, "
+         "§20.2)")]
 
 
 NOT_TASK_IDS = ("s9_complete.extension.families is not a list of task ids, so nothing shows which families the extension "
@@ -1088,6 +1132,71 @@ def test_the_s9_record_is_read_by_sample(pf):
     assert pf.s9_problems(index) == [*first, NO_S9.format(sample="extension", what="true")]
 
 
+def test_a_family_that_s9_lists_for_a_sample_needs_a_row_that_names_that_sample(pf, family, capsys):
+    """§20.2, failing closed: a sample's building rule reads the rows that name that sample, so a family that the S9
+    record lists for it under a row that names the other sample, or neither, could be left out of the rule (or graded in
+    the other run). The S9 record then does not show the sample complete, for its own rule and for §19.5's, whatever the
+    family's S10 outcome; natural-pr-v1 is refused for a pending first-sample family recorded as the extension's."""
+    rows = [index_row("NP-01", repo_id=1), index_row("NP-02", s11=False, outcome="not built", repo_id=2, sample="extension"),
+            index_row("NP-03", s11=False, outcome="rejected", repo_id=3, sample=None)]
+    index = {"tasks": rows, "s9_complete": {"first": {"screened": 150, "families": ["NP-01", "NP-02", "NP-03"]},
+                                            "extension": {"screened": 534, "families": []}}}
+    why = listed_elsewhere("first", "NP-02, NP-03")
+    assert pf.s9_problems(index, ("first",)) == pf.s9_problems(index) == [why]
+    assert pf.s9_problems(index, ("extension",)) == []
+    assert pf.building_problems(index, None, "first") == [STOP_FIRST.format(why=why)]
+    assert pf.building_problems(index, None) == [
+        STOP.format(n=1, why=f"{why}; 1 family of a repository with an open place has no S10 outcome (NP-02)")]
+    root, _ = family
+    write_index(root, [index_row(), index_row("NP-91", s11=False, outcome="not built", repo_id=991, sample="extension")],
+                s9={"first": {"screened": 150, "families": [TID, "NP-91"]}, "extension": S9_DONE["extension"]})
+    assert run(pf, root, *RUN, capsys=capsys)[1] == [STOP_FIRST.format(why=listed_elsewhere("first", "NP-91"))]
+
+
+@pytest.mark.parametrize("sample", [None, "absent", "second"])
+def test_a_row_that_names_neither_sample_counts_for_both_samples(pf, sample):
+    """§20.2, failing closed: a row that names neither sample may be a family of either, so for each sample's rule it
+    needs an S10 outcome while its repository has an open place, and the reason says that nothing shows it is not of
+    that sample. Rows of the other sample still do not count, and once the row is processed its sample does not matter
+    to building (``sample_problems`` still fails a run for it)."""
+    unnamed = index_row("NP-27", s11=False, outcome="not built", repo_id=27, sample=None if sample == "absent" else sample)
+    if sample == "absent":
+        del unnamed["sample"]
+    rows = [index_row("NP-01", repo_id=1), unnamed,
+            index_row("NP-28", s11=False, outcome="not built", repo_id=28, sample="extension")]
+    assert pf.unprocessed_families(rows, "first") == ["NP-27"]
+    assert pf.unprocessed_families(rows, "extension") == pf.unprocessed_families(rows) == ["NP-27", "NP-28"]
+    index = {"tasks": rows, "s9_complete": {"first": {"screened": 150, "families": ["NP-01"]},
+                                            "extension": {"screened": 534, "families": ["NP-28"]}}}
+    nothing = ("1 family whose row names neither sample, in a repository with an open place, has no S10 outcome (NP-27), "
+               "and nothing shows that it is not of {}")
+    assert pf.building_problems(index, None, "first") == [STOP_FIRST.format(why=nothing.format("the first sample"))]
+    assert pf.building_problems(index, None, "extension") == [STOP_EXTENSION.format(n=1, why=(
+        "1 family of the extension in a repository with an open place has no S10 outcome (NP-28); "
+        f"{nothing.format('the extension')}"))]
+    unnamed["s10"] = {"outcome": "rejected", "stage": "S10"}
+    assert pf.building_problems(index, None, "first") == []
+    assert len(pf.sample_problems(index)) == 1
+
+
+def test_the_run_and_the_label_proposer_share_the_rules_of_the_index(pf):
+    """scripts/propose_labels.py applies the pre-flight's own functions before D19 (decision log D73), and
+    natural_run_problems reports with them: the accepted families of a sample, every one of which the run of that sample
+    grades, and the rows that name neither sample, which fail a run."""
+    rows = [index_row(), index_row("NP-03", repo_id=3), index_row("NP-91", repo_id=991, sample="extension"),
+            index_row("NP-92", s11=False, outcome="rejected", repo_id=992), {"task_id": "NP-93", "s11": True}]
+    index = {"tasks": rows}
+    assert pf.accepted_families(index, "first") == ["NP-03", TID]
+    assert pf.accepted_families(index, "extension") == ["NP-91"]
+    assert pf.sample_problems(index) == [
+        ("natural: 1 row of the committed index (NP-93) names neither sample ('first' or 'extension'), so nothing shows "
+         f"which run grades it ({TWO_RUNS})")]
+    assert pf.sample_problems({"tasks": rows[:4]}) == []
+    assert pf.natural_run_problems([(TID, True)], index, "natural-pr-v1") == [*pf.sample_problems(index), (
+        "natural: the run leaves out accepted families of the first sample in the committed index (NP-03); the run "
+        "natural-pr-v1 grades every accepted family of the first sample (protocol §20.2)")]
+
+
 def test_the_preflight_fails_until_building_has_stopped(pf, family, capsys):
     root, _ = family
     write_index(root, [index_row(), index_row("NP-91", s11=False, outcome="not built", repo_id=991)], s9=None)
@@ -1100,7 +1209,7 @@ def test_the_preflight_fails_until_building_has_stopped(pf, family, capsys):
     fails = run(pf, root, *RUN, capsys=capsys)[1]
     assert fails == [(f"natural: the committed index (data/manifests/natural_tasks_index.json in the HEAD commit) cannot be "
                       f"read ({pf.INDEX_NOT_SHOWN}), so nothing shows that building has stopped or which families are "
-                      "accepted (protocol §16.4, §19.5)")]
+                      "accepted (protocol §16.4, §19.5, §20.2)")]
 
 
 def test_the_committed_index_is_read_as_the_acceptance_gate_reads_it(pf, tmp_path):
@@ -1119,9 +1228,12 @@ def test_the_committed_index_is_read_as_the_acceptance_gate_reads_it(pf, tmp_pat
 def test_the_preflight_cites_d64_for_the_recipe_and_d71_for_the_two_runs():
     """The natural recipe's decision-log entry is D64 (planned as D61, which is the fresh-v1 run record), and the arm's two
     runs are protocol §20 (v0.12), hashed in D71: the pre-flight's natural rules cite D64 wherever they name the recipe,
-    D71 only beside §20, and no other entry after D60. Its docstring describes the two runs, not §19.7's one run."""
+    D71 only beside §20, D65 (the order record) and D73 for the phase-end log and D19's place in the run, and no other
+    entry after D60. Its docstring describes the two runs, not §19.7's one run, and the phase-end requirement."""
     text = (R / "scripts" / "preflight_final_run.py").read_text(encoding="utf-8")
-    assert set(re.findall(r"\bD(?:6[1-9]|[7-9]\d)\b", text)) == {"D64", "D71"}
+    assert set(re.findall(r"\bD(?:6[1-9]|[7-9]\d)\b", text)) == {"D64", "D65", "D71", "D73"}
+    for m in re.finditer(r"\bD65\b", text):  # each beside the phase-end log, the order record
+        assert "phase" in text[max(m.start() - 400, 0):m.end() + 200], text[m.start() - 80:m.end() + 40]
     mentions = list(re.finditer(r"\brecipe\b", text))
     assert len(mentions) >= 4  # the audit rule's text and comments, and the order of the missing audits
     for m in mentions:  # each names D64 right after the recipe
@@ -1133,6 +1245,29 @@ def test_the_preflight_cites_d64_for_the_recipe_and_d71_for_the_two_runs():
     doc = _preflight().__doc__
     assert "§20.2, decision log D71" in doc and "``natural-pr-v1``" in doc and "``natural-pr-v2``" in doc
     assert "the one run of the arm" not in doc and "does not write the record yet" not in doc
+    flat = " ".join(doc.split())
+    assert "the order record of decision log D65" in flat and "in order (D73; :func:`phase_end_problems`)" in flat
+    assert "applies before it proposes any D19 label" not in flat  # the rule of both samples, as it was before D73
+
+
+def test_the_phase_end_rule_says_what_it_reads_and_whose_reading_it_is():
+    """The time condition of the order rule is the pre-flight's own reading of "in order", which D65 does not state; the
+    rule reads the log as HEAD holds it, while the order of the commits that added its lines, D65's order record, stays
+    the builder's record; one bad line makes the log unusable because skipping it could hide a family's repeated or
+    out-of-order phase (a missing one shows anyway); and the label proposer applies the rule to every family of the run."""
+    mod = _preflight()
+
+    def flat(text: str | None) -> str:
+        return " ".join((text or "").split())
+
+    reader, rule, doc = flat(mod.committed_phase_ends.__doc__), flat(mod.phase_end_problems.__doc__), flat(mod.__doc__)
+    assert "skipping it could hide a family's phase that is repeated or out of order" in reader
+    assert "a family could lack a line without it showing" not in reader
+    assert 'the pre-flight\'s own reading of "in order" (D65 states none)' in rule
+    assert "D65's order record itself, stays the builder's record" in rule
+    assert 'That time condition is the pre-flight\'s own reading of "in order"' in doc
+    assert "the order of the commits that added them stays the builder's record" in doc
+    assert "the family and every accepted family of its sample (:func:`accepted_families`" in doc
 
 
 def test_the_run_grades_every_accepted_family_of_its_sample_and_no_other_population(pf, family, capsys):
@@ -1143,16 +1278,7 @@ def test_the_run_grades_every_accepted_family_of_its_sample_and_no_other_populat
         ("natural: the run leaves out accepted families of the first sample in the committed index (NP-91, NP-92); the run "
          "natural-pr-v1 grades every accepted family of the first sample (protocol §20.2)")]
     write_index(root)
-    other = root / "tasks" / "FX-PF"  # a fixture-population task, as in tests/test_preflight_run_rules.py
-    noop = Candidate(candidate_id="FX-PF-noop-eval", task_id="FX-PF", origin=CandidateOrigin.noop, split=Split.eval, patch="",
-                     patch_sha256=sha256_text(""), produced_by="base snapshot")
-    dump(noop, other / "candidates" / "noop.json")
-    dump(TaskManifest(task_id="FX-PF", family_id="FX-PF", population=Population.fixture, status="pending_review",
-                      provenance="provenance.json", snapshot_source=SnapshotSource(repo_url="https://example.invalid/x",
-                                                                                     commit="0" * 40),
-                      env_requirements=[], candidates=["candidates/noop.json"]), other / "task.json")
-    write_json({"snapshot_id": "FX-PF", "task_id": "FX-PF", "repo_url": "x", "base_commit": "0" * 40, "fidelity": "exact",
-                "file_manifest_sha256": "0" * 64, "n_files": 0}, other / "snapshot.json")
+    other = fixture_task(root)
     fails = run(pf, root, *RUN, tasks=[td, other], capsys=capsys)[1]
     assert ("natural: the run mixes natural:pr-review tasks with tasks of other populations (FX-PF); each population gets "
             "its own run (protocol §15.2)") in fails
@@ -1164,7 +1290,7 @@ def test_the_run_grades_every_accepted_family_of_its_sample_and_no_other_populat
 def test_natural_pr_v1_does_not_wait_for_the_extension(pf, family, capsys):
     """§20.2: natural-pr-v1 grades the first sample's accepted families once building has stopped for the first sample.
     The extension's families may still be unscreened, pending or accepted (natural-pr-v2 grades those), although §19.5's
-    rule over both samples, which the label proposer still applies, has not stopped."""
+    rule over both samples has not stopped (nor does the label proposer apply that rule since D73)."""
     root, _ = family
     rows = [index_row(), index_row("NP-91", s11=False, outcome="not built", repo_id=991, sample="extension"),
             index_row("NP-92", s11=False, outcome="built", repo_id=992, role="reserve", sample="extension"),
@@ -1267,8 +1393,8 @@ def test_every_row_of_the_committed_index_names_its_sample(pf, family, capsys, s
 
     write_index(root, [index_row(), row("NP-91", 991)])
     assert run(pf, root, *RUN, capsys=capsys)[1] == [unknown("NP-91")]
-    write_index(root, [row()])
-    assert run(pf, root, *RUN, capsys=capsys)[1] == [unknown(TID)]
+    write_index(root, [row()])  # S9 lists NP-90 for the first sample, whose row then does not name it either
+    assert run(pf, root, *RUN, capsys=capsys)[1] == [STOP_FIRST.format(why=listed_elsewhere("first", TID)), unknown(TID)]
     assert run(pf, root, *RUN_V2, capsys=capsys)[1] == [unknown(TID)]
 
 
@@ -1287,6 +1413,197 @@ def test_a_run_id_that_names_neither_run_keeps_the_rule_of_both_samples(pf, fami
     assert run(pf, root, *RUN, capsys=capsys) == (0, [], [])
 
 
+# --- the phase ends of every natural family the run grades (D65, D73) ---------------------------------------------------
+
+PHASE_LOG = "the committed phase-end log (data/manifests/natural_phase_ends.jsonl in the HEAD commit)"
+
+
+def no_line(tid: str, which: str) -> str:
+    return (f"{tid}: {PHASE_LOG} has no line for its {which}; D19 and the run grade a natural family once its phases P1 to "
+            "P7 have ended, each recorded with scripts/record_phase_end.py and committed (decision log D65, D73)")
+
+
+def not_in_order(tid: str, lines: list[dict]) -> str:
+    shown = ", ".join(f"{x['phase']} at {x['recorded_at']}" for x in lines)
+    return (f"{tid}: its lines in {PHASE_LOG} are not in the order of its phases ({shown}); in order, each phase comes "
+            "once, after the phase before it, and is recorded no earlier than it (the pre-flight's reading of decision log "
+            "D73; scripts/record_phase_end.py refuses to append a line that breaks it, D65)")
+
+
+def unreadable(why: str, tids: str = TID) -> str:
+    return (f"natural: {PHASE_LOG} cannot be read ({why}), so nothing shows that {tids} ended the phases P1 to P7 in order; "
+            "D19 and the run of a natural family need them (decision log D65, D73)")
+
+
+def log_repo(root: Path, lines: list | None = None) -> Path:
+    """A git repository at ``root`` whose HEAD commit holds the phase-end log ``lines`` (None: it has no commit)."""
+    root.mkdir(parents=True, exist_ok=True)
+    subprocess.run(["git", "init", "-q", str(root)], check=True, capture_output=True, env=_git_env())
+    if lines is not None:
+        write_phase_ends(root, lines)
+    return root
+
+
+def test_a_natural_run_needs_the_family_s_phases_p1_to_p7(pf, family, capsys):
+    """D73: the pre-flight requires, for every family of a natural run, the lines of its phases P1 to P7 in the committed
+    phase-end log (the order record of D65), in order: a family that lacks P7, or whose P5 comes after its P4 has not,
+    fails; once its seven lines are committed in order, the run passes."""
+    root, _ = family
+    write_phase_ends(root, phase_ends(TID, PHASES[:6]))
+    assert run(pf, root, *RUN, capsys=capsys)[1] == [no_line(TID, "phase P7")]
+    swapped = phase_ends(TID, ("P1", "P2", "P3", "P5", "P4", "P6", "P7"))
+    write_phase_ends(root, swapped)
+    assert run(pf, root, *RUN, capsys=capsys)[1] == [not_in_order(TID, swapped)]
+    write_phase_ends(root, phase_ends(TID))
+    assert run(pf, root, *RUN, capsys=capsys) == (0, [], [])
+
+
+def test_each_family_needs_its_own_lines_in_order(pf, tmp_path):
+    """Family by family, in task-id order, each once: lines of other tasks do not count, another family's lines between a
+    family's own do not break its order, and a phase recorded twice, after a later one, or at an earlier time than the
+    phase before it is out of order. A family with no line lacks all seven."""
+    swapped = ("P1", "P3", "P2", *PHASES[3:])
+    twice = ("P1", "P2", "P2", *PHASES[2:])
+    early = phase_ends("NP-05")
+    early[6]["recorded_at"] = "2026-11-22T05:59:59Z"  # P7 recorded before P6 (06:00), though after it in the log
+    side_by_side = [x for pair in zip(phase_ends(TID), phase_ends("NP-92", day="2026-11-21"), strict=True) for x in pair]
+    root = log_repo(tmp_path, [*phase_ends("NP-91", PHASES[:6]), *side_by_side, *phase_ends("NP-03", swapped),
+                               *phase_ends("NP-04", twice), *early])
+    assert pf.phase_end_problems(root, ["NP-91", TID, "NP-03", "NP-04", "NP-05", TID, "NP-92"]) == [
+        not_in_order("NP-03", phase_ends("NP-03", swapped)), not_in_order("NP-04", phase_ends("NP-04", twice)),
+        not_in_order("NP-05", early), no_line("NP-91", "phase P7")]
+    assert pf.phase_end_problems(root, ["NP-93"]) == [no_line("NP-93", "phases P1, P2, P3, P4, P5, P6, P7")]
+    assert pf.phase_end_problems(root, [TID, "NP-92"]) == [] and pf.phase_end_problems(root, []) == []
+
+
+def test_main_checks_the_phase_ends_of_every_natural_family_it_grades(pf, family, monkeypatch, capsys):
+    """main gives the rule the natural families of the run, and no task of another population, with its repository."""
+    root, td = family
+    seen = []
+    real = pf.phase_end_problems
+    monkeypatch.setattr(pf, "phase_end_problems", lambda repo, ids: seen.append((repo, list(ids))) or real(repo, ids))
+    run(pf, root, *RUN, tasks=[fixture_task(root), td], capsys=capsys)
+    assert seen == [(root, [TID])]
+
+
+def test_the_phase_end_log_is_read_from_the_head_commit_only(pf, family, monkeypatch, tmp_path_factory, capsys):
+    """As the committed index is read (contract.committed_text): the working tree's log, which record_phase_end.py appends
+    to before the builder commits it, is not read, and GIT_DIR or GIT_WORK_TREE of the caller (a hook's, say) does not
+    redirect git to another repository."""
+    root, _ = family
+    write_phase_ends(root, phase_ends(TID, PHASES[:6]))  # committed without P7
+    write_phase_ends(root, phase_ends(TID), commit=False)  # P7 in the working tree only
+    assert run(pf, root, *RUN, capsys=capsys)[1] == [no_line(TID, "phase P7")]
+    other = log_repo(tmp_path_factory.mktemp("other"), phase_ends(TID))  # its HEAD commit holds the whole log
+    monkeypatch.setenv("GIT_DIR", str(other / ".git"))
+    monkeypatch.setenv("GIT_WORK_TREE", str(other))
+    records, why = pf.committed_phase_ends(root)
+    assert why is None and [r["phase"] for r in records] == list(PHASES[:6])
+    assert pf.phase_end_problems(root, [TID]) == [no_line(TID, "phase P7")]
+    monkeypatch.delenv("GIT_DIR")
+    monkeypatch.delenv("GIT_WORK_TREE")
+    write_phase_ends(root, phase_ends(TID))  # P7 committed
+    (root / PHASE_ENDS).write_text("not a phase-end log\n", encoding="utf-8")  # the working tree's log, not read
+    assert run(pf, root, *RUN, capsys=capsys) == (0, [], [])
+
+
+LINE = phase_end_line(TID, "P1", "2026-11-22T01:00:00Z")
+
+
+@pytest.mark.parametrize("bad, why", [
+    ("{not json", "its line 2 is not JSON"),
+    (json.dumps([TID, "P1"]), "its line 2 is not a JSON object"),
+    (json.dumps("P1"), "its line 2 is not a JSON object"),
+    (json.dumps({k: v for k, v in LINE.items() if k != "schema"}),
+     f"its line 2 is not a record of {PHASE_END_SCHEMA} (its schema is null)"),
+    (json.dumps({**LINE, "schema": "tracecontract/natural-phase-end/v2"}),
+     f'its line 2 is not a record of {PHASE_END_SCHEMA} (its schema is "tracecontract/natural-phase-end/v2")'),
+    (json.dumps({**LINE, "task_id": ""}), 'its line 2 names no task (its task_id is "")'),
+    (json.dumps({**LINE, "task_id": 90}), "its line 2 names no task (its task_id is 90)"),
+    (json.dumps({**LINE, "phase": "p1"}), 'its line 2 records the phase "p1", not one of P1, P2, P3, P4, P5, P6, P7'),
+    (json.dumps({**LINE, "phase": None}), "its line 2 records the phase null, not one of P1, P2, P3, P4, P5, P6, P7"),
+    (json.dumps({k: v for k, v in LINE.items() if k != "recorded_at"}),
+     "its line 2 records no time with a time zone (its recorded_at is null)"),
+    (json.dumps({**LINE, "recorded_at": 5}), "its line 2 records no time with a time zone (its recorded_at is 5)"),
+    (json.dumps({**LINE, "recorded_at": "yesterday"}),
+     'its line 2 records no time with a time zone (its recorded_at is "yesterday")'),
+    (json.dumps({**LINE, "recorded_at": "2026-11-22T01:00:00"}),
+     'its line 2 records no time with a time zone (its recorded_at is "2026-11-22T01:00:00")'),
+])
+def test_a_line_that_is_not_a_phase_end_record_makes_the_log_unusable(pf, tmp_path, bad, why):
+    """Fail closed: one line of any task that is not a record of tracecontract/natural-phase-end/v1 (a JSON object with
+    that schema, a task id, a phase P1 to P7 and a time with a time zone) shows nothing for any family."""
+    root = log_repo(tmp_path, [phase_end_line("NP-91", "P1", "2026-11-22T00:30:00Z"), bad, *phase_ends(TID)])
+    assert pf.committed_phase_ends(root) == (None, why)
+    assert pf.phase_end_problems(root, [TID, "NP-03"]) == [unreadable(why, "NP-03, NP-90")]
+
+
+def test_a_log_that_git_does_not_give_from_the_head_commit_is_unusable(pf, tmp_path):
+    """No repository, no commit, a HEAD commit without the log, or a log that is not UTF-8: git gives no text, and the
+    reason names every case (contract.committed_text does not say which)."""
+    none = (None, pf.INDEX_NOT_SHOWN)
+    assert pf.committed_phase_ends(tmp_path / "nowhere") == none  # not even a directory
+    (tmp_path / "plain").mkdir()
+    assert pf.committed_phase_ends(tmp_path / "plain") == none  # not a git repository
+    empty = log_repo(tmp_path / "empty")
+    assert pf.committed_phase_ends(empty) == none  # no commit
+    elsewhere = log_repo(tmp_path / "elsewhere")
+    (elsewhere / "README").write_text("synthetic\n", encoding="utf-8")
+    commit_file(elsewhere, Path("README"), "a commit without the log (synthetic fixture)")
+    write_phase_ends(elsewhere, phase_ends(TID), commit=False)  # in the working tree only
+    assert pf.committed_phase_ends(elsewhere) == none
+    latin = log_repo(tmp_path / "latin", phase_ends(TID))
+    (latin / PHASE_ENDS).write_bytes(b'{"note": "caf\xe9"}\n')
+    commit_file(latin, PHASE_ENDS, "a log that is not UTF-8 (synthetic fixture)")
+    assert pf.committed_phase_ends(latin) == none
+    assert pf.phase_end_problems(latin, [TID]) == [unreadable(pf.INDEX_NOT_SHOWN)]
+
+
+def test_the_log_is_split_at_line_feeds_and_blank_lines_are_skipped(pf, tmp_path):
+    """store.jsonl_lines: a record whose string holds U+2028 stays whole (str.splitlines would cut it in two), a CRLF line
+    end is read, and a blank line is skipped but counted, so the line numbers of the reasons are the file's."""
+    lines = phase_ends(TID)
+    lines[2] = json.dumps({**lines[2], "note": "one two"}, ensure_ascii=False)  # a raw U+2028 in a string
+    lines[3] = json.dumps(lines[3]) + "\r"
+    root = log_repo(tmp_path, [lines[0], "", *lines[1:]])
+    records, why = pf.committed_phase_ends(root)
+    assert why is None and [r["phase"] for r in records] == list(PHASES) and records[2]["note"] == "one two"
+    assert pf.phase_end_problems(root, [TID]) == []
+    write_phase_ends(root, [lines[0], "", "   ", "{not json"])
+    assert pf.committed_phase_ends(root) == (None, "its line 4 is not JSON")
+
+
+def test_a_log_that_cannot_be_used_fails_the_run_once(pf, family, capsys):
+    """A run of natural families gets one failure for a log that cannot be used, whatever its families."""
+    root, _ = family
+    write_phase_ends(root, [*phase_ends(TID), "{not json"])
+    assert run(pf, root, *RUN, capsys=capsys)[1] == [unreadable("its line 8 is not JSON")]
+    _git(root, "rm", "-q", "--", PHASE_ENDS.as_posix())
+    _git(root, "commit", "-q", "--no-verify", "-m", "no phase-end log (synthetic fixture)")
+    assert run(pf, root, *RUN, capsys=capsys)[1] == [unreadable(pf.INDEX_NOT_SHOWN)]
+
+
+def test_the_log_that_record_phase_end_writes_is_read_as_written(pf, family, capsys):
+    """The pre-flight keeps its own copy of the log's path, schema and phases (it does not import the script), equal to
+    the script's and to the test layout's; and the lines that the script appends, once committed, are read as written."""
+    spec = importlib.util.spec_from_file_location("preflight_test_record_phase_end", R / "scripts" / "record_phase_end.py")
+    rpe = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(rpe)
+    assert (pf.PHASE_ENDS, pf.PHASE_END_SCHEMA, pf.NATURAL_PHASES) == (
+        rpe.LOG.relative_to(rpe.R).as_posix(), rpe.SCHEMA, rpe.PHASES) == (PHASE_ENDS.as_posix(), PHASE_END_SCHEMA, PHASES)
+    root, td = family
+    log = root / PHASE_ENDS
+    log.unlink()  # the fixture's own lines: the script writes the log from P1
+    for n, phase in enumerate(PHASES):
+        if n == len(PHASES) - 1:
+            assert run(pf, root, *RUN, capsys=capsys)[1] == [no_line(TID, "phase P7")]
+        rpe.append(td, phase, log, now=f"2026-11-22T{11 + n:02d}:00:00Z", repo=root)
+        commit_file(root, PHASE_ENDS, f"phase end {phase} (synthetic fixture)")
+        records, why = pf.committed_phase_ends(root)
+        assert why is None and [(r["task_id"], r["phase"]) for r in records] == [(TID, p) for p in PHASES[:n + 1]]
+    assert run(pf, root, *RUN, capsys=capsys) == (0, [], [])
+
+
 # --- controlled tasks are not affected ---------------------------------------------------------------------------------
 
 def test_a_controlled_run_never_reads_the_natural_index(pf, monkeypatch, capsys):
@@ -1299,14 +1616,32 @@ def test_a_controlled_run_never_reads_the_natural_index(pf, monkeypatch, capsys)
         pytest.skip("a base snapshot is missing or stale (tracecontract snapshot tasks/<id>)")
 
     def refuse(*_a, **_k):
-        raise AssertionError("a controlled run read the natural index")
+        raise AssertionError("a controlled run read the natural index or the phase-end log")
 
-    monkeypatch.setattr(pf, "committed_index", refuse)
+    for name in ("committed_index", "committed_phase_ends", "phase_end_problems"):
+        monkeypatch.setattr(pf, name, refuse)
     argv = [*map(str, tasks), "--run-id", "preflight-test-run", "--conditions", "initial_plain", "initial_audited",
             "full_plain", "full_audited", "llm_freeform", "repo_tests", "--repeats", "3", "--pilot"]
     assert pf.main(*argv) == 0, _lines(capsys.readouterr().out, "FAIL")
     out = capsys.readouterr().out
     assert "natural" not in out and not _lines(out, "NOTE")
+
+
+def test_a_run_without_a_natural_task_never_reads_the_natural_records(pf, tmp_path, monkeypatch, capsys):
+    """A run of a synthetic task of another population (FX-PF), also one that grades a stratum, as a fresh-v1 run does:
+    the natural checks of main are not entered, so neither the natural index nor the phase-end log is read, and no
+    failure names them. Needs no base snapshot of the pilot tasks."""
+    other = fixture_task(tmp_path)
+
+    def refuse(*_a, **_k):
+        raise AssertionError("a run without a natural task read a natural record")
+
+    for name in ("committed_index", "committed_phase_ends", "phase_end_problems", "building_problems"):
+        monkeypatch.setattr(pf, name, refuse)
+    for extra in ([], ["--strata", "fresh-v1"]):
+        code, fails, _ = run(pf, tmp_path, "--run-id", "fx-run", "--repeats", "3", *extra, tasks=[other], capsys=capsys)
+        assert code == 1 and fails  # the fixture task is incomplete
+        assert not [f for f in fails if re.search(r"natural|phase", f)], fails
 
 
 # --- the recorded natural families (read only) --------------------------------------------------------------------------

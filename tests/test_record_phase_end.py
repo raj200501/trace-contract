@@ -3,8 +3,9 @@
 A synthetic natural task (tests/natural_task_layout.py) gets phase-end records: its task directory's files as
 ``natural_pr.file_hashes`` summarises them (B1's overlay and the generated tests are each one manifest hash and a file
 count, so no repository path and no generated test's file name enters the log), its verifiers with their frozen state
-(sidecars included), its contracts and its candidates. Phases come in order per task, and only natural PR-review tasks
-are recorded. Synthetic data only; not research evidence.
+(sidecars included), its contracts and its candidates. Phases come in order per task, each recorded no earlier than the
+task's last line (the order that the pre-flight reads, decision log D73), and only natural PR-review tasks are recorded.
+Synthetic data only; not research evidence.
 """
 
 from __future__ import annotations
@@ -96,6 +97,40 @@ def test_phases_come_in_order_per_task(tmp_path):
     assert [json.loads(x)["phase"] for x in log.read_text(encoding="utf-8").splitlines()] == ["P1", "P3", "P1"]
     with pytest.raises(rpe.PhaseError, match="phase must be one of"):
         rpe.phase_record(nt.task_dir, "P8", now=NOW, repo=tmp_path)
+
+
+def test_no_line_is_recorded_earlier_than_the_task_s_last_line(tmp_path, capsys):
+    """The pre-flight and scripts/propose_labels.py read a family's lines as in order only when each is recorded no earlier
+    than the line before it (their reading, decision log D73), and appending cannot restore that order, so the script
+    refuses a line that would break it: one recorded earlier than the task's last line, one whose time has no time zone,
+    or one after a last line whose time shows nothing. The same time is not earlier, another task's lines do not count,
+    and nothing is appended on a refusal."""
+    nt = _family(tmp_path)
+    log = tmp_path / "phase_ends.jsonl"
+    rpe.append(nt.task_dir, "P1", log, now="2026-11-22T10:00:00Z", repo=tmp_path)
+    with pytest.raises(rpe.PhaseError, match=r"^NP-90: the log records P1 at 2026-11-22T10:00:00Z; P2 at "
+                                             r"2026-11-22T09:59:59Z would be recorded earlier"):
+        rpe.append(nt.task_dir, "P2", log, now="2026-11-22T09:59:59Z", repo=tmp_path)
+    with pytest.raises(rpe.PhaseError, match=r"^NP-90: P2 would be recorded at '2026-11-22T11:00:00', not a time with a "
+                                             r"time zone$"):
+        rpe.append(nt.task_dir, "P2", log, now="2026-11-22T11:00:00", repo=tmp_path)
+    assert len(log.read_text(encoding="utf-8").splitlines()) == 1
+    rpe.append(nt.task_dir, "P2", log, now="2026-11-22T10:00:00+00:00", repo=tmp_path)  # the same time: not earlier
+    other = build_natural_task(tmp_path, "NP-91", index=False)
+    rpe.append(other.task_dir, "P1", log, now="2026-11-22T08:00:00Z", repo=tmp_path)  # another task's times are its own
+    rpe.append(nt.task_dir, "P3", log, now="2026-11-22T10:30:00Z", repo=tmp_path)
+    assert [(json.loads(x)["task_id"], json.loads(x)["phase"]) for x in log.read_text(encoding="utf-8").splitlines()] == [
+        ("NP-90", "P1"), ("NP-90", "P2"), ("NP-91", "P1"), ("NP-90", "P3")]
+    with log.open("a", encoding="utf-8") as fh:  # a line the script would not write
+        fh.write(json.dumps({"task_id": "NP-90", "phase": "P4", "recorded_at": "yesterday"}) + "\n")
+    with pytest.raises(rpe.PhaseError, match=r"^NP-90: the log records P4 at 'yesterday', not a time with a time zone, "
+                                             r"so nothing shows that P5 at 2026-11-22T12:00:00Z is not recorded earlier$"):
+        rpe.append(nt.task_dir, "P5", log, now="2026-11-22T12:00:00Z", repo=tmp_path)
+    log.write_text(json.dumps(["NP-90", "P1"]) + "\n", encoding="utf-8")  # not an object: refused, not skipped
+    with pytest.raises(rpe.PhaseError, match=r"^phase_ends.jsonl line 1 is not a JSON object$"):
+        rpe.append(nt.task_dir, "P2", log, now="2026-11-22T12:00:00Z", repo=tmp_path)
+    assert rpe.main([str(nt.task_dir), "--phase", "P2", "--log", str(log)]) == 2
+    assert "not a JSON object" in capsys.readouterr().err
 
 
 def test_only_natural_tasks_and_cli_refusals(tmp_path, capsys):

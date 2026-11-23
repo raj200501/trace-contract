@@ -59,13 +59,34 @@ once every label is known. A refusal on the way (the reference patch cannot be s
 base tests do not complete on the reference) therefore leaves the task as it was. No label,
 log or overlay is written through a symbolic link (``labels/``, the log, the overlay).
 
-A natural PR-review task (population ``natural:pr-review``; protocol §15.6, §17.2, §19.7):
+A natural PR-review task (population ``natural:pr-review``; protocol §15.6, §17.2, §19.7, §20.2):
 
-* D19 waits until building has stopped (§19.5): no natural verifier is graded on a held-out
-  candidate before then (§19.7). The rule is the pre-flight's, on the natural index as the
-  HEAD commit holds it (``scripts/preflight_final_run.py``: ``committed_index`` and
-  ``building_problems``); a task is refused before anything is looked up, graded or written
-  while the committed index does not show that building has stopped;
+* D19 is the first step of the run of the task's sample (decision log D73): no natural verifier
+  is graded on a held-out candidate of a family before that family's run (§20.2), and the run
+  grades the family with every other accepted family of its sample. So D19 for ``natural-pr-v1``
+  runs once building has stopped for the first sample and each of its accepted families has ended
+  its seven phases (D73): every verifier, contract and candidate of the run is then frozen or
+  registered, and no D19 grade can change any of them. A task is refused before anything is
+  looked up, graded or written unless all of these hold, by records as the HEAD commit holds
+  them, checked with the pre-flight's own functions (``scripts/preflight_final_run.py``), so that
+  the gate and the pre-flight's check of the run cannot disagree on those records
+  (:func:`building_problem`):
+  * building has stopped for the task's own sample, the per-sample rule of §20.2 that D73 applies
+    to D19: the task's row in the committed natural index (``committed_index``, ``index_rows``)
+    names its sample (``row_sample``: ``first`` for ``natural-pr-v1``, ``extension`` for
+    ``natural-pr-v2``), and ``building_problems`` finds nothing for that sample. So the first
+    sample's families are labelled once building has stopped for the first sample, whatever the
+    extension's state. A task with no row in the committed index, or whose row names neither
+    sample, is refused;
+  * every row of the committed index names a sample (``sample_problems``), as a natural run
+    requires: nothing shows which run grades a row that names neither;
+  * the committed phase-end log (``data/manifests/natural_phase_ends.jsonl``, to which
+    ``scripts/record_phase_end.py`` appends a line at each phase end, and whose commits are the
+    order record of D65) holds the lines of the phases P1 to P7, in order, of the task and of
+    every accepted family of its sample (``accepted_families``, ``phase_end_problems``; D73). The
+    order of the lines and their times are checked in the log as HEAD holds it; the order of the
+    commits that added them stays the builder's record. A log that git does not give, or that
+    holds a line that is not a phase-end record, refuses every task;
 * its reference checks must be frozen, with the time of freezing and the hash of the scored
   check list recorded (``tracecontract freeze``), so that the labels are tied to the version
   frozen before the pool (§19.7); a controlled task's unfrozen reference checks are graded
@@ -115,9 +136,11 @@ NATURAL_REPEATS = 3  # D64: D19 grades a natural family's reference checks and r
 NATURAL_NORM_SOURCE = "s10.json base_tests.subset (protocol §17.2)"
 OVERLAY = "labels/base_tests_overlay"
 # The repository under which roots.snapshot_root resolves a task's recorded snapshot root, and whose HEAD commit holds the
-# natural index that shows whether building has stopped.
+# natural index and the phase-end log that show whether D19 may run on a natural task.
 REPO = roots.REPO
-PREFLIGHT = Path(__file__).resolve().parent / "preflight_final_run.py"  # the pre-flight: its rule for when building stops
+# The pre-flight: its rules for when D19 may run on a natural task (building has stopped for the task's sample, and the
+# committed phase-end log holds the phases P1 to P7 of every family of its run; protocol §20.2, decision log D73).
+PREFLIGHT = Path(__file__).resolve().parent / "preflight_final_run.py"
 _LISTED = 20  # failing checks listed per candidate (and per repeat) in the log and the label note
 
 
@@ -141,21 +164,76 @@ def repeats_for(m: TaskManifest, repeats: int | None) -> int:
     return repeats
 
 
-def building_problem(repo: Path) -> str | None:
-    """Why D19 may not run yet on a natural PR-review task, or None: building has not stopped by the natural index as the
-    HEAD commit of ``repo`` holds it (protocol §19.5; before then no natural verifier is graded on a held-out candidate,
-    §19.7). The rule is the pre-flight's (:data:`PREFLIGHT`: ``committed_index`` and ``building_problems``), so the two
-    cannot disagree; if it cannot be applied, nothing shows that building has stopped, and the answer is a refusal."""
+def _preflight() -> Any:
+    """The pre-flight (:data:`PREFLIGHT`), loaded as a module."""
+    spec = importlib.util.spec_from_file_location("tracecontract_preflight_final_run", PREFLIGHT)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"no module at {PREFLIGHT}")
+    preflight = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(preflight)
+    return preflight
+
+
+def building_problem(repo: Path, task_id: str) -> str | None:
+    """Why D19 may not run yet on the natural PR-review task ``task_id``, or None (the caller names the task). D19 grades
+    the frozen reference checks on the family's held-out candidates, and no natural verifier is graded on a held-out
+    candidate of a family before that family's run (protocol §20.2). The run of the family's sample grades it with every
+    other accepted family of that sample, and D19 is that run's first step (decision log D73): D19 for ``natural-pr-v1``
+    runs once building has stopped for the first sample and each of its accepted families has ended its seven phases, so
+    that every verifier, contract and candidate of the run is frozen or registered by then, and no D19 grade can change
+    any of them. By records as the HEAD commit of ``repo`` holds them, D19 needs:
+
+    * building has stopped for the family's own sample (the rule of §20.2 for that sample, which D73 applies to D19):
+      the family's row in the committed natural index (``committed_index``, ``index_rows``) names its sample
+      (``row_sample``: ``first``, graded in ``natural-pr-v1``, or ``extension``, in ``natural-pr-v2``), and
+      ``building_problems`` finds nothing for that sample. The rule for both samples together (§19.5, §19.7) would refuse
+      the first sample's families until the extension is built. A task with no row in the committed index, or whose row
+      names neither sample, is refused, since nothing then shows which run grades it;
+    * the family is accepted (its row has ``s11`` true, §16.4): no run grades another, so D19 would be no run's step;
+    * every row of the committed index names a sample (``sample_problems``): a row that names neither could be an
+      accepted family of the task's sample that the run must grade, whose phase ends D19 would then not ask for;
+    * the committed phase-end log holds the lines of the phases P1 to P7, in order, of the family and of every accepted
+      family of its sample (``accepted_families``, the families that the run grades with it; ``phase_end_problems``;
+      decision log D65, D73).
+
+    These are the checks of the pre-flight's natural run (:data:`PREFLIGHT`) that the committed records decide, applied
+    with its own functions to the run of the task's sample, so that the gate and the pre-flight cannot disagree on those
+    records. If they cannot be applied, nothing shows that D19 may run, and the answer is a refusal."""
     try:
-        spec = importlib.util.spec_from_file_location("tracecontract_preflight_final_run", PREFLIGHT)
-        if spec is None or spec.loader is None:
-            raise ImportError(f"no module at {PREFLIGHT}")
-        preflight = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(preflight)
-        problems = preflight.building_problems(*preflight.committed_index(repo))
-    except Exception as exc:  # noqa: BLE001 - fail closed: a rule that cannot be applied shows nothing
-        return (f"the pre-flight's rule for when building stops ({PREFLIGHT.name}) could not be applied ({type(exc).__name__}: "
-                f"{exc}), so nothing shows that building has stopped (protocol §19.5, §19.7)")
+        preflight = _preflight()
+        index, why = preflight.committed_index(repo)
+        at = f"the committed index ({preflight.NATURAL_INDEX} in the HEAD commit)"
+        run, families = None, [task_id]  # the run of the task's sample, once known, and whose phase ends D19 needs
+        if index is None:  # it cannot be read: the pre-flight's reason, which needs no sample
+            problems = preflight.building_problems(index, why)
+        elif (row := preflight.index_rows(index).get(task_id)) is None:
+            problems = [(f"{at} has no row for it, so nothing shows its sample, which run grades it, or whether building has "
+                         "stopped for that sample (protocol §20.2; decision log D73)")]
+        elif (sample := preflight.row_sample(row)) is None:
+            said = f"its sample is {json.dumps(row['sample'])}" if "sample" in row else "it records no sample"
+            problems = [(f"its row in {at} names neither sample ({said}; the samples are 'first' and 'extension'), so "
+                         "nothing shows which run grades it, or whether building has stopped for its sample (protocol "
+                         "§20.2; decision log D73)")]
+        else:
+            problems = [*preflight.building_problems(index, why, sample), *preflight.sample_problems(index)]
+            if row.get("s11") is not True:  # no run grades a family that is not accepted
+                problems.append(f"it is not S11 in {at}: a run grades only accepted families, so D19 has no run to be "
+                                "the first step of (protocol §16.4, §20.2; decision log D73)")
+            run = next(r for r, s in preflight.NATURAL_RUN_SAMPLES.items() if s == sample)
+            families += preflight.accepted_families(index, sample)
+        for p in preflight.phase_end_problems(repo, families):
+            tid, _, rest = p.partition(": ")
+            if tid == task_id:  # the caller names the task
+                problems.append(rest)
+            elif tid in families:  # another family of the task's run
+                problems.append(f"{tid}, which {run} grades with it (D19 is the first step of that run, decision log D73): "
+                                f"{rest}")
+            else:  # a log that cannot be used: one problem for all the families
+                problems.append(p)
+    except Exception as exc:  # noqa: BLE001 - fail closed: rules that cannot be applied show nothing
+        return (f"the pre-flight's rules for when D19 may run ({PREFLIGHT.name}: building has stopped for the task's sample, "
+                "and the committed phase-end log holds the phases P1 to P7 of every family of its run) could not be applied "
+                f"({type(exc).__name__}: {exc}), so nothing shows that D19 may run (protocol §20.2; decision log D65, D73)")
     return "; ".join(problems) or None
 
 
@@ -429,7 +507,8 @@ def main(task_dir: str, *base_test_paths: str, stratum: str | None = None, repea
         if stratum is not None:
             raise refuse(f"{m.task_id} is a natural PR-review task, which has no candidate strata (natural-pr-v1 grades the "
                          "task's own pool)")
-        building = building_problem(REPO)  # §19.5, §19.7: D19 grades the reference checks on held-out candidates
+        # §20.2, D73: D19 grades the reference checks on held-out candidates, the first step of the run (building_problem)
+        building = building_problem(REPO, m.task_id)
         if building:
             raise refuse(f"{m.task_id}: {building}")
         base_test_paths = tuple(natural_base_tests(tdir, m, base_test_paths))

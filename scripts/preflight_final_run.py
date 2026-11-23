@@ -158,9 +158,11 @@ per sample, in place of §19.7's one run):
   gives for each sample the number of its comments that S9 has screened (``screened``: the whole
   sample, 150 comments for the first, §15.6, and 534 for the extension, §19.2) and the task ids of the
   families and reserves formed from it (``families``; §15.6, §17.3, §19.3), each of which must have a
-  row in the index; a bare ``true`` shows neither. A family or reserve has been processed when it has
-  an S10 outcome (``passed`` or ``rejected``) or its repository has no open place: 2 accepted families,
-  counted over both samples, since §15.6's cap applies to both together (§19.3).
+  row in the index that names that sample; a bare ``true`` shows neither. A family or reserve of a
+  sample is one whose row names that sample, and a row that names neither sample counts for both, since
+  nothing shows otherwise. It has been processed when it has an S10 outcome (``passed`` or
+  ``rejected``) or its repository has no open place: 2 accepted families, counted over both samples,
+  since §15.6's cap applies to both together (§19.3).
   * ``natural-pr-v1``: S9 is complete for the first sample, and every family and reserve of the first
     sample has been processed (the rule of §19.5 restricted to the first sample, §20.2);
   * ``natural-pr-v2``: the index counts 30 accepted tasks in all (both samples), or S9 is complete for
@@ -169,8 +171,29 @@ per sample, in place of §19.7's one run):
   ``tracecontract natural-index`` writes the S9 record when its input files can be read, and leaves it
   out otherwise (``natural_pr.s9_record``). For a run id that names neither run, building is checked as
   §19.5 reads for both samples together (30 accepted, or both samples complete with every family
-  processed): :func:`building_problems` without a sample, the rule that ``scripts/propose_labels.py``
-  applies before it proposes any D19 label.
+  processed): :func:`building_problems` without a sample;
+* every natural family it grades has ended the phases P1 to P7 of the natural recipe (D64): the
+  phase-end log (``data/manifests/natural_phase_ends.jsonl``), to which ``scripts/record_phase_end.py``
+  appends a line at the end of each phase of each family and which the builder commits alone after each
+  phase, so that its commits are the order record of decision log D65, holds the family's lines of the
+  seven phases, in order (D73; :func:`phase_end_problems`). The log is read as the HEAD commit holds it,
+  as the index is (``contract.committed_text``): the working tree's log is not read, and no ``GIT_*``
+  variable of the caller redirects git. Each of its lines must be a record of
+  ``tracecontract/natural-phase-end/v1`` (a JSON object with a ``task_id``, a ``phase`` of P1 to P7 and a
+  ``recorded_at`` time with a time zone; a blank line is skipped); a log that git does not give, or that
+  holds a line of any other form, fails for every family. A family's lines are those that name its task
+  id, in the order of the log: each phase once, after the phase before it, as the script appends them,
+  and each recorded no earlier than the line before it. That time condition is the pre-flight's own
+  reading of "in order", and the script refuses a line that breaks it. What is checked is the log at
+  HEAD, the order of its lines and their times; the order of the commits that added them stays the
+  builder's record.
+
+Before it proposes a family's D19 labels, the first step of the run of the family's sample (decision log
+D73), ``scripts/propose_labels.py`` applies the checks of the list above that the committed records decide
+for that run: building has stopped for the sample that the family's row in the committed index names,
+every row of the index names a sample (:func:`sample_problems`), and the family and every accepted family
+of its sample (:func:`accepted_families`, those that the run grades with it) have ended their phases P1
+to P7, in order.
 
 The checks of a natural task's pool (its composition, labels, near-miss targets, generation records
 and freezing order, and the audits of its pool generators) are notes with ``--only-strata``, as the
@@ -205,6 +228,7 @@ import subprocess
 import sys
 from collections import Counter
 from datetime import datetime
+from itertools import pairwise
 from pathlib import Path, PurePosixPath
 from typing import Any, NamedTuple
 
@@ -239,7 +263,7 @@ from tracecontract.schemas import (
     VerifierSpec,
 )
 from tracecontract.shadowing import shadowing_files
-from tracecontract.store import load
+from tracecontract.store import jsonl_lines, load
 from tracecontract.strata import Stratum, StratumError, load_strata, load_stratum
 from tracecontract.verifier import check_frozen, generation_record_problems
 
@@ -269,6 +293,14 @@ STOP_ACCEPTED = 30  # §19.5, §20.2: building stops at 30 accepted tasks in all
 # S8a comments; its extension, §19.2: the other 534).
 S9_SAMPLE_SIZES = {"first": 150, "extension": 534}
 S9_RECORD = "s9_complete"  # the index's S9 record: {sample: {"screened": n, "families": [task id, ...]}} (s9_problems)
+# The phase-end log, whose commits are the order record (decision log D65): scripts/record_phase_end.py appends one line per
+# family and phase, and the builder commits the log alone after each phase. A natural run needs the lines of the phases P1
+# to P7 of every family it grades, in order, in the log as the HEAD commit holds it, and D19's labels, the run's first step,
+# those of every family of the run (D73; phase_end_problems). The pre-flight keeps its own copy of the log's path, schema
+# and phases, so that it does not import that script.
+PHASE_ENDS = "data/manifests/natural_phase_ends.jsonl"
+PHASE_END_SCHEMA = "tracecontract/natural-phase-end/v1"
+NATURAL_PHASES = ("P1", "P2", "P3", "P4", "P5", "P6", "P7")
 FAMILY_CAP = 2  # §15.6: at most 2 families come from one repository
 S10_FINAL = ("passed", "rejected")  # the S10 outcomes of a processed family
 B1 = VerifierCondition.repo_tests.value
@@ -753,7 +785,8 @@ def _task_order(task_id: str) -> tuple[int, str]:
     return (int(m.group(1)) if m else 10 ** 9, task_id)
 
 
-# Why contract.committed_text gives no text: it folds every case into None, so the reason names them all.
+# Why contract.committed_text gives no text (for the index or the phase-end log): it folds every case into None, so the
+# reason names them all.
 INDEX_NOT_SHOWN = ("git gives no text for it from the HEAD commit: the directory is not a git repository that git will "
                    "read, the repository has no commit, its HEAD commit does not hold the file, or the file is not UTF-8")
 
@@ -785,6 +818,53 @@ def row_sample(row: dict[str, Any]) -> str | None:
     gives by task id), or None when it names neither."""
     sample = row.get("sample")
     return sample if isinstance(sample, str) and sample in S9_SAMPLE_SIZES else None
+
+
+def _phase_end_form(rec: Any) -> str | None:
+    """What keeps ``rec``, one line of the phase-end log, from being a record of :data:`PHASE_END_SCHEMA` (None if
+    nothing does): a JSON object with that ``schema``, a ``task_id``, a ``phase`` of :data:`NATURAL_PHASES` and a
+    ``recorded_at`` time with a time zone, as ``scripts/record_phase_end.py`` writes them."""
+    if not isinstance(rec, dict):
+        return "is not a JSON object"
+    if rec.get("schema") != PHASE_END_SCHEMA:
+        return f"is not a record of {PHASE_END_SCHEMA} (its schema is {json.dumps(rec.get('schema'))})"
+    if not (isinstance(rec.get("task_id"), str) and rec["task_id"]):
+        return f"names no task (its task_id is {json.dumps(rec.get('task_id'))})"
+    if rec.get("phase") not in NATURAL_PHASES:
+        return f"records the phase {json.dumps(rec.get('phase'))}, not one of {', '.join(NATURAL_PHASES)}"
+    raw = rec.get("recorded_at")
+    if not isinstance(raw, str) or _time(raw) is None:
+        return f"records no time with a time zone (its recorded_at is {json.dumps(raw)})"
+    return None
+
+
+def committed_phase_ends(repo_root: Path) -> tuple[list[dict[str, Any]] | None, str | None]:
+    """The phase-end log of the natural families (:data:`PHASE_ENDS`, decision log D65) as the HEAD commit of the
+    repository at ``repo_root`` holds it, read as :func:`committed_index` reads the index (``contract.committed_text``):
+    ``(records, None)``, in the order of the log, or ``(None, why it cannot be used)``. The working tree's log, which
+    ``scripts/record_phase_end.py`` appends to before the builder commits it, is not read, and no ``GIT_*`` variable of
+    the caller redirects git.
+
+    The log is split at line feeds only (``store.jsonl_lines``), and a blank line is skipped, as the script's own reader
+    skips it. Every other line must be a record of :data:`PHASE_END_SCHEMA` (:func:`_phase_end_form`). One line that is
+    not makes the whole log unusable: nothing then shows whose phase end it records, so skipping it could hide a
+    family's phase that is repeated or out of order."""
+    text = committed_text(repo_root, PHASE_ENDS)
+    if text is None:  # committed_text does not say why git gave no text, so neither can the reason
+        return None, INDEX_NOT_SHOWN
+    records = []
+    for n, line in enumerate(jsonl_lines(text), 1):
+        if not line.strip():
+            continue
+        try:
+            rec = json.loads(line)
+        except ValueError:
+            return None, f"its line {n} is not JSON"
+        form = _phase_end_form(rec)
+        if form is not None:
+            return None, f"its line {n} {form}"
+        records.append(rec)
+    return records, None
 
 
 def natural_record_problems(td: Path, m: TaskManifest, index: dict[str, Any] | None) -> list[str]:
@@ -1055,8 +1135,10 @@ def natural_audit_entry_problems(task_id: str, ws: str, rec: Any) -> list[str]:
 def unprocessed_families(rows: list[dict[str, Any]], sample: str | None = None) -> list[str]:
     """The index rows without an S10 outcome (:data:`S10_FINAL`) in a repository that still has an open place: fewer than
     :data:`FAMILY_CAP` accepted families (§15.6, §17.3, §19.3; a repository with 2 accepted families builds no other).
-    With ``sample``, only the rows of that sample (the index's ``sample``; §20.2) are reported, while a repository's
-    accepted families are still counted over every row: the cap applies to both samples together (§19.3)."""
+    With ``sample``, the rows of the other sample are left out (§20.2): those of ``sample`` are reported, and so are
+    those that name neither sample (:func:`row_sample`), since nothing shows that such a row is not of ``sample``
+    (:func:`sample_problems` reports the row too). A repository's accepted families are still counted over every row:
+    the cap applies to both samples together (§19.3)."""
     repos: dict[tuple[str, str], list[dict[str, Any]]] = {}
     for r in rows:
         key = ("repo", str(r["repo_id"])) if r.get("repo_id") is not None else ("task", str(r.get("task_id")))
@@ -1066,7 +1148,7 @@ def unprocessed_families(rows: list[dict[str, Any]], sample: str | None = None) 
         if sum(r.get("s11") is True for r in rs) >= FAMILY_CAP:
             continue
         for r in rs:
-            if sample is not None and row_sample(r) != sample:
+            if sample is not None and row_sample(r) not in (None, sample):  # a row of the other sample
                 continue
             s10 = r.get("s10")
             if (s10.get("outcome") if isinstance(s10, dict) else None) not in S10_FINAL:
@@ -1086,12 +1168,14 @@ def s9_problems(index: dict[str, Any], samples: tuple[str, ...] | None = None) -
     :data:`S9_SAMPLE_SIZES`, ``screened``, the number of the sample's comments that S9 has screened (an S9 outcome:
     qualifies, fails, or excluded because the judges disagree), which must be the whole sample, and ``families``, the
     task ids of the families and reserves formed from the sample's qualifying comments (one family per PR; §15.6, §17.3,
-    §19.3). Each of them must have a row in the index, so that no family of a sample that S9 has completed can be left
-    out of :func:`unprocessed_families`. A bare ``true`` shows neither."""
+    §19.3). Each of them must have a row in the index that names that sample (:func:`row_sample`), so that no family of
+    a sample that S9 has completed can be left out of :func:`unprocessed_families`, which for one sample leaves out the
+    rows of the other, or be graded in the other sample's run (§20.2). A bare ``true`` shows neither."""
     record = index.get(S9_RECORD, {})
     if not isinstance(record, dict):
         return [f"{S9_RECORD} in the index is {json.dumps(record)}, not an S9 record by sample"]
-    rows = set(index_rows(index))
+    by_id = index_rows(index)
+    rows = set(by_id)
     out = []
     for sample, size in S9_SAMPLE_SIZES.items():
         if samples is not None and sample not in samples:
@@ -1116,6 +1200,10 @@ def s9_problems(index: dict[str, Any], samples: tuple[str, ...] | None = None) -
                 shown = ", ".join(absent[:10]) + (", ..." if len(absent) > 10 else "")
                 out.append(f"{len(absent)} of the {sample} sample's families and reserves ({at}.families) have no row in "
                            f"the index ({shown})")
+            elsewhere = [t for t in set(families) & rows if row_sample(by_id[t]) != sample]
+            if elsewhere:
+                out.append(f"{len(elsewhere)} of the {sample} sample's families and reserves ({at}.families) have a row in "
+                           f"the index that names the other sample or neither ({_ids(elsewhere)})")
     return out
 
 
@@ -1140,13 +1228,19 @@ def building_problems(index: dict[str, Any] | None, why: str | None, sample: str
     With ``sample``, the rule of §20.2 (D71) for the run of that sample (:data:`NATURAL_RUN_SAMPLES`): ``first``
     (``natural-pr-v1``), when S9 is complete for the first sample and every family of it has been processed; ``extension``
     (``natural-pr-v2``), at :data:`STOP_ACCEPTED` accepted tasks in all (both samples), or when S9 is complete for the
-    extension and every family of it has been processed. A repository's open places are counted over both samples."""
+    extension and every family of it has been processed. A repository's open places are counted over both samples. A
+    family of a sample is one whose row names it; a row that names neither sample counts for both, and a family that the
+    S9 record lists for a sample must have a row that names it (:func:`unprocessed_families`, :func:`s9_problems`), so
+    that a row whose sample is unknown or disagrees with the S9 record cannot let building stop for a sample.
+    ``scripts/propose_labels.py`` applies it with the sample of a family's row in the committed index, before the
+    family's D19 labels (decision log D73)."""
     if sample is not None and sample not in S9_SAMPLE_SIZES:
         raise ValueError(f"no S9 sample {sample!r} (the samples are {', '.join(S9_SAMPLE_SIZES)})")
     if index is None:
         return [(f"natural: the committed index ({NATURAL_INDEX} in the HEAD commit) cannot be read ({why}), so nothing shows "
-                 "that building has stopped or which families are accepted (protocol §16.4, §19.5)")]
-    rows = list(index_rows(index).values())
+                 "that building has stopped or which families are accepted (protocol §16.4, §19.5, §20.2)")]
+    by_id = index_rows(index)
+    rows = list(by_id.values())
     accepted = sum(r.get("s11") is True for r in rows)
     if sample != "first" and accepted >= STOP_ACCEPTED:  # 30 in all: no branch of natural-pr-v1's rule (§20.2)
         return []
@@ -1155,10 +1249,17 @@ def building_problems(index: dict[str, Any] | None, why: str | None, sample: str
     if not unscreened and not pending:
         return []
     open_ = list(unscreened)
-    if pending:
+    unnamed = [] if sample is None else [t for t in pending if row_sample(by_id[t]) is None]
+    named = [t for t in pending if t not in unnamed]
+    if named:
         whose = "of a repository" if sample is None else f"of {SAMPLE_NAMES[sample]} in a repository"
-        open_.append(f"{len(pending)} {_plural(len(pending), 'family', 'families')} {whose} with an open place "
-                     f"{_plural(len(pending), 'has', 'have')} no S10 outcome ({', '.join(pending)})")
+        open_.append(f"{len(named)} {_plural(len(named), 'family', 'families')} {whose} with an open place "
+                     f"{_plural(len(named), 'has', 'have')} no S10 outcome ({', '.join(named)})")
+    if unnamed:  # with a sample only: nothing shows that these are not of it
+        open_.append(f"{len(unnamed)} {_plural(len(unnamed), 'family', 'families')} whose row names neither sample, in a "
+                     f"repository with an open place, {_plural(len(unnamed), 'has', 'have')} no S10 outcome "
+                     f"({', '.join(unnamed)}), and nothing shows that {_plural(len(unnamed), 'it is', 'they are')} not of "
+                     f"{SAMPLE_NAMES[sample]}")
     if sample is None:
         return [(f"natural: building has not stopped by the committed index: it counts {accepted} accepted task(s) of both "
                  f"samples, and protocol §19.5 stops building at {STOP_ACCEPTED} or when every family of both samples has "
@@ -1175,6 +1276,49 @@ def building_problems(index: dict[str, Any] | None, why: str | None, sample: str
     return [(f"natural: building has not stopped for {SAMPLE_NAMES[sample]} by the committed index: {rule}; "
              f"{'; '.join(open_)}. No natural verifier is graded on a held-out candidate of a family before that family's "
              "run (§20.2)")]
+
+
+def phase_end_problems(repo_root: Path, task_ids: list[str]) -> list[str]:
+    """Whether the phase-end log as the HEAD commit of ``repo_root`` holds it (:func:`committed_phase_ends`) shows that
+    each natural family of ``task_ids`` has ended the phases P1 to P7 of the natural recipe (D64), in order. A natural
+    run needs that for every family it grades, and D19's labels, the run's first step, for every family of the run
+    (decision log D65, D73): by then every verifier, contract and candidate of those families is frozen or registered.
+
+    A family's lines are those that name its task id; lines of other tasks do not count. It needs a line for each phase
+    of :data:`NATURAL_PHASES`, and its lines must be in order: in the order of the log, each phase once and after the
+    phase before it, as ``scripts/record_phase_end.py`` appends them (it appends a phase only after the last one it
+    records for the family), and each recorded (``recorded_at``) no earlier than the line before it. The time condition
+    is the pre-flight's own reading of "in order" (D65 states none), and the script refuses a line recorded earlier than
+    the family's last one, so that no time it records (after a clock set back, say) can make this rule refuse the family
+    for good, since appending cannot restore the order. The rule reads the log as HEAD holds it: the order of its
+    lines and their times. The order of the commits that added the phase ends, D65's order record itself, stays the
+    builder's record. A log that cannot be used is one problem for all the families."""
+    ids = sorted(dict.fromkeys(task_ids), key=_task_order)
+    if not ids:
+        return []
+    records, why = committed_phase_ends(repo_root)
+    if records is None:
+        return [(f"natural: the committed phase-end log ({PHASE_ENDS} in the HEAD commit) cannot be read ({why}), so nothing "
+                 f"shows that {_ids(ids)} ended the phases P1 to P7 in order; D19 and the run of a natural family need "
+                 "them (decision log D65, D73)")]
+    out = []
+    where = f"the committed phase-end log ({PHASE_ENDS} in the HEAD commit)"
+    for tid in ids:
+        lines = [(r["phase"], r["recorded_at"]) for r in records if r["task_id"] == tid]
+        recorded = {phase for phase, _ in lines}
+        missing = [p for p in NATURAL_PHASES if p not in recorded]
+        if missing:
+            out.append(f"{tid}: {where} has no line for {_plural(len(missing), 'its phase', 'its phases')} "
+                       f"{', '.join(missing)}; D19 and the run grade a natural family once its phases P1 to P7 have ended, "
+                       "each recorded with scripts/record_phase_end.py and committed (decision log D65, D73)")
+        ranks = [NATURAL_PHASES.index(phase) for phase, _ in lines]
+        times = [_time(at) for _, at in lines]  # each a time with a time zone (committed_phase_ends)
+        if any(b <= a for a, b in pairwise(ranks)) or any(t < s for s, t in pairwise(times)):
+            shown = ", ".join(f"{phase} at {at}" for phase, at in lines)
+            out.append(f"{tid}: its lines in {where} are not in the order of its phases ({shown}); in order, each phase "
+                       "comes once, after the phase before it, and is recorded no earlier than it (the pre-flight's reading "
+                       "of decision log D73; scripts/record_phase_end.py refuses to append a line that breaks it, D65)")
+    return out
 
 
 # §20.2 (D71): what the natural arm's runs are, as the run-id and composition checks say it.
@@ -1194,12 +1338,32 @@ def natural_run_id_problems(run_id: str | None) -> list[str]:
     return []
 
 
+def sample_problems(index: dict[str, Any]) -> list[str]:
+    """The rows of the committed index that name neither sample (:func:`row_sample`), as one problem: nothing then shows
+    which of the two runs grades them (§20.2, D71). :func:`natural_run_problems` reports it for a run, and
+    ``scripts/propose_labels.py`` before D19, the first step of the run (decision log D73)."""
+    unknown = [tid for tid, r in index_rows(index).items() if row_sample(r) is None]
+    if not unknown:
+        return []
+    return [(f"natural: {len(unknown)} {_plural(len(unknown), 'row', 'rows')} of the committed index ({_ids(unknown)}) "
+             f"{_plural(len(unknown), 'names', 'name')} neither sample ('first' or 'extension'), so nothing shows which "
+             f"run grades {_plural(len(unknown), 'it', 'them')} ({TWO_RUNS})")]
+
+
+def accepted_families(index: dict[str, Any], sample: str) -> list[str]:
+    """The accepted (``s11``) families of ``sample`` in the committed index, in task-id order: those that the run of that
+    sample grades, every one of them (§20.2, D71; :func:`natural_run_problems`). ``scripts/propose_labels.py`` needs
+    the phase ends of all of them before the D19 labels of any (decision log D73)."""
+    return sorted((tid for tid, r in index_rows(index).items() if r.get("s11") is True and row_sample(r) == sample),
+                  key=_task_order)
+
+
 def natural_run_problems(given: list[tuple[str, bool]], index: dict[str, Any] | None, run_id: str | None = None) -> list[str]:
     """A run with natural PR-review tasks (``given``: each task id and whether it is one) grades no task of another
     population (§15.2). By the samples of the committed index (§20.2, D71), it never mixes the two samples, and the run
     ``run_id`` (one of :data:`NATURAL_RUN_SAMPLES`) grades every accepted family of its sample and no family of the other.
-    A row of the index that names neither sample fails: nothing shows which run grades it. A given task without a row is
-    reported by :func:`natural_record_problems`."""
+    A row of the index that names neither sample fails (:func:`sample_problems`): nothing shows which run grades it. A
+    given task without a row is reported by :func:`natural_record_problems`."""
     others = [tid for tid, natural in given if not natural]
     out = []
     if others:
@@ -1208,11 +1372,7 @@ def natural_run_problems(given: list[tuple[str, bool]], index: dict[str, Any] | 
     if index is None:
         return out
     rows = index_rows(index)
-    unknown = [tid for tid, r in rows.items() if row_sample(r) is None]
-    if unknown:
-        out.append(f"natural: {len(unknown)} {_plural(len(unknown), 'row', 'rows')} of the committed index ({_ids(unknown)}) "
-                   f"{_plural(len(unknown), 'names', 'name')} neither sample ('first' or 'extension'), so nothing shows "
-                   f"which run grades {_plural(len(unknown), 'it', 'them')} ({TWO_RUNS})")
+    out += sample_problems(index)
     natural = list(dict.fromkeys(tid for tid, is_natural in given if is_natural))
     by_sample: dict[str, list[str]] = {}
     for tid in natural:
@@ -1233,8 +1393,7 @@ def natural_run_problems(given: list[tuple[str, bool]], index: dict[str, Any] | 
         out.append(f"natural: the run {run_id} {mixes}includes families of {SAMPLE_NAMES[other_sample]} ({_ids(other)}), "
                    f"but it grades the accepted families of {SAMPLE_NAMES[sample]} only, and {other_run} those of "
                    f"{SAMPLE_NAMES[other_sample]} (protocol §20.2)")
-    accepted = [tid for tid, r in rows.items() if r.get("s11") is True and row_sample(r) == sample]
-    left_out = sorted(set(accepted) - set(natural), key=_task_order)
+    left_out = [tid for tid in accepted_families(index, sample) if tid not in natural]
     if left_out:
         out.append(f"natural: the run leaves out accepted families of {SAMPLE_NAMES[sample]} in the committed index "
                    f"({', '.join(left_out)}); the run {run_id} grades every accepted family of {SAMPLE_NAMES[sample]} "
@@ -1429,8 +1588,10 @@ def main(*argv: str) -> int:
                 problems += shadowing_problems(m, [c for _, c in st.candidates], stratum=st.name)
             problems += frozen_before_attempts_problems(m, graded_verifiers(extras, a.conditions), loaded)
     if natural_run:  # the run as a whole (§20.2, D71): one of the two runs, of every accepted family of its sample only,
-        # once building has stopped for that sample (for a run id that names neither run: §19.5 over both samples)
+        # once building has stopped for that sample (for a run id that names neither run: §19.5 over both samples) and
+        # every natural family it grades has ended its phases P1 to P7 by the committed phase-end log (D65, D73)
         problems += building_problems(index, index_why, NATURAL_RUN_SAMPLES.get(a.run_id or ""))
+        problems += phase_end_problems(R, [tid for tid, is_natural in given if is_natural])
         problems += natural_run_problems(given, index, a.run_id)
         problems += natural_run_id_problems(a.run_id)
     from tracecontract.sandbox.docker_runner import HARNESS_VERSION

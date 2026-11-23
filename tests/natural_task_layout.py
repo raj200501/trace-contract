@@ -23,6 +23,11 @@ S10 environment step (``natural_pr.run_s10_environment``) leave for an accepted 
 * ``data/manifests/natural_tasks_index.json``: the index with the task's row (``s11`` true, or as asked), committed when
   ``<root>`` is a git repository (:func:`init_git`), since the acceptance gate reads the index of the HEAD commit.
 
+:func:`write_phase_ends` writes and commits ``data/manifests/natural_phase_ends.jsonl``, the phase-end log (the order
+record of decision log D65): one line per family and phase (:func:`phase_end_line`), in the form
+``scripts/record_phase_end.py`` writes, with its state's hashes left out, since the rules that read the log (the
+pre-flight's ``phase_end_problems``, decision log D73) read only the schema, task id, phase and time.
+
 The files are written directly, not compiled (as tests/natural_pr_world.py does), so no DuckDB is needed, and a git
 repository only for the rules that ask git (the committed index, the git-ignored run directory). Every text is synthetic
 and holds no login, handle, e-mail address or model identifier. The agent-only texts (the PR body and the commit messages)
@@ -60,6 +65,9 @@ TASK_ID = "NP-90"
 NATURAL_TASKS = Path("data/natural/tasks")
 NATURAL_SNAPSHOTS = Path("data/natural/snapshots")
 INDEX = Path("data/manifests/natural_tasks_index.json")
+PHASE_ENDS = Path("data/manifests/natural_phase_ends.jsonl")  # scripts/record_phase_end.py's LOG, SCHEMA and PHASES
+PHASE_END_SCHEMA = "tracecontract/natural-phase-end/v1"
+PHASES = ("P1", "P2", "P3", "P4", "P5", "P6", "P7")
 PINS = ["iniconfig==2.0.0", "packaging==24.2", "pluggy==1.5.0", "pytest==8.3.4"]
 IMAGE = f"tc-env:{_req_hash(sorted(set(PINS)))}"  # as docker_runner.build_env_image names it
 IMAGE_ID = "sha256:" + "9e" * 32
@@ -366,13 +374,44 @@ def init_git(root: Path) -> None:
     subprocess.run(["git", "init", "-q", str(root)], check=True, capture_output=True, env=git_env())
 
 
-def commit_index(root: Path) -> None:
-    """Commit the index under ``root`` (nothing else) in the git repository at ``root``, if it changed."""
-    git(root, "add", "--", INDEX.as_posix())
-    staged = subprocess.run(["git", "-C", str(root), "diff", "--cached", "--quiet", "--", INDEX.as_posix()],
+def commit_file(root: Path, rel: Path, message: str) -> None:
+    """Commit the file ``rel`` under ``root`` (nothing else) in the git repository at ``root``, if it changed."""
+    git(root, "add", "--", rel.as_posix())
+    staged = subprocess.run(["git", "-C", str(root), "diff", "--cached", "--quiet", "--", rel.as_posix()],
                             capture_output=True, env=git_env(), check=False)
     if staged.returncode:
-        git(root, "commit", "-q", "--no-verify", "-m", "natural index (synthetic fixture)", "--", INDEX.as_posix())
+        git(root, "commit", "-q", "--no-verify", "-m", message, "--", rel.as_posix())
+
+
+def commit_index(root: Path) -> None:
+    """Commit the index under ``root`` (nothing else) in the git repository at ``root``, if it changed."""
+    commit_file(root, INDEX, "natural index (synthetic fixture)")
+
+
+def phase_end_line(task_id: str, phase: str, recorded_at: str, **fields: Any) -> dict[str, Any]:
+    """One line of the phase-end log as ``scripts/record_phase_end.py`` writes it, without the state's hashes (the
+    ``files``, ``verifiers``, ``contracts`` and ``candidates`` it summarises), then ``fields``."""
+    return {"schema": PHASE_END_SCHEMA, "task_id": task_id, "phase": phase, "recorded_at": recorded_at, "head": None,
+            **fields}
+
+
+def phase_ends(task_id: str, phases: tuple[str, ...] = PHASES, *, day: str = "2026-11-22") -> list[dict[str, Any]]:
+    """The lines of ``phases`` of a task, in the order given, the n-th recorded at the n-th hour of ``day`` (UTC)."""
+    return [phase_end_line(task_id, p, f"{day}T{n:02d}:00:00Z") for n, p in enumerate(phases, 1)]
+
+
+def write_phase_ends(root: Path, lines: list[dict[str, Any] | str], *, commit: bool = True) -> Path:
+    """Write the phase-end log under ``root`` (``data/manifests/natural_phase_ends.jsonl``): each line a record, as one
+    line of JSON, or a string, written as it is; then, with ``commit``, commit it (nothing else) when ``root`` is a git
+    repository."""
+    path = root / PHASE_ENDS
+    path.parent.mkdir(parents=True, exist_ok=True)
+    text = "".join((x if isinstance(x, str) else json.dumps(x, sort_keys=True, separators=(",", ":"), ensure_ascii=False))
+                   + "\n" for x in lines)
+    path.write_text(text, encoding="utf-8")
+    if commit and (root / ".git").exists():
+        commit_file(root, PHASE_ENDS, "natural phase ends (synthetic fixture)")
+    return path
 
 
 def image_stub(images: dict[tuple[str, ...], tuple[str, str]] | None = None, builds: list | None = None):

@@ -18,8 +18,12 @@ Ids, hashes, counts and times only: no thread text, no repository path, no gener
 index is being rewritten by the S10 step of the S9 extension, the commit at a phase end is of this log (D65): the
 builder commits the log alone after each phase of each family, before that family's next phase starts.
 
-Refused: a directory that is not a natural PR-review task, and a phase that does not come after the last phase the
-log records for the task.
+Refused: a directory that is not a natural PR-review task, a phase that does not come after the last phase the log
+records for the task, and a line recorded (``recorded_at``) earlier than the last line the log records for the task, or
+with a time that has no time zone. ``scripts/preflight_final_run.py`` and ``scripts/propose_labels.py`` read a family's
+lines in the committed log as in order only when each phase comes after the one before it and is recorded no earlier
+than it (their reading, decision log D73), so a line that broke that would refuse the family for good: appending cannot
+restore the order.
 """
 
 from __future__ import annotations
@@ -69,8 +73,17 @@ def _verifier(task_dir: Path, rel: str, extra: bool) -> dict[str, Any]:
             "frozen_at": spec.get("frozen_at"), "content_sha256": spec.get("content_sha256"), "sidecar": extra}
 
 
-def last_phase(log: Path, task_id: str) -> str | None:
-    """The last phase the log records for the task, or None."""
+def _time(value: Any) -> datetime | None:
+    """An ISO 8601 time with a time zone, or None (absent, or not such a time)."""
+    try:
+        t = datetime.fromisoformat(value) if isinstance(value, str) and value else None
+    except ValueError:
+        return None
+    return t if t is not None and t.tzinfo is not None else None
+
+
+def last_line(log: Path, task_id: str) -> dict[str, Any] | None:
+    """The last line the log records for the task, or None."""
     if not log.is_file():
         return None
     last = None
@@ -81,9 +94,17 @@ def last_phase(log: Path, task_id: str) -> str | None:
             rec = json.loads(line)
         except json.JSONDecodeError as exc:
             raise PhaseError(f"{log.name} line {n} is not JSON: {exc}") from exc
+        if not isinstance(rec, dict):
+            raise PhaseError(f"{log.name} line {n} is not a JSON object")
         if rec.get("task_id") == task_id:
-            last = rec.get("phase")
+            last = rec
     return last
+
+
+def last_phase(log: Path, task_id: str) -> str | None:
+    """The last phase the log records for the task, or None."""
+    last = last_line(log, task_id)
+    return None if last is None else last.get("phase")
 
 
 def phase_record(task_dir: Path, phase: str, *, now: str | None = None, repo: Path = R) -> dict[str, Any]:
@@ -112,11 +133,24 @@ def phase_record(task_dir: Path, phase: str, *, now: str | None = None, repo: Pa
 
 
 def append(task_dir: Path, phase: str, log: Path = LOG, *, now: str | None = None, repo: Path = R) -> dict[str, Any]:
-    """Check the phase order, then append the record to the log."""
+    """Check the phase order and the time order (see the module docstring), then append the record to the log."""
     rec = phase_record(task_dir, phase, now=now, repo=repo)
-    last = last_phase(log, rec["task_id"])
-    if last is not None and (last not in PHASES or PHASES.index(phase) <= PHASES.index(last)):
-        raise PhaseError(f"{rec['task_id']}: the log already records {last}; {phase} does not come after it")
+    tid, at = rec["task_id"], rec["recorded_at"]
+    when = _time(at)
+    if when is None:
+        raise PhaseError(f"{tid}: {phase} would be recorded at {at!r}, not a time with a time zone")
+    line = last_line(log, tid)
+    if line is not None:
+        last = line.get("phase")
+        if last not in PHASES or PHASES.index(phase) <= PHASES.index(last):
+            raise PhaseError(f"{tid}: the log already records {last}; {phase} does not come after it")
+        before = _time(line.get("recorded_at"))
+        if before is None:
+            raise PhaseError(f"{tid}: the log records {last} at {line.get('recorded_at')!r}, not a time with a time zone, so "
+                             f"nothing shows that {phase} at {at} is not recorded earlier")
+        if when < before:
+            raise PhaseError(f"{tid}: the log records {last} at {line['recorded_at']}; {phase} at {at} would be recorded "
+                             "earlier, and the pre-flight would read the family's lines as out of order for good")
     log.parent.mkdir(parents=True, exist_ok=True)
     with log.open("a", encoding="utf-8") as fh:
         fh.write(_canonical(rec).decode("utf-8") + "\n")

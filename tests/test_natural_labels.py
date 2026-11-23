@@ -1,10 +1,17 @@
-"""D19 labels, duplicates and the review packet of a natural PR-review task (plan WP-F; protocol §15.6, §17.2, §19.7; D64).
+"""D19 labels, duplicates and the review packet of a natural PR-review task (plan WP-F; protocol §15.6, §17.2, §19.7, §20.2;
+D64, D73).
 
 On a synthetic accepted family (``tests/natural_task_layout.py``: NP-90, whose task and base snapshot lie under a scratch
 repository's ``data/natural/``), given frozen synthetic reference checks and a small pool, with stubs in place of Docker:
 
-* ``scripts/propose_labels.py``: D19 waits until building has stopped by the committed index (§19.5, §19.7) and grades only
-  frozen reference checks; the regression norm is ``s10.json`` ``base_tests.subset`` (the default; any other base test paths
+* ``scripts/propose_labels.py``: D19 is the first step of the run of the family's sample (D73), so it waits until building
+  has stopped for the family's own sample, the ``sample`` of its row in the committed index (§20.2: a first-sample family
+  does not wait for the extension; a task without a row, or whose row names neither sample, is refused, and so is every
+  task while another row names neither sample, or while a family that S9 lists for the sample is pending under a row of
+  the other sample or of none), and until the committed phase-end log holds the phases P1 to P7, in order, of the family
+  and of every accepted family of its sample (D65, D73; lines of other tasks do not count, the working tree's log is not
+  read, and a log that cannot be read or holds a line of another form refuses); it grades only frozen
+  reference checks; the regression norm is ``s10.json`` ``base_tests.subset`` (the default; any other base test paths
   are refused before anything is looked up, graded or written); the paths and the overlay's manifest hash are logged; the
   base snapshot is the one ``roots.snapshot_root`` names for the task id, and is checked; the image is looked up, never
   built; three repeats by default and no other count; repeats whose proposals differ are a missing decision, so ambiguous;
@@ -20,8 +27,9 @@ repository's ``data/natural/``), given frozen synthetic reference checks and a s
 * ``scripts/write_review_queue.py`` and ``scripts/record_construction_checks.py --tasks-root`` on the natural task, never
   through a symbolic link.
 
-The family's index row is committed in the scratch repository with S9 complete for both samples, so building has stopped
-there. Synthetic data only; nothing is graded, and nothing under the study repository is written.
+The family's index row (of the first sample) is committed in the scratch repository with S9 complete for both samples, so
+building has stopped there, and so is the phase-end log with the family's phases P1 to P7. Synthetic data only; nothing is
+graded, and nothing under the study repository is written.
 """
 
 from __future__ import annotations
@@ -30,6 +38,7 @@ import hashlib
 import importlib.util
 import json
 import os
+import re
 import shutil
 import sys
 from collections import Counter
@@ -39,8 +48,9 @@ from types import SimpleNamespace
 import pytest
 
 from natural_task_layout import (
-    AGENT_ONLY_MARKERS, BASE_TEST, COMMENT_TEXT, HUNK_TEXT, IMAGE, IMAGE_ID, ISSUE_TEXT, PRE_REVIEW_MOD, REFERENCE_MOD,
-    REPLY_TEXT, T0, TEST_ARGS, NaturalTask, build_natural_task, commit_index, init_git, local_image_stub,
+    AGENT_ONLY_MARKERS, BASE_TEST, COMMENT_TEXT, HUNK_TEXT, IMAGE, IMAGE_ID, INDEX, ISSUE_TEXT, PHASE_ENDS, PHASES,
+    PRE_REVIEW_MOD, REFERENCE_MOD, REPLY_TEXT, T0, TEST_ARGS, NaturalTask, build_natural_task, commit_index, git, init_git,
+    local_image_stub, phase_end_line, phase_ends, write_index_row, write_phase_ends,
 )
 from tracecontract import evaluate, roots
 from tracecontract import natural_pr as npr
@@ -77,6 +87,7 @@ def _script(name: str):
 
 
 pl = _script("propose_labels")
+pfl = _script("preflight_final_run")  # whose rules propose_labels applies
 fd = _script("find_duplicates")
 wrq = _script("write_review_queue")
 rcc = _script("record_construction_checks")
@@ -136,14 +147,17 @@ def _construction(value: str, violated: list[str] | None = None, labeler: str = 
 def nat(tmp_path) -> NaturalTask:
     """NP-90 with frozen reference checks (one check per requirement: R1 the issue, R2 the correction), a valid alternative
     and a near miss (held out), and a dev attack; the near miss and the dev attack have the pre-review state's code. The
-    scratch repository is a git repository whose committed index has the family's row (S10 passed, S11) and S9 complete for
-    both samples: building has stopped (protocol §19.5)."""
+    scratch repository is a git repository whose committed index has the family's row (S10 passed, S11, of the first
+    sample) and S9 complete for both samples, so building has stopped (protocol §19.5, §20.2), and whose committed
+    phase-end log holds the family's phases P1 to P7 (decision log D65, D73)."""
     root = tmp_path / "repo"
     root.mkdir()
     init_git(root)
     nt = build_natural_task(root)  # the index row, committed
+    write_index_row(root, nt.task_id, sample="first")  # a family of the first sample (natural-pr-v1, §20.2)
     _index(nt, s9_complete={"first": {"screened": 150, "families": [nt.task_id]},  # the pre-flight's S9 record
                             "extension": {"screened": 534, "families": []}})
+    write_phase_ends(root, phase_ends(nt.task_id))  # the end of each of its phases, committed (D65)
     td = nt.task_dir
     tests = td / "verifiers" / "reference_check" / "tests"
     tests.mkdir(parents=True)
@@ -388,26 +402,310 @@ def test_a_natural_task_has_no_strata_and_needs_its_s10_subset(nat, monkeypatch)
     assert docker.grades == [] and not (nat.task_dir / "labels").exists()
 
 
-def test_d19_waits_until_building_has_stopped(nat, monkeypatch):
-    """§19.7: no natural verifier is graded on a held-out candidate before building stops (§19.5), as the committed index
-    shows it (the pre-flight's rule): refused before anything is looked up, graded or written."""
+# --------------------------------------------------------------------------- when D19 may run (§20.2; D65, D73)
+
+FIRST_DONE = {"screened": 150, "families": ["NP-90"]}  # S9 complete for the first sample, NP-90 its only family
+EXTENSION_DONE = {"screened": 534, "families": []}
+INDEX_AT = r"the committed index \(data/manifests/natural_tasks_index.json in the HEAD commit\)"
+LOG_AT = r"the committed phase-end log \(data/manifests/natural_phase_ends.jsonl in the HEAD commit\)"
+
+
+def _row(task_id: str = "NP-90", *, sample: object = "first", s11: bool = True, outcome: str = "passed",
+         role: str = "family") -> dict:
+    """A row of the natural index, in the layout's form, with its sample."""
+    return {"task_id": task_id, "role": role, "s10": {"outcome": outcome, "stage": "S10"}, "s11": s11, "sample": sample}
+
+
+def _gate_tree(nt: NaturalTask) -> dict[str, str]:
+    """The scratch repository's files, but the two committed records that the tests of the gate rewrite."""
+    return {k: v for k, v in _tree(nt.root).items() if k not in (INDEX.as_posix(), PHASE_ENDS.as_posix())}
+
+
+def _refused(nt: NaturalTask, docker: Docker, match: str) -> None:
+    """propose_labels refuses the task, with a message that matches ``match``, before anything is looked up, graded or
+    written."""
+    before = _gate_tree(nt)
+    with pytest.raises(SystemExit, match=r"^propose_labels refused, nothing written: " + match):
+        pl.main(str(nt.task_dir))
+    assert _gate_tree(nt) == before
+    assert docker.grades == [] and docker.lookups == [] and docker.runs == 0 and not (nt.task_dir / "labels").exists()
+
+
+def _labelled(nt: NaturalTask, docker: Docker) -> None:
+    """propose_labels labels the task's held-out candidates (the gate let D19 run)."""
+    pl.main(str(nt.task_dir))
+    assert docker.grades and _log(nt)["candidates"].keys() == {nt.candidate_id(k) for k in ("pre-review", "eval-alt-1",
+                                                                                             "eval-nm-1")}
+
+
+def test_d19_waits_until_building_has_stopped_for_the_family_s_sample(nat, monkeypatch):
+    """§20.2 as D73 reads it: D19 is the first step of the family's run, so it waits until building has stopped for the
+    family's own sample by the committed index (the pre-flight's rule), and is refused before anything is looked up,
+    graded or written until then."""
     docker = Docker(monkeypatch, nat)
-    before = _tree(nat.root)
-    _index(nat, s9_complete={"first": {"screened": 150, "families": [nat.task_id]}})  # the extension sample is not screened yet
-    with pytest.raises(SystemExit, match=r"NP-90: natural: building has not stopped by the committed index: it counts 1 "
-                                         r"accepted task\(s\).*for the extension sample"):
-        pl.main(str(nat.task_dir))
+    _index(nat, s9_complete={"extension": EXTENSION_DONE})  # S9 is not recorded as complete for the first sample
+    _refused(nat, docker, r"NP-90: natural: building has not stopped for the first sample by the committed index: .*S9 is "
+                          r"not recorded as complete for the first sample")
+    # A family of the first sample in a repository with an open place has no S10 outcome yet.
+    _index(nat, tasks=[_row(), _row("NP-91", s11=False, outcome="not built")],
+           s9_complete={"first": {"screened": 150, "families": ["NP-90", "NP-91"]}, "extension": EXTENSION_DONE})
+    _refused(nat, docker, r"NP-90: natural: building has not stopped for the first sample by the committed index: .*1 "
+                          r"family of the first sample in a repository with an open place has no S10 outcome \(NP-91\)")
     nat.index.write_text("not an index\n", encoding="utf-8")
     commit_index(nat.root)
-    with pytest.raises(SystemExit, match=r"the committed index .* cannot be read \(it is not JSON\)"):
-        pl.main(str(nat.task_dir))
-    # A rule that cannot be applied shows nothing either (fail closed).
+    _refused(nat, docker, rf"NP-90: natural: {INDEX_AT} cannot be read \(it is not JSON\), so nothing shows that building "
+                          r"has stopped or which families are accepted \(protocol §16.4, §19.5, §20.2\)$")
+    # Rules that cannot be applied show nothing either (fail closed).
     monkeypatch.setattr(pl, "PREFLIGHT", nat.root / "no_such_preflight.py")
-    with pytest.raises(SystemExit, match=r"rule for when building stops \(no_such_preflight.py\) could not be applied"):
-        pl.main(str(nat.task_dir))
-    assert {k: v for k, v in _tree(nat.root).items() if k != nat.index.relative_to(nat.root).as_posix()} == {
-        k: v for k, v in before.items() if k != nat.index.relative_to(nat.root).as_posix()}
-    assert docker.grades == [] and docker.lookups == [] and docker.runs == 0 and not (nat.task_dir / "labels").exists()
+    _refused(nat, docker, r"NP-90: the pre-flight's rules for when D19 may run \(no_such_preflight.py: building has stopped "
+                          r"for the task's sample, and the committed phase-end log holds the phases P1 to P7 of every family "
+                          r"of its run\) could not be applied \(.*\), so nothing shows that D19 may run \(protocol §20.2; "
+                          r"decision log D65, D73\)$")
+
+
+def test_a_first_sample_family_is_labelled_while_the_extension_is_still_being_built(nat, monkeypatch):
+    """§20.2: the first sample's families are graded in natural-pr-v1 without waiting for the extension. Its S9 record is
+    absent or partial and its families are pending or accepted, so §19.5's rule for both samples has not stopped building;
+    the first sample's has, and D19 runs on NP-90."""
+    docker = Docker(monkeypatch, nat)
+    rows = [_row(), _row("NP-91", sample="extension", s11=False, outcome="not built"),
+            _row("NP-92", sample="extension", s11=False, outcome="built", role="reserve"), _row("NP-93", sample="extension")]
+    for extension in ({}, {"extension": {"screened": 200, "families": ["NP-91", "NP-92", "NP-93"]}}):
+        _index(nat, tasks=rows, s9_complete={"first": FIRST_DONE, **extension})
+        index, why = pfl.committed_index(nat.root)
+        assert pfl.building_problems(index, why)[0].startswith(  # §19.5 over both samples
+            "natural: building has not stopped by the committed index: it counts 2 accepted task(s) of both samples")
+        _labelled(nat, docker)
+
+
+def test_a_family_of_the_extension_waits_for_the_extension(nat, monkeypatch):
+    """The rule is the one of the family's own sample: NP-90 recorded as a family of the extension waits until building
+    has stopped for the extension, while the first sample's building has stopped."""
+    docker = Docker(monkeypatch, nat)
+    _index(nat, tasks=[_row(sample="extension"), _row("NP-91", sample="extension", s11=False, outcome="not built")],
+           s9_complete={"first": {"screened": 150, "families": []},
+                        "extension": {"screened": 534, "families": ["NP-90", "NP-91"]}})
+    _refused(nat, docker, r"NP-90: natural: building has not stopped for the extension by the committed index: .*1 family "
+                          r"of the extension in a repository with an open place has no S10 outcome \(NP-91\)")
+
+
+@pytest.mark.parametrize("sample", ["extension", None, "absent"])
+def test_a_family_that_s9_lists_for_the_first_sample_keeps_building_open_whatever_its_row_names(nat, monkeypatch, sample):
+    """Fail closed (§20.2, D73): NP-91 is a family of the first sample by the S9 record, in a repository with an open place
+    and without an S10 outcome, so building has not stopped for the first sample and D19 is refused on NP-90, as §19.5's
+    rule over both samples refuses it, though NP-91's committed row names the extension or no sample, which a rule that
+    read only the rows naming the first sample would pass over. A row that names no sample is also reported as the
+    pre-flight reports it for a run."""
+    docker = Docker(monkeypatch, nat)
+    row = _row("NP-91", sample=sample, s11=False, outcome="not built")
+    if sample == "absent":
+        del row["sample"]
+    _index(nat, tasks=[_row(), row],
+           s9_complete={"first": {"screened": 150, "families": ["NP-90", "NP-91"]}, "extension": EXTENSION_DONE})
+    stop = (r"NP-90: natural: building has not stopped for the first sample by the committed index: protocol §20\.2 grades "
+            r"its accepted families in natural-pr-v1 once S9 is complete for it and every family and reserve of it has been "
+            r"processed; 1 of the first sample's families and reserves \(s9_complete\.first\.families\) have a row in the "
+            r"index that names the other sample or neither \(NP-91\)")
+    end = r"\. No natural verifier is graded on a held-out candidate of a family before that family's run \(§20\.2\)"
+    if sample == "extension":
+        _refused(nat, docker, stop + end + "$")
+    else:
+        _refused(nat, docker, stop + r"; 1 family whose row names neither sample, in a repository with an open place, has "
+                                     r"no S10 outcome \(NP-91\), and nothing shows that it is not of the first sample"
+                                     + end + r"; natural: 1 row of the committed index \(NP-91\) names neither sample "
+                                     r"\('first' or 'extension'\), so nothing shows which run grades it \(protocol §20\.2 "
+                                     r"grades the natural arm in two runs, .*\)$")
+
+
+def test_another_row_that_names_no_sample_refuses_d19_as_it_refuses_the_run(nat, monkeypatch):
+    """As the pre-flight refuses a natural run (``sample_problems``): NP-91, accepted and processed, is in no S9 record and
+    its row names no sample, so it could be an accepted family of the first sample that natural-pr-v1 grades with NP-90,
+    whose phase ends D19 would then not ask for (D73)."""
+    docker = Docker(monkeypatch, nat)
+    row = _row("NP-91")
+    del row["sample"]
+    _index(nat, tasks=[_row(), row])
+    _refused(nat, docker, r"NP-90: natural: 1 row of the committed index \(NP-91\) names neither sample \('first' or "
+                          r"'extension'\), so nothing shows which run grades it \(protocol §20\.2 grades the natural arm in "
+                          r"two runs, .*\)$")
+
+
+@pytest.mark.parametrize("sample, other, run", [("first", "extension", "natural-pr-v1"),
+                                                ("extension", "first", "natural-pr-v2")])
+def test_d19_waits_for_the_phase_ends_of_every_accepted_family_of_its_sample(nat, monkeypatch, sample, other, run):
+    """D73: the run of a sample grades its accepted families together, and D19 is the run's first step, so D19 on any of
+    them waits until each has ended its seven phases: NP-90's own lines are not enough while NP-91, accepted in the same
+    sample, lacks P7, or while the log cannot be read. A family of the other sample (NP-93), or one of the same sample
+    that is not accepted (NP-92, rejected at S10), does not hold NP-90 back."""
+    docker = Docker(monkeypatch, nat)
+    sizes = {"first": 150, "extension": 534}
+    _index(nat, tasks=[_row(sample=sample), _row("NP-91", sample=sample),
+                       _row("NP-92", sample=sample, s11=False, outcome="rejected"), _row("NP-93", sample=other)],
+           s9_complete={sample: {"screened": sizes[sample], "families": ["NP-90", "NP-91", "NP-92"]},
+                        other: {"screened": sizes[other], "families": ["NP-93"]}})
+    write_phase_ends(nat.root, [*phase_ends(nat.task_id), *phase_ends("NP-91", PHASES[:6])])
+    _refused(nat, docker, rf"NP-90: NP-91, which {run} grades with it \(D19 is the first step of that run, decision log "
+                          rf"D73\): {LOG_AT} has no line for its phase P7; D19 and the run grade a natural family once its "
+                          r"phases P1 to P7 have ended, each recorded with scripts/record_phase_end.py and committed "
+                          r"\(decision log D65, D73\)$")
+    write_phase_ends(nat.root, [*phase_ends(nat.task_id), *phase_ends("NP-91"), "{not json"])
+    _refused(nat, docker, rf"NP-90: natural: {LOG_AT} cannot be read \(its line 15 is not JSON\), so nothing shows that "
+                          r"NP-90, NP-91 ended the phases P1 to P7 in order; ")
+    write_phase_ends(nat.root, [*phase_ends(nat.task_id), *phase_ends("NP-91")])  # NP-92 and NP-93 have no line
+    _labelled(nat, docker)
+
+
+@pytest.mark.parametrize("sample", ["absent", None, "second", ["first"]])
+def test_a_task_whose_committed_row_names_no_sample_is_refused(nat, monkeypatch, sample):
+    """Fail closed (D73): with no sample, nothing shows which run grades the family, or whether building has stopped for
+    its sample, though here it has stopped for both samples."""
+    docker = Docker(monkeypatch, nat)
+    row = _row(sample=sample)
+    if sample == "absent":
+        del row["sample"]
+    _index(nat, tasks=[row])  # the fixture's S9 record: both samples complete, NP-90 the first sample's only family
+    said = "it records no sample" if sample == "absent" else f"its sample is {re.escape(json.dumps(sample))}"
+    _refused(nat, docker, rf"NP-90: its row in {INDEX_AT} names neither sample \({said}; the samples are 'first' and "
+                          r"'extension'\), so nothing shows which run grades it, or whether building has stopped for its "
+                          r"sample \(protocol §20.2; decision log D73\)$")
+
+
+def test_a_family_that_is_not_accepted_is_refused(nat, monkeypatch):
+    """A run grades only accepted (S11) families (§16.4, §20.2), so D19, the first step of its run (D73), is refused for a
+    family whose committed row is not S11, though building has stopped and its seven phase ends are committed."""
+    docker = Docker(monkeypatch, nat)
+    _index(nat, tasks=[_row(s11=False)])
+    _refused(nat, docker, rf"NP-90: it is not S11 in {INDEX_AT}: a run grades only accepted families, so D19 has no run "
+                          r"to be the first step of \(protocol §16.4, §20.2; decision log D73\)$")
+
+
+def test_a_task_without_a_row_in_the_committed_index_is_refused(nat, monkeypatch):
+    """Building has stopped for both samples by the committed index, whose only family is NP-91 (rejected at S10), but
+    NP-90 has no row there, so nothing shows its sample (D73). A row in the working tree's index is not read."""
+    docker = Docker(monkeypatch, nat)
+    _index(nat, tasks=[_row("NP-91", s11=False, outcome="rejected")],
+           s9_complete={"first": {"screened": 150, "families": ["NP-91"]}, "extension": EXTENSION_DONE})
+    no_row = (rf"NP-90: {INDEX_AT} has no row for it, so nothing shows its sample, which run grades it, or whether "
+              r"building has stopped for that sample \(protocol §20.2; decision log D73\)$")
+    _refused(nat, docker, no_row)
+    write_index_row(nat.root, nat.task_id, sample="first", commit=False)  # in the working tree only
+    _refused(nat, docker, no_row)
+
+
+@pytest.mark.parametrize("case", ["no P7", "no P3", "no line", "out of order", "twice", "recorded earlier"])
+def test_d19_waits_for_the_family_s_phase_ends(nat, monkeypatch, case):
+    """D65, D73: the committed phase-end log holds a line for each of the family's phases P1 to P7, in order: each phase
+    once, after the phase before it, and recorded no earlier than it."""
+    docker = Docker(monkeypatch, nat)
+    tid = nat.task_id
+    missing = rf"NP-90: {LOG_AT} has no line for its phase{{}}; D19 and the run grade a natural family once its phases P1 to " \
+              r"P7 have ended, each recorded with scripts/record_phase_end.py and committed \(decision log D65, D73\)$"
+    disorder = rf"NP-90: its lines in {LOG_AT} are not in the order of its phases \({{}}\); in order, each phase comes " \
+               r"once, after the phase before it, and is recorded no earlier than it \(the pre-flight's reading of decision " \
+               r"log D73; scripts/record_phase_end.py refuses to append a line that breaks it, D65\)$"
+    if case in ("no P7", "no P3"):
+        lines = phase_ends(tid, tuple(p for p in PHASES if p != case[-2:]))
+        match = missing.format(f" {case[-2:]}")
+    elif case == "no line":
+        lines = phase_ends("NP-91")
+        match = missing.format("s P1, P2, P3, P4, P5, P6, P7")
+    else:
+        order = {"out of order": ("P1", "P2", "P4", "P3", "P5", "P6", "P7"), "twice": ("P1", "P2", "P2", *PHASES[2:]),
+                 "recorded earlier": PHASES}[case]
+        lines = phase_ends(tid, order)
+        if case == "recorded earlier":  # P5 recorded before P4 (04:00), though after it in the log
+            lines[4]["recorded_at"] = "2026-11-22T03:30:00Z"
+        shown = ", ".join(f"{x['phase']} at {x['recorded_at']}" for x in lines)
+        match = disorder.format(re.escape(shown))
+    write_phase_ends(nat.root, lines)
+    _refused(nat, docker, match)
+
+
+def test_lines_of_other_tasks_do_not_count(nat, monkeypatch):
+    """Another family's P7 line does not stand in for NP-90's, and another family's lines between NP-90's (as when
+    families run side by side) do not break NP-90's order."""
+    docker = Docker(monkeypatch, nat)
+    write_phase_ends(nat.root, [*phase_ends(nat.task_id, PHASES[:6]), *phase_ends("NP-91")])
+    _refused(nat, docker, rf"NP-90: {LOG_AT} has no line for its phase P7; ")
+    mine, theirs = phase_ends(nat.task_id), phase_ends("NP-91", day="2026-11-21")
+    write_phase_ends(nat.root, [x for pair in zip(theirs, mine, strict=True) for x in pair])
+    _labelled(nat, docker)
+
+
+def test_only_the_committed_phase_end_log_is_read(nat, monkeypatch, tmp_path):
+    """The log as the HEAD commit holds it, read as the index is (contract.committed_text): the working tree's log, to
+    which record_phase_end.py appends before the builder commits it, is not read, and neither GIT_DIR nor GIT_WORK_TREE of
+    the caller redirects git to another repository."""
+    docker = Docker(monkeypatch, nat)
+    write_phase_ends(nat.root, phase_ends(nat.task_id, PHASES[:6]))  # committed without P7
+    write_phase_ends(nat.root, phase_ends(nat.task_id), commit=False)  # P7 in the working tree only
+    no_p7 = rf"NP-90: {LOG_AT} has no line for its phase P7; "
+    _refused(nat, docker, no_p7)
+    other = tmp_path / "other"  # a repository whose HEAD commit holds the whole log, and a natural index with NP-90's row
+    other.mkdir()
+    init_git(other)
+    write_phase_ends(other, phase_ends(nat.task_id))
+    shutil.copytree(nat.index.parent, other / INDEX.parent, dirs_exist_ok=True)
+    git(other, "add", "--", INDEX.as_posix())
+    git(other, "commit", "-q", "--no-verify", "-m", "natural index (synthetic fixture)")
+    monkeypatch.setenv("GIT_DIR", str(other / ".git"))
+    monkeypatch.setenv("GIT_WORK_TREE", str(other))
+    _refused(nat, docker, no_p7)
+    monkeypatch.delenv("GIT_DIR")
+    monkeypatch.delenv("GIT_WORK_TREE")
+    write_phase_ends(nat.root, phase_ends(nat.task_id))  # P7 committed
+    (nat.root / PHASE_ENDS).write_text("not a phase-end log\n", encoding="utf-8")  # the working tree's log: not read
+    _labelled(nat, docker)
+
+
+@pytest.mark.parametrize("case, why", [
+    ("not committed", r"git gives no text for it from the HEAD commit: .*its HEAD commit does not hold the file"),
+    ("not JSON", r"its line 3 is not JSON"),
+    ("not an object", r"its line 2 is not a JSON object"),
+    ("another schema", (r'its line 1 is not a record of tracecontract/natural-phase-end/v1 \(its schema is '
+                        r'"tracecontract/natural-phase-end/v0"\)')),
+    ("no task", r"its line 4 names no task \(its task_id is null\)"),
+    ("phase P8", r'its line 7 records the phase "P8", not one of P1, P2, P3, P4, P5, P6, P7'),
+    ("no time zone", r'its line 5 records no time with a time zone \(its recorded_at is "2026-11-22T05:00:00"\)'),
+    ("another task's line", r'its line 8 records the phase "P0", not one of P1'),
+])
+def test_an_unreadable_or_malformed_committed_phase_end_log_refuses(nat, monkeypatch, case, why):
+    """Fail closed: a log that git does not give from the HEAD commit, or that holds one line that is not a phase-end
+    record (of any task), shows nothing, even though NP-90's seven lines are there."""
+    docker = Docker(monkeypatch, nat)
+    lines: list = phase_ends(nat.task_id)
+    if case == "not committed":
+        git(nat.root, "rm", "-q", "--", PHASE_ENDS.as_posix())
+        git(nat.root, "commit", "-q", "--no-verify", "-m", "no phase-end log (synthetic fixture)")
+        write_phase_ends(nat.root, lines, commit=False)  # the whole log, in the working tree only
+    else:
+        if case == "not JSON":
+            lines.insert(2, '{"schema": "tracecontract/natural-phase-end/v1", "task_id": "NP-90",')
+        elif case == "not an object":
+            lines.insert(1, json.dumps(["NP-90", "P1"]))
+        elif case == "another schema":
+            lines[0]["schema"] = "tracecontract/natural-phase-end/v0"
+        elif case == "no task":
+            lines[3]["task_id"] = None
+        elif case == "phase P8":
+            lines[6]["phase"] = "P8"
+        elif case == "no time zone":
+            lines[4]["recorded_at"] = "2026-11-22T05:00:00"
+        else:
+            lines.append(phase_end_line("NP-91", "P0", "2026-11-22T08:00:00Z"))
+        write_phase_ends(nat.root, lines)
+    _refused(nat, docker, rf"NP-90: natural: {LOG_AT} cannot be read \({why}.*\), so nothing shows that NP-90 ended the "
+                          r"phases P1 to P7 in order; D19 and the run of a natural family need them \(decision log D65, "
+                          r"D73\)$")
+
+
+def test_every_problem_of_the_gate_is_reported(nat, monkeypatch):
+    """Building has not stopped for the first sample and the phase-end log lacks P7: one refusal names both."""
+    docker = Docker(monkeypatch, nat)
+    _index(nat, s9_complete={"extension": EXTENSION_DONE})
+    write_phase_ends(nat.root, phase_ends(nat.task_id, PHASES[:6]))
+    _refused(nat, docker, r"NP-90: natural: building has not stopped for the first sample by the committed index: .*; "
+                          rf"{LOG_AT} has no line for its phase P7; ")
 
 
 def test_a_natural_task_is_labelled_with_frozen_reference_checks_only(nat, monkeypatch):
