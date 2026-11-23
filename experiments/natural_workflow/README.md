@@ -15,6 +15,10 @@ families ran with it (D67, D68, D70), and the later phases run with it too.
 * Agent options follow each template's source workflow (D65): the default workflow agent for the generate workflow's
   roles, the general-purpose agent type for the held-out workflow's roles (the reviewers with the source's review
   schema), configuration B for the labeler and its revision.
+* `host_step: {name, text}` in the args runs one host step on its own, with the phase's coordinator rules, and sends
+  no generator: for a step the build session must finish after a tooling fix, without running the phase again (a
+  resumed run would not replay from cache once the coordinators' rules have changed). Each use is logged in the
+  decision log; the first finished NP-04's P6 registration (D72).
 * After each phase, run `scripts/record_phase_end.py data/natural/tasks/<task> --phase <P>`, commit
   `data/manifests/natural_phase_ends.jsonl` alone, and push it before P6 (F7).
 * The sha256 code in the script was tested against a standard implementation on 20 inputs, including the twelve proposer

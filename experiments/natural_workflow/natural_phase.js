@@ -193,6 +193,20 @@ const simplePhase = async (prepText, regText) => {
   return register('register', outs, regText)
 }
 
+// One host step on its own (args.host_step = {name, text}), with the phase's coordinator rules: for a step the build
+// session must finish after a tooling fix, without running the phase again. It sends no generator and returns no
+// prompts; each use is logged in the decision log.
+if (args.host_step) {
+  const hs = args.host_step
+  if (typeof hs.name !== 'string' || !/^[a-z0-9-]+$/.test(hs.name) || typeof hs.text !== 'string' || !hs.text.trim())
+    throw new Error('args.host_step: {name: a short lower-case step name, text: what the step does}')
+  phase('Register')
+  const h = rec(hs.name, await host(hs.name, `${hs.text}\nThis step sends no generator: return no next_prompts and no reruns.`))
+  if (h && ((h.next_prompts || []).length || (h.reruns || []).length))
+    out.steps.push({ name: `${hs.name}-prompts-ignored`, problems: ['the step returned prompts; none was sent'], stop: true })
+  return finish(!halted(h) && !((h.next_prompts || []).length || (h.reruns || []).length))
+}
+
 if (PH === 'P1') {
   const h = await simplePhase(
     `P1. The proposer workspaces ${WS}/contract-initial and ${WS}/contract-full and their prompts ${RR}/prompts/contract-initial.txt and contract-full.txt were made before D65. Check that D65 is in the committed decision log (git show HEAD:docs/decision_log.md), that each saved prompt renders equal (check_natural_prompts.py render experiments/prompts/natural/contract_v1-natural.txt --variant initial_only or full_session --set TASK=${T} --set WS=<workspace> --set SESSION_ID=<the session id of session.json> --verify <file>) and has the sha256 D65 logs for ${T}, and that both workspaces still hold only manifest.json, an empty scratch/, the session file and session_events.json. Return the two prompts as next_prompts (roles contract-initial and contract-full, config A), copied from the saved files.`,
