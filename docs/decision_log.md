@@ -2862,3 +2862,39 @@ build session started Docker as in D68. Times are UTC, 2026-11-23 unless stated.
   * `propose_labels.py`, and the pre-flight for every family of a natural run, require the family's P1 to P7 lines in
     the committed phase-end log.
   * The natural index is committed again after the last P7 (D65).
+
+### D74. When D19 may run, as code: the label gate and the pre-flight read the committed records
+D73 listed what was to be done before D19, with tests. It was built in an isolated worktree, reviewed through two
+lenses (correctness; fidelity to the protocol and this log), fixed, and verified again by the build session. This
+entry records it before its first use.
+* **The label gate (`scripts/propose_labels.py`).** D19 runs on a natural family only when all of these hold, by the
+  records as the HEAD commit holds them:
+  * the family's row in the committed natural index names its sample;
+  * building has stopped for that sample (the pre-flight's rule of §20.2, D73);
+  * the family is accepted (S11);
+  * every row of the index names a sample;
+  * the committed phase-end log holds P1 to P7 of the family and of every accepted family of its sample, the families
+    its run grades with it.
+
+  Anything that cannot be read or applied is a refusal, before anything is looked up, graded or written. The rules are
+  the pre-flight's own functions, so the gate and the pre-flight cannot disagree on these records.
+* **The pre-flight** requires the same seven phase-end lines for every natural family a run grades.
+  * The log is read from HEAD, never from the working tree. One malformed line makes it unusable.
+  * "In order" means, in the log's order, each phase once, after the one before it, with a `recorded_at` no earlier.
+    The time condition is the pre-flight's own reading; D65 names the log's commits as the order record, and those stay
+    the builder's record.
+  * Two shared rules now fail closed:
+    * a family that the S9 record lists for a sample must have a row naming that sample;
+    * a row that names no sample counts for both samples.
+* **`scripts/record_phase_end.py`** refuses to append a line that the reader would refuse later: a time earlier than
+  the family's last, a time without a time zone, and a log line that is not a JSON object.
+* **The reviews.**
+  * Both reviewers found that the first version required only the family's own phase ends, where D73 requires every
+    family of its run.
+  * One found that a row naming no sample could hide a family from the building rule.
+  * Ten findings in all were confirmed and fixed. The build session added the S11 requirement, which neither review
+    raised.
+  * Each new or changed test fails without its change. Full offline suite, ruff (no new finding) and
+    `verify_frozen_inputs` are as the commit says.
+* **Effect now.** D19 and the pre-flight refuse every first-sample family until all six have committed their P7 line.
+  This is the order D73 describes.
