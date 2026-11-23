@@ -1,0 +1,832 @@
+{
+  "code_revision": "e9c9c91450c087754b59f642b8ab3fc7ac8c367a",
+  "conditions": null,
+  "extra_verifiers": true,
+  "finished_at": "2026-11-23T08:35:10+00:00",
+  "invocations": [
+    {
+      "at": "2026-11-23T04:14:36+00:00",
+      "code_revision": "e9c9c91450c087754b59f642b8ab3fc7ac8c367a",
+      "pilot": true,
+      "tasks": [
+        "NP-03",
+        "NP-04",
+        "NP-05",
+        "NP-18",
+        "NP-19",
+        "NP-20"
+      ]
+    },
+    {
+      "at": "2026-11-23T04:15:05+00:00",
+      "code_revision": "e9c9c91450c087754b59f642b8ab3fc7ac8c367a",
+      "pilot": true,
+      "tasks": [
+        "NP-03",
+        "NP-04",
+        "NP-05",
+        "NP-18",
+        "NP-19",
+        "NP-20"
+      ]
+    }
+  ],
+  "limits": {
+    "cpus": 2.0,
+    "memory": "4g",
+    "pids": 512,
+    "tmp_size": "512m",
+    "wall_s": 900.0,
+    "work_size": "1g"
+  },
+  "pilot": true,
+  "repeats": 3,
+  "run_id": "natural-pr-v1",
+  "split": "eval",
+  "started_at": "2026-11-23T04:14:36+00:00",
+  "tasks": [
+    {
+      "acceptance_gate": {
+        "accepted": false,
+        "passed": false,
+        "provenance_eligibility": "pending_review",
+        "reasons": [
+          "provenance: eligibility is 'pending_review'; a reviewer must find the source eligible",
+          "contract initial_only: needs_human_review: inferred R4 (no human review)",
+          "contract initial_only: unresolved: R5 must be resolved or removed",
+          "contract initial_only: unresolved: R6 must be resolved or removed",
+          "contract full_session: needs_human_review: inferred R6 (no human review)",
+          "contract full_session: unresolved: R7 must be resolved or removed",
+          "contract reference: needs_human_review: reference requirement R1 (no human review)",
+          "contract reference: needs_human_review: inferred R2 (no human review)",
+          "contract reference: needs_human_review: inferred R3 (no human review)",
+          "contract reference: needs_human_review: reference requirement R4 (no human review)",
+          "contract reference: needs_human_review: inferred R5 (no human review)",
+          "contract reference: unresolved: R6 must be resolved or removed",
+          "contract reference: unresolved: R7 must be resolved or removed",
+          "contract reference: needs_human_review: reference requirement R8 (no human review)",
+          "contract reference: needs_human_review: reference requirement R9 (no human review)"
+        ],
+        "refused": false,
+        "status": "pending_review",
+        "task_id": "NP-03"
+      },
+      "candidates": {
+        "NP-03-eval-alt-1": {
+          "origin": "valid_alternative",
+          "patch_sha256": "c5ac3a1f262642872b723d7a925875fe9d63a77b99d5f07270ba5bbe50bcbf28"
+        },
+        "NP-03-eval-alt-2": {
+          "origin": "valid_alternative",
+          "patch_sha256": "bc2bc7510224ec0067644a00cc9d17880bccd0739bab28671a8292942ea1f594"
+        },
+        "NP-03-eval-nm-1": {
+          "origin": "constructed_near_miss",
+          "patch_sha256": "47b0a71da6a46d58ce1d014130748d7417444c9683824b0448fb01573d4724c4"
+        },
+        "NP-03-eval-nm-2": {
+          "origin": "constructed_near_miss",
+          "patch_sha256": "4f92f7e283692b23e3e984a70b61c61c22b912a17e219a7caed59226d0e96b58"
+        },
+        "NP-03-eval-nm-3": {
+          "origin": "constructed_near_miss",
+          "patch_sha256": "22bf5e0533dee81ad7824fe986d506b73c5aeea29833c75d39a7d0b1aaf3d039"
+        },
+        "NP-03-noop-eval": {
+          "origin": "noop",
+          "patch_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "NP-03-pre-review": {
+          "origin": "natural_pre_review",
+          "patch_sha256": "8a540b5f184b7228333bfbae3b56e8699a86b5ba58d7e3f6601641e3afe7c049"
+        },
+        "NP-03-reference": {
+          "origin": "reference",
+          "patch_sha256": "16294492dfc4cc4b03841c028cf3f9d138e8a37ca3e24ba1c99a793b27b4cffe"
+        }
+      },
+      "family_id": "NP-03",
+      "image": "tc-env:c7b06491cbe03e15",
+      "image_id": "sha256:e64fde265f6286dbe9dec056f0eae5f41ac4f71e846b7587b54c257feea26baa",
+      "snapshot_manifest_sha256": "95314e6cc6719d397cf104e26dc0c9d8766f6c77d37e5cfff99b970840efd864",
+      "task_dir": "data/natural/tasks/NP-03",
+      "task_id": "NP-03",
+      "verifiers": {
+        "diff_derived": {
+          "checks_sha256": "074fb7090554cc075cae289af174280540e55808b271f3aa11c0fd6d1e909e7e",
+          "condition": "diff_derived",
+          "content_sha256": "6be885e48669aa1614994ec792b5f0aaf704992bfe38dcdf601d2425fcf1319c",
+          "n_checks": 11,
+          "version": 1
+        },
+        "full_audited": {
+          "checks_sha256": "3a52775484c41a39c021c66faa3912b2b8bb4ebc4b4ab741981ec4219b3f0c9b",
+          "condition": "full_audited",
+          "content_sha256": "2f68f79861f208af51f1c0de86eccb5c4a0fec244f1afd42e9a041e3c6e09f41",
+          "n_checks": 15,
+          "version": 1
+        },
+        "full_plain": {
+          "checks_sha256": "c2cada7f818e57ccca59262e11d13e8419127ea8ca829b7c7c63eb6c2ec7c9dc",
+          "condition": "full_plain",
+          "content_sha256": "37cc453534b5c0a7c130e0f9cfa144e85222aa6a37e77545d2884a702989c5a8",
+          "n_checks": 14,
+          "version": 1
+        },
+        "independent_label": {
+          "checks_sha256": "b43da069392e99232d5c0e816a239852201d9c65ebaa24d3ed14fe2471e51313",
+          "condition": "reference_check",
+          "content_sha256": "9bde2a0d2ff6dfe694bdf677d33cfd2574c61d0920c8f5a5fa40a8c84bdd70e4",
+          "n_checks": 17,
+          "version": 1
+        },
+        "initial_audited": {
+          "checks_sha256": "13b865a4e8451136cccc2799a60cb10f5ab06d47ceee9e8400bcd125e4da1b9d",
+          "condition": "initial_audited",
+          "content_sha256": "2bf829ab947ee86080529504345873b19a7238e35a4e674f0507e619dc68ad97",
+          "n_checks": 14,
+          "version": 1
+        },
+        "initial_plain": {
+          "checks_sha256": "0929dd832eeba0a8d7f947c49992d25af35a018f71311792a1e2ab4497b1f44d",
+          "condition": "initial_plain",
+          "content_sha256": "efc8f51f6181752a03366fd1d0b1e1697aeab833494c60651a15f4a41ff495dc",
+          "n_checks": 11,
+          "version": 1
+        },
+        "llm_freeform": {
+          "checks_sha256": "0c57b187f3a72b15a2a5b159fd0125aa4235a35efa91914baade30a7eb314d42",
+          "condition": "llm_freeform",
+          "content_sha256": "7dabcb3bde869cd8cece81c1e936692049bfbe32a810d67b2964d5cbe64ca2ab",
+          "n_checks": 14,
+          "version": 1
+        },
+        "reference_check": {
+          "checks_sha256": "7e605629a265bc27831b80bac44610b0824bce0d0321c2a64936039a7c8f26f8",
+          "condition": "reference_check",
+          "content_sha256": "f13e361ebb79605313ca3c8c91eb1f17d59c537497340c5cd5169d37d3836600",
+          "n_checks": 19,
+          "version": 1
+        },
+        "repo_tests": {
+          "checks_sha256": "8d07a9347a5a05b9bb4febc8c6ce0233db60aefd44f0689401b092aec1a89a63",
+          "condition": "repo_tests",
+          "content_sha256": "0edbce1bbb7dd9091f51a8ad7e75b4c346d2821ad5ed373d78796535586f7028",
+          "n_checks": 954,
+          "version": 1
+        }
+      }
+    },
+    {
+      "acceptance_gate": {
+        "accepted": false,
+        "passed": false,
+        "provenance_eligibility": "pending_review",
+        "reasons": [
+          "provenance: eligibility is 'pending_review'; a reviewer must find the source eligible",
+          "contract initial_only: needs_human_review: inferred R2 (no human review)",
+          "contract full_session: needs_human_review: inferred R4 (no human review)",
+          "contract full_session: unresolved: R5 must be resolved or removed",
+          "contract reference: needs_human_review: reference requirement R1 (no human review)",
+          "contract reference: needs_human_review: inferred R2 (no human review)",
+          "contract reference: needs_human_review: reference requirement R4 (no human review)",
+          "contract reference: needs_human_review: inferred R5 (no human review)"
+        ],
+        "refused": false,
+        "status": "pending_review",
+        "task_id": "NP-04"
+      },
+      "candidates": {
+        "NP-04-eval-alt-1": {
+          "origin": "valid_alternative",
+          "patch_sha256": "ed78dc39c835a49547233a011157749090f74f3ba24bf85ba96f804dcc0694f7"
+        },
+        "NP-04-eval-alt-2": {
+          "origin": "valid_alternative",
+          "patch_sha256": "feb01a09097e10d219e673ab0cd8a496381c0c60e02889d1ff5f49b15ca40358"
+        },
+        "NP-04-eval-nm-1": {
+          "origin": "constructed_near_miss",
+          "patch_sha256": "31c6977fbbcbdec87be282b55bcac17a12342bd0a3852eac4bcb5233eda559e4"
+        },
+        "NP-04-eval-nm-2": {
+          "origin": "constructed_near_miss",
+          "patch_sha256": "ba174740b747a5e1d21786131d1562673b633ef96c3545ddac889032eb240cf5"
+        },
+        "NP-04-eval-nm-3": {
+          "origin": "constructed_near_miss",
+          "patch_sha256": "4dafba6dc65a0425a93e72d10236425d4ed9d71925c7b03c81419650afeae50e"
+        },
+        "NP-04-noop-eval": {
+          "origin": "noop",
+          "patch_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "NP-04-pre-review": {
+          "origin": "natural_pre_review",
+          "patch_sha256": "4dac8f6bc43ccabe0d970b2d6ec2eeb919a7f3f89d2df16b49b3f688684afe67"
+        },
+        "NP-04-reference": {
+          "origin": "reference",
+          "patch_sha256": "569f02c44d1d24a5f71a1d9dbed2781d8768136d59e44a32ac4bb2ae5cc6345e"
+        }
+      },
+      "family_id": "NP-04",
+      "image": "tc-env:bad629bd447b5dde",
+      "image_id": "sha256:4c723b54c31a78e99b02c0c31be361ec542fa7c7a330fab4af6c1173f413ed2d",
+      "snapshot_manifest_sha256": "dbf2d81aa39001ae1162d62b428194a18536437d52f4520aac21aef2838d86f5",
+      "task_dir": "data/natural/tasks/NP-04",
+      "task_id": "NP-04",
+      "verifiers": {
+        "diff_derived": {
+          "checks_sha256": "7da28e7a33c638e8ba56b759cca895ac0bdb9c77e8c3e913499d3d709bd0b169",
+          "condition": "diff_derived",
+          "content_sha256": "7593bace8de7a3e1b8d1f127cdf88547e2508b18dc48d15b4a859b4aa703b56e",
+          "n_checks": 14,
+          "version": 1
+        },
+        "full_audited": {
+          "checks_sha256": "9182ddaf66964a51607fdf31f14934e23ad5b566b101368fa50bf160804ae60f",
+          "condition": "full_audited",
+          "content_sha256": "778a849c30706b798db70346dce3db7d3c0d1c45f52a449fc80fb7a7ac3ce762",
+          "n_checks": 14,
+          "version": 1
+        },
+        "full_plain": {
+          "checks_sha256": "9182ddaf66964a51607fdf31f14934e23ad5b566b101368fa50bf160804ae60f",
+          "condition": "full_plain",
+          "content_sha256": "778a849c30706b798db70346dce3db7d3c0d1c45f52a449fc80fb7a7ac3ce762",
+          "n_checks": 14,
+          "version": 1
+        },
+        "independent_label": {
+          "checks_sha256": "aaa2dfedd48b7b7e94dc9af7ffacc81312edcf5253fccc6bae457c284e68b846",
+          "condition": "reference_check",
+          "content_sha256": "bb8ecb5e557a0c64b126be35002c4e98196538c53508e8f72c3e70c375a1bb8e",
+          "n_checks": 9,
+          "version": 1
+        },
+        "initial_audited": {
+          "checks_sha256": "7d620d494b4fbf85f2280064afa4e7788a2deea14a5e131eb864e4d6bd658381",
+          "condition": "initial_audited",
+          "content_sha256": "138299164fa219959ee9403366d1988578a25db6d3d1f4a19af48c3b101b4f41",
+          "n_checks": 12,
+          "version": 1
+        },
+        "initial_plain": {
+          "checks_sha256": "638cae3309d7ff648bbbf97c9a019e04ff3ce1b88b8aff82010570c9dd00c26d",
+          "condition": "initial_plain",
+          "content_sha256": "81859603faec175d68da02c3a4a4db5a9501f6a39db39becb1d70e9c878941b0",
+          "n_checks": 11,
+          "version": 1
+        },
+        "llm_freeform": {
+          "checks_sha256": "4b78b355db50043830d62bb772c592a907cb928dd3d3f852328aee27c511ab4d",
+          "condition": "llm_freeform",
+          "content_sha256": "281b2f5fb3392443ec46d85ff4f51cfc0e0cad1f6d4bc49451f043f557d8965e",
+          "n_checks": 11,
+          "version": 1
+        },
+        "reference_check": {
+          "checks_sha256": "b6ba1e2b224d2d152aabdf8c5549679338f73c7042d79e8217dd3427ef99b40f",
+          "condition": "reference_check",
+          "content_sha256": "75d7b0b4187e0827d6af4ae0ecb4bda433743acd09d4943fdf6c6a5ccc9d6c89",
+          "n_checks": 18,
+          "version": 1
+        },
+        "repo_tests": {
+          "checks_sha256": "43a59a681911fac79c1bb4f13bc5cfd6267119c3581bed53a28dd7de4c85e850",
+          "condition": "repo_tests",
+          "content_sha256": "6b3e70a69aae4e7b54e166f91e9cf346f378f74ed9034344de660b7c861064ed",
+          "n_checks": 34,
+          "version": 1
+        }
+      }
+    },
+    {
+      "acceptance_gate": {
+        "accepted": false,
+        "passed": false,
+        "provenance_eligibility": "pending_review",
+        "reasons": [
+          "provenance: eligibility is 'pending_review'; a reviewer must find the source eligible",
+          "contract initial_only: unresolved: R3 must be resolved or removed",
+          "contract initial_only: needs_human_review: inferred R4 (no human review)",
+          "contract initial_only: needs_human_review: inferred R5 (no human review)",
+          "contract initial_only: needs_human_review: inferred R6 (no human review)",
+          "contract initial_only: needs_human_review: inferred R7 (no human review)",
+          "contract initial_only: needs_human_review: inferred R11 (no human review)",
+          "contract initial_only: unresolved: R12 must be resolved or removed",
+          "contract full_session: needs_human_review: inferred R2 (no human review)",
+          "contract full_session: unresolved: R3 must be resolved or removed",
+          "contract full_session: needs_human_review: inferred R4 (no human review)",
+          "contract reference: needs_human_review: reference requirement R1 (no human review)",
+          "contract reference: needs_human_review: inferred R2 (no human review)",
+          "contract reference: needs_human_review: inferred R3 (no human review)",
+          "contract reference: needs_human_review: reference requirement R4 (no human review)",
+          "contract reference: needs_human_review: reference requirement R7 (no human review)",
+          "contract reference: needs_human_review: reference requirement R8 (no human review)",
+          "contract reference: needs_human_review: inferred R9 (no human review)",
+          "contract reference: needs_human_review: inferred R10 (no human review)",
+          "contract reference: needs_human_review: inferred R11 (no human review)",
+          "contract reference: needs_human_review: inferred R12 (no human review)",
+          "contract reference: unresolved: R13 must be resolved or removed"
+        ],
+        "refused": false,
+        "status": "pending_review",
+        "task_id": "NP-05"
+      },
+      "candidates": {
+        "NP-05-eval-alt-1": {
+          "origin": "valid_alternative",
+          "patch_sha256": "935b7bbcb16be42e0cb8fb0ee1d1e421725448d115cd079211b1ee8d704bb251"
+        },
+        "NP-05-eval-alt-2": {
+          "origin": "valid_alternative",
+          "patch_sha256": "35505d1a32d78588f0ac4ad6de482b80df8090bc767e85b83d3c3bd2c35b36e3"
+        },
+        "NP-05-eval-nm-1": {
+          "origin": "constructed_near_miss",
+          "patch_sha256": "1a0de9c93e36732d2c1e474cb2fd737fe2ea7197f6fa9f60d02f6024b0f753bd"
+        },
+        "NP-05-eval-nm-2": {
+          "origin": "constructed_near_miss",
+          "patch_sha256": "d6c2f04ca39a39d5a191a24de71d068ba6f093b7b54f4364a22842f94f8e2a18"
+        },
+        "NP-05-eval-nm-3": {
+          "origin": "constructed_near_miss",
+          "patch_sha256": "cbfb2a7e971106b8c37ada6ed775487d51c25174d65a8ce931710256d7ea8866"
+        },
+        "NP-05-noop-eval": {
+          "origin": "noop",
+          "patch_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "NP-05-pre-review": {
+          "origin": "natural_pre_review",
+          "patch_sha256": "74694e6b5d895995e7b24045ebc7b66d2e16e106bc158f9c15df35ea022e1748"
+        },
+        "NP-05-reference": {
+          "origin": "reference",
+          "patch_sha256": "3d1cf6157daf0bbff50233537c6862fd5526f2436b424855f9e6c0747f93bd2a"
+        }
+      },
+      "family_id": "NP-05",
+      "image": "tc-env:6e35a40e852b04b4",
+      "image_id": "sha256:70f5b91fd6f23b73d5df3bb1707325e2900687ace4aa53424289e61864b465a8",
+      "snapshot_manifest_sha256": "239679254006b762ffa3fb041c740fac193d3ab5b09d8dfb64c1988ca8130958",
+      "task_dir": "data/natural/tasks/NP-05",
+      "task_id": "NP-05",
+      "verifiers": {
+        "diff_derived": {
+          "checks_sha256": "cd8b74aed18037fafe9abcb224e5c6a9efac0c884c0c973a8f6de575d7f435f4",
+          "condition": "diff_derived",
+          "content_sha256": "916afc15db0f53a129f1bea6a65595779bfdd7dc7180157f79891b502d3ac8fb",
+          "n_checks": 14,
+          "version": 1
+        },
+        "full_audited": {
+          "checks_sha256": "00d4a7c07d04e6d410c93bbfefe88cf798a61acebd11f4d5b2e7ef1af2c4c4df",
+          "condition": "full_audited",
+          "content_sha256": "4c1a01b993740ab109d450877d87a43f2cc18dfcf9afae78876f794f20c30e25",
+          "n_checks": 15,
+          "version": 1
+        },
+        "full_plain": {
+          "checks_sha256": "0a2620c1f78852303265f82b897a30c0c3682d921d7d638dcb2c2021cf7b9132",
+          "condition": "full_plain",
+          "content_sha256": "de5de1d010e8d74e5342ca35b2ecb6d5068939aa8d9da1b8c9c76b5ca816d770",
+          "n_checks": 14,
+          "version": 1
+        },
+        "independent_label": {
+          "checks_sha256": "a10c6405fab5bd5a485bf2c3addb9412b8e870997ad2fca73f773d839546d730",
+          "condition": "reference_check",
+          "content_sha256": "b03f6da5fea6b6643740ddcb95f270321176856b8a51d3bc3a385c6a1d81cd3d",
+          "n_checks": 17,
+          "version": 1
+        },
+        "initial_audited": {
+          "checks_sha256": "dec8564cb677e82de169cc52da51fd1de7c4390589c900f48d15f2bb5f8ff55e",
+          "condition": "initial_audited",
+          "content_sha256": "5acca7ca1cd41351737b28463decc0df775451e4965a525b4df9db039d8d1e2e",
+          "n_checks": 14,
+          "version": 1
+        },
+        "initial_plain": {
+          "checks_sha256": "c1031884a4f210086a58f8612a3441db38233d8a63fbd1f9411dffa4d6b78ebf",
+          "condition": "initial_plain",
+          "content_sha256": "dd1e58367f22e2c9aad4be986680e4d779d08b8037a4f7affa2ebd1bce9b94f5",
+          "n_checks": 14,
+          "version": 1
+        },
+        "llm_freeform": {
+          "checks_sha256": "1b1accc3495b8df797f57750636972dc74ce186650056315bb2dd0c25dc1e356",
+          "condition": "llm_freeform",
+          "content_sha256": "7ded4a76630bcb3e9b9ed516ac71536e78a97f23119734517d5e0d39f848e17e",
+          "n_checks": 12,
+          "version": 1
+        },
+        "reference_check": {
+          "checks_sha256": "2579b463775e3967e7d62bb9c152c8e83444812925c7f4874b01051cc0b7d433",
+          "condition": "reference_check",
+          "content_sha256": "5291018338e1accf4ea49451c684d1f55fcacf5e4c339a12367a9cfdca66fd3d",
+          "n_checks": 18,
+          "version": 1
+        },
+        "repo_tests": {
+          "checks_sha256": "7ee374fd4cddf6fa4fc565e5c828454498ad8d3aa6309e8620fe2252310f3a3e",
+          "condition": "repo_tests",
+          "content_sha256": "7951dd792019034a13dab2953a475d84905f4ea5b507397e9ff41c93fb36778b",
+          "n_checks": 354,
+          "version": 1
+        }
+      }
+    },
+    {
+      "acceptance_gate": {
+        "accepted": false,
+        "passed": false,
+        "provenance_eligibility": "pending_review",
+        "reasons": [
+          "provenance: eligibility is 'pending_review'; a reviewer must find the source eligible",
+          "contract initial_only: needs_human_review: inferred R3 (no human review)",
+          "contract initial_only: needs_human_review: inferred R4 (no human review)",
+          "contract initial_only: needs_human_review: inferred R5 (no human review)",
+          "contract full_session: needs_human_review: inferred R2 (no human review)",
+          "contract reference: needs_human_review: reference requirement R1 (no human review)",
+          "contract reference: needs_human_review: reference requirement R2 (no human review)",
+          "contract reference: needs_human_review: inferred R3 (no human review)",
+          "contract reference: needs_human_review: inferred R4 (no human review)",
+          "contract reference: unresolved: R5 must be resolved or removed"
+        ],
+        "refused": false,
+        "status": "pending_review",
+        "task_id": "NP-18"
+      },
+      "candidates": {
+        "NP-18-eval-alt-1": {
+          "origin": "valid_alternative",
+          "patch_sha256": "2aacad9e51bca824bd7f1536192868038dbdae166686e90e3ec5a02f11795551"
+        },
+        "NP-18-eval-alt-2": {
+          "origin": "valid_alternative",
+          "patch_sha256": "c2055baac7205ee0b523545cfbfe80390b2ba188347461a6738d4130002b6021"
+        },
+        "NP-18-eval-nm-1": {
+          "origin": "constructed_near_miss",
+          "patch_sha256": "606c6aec816b26d7abd79dd42df598abff87dc32b92017d37c53252cad28f31f"
+        },
+        "NP-18-eval-nm-2": {
+          "origin": "constructed_near_miss",
+          "patch_sha256": "d2820b793f9eafbb52d72363b8dc2da95fc4bd23b26943b4ca092ffea81f0c24"
+        },
+        "NP-18-eval-nm-3": {
+          "origin": "constructed_near_miss",
+          "patch_sha256": "5b99227a4761419112de8ca15dc2f73d3c4e6908f1acd2045f00e83ddcbd2313"
+        },
+        "NP-18-noop-eval": {
+          "origin": "noop",
+          "patch_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "NP-18-pre-review": {
+          "origin": "natural_pre_review",
+          "patch_sha256": "67081830ac3814975e7ef7b21a1f9a7c358f53783074f870981f4274b4dec4d5"
+        },
+        "NP-18-reference": {
+          "origin": "reference",
+          "patch_sha256": "bdea7efc59ccad1ef5734bf473a0c42234acdb0304a5bd219e517e5dc5f86efd"
+        }
+      },
+      "family_id": "NP-18",
+      "image": "tc-env:62b89214c85f0c2e",
+      "image_id": "sha256:0675e80acb7e9b5f6c1d9a0661de082d697a647686fb96564c17889f2eb04394",
+      "snapshot_manifest_sha256": "14e92d7a834467200ea967f77829aa4363dae79e8f56802261fc9bc8eb1b38cc",
+      "task_dir": "data/natural/tasks/NP-18",
+      "task_id": "NP-18",
+      "verifiers": {
+        "diff_derived": {
+          "checks_sha256": "cf8bf9b60f5fc8784358182a4bc573ed45c526685fe5a9f58b833f97481a9571",
+          "condition": "diff_derived",
+          "content_sha256": "adddbbdc93b47816070074d3261c34ff624c7921438ff4521a2d1bc69469fbd2",
+          "n_checks": 13,
+          "version": 1
+        },
+        "full_audited": {
+          "checks_sha256": "9846431f4d6442a76363ba4086db691d679b9743764d48902e95ff8186d665e0",
+          "condition": "full_audited",
+          "content_sha256": "04448a5038d2f0b57602c999a36d55c81f2c12bf37aa253b8925eab7f7f9e269",
+          "n_checks": 12,
+          "version": 1
+        },
+        "full_plain": {
+          "checks_sha256": "5279d113fd8969441d57018a90995ffa70c67cb5449688b4bc963660d2fcc321",
+          "condition": "full_plain",
+          "content_sha256": "68ce01a696bcd4a12709376673e91da50dca916e875bd0306b44bbacd0fc09c8",
+          "n_checks": 11,
+          "version": 1
+        },
+        "independent_label": {
+          "checks_sha256": "6a3ff20572bd529a4a7c88a5f778846f388ce92719e1889fbc106abc376170b4",
+          "condition": "reference_check",
+          "content_sha256": "34da22caed856d28fefab9cce974e9b47885745a7a683981d32a67c918371044",
+          "n_checks": 10,
+          "version": 1
+        },
+        "initial_audited": {
+          "checks_sha256": "0019685213bc43dc87edc9ad5aaa96a410ad657c2b33e390c0498bf5f13f0c25",
+          "condition": "initial_audited",
+          "content_sha256": "5cc52db42b4c06337ca44651ebdaf1feb2d546309d5c6cd0f13c4113fd53802d",
+          "n_checks": 12,
+          "version": 1
+        },
+        "initial_plain": {
+          "checks_sha256": "c53e330e04727565eea2c5b10c453571aa6b9b84a6943aac9f5015c2601de9d0",
+          "condition": "initial_plain",
+          "content_sha256": "79cf723edb45450fc2f7fd49e889e41fde3068d552c69f474e2691ebe061f157",
+          "n_checks": 12,
+          "version": 1
+        },
+        "llm_freeform": {
+          "checks_sha256": "97a69172fea0d704f1d33c1edacd8da39a4a23f056f2438c2ed0356c62aa037b",
+          "condition": "llm_freeform",
+          "content_sha256": "bd69d01c146520edaef57d75225f7e61446e71a87af53ff413177d2bf2ed1ab4",
+          "n_checks": 12,
+          "version": 1
+        },
+        "reference_check": {
+          "checks_sha256": "c2902bc6a10aa5f28ba9e7dcf0a88e230c47a1b0fc53b5de86fc83b7291e3c8e",
+          "condition": "reference_check",
+          "content_sha256": "a846427b1a0311edd3286f973f5252674c1348cff4dd3065c54ce9ffd84028f6",
+          "n_checks": 14,
+          "version": 1
+        },
+        "repo_tests": {
+          "checks_sha256": "a2e72b4e15456e92712c00630290d667599aa1c9dc41eddd7600593faa572f5a",
+          "condition": "repo_tests",
+          "content_sha256": "053ffe44df580d0677d9a1aa5be688e70625380c6f624a46fa59bf405b1a18e6",
+          "n_checks": 26,
+          "version": 1
+        }
+      }
+    },
+    {
+      "acceptance_gate": {
+        "accepted": false,
+        "passed": false,
+        "provenance_eligibility": "pending_review",
+        "reasons": [
+          "provenance: eligibility is 'pending_review'; a reviewer must find the source eligible",
+          "contract initial_only: needs_human_review: inferred R3 (no human review)",
+          "contract initial_only: needs_human_review: inferred R4 (no human review)",
+          "contract full_session: needs_human_review: inferred R2 (no human review)",
+          "contract reference: needs_human_review: reference requirement R1 (no human review)",
+          "contract reference: needs_human_review: inferred R2 (no human review)",
+          "contract reference: needs_human_review: reference requirement R3 (no human review)",
+          "contract reference: needs_human_review: reference requirement R4 (no human review)"
+        ],
+        "refused": false,
+        "status": "pending_review",
+        "task_id": "NP-19"
+      },
+      "candidates": {
+        "NP-19-eval-alt-1": {
+          "origin": "valid_alternative",
+          "patch_sha256": "4135bd5b574308929290556010836678b419c7a7b5a71e31a2d59a94e6598fdc"
+        },
+        "NP-19-eval-alt-2": {
+          "origin": "valid_alternative",
+          "patch_sha256": "6f549f748ea072de1cda10613159f47b0b180a023c0cefe92f9111e05673e4ac"
+        },
+        "NP-19-eval-nm-1": {
+          "origin": "constructed_near_miss",
+          "patch_sha256": "b27b3f2f79437581ae49c11be02d1620576d93ccd9162de4d92dd1557241fcc5"
+        },
+        "NP-19-eval-nm-2": {
+          "origin": "constructed_near_miss",
+          "patch_sha256": "1ed6e714d64d16c7dd597fc8c07b58c342af9b07329e72c087c4b36f75bac9b8"
+        },
+        "NP-19-eval-nm-3": {
+          "origin": "constructed_near_miss",
+          "patch_sha256": "740e549734a3d4382222d2dd27f08a3f5d50469014bd08af3b6eb2d5ff3c0a45"
+        },
+        "NP-19-noop-eval": {
+          "origin": "noop",
+          "patch_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "NP-19-pre-review": {
+          "origin": "natural_pre_review",
+          "patch_sha256": "092a634e55528e6242fa5e35b5cda03786430f1d00c4e3052ec7fd1cc94a33ca"
+        },
+        "NP-19-reference": {
+          "origin": "reference",
+          "patch_sha256": "e5207b708a69f8bac30a4d53ad4155087551720c8e5c6bf9dec1d97ac24aff46"
+        }
+      },
+      "family_id": "NP-19",
+      "image": "tc-env:bd42c3aa6cc4924c",
+      "image_id": "sha256:5504bfa0bda529ff42d8dbac0cbdce78e65c2db58e787b5153285c4f121da3cb",
+      "snapshot_manifest_sha256": "06549250e72bab6e93670844c78137e9d9303c0cace3e03ceec5d43b883d8f01",
+      "task_dir": "data/natural/tasks/NP-19",
+      "task_id": "NP-19",
+      "verifiers": {
+        "diff_derived": {
+          "checks_sha256": "3cc85bb96857f56cac4690b9f29d6a4ce4f7dee09067cea49069c1fde1124724",
+          "condition": "diff_derived",
+          "content_sha256": "49ead217d9ad44d9238b0979f128e17e1caba2d502d206302dbdb8bbccdad30b",
+          "n_checks": 8,
+          "version": 1
+        },
+        "full_audited": {
+          "checks_sha256": "525e86a43fb6b3b4a88018d59fc985fcc41dbe8a8b4c180e1245c232daeaf0d8",
+          "condition": "full_audited",
+          "content_sha256": "8a69a7b8e0f5fdfa953414b73808ee222b12be04537faa4143f4696d5e5c838e",
+          "n_checks": 15,
+          "version": 1
+        },
+        "full_plain": {
+          "checks_sha256": "7c430c0aeaffe35adb8c97161090e521bfca8de49df765e99237a40e6c6d8e56",
+          "condition": "full_plain",
+          "content_sha256": "7cef56f31dcb3f4ba109f8a6435c0a491fa7a1b223e5f2443b639b3fd50e2647",
+          "n_checks": 11,
+          "version": 1
+        },
+        "independent_label": {
+          "checks_sha256": "3c7c3836823dcfba8f26d0c79be593f88170c3300bccb9c07fa9e9f448309997",
+          "condition": "reference_check",
+          "content_sha256": "c8a890167095987a5d9702037465f56eb0787463498c32dece541bb31e40f052",
+          "n_checks": 7,
+          "version": 1
+        },
+        "initial_audited": {
+          "checks_sha256": "741a14812b7e92c174e226c7aa43db58cc70eb5283d4e37e0c01d772c8815d34",
+          "condition": "initial_audited",
+          "content_sha256": "8eabd3211f545c6820818951a5e576efb03fc3d8bfa85036339d88ea90816e04",
+          "n_checks": 13,
+          "version": 1
+        },
+        "initial_plain": {
+          "checks_sha256": "24a699563ac71aef3a0ffa2c8a89553d355869704ac319723296b43a2b2ccdeb",
+          "condition": "initial_plain",
+          "content_sha256": "ef9e0739e8da8e7fc397e694915bed31c5c209de24c789451b6374e9c4fc5577",
+          "n_checks": 10,
+          "version": 1
+        },
+        "llm_freeform": {
+          "checks_sha256": "54ead7464a0bd618b477393af7053e59311d105ba3d5c8844b1a5b605fd7d13c",
+          "condition": "llm_freeform",
+          "content_sha256": "3b1ce06acbcc14b44e479d50a8a10767423a4746adf2ea38485a7ba8a41406d3",
+          "n_checks": 13,
+          "version": 1
+        },
+        "reference_check": {
+          "checks_sha256": "d7eedc5cb6cdf0f4aaf64c20be5fc4d9377ee9024a7bf2a9f81fdecf3c81afa7",
+          "condition": "reference_check",
+          "content_sha256": "9e54eff9a356663f5d4d50e417175d70bf2ef55432b60553351aee4346156504",
+          "n_checks": 10,
+          "version": 1
+        },
+        "repo_tests": {
+          "checks_sha256": "7d32e042289fccd10a4c5b803f48f4be07be8203d1bafa172a7fdbfbb3630cea",
+          "condition": "repo_tests",
+          "content_sha256": "6ed0913943bd74ce70bcf7ee43e51eb40da32cc6ad06604b24c83c7a7df2ab16",
+          "n_checks": 1,
+          "version": 1
+        }
+      }
+    },
+    {
+      "acceptance_gate": {
+        "accepted": false,
+        "passed": false,
+        "provenance_eligibility": "pending_review",
+        "reasons": [
+          "provenance: eligibility is 'pending_review'; a reviewer must find the source eligible",
+          "contract initial_only: needs_human_review: inferred R3 (no human review)",
+          "contract initial_only: unresolved: R4 must be resolved or removed",
+          "contract initial_only: unresolved: R5 must be resolved or removed",
+          "contract full_session: unresolved: R7 must be resolved or removed",
+          "contract full_session: needs_human_review: inferred R8 (no human review)",
+          "contract reference: needs_human_review: reference requirement R1 (no human review)",
+          "contract reference: needs_human_review: reference requirement R3 (no human review)",
+          "contract reference: needs_human_review: reference requirement R4 (no human review)",
+          "contract reference: needs_human_review: reference requirement R5 (no human review)",
+          "contract reference: needs_human_review: reference requirement R6 (no human review)",
+          "contract reference: needs_human_review: inferred R7 (no human review)",
+          "contract reference: needs_human_review: inferred R8 (no human review)",
+          "contract reference: needs_human_review: reference requirement R10 (no human review)",
+          "contract reference: needs_human_review: inferred R11 (no human review)",
+          "contract reference: needs_human_review: inferred R12 (no human review)",
+          "contract reference: needs_human_review: inferred R13 (no human review)",
+          "contract reference: needs_human_review: inferred R15 (no human review)"
+        ],
+        "refused": false,
+        "status": "pending_review",
+        "task_id": "NP-20"
+      },
+      "candidates": {
+        "NP-20-eval-alt-1": {
+          "origin": "valid_alternative",
+          "patch_sha256": "5d9cd93cb5bb134c01406ee1808f8fdaf001acf3cf82bb51f68392ab4c242cfd"
+        },
+        "NP-20-eval-alt-2": {
+          "origin": "valid_alternative",
+          "patch_sha256": "9ff7971b3374353c7d49675f40b966350bf3506bd563d1e35e2de79622b53e97"
+        },
+        "NP-20-eval-nm-1": {
+          "origin": "constructed_near_miss",
+          "patch_sha256": "a5d1cdda0dabc5da30b3a77a2889a25535a2745d03ab2c8b96757ee13ec6bee4"
+        },
+        "NP-20-eval-nm-2": {
+          "origin": "constructed_near_miss",
+          "patch_sha256": "2157be68b3488be4838c4b2910d05ebccf19187a7d6bb5c3af83c7a72f865ad8"
+        },
+        "NP-20-eval-nm-3": {
+          "origin": "constructed_near_miss",
+          "patch_sha256": "9bb5f599b0efbf99a69847a3015a15901e0011a6d3434ea9a5265ab8bd21c3a3"
+        },
+        "NP-20-noop-eval": {
+          "origin": "noop",
+          "patch_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "NP-20-pre-review": {
+          "origin": "natural_pre_review",
+          "patch_sha256": "f9e385eb39cad6b299cc151ababc5ed082f8da7db9e7a4b7eecedbca41ed5efe"
+        },
+        "NP-20-reference": {
+          "origin": "reference",
+          "patch_sha256": "9178a57f45c20e161feaa9baad183c317b4eb2e972d33763963c025a634194c6"
+        }
+      },
+      "family_id": "NP-20",
+      "image": "tc-env:5b7498cba09dc276",
+      "image_id": "sha256:afc3509134ab600f10226acda5b3a84316d02bd0f657e1008643f2a6655841d4",
+      "snapshot_manifest_sha256": "38ade7b1212c52b31fc6b9bdd33dcfee5b723cb556cca710fc65fcc0461c369a",
+      "task_dir": "data/natural/tasks/NP-20",
+      "task_id": "NP-20",
+      "verifiers": {
+        "diff_derived": {
+          "checks_sha256": "5f21cccfc8fbf82613fa60be58a6ed1930491c80a9583e950f5361987c0ec872",
+          "condition": "diff_derived",
+          "content_sha256": "302cbf3f551cdbb9f7b21ad241b597b36708d08c00f8a2778f1c5a18ac5e21d1",
+          "n_checks": 11,
+          "version": 1
+        },
+        "full_audited": {
+          "checks_sha256": "a81dcbd8cc791ac24a1d4aa549d5cc3e0669c82f09ffb775c0ab63c99d508eb2",
+          "condition": "full_audited",
+          "content_sha256": "e5e4c75b71f5f8c2242b67dbf12fa03c247290639af5fa6408914867f2bdc6dd",
+          "n_checks": 13,
+          "version": 1
+        },
+        "full_plain": {
+          "checks_sha256": "a81dcbd8cc791ac24a1d4aa549d5cc3e0669c82f09ffb775c0ab63c99d508eb2",
+          "condition": "full_plain",
+          "content_sha256": "e5e4c75b71f5f8c2242b67dbf12fa03c247290639af5fa6408914867f2bdc6dd",
+          "n_checks": 13,
+          "version": 1
+        },
+        "independent_label": {
+          "checks_sha256": "f27d3c339e585a2d9ad8e639d5b60c23466a5add5e13e8cafda2a0921c7db7e6",
+          "condition": "reference_check",
+          "content_sha256": "b01167203e27ad3e29292d5691953af17ef5dd3f9750b837dc46e89cbf34a8e3",
+          "n_checks": 20,
+          "version": 1
+        },
+        "initial_audited": {
+          "checks_sha256": "019cbc0fd1b4fdeb46a2853a89d436433e9b825444ac4a9316bf13ba67654a6c",
+          "condition": "initial_audited",
+          "content_sha256": "ee7934cffb6c47a0c9b6205399b9ccafa1a14a7a3476f932f136f64ce0944238",
+          "n_checks": 13,
+          "version": 1
+        },
+        "initial_plain": {
+          "checks_sha256": "018e971e395883af21650c8fec4ad95728334495df8cf6039c232abcd6fe7928",
+          "condition": "initial_plain",
+          "content_sha256": "9126a0996b94b88e496e1de0eee2f316b11cb66b7f1634003531cb6c05e9a1a9",
+          "n_checks": 12,
+          "version": 1
+        },
+        "llm_freeform": {
+          "checks_sha256": "7666fd0fa82b2945a84d6114998fb132c827e13c7b0b00f15a12a5793997deca",
+          "condition": "llm_freeform",
+          "content_sha256": "bc2de80487a7efebce5877622cb41850465801fd818a3c3f05358b90d7cf40d3",
+          "n_checks": 12,
+          "version": 1
+        },
+        "reference_check": {
+          "checks_sha256": "579cb9e0c0e4bcfa86688d32c9adec042f720efb29677912a24dbc92e7e4d2c0",
+          "condition": "reference_check",
+          "content_sha256": "22a940ae8aaa903a7b623881a4e85486f27d5a26301b33d2dcecb0499530584f",
+          "n_checks": 20,
+          "version": 1
+        },
+        "repo_tests": {
+          "checks_sha256": "0722a68df46a4e1d10c322d18a16ee6ba1b5b5af4e43ece84b217f248d1613d9",
+          "condition": "repo_tests",
+          "content_sha256": "bf675a2148ebd413b80d23ae955014a79f445798db832e01d3a6b06a5629fd80",
+          "n_checks": 48,
+          "version": 1
+        }
+      }
+    }
+  ]
+}
