@@ -2766,3 +2766,99 @@ They are not results of the natural arm, whose run has not been made.
   their union.
 * **To do before the run.** The pre-flight still implements §19.5 and §19.7 for a single run `natural-pr-v1` over both
   samples. It is to implement §20.2 before `natural-pr-v1` is graded, with tests, in an entry of its own.
+
+### D72. Round 6 to the held-out pools: P5 and P6 of four families, and the deviations found on the way
+Round 6 began at 2026-11-22T23:35Z under the owner's instruction of D71. The machine restarted at 23:38Z, and the
+build session started Docker as in D68. Times are UTC, 2026-11-23 unless stated.
+* **P5 (F6) for NP-03, NP-04, NP-18 and NP-20.** NP-05 and NP-19 are still in their P5 fix rounds and come in a later
+  entry. Every reference-check writer, reviewer and labeler prompt passed the pre-send hash check.
+
+  | Family | Reference checks | Review | Labeler |
+  | --- | --- | --- | --- |
+  | NP-03 | 19 checks, usable, frozen 00:42:55 | 1 review, ok, 2 coverage remarks (R2, R5) | unusable after its one revision |
+  | NP-04 | 18 checks, usable, frozen 00:22:43 | 1 review, ok | 9 checks, usable |
+  | NP-18 | 14 checks, usable, frozen 00:38:23 | 1 review, ok, 1 coverage remark (R4) | 10 checks, usable at round 1 |
+  | NP-20 | 20 checks, usable, frozen 00:29:01 | 1 review, ok, 1 coverage remark (R11) | usable after its revision |
+
+  * NP-03's labeler fails on the reference: 6 of its 17 checks are string-input observables that the reference does
+    not meet. Its writer, the reviewer and the revision report the same gap in the library's phrase dictionary. It is
+    left out of the second labeling (§15.5). The reference-check writer found that the reference cannot meet three
+    observables of the reference contract (R1, R8, R9), and its checks hold for any segmentation there. Nothing was
+    regenerated because of these outcomes.
+  * NP-20's labeler missed R15 as written; its revision detects all nine change requirements.
+  * The reviews' coverage remarks came with an ok verdict, so no fix round ran (D33). They are reported with each
+    family.
+* **Order (F7).** Each family's P5 line was pushed before its P6 began: `72f5735` (NP-04), `33f50d4` (NP-20),
+  `0dc21a6` (NP-18) and `98f4c44` (NP-03). Every pool generation's started_at is later than every verifier's frozen_at
+  of its family, checked per run at registration.
+* **P6 (the held-out pools).** NP-03, NP-18 and NP-20 each have two alternatives and three near misses. Each near miss
+  names its target as the requirement it violates: NP-03 R8, R9, R1; NP-18 R2, R3, R1; NP-20 R5, R6, R1. NP-04 has
+  eval-alt-1 and near misses for R4, R5 and R1; its eval-alt-2 is registered by the step below.
+* **A transcript that the tools could not read.** NP-04's eval-alt-2 transcript holds raw U+2028 characters inside JSON
+  strings, which JSON allows. `scripts/agent_run_record.py` split transcripts with `str.splitlines()`, which also
+  splits there, and refused it. Its coordinator stopped, as the recipe requires. Every reader of JSON Lines had the same
+  flaw, the natural sanitiser among them; they now split at line feeds only (`4e0776c`). No recorded output changes:
+  no JSON file in the repository's data holds such a character. Of the 246 natural transcripts, only that run's and
+  its registering coordinator's do.
+* **Finishing a stopped registration.** A resumed workflow run would not replay the phase from cache: the coordinators'
+  rules changed after NP-04's P6 began (below), so its first call would not match, and its generators would run again.
+  `natural_phase.js` gains `host_step` (`0ad0a0a`): one host step on its own, with the phase's coordinator rules, and
+  no generator. It is used once, to register NP-04's eval-alt-2 exactly as P6's registration says. The generator is
+  not re-run.
+* **Task titles in natural agents' contexts (a deviation from D65).** The harness shows the shared task list, titles
+  included, to every subagent in a reminder; no agent needs to call a task tool. Agents of the build session's tooling
+  workflow created two sets of five tasks:
+  * Set A existed from 2026-11-22T23:43:39 to 00:28:00. Its titles named the paper's natural-run tables (for example
+    "Implement make_tables.py --natural-run RUN_DIR").
+  * Set B existed from 00:54:31 to 01:16:40. Its titles named review fixes (for example "L4-L6: B1 partial norm,
+    infrastructure disclosure, refcheck status record").
+  * 19 natural generator runs had set A in their context: 6 reference-check writers, 5 labelers, 3 labeler revisions
+    and 5 reviews. 23 had set B: 8 alternatives, 11 near misses, 2 reference-check fix rounds and 2 reviews. 13 host
+    coordinators had one of the sets. No run of P1 to P4 had a task list in its context.
+  * No title names a family, a requirement, a check, a target, a label or a candidate. The build session searched each
+    exposed run's own text and tool inputs for 25 distinctive terms of the titles and found none in any of the 42 runs.
+  * Builder decision, pending the owner's review: nothing is regenerated for this, and the exposed runs are kept. The
+    titles carried no information about any task, and no run shows a trace of them. The deviation is reported with
+    the natural results.
+  * Remedies: the build session deleted both sets and stopped the tooling workflow; it then finished that workflow's
+    last verification itself. The coordinators' rules now forbid the task-list tools (`8796802`). The build session
+    gives its own workflows the same rule while natural agents run, and checks the list is empty before launching a
+    natural phase.
+* **Scanner.** A natural verifier splits the study's own sandbox idiom over two lines, so the head of the call
+  (`r = run_python(_snippet(`) became a natural code line. It matched the controlled runs' results 138 times and
+  blocked a push. A natural line that a line of the pre-natural corpus holds within it is now an idiom too, with the
+  same word-boundary rule as the search (`dc055b2`). Of 34,354 natural code lines, 18 are newly left out: imports, call
+  heads and other idioms of the study's own code and the standard library. No finding is suppressed and nothing is
+  listed by name.
+* **NP-03's host log** quoted a two-character test input that may be thread text, in one entry. The build session
+  replaced it with a placeholder and logged the redaction, as for NP-19 (D65).
+* **The strict re-audit (D44)** of every natural family's audit file is the builder's. It runs after all six P7s.
+
+### D73. The pre-flight implements §20.2; D19's labels for `natural-pr-v1` are the run's first step
+* **The pre-flight (`f943d1b`), as D71 asks.**
+  * It knows two natural runs: `natural-pr-v1` for the first sample and `natural-pr-v2` for the extension. A natural
+    run with no run id or another id is refused, citing §20.2.
+  * `natural-pr-v1`: building has stopped once S9 is complete for the first sample and no first-sample family or
+    reserve in a repository with an open place lacks an S10 outcome. There is no 30-accepted branch, as §20.2 says.
+  * `natural-pr-v2`: 30 accepted tasks in all, or the extension's S9 record complete with no extension family pending.
+  * A run that includes a family of the other sample, leaves out an accepted family of its own, or meets an index row
+    that names neither sample, is refused.
+  * Readings chosen: a repository's open places are counted over both samples, because the cap of §15.6 and §19.3
+    applies to both together. Only the run's own sample's rows need an S10 outcome. The stricter reading would block
+    `natural-pr-v1` for good once an extension family filled a first-sample repository; on the committed index both
+    readings agree.
+* **When D19 runs.** D19 grades the frozen reference checks and the regression norm on every held-out candidate.
+  §20.2 says that no natural verifier is graded on a held-out candidate of a family before that family's run. Under
+  §19.7, `propose_labels.py` read the same rule as "not before building has stopped" and ran D19 as the first step of
+  the run.
+  * The build session applies that reading per sample: D19 for `natural-pr-v1` runs once building has stopped for the
+    first sample and each of the six families' seven phase-end lines is committed. It is the run's first step, followed
+    by the pre-flight and the grading.
+  * By then every verifier, contract and candidate of the six is frozen or registered. No D19 grade changes any of them.
+  * This is a builder reading, pending the owner's review.
+* **To do before D19, with tests.**
+  * `propose_labels.py` takes the family's sample from its committed index row and applies the per-sample rule. Until
+    now it applied the rule for both samples, which refuses the six until the extension is built.
+  * `propose_labels.py`, and the pre-flight for every family of a natural run, require the family's P1 to P7 lines in
+    the committed phase-end log.
+  * The natural index is committed again after the last P7 (D65).
