@@ -1,12 +1,12 @@
 """The pre-flight of a run with natural PR-review tasks (``scripts/preflight_final_run.py``; protocol §15.5, §15.6,
-§16.4, §17, §19).
+§16.4, §17, §19, §20).
 
-A synthetic family, NP-90, is laid out as an accepted natural family whose verifiers, held-out pool, labels and audits
-are complete, under a scratch repository (``data/natural/{tasks,snapshots}`` and the committed index), and the whole
-pre-flight passes on it. Each test then breaks one rule:
+A synthetic family, NP-90, is laid out as an accepted natural family of the first sample whose verifiers, held-out pool,
+labels and audits are complete, under a scratch repository (``data/natural/{tasks,snapshots}`` and the committed index),
+and the whole pre-flight passes on it. Each test then breaks one rule:
 
 * the base snapshot is looked up under ``data/natural/snapshots`` (``roots.snapshot_root``); the run id is
-  ``natural-pr-v1``, and it must be new under ``data/natural/runs`` too;
+  ``natural-pr-v1`` or ``natural-pr-v2`` (§20.2, D71), and it must be new under ``data/natural/runs`` too;
 * the pool is the pre-review state, 2 valid alternatives and 3 near misses, and nothing else;
 * at least 2 of the 3 near misses name a scored active reference requirement introduced at a correction event (the
   review comment or a reply, ``session.metadata.events``);
@@ -20,8 +20,13 @@ pre-flight passes on it. Each test then breaks one rule:
 * B1 or B3 that the family's records show unavailable is a note, otherwise a missing condition;
 * every agent of the natural recipe was audited with the natural-agent profile (the revisers and the labeler's revision
   as the records count them, and the mappers), and every flag (hit or exposure) is assessed;
-* building has stopped by the committed index (§19.5: 30 accepted, or the S9 record shows both samples screened with
-  every family in the index, all processed), and the run grades every accepted family and nothing else.
+* the run grades the accepted families of one sample (§20.2): ``natural-pr-v1`` every accepted family of the first sample
+  (the index's ``sample``) and ``natural-pr-v2`` every one of the extension, never a family of the other sample, and
+  nothing of another population; a row of the index that names no sample fails;
+* building has stopped for the run's sample by the committed index (§20.2): for ``natural-pr-v1``, the S9 record shows the
+  first sample screened with every family in the index, all processed, whatever the extension's state; for
+  ``natural-pr-v2``, 30 accepted in all, or the same for the extension. A repository's open places are counted over both
+  samples. §19.5's rule over both samples is kept for a run id that names neither run (and for the label proposer).
 
 Controlled tasks are not affected: the existing pre-flight tests stay as they are, and a run of the four pilot tasks
 never reads the natural index. Docker and ``git status`` are not asked (the host is idle and clean); the scratch
@@ -48,10 +53,35 @@ from tracecontract.duplicates import same_code_duplicates
 from tracecontract.patches import diff_dirs
 from tracecontract.reconstruction import RECORD
 from tracecontract.schemas import (
-    AuditRecord, Author, Candidate, CandidateOrigin, ContractVariant, Eligibility, Event, EventKind, EvidenceSpan,
-    Fidelity, GenerationRecord, Label, LabelerKind, Population, PRProvenance, ProvenanceRecord, RedactionStatus,
-    Requirement, RequirementKind, RequirementStatus, Session, Snapshot, SnapshotSource, SourceRef, Split, TaskContract,
-    TaskManifest, VerifierCondition, sha256_text,
+    AuditRecord,
+    Author,
+    Candidate,
+    CandidateOrigin,
+    ContractVariant,
+    Eligibility,
+    Event,
+    EventKind,
+    EvidenceSpan,
+    Fidelity,
+    GenerationRecord,
+    Label,
+    LabelerKind,
+    Population,
+    ProvenanceRecord,
+    PRProvenance,
+    RedactionStatus,
+    Requirement,
+    RequirementKind,
+    RequirementStatus,
+    Session,
+    Snapshot,
+    SnapshotSource,
+    SourceRef,
+    Split,
+    TaskContract,
+    TaskManifest,
+    VerifierCondition,
+    sha256_text,
 )
 from tracecontract.snapshot import manifest, manifest_sha256
 from tracecontract.store import dump, load, write_json
@@ -65,9 +95,10 @@ FROZEN = "2026-11-22T09:00:00+00:00"  # when every verifier of the fixture was f
 POOL_START = "2026-11-22T10:00:00+00:00"  # when the first pool candidate's generation started
 CONDITIONS = ["initial_plain", "initial_audited", "full_plain", "full_audited", "llm_freeform", "repo_tests",
               "diff_derived", "reference_check"]
-RUN_ID = ["--run-id", "natural-pr-v1"]  # the natural arm's one run (§19.7)
+RUN_ID = ["--run-id", "natural-pr-v1"]  # the natural run of the first sample's families (§20.2), NP-90's
 OPTIONS = ["--repeats", "3", "--pilot", "--with-extra-verifiers", "--conditions", *CONDITIONS]
 RUN = [*RUN_ID, *OPTIONS]
+RUN_V2 = ["--run-id", "natural-pr-v2", *OPTIONS]  # the natural run of the extension's families (§20.2)
 PR = 9090  # NP-90's PR id (its provenance)
 # The index's S9 record when both samples are screened: the whole of each sample, and the families and reserves formed
 # from it (NP-90 from the first sample; none from the extension).
@@ -145,8 +176,8 @@ INDEX = Path("data/manifests/natural_tasks_index.json")
 
 
 def index_row(task_id: str = TID, *, s11: bool = True, outcome: str = "passed", repo_id: int = 990,
-              role: str = "family") -> dict:
-    return {"task_id": task_id, "role": role, "repo_id": repo_id, "sample": "first",
+              role: str = "family", sample: object = "first") -> dict:
+    return {"task_id": task_id, "role": role, "repo_id": repo_id, "sample": sample,
             "s10": {"outcome": outcome, "stage": "S10"}, "s11": s11}
 
 
@@ -433,21 +464,27 @@ def test_the_run_id_must_be_new_under_data_natural_runs_too(pf, tmp_path):
     assert pf.run_problems.__kwdefaults__["natural_runs_root"] == roots.NATURAL_RUNS
 
 
-ONE_RUN = "the natural arm has one run, natural-pr-v1, which grades every accepted family together (protocol §15.6, §19.7)"
+TWO_RUNS = ("protocol §20.2 grades the natural arm in two runs, natural-pr-v1 for the accepted families of the first sample "
+            "and natural-pr-v2 for those of the extension")
 
 
-def test_a_natural_run_is_the_arm_s_one_run_natural_pr_v1(pf, family, capsys):
-    """§19.7 fixes one natural run: without --run-id the check that it is new would be skipped, and under another id a
-    second natural run would pass."""
+def test_a_natural_run_is_one_of_the_arm_s_two_runs(pf, family, capsys):
+    """§20.2 fixes two natural runs, natural-pr-v1 and natural-pr-v2: without --run-id the check that the run is new would
+    be skipped, and under another id a further natural run would pass."""
     root, _ = family
     assert run(pf, root, *OPTIONS, capsys=capsys)[1] == [
-        (f"natural: pass --run-id natural-pr-v1 here and to evaluate: {ONE_RUN}, and the pre-flight checks that it has not "
-         "been made")]
-    assert run(pf, root, "--run-id", "natural-pr-v1b", *OPTIONS, capsys=capsys)[1] == [
-        f"natural: the run id is 'natural-pr-v1b'; {ONE_RUN}"]
+        (f"natural: pass --run-id natural-pr-v1 or natural-pr-v2 here and to evaluate: {TWO_RUNS}, and the pre-flight "
+         "checks that the run has not been made")]
+    for other in ("natural-pr-v1b", "natural-pr-v3", "natural-pr"):
+        assert run(pf, root, "--run-id", other, *OPTIONS, capsys=capsys)[1] == [f"natural: the run id is {other!r}; {TWO_RUNS}"]
+    assert run(pf, root, *RUN, capsys=capsys) == (0, [], [])
     (root / "data" / "natural" / "runs" / "natural-pr-v1").mkdir(parents=True)  # the run has been made
     assert run(pf, root, *RUN, capsys=capsys)[1] == [
         "run: data/natural/runs/natural-pr-v1 already exists; a new run needs a new run id (recorded runs are not changed)"]
+    # natural-pr-v2 is the other run's id: refused here only because NP-90 is of the first sample
+    assert run(pf, root, *RUN_V2, capsys=capsys)[1] == [
+        ("natural: the run natural-pr-v2 includes families of the first sample (NP-90), but it grades the accepted families "
+         "of the extension only, and natural-pr-v1 those of the first sample (protocol §20.2)")]
 
 
 def test_the_run_id_is_checked_under_the_preflight_s_repository(pf, tmp_path, monkeypatch, capsys):
@@ -899,16 +936,27 @@ def test_the_pool_checks_of_a_natural_family_are_notes_with_only_strata(pf, fami
     assert notes[1].startswith(f"{TID}: {TID}-eval-alt-1 records no start of its generation")
 
 
-# --- building has stopped, and the run grades every accepted family ----------------------------------------------------
+# --- building has stopped, and the run grades every accepted family of its sample --------------------------------------
 
+# §19.5 over both samples: the rule without a sample, kept for a run id that names neither run and for the label proposer.
 STOP = ("natural: building has not stopped by the committed index: it counts {n} accepted task(s) of both samples, and "
         "protocol §19.5 stops building at 30 or when every family of both samples has been processed; {why}. No natural "
         "verifier is graded on a held-out candidate before building stops (§19.7)")
+# §20.2: the rule of each run's sample.
+STOP_FIRST = ("natural: building has not stopped for the first sample by the committed index: protocol §20.2 grades its "
+              "accepted families in natural-pr-v1 once S9 is complete for it and every family and reserve of it has been "
+              "processed; {why}. No natural verifier is graded on a held-out candidate of a family before that family's run "
+              "(§20.2)")
+STOP_EXTENSION = ("natural: building has not stopped for the extension by the committed index: it counts {n} accepted "
+                  "task(s) in all, and protocol §20.2 grades the extension's accepted families in natural-pr-v2 at 30 "
+                  "accepted tasks in all or once every family and reserve of the extension has been processed; {why}. No "
+                  "natural verifier is graded on a held-out candidate of a family before that family's run (§20.2)")
 NO_S9 = ("S9 is not recorded as complete for the {sample} sample (s9_complete.{sample} in the index is {what}, not the number "
          "of its comments screened and the task ids of its families and reserves)")
 
 
 def test_building_stops_at_30_accepted_tasks_or_when_every_family_was_processed(pf):
+    """Without a sample: §19.5 for both samples together."""
     rows = [index_row(f"NP-{n:02d}", repo_id=n) for n in range(1, 31)]
     assert pf.building_problems({"tasks": rows}, None) == []  # 30 accepted: stopped, whatever else the index says
     rows = rows[:29] + [index_row("NP-30", s11=False, outcome="not built", repo_id=30)]
@@ -979,13 +1027,73 @@ def test_a_family_is_processed_when_its_repository_has_no_open_place(pf):
     assert pf.unprocessed_families([no_repo]) == ["NP-27"]
 
 
+def test_a_repository_s_open_places_are_counted_over_both_samples(pf):
+    """§19.3: a repository with 2 accepted families builds no other, whichever samples they come from. A run's sample
+    restricts the rows that need an S10 outcome, not the count of a repository's accepted families."""
+    rows = [index_row("NP-04", repo_id=7), index_row("NP-23", s11=False, outcome="not built", repo_id=7, role="reserve"),
+            index_row("NP-30", repo_id=7, sample="extension"),
+            index_row("NP-31", s11=False, outcome="not built", repo_id=8, sample="extension"),
+            index_row("NP-24", s11=False, outcome="not built", repo_id=8, role="reserve")]
+    assert pf.unprocessed_families(rows, "first") == ["NP-24"]  # repository 7 is full: NP-04 and NP-30
+    assert pf.unprocessed_families(rows, "extension") == ["NP-31"]
+    assert pf.unprocessed_families(rows) == ["NP-24", "NP-31"]  # every row (§19.5)
+    assert pf.unprocessed_families([r for r in rows if r["sample"] == "first"], "first") == ["NP-23", "NP-24"]
+
+
+def test_building_stops_by_sample_for_the_two_runs(pf):
+    """§20.2: natural-pr-v1 needs S9 complete for the first sample and each of its families processed, whatever the
+    extension's state, and has no branch at 30 accepted; natural-pr-v2 stops at 30 accepted tasks in all (both samples),
+    or once S9 is complete for the extension and each of its families has been processed."""
+    first = [index_row("NP-01", repo_id=1), index_row("NP-02", s11=False, outcome="rejected", repo_id=2),
+             index_row("NP-21", s11=False, outcome="not built", repo_id=2, role="reserve")]
+    extension = [index_row("NP-26", s11=False, outcome="not built", repo_id=3, sample="extension")]
+    s9 = {"first": {"screened": 150, "families": ["NP-01", "NP-02", "NP-21"]},
+          "extension": {"screened": 534, "families": ["NP-26"]}}
+
+    def problems(sample, rows, record=s9):
+        return pf.building_problems({"tasks": rows, "s9_complete": record}, None, sample)
+
+    reserve = "1 family of the first sample in a repository with an open place has no S10 outcome (NP-21)"
+    family = "1 family of the extension in a repository with an open place has no S10 outcome (NP-26)"
+    assert problems("first", first + extension) == [STOP_FIRST.format(why=reserve)]
+    assert problems("extension", first + extension) == [STOP_EXTENSION.format(n=1, why=family)]
+    first[2] = index_row("NP-21", s11=False, outcome="rejected", repo_id=2, role="reserve")
+    assert problems("first", first + extension) == []  # the extension's family is pending: no matter for natural-pr-v1
+    assert problems("first", first + extension, {"first": s9["first"]}) == []  # nor is the extension's S9 record
+    assert problems("extension", first + extension, {"first": s9["first"]}) == [
+        STOP_EXTENSION.format(n=1, why=f"{NO_S9.format(sample='extension', what='absent')}; {family}")]
+    assert problems("first", first + extension, {"extension": s9["extension"]}) == [
+        STOP_FIRST.format(why=NO_S9.format(sample="first", what="absent"))]
+    assert problems(None, first + extension) == [STOP.format(n=1, why=family.replace(" of the extension in", " of"))]
+    extension[0] = index_row("NP-26", s11=False, outcome="rejected", repo_id=3, sample="extension")
+    assert problems("extension", first + extension) == []
+    # 30 accepted tasks in all stop the extension's building (and §19.5's), not the first sample's
+    many = [index_row(f"NP-{n}", repo_id=n) for n in range(50, 79)]  # 29 more accepted: 30 with NP-01
+    pending = [index_row("NP-22", s11=False, outcome="not built", repo_id=2, role="reserve"),
+               index_row("NP-40", s11=False, outcome="not built", repo_id=40, sample="extension")]
+    rows = first + many + pending
+    assert problems("extension", rows, None) == [] and problems(None, rows, None) == []
+    assert problems("first", rows) == [
+        STOP_FIRST.format(why="1 family of the first sample in a repository with an open place has no S10 outcome (NP-22)")]
+    with pytest.raises(ValueError, match="no S9 sample 'second'"):
+        pf.building_problems({"tasks": rows}, None, "second")
+
+
+def test_the_s9_record_is_read_by_sample(pf):
+    record = {"first": {"screened": 149, "families": ["NP-01"]}, "extension": True}
+    index = {"tasks": [index_row("NP-01", repo_id=1)], "s9_complete": record}
+    first = ["S9 has not screened the whole first sample (s9_complete.first.screened is 149, the sample has 150 comments)"]
+    assert pf.s9_problems(index, ("first",)) == first
+    assert pf.s9_problems(index, ("extension",)) == [NO_S9.format(sample="extension", what="true")]
+    assert pf.s9_problems(index) == [*first, NO_S9.format(sample="extension", what="true")]
+
+
 def test_the_preflight_fails_until_building_has_stopped(pf, family, capsys):
     root, _ = family
     write_index(root, [index_row(), index_row("NP-91", s11=False, outcome="not built", repo_id=991)], s9=None)
-    fails = run(pf, root, *RUN, capsys=capsys)[1]
-    assert len(fails) == 1 and fails[0].startswith("natural: building has not stopped by the committed index: it counts 1 "
-                                                   "accepted task(s) of both samples")
-    assert NO_S9.format(sample="extension", what="absent") in fails[0] and "(NP-91)" in fails[0]
+    pending = "1 family of the first sample in a repository with an open place has no S10 outcome (NP-91)"
+    assert run(pf, root, *RUN, capsys=capsys)[1] == [
+        STOP_FIRST.format(why=f"{NO_S9.format(sample='first', what='absent')}; {pending}")]
     (root / INDEX).unlink()
     _git(root, "rm", "-q", "--cached", "--", INDEX.as_posix())
     _git(root, "commit", "-q", "--no-verify", "-m", "no index")
@@ -1008,23 +1116,32 @@ def test_the_committed_index_is_read_as_the_acceptance_gate_reads_it(pf, tmp_pat
     assert index is None and why == pf.INDEX_NOT_SHOWN and "not a git repository" in why
 
 
-def test_the_preflight_cites_d64_for_the_natural_recipe():
-    """The natural recipe's decision-log entry is D64 (planned as D61, which is the fresh-v1 run record): the pre-flight's
-    natural rules cite D64 wherever they name the recipe, and no other entry after D60."""
+def test_the_preflight_cites_d64_for_the_recipe_and_d71_for_the_two_runs():
+    """The natural recipe's decision-log entry is D64 (planned as D61, which is the fresh-v1 run record), and the arm's two
+    runs are protocol §20 (v0.12), hashed in D71: the pre-flight's natural rules cite D64 wherever they name the recipe,
+    D71 only beside §20, and no other entry after D60. Its docstring describes the two runs, not §19.7's one run."""
     text = (R / "scripts" / "preflight_final_run.py").read_text(encoding="utf-8")
-    assert set(re.findall(r"\bD(?:6[1-9]|[7-9]\d)\b", text)) == {"D64"}
+    assert set(re.findall(r"\bD(?:6[1-9]|[7-9]\d)\b", text)) == {"D64", "D71"}
     mentions = list(re.finditer(r"\brecipe\b", text))
     assert len(mentions) >= 4  # the audit rule's text and comments, and the order of the missing audits
     for m in mentions:  # each names D64 right after the recipe
         assert "D64" in text[m.end():m.end() + 20], text[m.start() - 60:m.end() + 40]
+    d71 = list(re.finditer(r"\bD71\b", text))
+    assert len(d71) >= 3  # the docstring, the runs' constants and their checks
+    for m in d71:  # each cites §20 right before
+        assert "§20" in text[m.start() - 30:m.start()], text[m.start() - 60:m.end() + 20]
+    doc = _preflight().__doc__
+    assert "§20.2, decision log D71" in doc and "``natural-pr-v1``" in doc and "``natural-pr-v2``" in doc
+    assert "the one run of the arm" not in doc and "does not write the record yet" not in doc
 
 
-def test_the_run_grades_every_accepted_family_and_no_other_population(pf, family, capsys):
+def test_the_run_grades_every_accepted_family_of_its_sample_and_no_other_population(pf, family, capsys):
     root, td = family
-    write_index(root, [index_row(), index_row("NP-91", repo_id=991), index_row("NP-92", repo_id=992)])
+    write_index(root, [index_row(), index_row("NP-91", repo_id=991), index_row("NP-92", repo_id=992),
+                       index_row("NP-93", repo_id=993, sample="extension")])  # NP-93 is natural-pr-v2's
     assert run(pf, root, *RUN, capsys=capsys)[1] == [
-        ("natural: the run leaves out accepted families of the committed index (NP-91, NP-92); the run natural-pr-v1 grades "
-         "every accepted family together (protocol §19.7)")]
+        ("natural: the run leaves out accepted families of the first sample in the committed index (NP-91, NP-92); the run "
+         "natural-pr-v1 grades every accepted family of the first sample (protocol §20.2)")]
     write_index(root)
     other = root / "tasks" / "FX-PF"  # a fixture-population task, as in tests/test_preflight_run_rules.py
     noop = Candidate(candidate_id="FX-PF-noop-eval", task_id="FX-PF", origin=CandidateOrigin.noop, split=Split.eval, patch="",
@@ -1040,6 +1157,134 @@ def test_the_run_grades_every_accepted_family_and_no_other_population(pf, family
     assert ("natural: the run mixes natural:pr-review tasks with tasks of other populations (FX-PF); each population gets "
             "its own run (protocol §15.2)") in fails
     assert not [f for f in fails if f.startswith(f"{TID}:")]
+
+
+# --- the two runs of §20.2: natural-pr-v1 (the first sample) and natural-pr-v2 (the extension) --------------------------
+
+def test_natural_pr_v1_does_not_wait_for_the_extension(pf, family, capsys):
+    """§20.2: natural-pr-v1 grades the first sample's accepted families once building has stopped for the first sample.
+    The extension's families may still be unscreened, pending or accepted (natural-pr-v2 grades those), although §19.5's
+    rule over both samples, which the label proposer still applies, has not stopped."""
+    root, _ = family
+    rows = [index_row(), index_row("NP-91", s11=False, outcome="not built", repo_id=991, sample="extension"),
+            index_row("NP-92", s11=False, outcome="built", repo_id=992, role="reserve", sample="extension"),
+            index_row("NP-93", repo_id=993, sample="extension")]
+    for extension in ({}, {"extension": {"screened": 200, "families": ["NP-91", "NP-92", "NP-93"]}}):
+        write_index(root, rows, s9={"first": S9_DONE["first"], **extension})
+        assert run(pf, root, *RUN, capsys=capsys) == (0, [], [])
+        index, why = pf.committed_index(root)
+        assert why is None and pf.building_problems(index, why)[0].startswith(
+            "natural: building has not stopped by the committed index: it counts 2 accepted task(s) of both samples")
+
+
+def test_natural_pr_v1_grades_no_family_of_the_extension(pf, family, capsys):
+    """NP-90 recorded as a family of the extension: natural-pr-v1 refuses it, and leaves out the first sample's accepted
+    family; natural-pr-v2 grades it."""
+    root, _ = family
+    includes = ("natural: the run natural-pr-v1 includes families of the extension (NP-90), but it grades the accepted "
+                "families of the first sample only, and natural-pr-v2 those of the extension (protocol §20.2)")
+    extension = {"extension": {"screened": 534, "families": [TID]}}
+    write_index(root, [index_row(sample="extension")], s9={"first": {"screened": 150, "families": []}, **extension})
+    assert run(pf, root, *RUN, capsys=capsys)[1] == [includes]
+    assert run(pf, root, *RUN_V2, capsys=capsys) == (0, [], [])
+    write_index(root, [index_row(sample="extension"), index_row("NP-03", repo_id=3)],
+                s9={"first": {"screened": 150, "families": ["NP-03"]}, **extension})
+    assert run(pf, root, *RUN, capsys=capsys)[1] == [includes, (
+        "natural: the run leaves out accepted families of the first sample in the committed index (NP-03); the run "
+        "natural-pr-v1 grades every accepted family of the first sample (protocol §20.2)")]
+    assert run(pf, root, *RUN_V2, capsys=capsys) == (0, [], [])  # NP-03 is natural-pr-v1's
+
+
+def test_natural_pr_v2_waits_until_building_has_stopped_for_the_extension(pf, family, capsys):
+    """NP-90 recorded as a family of the extension: natural-pr-v2 is refused while S9 is not complete for the extension
+    or one of its families in a repository with an open place has no S10 outcome, and passes once every family of the
+    extension has been processed, or at 30 accepted tasks in all. It grades every accepted family of the extension."""
+    root, _ = family
+    s9 = {"extension": {"screened": 534, "families": [TID, "NP-91"]}}  # the first sample's record is not read
+    rows = [index_row(sample="extension"), index_row("NP-91", s11=False, outcome="not built", repo_id=991, sample="extension")]
+    pending = "1 family of the extension in a repository with an open place has no S10 outcome (NP-91)"
+    write_index(root, rows, s9=s9)
+    assert run(pf, root, *RUN_V2, capsys=capsys)[1] == [STOP_EXTENSION.format(n=1, why=pending)]
+    write_index(root, rows, s9={"extension": {"screened": 533, "families": [TID, "NP-91"]}})
+    unscreened = ("S9 has not screened the whole extension sample (s9_complete.extension.screened is 533, the sample has 534 "
+                  "comments)")
+    assert run(pf, root, *RUN_V2, capsys=capsys)[1] == [STOP_EXTENSION.format(n=1, why=f"{unscreened}; {pending}")]
+    # processed: rejected at S10, or in a repository with no open place (2 accepted families, one of each sample)
+    for rest in ([index_row("NP-91", s11=False, outcome="rejected", repo_id=991, sample="extension")],
+                 [index_row("NP-91", s11=False, outcome="not built", repo_id=990, sample="extension"),
+                  index_row("NP-03", repo_id=990)]):
+        write_index(root, [rows[0], *rest], s9=s9)
+        assert run(pf, root, *RUN_V2, capsys=capsys) == (0, [], [])
+    # 30 accepted tasks in all stop it, whatever is pending and whatever the S9 record says
+    many = [index_row(f"NP-{n:02d}", repo_id=n) for n in range(1, 30)]  # 29 accepted families of the first sample
+    write_index(root, [*rows, *many], s9=None)
+    assert run(pf, root, *RUN_V2, capsys=capsys) == (0, [], [])
+    write_index(root, [rows[0], index_row("NP-94", repo_id=994, sample="extension")],
+                s9={"extension": {"screened": 534, "families": [TID, "NP-94"]}})
+    assert run(pf, root, *RUN_V2, capsys=capsys)[1] == [
+        ("natural: the run leaves out accepted families of the extension in the committed index (NP-94); the run "
+         "natural-pr-v2 grades every accepted family of the extension (protocol §20.2)")]
+
+
+def test_a_natural_run_never_mixes_the_two_samples(pf):
+    """A run of a family of each sample (a run gives one task directory per family): each of the two runs refuses the
+    other sample's family, and a run id that names neither run is refused for the mix too."""
+    index = {"tasks": [index_row(), index_row("NP-91", repo_id=991, sample="extension")]}
+    both = [(TID, True), ("NP-91", True)]
+    assert pf.natural_run_problems(both, index, "natural-pr-v1") == [
+        ("natural: the run natural-pr-v1 mixes the two samples: it includes families of the extension (NP-91), but it "
+         "grades the accepted families of the first sample only, and natural-pr-v2 those of the extension (protocol §20.2)")]
+    assert pf.natural_run_problems(both, index, "natural-pr-v2") == [
+        ("natural: the run natural-pr-v2 mixes the two samples: it includes families of the first sample (NP-90), but it "
+         "grades the accepted families of the extension only, and natural-pr-v1 those of the first sample (protocol §20.2)")]
+    for run_id in (None, "natural-pr-v3"):  # refused for its run id too (natural_run_id_problems)
+        assert pf.natural_run_problems(both, index, run_id) == [
+            f"natural: the run mixes the two samples (first: NP-90; extension: NP-91); {TWO_RUNS}"]
+    assert pf.natural_run_problems([(TID, True)], index, "natural-pr-v1") == []
+    assert pf.natural_run_problems([("NP-91", True)], index, "natural-pr-v2") == []
+    assert pf.natural_run_problems([(TID, True)], None, "natural-pr-v1") == []  # building_problems reports the index
+    index["tasks"] += [index_row("NP-92", repo_id=992, sample=None), {"task_id": "NP-93", "s11": False}]
+    assert pf.natural_run_problems([(TID, True)], index, "natural-pr-v1") == [
+        ("natural: 2 rows of the committed index (NP-92, NP-93) name neither sample ('first' or 'extension'), so nothing "
+         f"shows which run grades them ({TWO_RUNS})")]
+
+
+@pytest.mark.parametrize("sample", [None, "absent", "second", ["first"]])
+def test_every_row_of_the_committed_index_names_its_sample(pf, family, capsys, sample):
+    """A row that names neither sample could be left out of both runs or graded by either, so it fails, whether it is
+    another accepted family's (which no run would then grade) or the run's own family's."""
+    root, _ = family
+
+    def row(task_id: str = TID, repo_id: int = 990) -> dict:
+        r = index_row(task_id, repo_id=repo_id, sample=None if sample == "absent" else sample)
+        if sample == "absent":
+            del r["sample"]
+        return r
+
+    def unknown(task_id: str) -> str:
+        return (f"natural: 1 row of the committed index ({task_id}) names neither sample ('first' or 'extension'), so "
+                f"nothing shows which run grades it ({TWO_RUNS})")
+
+    write_index(root, [index_row(), row("NP-91", 991)])
+    assert run(pf, root, *RUN, capsys=capsys)[1] == [unknown("NP-91")]
+    write_index(root, [row()])
+    assert run(pf, root, *RUN, capsys=capsys)[1] == [unknown(TID)]
+    assert run(pf, root, *RUN_V2, capsys=capsys)[1] == [unknown(TID)]
+
+
+def test_a_run_id_that_names_neither_run_keeps_the_rule_of_both_samples(pf, family, capsys):
+    """For a run id that §20.2 does not know, nothing says which sample the run grades: building is checked as §19.5 reads
+    for both samples together, beside the refusal of the run id."""
+    root, _ = family
+    write_index(root, [index_row(), index_row("NP-91", s11=False, outcome="not built", repo_id=991, sample="extension")],
+                s9={"first": S9_DONE["first"], "extension": {"screened": 534, "families": ["NP-91"]}})
+    stop = STOP.format(n=1, why="1 family of a repository with an open place has no S10 outcome (NP-91)")
+    assert run(pf, root, *OPTIONS, capsys=capsys)[1] == [stop, (
+        f"natural: pass --run-id natural-pr-v1 or natural-pr-v2 here and to evaluate: {TWO_RUNS}, and the pre-flight checks "
+        "that the run has not been made")]
+    assert run(pf, root, "--run-id", "natural-pr-v3", *OPTIONS, capsys=capsys)[1] == [
+        stop, f"natural: the run id is 'natural-pr-v3'; {TWO_RUNS}"]
+    assert run(pf, root, *RUN, capsys=capsys) == (0, [], [])
 
 
 # --- controlled tasks are not affected ---------------------------------------------------------------------------------
@@ -1086,3 +1331,16 @@ def test_the_recorded_accepted_families_pass_the_s10_s11_and_source_evidence_che
         held = [load(td / p, Candidate) for p in m.candidates]
         held = [c for c in held if c.split == Split.eval and c.origin not in (CandidateOrigin.noop, CandidateOrigin.reference)]
         assert pf.source_evidence_problems(m, held) == [], td.name
+
+
+def test_the_committed_index_lets_natural_pr_v1_grade_the_six_families(pf):
+    """Read only (the committed index is tracked): building has stopped for the first sample (§20.2: S9 complete for it,
+    and each of its families and reserves processed), its accepted families are the six of D59, and a run natural-pr-v1 of
+    the six leaves none out and takes nothing of the extension."""
+    index, why = pf.committed_index(R)
+    if index is None:
+        pytest.skip(f"the committed index cannot be read ({why})")
+    assert pf.building_problems(index, why, "first") == []
+    rows = pf.index_rows(index)
+    assert sorted(t for t, r in rows.items() if r.get("s11") is True and pf.row_sample(r) == "first") == list(ACCEPTED)
+    assert pf.natural_run_problems([(t, True) for t in ACCEPTED], index, "natural-pr-v1") == []

@@ -100,7 +100,7 @@ under ``reference_check``. The run checks and the acceptance gate, reconstructio
 verifier and shadowing checks still apply.
 
 A natural PR-review task (population ``natural:pr-review``, built under the git-ignored
-``data/natural/``; protocol §15.5, §15.6, §16.4, §17, §19) is checked as above, with these
+``data/natural/``; protocol §15.5, §15.6, §16.4, §17, §19, §20) is checked as above, with these
 differences and additions:
 * its base snapshot is looked up where ``roots.snapshot_root`` puts it (``data/natural/snapshots``,
   the root its provenance notes record);
@@ -143,19 +143,34 @@ differences and additions:
   flags (its ``hits``, in tool inputs, its ``exposures``, in tool outputs, or ``flagged``) has a
   written ``assessment``;
 
-and, for a run with a natural PR-review task:
-* building has stopped by the committed index (§19.5): it counts 30 accepted (``s11``) tasks of both
-  samples, or every family of both samples has been processed. The second is read from the index's
-  S9 record, ``s9_complete``, which gives for each sample the number of its comments that S9 has
-  screened (``screened``: the whole sample, 150 comments for the first, §15.6, and 534 for the
-  extension, §19.2) and the task ids of the families and reserves formed from it (``families``;
-  §15.6, §17.3, §19.3), each of which must have a row in the index; and no repository with fewer
-  than 2 accepted families may have a row without an S10 outcome (``passed`` or ``rejected``). A
-  bare ``true`` shows neither. ``tracecontract natural-index`` does not write the record yet; until
-  it does, only the first branch can show that building has stopped;
-* its run id is ``natural-pr-v1`` (``--run-id``, which a natural run needs): the one run of the arm,
-  which grades every accepted family of the committed index together (§15.6, §19.7). It grades all of
-  them, and no task of another population (§15.2).
+and, for a run with a natural PR-review task (protocol §20.2, decision log D71: the arm has two runs, one
+per sample, in place of §19.7's one run):
+* its run id is one of the two (``--run-id``, which a natural run needs; :data:`NATURAL_RUN_SAMPLES`):
+  ``natural-pr-v1`` grades the accepted (``s11``) families of the first sample, the rows of the committed
+  index whose ``sample`` is ``first`` (the S9 sample of §15.6), and ``natural-pr-v2`` those of the
+  extension, whose ``sample`` is ``extension`` (§19.2, §19.3). Any other run id is refused, and
+  ``run_problems`` checks that the one given is new;
+* it grades every accepted family of its sample, no family of the other sample (so it never mixes the
+  two samples; under a run id that names neither run, a mix fails too) and no task of another
+  population (§15.2). A row of the committed index that names neither sample fails, since nothing then
+  shows which run grades it;
+* building has stopped for its sample by the committed index. The index's S9 record, ``s9_complete``,
+  gives for each sample the number of its comments that S9 has screened (``screened``: the whole
+  sample, 150 comments for the first, §15.6, and 534 for the extension, §19.2) and the task ids of the
+  families and reserves formed from it (``families``; §15.6, §17.3, §19.3), each of which must have a
+  row in the index; a bare ``true`` shows neither. A family or reserve has been processed when it has
+  an S10 outcome (``passed`` or ``rejected``) or its repository has no open place: 2 accepted families,
+  counted over both samples, since §15.6's cap applies to both together (§19.3).
+  * ``natural-pr-v1``: S9 is complete for the first sample, and every family and reserve of the first
+    sample has been processed (the rule of §19.5 restricted to the first sample, §20.2);
+  * ``natural-pr-v2``: the index counts 30 accepted tasks in all (both samples), or S9 is complete for
+    the extension and every family and reserve of the extension has been processed (§20.2).
+
+  ``tracecontract natural-index`` writes the S9 record when its input files can be read, and leaves it
+  out otherwise (``natural_pr.s9_record``). For a run id that names neither run, building is checked as
+  §19.5 reads for both samples together (30 accepted, or both samples complete with every family
+  processed): :func:`building_problems` without a sample, the rule that ``scripts/propose_labels.py``
+  applies before it proposes any D19 label.
 
 The checks of a natural task's pool (its composition, labels, near-miss targets, generation records
 and freezing order, and the audits of its pool generators) are notes with ``--only-strata``, as the
@@ -177,8 +192,8 @@ unrecorded.
 
 Usage: python scripts/preflight_final_run.py tasks/CS-01 tasks/CS-02 ... [--run-id ID] [--conditions C ...]
        [--repeats 3] [--pilot] [--strata NAME ...] [--only-strata] [--with-extra-verifiers]
-       python scripts/preflight_final_run.py data/natural/tasks/NP-03 ... --run-id natural-pr-v1 --repeats 3 --pilot
-       --with-extra-verifiers --conditions C ...
+       python scripts/preflight_final_run.py data/natural/tasks/NP-03 ... --run-id natural-pr-v1|natural-pr-v2 --repeats 3
+       --pilot --with-extra-verifiers --conditions C ...
 """
 
 from __future__ import annotations
@@ -195,14 +210,33 @@ from typing import Any, NamedTuple
 
 from tracecontract import roots
 from tracecontract.analysis import (
-    INDEPENDENT_LABELER, LABEL_SUPPORT_CONDITION, PILOT_LABELER, ConditionConflict, _check_conditions,
+    INDEPENDENT_LABELER,
+    LABEL_SUPPORT_CONDITION,
+    PILOT_LABELER,
+    ConditionConflict,
+    _check_conditions,
 )
-from tracecontract.contract import NATURAL_INDEX, S10_RECORD, committed_text, correction_event_ids, task_gate
+from tracecontract.contract import (
+    NATURAL_INDEX,
+    S10_RECORD,
+    committed_text,
+    correction_event_ids,
+    task_gate,
+)
 from tracecontract.evaluate import EXTRA_VERIFIERS, extra_verifier_paths
 from tracecontract.reconstruction import recorded_check
 from tracecontract.schemas import (
-    Candidate, CandidateOrigin, ContractVariant, LabelerKind, Population, Session, Split, TaskContract, TaskManifest,
-    VerifierCondition, VerifierSpec,
+    Candidate,
+    CandidateOrigin,
+    ContractVariant,
+    LabelerKind,
+    Population,
+    Session,
+    Split,
+    TaskContract,
+    TaskManifest,
+    VerifierCondition,
+    VerifierSpec,
 )
 from tracecontract.shadowing import shadowing_files
 from tracecontract.store import load
@@ -225,11 +259,14 @@ CORRECTION_NEAR_MISSES = 2  # §15.6: at least two of the three near misses targ
 # NATURAL_INDEX (the committed index of the natural tasks, natural_pr.INDEX) and S10_RECORD (a family's S10 record, in
 # its task directory, natural_pr.S10_RECORD) are the acceptance gate's (tracecontract.contract), read the same way here.
 SESSION_FILE = "session.json"  # a natural PR-review task's session (tasks.PR_SESSION_FILE)
-NATURAL_RUN_ID = "natural-pr-v1"  # §15.6, §19.7: the arm's one run, which grades every accepted family together
+# §20.2 (D71): the arm's two runs, by the sample whose accepted families each grades (the committed index's "sample").
+NATURAL_RUN_SAMPLES = {"natural-pr-v1": "first", "natural-pr-v2": "extension"}
+SAMPLE_NAMES = {"first": "the first sample", "extension": "the extension"}
 NATURAL_RUNS_REL = roots.NATURAL_RUNS.relative_to(roots.REPO)  # data/natural/runs, where evaluate writes a natural run
-STOP_ACCEPTED = 30  # §19.5: building stops at 30 accepted tasks of both samples ...
-# ... or when every family of both samples has been processed: S9 has screened every comment of both samples (the S9
-# sample of §15.6, D47: 150 of the 684 S8a comments; its extension, §19.2: the other 534), by sample.
+STOP_ACCEPTED = 30  # §19.5, §20.2: building stops at 30 accepted tasks in all (both samples) ...
+# ... or when every family has been processed: of both samples (§19.5), of the first (natural-pr-v1) or of the extension
+# (natural-pr-v2; §20.2). S9 has then screened every comment of the sample (the S9 sample of §15.6, D47: 150 of the 684
+# S8a comments; its extension, §19.2: the other 534).
 S9_SAMPLE_SIZES = {"first": 150, "extension": 534}
 S9_RECORD = "s9_complete"  # the index's S9 record: {sample: {"screened": n, "families": [task id, ...]}} (s9_problems)
 FAMILY_CAP = 2  # §15.6: at most 2 families come from one repository
@@ -313,8 +350,8 @@ def gate_problems(td: Path, m: TaskManifest, *, pilot: bool) -> list[str]:
         print(f"WARN: {m.task_id}: not accepted through the acceptance gate (status {g.status!r}; {len(others)} reason(s), "
               f"first: {first}); checked as an automated pilot (--pilot)")
         return []
-    return [f"{m.task_id}: not accepted through the acceptance gate (status {g.status!r}; {len(others)} reason(s), first: "
-            f"{first}); pass --pilot here and to evaluate for an automated pilot"]
+    return [(f"{m.task_id}: not accepted through the acceptance gate (status {g.status!r}; {len(others)} reason(s), first: "
+             f"{first}); pass --pilot here and to evaluate for an automated pilot")]
 
 
 def _args(argv: list[str]) -> argparse.Namespace:
@@ -743,6 +780,13 @@ def index_rows(index: dict[str, Any]) -> dict[str, dict[str, Any]]:
     return {r["task_id"]: r for r in index["tasks"] if isinstance(r, dict) and isinstance(r.get("task_id"), str)}
 
 
+def row_sample(row: dict[str, Any]) -> str | None:
+    """The S9 sample of an index row (its ``sample``: one of :data:`S9_SAMPLE_SIZES`, which ``natural_pr.sample_of``
+    gives by task id), or None when it names neither."""
+    sample = row.get("sample")
+    return sample if isinstance(sample, str) and sample in S9_SAMPLE_SIZES else None
+
+
 def natural_record_problems(td: Path, m: TaskManifest, index: dict[str, Any] | None) -> list[str]:
     """A natural PR-review task's S10 record and its row in the committed index (protocol §15.6, §16.4): ``s10.json``
     records the outcome ``passed``, and the committed index gives the task ``s11`` true. An index that cannot be read is
@@ -1008,9 +1052,11 @@ def natural_audit_entry_problems(task_id: str, ws: str, rec: Any) -> list[str]:
     return out
 
 
-def unprocessed_families(rows: list[dict[str, Any]]) -> list[str]:
+def unprocessed_families(rows: list[dict[str, Any]], sample: str | None = None) -> list[str]:
     """The index rows without an S10 outcome (:data:`S10_FINAL`) in a repository that still has an open place: fewer than
-    :data:`FAMILY_CAP` accepted families (§15.6, §17.3, §19.3; a repository with 2 accepted families builds no other)."""
+    :data:`FAMILY_CAP` accepted families (§15.6, §17.3, §19.3; a repository with 2 accepted families builds no other).
+    With ``sample``, only the rows of that sample (the index's ``sample``; §20.2) are reported, while a repository's
+    accepted families are still counted over every row: the cap applies to both samples together (§19.3)."""
     repos: dict[tuple[str, str], list[dict[str, Any]]] = {}
     for r in rows:
         key = ("repo", str(r["repo_id"])) if r.get("repo_id") is not None else ("task", str(r.get("task_id")))
@@ -1020,6 +1066,8 @@ def unprocessed_families(rows: list[dict[str, Any]]) -> list[str]:
         if sum(r.get("s11") is True for r in rs) >= FAMILY_CAP:
             continue
         for r in rs:
+            if sample is not None and row_sample(r) != sample:
+                continue
             s10 = r.get("s10")
             if (s10.get("outcome") if isinstance(s10, dict) else None) not in S10_FINAL:
                 out.append(str(r.get("task_id")))
@@ -1031,21 +1079,23 @@ def _int(value: Any) -> bool:
     return isinstance(value, int) and not isinstance(value, bool)
 
 
-def s9_problems(index: dict[str, Any]) -> list[str]:
-    """What keeps the committed index from showing that S9 has been completed for both samples, with every family it
-    yields in the index (the second branch of §19.5's stop rule; see the module docstring). The index's S9 record
-    (:data:`S9_RECORD`) gives, for each sample of :data:`S9_SAMPLE_SIZES`, ``screened``, the number of the sample's
-    comments that S9 has screened (an S9 outcome: qualifies, fails, or excluded because the judges disagree), which
-    must be the whole sample, and ``families``, the task ids of the families and reserves formed from the sample's
-    qualifying comments (one family per PR; §15.6, §17.3, §19.3). Each of them must have a row in the index, so that no
-    family of a sample that S9 has completed can be left out of :func:`unprocessed_families`. A bare ``true`` shows
-    neither."""
+def s9_problems(index: dict[str, Any], samples: tuple[str, ...] | None = None) -> list[str]:
+    """What keeps the committed index from showing that S9 has been completed for both samples (or for those of
+    ``samples``: one, for a run of §20.2), with every family it yields in the index (the second branch of §19.5's stop
+    rule; see the module docstring). The index's S9 record (:data:`S9_RECORD`) gives, for each sample of
+    :data:`S9_SAMPLE_SIZES`, ``screened``, the number of the sample's comments that S9 has screened (an S9 outcome:
+    qualifies, fails, or excluded because the judges disagree), which must be the whole sample, and ``families``, the
+    task ids of the families and reserves formed from the sample's qualifying comments (one family per PR; §15.6, §17.3,
+    §19.3). Each of them must have a row in the index, so that no family of a sample that S9 has completed can be left
+    out of :func:`unprocessed_families`. A bare ``true`` shows neither."""
     record = index.get(S9_RECORD, {})
     if not isinstance(record, dict):
         return [f"{S9_RECORD} in the index is {json.dumps(record)}, not an S9 record by sample"]
     rows = set(index_rows(index))
     out = []
     for sample, size in S9_SAMPLE_SIZES.items():
+        if samples is not None and sample not in samples:
+            continue
         rec = record.get(sample)
         at = f"{S9_RECORD}.{sample}"
         if not isinstance(rec, dict):
@@ -1069,60 +1119,126 @@ def s9_problems(index: dict[str, Any]) -> list[str]:
     return out
 
 
-def building_problems(index: dict[str, Any] | None, why: str | None) -> list[str]:
-    """Whether building has stopped by the committed index (protocol §19.5; see the module docstring): no natural verifier
-    is graded on a held-out candidate before then (§19.7). Building has stopped at :data:`STOP_ACCEPTED` accepted tasks of
-    both samples, or when S9 is complete for both samples with every family they yield in the index (:func:`s9_problems`)
-    and every one of those families has been processed (:func:`unprocessed_families`)."""
+def _plural(n: int, one: str, many: str) -> str:
+    return one if n == 1 else many
+
+
+def _ids(task_ids: list[str], limit: int = 10) -> str:
+    """Task ids in id order, the first ``limit`` of them."""
+    ids = sorted(task_ids, key=_task_order)
+    return ", ".join(ids[:limit]) + (", ..." if len(ids) > limit else "")
+
+
+def building_problems(index: dict[str, Any] | None, why: str | None, sample: str | None = None) -> list[str]:
+    """Whether building has stopped by the committed index (see the module docstring): no natural verifier is graded on a
+    held-out candidate before then (§19.7), or, for a run of §20.2, before the run of its family.
+
+    Without ``sample``, the rule of §19.5 for both samples together: building has stopped at :data:`STOP_ACCEPTED`
+    accepted tasks of both samples, or when S9 is complete for both samples with every family they yield in the index
+    (:func:`s9_problems`) and every one of those families has been processed (:func:`unprocessed_families`).
+
+    With ``sample``, the rule of §20.2 (D71) for the run of that sample (:data:`NATURAL_RUN_SAMPLES`): ``first``
+    (``natural-pr-v1``), when S9 is complete for the first sample and every family of it has been processed; ``extension``
+    (``natural-pr-v2``), at :data:`STOP_ACCEPTED` accepted tasks in all (both samples), or when S9 is complete for the
+    extension and every family of it has been processed. A repository's open places are counted over both samples."""
+    if sample is not None and sample not in S9_SAMPLE_SIZES:
+        raise ValueError(f"no S9 sample {sample!r} (the samples are {', '.join(S9_SAMPLE_SIZES)})")
     if index is None:
         return [(f"natural: the committed index ({NATURAL_INDEX} in the HEAD commit) cannot be read ({why}), so nothing shows "
                  "that building has stopped or which families are accepted (protocol §16.4, §19.5)")]
     rows = list(index_rows(index).values())
     accepted = sum(r.get("s11") is True for r in rows)
-    if accepted >= STOP_ACCEPTED:
+    if sample != "first" and accepted >= STOP_ACCEPTED:  # 30 in all: no branch of natural-pr-v1's rule (§20.2)
         return []
-    unscreened = s9_problems(index)
-    pending = unprocessed_families(rows)
+    unscreened = s9_problems(index, None if sample is None else (sample,))
+    pending = unprocessed_families(rows, sample)
     if not unscreened and not pending:
         return []
     open_ = list(unscreened)
     if pending:
-        open_.append(f"{len(pending)} famil{'ies' if len(pending) > 1 else 'y'} of a repository with an open place "
-                     f"{'have' if len(pending) > 1 else 'has'} no S10 outcome ({', '.join(pending)})")
-    return [(f"natural: building has not stopped by the committed index: it counts {accepted} accepted task(s) of both "
-             f"samples, and protocol §19.5 stops building at {STOP_ACCEPTED} or when every family of both samples has been "
-             f"processed; {'; '.join(open_)}. No natural verifier is graded on a held-out candidate before building stops "
-             "(§19.7)")]
+        whose = "of a repository" if sample is None else f"of {SAMPLE_NAMES[sample]} in a repository"
+        open_.append(f"{len(pending)} {_plural(len(pending), 'family', 'families')} {whose} with an open place "
+                     f"{_plural(len(pending), 'has', 'have')} no S10 outcome ({', '.join(pending)})")
+    if sample is None:
+        return [(f"natural: building has not stopped by the committed index: it counts {accepted} accepted task(s) of both "
+                 f"samples, and protocol §19.5 stops building at {STOP_ACCEPTED} or when every family of both samples has "
+                 f"been processed; {'; '.join(open_)}. No natural verifier is graded on a held-out candidate before building "
+                 "stops (§19.7)")]
+    run = next(r for r, s in NATURAL_RUN_SAMPLES.items() if s == sample)
+    if sample == "first":
+        rule = (f"protocol §20.2 grades its accepted families in {run} once S9 is complete for it and every family and "
+                "reserve of it has been processed")
+    else:
+        rule = (f"it counts {accepted} accepted task(s) in all, and protocol §20.2 grades the extension's accepted families "
+                f"in {run} at {STOP_ACCEPTED} accepted tasks in all or once every family and reserve of the extension has "
+                "been processed")
+    return [(f"natural: building has not stopped for {SAMPLE_NAMES[sample]} by the committed index: {rule}; "
+             f"{'; '.join(open_)}. No natural verifier is graded on a held-out candidate of a family before that family's "
+             "run (§20.2)")]
+
+
+# §20.2 (D71): what the natural arm's runs are, as the run-id and composition checks say it.
+TWO_RUNS = ("protocol §20.2 grades the natural arm in two runs, natural-pr-v1 for the accepted families of the first sample "
+            "and natural-pr-v2 for those of the extension")
 
 
 def natural_run_id_problems(run_id: str | None) -> list[str]:
-    """A run with natural PR-review tasks is the arm's one run, :data:`NATURAL_RUN_ID` (§15.6, §19.7), so it is given that
-    run id, which :func:`run_problems` then checks is new (a second natural run under another id would grade the accepted
-    families again)."""
+    """A run with natural PR-review tasks is one of the arm's two runs, :data:`NATURAL_RUN_SAMPLES` (§20.2, D71), so it is
+    given one of their run ids, which :func:`run_problems` then checks is new (a natural run under another id would grade
+    accepted families again)."""
     if run_id is None:
-        return [(f"natural: pass --run-id {NATURAL_RUN_ID} here and to evaluate: the natural arm has one run, "
-                 f"{NATURAL_RUN_ID}, which grades every accepted family together (protocol §15.6, §19.7), and the pre-flight "
-                 "checks that it has not been made")]
-    if run_id != NATURAL_RUN_ID:
-        return [(f"natural: the run id is {run_id!r}; the natural arm has one run, {NATURAL_RUN_ID}, which grades every "
-                 "accepted family together (protocol §15.6, §19.7)")]
+        return [(f"natural: pass --run-id natural-pr-v1 or natural-pr-v2 here and to evaluate: {TWO_RUNS}, and the "
+                 "pre-flight checks that the run has not been made")]
+    if run_id not in NATURAL_RUN_SAMPLES:
+        return [f"natural: the run id is {run_id!r}; {TWO_RUNS}"]
     return []
 
 
-def natural_run_problems(given: list[tuple[str, bool]], index: dict[str, Any] | None) -> list[str]:
+def natural_run_problems(given: list[tuple[str, bool]], index: dict[str, Any] | None, run_id: str | None = None) -> list[str]:
     """A run with natural PR-review tasks (``given``: each task id and whether it is one) grades no task of another
-    population (§15.2) and every accepted family of the committed index (§19.7: one run grades them all together)."""
+    population (§15.2). By the samples of the committed index (§20.2, D71), it never mixes the two samples, and the run
+    ``run_id`` (one of :data:`NATURAL_RUN_SAMPLES`) grades every accepted family of its sample and no family of the other.
+    A row of the index that names neither sample fails: nothing shows which run grades it. A given task without a row is
+    reported by :func:`natural_record_problems`."""
     others = [tid for tid, natural in given if not natural]
     out = []
     if others:
         out.append(f"natural: the run mixes natural:pr-review tasks with tasks of other populations ({', '.join(others)}); "
                    "each population gets its own run (protocol §15.2)")
-    if index is not None:
-        accepted = [tid for tid, r in index_rows(index).items() if r.get("s11") is True]
-        left_out = sorted(set(accepted) - {tid for tid, natural in given if natural}, key=_task_order)
-        if left_out:
-            out.append(f"natural: the run leaves out accepted families of the committed index ({', '.join(left_out)}); the run "
-                       f"{NATURAL_RUN_ID} grades every accepted family together (protocol §19.7)")
+    if index is None:
+        return out
+    rows = index_rows(index)
+    unknown = [tid for tid, r in rows.items() if row_sample(r) is None]
+    if unknown:
+        out.append(f"natural: {len(unknown)} {_plural(len(unknown), 'row', 'rows')} of the committed index ({_ids(unknown)}) "
+                   f"{_plural(len(unknown), 'names', 'name')} neither sample ('first' or 'extension'), so nothing shows "
+                   f"which run grades {_plural(len(unknown), 'it', 'them')} ({TWO_RUNS})")
+    natural = list(dict.fromkeys(tid for tid, is_natural in given if is_natural))
+    by_sample: dict[str, list[str]] = {}
+    for tid in natural:
+        s = row_sample(rows.get(tid, {}))
+        if s is not None:
+            by_sample.setdefault(s, []).append(tid)
+    sample = NATURAL_RUN_SAMPLES.get(run_id or "")
+    if sample is None:  # the run id is refused (natural_run_id_problems); the samples must not be mixed all the same
+        if len(by_sample) > 1:
+            shown = "; ".join(f"{s}: {_ids(by_sample[s])}" for s in S9_SAMPLE_SIZES if s in by_sample)
+            out.append(f"natural: the run mixes the two samples ({shown}); {TWO_RUNS}")
+        return out
+    other = [tid for s, tids in by_sample.items() if s != sample for tid in tids]
+    if other:
+        other_sample = next(s for s in S9_SAMPLE_SIZES if s != sample)
+        other_run = next(r for r, s in NATURAL_RUN_SAMPLES.items() if s == other_sample)
+        mixes = "mixes the two samples: it " if by_sample.get(sample) else ""
+        out.append(f"natural: the run {run_id} {mixes}includes families of {SAMPLE_NAMES[other_sample]} ({_ids(other)}), "
+                   f"but it grades the accepted families of {SAMPLE_NAMES[sample]} only, and {other_run} those of "
+                   f"{SAMPLE_NAMES[other_sample]} (protocol §20.2)")
+    accepted = [tid for tid, r in rows.items() if r.get("s11") is True and row_sample(r) == sample]
+    left_out = sorted(set(accepted) - set(natural), key=_task_order)
+    if left_out:
+        out.append(f"natural: the run leaves out accepted families of {SAMPLE_NAMES[sample]} in the committed index "
+                   f"({', '.join(left_out)}); the run {run_id} grades every accepted family of {SAMPLE_NAMES[sample]} "
+                   "(protocol §20.2)")
     return out
 
 
@@ -1149,7 +1265,7 @@ def main(*argv: str) -> int:
             print(f"WARN: {msg}")
 
     tasks = list(map(Path, a.tasks))
-    # A run with a natural PR-review task: the committed index, read once (protocol §16.4, §19.5, §19.7).
+    # A run with a natural PR-review task: the committed index, read once (protocol §16.4, §19.5, §20.2).
     natural_run = any(roots.is_natural_pr(td) for td in tasks)
     index, index_why = committed_index(R) if natural_run else (None, None)
     given: list[tuple[str, bool]] = []  # each task id, and whether it is a natural PR-review task
@@ -1312,19 +1428,21 @@ def main(*argv: str) -> int:
                     note(n)
                 problems += shadowing_problems(m, [c for _, c in st.candidates], stratum=st.name)
             problems += frozen_before_attempts_problems(m, graded_verifiers(extras, a.conditions), loaded)
-    if natural_run:  # the run as a whole: building has stopped; it is the arm's one run, of every accepted family only
-        problems += building_problems(index, index_why)
-        problems += natural_run_problems(given, index)
+    if natural_run:  # the run as a whole (§20.2, D71): one of the two runs, of every accepted family of its sample only,
+        # once building has stopped for that sample (for a run id that names neither run: §19.5 over both samples)
+        problems += building_problems(index, index_why, NATURAL_RUN_SAMPLES.get(a.run_id or ""))
+        problems += natural_run_problems(given, index, a.run_id)
         problems += natural_run_id_problems(a.run_id)
     from tracecontract.sandbox.docker_runner import HARNESS_VERSION
 
     # The run id is new under the repository's results/runs and data/natural/runs (R: where every other check looks too).
     problems += run_problems(repeats=a.repeats, harness=HARNESS_VERSION, run_id=a.run_id, runs_root=R / "results" / "runs",
                              natural_runs_root=R / NATURAL_RUNS_REL)
-    running = subprocess.run(["docker", "ps", "-q"], capture_output=True, text=True).stdout.split()
+    running = subprocess.run(["docker", "ps", "-q"], capture_output=True, text=True, check=False).stdout.split()
     if running:
         problems.append(f"{len(running)} container(s) running; a run needs an idle host")
-    dirty = subprocess.run(["git", "status", "--porcelain"], cwd=R, capture_output=True, text=True).stdout.strip()
+    dirty = subprocess.run(["git", "status", "--porcelain"], cwd=R, capture_output=True, text=True,
+                           check=False).stdout.strip()
     if dirty:
         problems.append("git working tree not clean")
     for p in problems:
