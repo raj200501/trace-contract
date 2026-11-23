@@ -3074,3 +3074,66 @@ Times are UTC, 2026-11-23.
   these texts, and the gate's scan has no finding.
 * **The labels** are model proposals, and no human label exists. The run is an automated pilot: every family's
   provenance awaits a human reviewer (§16.4).
+
+### D79. The manuscript restructured after an independent review, with the natural case studies placed
+Times are UTC, 2026-11-23.
+* **Why.** A read-only review ran while `natural-pr-v1` was grading. It had three lenses (a venue reviewer, technical
+  accuracy and writing) and a synthesis that verified the findings. It judged the draft not ready for a preprint:
+  * its lead result was largely set by the design;
+  * its labels share inputs with the verifiers that score well, and no human label exists;
+  * several statements were wrong or out of date;
+  * it read as a lab notebook.
+
+  Of its five ranked changes, three need no new data: restate the claims, correct the text, and restructure into a
+  short paper. Two need the owner: human labels, and more families with a second model family. A planner wrote the
+  restructure plan, an independent critic checked it against the findings and the rules, and the planner revised it.
+* **What was done.** It was built in an isolated worktree in five stages: code, main text, appendices, a review through
+  three lenses (numbers and claims, fidelity and privacy, the reader and the build), and a fix stage. The build session
+  then verified it. The review raised 50 findings: 48 were fixed in full, one in part, and one is left to the owner.
+  * Code:
+    * new keys of `\fv`, and two number namespaces: `\plv` for the pilot, and `\dv` for design constants, each value
+      checked against its source and protocol hashes recomputed;
+    * the generated table of protocol amendments, v0.1 to v0.12;
+    * a behaviours table, and the primary per-family table kept;
+    * the design figure with a worked example, and the CS-02 panel marked as regression-only;
+    * `paper/check_numbers.py`, so that no digit or count word stands outside a macro;
+    * the abstract gate, which now expands the macros.
+  * The manuscript: a new title; the abstract and introduction; design; the controlled results, with the planned
+    estimand first and the post hoc reading labelled; a short pilot section; the natural case studies; related work,
+    discussion, threats, ethics and availability; and appendices A to I with the process detail.
+* **The natural template after the analysis** (D77 fixed it before). Only these changed:
+  1. The closing paragraph's slot became the one sentence its rule asks for, the only text written from the run's
+     cells: "In NP-03, NP-04, NP-05, NP-18, NP-19 and NP-20, C1 and C3 rejected the pre-review state."
+  2. The two pointers D77 left out were restored: App. A's amendments table, with its v0.12 row, and App. G's comparison
+     of the natural arm with the controlled study.
+  3. Review corrections of statements about the records, none of which states an outcome of the run:
+     * in Status, what was fixed before the analysis and what the build session had seen;
+     * in Caveats, the caveat on D70's construction facts and the wording of the task-list exposure;
+     * in their family paragraphs, NP-05's kept correction as a builder default, and NP-20's near-miss disclosure as D77
+       records it;
+     * in the closing paragraph, that the planned cost per accepted task is not reported.
+* **Defaults for the owner's open questions,** to be confirmed or changed by the owner:
+  * The title is "When the First Request Is Not the Task: Verifiers of Session-Derived Coding Tasks and the Corrections
+    They Miss".
+  * The AI-assistance statement says "an AI coding agent", and no model is named.
+  * D72 and D75 are reported by role and kind, without counts.
+  * Costs are per family only, and future work is stated without sizes.
+  * The builder decisions not yet reviewed by a person are disclosed as such.
+  * The author line stays a TODO, and the working-draft subtitle stays until posting.
+* **Verification by the build session**, on the merged tree:
+  * A clean LaTeX build gives 70 pages, the main text ending on page 23, with no undefined reference or citation, no
+    overfull box, no unfilled number and one TODO (the author line).
+  * The PDF text holds no model, provider or agent-product name.
+  * The abstract gate passes (1,621 of 1,900 characters), and the number checker passes on every section.
+  * Every generator reproduces its outputs byte for byte, the frozen pilot inputs are unchanged
+    (`verify_frozen_inputs`), and the full offline suite and the pre-push scan pass, as the commit says.
+* **Left to the owner.**
+  * The main text is about 10,500 words against the plan's 7,900; the natural section alone is about 3,860. Whether to
+    move its per-family lists to App. G is the owner's choice.
+  * The frozen pilot tables keep their recorded captions ('reward fidelity', 'pre-specified', 'full'). App. F explains
+    those words; re-freezing the tables needs the owner's approval.
+  * Human labels from two blinded reviewers, with the existing review packet.
+  * Naming the models, and a second model family.
+  * The model identifier in the committed controlled transcripts (450 assistant messages carry it in their `model`
+    field): keep it as the raw session record, or redact it in a new sanitiser version with the hashes renewed.
+  * Whether the screening download records keep the fetched repositories' URLs (D50, D63).

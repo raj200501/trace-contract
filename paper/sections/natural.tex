@@ -12,11 +12,16 @@
 %   fix_rounds, a key D64 does not fix: the build session confirms that the six records hold it before the run is
 %   analysed, since the published analysis is a byte copy (scripts/publish_natural_run.py).
 % * Families are named, never counted; no thread text, repository name, login or agent product is written.
-% * main.tex does not input this file yet: the manuscript restructure places it. The template points to no other section
-%   or appendix: App. A's generated table of amendments (no v0.12 row yet) and App. G's comparison of the natural arm
-%   with the controlled study (not written yet) get their pointers from the restructure once they hold that content.
-% * One integration slot is left, in the closing paragraph: a visible UNFILLED marker, which sentences that name families
-%   by their cells replace after make_tables.py --natural-run, never before.
+% * main.tex inputs this file as the manuscript's natural section (the restructure). Its only pointers outside itself and
+%   its generated tables are the two that D77 left open, re-added once the appendix moves gave them their content: App. A's
+%   generated table of amendments (its v0.12 row) and App. G's comparison of the natural arm with the controlled study.
+% * What changed after the run's analysis (D79), and nothing else: (1) the closing paragraph's integration
+%   slot, replaced by the one sentence its rule asks for, the only text written from the run's cells; (2) the two
+%   pointers above; (3) review corrections of statements about the records, none of which states an outcome of the run:
+%   what was fixed before the analysis and what the build session had seen (Status), the caveat on D70's construction
+%   facts and the wording of the task-list exposure (Caveats), NP-05's correction as a builder default and NP-20's
+%   near-miss disclosure as D77 records it (their paragraphs), and the planned cost per accepted task, not reported
+%   (closing paragraph).
 \providecommand{\nrcaveat}[1]{\raggedright\hspace{0pt}#1}
 
 \section{Natural case studies}
@@ -32,9 +37,15 @@ stopped, within seconds and before any pair was graded, and that the run was the
 pilot: provenance eligibility needs a human reviewer and stays pending, so each family's acceptance gate is pending, and
 the manifest's pilot flag is \nrv{run.pilot} (D64, decision~9; D75; D76). Protocol v0.12 (protocol~\S20) gave each
 sample a run of its own after phases P1 to P4 of the first sample's families had run and before any natural held-out
-candidate existed (D71). When this run started, the extension's run, \texttt{natural-pr-v2}, had not been made: the
-extension's S10 step was stopped at a usage limit, and the task directories it left are to be built again from the start
-(D66, D75), with the results of this run known (protocol~\S20.3).
+candidate existed (D71; Table~\ref{tab:amendments}, its v0.12 row). When this run started, the extension's run,
+\texttt{natural-pr-v2}, had not been made: the extension's S10 step was stopped at a usage limit, and the task
+directories it left are to be built again from the start (D66, D75), with the results of this run known
+(protocol~\S20.3). This section's wording and the run's analysis fields were fixed before any analysis of the run, while
+grading was still in progress; before then, the build session's progress checks had shown it counts of outcomes over all
+graded pairs together, naming no verifier or candidate (D77). After the analysis, the closing paragraph's first sentence
+was written from the run's cells, as were the sentences on these case studies in the abstract, the introduction and the
+discussion, and review corrected or added statements about the records in this section, none of which states an outcome
+of the run (D79).
 
 \paragraph{What was built.}
 Each family follows the recipe of D64 in phases P0 to P7, and the end of each of P1 to P7 is a committed record (D65,
@@ -42,7 +53,8 @@ D74). The generated verifiers are built and frozen in P2 and P3. The reference c
 no generator saw it, and before the reference checks and the independent labeler of P5. The held-out pool of P6,
 alternatives and near misses with a workspace each, starts after every verifier of its family is frozen, and P7 runs the
 mappers, the duplicate check and the audits (D64; D72; D75). A family accepted at S11 is accepted for building: it passes
-S10 within the family cap (protocol~\S16.4). The natural arm differs from the controlled study in these respects:
+S10 within the family cap (protocol~\S16.4). The natural arm differs from the controlled study in these respects
+(Table~\ref{tab:natural-vs-controlled}, Appendix~\ref{app:natural}):
 \begin{enumerate}
 \item The correction is a reviewer's comment on an agent's pull request. The reviewer need not be the person who opened
   the issue: we treat the comment as the correction, a construct difference from an in-session user correction (D64,
@@ -67,6 +79,8 @@ $^{\ddagger}$.
 \begin{itemize}
 \item The reference is not an oracle, and the reference checks were validated on it: they are usable only where the
   reference passes them in every repeat of their validation and the development no-op fails them (D64; D70).
+\item The construction facts that the family paragraphs take from D70, such as why a reference fails a verifier or what
+  revisers relaxed, are observations of the build made by model agents and not reviewed by a person (D70).
 \item Every label is a model proposal: D19's, the independent labeler's, and the source-evidence label, which rests on
   the reviewer's request, the addressing commit and the agreement of the model judges of S9 (protocol~\S15.6). No human
   label exists (D64, decision~8).
@@ -78,8 +92,8 @@ $^{\ddagger}$.
   owner's review (D73, D74, D76).
 \item The run is an automated pilot, as the status paragraph says (D64, decision~9; D76).
 \item Some reference-check writers, labelers and their revisions, reviews, alternatives, near misses and fix rounds of P5
-  and P6 had the build session's task titles in their context, and so did some host coordinators, which write no
-  generated content (D65, D72). No title names a family, requirement, check, target, label or candidate; a search of
+  and P6 had in their context the titles of the build session's task-list items (about the paper's tables and review
+  fixes), and so did some host coordinators, which write no generated content (D65, D72). No title names a family, requirement, check, target, label or candidate; a search of
   each exposed generator run's text and tool inputs for the titles' distinctive terms found none; and nothing was
   regenerated, a builder decision not yet reviewed by a person (D72).
 \item Some runs worked outside the recipe: they started the task image themselves, wrote temporary files outside their
@@ -263,7 +277,8 @@ of \nrv{il.np05.pool.decided}.
 (e)~Pairs of the run (graded; unresolved; infrastructure outcomes): \nrv{pairs.np05}; \nrv{pairs.np05.unresolved};
 \nrv{pairs.np05.infrastructure}.
 (f)~NP-05 shares its repository with NP-04 (D63). A qualifying comment of the extension was made before the family's
-correction, and the family keeps the correction it was built with (D63, D66). At the audit's first iteration the
+correction, and the family keeps the correction it was built with, a builder default that departs from the
+earliest-comment rule of protocol~\S15.6 (D63, D66). At the audit's first iteration the
 reference fails C1 and C3, and the audits of C2 and C4 failed after their last revision by accepting a development
 attack that, by the revisers' account, cannot be told apart from the reference on the requirement it targets (D70). Its
 reference checks were frozen after \nrv{refchecks.np05.rounds} fix rounds while the last review still asked for fixes,
@@ -342,8 +357,9 @@ reference checks' outcome on it in the run: \nrv{pre.np20.refchecks}.
 (c)~Under D19: C1 \nrv{c1.np20.fa} and \nrv{c1.np20.fr}, C3 \nrv{c3.np20.fa} and \nrv{c3.np20.fr}; in the oracle-gated
 view C1's cell is \nrv{og.c1.np20} and C3's \nrv{og.c3.np20}. B1 equals D19's regression norm here, so its false
 rejection, \nrv{b1.np20.fr}, is uninformative, and its verdicts on the alternatives are not blind: they were developed
-against B1's own test files (D64, decision~3). The build session found no test-run command in the transcripts of the
-family's near-miss writers (D77).
+against B1's own test files (D64, decision~3). The family's audit records of P7 do not say whether a near-miss writer ran
+the repository's tests; a search of its near-miss writers' tool inputs for a fixed list of test-run commands
+found none (D77).
 (d)~Second labeling, on the held-out pool (units both label alike, of the units both decide): \nrv{il.np20.pool.agree}
 of \nrv{il.np20.pool.decided}.
 (e)~Pairs of the run (graded; unresolved; infrastructure outcomes): \nrv{pairs.np20}; \nrv{pairs.np20.unresolved};
@@ -354,14 +370,15 @@ passes C3, and a reviser relaxed a check that the reference fails (D70). The wri
 outside its workspace, in the host's temporary directory (D75).
 
 \paragraph{What the case studies can and cannot show.}
-% INTEGRATION SLOT (restructure plan, part 7, item 6). The marker below prints UNFILLED until, after make_tables.py
-% --natural-run has written the run's cells, it is replaced by sentences that name families by their cells and never
-% count them, in the form "In NP-xx and NP-yy C1 accepted the pre-review state and C3 rejected it", one sentence for each
-% pattern of Table 7's C1 and C3 cells that occurs, each family named once. Nothing is written from the cells before
-% then. tests/test_natural_template.py allows this marker alone, and the planned check of the posted PDF (restructure
-% plan, part 8) is to fail on any UNFILLED, so the marker cannot be left in place.
-\unfilled{integration slot: sentences naming the families by their C1 and C3 cells in the table of the pre-review
-states}
+% INTEGRATION SLOT (restructure plan, part 7, item 6). Its rule, as the template committed it before any analysis of
+% the run (D77): the marker "prints UNFILLED until, after make_tables.py --natural-run has written the run's cells, it is
+% replaced by sentences that name families by their cells and never count them, in the form "In NP-xx and NP-yy C1
+% accepted the pre-review state and C3 rejected it", one sentence for each pattern of Table 7's C1 and C3 cells that
+% occurs, each family named once. Nothing is written from the cells before then."
+% Written after make_tables.py --natural-run had written the run's cells (D79): Table
+% tab:nr-source's C1 and C3 cells (se.c1.<family>, se.c3.<family>) hold one pattern, so the slot is the one sentence
+% below. tests/test_natural_template.py (INTEGRATION) checks the cells it states against the run's own numbers.
+In NP-03, NP-04, NP-05, NP-18, NP-19 and NP-20, C1 and C3 rejected the pre-review state.
 Table~\ref{tab:nr-source} gives, per family, whether C1 and C3 accept the pre-review state, and the family paragraphs
 set each family's cells beside its caveats; no statement here counts families. S10 passed \nat{s10.first.passed} of the
 \nat{s10.first.processed} families of the first sample that it processed (D59): a screening count, not a prevalence.
@@ -382,5 +399,7 @@ out what no such record holds, as the run's analysis lists it: the host's own st
 (D65), apart from the run's grading; agent runs that leave no generation record, the mappers among them; stages S1 to
 S9; re-runs of S10 and the part of its compile step that its record does not time; and image builds and wheel downloads
 (D64, ``Generation records''). So it is not the whole cost of building a family: D68 reports the host coordinators'
-share of a phase. No total over the families is given. These case studies cannot show how often anything they show
+share of a phase. No total over the families is given. The protocol's cost and time per accepted task
+(protocol~\S15.6), which the analysis computes over the families that S10 processed, rejected ones included (D69), is a
+quantity over families and is not reported (protocol~\S19.6). These case studies cannot show how often anything they show
 happens, nor whether it holds beyond these families.

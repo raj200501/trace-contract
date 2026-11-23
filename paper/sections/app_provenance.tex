@@ -1,0 +1,81 @@
+% Appendix I, provenance (restructure plan, part 3): each main-text part with the decision-log entries, protocol
+% sections and records it rests on, and the index of the evidence ledgers, named from paper/'s directory listing.
+% Identifiers only; no number. File names are set with \path, which may break at a slash or a dot.
+\section{Provenance}
+\label{app:provenance}
+The verifiers are scored on the controlled task families on the construction pilot's constructed pool
+(Appendix~\ref{app:pilot}) and again on fresh agents' attempts (Section~\ref{sec:results-controlled}); the natural case
+studies (Section~\ref{sec:natural-cases}) come from review comments on agents' pull requests. ``Protocol~\S$n$''
+refers to \texttt{experiments/protocol.md}, ``D$n$'' to an entry of the decision log (\texttt{docs/decision\_log.md}),
+which is append-only and corrects earlier entries in later ones. Table~\ref{tab:provenance} maps each part of the main
+text to its records. Every number of the text is a macro whose value is written, with the file and field it comes from,
+in an evidence ledger listed below; \texttt{paper/check\_numbers.py} reports any number outside a macro.
+
+\begingroup\scriptsize\setlength{\LTcapwidth}{\linewidth}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.17\linewidth}>{\raggedright\arraybackslash}p{0.19\linewidth}>{\raggedright\arraybackslash}p{0.13\linewidth}>{\raggedright\arraybackslash}p{0.43\linewidth}@{}}
+\caption{Provenance of the main text: the decision-log entries, protocol sections and records each part rests on.}\label{tab:provenance}\\
+\toprule Main text & Decision log & Protocol & Records \\\midrule
+\endfirsthead
+\toprule Main text & Decision log & Protocol & Records \\\midrule
+\endhead
+\midrule\multicolumn{4}{r}{continued} \\
+\endfoot
+\bottomrule
+\endlastfoot
+Abstract; Section~\ref{sec:intro}, findings & D58, D61, D62, D78 & \S15.4, \S15.7, \S20 &
+\path{results/runs/fresh-v1/analysis.json}, \path{results/runs/natural-pr-v1/analysis.json} \\
+Section~\ref{sec:intro}, scope & D41, D48, D49, D57, D64 & \S2, \S15.1, \S15.2, \S19.6 & \path{experiments/protocol.md} \\
+Section~\ref{sec:design-tasks} & D5, D10, D50, D56--D58, D62 & CS-v1, \S15.4, \S16.2, \S18 &
+\path{data/controlled/scenarios/}; \path{data/fresh/fresh-v1/} (instructions, attempts, audits) \\
+Section~\ref{sec:design-conditions} & D24, D27, D31, D62 & \S4, \S8, \S15.4 & the verifier specs
+(\path{tasks/CS-0*/verifiers/*/spec.json}); \path{experiments/prompts/workflows/} \\
+Table~\ref{tab:roles} & D11, D55, D58, D64, D65 & \S15.4, \S15.5, \S19.2 & the generation records of the verifier specs
+and of the candidates \\
+Section~\ref{sec:design-labels}; Table~\ref{tab:label-rules} & D19, D33, D58, D64, D76 & \S5, \S15.5, \S15.6 &
+\path{scripts/propose_labels.py}; \path{tasks/CS-0*/strata/fresh-v1/proposed_labels.json} \\
+Section~\ref{sec:design-metrics} & D48, D57 & \S6, \S7, \S15.7 & \path{paper/design_constants.json} \\
+Section~\ref{sec:results-controlled}; Table~\ref{tab:fresh-family}; Figure~\ref{fig:fresh-fa} & D61 & \S15.3, \S15.7 &
+\path{results/runs/fresh-v1/} (\path{manifest.json}, \path{analysis.json}, \path{results.jsonl}) \\
+Section~\ref{sec:results-planned}; Table~\ref{tab:fresh-behaviours}; Figure~\ref{fig:design} & D61, D62 & \S15.4, \S15.7 &
+the contract mappings (\path{tasks/CS-0*/contracts/}); \path{data/controlled/scenarios/}; \path{results.jsonl} \\
+Section~\ref{sec:results-nulls}; Table~\ref{tab:fresh-comparisons} & D27, D61, D62 & \S7, \S15.7 & the audited
+verifiers' specs; \path{analysis.json} \\
+Section~\ref{sec:results-b1} & D13, D62 & \S4 & \path{tasks/CS-0*/verifiers/repo_tests/upstream_check_ids.json} \\
+Section~\ref{sec:results-robust} & D55, D58, D61, D62 & \S15.5, \S15.7, \S18.1 &
+\path{results/runs/fresh-v1/analysis_sensitivity.json} \\
+Section~\ref{sec:pilot} & D19, D37, D44, D45, D49 & \S11--\S14, \S15.1 & \path{results/runs/pilot-v0.3.3/};
+\path{results/analyses/pilot-v0.3.3-exploratory/} \\
+Section~\ref{sec:natural-cases} & D59, D63--D78 & \S15.6, \S16.4, \S19, \S20 & \path{results/runs/natural-pr-v1/};
+\path{data/manifests/natural_tasks_index.json}; \path{data/manifests/natural_phase_ends.jsonl} \\
+Section~\ref{sec:related} & D25, D34, D47 & -- & \path{docs/research_brief.md}; \path{paper/references.bib} \\
+Section~\ref{sec:discussion} & D62, D70 & \S18.3 & the records of the sections it discusses \\
+Section~\ref{sec:threats} & D5, D33, D41, D48, D51, D62, D64, D69, D72, D73, D77 & \S2, \S15.6, \S19.6 & the records of
+the appendices \\
+Section~\ref{sec:ethics} & D4, D21, D38, D47, D50, D52, D69 & \S17.4 & \path{THIRD_PARTY_LICENSES/};
+\path{data/manifests/} \\
+Section~\ref{sec:repro} & D46, D54, D61, D62, D64 & \S8, \S15.3 & \path{scripts/verify_frozen_inputs.py};
+\path{paper/README.md} \\
+\end{longtable}
+\endgroup
+
+\paragraph{The evidence ledgers.} Each lies in \texttt{paper/}, is generated with the numbers it lists, and is not edited
+by hand.
+\begin{center}\scriptsize
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.33\linewidth}>{\raggedright\arraybackslash}p{0.38\linewidth}>{\raggedright\arraybackslash}p{0.21\linewidth}@{}}\toprule
+Ledger & Numbers & Written by \\\midrule
+\path{evidence_ledger.md} & the construction pilot's tables (\path{generated/*.tex}), frozen with the pilot &
+\path{make_tables.py}, pilot run \\
+\path{evidence_ledger_exploratory.md} & the exploratory re-analysis and planning simulation of D49
+(\path{generated/exploratory/}) & \path{scripts/exploratory_reanalysis.py} \\
+\path{evidence_ledger_fresh.md} & \texttt{fresh-v1} and the pilot's re-grade (\path{generated/fresh/}, the
+\texttt{\textbackslash fv} macros) & \texttt{-{}-fresh}, \texttt{-{}-regrade} \\
+\path{evidence_ledger_natural.md} & the natural arm's screening, S10 and the Trace Commons screen
+(\path{generated/natural/}, \texttt{\textbackslash nat}) & \texttt{-{}-natural} \\
+\path{evidence_ledger_natural_run.md} & the natural run's per-family tables (\path{generated/natural_run/},
+\texttt{\textbackslash nrv}) & \texttt{-{}-natural-run} \\
+\path{evidence_ledger_figures.md} & the figures (\path{generated/figures/}) & \path{make_figures.py} \\
+\path{evidence_ledger_pilot.md} & the pilot's numbers for the text (\path{generated/pilot/}, \texttt{\textbackslash plv})
+& \texttt{-{}-pilot-numbers} \\
+\path{evidence_ledger_design.md} & the design's constants, each checked against its source, and the protocol's history
+(\path{generated/design/}, \texttt{\textbackslash dv}) & \texttt{-{}-design} \\
+\bottomrule\end{tabular}\end{center}

@@ -1,10 +1,10 @@
 \begin{table}[t]\centering\footnotesize
-\caption{Oracle-gated view of run \texttt{fresh-v1} (secondary, protocol \S15.7): a verifier's cell of a family is dropped when the verifier does not pass that family's reference solution, and the dropped cell's units are the lost yield (invalid/valid). D19 labels. \textbf{All labels are model proposals; no human labels exist.} Gated C1$-$C3: FA \ensuremath{+}0.63 (disc.\ 14/2, $p_{>}$ = 0.25, floor 0.125, 3 families); FR \ensuremath{+}0.07 (disc.\ 0/3, $p_{>}$ = 0.5, floor 0.5, 3 families). Four controlled families: descriptive, not inferential.}\label{tab:fresh-oracle}
+\caption{Oracle-gated view of run \texttt{fresh-v1} (secondary, protocol \S15.7): a verifier's cell of a family is dropped when the verifier does not pass that family's reference solution, and the dropped cell's attempts are the lost yield (invalid/valid). Rule D19's labels. Gated C1$-$C3: FA \ensuremath{+}0.63 (disc.\ 14/2, $p_{>}$ = 0.25, floor 0.125, 3 families); FR \ensuremath{+}0.07 (disc.\ 0/3, $p_{>}$ = 0.5, floor 0.5, 3 families). $^{\diamond}$Automated pilot; model-proposed labels, no human labels; 4 controlled families; descriptive (\S\ref{sec:intro}).}\label{tab:fresh-oracle}
 \begin{tabular}{lrrlrll}\toprule Condition & Ref.\ passes & Cells kept & Dropped & Lost yield & FA & FR \\\midrule
-C1 initial, plain & 3/4 & 3/4 & CS-01 & 10/10 & 0.74 (14/19) & 0.07 (3/40) \\
-C2 initial, audited & 3/4 & 3/4 & CS-01 & 10/10 & 0.74 (14/19) & 0.07 (3/40) \\
-C3 full, plain & 4/4 & 4/4 & -- & 0/0 & 0.07 (2/29) & 0.00 (0/50) \\
-C4 full, audited & 4/4 & 4/4 & -- & 0/0 & 0.07 (2/29) & 0.12 (6/50) \\
-B2 full-session LLM & 4/4 & 4/4 & -- & 0/0 & 0.07 (2/29) & 0.04 (2/50) \\
+C1 initial-only, plain & 3/4 & 3/4 & CS-01 & 10/10 & 0.74 (14/19) & 0.07 (3/40) \\
+C2 initial-only, audited & 3/4 & 3/4 & CS-01 & 10/10 & 0.74 (14/19) & 0.07 (3/40) \\
+C3 correction-aware, plain & 4/4 & 4/4 & -- & 0/0 & 0.07 (2/29) & 0.00 (0/50) \\
+C4 correction-aware, audited & 4/4 & 4/4 & -- & 0/0 & 0.07 (2/29) & 0.12 (6/50) \\
+B2 session-LLM baseline & 4/4 & 4/4 & -- & 0/0 & 0.07 (2/29) & 0.04 (2/50) \\
 B1 repository tests & 4/4 & 4/4 & -- & 0/0 & 0.00 (0/29) & 0.68 (34/50) \\
 \bottomrule\end{tabular}\end{table}

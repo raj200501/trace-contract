@@ -1,16 +1,10 @@
-\begin{table}[t]\centering\footnotesize
-\caption{Per-family false acceptance $\cdot$ false rejection (accepted/invalid $\cdot$ rejected/valid) on the fresh-agent stratum, run \texttt{fresh-v1}, the primary display (protocol \S15.7). Each distinct graded patch counts once: 79 units; excluded by the reviewed audit: \texttt{CS-02-fresh-A-final-1}. D19: rule-based label proposals (29 invalid, 50 valid); labeler: the independent labeler's verdicts, a second labeling (27 invalid, 52 valid). \textbf{All labels are model proposals; no human labels exist.} n/a: no invalid unit in that family under that labeling. Four controlled families: descriptive, not inferential.}\label{tab:fresh-family}
-\begin{tabular}{llccccc}\toprule Condition & Labels & CS-01 & CS-02 & CS-03 & CS-04 & Pooled \\\midrule
-C1 initial, plain & D19 & 10/10 $\cdot$ 10/10 & 0/2 $\cdot$ 0/17 & 4/7 $\cdot$ 3/13 & 10/10 $\cdot$ 0/10 & 24/29 $\cdot$ 13/50 \\
- & labeler & 10/10 $\cdot$ 10/10 & n/a $\cdot$ 2/19 & 4/7 $\cdot$ 3/13 & 10/10 $\cdot$ 0/10 & 24/27 $\cdot$ 15/52 \\\addlinespace
-C2 initial, audited & D19 & 10/10 $\cdot$ 10/10 & 0/2 $\cdot$ 0/17 & 4/7 $\cdot$ 3/13 & 10/10 $\cdot$ 0/10 & 24/29 $\cdot$ 13/50 \\
- & labeler & 10/10 $\cdot$ 10/10 & n/a $\cdot$ 2/19 & 4/7 $\cdot$ 3/13 & 10/10 $\cdot$ 0/10 & 24/27 $\cdot$ 15/52 \\\addlinespace
-C3 full, plain & D19 & 0/10 $\cdot$ 0/10 & 2/2 $\cdot$ 0/17 & 0/7 $\cdot$ 0/13 & 0/10 $\cdot$ 0/10 & 2/29 $\cdot$ 0/50 \\
- & labeler & 0/10 $\cdot$ 0/10 & n/a $\cdot$ 0/19 & 0/7 $\cdot$ 0/13 & 0/10 $\cdot$ 0/10 & 0/27 $\cdot$ 0/52 \\\addlinespace
-C4 full, audited & D19 & 0/10 $\cdot$ 0/10 & 2/2 $\cdot$ 0/17 & 0/7 $\cdot$ 6/13 & 0/10 $\cdot$ 0/10 & 2/29 $\cdot$ 6/50 \\
- & labeler & 0/10 $\cdot$ 0/10 & n/a $\cdot$ 0/19 & 0/7 $\cdot$ 6/13 & 0/10 $\cdot$ 0/10 & 0/27 $\cdot$ 6/52 \\\addlinespace
-B2 full-session LLM & D19 & 0/10 $\cdot$ 0/10 & 2/2 $\cdot$ 0/17 & 0/7 $\cdot$ 2/13 & 0/10 $\cdot$ 0/10 & 2/29 $\cdot$ 2/50 \\
- & labeler & 0/10 $\cdot$ 0/10 & n/a $\cdot$ 0/19 & 0/7 $\cdot$ 2/13 & 0/10 $\cdot$ 0/10 & 0/27 $\cdot$ 2/52 \\\addlinespace
-B1 repository tests & D19 & 0/10 $\cdot$ 8/10 & 0/2 $\cdot$ 17/17 & 0/7 $\cdot$ 9/13 & 0/10 $\cdot$ 0/10 & 0/29 $\cdot$ 34/50 \\
- & labeler & 0/10 $\cdot$ 8/10 & n/a $\cdot$ 19/19 & 0/7 $\cdot$ 9/13 & 0/10 $\cdot$ 0/10 & 0/27 $\cdot$ 36/52 \\
+\begin{table}[t]\centering\footnotesize\setlength{\tabcolsep}{4pt}
+\caption{Per-family false acceptance and false rejection on the fresh-agent stratum, the primary display (protocol \S15.7), under rule D19's labels: 29 invalid and 50 valid attempts, each distinct graded patch once (79 graded patches; excluded by the reviewed audit: \texttt{CS-02-fresh-A-final-1}). Run \texttt{fresh-v1} graded every pair 3 times under harness 0.3.5 (672 pairs, 0 unresolved). n/a: the family has no attempt of that kind. The second labeler's view: Table~\ref{tab:fresh-family-labeler}. $^{\diamond}$Automated pilot; model-proposed labels, no human labels; 4 controlled families; descriptive (\S\ref{sec:intro}).}\label{tab:fresh-family}
+\begin{tabular}{lrrrrrrrrrr}\toprule  & \multicolumn{5}{c}{False acceptance (accepted/invalid)} & \multicolumn{5}{c}{False rejection (rejected/valid)} \\\cmidrule(lr){2-6}\cmidrule(lr){7-11} Condition & CS-01 & CS-02 & CS-03 & CS-04 & Pooled & CS-01 & CS-02 & CS-03 & CS-04 & Pooled \\\midrule
+C1 initial-only, plain & 10/10 & 0/2 & 4/7 & 10/10 & 24/29 & 10/10 & 0/17 & 3/13 & 0/10 & 13/50 \\
+C2 initial-only, audited & 10/10 & 0/2 & 4/7 & 10/10 & 24/29 & 10/10 & 0/17 & 3/13 & 0/10 & 13/50 \\
+C3 correction-aware, plain & 0/10 & 2/2 & 0/7 & 0/10 & 2/29 & 0/10 & 0/17 & 0/13 & 0/10 & 0/50 \\
+C4 correction-aware, audited & 0/10 & 2/2 & 0/7 & 0/10 & 2/29 & 0/10 & 0/17 & 6/13 & 0/10 & 6/50 \\
+B2 session-LLM baseline & 0/10 & 2/2 & 0/7 & 0/10 & 2/29 & 0/10 & 0/17 & 2/13 & 0/10 & 2/50 \\
+B1 repository tests & 0/10 & 0/2 & 0/7 & 0/10 & 0/29 & 8/10 & 17/17 & 9/13 & 0/10 & 34/50 \\
 \bottomrule\end{tabular}\end{table}

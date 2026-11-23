@@ -1,18 +1,18 @@
-\begin{table}[t]\centering\scriptsize\setlength{\tabcolsep}{4pt}
-\caption{The 14 pre-specified paired comparisons on the same units, run \texttt{fresh-v1}, D19 labels. \textbf{All labels are model proposals; no human labels exist.} Metric (n): FA over the invalid or FR over the valid units. A$-$B: pooled difference; then the per-family differences. Disc.: A accepts \& B rejects / A rejects \& B accepts. $p$: exact sign-flip randomization p-values over the 4 families, on the pooled statistic ($>$: A$>$B, $<$: A$<$B, both one-sided; 2-s.: two-sided) and, last but one, two-sided on the family-mean statistic. With 4 families no one-sided $p$ below 0.0625 and no two-sided $p$ below 0.125 can occur; Floor: the smallest one-sided $p$ attainable given the families whose difference is zero. The smallest two-sided $p$ here is 0.25. Short names: C1--C4 contracts (initial or full, plain or audited), B2 full-session LLM, B1 repository tests. Four controlled families: descriptive, not inferential.}\label{tab:fresh-comparisons}
-\begin{tabular}{lllrrrrrrrrrrr}\toprule A & B & Metric (n) & A$-$B & CS-01 & CS-02 & CS-03 & CS-04 & Disc. & $p_{>}$ & $p_{<}$ & $p$ 2-s. & $p$ 2-s.\ (mean) & Floor \\\midrule
-C1 & C3 & FA (29) & \ensuremath{+}0.76 & \ensuremath{+}1.00 & \ensuremath{-}1.00 & \ensuremath{+}0.57 & \ensuremath{+}1.00 & 24/2 & 0.125 & 0.9375 & 0.25 & 0.625 & 0.0625 \\
-C1 & C3 & FR (50) & \ensuremath{+}0.26 & \ensuremath{+}1.00 & 0.00 & \ensuremath{+}0.23 & 0.00 & 0/13 & 0.25 & 1 & 0.5 & 0.5 & 0.25 \\
-C2 & C4 & FA (29) & \ensuremath{+}0.76 & \ensuremath{+}1.00 & \ensuremath{-}1.00 & \ensuremath{+}0.57 & \ensuremath{+}1.00 & 24/2 & 0.125 & 0.9375 & 0.25 & 0.625 & 0.0625 \\
-C2 & C4 & FR (50) & \ensuremath{+}0.14 & \ensuremath{+}1.00 & 0.00 & \ensuremath{-}0.23 & 0.00 & 5/12 & 0.5 & 0.75 & 1 & 1 & 0.25 \\
-C1 & C2 & FA (29) & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0/0 & 1 & 1 & 1 & 1 & 1 \\
-C1 & C2 & FR (50) & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0/0 & 1 & 1 & 1 & 1 & 1 \\
-C3 & C4 & FA (29) & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0/0 & 1 & 1 & 1 & 1 & 1 \\
-C3 & C4 & FR (50) & \ensuremath{-}0.12 & 0.00 & 0.00 & \ensuremath{-}0.46 & 0.00 & 6/0 & 1 & 0.5 & 1 & 1 & 0.5 \\
-B2 & C4 & FA (29) & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0/0 & 1 & 1 & 1 & 1 & 1 \\
-B2 & C4 & FR (50) & \ensuremath{-}0.08 & 0.00 & 0.00 & \ensuremath{-}0.31 & 0.00 & 4/0 & 1 & 0.5 & 1 & 1 & 0.5 \\
-B2 & C3 & FA (29) & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0/0 & 1 & 1 & 1 & 1 & 1 \\
-B2 & C3 & FR (50) & \ensuremath{+}0.04 & 0.00 & 0.00 & \ensuremath{+}0.15 & 0.00 & 0/2 & 0.5 & 1 & 1 & 1 & 0.5 \\
-B1 & C4 & FA (29) & \ensuremath{-}0.07 & 0.00 & \ensuremath{-}1.00 & 0.00 & 0.00 & 0/2 & 1 & 0.5 & 1 & 1 & 0.5 \\
-B1 & C4 & FR (50) & \ensuremath{+}0.56 & \ensuremath{+}0.80 & \ensuremath{+}1.00 & \ensuremath{+}0.23 & 0.00 & 0/28 & 0.125 & 1 & 0.25 & 0.25 & 0.125 \\
+\begin{table}[t]\centering\footnotesize
+\caption{The 14 planned comparisons (protocol \S15.7), run \texttt{fresh-v1}, rule D19's labels. A$-$B: pooled difference over invalid (FA) or valid (FR) attempts; Disc.: A accepts \& B rejects / the reverse; exact sign-flip $p$ over 4 families ($p_{>}$: one-sided, A$>$B; 2-s.: two-sided), never below 0.0625 one-sided or 0.125 two-sided; Floor: the one-sided bound given families with zero difference. Full: Table~\ref{tab:fresh-comparisons-full}. $^{\diamond}$Automated pilot; model-proposed labels, no human labels; 4 controlled families; descriptive (\S\ref{sec:intro}).}\label{tab:fresh-comparisons}
+\begin{tabular}{lllrrrrr}\toprule A & B & Metric (n) & A$-$B & Disc. & $p_{>}$ & $p$ 2-s. & Floor \\\midrule
+C1 & C3 & FA (29) & \ensuremath{+}0.76 & 24/2 & 0.125 & 0.25 & 0.0625 \\
+C1 & C3 & FR (50) & \ensuremath{+}0.26 & 0/13 & 0.25 & 0.5 & 0.25 \\
+C2 & C4 & FA (29) & \ensuremath{+}0.76 & 24/2 & 0.125 & 0.25 & 0.0625 \\
+C2 & C4 & FR (50) & \ensuremath{+}0.14 & 5/12 & 0.5 & 1 & 0.25 \\
+C1 & C2 & FA (29) & 0.00 & 0/0 & 1 & 1 & 1 \\
+C1 & C2 & FR (50) & 0.00 & 0/0 & 1 & 1 & 1 \\
+C3 & C4 & FA (29) & 0.00 & 0/0 & 1 & 1 & 1 \\
+C3 & C4 & FR (50) & \ensuremath{-}0.12 & 6/0 & 1 & 1 & 0.5 \\
+B2 & C4 & FA (29) & 0.00 & 0/0 & 1 & 1 & 1 \\
+B2 & C4 & FR (50) & \ensuremath{-}0.08 & 4/0 & 1 & 1 & 0.5 \\
+B2 & C3 & FA (29) & 0.00 & 0/0 & 1 & 1 & 1 \\
+B2 & C3 & FR (50) & \ensuremath{+}0.04 & 0/2 & 0.5 & 1 & 0.5 \\
+B1 & C4 & FA (29) & \ensuremath{-}0.07 & 0/2 & 1 & 1 & 0.5 \\
+B1 & C4 & FR (50) & \ensuremath{+}0.56 & 0/28 & 0.125 & 0.25 & 0.125 \\
 \bottomrule\end{tabular}\end{table}

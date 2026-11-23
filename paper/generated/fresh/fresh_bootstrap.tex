@@ -1,11 +1,11 @@
 \begin{table}[t]\centering\footnotesize
-\caption{\textbf{Not inferential.} Cluster-bootstrap 95\% intervals over the 4 task families of run \texttt{fresh-v1} (fewer than 10 families, protocol \S15.7), for the pooled rates (top) and the paired differences (bottom), D19 labels; $^{*}$: degenerate, every resample gives the same value. \textbf{All labels are model proposals; no human labels exist.}}\label{tab:fresh-boot}
+\caption{\textbf{Not inferential.} Cluster-bootstrap 95\% intervals over the 4 task families of run \texttt{fresh-v1} (fewer than 10 families, protocol \S15.7), for the pooled rates (top) and the paired differences (bottom), D19 labels; $^{*}$: degenerate, every resample gives the same value. $^{\diamond}$Automated pilot; model-proposed labels, no human labels; 4 controlled families; descriptive (\S\ref{sec:intro}).}\label{tab:fresh-boot}
 \begin{tabular}{lll}\toprule Pooled rate & FA & FR \\\midrule
-C1 initial, plain & [0.44, 1.00] & [0.00, 0.75] \\
-C2 initial, audited & [0.44, 1.00] & [0.00, 0.75] \\
-C3 full, plain & [0.00, 0.38] & [0.00, 0.00]$^{*}$ \\
-C4 full, audited & [0.00, 0.38] & [0.00, 0.37] \\
-B2 full-session LLM & [0.00, 0.38] & [0.00, 0.12] \\
+C1 initial-only, plain & [0.44, 1.00] & [0.00, 0.75] \\
+C2 initial-only, audited & [0.44, 1.00] & [0.00, 0.75] \\
+C3 correction-aware, plain & [0.00, 0.38] & [0.00, 0.00]$^{*}$ \\
+C4 correction-aware, audited & [0.00, 0.38] & [0.00, 0.37] \\
+B2 session-LLM baseline & [0.00, 0.38] & [0.00, 0.12] \\
 B1 repository tests & [0.00, 0.00]$^{*}$ & [0.21, 0.94] \\\midrule
 Paired difference A$-$B & FA & FR \\\midrule
 C1$-$C3 & [\ensuremath{+}0.22, \ensuremath{+}1.00] & [0.00, \ensuremath{+}0.75] \\

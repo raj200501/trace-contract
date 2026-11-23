@@ -1,0 +1,201 @@
+% Appendix D, construction details (restructure plan, part 3). Sources: experiments/protocol.md (§4, §5, §15.5,
+% §15.6, §16.5); src/tracecontract/contract.py (requirements_from_proposals, validate_contract, GATE_BLOCKING_WARNINGS),
+% src/tracecontract/audit.py, src/tracecontract/verifier.py (the lint); tasks/CS-0*/verifiers/*/spec.json;
+% docs/decision_log.md (the D-ids in the text). Moved here: data.tex's controlled sessions and initial state, method.tex's
+% contracts, conditions, audit, freezing and label-support verifiers, results_pilot.tex's contract recovery, the
+% appendix's verifier and task tables, and the acceptance gate. Every number is a macro (\fv, \plv, \dv).
+\section{Construction details}
+\label{app:construction}
+
+\subsection{Controlled sessions}
+\label{sec:controlled}
+Each scenario was hashed and logged locally before its session ran (protocol CS-v1; not a formal preregistration). It
+fixes an initial request $U_1$, a correction $U_2$, a neutral reply for clarification questions, and the intended final
+requirements with the turn that introduced each (Table~\ref{tab:scenarios}); CS-04's unchanged default is an inferred
+requirement without a quote (D41). The scenario writer is the study's agent, the same model as the session agent, and no
+person wrote or reviewed a scenario; for \texttt{humanize} the reference operationalisation was written after the agent's
+first output had been seen. The session agent, a subagent of an AI coding agent, works in a fresh git copy of a pinned
+commit of a permissively licensed Python library, and runs repository code only through wrappers that execute it in an
+offline Docker sandbox. Its workspace is captured after $U_1$ (the pre-correction state) and at the end (the reference
+solution). The correction arrives through a subagent messaging channel that adds a short harness frame (D10).
+Transcripts are audited for access outside the workspace and for reads of sealed material, then sanitised: harness
+internals are dropped and e-mail addresses redacted. Each session gives a task family (Table~\ref{tab:tasks}).
+
+\subsection{Contracts}
+\label{sec:contracts}
+A contract is a set of requirements, each with a statement, a kind (change, invariant, constraint, non-goal), a status
+(\emph{explicit}, \emph{inferred}, \emph{superseded} or \emph{unresolved}), the session event that introduced it, and
+evidence spans that must match the session text exactly. The same proposer prompt (\texttt{contract:v1}) recovers the
+correction-aware contract from the whole session and the initial-only contract from the first user request alone, so
+the contracts differ only in what reaches the proposer ($U_1$ alone or the whole session), not in the proposer's
+capability; every generator also gets the reference diff (Section~\ref{sec:design-conditions}). As the code implements it (\texttt{src/tracecontract/contract.py}):
+\begin{itemize}
+\item quotes are aligned to any session event; an explicit requirement that quotes a non-user event is kept, with a
+  \texttt{non\_user\_evidence} warning that blocks the acceptance gate;
+\item quotes that do not align are dropped with a warning; an explicit requirement left with no aligned quote is
+  downgraded to inferred if it carries a rationale, and rejected otherwise;
+\item supersession links must point forward in time, active requirements may not conflict, an initial-only contract may
+  use no later event, and superseded and unresolved requirements are never scored;
+\item inferred requirements, like every requirement of a reference contract, need human review before a task is
+  accepted.
+\end{itemize}
+For a natural task the proposer reads a rendered pull-request thread: the issue alone, or the issue with the review
+thread (protocol~\S15.6); a proposal introduced at an event that is not a user turn (the issue, the review comment or a
+reply) is rejected.
+
+\subsection{Verifier conditions}
+\label{sec:conditions}
+Table~\ref{tab:conditions} lists the conditions. A generator writes black-box tests from a contract (the prompt asks for
+\dv{design.tests.min} to \dv{design.tests.max} test functions, and the audit's reviser may keep
+\dv{design.revise.tests.min} to \dv{design.revise.tests.max}; in the controlled tasks C1, C3 and B2 have
+\fv{checks.plain.min} to \fv{checks.plain.max} scored checks and the audited C2 and C4 \fv{checks.audited.min} to
+\fv{checks.audited.max}, Table~\ref{tab:verifiers}). Every generator gets
+the base repository and the reference diff and runs code only against the base. Protocol~\S4 asks for the same generator
+model for every condition, which no record can confirm for the controlled arm (Table~\ref{tab:roles}), and the same
+prompt template, apart from the deviations of Appendix~\ref{app:deviations}. The natural arm uses these templates with
+marked deviations, checked word by word against their sources and hashed before any natural agent started (D64).
+
+\begin{table}[t]\centering\scriptsize
+\caption{The verifier conditions (protocol~\S4, \S15.6). Every generator gets the base repository and the reference diff,
+and is told not to over-fit to the reference's implementation choices; plain generators may not execute their tests on
+any candidate. The audit grades development candidates only (Section~\ref{sec:design-conditions}).}\label{tab:conditions}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.2\linewidth}>{\raggedright\arraybackslash}p{0.29\linewidth}>{\raggedright\arraybackslash}p{0.16\linewidth}>{\raggedright\arraybackslash}p{0.27\linewidth}@{}}\toprule
+Condition & Generator's contract or input & Audit & Notes \\\midrule
+C1 initial-only, plain & initial-only contract, recovered from $U_1$ alone & none & single-pass generation \\
+C2 initial-only, audited & the same contract & \texttt{audit:v1}, at most \dv{design.audit.revisions.w} revisions &
+starts from C1's tests \\
+C3 correction-aware, plain & correction-aware contract, recovered from the whole session & none & single-pass
+generation \\
+C4 correction-aware, audited & the same contract & \texttt{audit:v1}, at most \dv{design.audit.revisions.w} revisions &
+starts from C3's tests \\
+B1 repository tests & none & none & the repository's tests at the reference state that pass on the reference, the session
+agent's added tests among them; candidate code in the reporting process \\
+B2 session-LLM baseline & the whole session transcript, without a contract & none & single-pass generation \\
+B3 diff-derived (natural arm, secondary) & the initial request and the reference diff, without a contract & none & a test
+is kept only if it fails on the base and passes on the reference \\
+\bottomrule\end{tabular}\end{table}
+
+C1 and C3 are single-pass; C2 and C4 start from their tests and apply the audit. B1 imports candidate code directly; in
+the controlled tasks the reference is the session agent's final state, so B1 includes
+\plv{b1.checks.added.min} to \plv{b1.checks.added.max} tests per task that the agent itself added. B2 is a generator
+given the whole session transcript and no contract machinery, a competent ``just ask an LLM'' baseline. B3, natural arm
+only, gets the initial request and the reference diff; its tests must fail on the base and pass on the reference
+(protocol~\S15.6).
+
+\subsection{The audit and freezing}
+\label{sec:audit}\label{sec:freezing}
+The audit uses development candidates only: the reference, graded \dv{design.audit.reference.repeats.w} times, the
+no-op, \dv{design.audit.attacks.w} attacks written from the same contract, each to violate a requirement, and
+\dv{design.audit.alternatives.w} valid alternative. It passes when the reference passes every repeat, the no-op and every
+attack fail, the alternative passes, every scored requirement maps to a check and a static lint passes; an attack that
+fails only checks mapped to other requirements is reported as a finding that does not fail the audit
+(\texttt{src/tracecontract/audit.py}). The lint admits imports from the standard library, \texttt{pytest},
+\texttt{hypothesis} and the sandbox API only, and rejects parametrised tests, tests whose only calls are to
+\texttt{print}, \texttt{len} or \texttt{isinstance}, tests whose assertions are missing or check only a result's
+\texttt{ok} flag, and writes to literal paths in the candidate workspace or results directory. In every frozen generated
+verifier (C1 to C4, B2) each test calls \texttt{run\_python} directly, and none writes files from the grader process. At
+most \dv{design.audit.revisions.w} revisions are allowed, and a verifier whose audit still fails is frozen as it stands,
+as CS-01's C2 was (D27). In every pilot audit record, the reference's repeated gradings agreed.
+
+The audit records of CS-01's C2 and CS-03's C4 hide part of what happened (D62). CS-01's C2 record names
+\dv{audit.message.named} of the \fv{ref.c2.cs01.failed} checks that fail on the reference, its message cut at
+\dv{audit.message.named}. CS-03's C4 record shows no finding after a revision that added \fv{audit.c4.cs03.added} checks,
+without showing them. The files are kept as recorded; new audit records keep every failing check and every check a
+revision adds or removes.
+
+The pilot's evaluated verifiers (C1 to C4, B1, B2) were frozen by content hash before any generated held-out candidate
+existed, except B1 for \texttt{more-itertools}, whose check selection was re-run mechanically after a harness defect had
+truncated it, when superseded results using the truncated selection had been seen (D31, D32). Specs first hashed only
+their test files; a hash of the scored check list was added to all \dv{pilot.specs.hashed} after the run
+\texttt{pilot-v0.3} (D37), and no pilot spec records its freeze time, so the freeze order rests on git history. Every
+verifier that grades the fresh attempts, the independent labeler included, was frozen before the first attempt. The
+natural verifiers were frozen phase by phase, each before its family's held-out pool (D64, D65).
+
+\subsection{The verifiers behind the labels}
+\label{sec:labelers}
+The \emph{reference checks} and the \emph{independent labeler} support the labels (Section~\ref{sec:design-labels}) and
+are not conditions.
+\begin{itemize}
+\item The reference checks were written by configuration-A agents from the reference contract, with no recorded read of
+  the held-out pool, and validated only on the reference and the no-op.
+\item The independent labeler (protocol~\S15.5; D55, D58) is written per family by a configuration-B agent that may read
+  only the reference contract, the base snapshot, the harness API, the lint rules and a synthetic test example: no
+  reference diff, reference check, verifier, candidate or label. Its checks are per requirement (specified properties,
+  invariants checked differentially against the base, quoted examples), and it does not run the repository's tests,
+  which D19's regression norm uses.
+\item A configuration-A coordinator graded each controlled labeler \dv{fresh.labeler.repeats.w} times on the reference
+  and on the development no-op, was to pass back only failing check names, and froze it after at most
+  \dv{fresh.labeler.revisions.w} revision. The labelers have \fv{checks.cs01.il}, \fv{checks.cs02.il},
+  \fv{checks.cs03.il} and \fv{checks.cs04.il} checks in CS-01 to CS-04 (only CS-03's was revised); each passes the
+  reference in every repeat, fails some check of every change requirement on the no-op and covers every active
+  requirement. They were frozen from \dv{fresh.labelers.first} to \dv{fresh.labelers.last} UTC on \dv{fresh.date},
+  before any fresh attempt, and registered in sidecar files after a first registration that changed the frozen task
+  manifests was reverted (D55).
+\item A strict audit of the \dv{fresh.labeler.writers.w} writer transcripts, confirmed by a second agent, found no read of
+  forbidden material (D58). Its verdicts are \emph{independent} for CS-01, CS-02 and CS-04 and \emph{concerns} for CS-03,
+  whose revision prompt also gave the failing checks' kinds, against the names-only rule, and whose reviser tried a
+  repository-wide search that was denied; that revision also leaves the attribution of its all-caps checks to
+  requirements unreliable, though not its candidate-level verdict.
+\item The exploratory agreement of the labelers with D19 on the \plv{heldout} pilot candidates (protocol~\S15.5) has not
+  been computed.
+\end{itemize}
+The natural arm's reference checks go through the review loop of D33 for every family and carry a status record, and
+its labelers follow D64's rules (Section~\ref{sec:natural-cases}).
+
+\subsection{Initial state, leakage and the reconstruction check}
+\label{sec:initial-state}
+\begin{itemize}
+\item A controlled base snapshot is the exact tree of the pinned commit (\texttt{git archive}, no history), and the fresh
+  attempts start from it; CS-01's base adds a generated version file, recorded as an approximation.
+\item The leakage check recorded with each snapshot was vacuous as called: it compared the base with itself (D47).
+\item A reconstruction check, added after the pilot, tests each base against its own session from recorded material
+  only (D52):
+  \begin{itemize}
+  \item replaying the session's edits must reproduce the captured pre-correction and final states of every file they
+    wrote;
+  \item at each file's first edit the replaced text must occur in the base and the new text must not;
+  \item file contents that the agent saw while unchanged (Read, Grep, plain \texttt{cat}, \texttt{sed}, \texttt{head})
+    must equal the base;
+  \item the rebuilt base must equal the manifest recorded before the session, without compiled or backup copies of
+    changed files.
+  \end{itemize}
+  Every controlled base passes, also under the check's second version. In \texttt{humanize}, a test file that the agent
+  rewrote with a script before its first edit, and the added version file, of which the session saw part (it matches),
+  cannot be fully checked. Since protocol v0.8 every new task must pass a reconstruction check before it enters a run.
+\item A natural task's record checks that both commits are reachable, that the base and merge rules hold, that the
+  snapshot equals the base tree, and that the reference and the pre-review state reproduce their commits' trees; a
+  missing or non-permissive LICENSE rejects the family. NP-03 is approximate (a symbolic link and submodules not
+  materialised), and NP-04, NP-05, NP-18, NP-19 and NP-20 are exact (D59; Table~\ref{tab:natural-s10}).
+\end{itemize}
+
+\subsection{The acceptance gate}
+\label{sec:gate}
+Behind the contracts stands a human-review acceptance gate that no task has passed. Human review alone cannot open it,
+since the documented procedure lacks what it requires (D51): no command sets an \texttt{eligible} provenance record, and
+every record is \texttt{pending\_review}; and the gate checks every contract a task lists, while the initial-only and
+correction-aware contracts hold unresolved requirements by design and the blinded review packet covers only the
+reference contract (Appendix~\ref{app:annotation}). \texttt{tracecontract accept-task -{}-dry-run} lists every reason.
+
+\subsection{Contract recovery and the tables of the controlled tasks}
+\label{sec:recovery}
+Contracts recovered from the whole session cover every active requirement of the reference contract in every family.
+The initial-only contracts cover from \plv{coverage.initial.min} to \plv{coverage.initial.max} of them
+(Table~\ref{tab:coverage}). In \texttt{humanize} the initial-only contract maps to a requirement that its other
+requirements contradict (reported apart as ``covered but contradicted''). A second, independent model mapper agrees
+closely with the first ($\kappa$ from \plv{kappa.min} to \plv{kappa.max}), but both mappers are the same model, and the
+second mapper, and the first for \texttt{tinydb}, received an extra instruction (D41). We corrected a contradiction claim
+of the first mapper for \texttt{humanize} after a sandbox check showed that it rested on a wrong assumption about the
+base behaviour (\texttt{tasks/CS-01/contracts/mapping\_full\_session.json}, field \texttt{corrections}; D42). Without the
+correction, that correction-aware contract would show a contradicting requirement and a covered-but-contradicted
+requirement; its coverage would be unchanged. Table~\ref{tab:verifiers} lists the scored checks of every verifier, the
+audit revisions of the audited ones, and the checks that the session agent added to the repository's tests;
+Table~\ref{tab:tasks} lists the tasks and Table~\ref{tab:scenarios} the scenarios' intended requirements. These
+tables, like the pilot's tables of Appendix~\ref{app:pilot}, are frozen with the pilot's run
+(\path{scripts/verify_frozen_inputs.py}) and keep the names they were frozen with: there ``full'' and
+``full-session'' mean correction-aware (C3, C4), ``initial'' means initial-only (C1, C2), and ``full-session LLM'' is the
+session-LLM baseline (B2).
+
+\IfFileExists{generated/coverage_table.tex}{\input{generated/coverage_table.tex}}{\unfilled{coverage table}}
+\IfFileExists{generated/verifiers_table.tex}{\input{generated/verifiers_table.tex}}{\unfilled{verifier table}}
+\IfFileExists{generated/tasks_table.tex}{\input{generated/tasks_table.tex}}{\unfilled{tasks table}}
+\IfFileExists{generated/scenario_table.tex}{\input{generated/scenario_table.tex}}{\unfilled{scenario table}}

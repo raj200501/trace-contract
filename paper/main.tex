@@ -9,6 +9,7 @@
 \usepackage{xcolor}
 \usepackage{graphicx}
 \usepackage{longtable}
+\usepackage{array}
 \usepackage[hidelinks]{hyperref}
 \usepackage[style=numeric,sorting=none,maxbibnames=6]{biblatex}
 \addbibresource{references.bib}
@@ -21,36 +22,54 @@
 \newcommand{\todo}[1]{\textcolor{red}{[TODO: #1]}}
 \newcommand{\unfilled}[1]{\textcolor{orange}{[UNFILLED: #1]}}
 % Number lookups for the generated number files (paper/generated/fresh/numbers.tex, paper/generated/natural/numbers.tex,
-% paper/generated/natural_run/numbers.tex, which make_tables.py --natural-run writes once the natural run is published).
+% paper/generated/natural_run/numbers.tex, which make_tables.py --natural-run writes once the natural run is published;
+% paper/generated/pilot/numbers.tex from --pilot-numbers and paper/generated/design/numbers.tex from --design).
 \newcommand{\fv}[1]{\ifcsname fv:#1\endcsname\csname fv:#1\endcsname\else\unfilled{missing number #1}\fi}
 \newcommand{\nat}[1]{\ifcsname nat:#1\endcsname\csname nat:#1\endcsname\else\unfilled{missing number #1}\fi}
 \newcommand{\nrv}[1]{\ifcsname nrv:#1\endcsname\csname nrv:#1\endcsname\else\unfilled{missing number #1}\fi}
+\newcommand{\plv}[1]{\ifcsname plv:#1\endcsname\csname plv:#1\endcsname\else\unfilled{missing number #1}\fi}
+\newcommand{\dv}[1]{\ifcsname dv:#1\endcsname\csname dv:#1\endcsname\else\unfilled{missing number #1}\fi}
 \IfFileExists{generated/fresh/numbers.tex}{\input{generated/fresh/numbers.tex}}{}
 \IfFileExists{generated/natural/numbers.tex}{\input{generated/natural/numbers.tex}}{}
 \IfFileExists{generated/natural_run/numbers.tex}{\input{generated/natural_run/numbers.tex}}{}
+\IfFileExists{generated/pilot/numbers.tex}{\input{generated/pilot/numbers.tex}}{}
+\IfFileExists{generated/design/numbers.tex}{\input{generated/design/numbers.tex}}{}
 
-\title{From Corrections to Contracts: Measuring Reward Fidelity\\in Trace-Derived Coding Tasks\\[4pt]\large Working draft --- not peer reviewed; automated study with model-proposed labels, no human labels}
+\title{When the First Request Is Not the Task:\\Verifiers of Session-Derived Coding Tasks\\and the Corrections They Miss\thanks{Automated pilot: all labels are model proposals; no human labels exist.}\\[4pt]\large Working draft --- not peer reviewed; automated study with model-proposed labels, no human labels}
 \author{\todo{authors and affiliations to be decided by the human authors}}
 \date{\today}
 
 \begin{document}
 \maketitle
 
+% The main text in the order of the restructure plan (part 2): the owner's defaults settle its open questions (the
+% title is the plan's option 2; the author line and the working-draft subtitle stay until posting).
 \input{sections/abstract}
 \input{sections/introduction}
+\input{sections/design}
+\input{sections/results_controlled}
+\input{sections/pilot}
+\input{sections/natural}
 \input{sections/related}
-\input{sections/data}
-\input{sections/method}
-\input{sections/protocol}
-\input{sections/results}
-\input{sections/analysis}
-\input{sections/limitations}
+\input{sections/discussion}
+\input{sections/threats}
 \input{sections/ethics}
 \input{sections/reproducibility}
 
-\printbibliography
+% A little more stretch, so that an entry with a long unbreakable title word does not run into the margin.
+{\setlength{\emergencystretch}{3em}\printbibliography}
 
 \appendix
-\input{sections/appendix}
+% The appendices of the restructure plan (part 3), in its order; each starts on a new page. The draft's earlier sections,
+% whose material they hold, were retired after the move-map check (no paragraph that the plan keeps was lost).
+\clearpage\input{sections/app_protocol}
+\clearpage\input{sections/app_deviations}
+\clearpage\input{sections/app_grading}
+\clearpage\input{sections/app_construction}
+\clearpage\input{sections/app_fresh}
+\clearpage\input{sections/app_pilot}
+\clearpage\input{sections/app_natural}
+\clearpage\input{sections/app_annotation}
+\clearpage\input{sections/app_provenance}
 
 \end{document}

@@ -353,8 +353,8 @@ def test_nothing_is_pooled_over_the_families(made):
 
 # --------------------------------------------------------------------------- what the cells say
 
-ROW = {"initial_plain": "C1 initial, plain", "initial_audited": "C2 initial, audited", "full_plain": "C3 full, plain",
-       "full_audited": "C4 full, audited", "llm_freeform": "B2 full-session LLM", "repo_tests": "B1 repository tests",
+ROW = {"initial_plain": "C1 initial-only, plain", "initial_audited": "C2 initial-only, audited", "full_plain": "C3 correction-aware, plain",
+       "full_audited": "C4 correction-aware, audited", "llm_freeform": "B2 session-LLM baseline", "repo_tests": "B1 repository tests",
        "diff_derived": "B3 diff-derived (secondary)"}
 
 
@@ -433,7 +433,7 @@ def construction_rows_follow_the_analysis(a: dict, t4: dict[tuple[str, str], str
     ref = con["contracts"].get("reference", {})
     assert t4[("Reference contract: requirements, scored active, at the correction", f)] == ", ".join(
         num(ref.get(k, ABSENT)) for k in ("requirements", "scored_active", "at_correction"))
-    assert t4[("Recovered contracts, scored active: initial-only, full-session", f)] == ", ".join(
+    assert t4[("Recovered contracts, scored active: initial-only, correction-aware", f)] == ", ".join(
         num(con["contracts"].get(v, {}).get("scored_active", ABSENT)) for v in ("initial_only", "full_session"))
     for row, ids in (("Checks: C1, C2, C3, C4", ("initial_plain", "initial_audited", "full_plain", "full_audited")),
                      ("Checks: B2, B1, B3", ("llm_freeform", "repo_tests", "diff_derived")),
@@ -473,18 +473,18 @@ def construction_rows_follow_the_analysis(a: dict, t4: dict[tuple[str, str], str
 
 def test_the_tables_of_a_run_with_its_construction_records(built):
     t1 = cells(built, "natural_run_fa_fr")
-    assert [r for r, f in t1 if f == "NP-90"] == ["C1 initial, plain", "C2 initial, audited", "C3 full, plain", "C4 full, audited",
-                                                   "B2 full-session LLM", "B1 repository tests", "B3 diff-derived (secondary)",
+    assert [r for r, f in t1 if f == "NP-90"] == ["C1 initial-only, plain", "C2 initial-only, audited", "C3 correction-aware, plain", "C4 correction-aware, audited",
+                                                   "B2 session-LLM baseline", "B1 repository tests", "B3 diff-derived (secondary)",
                                                    "The run's pairs: graded, unresolved",
                                                    "The run's pairs ending in an infrastructure outcome"]
     assert (t1[("The run's pairs: graded, unresolved", "NP-90")], t1[("The run's pairs ending in an infrastructure outcome",
                                                                       "NP-90")]) == ("72, 1", "none")
     # C1 fails its reference in NP-90, so the oracle-gated view drops the cell; B3 was taken out of NP-92.
-    assert t1[("C1 initial, plain", "NP-90")] == "3/4 $\\cdot$ 0/2$^{\\dagger}$" and t1[("C1 initial, plain", "NP-91")] == "2/3 $\\cdot$ 0/2"
-    assert t1[("C4 full, audited", "NP-90")] == "0/4 $\\cdot$ 1/2" and t1[("B3 diff-derived (secondary)", "NP-92")] == "--"
+    assert t1[("C1 initial-only, plain", "NP-90")] == "3/4 $\\cdot$ 0/2$^{\\dagger}$" and t1[("C1 initial-only, plain", "NP-91")] == "2/3 $\\cdot$ 0/2"
+    assert t1[("C4 correction-aware, audited", "NP-90")] == "0/4 $\\cdot$ 1/2" and t1[("B3 diff-derived (secondary)", "NP-92")] == "--"
     t2 = cells(built, "natural_run_source_evidence")
-    assert [t2[("C1 initial, plain", f)] for f in built.fams] == ["accepted"] * 3
-    assert [t2[("C3 full, plain", f)] for f in built.fams] == ["rejected"] * 3 and t2[("B3 diff-derived (secondary)", "NP-92")] == "--"
+    assert [t2[("C1 initial-only, plain", f)] for f in built.fams] == ["accepted"] * 3
+    assert [t2[("C3 correction-aware, plain", f)] for f in built.fams] == ["rejected"] * 3 and t2[("B3 diff-derived (secondary)", "NP-92")] == "--"
     assert [t2[("Its D19 label", f)] for f in built.fams] == ["invalid", "ambiguous", "invalid"]
     assert [t2[("Its second label (the labeler's outcome)", f)] for f in built.fams] == [
         "ambiguous (pass)", "invalid (task failure)", "left out"]
@@ -531,7 +531,7 @@ def test_the_tables_of_a_run_without_construction_records(plain):
     caption, _, _ = parse_table((plain.out / "natural_run_fa_fr.tex").read_text())
     assert caption.endswith("Not graded in this run: C2, B2. " + mt.NR_MARKER)
     t1 = cells(plain, "natural_run_fa_fr")
-    assert {r for r, _ in t1} == {"C1 initial, plain", "C3 full, plain", "C4 full, audited", "B1 repository tests",
+    assert {r for r, _ in t1} == {"C1 initial-only, plain", "C3 correction-aware, plain", "C4 correction-aware, audited", "B1 repository tests",
                                   "B3 diff-derived (secondary)", "The run's pairs: graded, unresolved",
                                   "The run's pairs ending in an infrastructure outcome"}
     t4 = cells(plain, "natural_run_construction")
@@ -569,7 +569,7 @@ def test_the_cells_say_what_the_records_hold(outputs, built, tmp_path):
         "yes (2 of 2; norm 2)", "in part (2 of 3; norm 4)", "not known"]
     assert _rows_of(out, "natural_run_construction", "Reference checks: status (fix rounds)", fams) == [
         "unrecognised status (fix rounds not recorded)", "usable (fix rounds not recorded)", "not recorded"]
-    assert _rows_of(out, "natural_run_source_evidence", "C3 full, plain", fams) == [
+    assert _rows_of(out, "natural_run_source_evidence", "C3 correction-aware, plain", fams) == [
         "rejected", "rejected (environment failure)", "rejected (unresolved)"]
     assert _rows_of(out, "natural_run_fa_fr", "The run's pairs ending in an infrastructure outcome", fams) == [
         "none", "1 environment failure, 2 timeout", "none"]

@@ -1,0 +1,168 @@
+% Appendix G, the natural arm's screening, replay and construction (restructure plan, part 3). Every number is a macro:
+% \nat (generated/natural/numbers.tex; evidence_ledger_natural.md: data/manifests/screening_natural_aidev*.json,
+% natural_tasks_index.json, rejection_ledger.json), \dv (evidence_ledger_design.md) or \fv; the per-family tables are
+% make_tables.py --natural-run's (evidence_ledger_natural_run.md). Moved here: data.tex's populations and natural arm,
+% results_natural.tex's funnel and replay, and the appendix's natural tables; the comparison with the controlled study is
+% the table the natural section points to. Families are named, never counted, where a statement concerns the run's
+% families; S9 and S10 counts are screening counts. No thread text, repository name, login or agent product is written.
+\section{Natural arm: screening, replay and construction}
+\label{app:natural}\label{sec:natural}\label{sec:results-natural}
+
+\paragraph{Populations and sources.} We keep populations of these kinds apart and never pool them without saying so
+(protocol~\S2, \S15.2): \emph{natural} data from real use of coding agents, a population per source; \emph{controlled}
+sessions, real agent runs whose user turns the study's agent wrote beforehand, the same model as the session agent, with
+no person writing or reviewing them; and synthetic \emph{fixtures} for software tests. SWE-chat \cite{swechat} was not
+used: its access terms were not accepted (D4). Ungated, openly licensed sources were screened instead (D47): Trace
+Commons \cite{tracecommons2026trace}, whose agent sessions were all rejected (\nat{tc.rejected} of \nat{tc.screened}),
+none of them reconstructable (Table~\ref{tab:trace-commons}); and AIDev v5 \cite{li2025rise,li2026aidev,haoli2025aidev}, which
+supplies the natural arm. Every verifier result outside the natural case studies is on the controlled population, whose
+feedback is synthetic.
+
+\paragraph{The source.} In the natural arm a reviewer's comment on an agent's pull request (PR) takes the place of the
+user's correction. AIDev v5 is a CC-BY-4.0 compilation of agent-authored PRs in which each repository keeps its own
+licence; its files are pinned to the tag recorded in D47 and hash-checked.
+
+\paragraph{The deterministic funnel (S1 to S8a).} The stages keep (protocol~\S15.6; Table~\ref{tab:natural-funnel}):
+\begin{itemize}
+\item PRs of Python repositories under MIT, Apache-2.0 or BSD licences that are not forks;
+\item thread-starting inline comments by a person other than the PR's author, on a \texttt{.py} file with a diff hunk;
+\item whose commented code changed later, with the reviewed commit in the PR's commit list and a later commit;
+\item on PRs linked to an issue written by a person;
+\item whose first later commit is attributed to an agent.
+\end{itemize}
+From \nat{aidev.s1.prs} agent-authored PRs in \nat{aidev.s1.repos} repositories, \nat{aidev.s8a.comments} comments
+survive, on \nat{aidev.s8a.prs} PRs in \nat{aidev.s8a.repos} repositories. Attribution needs a bot account or an agent
+co-author trailer, which misses agents committing as a person, and the most frequent agent product accounts for
+\nat{aidev.s8a.topagent} of the \nat{aidev.s8a.comments} comments (D48).
+
+\paragraph{The model-judged stage (S9).}
+\begin{itemize}
+\item Each sampled comment goes to \dv{screen.s9.judges.w} independent configuration-A judges, who read the pseudonymised
+  comment, its diff hunk, the PR's title and the linked issue, and the diff from the reviewed commit to the first later commit that touches the commented
+  file (partial clones, at most \dv{screen.s9.repo}\,MB per repository and \dv{screen.s9.total}\,GB in all).
+\item A comment qualifies only if both find that it asks for a behaviour change or reports a defect, that this commit
+  addresses it, and that an offline Python test can check it; disagreements are excluded. These verdicts are model
+  proposals, queued for human coding.
+\item The \emph{first sample} is \nat{s9.first.comments} of the \nat{aidev.s8a.comments} comments, drawn with a fixed
+  seed (D47, D48); \dv{screen.s9.rejudged} comments first judged on an empty diff were judged again (D50). In it,
+  \nat{s9.first.qualifying} comments qualify (\nat{s9.first.rate}, Wilson \nat{s9.first.wilson}).
+\item The \emph{extension} is the other \nat{s9.ext.comments}, screened in comment-id order under unchanged rules by new
+  judges blind to the first sample's judgments (protocol~\S19.2); \nat{s9.ext.qualifying} qualify (\nat{s9.ext.rate},
+  Wilson \nat{s9.ext.wilson}). It was decided after the first sample yielded \nat{s10.first.passed} replayable tasks,
+  short of the \dv{design.size.threshold} below which protocol~\S15.6 reports the arm as a screening study only, and
+  before any natural contract, verifier, held-out candidate or label existed: a post hoc design change (D60).
+\item The leading reason a comment fails is that it asks for no behaviour change or defect fix
+  (\nat{s9.first.fail.behaviour} comments of the first sample and \nat{s9.ext.fail.behaviour} of the extension). The shares are model-judged screening
+  yields, not prevalence.
+\end{itemize}
+
+\IfFileExists{generated/natural/natural_funnel.tex}{\input{generated/natural/natural_funnel.tex}}{\unfilled{natural funnel table}}
+
+\paragraph{Families and replay (S10).}
+\begin{itemize}
+\item A family is a PR, corrected by its earliest qualifying comment. At most \dv{natural.family.repo.cap.w} come from a
+  repository, the earliest by creation time that pass S10, and a rejected family is replaced by its repository's next
+  qualifying PR (protocol~\S17.3). The first sample gives NP-01 to NP-20 and reserves NP-21 to NP-25; the extension's
+  families, from NP-26, only fill open places, and first-sample families keep the corrections they were built with, a
+  builder default that departs from the earliest-comment rule where an extension comment came first, as for NP-05 (D63,
+  D66; Appendix~\ref{app:deviations}).
+\item S10, fixed before any build (protocol~\S15.6, \S17), requires reachable reviewed and addressing commits; a base by
+  a fixed merge-base rule, approximate where the rule falls back or a merge leaves the commented file unchanged, and
+  rejected where a merge changes it; a pinned, wheels-only Python~3.12 environment of at most
+  \dv{screen.s10.wheelhouse}\,GB, resolved from the dependencies declared at the base plus the packages the PR adds
+  (pure-Python sdists may be built offline); and a base-test subset (test files that import a changed module or that the
+  PR changes), fixed before any verifier exists, that collects and runs offline within \dv{screen.s10.minutes} minutes.
+\item B1 is the subset's tests at the addressing commit that pass on the reference, or unavailable.
+\item Repository code ran only in containers without network, and every rejection is ledgered with its reason (D59).
+\item Building stops at \dv{design.family.cap} accepted tasks or once every family of both samples is processed
+  (protocol~\S19.5); protocol v0.12 gives each sample a run of its own (\S20.2), and \texttt{\NATURALRUN} graded the
+  first sample once building had stopped for it.
+\end{itemize}
+
+\paragraph{The task.} The initial request is the linked issue's title and body; the correction is the review comment
+with the same reviewer's later replies before the addressing commit, plus its diff hunk; both are sanitised. The
+pre-review state, the tree at the reviewed commit, is a held-out candidate (origin \texttt{natural\_pre\_review}); the
+reference is the tree at the addressing commit. Tasks hold pseudonymised third-party text and live in a git-ignored
+directory with a committed index of ids, hashes and licences (protocol~\S17.4); this paper prints no natural text,
+repository name or identifier beyond the study's task ids. A review comment is not a chat correction, and the reviewer
+need not be the person who asked for the change. We treat such a comment as the correction, a construct difference from
+an in-session correction: this is D64's decision~1, a builder default that the owner has not reviewed (D65; first raised
+in D47).
+
+\paragraph{Replay of the first sample.} S10 of the first sample processed \nat{s10.first.processed} families (the
+reserves NP-21 and NP-22 replaced NP-01 and NP-02 and were also rejected) and passed \nat{s10.first.passed}:
+\nat{s11.ids} (D59; Table~\ref{tab:natural-s10}), whose B1 verifiers were frozen before anything else was generated for
+them (D64). Their licences, as AIDev records them and as the LICENSE files at their bases state them, are in
+Table~\ref{tab:natural-s10}. NP-03's snapshot is approximate, and those of NP-04, NP-05,
+NP-18, NP-19 and NP-20 are exact (Appendix~\ref{app:construction}). The extension's \nat{fam.ext} families and
+\nat{fam.ext.reserves} reserves (\nat{ni.ext.first} to \nat{ni.ext.last}) have no S10 outcome: its S10 step was stopped
+at a usage limit, and the task directories it left are to be built again from the start (D66, D75), for
+\texttt{natural-pr-v2} (protocol~\S20.2).
+
+\paragraph{Infrastructure attrition.} The first sample's S10 rejections are environmental or follow from S10's rules:
+base tests that fail to collect (\nat{s10.first.reject.collect}), no resolvable dependency closure
+(\nat{s10.first.reject.closure}), an environment over the size cap (\nat{s10.first.reject.toolarge}), an empty base-test
+subset (\nat{s10.first.reject.emptysubset}), a fetch over the repository cap (\nat{s10.first.reject.fetchcap}) and the
+merge rule (\nat{s10.first.reject.merge}). The rejections of NP-10, NP-16 and NP-17 depend on pip's resolver and on the
+compiler's resolver limit of \dv{screen.s10.resolver.minutes} minutes, an implementation parameter rather than a
+protocol rule; others follow from rules that cannot yield a runnable environment: path requirements outside the
+workspace, generated version modules and submodules. Replay therefore favours small repositories with plain test
+set-ups and fails on environments that cannot be pinned offline (D59).
+
+\IfFileExists{generated/natural/natural_s10.tex}{\input{generated/natural/natural_s10.tex}}{\unfilled{S10 table}}
+\IfFileExists{generated/natural/trace_commons.tex}{\input{generated/natural/trace_commons.tex}}{\unfilled{Trace Commons table}}
+
+\paragraph{Construction.} For the accepted families the recipe was fixed and logged before any natural agent ran (D64,
+D65): \dv{natural.templates.w} prompt templates with their hashes, the order of work with its freeze points, and the
+rendered inputs and proposer prompts of each family. Each family's held-out pool holds the pre-review state,
+\dv{natural.pool.alternatives.w} valid alternatives and \dv{natural.pool.nearmisses.w} near misses, at least
+\dv{natural.pool.correction.w} of which target the correction (protocol~\S15.6). The phases, each ending with a committed record (D64, D65):
+\begin{itemize}
+\item P0: the task's validation, its PR record and image, and B1 frozen;
+\item P1: the contract proposers (initial-only and correction-aware) and the host's build of their contracts;
+\item P2: the generators of C1, C3, B2 and B3, and the development attacks and alternatives; C1, C3 and B2 frozen;
+\item P3: the audits of C2 and C4 with their revisers, and B3's per-test selection, each frozen;
+\item P4: the reference contract, drafted after every generated verifier is frozen;
+\item P5: the reference checks with their review loop, and the independent labeler and its revision, each frozen with a
+  status record;
+\item P6: the near-miss targets, then the held-out pool, each candidate in a workspace of its own;
+\item P7: the mappers, the duplicate check and the audits.
+\end{itemize}
+The host's steps of a phase (the repository's commands and scripts) are run by \emph{host coordinators}: subagents of the
+build session in configuration A, a coordinator per step, which write no generated content and whose context
+reaches no generator (D65). The run is in Section~\ref{sec:natural-cases}. Table~\ref{tab:natural-vs-controlled} sets the arm beside the controlled study,
+Table~\ref{tab:nr-construction} gives each family's construction facts, and Table~\ref{tab:nr-labeler} its second
+labeling.
+
+\begin{table}[t]\centering\scriptsize
+\caption{How the natural arm differs from the controlled study (protocol~\S15.4 to \S15.6, \S20; decision log D64, D70).
+$^{\ddagger}$Natural case study; caveats in Section~\ref{sec:natural-cases}.}\label{tab:natural-vs-controlled}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.17\linewidth}>{\raggedright\arraybackslash}p{0.38\linewidth}>{\raggedright\arraybackslash}p{0.39\linewidth}@{}}\toprule
+ & Controlled study (\texttt{\FRESHRUN}, \texttt{\PILOTRUN}) & Natural arm (\texttt{\NATURALRUN}) \\\midrule
+Source & a real agent session on a pinned commit, whose user turns the study's agent wrote and hashed beforehand: synthetic
+feedback & an agent's pull request in AIDev v5 and its review thread \\
+Correction & $U_2$, scripted, and relayed to the session agent with a short harness frame & a reviewer's comment on the
+pull request, with the same reviewer's later replies; the reviewer need not have opened the issue \\
+First request; pre-correction state & $U_1$; the session agent's workspace after $U_1$ & the linked issue; the tree the
+reviewer commented on (the pre-review state) \\
+Reference & the session agent's final state & the addressing commit: evidence about the correction, not an oracle \\
+Reference contract & the study's intended requirements, hashed before the session and operationalised with quotes by
+the study's agent & drafted at P4, after every generated verifier was frozen, by a configuration-A agent from the
+rendered thread, the addressing diff and the reference diff \\
+Held-out candidates & a constructed pool (pilot) and fresh attempts & the pre-review state (from S10), and
+\dv{natural.pool.alternatives.w} alternatives and \dv{natural.pool.nearmisses.w} near misses generated after the family's
+verifiers were frozen \\
+Labels & D19 from the reference checks and the regression norm (and, for constructed candidates, the construction
+intent); the independent labeler beside it & D19 with \dv{natural.d19.repeats.w} repeats; the source-evidence label of the
+pre-review state (the label of protocol~\S15.6's first estimand); the independent labeler beside it
+(Table~\ref{tab:label-rules}) \\
+Audit & holds the reference valid & holds the reference valid, so C2 and C4 are audited against an unreliable oracle \\
+B1; B3 & the reference state's repository tests, the session agent's added tests among them; no B3 & the base-test
+subset's tests at the addressing commit, equal to D19's regression norm in NP-03, NP-05 and NP-20 and in part in NP-19;
+B3, diff-derived, a secondary arm \\
+Reporting & \fv{families.w} families, descriptive; the per-family table is primary & exploratory case studies: per-family
+tables only, with no pooled rate, interval, p-value or total \\
+\bottomrule\end{tabular}\end{table}
+
+\IfFileExists{generated/natural_run/natural_run_construction.tex}{\input{generated/natural_run/natural_run_construction.tex}}{\unfilled{construction table (make\_tables.py -{}-natural-run)}}
+\IfFileExists{generated/natural_run/natural_run_labeler.tex}{\input{generated/natural_run/natural_run_labeler.tex}}{\unfilled{second-labeling table (make\_tables.py -{}-natural-run)}}

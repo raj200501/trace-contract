@@ -1,0 +1,13 @@
+% Section 4, what the construction pilot adds (restructure plan, part 2). Every number is a macro of
+% generated/pilot/numbers.tex (\plv; evidence_ledger_pilot.md names its file and field): the frozen run
+% results/runs/pilot-v0.3.3 and the exploratory re-analysis results/analyses/pilot-v0.3.3-exploratory (D49).
+\section{What the construction pilot adds}
+\label{sec:pilot}
+The construction pilot (run \texttt{\PILOTRUN}) graded the same frozen verifiers on a constructed held-out pool of the same \plv{run.families.w} families: each family's pre-correction state, valid alternatives written without the reference diff, and near misses built from the reference to violate a targeted requirement (Tables~\ref{tab:summary} and~\ref{tab:labels}). Of its \plv{heldout} held-out candidates, D19 labels \plv{labels.invalid} invalid, \plv{labels.valid} valid and \plv{labels.ambiguous} ambiguous. It adds the following, and no more.
+\begin{itemize}
+\item \emph{The same ordering.} C1 accepts \plv{c1.fa} invalid candidates and C3 \plv{c3.fa}.
+\item \emph{The label rule's selection effect (exploratory).} The reference checks confirm \plv{nm.confirmed} of the \plv{nm.n} near misses as invalid; the other \plv{nm.ambiguous} are ambiguous and left out. C3 accepts \plv{nm.conf.c3} of the confirmed near misses but \plv{nm.amb.c3} of the unconfirmed ones (C4: \plv{nm.conf.c4} and \plv{nm.amb.c4}), and under construction-intent labels C3 accepts \plv{intent.c3.fa} invalid candidates. The zeros of \S\ref{sec:results-controlled} therefore hold only for what the reference checks exercise.
+\item \emph{It is not independent evidence.} The pilot shares the tasks and the frozen verifiers with \texttt{\FRESHRUN}, which was designed after the pilot's results were known.
+\item \emph{An exploratory sign-flip analysis exists} (D49). On false acceptance, C1 against C3 has one-sided $p=\plv{signflip.c1-c3.fa.p1}$ and two-sided $p=\plv{signflip.c1-c3.fa.p2}$, at its conditional floor of \plv{signflip.c1-c3.fa.floor}.
+\end{itemize}
+The pilot's tables, its duplicated candidates, its reliability re-grade and its cases are in Appendix~\ref{app:pilot}.

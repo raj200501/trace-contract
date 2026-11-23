@@ -1,5 +1,5 @@
 \begin{table}[t]\centering\footnotesize
-\caption{Screening funnel of the natural PR-review arm (AIDev v5). Top: the deterministic stages S1--S8a; S1 and S2 count PRs. Without the linked-issue requirement of S8, 3{,}126 comments would pass S8 and 2{,}263 would pass S8a. Bottom: S9 for the first sample (a random sample of the S8a comments) and for the extension (every other S8a comment, decided after the first sample's S10 yield was known, protocol \S19), then families, S10 (replayability) and S11. \textbf{The S9 verdicts are model proposals of two judges, not human coding.} In the first sample the comments without reachable commits were judged without a diff and failed as not fetchable; in the extension they failed before judging. Extension, share of the judged comments: 22.5\% (18.7\%--26.8\%). First sample, judge $\kappa$ over the 131 comments with reachable commits: 0.93; 0.91; 0.93. No natural verifier, label or run exists yet.}\label{tab:natural-funnel}
+\caption{Screening funnel of the natural PR-review arm (AIDev v5). Top: the deterministic stages S1--S8a; S1 and S2 count PRs. Without the linked-issue requirement of S8, 3{,}126 comments would pass S8 and 2{,}263 would pass S8a. Bottom: S9 for the first sample (a random sample of the S8a comments) and for the extension (every other S8a comment, decided after the first sample's S10 yield was known, protocol \S19), then families, S10 (replayability) and S11; the extension's S10 step was stopped at a usage limit, so its S10 and S11 were not run (decision log D66, D75). \textbf{The S9 verdicts are model proposals of two judges, not human coding.} In the first sample the comments without reachable commits were judged without a diff and failed as not fetchable; in the extension they failed before judging. Extension, share of the judged comments: 22.5\% (18.7\%--26.8\%). First sample, judge $\kappa$ over the 131 comments with reachable commits: 0.93; 0.91; 0.93. The S9 shares are model-judged screening yields, not prevalence.}\label{tab:natural-funnel}
 \begin{tabular}{llrrr}\toprule Stage & Rule & Comments & PRs & Repositories \\\midrule
 S1 & Agent-authored pull requests (AIDev v5) & -- & 361{,}296 & 25{,}402 \\
 S2 & Python repository; MIT, Apache-2.0 or BSD licence; not a fork & -- & 44{,}914 & 3{,}333 \\
@@ -35,12 +35,12 @@ Failed (one primary reason each) & 117 & 433 \\
 Qualifying PRs / repositories & 25 / 14 & 42 / 19 \\
 Judge $\kappa$: behaviour or defect; addressed; testable offline & 0.93; 0.94; 0.93 (n = 150) & 0.95; 0.89; 0.94 (n = 405) \\\midrule
 Families + reserves (at most 2 per repository) & 20 + 5 & 19 + 4 \\
-S10 processed / passed / rejected & 22 / 6 / 16 & \parbox[t]{\linewidth}{\raggedright \unfilled{pending: S10 of the S9 extension}} \\
-\quad rejected: base tests fail to collect & 8 & \unfilled{pending} \\
-\quad rejected: no resolvable dependency closure & 4 & \unfilled{pending} \\
-\quad rejected: environment too large & 1 & \unfilled{pending} \\
-\quad rejected: empty base-test subset & 1 & \unfilled{pending} \\
-\quad rejected: fetch over the repository cap & 1 & \unfilled{pending} \\
-\quad rejected: merge rule & 1 & \unfilled{pending} \\
-S11 accepted for building & 6 & \unfilled{pending} \\
+S10 processed / passed / rejected & 22 / 6 / 16 & not run \\
+\quad rejected: base tests fail to collect & 8 & -- \\
+\quad rejected: no resolvable dependency closure & 4 & -- \\
+\quad rejected: environment too large & 1 & -- \\
+\quad rejected: empty base-test subset & 1 & -- \\
+\quad rejected: fetch over the repository cap & 1 & -- \\
+\quad rejected: merge rule & 1 & -- \\
+S11 accepted for building & 6 & -- \\
 \bottomrule\end{tabular}\end{table}

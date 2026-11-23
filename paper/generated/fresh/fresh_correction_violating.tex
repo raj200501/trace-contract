@@ -1,11 +1,11 @@
 \begin{table}[t]\centering\footnotesize
-\caption{\texttt{u1} attempts (given the first user request only) that violate a requirement the reference contract introduces after it, by family, and how many of them each condition accepts (accepted/violating), run \texttt{fresh-v1}, D19 labels. \textbf{All labels are model proposals; no human labels exist.} No generator wrote these negatives: agents that were not told the correction produced them. Last column: the invalid units whose only violated requirement is the regression norm (accepted/total); they violate no correction requirement. Four controlled families: descriptive, not inferential.}\label{tab:fresh-cv}
+\caption{\texttt{u1} attempts (given the first user request only) that violate a requirement the reference contract introduces after it, by family, and how many of them each condition accepts (accepted/violating), run \texttt{fresh-v1}, rule D19's labels. Last column: the invalid attempts whose only violated requirement is the regression norm (accepted/total); they violate no correction requirement. $^{\diamond}$Automated pilot; model-proposed labels, no human labels; 4 controlled families; descriptive (\S\ref{sec:intro}).}\label{tab:fresh-cv}
 \begin{tabular}{lrrrrrr}\toprule  & CS-01 & CS-02 & CS-03 & CS-04 & Pooled & Regression only \\\midrule
 Correction-violating \texttt{u1} attempts & 10/10 & 0/10 & 7/10 & 10/10 & 27/40 & 2 \\\midrule
-C1 initial, plain & 10/10 & -- & 4/7 & 10/10 & 24/27 & 0/2 \\
-C2 initial, audited & 10/10 & -- & 4/7 & 10/10 & 24/27 & 0/2 \\
-C3 full, plain & 0/10 & -- & 0/7 & 0/10 & 0/27 & 2/2 \\
-C4 full, audited & 0/10 & -- & 0/7 & 0/10 & 0/27 & 2/2 \\
-B2 full-session LLM & 0/10 & -- & 0/7 & 0/10 & 0/27 & 2/2 \\
+C1 initial-only, plain & 10/10 & -- & 4/7 & 10/10 & 24/27 & 0/2 \\
+C2 initial-only, audited & 10/10 & -- & 4/7 & 10/10 & 24/27 & 0/2 \\
+C3 correction-aware, plain & 0/10 & -- & 0/7 & 0/10 & 0/27 & 2/2 \\
+C4 correction-aware, audited & 0/10 & -- & 0/7 & 0/10 & 0/27 & 2/2 \\
+B2 session-LLM baseline & 0/10 & -- & 0/7 & 0/10 & 0/27 & 2/2 \\
 B1 repository tests & 0/10 & -- & 0/7 & 0/10 & 0/27 & 0/2 \\
 \bottomrule\end{tabular}\end{table}

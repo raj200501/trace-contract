@@ -1,12 +1,12 @@
 \begin{table}[t]\centering\footnotesize
-\caption{Solve rates of the fresh attempts (protocol \S15.4, estimand 1), run \texttt{fresh-v1}: solved/attempts per configuration (A: the build session's default agent model; B: the smallest model tier the agent tool offers; same template, tools and budget) and instruction (\texttt{u1}: the first user request only; \texttt{final}: with the correction added), pooled and per family. D19: solved when D19 labels the attempt valid (reference checks and regression norm); labeler: when the independent labeler passes it. \textbf{All labels are model proposals; no human labels exist.} Every attempt counts; the excluded one (\texttt{CS-02-fresh-A-final-1}) counts nowhere. Ended: finished/gave up/error. The \texttt{u1}--\texttt{final} contrast measures the information in the instruction, not the agents' capability.}\label{tab:fresh-solve}
+\caption{Solve rates of the fresh attempts (protocol \S15.4, estimand 1), run \texttt{fresh-v1}: solved/attempts per configuration (configurations A and B use different models of one model family of one provider, with the same template, tools and budget) and instruction (\texttt{u1}: the first user request only; \texttt{final}: with the correction added), pooled and per family. rule (D19): solved when D19 labels the attempt valid (reference checks and regression norm); second labeler: when the independent labeler passes it. Every analysed attempt counts; the excluded one (\texttt{CS-02-fresh-A-final-1}) counts nowhere. Ended: finished/gave up/error. The \texttt{u1}--\texttt{final} contrast measures the information in the instruction, not the agents' capability. $^{\diamond}$Automated pilot; model-proposed labels, no human labels; 4 controlled families; descriptive (\S\ref{sec:intro}).}\label{tab:fresh-solve}
 \begin{tabular}{lllrrrrrr}\toprule Config. & Instruction & Labels & Solved & CS-01 & CS-02 & CS-03 & CS-04 & Ended \\\midrule
-A & \texttt{final} & D19 & 19/19 & 5/5 & 4/4 & 5/5 & 5/5 & 19/0/0 \\
- & & labeler & 19/19 & 5/5 & 4/4 & 5/5 & 5/5 & \\\addlinespace
-A & \texttt{u1} & D19 & 6/20 & 0/5 & 3/5 & 3/5 & 0/5 & 20/0/0 \\
- & & labeler & 8/20 & 0/5 & 5/5 & 3/5 & 0/5 & \\\addlinespace
-B & \texttt{final} & D19 & 20/20 & 5/5 & 5/5 & 5/5 & 5/5 & 20/0/0 \\
- & & labeler & 20/20 & 5/5 & 5/5 & 5/5 & 5/5 & \\\addlinespace
-B & \texttt{u1} & D19 & 5/20 & 0/5 & 5/5 & 0/5 & 0/5 & 20/0/0 \\
- & & labeler & 5/20 & 0/5 & 5/5 & 0/5 & 0/5 & \\
+A & \texttt{final} & rule (D19) & 19/19 & 5/5 & 4/4 & 5/5 & 5/5 & 19/0/0 \\
+ & & second labeler & 19/19 & 5/5 & 4/4 & 5/5 & 5/5 & \\\addlinespace
+A & \texttt{u1} & rule (D19) & 6/20 & 0/5 & 3/5 & 3/5 & 0/5 & 20/0/0 \\
+ & & second labeler & 8/20 & 0/5 & 5/5 & 3/5 & 0/5 & \\\addlinespace
+B & \texttt{final} & rule (D19) & 20/20 & 5/5 & 5/5 & 5/5 & 5/5 & 20/0/0 \\
+ & & second labeler & 20/20 & 5/5 & 5/5 & 5/5 & 5/5 & \\\addlinespace
+B & \texttt{u1} & rule (D19) & 5/20 & 0/5 & 5/5 & 0/5 & 0/5 & 20/0/0 \\
+ & & second labeler & 5/20 & 0/5 & 5/5 & 0/5 & 0/5 & \\
 \bottomrule\end{tabular}\end{table}

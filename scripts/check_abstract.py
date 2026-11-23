@@ -1,12 +1,15 @@
 """Check the length of the paper's abstract as plain text (TeX markup removed).
 
 Usage: .venv/bin/python scripts/check_abstract.py [paper/sections/abstract.tex] [--limit 1900] [--print]
+       [--generated paper/generated]
 
 The text between ``\\begin{abstract}`` and ``\\end{abstract}`` (the whole file if there is no such
 environment) is reduced to what would be pasted into a plain-text abstract field:
 
-* comments are dropped; formatting commands (``\\emph``, ``\\textbf``, ``\\texttt``, ...) keep their
-  argument, and ``\\label`` is dropped;
+* comments are dropped; every number macro (``\\fv``, ``\\nat``, ``\\nrv``, ``\\plv``, ``\\dv``) is replaced
+  by its value from the generated ``numbers.tex`` files (paper/check_numbers.py reads them), and a key
+  that no file defines is a problem; formatting commands (``\\emph``, ``\\textbf``, ``\\texttt``,
+  ``\\ensuremath``, ...) keep their argument, ``{,}`` becomes a comma, and ``\\label`` is dropped;
 * ``~``, ``\\,`` and ``\\ `` become spaces; ``\\%``, ``\\&``, ``\\_``, ``\\#`` and ``\\$`` their
   character; ``\\S`` the section sign; ``\\ldots`` and ``\\dots`` an ellipsis; ``---`` and ``--``
   dashes; two backquotes and two apostrophes a double quote; ``$...$`` keeps its content;
@@ -22,14 +25,21 @@ stderr. Exit status 1 if the text is longer than ``--limit`` characters or a pro
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import re
 import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
 DEFAULT = REPO / "paper" / "sections" / "abstract.tex"
+GENERATED = REPO / "paper" / "generated"
 LIMIT = 1900
-KEEP_ARGUMENT = ("emph", "textbf", "textit", "texttt", "textsc", "textrm", "textsf", "textup", "mbox", "text", "url")
+KEEP_ARGUMENT = ("emph", "textbf", "textit", "texttt", "textsc", "textrm", "textsf", "textup", "mbox", "text", "url",
+                 "ensuremath")
+_cn_spec = importlib.util.spec_from_file_location("check_numbers", REPO / "paper" / "check_numbers.py")
+check_numbers = importlib.util.module_from_spec(_cn_spec)
+_cn_spec.loader.exec_module(check_numbers)
+_NUMBER = re.compile(r"\\(" + "|".join(check_numbers.NAMESPACES) + r")\{([^{}]*)\}")
 DROP_WITH_ARGUMENT = ("label",)
 NO_PLAIN_FORM = ("cite", "ref", "eqref", "autoref", "cref", "Cref", "footnote")
 ESCAPES = {r"\%": "%", r"\&": "&", r"\_": "_", r"\#": "#", r"\$": "$", r"\,": " ", "\\ ": " ", r"\@": ""}
@@ -47,12 +57,31 @@ _WORD_SYMBOL = re.compile(r"\\(" + "|".join(WORD_SYMBOLS) + r")(?![A-Za-z])")
 _COMMAND = re.compile(r"\\(?:[A-Za-z]+|[^A-Za-z\s])")
 
 
-def plain_text(tex: str) -> tuple[str, list[str]]:
-    """``(text, problems)``: the abstract in ``tex`` as plain text, and the markup that has no plain form."""
+def expand_numbers(body: str, numbers: dict[str, dict[str, str]] | None) -> tuple[str, list[str]]:
+    """``body`` with every number macro replaced by its generated value (``numbers``: as check_numbers.load_numbers
+    returns them, read from paper/generated/ when None and a macro is used), and a problem per key no file defines."""
+    if numbers is None and _NUMBER.search(body):
+        numbers = check_numbers.load_numbers(GENERATED)
+    problems = []
+
+    def value(m: re.Match) -> str:
+        v = (numbers or {}).get(m.group(1), {}).get(m.group(2))
+        if v is None:
+            problems.append(f"missing number key: {m.group(0)}")
+            return ""
+        return v
+
+    return _NUMBER.sub(value, body), problems
+
+
+def plain_text(tex: str, numbers: dict[str, dict[str, str]] | None = None) -> tuple[str, list[str]]:
+    """``(text, problems)``: the abstract in ``tex`` as plain text, and the markup that has no plain form or a number key
+    that is not generated."""
     env = _ENV.search(tex)
     body = env.group(1) if env else tex
     body = "\n".join(_COMMENT.sub("", line) for line in body.splitlines())
-    problems = [f"no plain-text form: {m.group(0)}" for m in _NO_PLAIN.finditer(body)]
+    body, problems = expand_numbers(body, numbers)
+    problems += [f"no plain-text form: {m.group(0)}" for m in _NO_PLAIN.finditer(body)]
     body = _NO_PLAIN.sub("", body)
     while True:  # innermost first, so that nested formatting commands are resolved too
         new = _ARGUMENT.sub(lambda m: "" if m.group(1) in DROP_WITH_ARGUMENT else m.group(2), body)
@@ -81,8 +110,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("path", nargs="?", type=Path, default=DEFAULT)
     ap.add_argument("--limit", type=int, default=LIMIT)
     ap.add_argument("--print", action="store_true", help="also print the plain text")
+    ap.add_argument("--generated", type=Path, default=GENERATED, help="the directory of the generated numbers.tex files")
     a = ap.parse_args(argv)
-    text, problems = plain_text(a.path.read_text(encoding="utf-8"))
+    text, problems = plain_text(a.path.read_text(encoding="utf-8"), check_numbers.load_numbers(a.generated))
     if a.print:
         print(text, end="\n\n")
     for p in problems:

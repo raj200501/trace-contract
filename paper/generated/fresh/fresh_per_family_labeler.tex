@@ -1,0 +1,10 @@
+\begin{table}[t]\centering\footnotesize\setlength{\tabcolsep}{4pt}
+\caption{Per-family false acceptance and false rejection on the fresh-agent stratum, run \texttt{fresh-v1}, under the second labeler: the independent labeler's verdicts (protocol \S15.5; 27 invalid, 52 valid attempts), which never change D19's labels. The labeler has no regression part. n/a: the family has no attempt of that kind under this labeling. Rule D19's view: Table~\ref{tab:fresh-family}. $^{\diamond}$Automated pilot; model-proposed labels, no human labels; 4 controlled families; descriptive (\S\ref{sec:intro}).}\label{tab:fresh-family-labeler}
+\begin{tabular}{lrrrrrrrrrr}\toprule  & \multicolumn{5}{c}{False acceptance (accepted/invalid)} & \multicolumn{5}{c}{False rejection (rejected/valid)} \\\cmidrule(lr){2-6}\cmidrule(lr){7-11} Condition & CS-01 & CS-02 & CS-03 & CS-04 & Pooled & CS-01 & CS-02 & CS-03 & CS-04 & Pooled \\\midrule
+C1 initial-only, plain & 10/10 & n/a & 4/7 & 10/10 & 24/27 & 10/10 & 2/19 & 3/13 & 0/10 & 15/52 \\
+C2 initial-only, audited & 10/10 & n/a & 4/7 & 10/10 & 24/27 & 10/10 & 2/19 & 3/13 & 0/10 & 15/52 \\
+C3 correction-aware, plain & 0/10 & n/a & 0/7 & 0/10 & 0/27 & 0/10 & 0/19 & 0/13 & 0/10 & 0/52 \\
+C4 correction-aware, audited & 0/10 & n/a & 0/7 & 0/10 & 0/27 & 0/10 & 0/19 & 6/13 & 0/10 & 6/52 \\
+B2 session-LLM baseline & 0/10 & n/a & 0/7 & 0/10 & 0/27 & 0/10 & 0/19 & 2/13 & 0/10 & 2/52 \\
+B1 repository tests & 0/10 & n/a & 0/7 & 0/10 & 0/27 & 8/10 & 19/19 & 9/13 & 0/10 & 36/52 \\
+\bottomrule\end{tabular}\end{table}

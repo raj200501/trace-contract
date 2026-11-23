@@ -61,8 +61,10 @@ How to read this:
 * **Robustness.**
   * The independent labeler agrees with D19 on 77 of 79 units (κ 0.94).
   * Excluding all 26 attempts that the audit flagged leaves the ordering: C1 accepts 18 of 21 invalid units, C3 1.
-* **Uncertainty.** With four families no two-sided exact sign-flip p below 0.125 is possible, and none of the 14
-  pre-specified comparisons reaches its floor. fresh-v1 reuses the pilot's families and frozen verifiers, so it
+* **Uncertainty.** With four families no exact sign-flip p below 0.0625 one-sided or 0.125 two-sided is possible,
+  and none of the 14 planned comparisons reaches that floor. C1 against C3 on false acceptance has one-sided p = 0.125,
+  because CS-02 differs in the other direction; C1 against C3 and B1 against C4 on false rejection sit at their
+  conditional floors (0.25 and 0.125), which the families with no difference set. fresh-v1 reuses the pilot's families and frozen verifiers, so it
   adds held-out candidates, not families.
 
   **These are descriptive numbers on model-proposed labels, not evidence of an effect beyond these tasks.**
@@ -78,8 +80,12 @@ How to read this:
   * At its first audit, the natural reference fails 9 of the 12 audited verifiers. C1 fails it in five families, C3
     in four.
   * audit:v1's revisers loosened checks toward the reference, and five audits stay failing after three revisions.
-* **Still to come:** the reference checks, the labeler and the held-out pool (P5 to P7), the extension's replay, and
-  the run. Every natural result is pending.
+* **Built and graded (D75 to D78).** P5 to P7 ran for all six families. The run `natural-pr-v1` graded them, and its
+  analysis and its id-and-outcome release are published in `results/runs/natural-pr-v1`. The paper reports the six
+  families as exploratory case studies, one table per family, with no pooled rate, interval, p-value or total; all
+  labels are model proposals.
+* **Still to come:** the extension's replay, which was stopped at a usage limit and is to be redone, its families, and
+  their own run, `natural-pr-v2` (protocol §20).
 
 ## Construction pilot (`pilot-v0.3.3`), a development study since protocol v0.7
 

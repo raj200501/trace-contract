@@ -60,23 +60,41 @@ from __future__ import annotations
 import argparse
 import ast
 import hashlib
+import importlib.util
 import json
 import math
 import os
 import re
 import shutil
 import statistics
+import subprocess
 import sys
 import tempfile
 from collections import Counter
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 GEN = ROOT / "paper" / "generated"
 LEDGER = ROOT / "paper" / "evidence_ledger.md"
-COND_TEX = {"initial_plain": "C1 initial, plain", "initial_audited": "C2 initial, audited", "full_plain": "C3 full, plain",
-            "full_audited": "C4 full, audited", "llm_freeform": "B2 full-session LLM", "repo_tests": "B1 repository tests"}
+# One name per concept (restructure plan, finding 13): initial-only (C1, C2), correction-aware (C3, C4), the session-LLM
+# baseline (B2), repository tests (B1).
+COND_TEX = {"initial_plain": "C1 initial-only, plain", "initial_audited": "C2 initial-only, audited",
+            "full_plain": "C3 correction-aware, plain", "full_audited": "C4 correction-aware, audited",
+            "llm_freeform": "B2 session-LLM baseline", "repo_tests": "B1 repository tests"}
+# The construction pilot's own tables (paper/generated/*.tex and paper/evidence_ledger.md) are frozen at commit c5ede4c
+# (scripts/verify_frozen_inputs.py, check e): they keep the names and captions they were frozen with, byte for byte.
+PILOT_COND_TEX = {"initial_plain": "C1 initial, plain", "initial_audited": "C2 initial, audited", "full_plain": "C3 full, plain",
+                  "full_audited": "C4 full, audited", "llm_freeform": "B2 full-session LLM", "repo_tests": "B1 repository tests"}
+# The rows of a table that gives both labelings: D19's rule-based proposals and the independent labeler's verdicts.
+RULE_ROW, LABELER_ROW = "rule (D19)", "second labeler"
+# A wrapping column for the conditions' names in the tables that are tight on width (never the last column, whose row
+# ends with \\, which \raggedright would take for a line break).
+COND_P = "p{0.15\\linewidth}"
+
+
+def cond_cell(cond: str) -> str:
+    return "\\raggedright " + tex(COND_TEX.get(cond, cond))
 
 
 ORDER = ["initial_plain", "initial_audited", "full_plain", "full_audited", "llm_freeform", "repo_tests"]
@@ -169,7 +187,7 @@ def results(run: Path, led: Ledger, out: Path) -> None:
         fa, fr = d["false_acceptance"], d["false_rejection"]
         j = "n/a" if d.get("youden_j") is None else f"{d['youden_j']:+.2f}"
         tn = d["tasks_with_any_accepted_negative"]
-        rows.append(f"{tex(COND_TEX.get(c, c))} & {cell(fa)} & {cell(fr)} & {j} & {tn['num']}/{tn['den']} & "
+        rows.append(f"{tex(PILOT_COND_TEX.get(c, c))} & {cell(fa)} & {cell(fr)} & {j} & {tn['num']}/{tn['den']} & "
                     f"{d['infrastructure']['num']}/{d['infrastructure']['den']} \\\\")
         for k, x in (("false_acceptance", fa), ("false_rejection", fr)):
             led.add("summary", f"{run_id} {c} {k} exact95 / macro / bootstrap degenerate", f"{x.get('exact95')} / {x.get('macro')} / {x.get('ci95_degenerate')}",
@@ -194,7 +212,7 @@ def results(run: Path, led: Ledger, out: Path) -> None:
     for d in a["comparisons"]:
         diff = "n/a" if d["difference"] is None else f"{d['difference']:+.2f}"
         ci = "n/a" if not d["ci95"] else f"[{d['ci95'][0]:+.2f}, {d['ci95'][1]:+.2f}]" + ("$^{*}$" if d.get("ci95_degenerate") else "")
-        crow.append(f"{tex(COND_TEX.get(d['a'], d['a']))} & {tex(COND_TEX.get(d['b'], d['b']))} & {d['metric'].upper()} & {diff} & {ci} & "
+        crow.append(f"{tex(PILOT_COND_TEX.get(d['a'], d['a']))} & {tex(PILOT_COND_TEX.get(d['b'], d['b']))} & {d['metric'].upper()} & {diff} & {ci} & "
                     f"{d['n_metric']} & {d['discordant']['a_accepts_b_rejects']}/{d['discordant']['a_rejects_b_accepts']} \\\\")
         led.add("comparisons", f"{run_id} {d['a']} - {d['b']} {d['metric']}", f"{d['difference']} ci95={d['ci95']} "
                 f"degenerate={d.get('ci95_degenerate')} n={d['n_metric']} (pairs={d['n_common']}) discordant={d['discordant']}",
@@ -216,7 +234,7 @@ def results(run: Path, led: Ledger, out: Path) -> None:
         nm_a, nm_n = acc(lambda r: r["origin"] == "constructed_near_miss")
         cv_a, cv_n = acc(lambda r: r["negative_type"] == "correction_violating")
         iv_a, iv_n = acc(lambda r: r["negative_type"] == "initial_violating")
-        nrows.append(f"{tex(COND_TEX.get(c, c))} & {pre_a}/{pre_n} & {nm_a}/{nm_n} & {cv_a}/{cv_n} & {iv_a}/{iv_n} \\\\")
+        nrows.append(f"{tex(PILOT_COND_TEX.get(c, c))} & {pre_a}/{pre_n} & {nm_a}/{nm_n} & {cv_a}/{cv_n} & {iv_a}/{iv_n} \\\\")
         led.add("negatives", f"{run_id} {c} accepted pre-correction/near-miss/correction-violating/initial-violating",
                 f"{pre_a}/{pre_n}, {nm_a}/{nm_n}, {cv_a}/{cv_n}, {iv_a}/{iv_n}", f"{src} per_task")
     (out / "negatives_table.tex").write_text(table(
@@ -227,7 +245,7 @@ def results(run: Path, led: Ledger, out: Path) -> None:
     srows = []
     for c, s in ordered(a["sanity"]):
         r, n = s.get("reference", {}), s.get("noop", {})
-        srows.append(f"{tex(COND_TEX.get(c, c))} & {r.get('pass', '-')}/{r.get('n', '-')} & {n.get('pass', '-')}/{n.get('n', '-')} \\\\")
+        srows.append(f"{tex(PILOT_COND_TEX.get(c, c))} & {r.get('pass', '-')}/{r.get('n', '-')} & {n.get('pass', '-')}/{n.get('n', '-')} \\\\")
         led.add("sanity", f"{run_id} {c} reference/no-op passes", f"{r.get('pass')}/{r.get('n')}, {n.get('pass')}/{n.get('n')}", f"{src} sanity.{c}")
     (out / "sanity_table.tex").write_text(table(
         "Sanity checks (excluded from the rates): reference solution and no-op passes per condition.", "tab:sanity", "lrr",
@@ -241,7 +259,7 @@ def results(run: Path, led: Ledger, out: Path) -> None:
                 ex = d.get(f"{k}_exact95")
                 return (fmt_rate(d[k], d[f"{k}_num"], d[f"{k}_den"], d[f"{k}_ci95"]) + star
                         + ("" if not ex else f" {{\\scriptsize exact [{ex[0]:.2f}, {ex[1]:.2f}]}}"))
-            xrows.append(f"{tex(COND_TEX.get(c, c))} & {scell('fa')} & {scell('fr')} \\\\")
+            xrows.append(f"{tex(PILOT_COND_TEX.get(c, c))} & {scell('fa')} & {scell('fr')} \\\\")
             led.add("sensitivity", f"{run_id} {c} construction-label FA/FR",
                     f"{d['fa']} ({d['fa_num']}/{d['fa_den']}) ci95={d['fa_ci95']} exact95={d.get('fa_exact95')} degenerate={d.get('fa_ci95_degenerate')}, "
                     f"{d['fr']} ({d['fr_num']}/{d['fr_den']}) ci95={d['fr_ci95']} exact95={d.get('fr_exact95')} degenerate={d.get('fr_ci95_degenerate')}",
@@ -259,7 +277,7 @@ def results(run: Path, led: Ledger, out: Path) -> None:
             x = xt[c]
             k = ck.get(c, {})
             n = nd.get(c, {})
-            prow.append(f"{tex(COND_TEX.get(c, c))} & {x['confirmed_invalid']['accepted']}/{x['confirmed_invalid']['n']} & "
+            prow.append(f"{tex(PILOT_COND_TEX.get(c, c))} & {x['confirmed_invalid']['accepted']}/{x['confirmed_invalid']['n']} & "
                         f"{x['ambiguous']['accepted']}/{x['ambiguous']['n']} & {k.get('fa_num', '-')}/{k.get('fa_den', '-')} & "
                         f"{k.get('fr_num', '-')}/{k.get('fr_den', '-')} & {n.get('fa_num', '-')}/{n.get('fa_den', '-')} & {n.get('fr_num', '-')}/{n.get('fr_den', '-')} \\\\")
             led.add("posthoc", f"{run_id} {c} near-miss accepted confirmed/ambiguous; check-label FA/FR; no-duplicate FA/FR",
@@ -325,7 +343,7 @@ def results(run: Path, led: Ledger, out: Path) -> None:
             mark = lambda o: "\\checkmark" if o == "pass" else ("--" if o is None else "$\\times$")  # noqa: E731
             short = {"observed_pre_correction": "pre-corr.", "constructed_near_miss": "near miss", "valid_alternative": "alternative"}.get(d["origin"], d["origin"])
             mrows.append(f"{tex(cid)} & {short} & {tex(d['label'] or '--')} & " + " & ".join(mark(d.get(c)) for c in conds) + " \\\\")
-    hdr = "Candidate & Origin & Label & " + " & ".join(tex(COND_TEX.get(c, c).split(' ')[0]) for c in conds)
+    hdr = "Candidate & Origin & Label & " + " & ".join(tex(PILOT_COND_TEX.get(c, c).split(' ')[0]) for c in conds)
     (out / "outcome_matrix.tex").write_text(table(
         f"Outcome of every verifier on every held-out candidate, run \\texttt{{{tex(run_id)}}} (\\checkmark{{}} pass, $\\times$ any "
         "non-pass outcome).", "tab:matrix", "lll" + "c" * len(conds), hdr, mrows, size="\\scriptsize"))
@@ -415,6 +433,21 @@ SHORT = {"initial_plain": "C1", "initial_audited": "C2", "full_plain": "C3", "fu
          "repo_tests": "B1"}
 NO_HUMAN = "\\textbf{All labels are model proposals; no human labels exist.}"
 FOUR_FAMILIES = "Four controlled families: descriptive, not inferential."
+# The verifiers that support the labels (D19's reference checks, protocol §15.5's independent labeler), not conditions.
+LABEL_SUPPORT = ("reference_check", "independent_label")
+# The one caveat marker that every caption of fresh-v1's tables and figures ends with, in place of repeated caveat
+# sentences (restructure plan, finding 20; the pilot's own tables are frozen and keep theirs); <n>: the run's families.
+# Its symbol is a diamond, not the plan's dagger: the natural run's false-acceptance table marks with a dagger the cells
+# the oracle-gated view drops, as the natural section (fixed before the run's analysis, D77) says, and one symbol is to
+# mean one thing in the manuscript.
+CONTROLLED_MARKER = ("$^{{\\diamond}}$Automated pilot; model-proposed labels, no human labels; {n} controlled families; "
+                     "descriptive (\\S\\ref{{sec:intro}}).")
+
+
+def controlled_marker(n_families: int, led, table: str, src: str) -> str:
+    """The caption marker of the controlled arm, with its number of families as a caption value of ``table``."""
+    led.add(table, "caption marker: controlled families", n_families, f"{src} n_families")
+    return CONTROLLED_MARKER.format(n=n_families)
 
 
 class SectionLedger:
@@ -460,6 +493,14 @@ class Numbers:
         self.values[key] = v
         self.led.add("numbers", f"\\{self.prefix}{{{key}}}" + (f" ({what})" if what else ""), v, src)
 
+    def put_count(self, key: str, n: int, src: str, what: str = "") -> None:
+        """A count, and for zero to twenty also its word form ``<key>.w`` (four), for prose that writes it as a word."""
+        if isinstance(n, bool) or not isinstance(n, int):
+            raise TypeError(f"number key {key!r}: {n!r} is not a count")
+        self.put(key, n, src, what)
+        if 0 <= n < len(COUNT_WORDS):
+            self.put(f"{key}.w", COUNT_WORDS[n], src, (what + "; " if what else "") + "in words")
+
     def tex(self, cmd: str) -> str:
         p = self.prefix
         lines = [f"% Generated by `{cmd}`; do not edit. Every value is listed in the ledger, section numbers.",
@@ -468,6 +509,10 @@ class Numbers:
                  f"\\else\\unfilled{{missing number #1}}\\fi}}"]
         lines += [f"\\expandafter\\gdef\\csname {p}:{k}\\endcsname{{{v}}}" for k, v in sorted(self.values.items())]
         return "\n".join(lines) + "\n"
+
+
+COUNT_WORDS = ("zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve",
+               "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen", "twenty")
 
 
 def _frac(num, den) -> str:
@@ -611,7 +656,7 @@ def fresh_run_numbers(F: dict, led: SectionLedger, nums: Numbers) -> None:
     if a["meta"]["n_results"] != len(rows):
         raise ValueError(f"{src}: meta.n_results {a['meta']['n_results']} but {len(rows)} rows in {rsrc}")
     nums.put("run.pairs", _int(len(rows)), f"{rsrc} (rows; = {src} meta.n_results)", "graded pairs")
-    nums.put("run.repeats", m["repeats"], f"{msrc} repeats")
+    nums.put_count("run.repeats", m["repeats"], f"{msrc} repeats")
     nums.put("run.pass", _int(oc["pass"]), f"{rsrc} outcome (count of pass)")
     nums.put("run.taskfailure", _int(oc["task_failure"]), f"{rsrc} outcome (count of task_failure)")
     nums.put("run.other", sum(v for k, v in oc.items() if k not in ("pass", "task_failure")),
@@ -631,7 +676,7 @@ def fresh_run_numbers(F: dict, led: SectionLedger, nums: Numbers) -> None:
     n_att = sum(f["summary"]["attempts"] for f in F["att"].values())
     nums.put("attempts", n_att, "; ".join(f"{F['att_src'][t]} summary.attempts" for t in F["fams"]))
     fa = a["fresh_attempts"]
-    nums.put("attempts.excluded", fa["n_excluded"], f"{src} fresh_attempts.n_excluded")
+    nums.put_count("attempts.excluded", fa["n_excluded"], f"{src} fresh_attempts.n_excluded")
     if len(fa["excluded"]) != fa["n_excluded"]:
         raise ValueError(f"{src}: fresh_attempts.excluded does not list n_excluded attempts")
     for i, x in enumerate(fa["excluded"]):
@@ -661,20 +706,66 @@ def fresh_run_numbers(F: dict, led: SectionLedger, nums: Numbers) -> None:
     n_a = sum(F["attempt"][i]["configuration"] == "config-A" for i in ids)
     nums.put("flagged.configa", n_a, f"{F['ssrc']} meta.sensitivity.excluded_here, already_excluded (candidate ids) joined with "
              "attempts[].configuration of " + ", ".join(F["att_src"][t] for t in F["fams"]), "flagged attempts of configuration A")
+    generated: dict[str, list[int]] = {"plain": [], "audited": []}  # scored checks: C1, C3, B2 (plain); C2, C4 (audited)
     for t in F["fams"]:
         for c in (*ORDER, "reference_check", "independent_label"):
             p = ROOT / "tasks" / t / "verifiers" / c / "spec.json"
             if p.exists():
                 key = {"reference_check": "ref", "independent_label": "il"}.get(c, SHORT.get(c, c).lower())
-                nums.put(f"checks.{_fk(t)}.{key}", len(json.loads(p.read_text())["checks"]), f"{rel(p)} checks (count)")
+                n = len(json.loads(p.read_text())["checks"])
+                nums.put(f"checks.{_fk(t)}.{key}", n, f"{rel(p)} checks (count)")
+                if c not in ("repo_tests", "reference_check", "independent_label"):
+                    generated["audited" if c.endswith("_audited") else "plain"].append(n)
+    how = "tasks/<task>/verifiers/{initial,full}_{plain,audited},llm_freeform/spec.json checks (count)"
+    every = generated["plain"] + generated["audited"]
+    nums.put("checks.generated.min", min(every), how + ", minimum", "scored checks of a generated verifier (C1-C4, B2)")
+    nums.put("checks.generated.max", max(every), how + ", maximum")
+    # The plain generators' output apart from the audited verifiers, whose reviser may keep more tests than a generator is
+    # asked to write (the generate workflow's "Keep 6-16 tests"; \dv{design.revise.tests.*}).
+    how = "tasks/<task>/verifiers/{initial_plain,full_plain,llm_freeform}/spec.json checks (count)"
+    nums.put("checks.plain.min", min(generated["plain"]), how + ", minimum", "scored checks of a plain generated verifier (C1, C3, B2)")
+    nums.put("checks.plain.max", max(generated["plain"]), how + ", maximum")
+    how = "tasks/<task>/verifiers/{initial_audited,full_audited}/spec.json checks (count)"
+    nums.put("checks.audited.min", min(generated["audited"]), how + ", minimum", "scored checks of an audited verifier (C2, C4)")
+    nums.put("checks.audited.max", max(generated["audited"]), how + ", maximum")
 
 
-def fresh_per_family_table(F: dict, view: dict, vsrc: str, led: SectionLedger, nums: Numbers, *, name: str, label: str,
-                           p: str, caption: str) -> str:
-    """Per-family FA · FR under D19 and under the independent labeler, per condition, and pooled (the primary display)."""
+def fresh_design_numbers(F: dict, led: SectionLedger, nums: Numbers) -> None:
+    """The design's counts as the records hold them (restructure plan, part 5.1): families, configurations and conditions,
+    and per instruction the attempts that D19 labels valid and invalid (estimand 1 of protocol §15.4)."""
+    a, m, src, msrc = F["a"], F["m"], F["src"], F["msrc"]
+    if a["n_families"] != len(F["fams"]):
+        raise ValueError(f"{src}: n_families = {a['n_families']}, per_task holds {len(F['fams'])} families")
+    nums.put_count("families", a["n_families"], f"{src} n_families", "controlled task families")
+    bcv = a["fresh_attempts"]["by_configuration_variant"]
+    cfgs = sorted({d["configuration"] for d in bcv.values()})
+    nums.put_count("run.configurations", len(cfgs), f"{src} fresh_attempts.by_configuration_variant.*.configuration "
+                   f"(distinct values: {', '.join(cfgs)})", "agent configurations")
+    conds = [c for c in m["conditions"] if c not in LABEL_SUPPORT]
+    if sorted(conds) != sorted(ORDER) or sorted(a["conditions"]) != sorted(ORDER):
+        raise ValueError(f"{msrc}: conditions {m['conditions']}; expected the six of the protocol and the label support")
+    nums.put_count("run.conditions", len(conds), f"{msrc} conditions, less the label-support verifiers "
+                   f"({', '.join(c for c in m['conditions'] if c in LABEL_SUPPORT)})", "verifier conditions (C1-C4, B2, B1)")
+    for var in sorted({d["variant"] for d in bcv.values()}):
+        ds = {k: d for k, d in bcv.items() if d["variant"] == var}
+        base = f"{src} fresh_attempts.by_configuration_variant.{{{','.join(sorted(ds))}}}"
+        att, solved = sum(d["attempts"] for d in ds.values()), sum(d["solved"] for d in ds.values())
+        invalid, undecided = sum(d["not_solved"] for d in ds.values()), sum(d["undecided"] for d in ds.values())
+        if solved + invalid + undecided != att:
+            raise ValueError(f"{base}: solved, not_solved and undecided do not add up to attempts")
+        nums.put(f"solve.{var}", f"{solved}/{att}", f"{base}.solved, .attempts (summed)", f"{var} attempts D19 labels valid")
+        nums.put(f"{var}.invalid", f"{invalid}/{att}", f"{base}.not_solved, .attempts (summed)", f"{var} attempts D19 labels invalid")
+        nums.put(f"{var}.invalid.n", invalid, f"{base}.not_solved (summed)")
+        nums.put(f"{var}.undecided", undecided, f"{base}.undecided (summed)", "neither valid nor invalid under D19")
+        nums.put(f"{var}.attempts", att, f"{base}.attempts (summed)")
+
+
+def _per_family_cells(F: dict, view: dict, vsrc: str, led: SectionLedger, nums: Numbers, name: str, p: str) -> dict:
+    """Per condition, the per-family and pooled FA and FR cells under D19 and under the independent labeler, each a
+    ledger entry and a macro (``<p><c>.<family>.<m>``, ``<p>il.<c>.<family>.<m>``, ``<p>il.<c>.<m>``)."""
     fams = F["fams"]
-    rows = []
     il = view["independent_labeling"]["conditions"]
+    out = {}
     for c in ORDER:
         sh = SHORT[c].lower()
         pf, lab = view["per_family"][c], il[c]["independent_label"]
@@ -685,20 +776,21 @@ def fresh_per_family_table(F: dict, view: dict, vsrc: str, led: SectionLedger, n
             if sum(pf[t][k] for t in fams) != tot:
                 raise ValueError(f"{vsrc}: per_family.{c}.*.{k} does not sum to the pooled value {tot}")
         lfa, lfr = lab["false_acceptance"], lab["false_rejection"]
-        dcells, lcells = [], []
+        cells = {"rule": {"fa": [], "fr": []}, "labeler": {"fa": [], "fr": []}}
         for t in fams:
             d, ll = pf[t], lab["per_family"][t]
-            dcells.append(_fa_fr(d))
-            lcells.append(_fa_fr(ll))
             led.add(name, f"{c} {t} D19 FA; FR", f"{d['fa_num']}/{d['fa_den']}; {d['fr_num']}/{d['fr_den']}", f"{vsrc} per_family.{c}.{t}")
             led.add(name, f"{c} {t} labeler FA; FR", f"{ll['fa_num']}/{ll['fa_den']}; {ll['fr_num']}/{ll['fr_den']}",
                     f"{vsrc} independent_labeling.conditions.{c}.independent_label.per_family.{t}")
             for m in ("fa", "fr"):
+                cells["rule"][m].append(_frac(d[f"{m}_num"], d[f"{m}_den"]))
+                cells["labeler"][m].append(_frac(ll[f"{m}_num"], ll[f"{m}_den"]))
                 nums.put(f"{p}{sh}.{_fk(t)}.{m}", _frac(d[f"{m}_num"], d[f"{m}_den"]), f"{vsrc} per_family.{c}.{t}.{m}_num, .{m}_den")
                 nums.put(f"{p}il.{sh}.{_fk(t)}.{m}", _frac(ll[f"{m}_num"], ll[f"{m}_den"]),
                          f"{vsrc} independent_labeling.conditions.{c}.independent_label.per_family.{t}.{m}_num, .{m}_den")
-        dcells.append(f"{_frac(fa['num'], fa['den'])} $\\cdot$ {_frac(fr['num'], fr['den'])}")
-        lcells.append(f"{_frac(lfa['num'], lfa['den'])} $\\cdot$ {_frac(lfr['num'], lfr['den'])}")
+        for m, x, y in (("fa", fa, lfa), ("fr", fr, lfr)):
+            cells["rule"][m].append(_frac(x["num"], x["den"]))
+            cells["labeler"][m].append(_frac(y["num"], y["den"]))
         led.add(name, f"{c} pooled D19 FA; FR", f"{fa['num']}/{fa['den']}; {fr['num']}/{fr['den']}",
                 f"{vsrc} conditions.{c}.false_acceptance, .false_rejection (num, den)")
         led.add(name, f"{c} pooled labeler FA; FR", f"{lfa['num']}/{lfa['den']}; {lfr['num']}/{lfr['den']}",
@@ -707,10 +799,232 @@ def fresh_per_family_table(F: dict, view: dict, vsrc: str, led: SectionLedger, n
             key = "false_acceptance" if m == "fa" else "false_rejection"
             nums.put(f"{p}il.{sh}.{m}", _frac(x["num"], x["den"]), f"{vsrc} independent_labeling.conditions.{c}.independent_label.{key}.num, .den")
             nums.put(f"{p}il.{sh}.{m}.rate", _r2(x["rate"]), f"{vsrc} independent_labeling.conditions.{c}.independent_label.{key}.rate")
-        rows.append(f"{tex(COND_TEX[c])} & D19 & " + " & ".join(dcells) + " \\\\")
-        rows.append(" & labeler & " + " & ".join(lcells) + " \\\\" + ("" if c == ORDER[-1] else "\\addlinespace"))
-    return table(caption, label, "llccccc", "Condition & Labels & " + " & ".join(tex(t) for t in fams) + " & Pooled", rows,
-                 size="\\footnotesize")
+        out[c] = cells
+    return out
+
+
+def fresh_split_table(F: dict, cells: dict, which: str, caption: str, label: str) -> str:
+    """One labeling's per-family table, split into a false-acceptance and a false-rejection column group (restructure plan,
+    part 6): a row per condition; per group a column per family and the pooled value (num/den)."""
+    fams, n = F["fams"], len(F["fams"]) + 1
+    rows = [f"{tex(COND_TEX[c])} & " + " & ".join(cells[c][which]["fa"]) + " & " + " & ".join(cells[c][which]["fr"]) + " \\\\"
+            for c in ORDER]
+    head = (f" & \\multicolumn{{{n}}}{{c}}{{False acceptance (accepted/invalid)}} & \\multicolumn{{{n}}}{{c}}{{False rejection "
+            f"(rejected/valid)}} \\\\\\cmidrule(lr){{2-{n + 1}}}\\cmidrule(lr){{{n + 2}-{2 * n + 1}}} Condition & "
+            + " & ".join([*(tex(t) for t in fams), "Pooled"] * 2))
+    return table(caption, label, "l" + "r" * (2 * n), head, rows, size="\\footnotesize\\setlength{\\tabcolsep}{4pt}")
+
+
+def fresh_per_family_table(F: dict, view: dict, vsrc: str, led: SectionLedger, nums: Numbers, *, name: str, label: str,
+                           p: str, caption: str) -> str:
+    """Per-family FA · FR under D19 and under the independent labeler, per condition, and pooled, in one table (the
+    sensitivity view's layout)."""
+    cells = _per_family_cells(F, view, vsrc, led, nums, name, p)
+    rows = []
+    for c in ORDER:
+        for which, text in (("rule", f"{tex(COND_TEX[c])} & {RULE_ROW}"), ("labeler", f" & {LABELER_ROW}")):
+            x = cells[c][which]
+            rows.append(f"{text} & " + " & ".join(f"{fa} $\\cdot$ {fr}" for fa, fr in zip(x["fa"], x["fr"])) + " \\\\"
+                        + ("\\addlinespace" if which == "labeler" and c != ORDER[-1] else ""))
+    return table(caption, label, "ll" + "c" * (len(F["fams"]) + 1),
+                 "Condition & Labels & " + " & ".join(tex(t) for t in F["fams"]) + " & Pooled", rows, size="\\footnotesize")
+
+
+def _req_key(req: str) -> str:
+    """A requirement id as part of a macro key: R-zero-step -> r-zero-step, REGRESSION -> regression, R3 -> r3."""
+    k = req.lower()
+    if not Numbers.KEY.fullmatch(k):
+        raise ValueError(f"requirement id {req!r} cannot be part of a number key")
+    return k
+
+
+def scenario_requirements(task: str) -> tuple[list[dict], str]:
+    """The intended requirements of a controlled scenario (hashed and logged before its session), and the file."""
+    p = ROOT / "data" / "controlled" / "scenarios" / f"{task}.json"
+    ir = json.loads(p.read_text())["intended_requirements"]
+    return (ir if isinstance(ir, list) else ast.literal_eval(ir)), rel(p)
+
+
+def _spec(task: str, cond: str) -> tuple[dict, str]:
+    p = ROOT / "tasks" / task / "verifiers" / cond / "spec.json"
+    return json.loads(p.read_text()), rel(p)
+
+
+def fresh_behaviours(F: dict, led: SectionLedger, nums: Numbers, out: Path, *, units: dict, viol: dict, unspec: list,
+                     violated: dict, marker) -> None:
+    """The behaviours behind the invalid first-request attempts, by family (restructure plan, parts 5.1 and 6, Tab. 4), as
+    macros and a table: what the correction changed (``corr.*``), what the invalid units broke (``beh.*``), whether each
+    condition passes the family's reference (``ref.<c>.<family>``), the violators that the initial-only verifier accepts
+    where it passes its reference (``cv.silent.*``, the post hoc silent-loss reading of the oracle-gated view), C1's checks
+    on the retracted or broken requirement under both model mappers, C1's rejected violators, and the checks the audit's
+    revisions added. Cells that repeat a key put elsewhere (``cv.c1.<family>``, ``b1.base.fa.<family>``) read its value."""
+    a, fams, src, rsrc = F["a"], F["fams"], F["src"], F["rsrc"]
+    name = "fresh_behaviours"
+    by_row = {(r["task_id"], r["verifier_id"], r["candidate_id"]): r for r in F["rows"]}
+    og = a["oracle_gated"]["conditions"]
+    n_cv = sum(len(v) for v in viol.values())
+    u1_invalid = int(nums.values["u1.invalid.n"])
+    if u1_invalid != n_cv + len(unspec) or any(F["attempt"][cid]["variant"] != "u1" for cid in unspec):
+        raise ValueError(f"{src}: {u1_invalid} invalid u1 attempts, but {n_cv} correction violators and {len(unspec)} "
+                         "regression-only u1 units; the text splits the first into the other two")
+    cells: dict[str, list[tuple[str, str, str]]] = {t: [] for t in fams}  # per family: (column, cell, source)
+
+    def cell(t: str, column: str, text: str, how: str) -> None:
+        cells[t].append((column, text, how))
+        led.add(name, f"{column} | {t}", text, how)
+
+    for t in fams:
+        fk = _fk(t)
+        # What the correction changed: the scenario's intended requirements by the turn that introduced them.
+        ir, ssrc = scenario_requirements(t)
+        sup = [r["id"] for r in ir if r["turn"] == "U1" and r["final_status"] == "superseded"]
+        add = [r["id"] for r in ir if r["turn"] != "U1"]
+        ref_contract = json.loads((ROOT / "tasks" / t / "contracts" / "reference.json").read_text())
+        if sorted(r["req_id"] for r in ref_contract["requirements"] if r["status"] == "superseded") != sorted(sup):
+            raise ValueError(f"tasks/{t}/contracts/reference.json: its superseded requirements are not the scenario's {sup}")
+        how = f"{ssrc} intended_requirements[] (turn, final_status)"
+        nums.put(f"corr.{fk}.initial", sum(r["turn"] == "U1" for r in ir), how, "requirements of the first request")
+        nums.put_count(f"corr.{fk}.superseded", len(sup), how, "first-request requirements the correction retracts")
+        nums.put_count(f"corr.{fk}.added", len(add), how, "requirements the correction adds")
+        cell(t, "Correction", f"adds {len(add)}, retracts {len(sup) or 'none'}", how)
+        # What the family's invalid units broke (each distinct graded patch once).
+        inv = sorted(cid for (tt, cid), u in units.items() if tt == t and u["label"] == "invalid")
+        plp = f"tasks/{t}/strata/{F['stratum']}/proposed_labels.json"
+        recorded = json.loads((ROOT / plp).read_text())["candidates"]
+        for cid in inv:
+            if recorded[cid]["proposed"] != "invalid" or sorted(recorded[cid]["violated"]) != sorted(violated[cid]):
+                raise ValueError(f"{plp}: {cid} is {recorded[cid]['proposed']} and violates {recorded[cid]['violated']}, the "
+                                 f"analysis labels it invalid and says {violated[cid]}")
+        cnt = Counter(req for cid in inv for req in violated[cid])
+        how = f"{src} labels.{t}.strata.{F['stratum']}.candidates[].violated of the family's invalid units (per_task labels)"
+        nums.put(f"beh.{fk}.n", len(inv), how, "the family's invalid units")
+        for req, n in sorted(cnt.items()):
+            nums.put(f"beh.{fk}.{_req_key(req)}", n, how, f"invalid units that violate {req}")
+        nums.put(f"unspec.{fk}.n", sum(cid in unspec for cid in inv), how, "invalid units whose only violation is REGRESSION")
+        broken = sorted(set.intersection(*(set(violated[cid]) for cid in viol[t])) & set(add)) if viol[t] else []
+        nums.put(f"beh.{fk}.broken", ", ".join(broken) or "none", how + "; the correction's requirements every violator breaks")
+        groups: dict[int, list[str]] = {}
+        for req, n in cnt.items():
+            groups.setdefault(n, []).append(req)
+        cell(t, "Invalid u1 attempts: what they break", (f"{len(inv)}: " + "; ".join(
+            ", ".join(sorted(groups[n])) + f" ({n})" for n in sorted(groups, reverse=True))) if inv else "none", how)
+        # The reference solution under each condition.
+        for c in ORDER:
+            r = by_row.get((t, c, f"{t}-reference"))
+            if r is None:
+                raise ValueError(f"{rsrc}: no {c} row for {t}-reference")
+            failed = [ch["check_id"] for ch in r["checks"] if ch["status"] != "passed"]
+            passes = r["outcome"] == "pass"
+            if passes == (t in og[c]["dropped"]):
+                raise ValueError(f"{rsrc}: {c} on {t}-reference is {r['outcome']}, which {src} oracle_gated does not reflect")
+            rhow = f"{rsrc} row ({t}, {c}, {t}-reference): outcome, checks[].status"
+            nums.put(f"ref.{SHORT[c].lower()}.{fk}", "passes" if passes else "fails", rhow, "the condition on the family's reference")
+            nums.put(f"ref.{SHORT[c].lower()}.{fk}.failed", len(failed), rhow, "checks that fail on the reference")
+        c1, c1src = _spec(t, "initial_plain")
+        n1 = len(c1["checks"])
+        c1ref = nums.values[f"ref.c1.{fk}"]
+        cell(t, "C1 passes its reference", "yes" if c1ref == "passes" else
+             f"no ({nums.values[f'ref.c1.{fk}.failed']} of {n1} checks fail)", f"{rsrc} row ({t}, initial_plain, {t}-reference)")
+        # C1's checks on the retracted requirement (where the correction retracted one) or on the requirements every
+        # violator breaks, through the initial-only contract's mapping to the reference contract, under each mapper.
+        counts = {}
+        for kind, targets in (("superseded", sup), ("broken", broken)):
+            if not targets:
+                continue
+            for mapper, mk in (("mapping_initial_only", ""), ("mapping2_initial_only", ".mapper2")):
+                mp = json.loads((ROOT / "tasks" / t / "contracts" / f"{mapper}.json").read_text())["map"]
+                k = sum(bool({x for rid in ch["requirement_ids"] for x in mp.get(rid, [])} & set(targets)) for ch in c1["checks"])
+                counts[(kind, mk)] = k
+                nums.put(f"c1.{fk}.checks.{kind}{mk}", k, f"{c1src} checks[].requirement_ids through tasks/{t}/contracts/"
+                         f"{mapper}.json map, onto {', '.join(targets)}", f"C1 checks on the {kind} requirement(s)")
+                if kind == "superseded" and not mk:  # which of them fail on the reference ("exactly those fail")
+                    ref_failed = {ch["check_id"] for ch in by_row[(t, "initial_plain", f"{t}-reference")]["checks"]
+                                  if ch["status"] != "passed"}
+                    on = {ch["check_id"] for ch in c1["checks"] if {x for rid in ch["requirement_ids"] for x in mp.get(rid, [])}
+                          & set(targets)}
+                    nums.put(f"c1.{fk}.checks.superseded.failed", len(on & ref_failed), f"{c1src}; {mapper}.json map; {rsrc} "
+                             f"row ({t}, initial_plain, {t}-reference) checks[].status", "of them, checks that fail on the reference")
+                    nums.put(f"c1.{fk}.checks.other.failed", len(ref_failed - on), f"{c1src}; {mapper}.json map; {rsrc} row "
+                             f"({t}, initial_plain, {t}-reference) checks[].status", "checks on other requirements that fail on it")
+        kind = "superseded" if sup else "broken" if broken else None
+        if kind:
+            k1, k2 = counts[(kind, "")], counts[(kind, ".mapper2")]
+            text = (f"{k1} of {n1}" + ("" if k1 == k2 else f" (mapper 2: {k2})") + (" on the retracted " if sup else " on ")
+                    + ", ".join(sup if sup else broken))
+        else:
+            text = "--"
+        cell(t, "C1 checks on the retracted or broken requirement", text,
+             f"{c1src} checks[].requirement_ids; tasks/{t}/contracts/mapping_initial_only.json, mapping2_initial_only.json map")
+        # The violators C1 rejects, and the requirements of its contract whose checks they fail.
+        rej = [cid for cid in viol[t] if units[(t, cid)]["outcome"]["initial_plain"] != "pass"]
+        if viol[t]:
+            req_of = {ch["check_id"]: ch["requirement_ids"] for ch in c1["checks"]}
+            how = f"{rsrc} rows ({t}, initial_plain, <violator>) checks[].status; {c1src} checks[].requirement_ids"
+            nums.put(f"c1.{fk}.cv.rejected", len(rej), how, "correction violators C1 rejects")
+            by_req: Counter = Counter()
+            for cid in rej:
+                bad = [ch["check_id"] for ch in by_row[(t, "initial_plain", cid)]["checks"] if ch["status"] != "passed"]
+                by_req.update({rid for b in bad for rid in req_of.get(b, [])})
+            for rid, n in sorted(by_req.items()):
+                nums.put(f"c1.{fk}.cv.rejected.{_req_key(rid)}", n, how, f"rejected violators failing a check of C1's {rid}")
+        for c in ("initial_plain", "full_plain"):
+            cell(t, f"{SHORT[c]} accepts", nums.values[f"cv.{SHORT[c].lower()}.{fk}"] if viol[t] else "--",
+                 f"\\fv{{cv.{SHORT[c].lower()}.{fk}}}")
+        cell(t, "Base tests accept", nums.values[f"b1.base.fa.{fk}"], f"\\fv{{b1.base.fa.{fk}}}")
+        cell(t, "Regression only", nums.values[f"unspec.{fk}.n"], f"\\fv{{unspec.{fk}.n}}")
+        # The audit's revisions: the checks each audited verifier adds to its plain counterpart, and the false rejections
+        # whose failing checks are all such added checks.
+        for plain, aud in (("initial_plain", "initial_audited"), ("full_plain", "full_audited")):
+            sp, ssp = _spec(t, plain)
+            sa, ssa = _spec(t, aud)
+            sh = SHORT[aud].lower()
+            pid, aid = {ch["check_id"] for ch in sp["checks"]}, {ch["check_id"] for ch in sa["checks"]}
+            added = aid - pid
+            how = f"{ssa} checks[].check_id, audit; {ssp} checks[].check_id, content_sha256"
+            nums.put(f"audit.{sh}.{fk}.added", len(added), how, "checks the audited verifier has and its plain one lacks")
+            nums.put(f"audit.{sh}.{fk}.removed", len(pid - aid), how, "checks the plain verifier has and the audited one lacks")
+            nums.put_count(f"audit.{sh}.{fk}.revisions", (sa.get("audit") or {}).get("iterations", 0), how, "audit revisions")
+            nums.put(f"audit.{sh}.{fk}.passed", "passed" if (sa.get("audit") or {}).get("passed") else "not passed", how)
+            nums.put(f"audit.{sh}.{fk}.identical", "identical" if sa["content_sha256"] == sp["content_sha256"] else "revised", how,
+                     "the audited tests against the plain ones")
+            fr_added = 0
+            for (tt, cid), u in units.items():
+                if tt != t or u["label"] != "valid" or u["outcome"][aud] == "pass":
+                    continue
+                bad = {ch["check_id"] for ch in by_row[(t, aud, cid)]["checks"] if ch["status"] != "passed"}
+                fr_added += bool(bad) and bad <= added
+            nums.put(f"{sh}.{fk}.fr.added", fr_added, f"{rsrc} rows ({t}, {aud}, <valid unit>) checks[].status; {how}",
+                     "false rejections whose failing checks are all checks the audit's revision added")
+    # The post hoc silent-loss reading of the secondary oracle-gated view (protocol §15.7): the violators in the families
+    # whose reference the initial-only verifier C1 passes, and how many of them each condition accepts.
+    kept = [t for t in fams if t not in og["initial_plain"]["dropped"]]
+    silent = [t for t in kept if viol[t]]
+    n_silent = sum(len(viol[t]) for t in silent)
+    how = (f"{src} oracle_gated.conditions.initial_plain.dropped (the families C1 keeps: {', '.join(kept)}); per_task "
+           "(negative_type, outcome) of their correction violators")
+    nums.put("cv.silent.n", n_silent, how, "correction violators where C1 passes its reference")
+    nums.put("cv.silent.families", ", ".join(tex(t) for t in silent) or "none", how)
+    for c in ORDER:
+        acc = sum(units[(t, cid)]["outcome"][c] == "pass" for t in silent for cid in viol[t])
+        nums.put(f"cv.silent.{SHORT[c].lower()}", _frac(acc, n_silent), how, f"of them, accepted by {SHORT[c]}")
+    columns = [col for col, _, _ in cells[fams[0]]]
+    rag = NRTable.RAGGED
+    rows = [f"{tex(t)} & " + " & ".join(rag + tex(text) for _, text, _ in cells[t]) + " \\tabularnewline" for t in fams]
+    widths = (0.09, 0.2, 0.11, 0.12, 0.075, 0.075, 0.075, 0.09)  # with the family column and the separations, within the line
+    # Ragged-right columns (array's \arraybackslash keeps \\ the row's end), so that no header or requirement id is
+    # hyphenated in a narrow column; the body's cells carry their own \raggedright as well.
+    spec = "l" + "".join(f">{{\\raggedright\\arraybackslash}}p{{{w}\\linewidth}}" for w in widths)
+    # The header; the ledger names each column as written in the code.
+    head = "Family & " + " & ".join(tex(col).replace("u1", "\\texttt{u1}") for col in columns)
+    (out / "fresh_behaviours.tex").write_text(table(
+        f"What the invalid first-request (\\texttt{{u1}}) attempts of run \\texttt{{{tex(F['run_id'])}}} did, by family, a post hoc "
+        "reading under rule D19's labels: what the correction changed (the scenario files), which requirements the invalid "
+        "attempts break (with counts), whether C1 passes the family's reference, how many of C1's checks map to the retracted "
+        "requirement or to those every violator breaks (both model mappers), how many correction violators C1 and C3 accept "
+        "(--: the family has none), how many invalid attempts the base-commit tests alone accept, and the invalid attempts "
+        "whose only violated requirement is the regression norm (Regression only). " + marker(name), "tab:fresh-behaviours",
+        spec, head, rows,
+        size="\\scriptsize\\setlength{\\tabcolsep}{2pt}"))
 
 
 def fresh_tables(F: dict, led: SectionLedger, nums: Numbers, out: Path) -> None:
@@ -727,14 +1041,31 @@ def fresh_tables(F: dict, led: SectionLedger, nums: Numbers, out: Path) -> None:
         if dens != {lab[k]}:
             raise ValueError(f"{src}: independent_labeling.labels.{k} = {lab[k]} but the labeler's denominators are {dens}")
 
-    # (a) per family, the primary display
-    (out / "fresh_per_family.tex").write_text(fresh_per_family_table(
-        F, a, src, led, nums, name="fresh_per_family", label="tab:fresh-family", p="",
-        caption=f"Per-family false acceptance $\\cdot$ false rejection (accepted/invalid $\\cdot$ rejected/valid) on the fresh-agent "
-                f"stratum, run {run_tt}, the primary display (protocol \\S15.7). Each distinct graded patch counts once: {n_units} "
-                f"units; excluded by the reviewed audit: {excl_txt}. D19: rule-based label proposals ({inv} invalid, {val} valid); "
-                f"labeler: the independent labeler's verdicts, a second labeling ({lab['invalid']} invalid, {lab['valid']} valid). "
-                f"{NO_HUMAN} n/a: no invalid unit in that family under that labeling. {FOUR_FAMILIES}"))
+    def marker(table_: str) -> str:
+        return controlled_marker(a["n_families"], led, table_, src)
+
+    # (a) per family, the primary display (rule D19's labels), split into FA and FR; the second labeler's view apart
+    cells = _per_family_cells(F, a, src, led, nums, "fresh_per_family", "")
+    man, rows_ = F["m"], F["rows"]
+    unresolved = sum(r["outcome"] == "unresolved" for r in rows_)
+    led.add("fresh_per_family", "caption: harness; repeats; graded pairs; unresolved; units; invalid; valid",
+            f"{rows_[0]['harness_version']}; {man['repeats']}; {len(rows_)}; {unresolved}; {n_units}; {inv}; {val}",
+            f"{rsrc} harness_version, outcome (rows); {F['msrc']} repeats; {src} distinct_patches.n_distinct, conditions.*.false_acceptance.den, "
+            ".false_rejection.den")
+    (out / "fresh_per_family.tex").write_text(fresh_split_table(
+        F, cells, "rule", label="tab:fresh-family",
+        caption=f"Per-family false acceptance and false rejection on the fresh-agent stratum, the primary display (protocol "
+                f"\\S15.7), under rule D19's labels: {inv} invalid and {val} valid attempts, each distinct graded patch once "
+                f"({n_units} graded patches; excluded by the reviewed audit: {excl_txt}). Run {run_tt} graded every pair "
+                f"{man['repeats']} times under harness {tex(rows_[0]['harness_version'].split('/')[-1])} ({_int(len(rows_))} pairs, "
+                f"{unresolved} unresolved). n/a: the family has no attempt of that kind. The second labeler's view: "
+                f"Table~\\ref{{tab:fresh-family-labeler}}. " + marker("fresh_per_family")))
+    (out / "fresh_per_family_labeler.tex").write_text(fresh_split_table(
+        F, cells, "labeler", label="tab:fresh-family-labeler",
+        caption=f"Per-family false acceptance and false rejection on the fresh-agent stratum, run {run_tt}, under the second "
+                f"labeler: the independent labeler's verdicts (protocol \\S15.5; {lab['invalid']} invalid, {lab['valid']} valid "
+                f"attempts), which never change D19's labels. The labeler has no regression part. n/a: the family has no attempt of "
+                f"that kind under this labeling. Rule D19's view: Table~\\ref{{tab:fresh-family}}. " + marker("fresh_per_family_labeler")))
 
     # (a2) pooled rates
     rows = []
@@ -751,7 +1082,7 @@ def fresh_tables(F: dict, led: SectionLedger, nums: Numbers, out: Path) -> None:
             nums.put(f"{sh}.{m}.exact", _iv(x["exact95"]), f"{src} conditions.{c}.{key}.exact95")
             nums.put(f"{sh}.{m}.macro", _r2(x["macro"]), f"{src} conditions.{c}.{key}.macro")
         tn, infra = d["tasks_with_any_accepted_negative"], d["infrastructure"]
-        rows.append(f"{tex(COND_TEX[c])} & " + " & ".join(cells) + f" & {_signed(d['youden_j'])} & {tn['num']}/{tn['den']} & "
+        rows.append(f"{cond_cell(c)} & " + " & ".join(cells) + f" & {_signed(d['youden_j'])} & {tn['num']}/{tn['den']} & "
                     f"{infra['num']}/{infra['den']} \\\\")
         led.add("fresh_pooled", f"{c} youden_j; families with an accepted negative; infrastructure",
                 f"{d['youden_j']}; {tn['num']}/{tn['den']}; {infra['num']}/{infra['den']}",
@@ -760,16 +1091,16 @@ def fresh_tables(F: dict, led: SectionLedger, nums: Numbers, out: Path) -> None:
         nums.put(f"{sh}.famfa", f"{tn['num']}/{tn['den']}", f"{src} conditions.{c}.tasks_with_any_accepted_negative.num, .den")
         nums.put(f"{sh}.infra", f"{infra['num']}/{infra['den']}", f"{src} conditions.{c}.infrastructure.num, .den")
     (out / "fresh_pooled.tex").write_text(table(
-        f"Pooled rates on the fresh-agent stratum, run {run_tt}, D19 labels, each distinct graded patch once. {NO_HUMAN} Rate "
+        f"Pooled rates on the fresh-agent stratum, run {run_tt}, rule D19's labels, each distinct graded patch once. Rate "
         "(num/den), the exact binomial 95\\% interval (it ignores clustering by family; reference scale only) and the macro rate "
-        "(mean of the per-family rates). $J$ = (1$-$FR)$-$FA. Fam.\\ w/ FA: families with at least one accepted invalid unit. "
+        "(mean of the per-family rates). $J$ = (1$-$FR)$-$FA. Fam.\\ w/ FA: families with at least one accepted invalid attempt. "
         f"Infra: infrastructure outcomes. Cluster-bootstrap intervals are reported separately and are not inferential with "
-        f"{a['n_families']} families. {FOUR_FAMILIES}", "tab:fresh-pooled", "lrrrrrrrrr",
+        f"{a['n_families']} families. " + marker("fresh_pooled"), "tab:fresh-pooled", COND_P + "rrrrrrrrr",
         "Condition & FA & exact 95\\% & macro & FR & exact 95\\% & macro & $J$ & Fam.\\ w/ FA & Infra", rows,
         size="\\scriptsize\\setlength{\\tabcolsep}{3.5pt}"))
 
-    # (a3) the pre-specified paired comparisons
-    rows, floors1, floors2, ptwo = [], set(), set(), []
+    # (a3) the paired comparisons planned in protocol §15.7: a compact table for the main text, the full one for the appendix
+    rows, compact, floors1, floors2, ptwo = [], [], set(), set(), []
     for i, d in enumerate(a["comparisons"]):
         sp, fm = d["signflip"]["pooled"], d["signflip"]["family_mean"]
         floors1.add(sp["floor_one_sided"])
@@ -780,6 +1111,9 @@ def fresh_tables(F: dict, led: SectionLedger, nums: Numbers, out: Path) -> None:
         rows.append(f"{SHORT[d['a']]} & {SHORT[d['b']]} & {d['metric'].upper()} ({d['n_metric']}) & {_signed(d['difference'])} & "
                     + " & ".join(pfd) + f" & {disc['a_accepts_b_rejects']}/{disc['a_rejects_b_accepts']} & {_p(sp['p_greater'])} & "
                     f"{_p(sp['p_less'])} & {_p(sp['p_two_sided'])} & {_p(fm['p_two_sided'])} & {_p(sp['conditional_floor_one_sided'])} \\\\")
+        compact.append(f"{SHORT[d['a']]} & {SHORT[d['b']]} & {d['metric'].upper()} ({d['n_metric']}) & {_signed(d['difference'])} & "
+                       f"{disc['a_accepts_b_rejects']}/{disc['a_rejects_b_accepts']} & {_p(sp['p_greater'])} & {_p(sp['p_two_sided'])} & "
+                       f"{_p(sp['conditional_floor_one_sided'])} \\\\")
         led.add("fresh_comparisons", f"comparisons[{i}] {d['a']} - {d['b']} {d['metric']}: difference, n, per-family differences, "
                 "discordant, pooled p_greater / p_less / p_two_sided / conditional floor, family-mean p_two_sided",
                 f"{d['difference']}, {d['n_metric']}, {d['per_family_difference']}, {disc}, {sp['p_greater']} / {sp['p_less']} / "
@@ -809,14 +1143,25 @@ def fresh_tables(F: dict, led: SectionLedger, nums: Numbers, out: Path) -> None:
     led.add("fresh_comparisons", "unconditional floors one-sided / two-sided (caption); smallest two-sided p (caption)",
             f"{f1} / {f2}; {min(ptwo)}", f"{src} comparisons[*].signflip.pooled.floor_one_sided, .floor_two_sided, .p_two_sided")
     (out / "fresh_comparisons.tex").write_text(table(
-        f"The {len(a['comparisons'])} pre-specified paired comparisons on the same units, run {run_tt}, D19 labels. {NO_HUMAN} "
-        "Metric (n): FA over the invalid or FR over the valid units. A$-$B: pooled difference; then the per-family differences. "
+        # At most 60 words before the marker (restructure plan, finding 20; tests/test_make_tables_fresh.py).
+        f"The {len(a['comparisons'])} planned comparisons (protocol \\S15.7), run {run_tt}, rule D19's labels. A$-$B: pooled "
+        "difference over invalid (FA) or valid (FR) attempts; Disc.: A accepts \\& B rejects / the reverse; exact sign-flip $p$ "
+        f"over {a['n_families']} families ($p_{{>}}$: one-sided, A$>$B; 2-s.: two-sided), never below {_p(f1)} one-sided or "
+        f"{_p(f2)} two-sided; Floor: the one-sided bound given families with zero difference. Full: "
+        "Table~\\ref{tab:fresh-comparisons-full}. " + marker("fresh_comparisons"),
+        "tab:fresh-comparisons", "lllrrrrr", "A & B & Metric (n) & A$-$B & Disc. & $p_{>}$ & $p$ 2-s. & Floor", compact,
+        size="\\footnotesize"))
+    (out / "fresh_comparisons_full.tex").write_text(table(
+        f"The {len(a['comparisons'])} paired comparisons planned before grading (protocol \\S15.7) on the same attempts, run "
+        f"{run_tt}, rule D19's labels, in full. "
+        "Metric (n): FA over the invalid or FR over the valid attempts. A$-$B: pooled difference; then the per-family differences. "
         "Disc.: A accepts \\& B rejects / A rejects \\& B accepts. $p$: exact sign-flip randomization p-values over the "
         f"{a['n_families']} families, on the pooled statistic ($>$: A$>$B, $<$: A$<$B, both one-sided; 2-s.: two-sided) and, "
         f"last but one, two-sided on the family-mean statistic. With {a['n_families']} families no one-sided $p$ below {_p(f1)} "
         f"and no two-sided $p$ below {_p(f2)} can occur; Floor: the smallest one-sided $p$ attainable given the families whose "
-        f"difference is zero. The smallest two-sided $p$ here is {_p(min(ptwo))}. Short names: C1--C4 contracts (initial or "
-        f"full, plain or audited), B2 full-session LLM, B1 repository tests. {FOUR_FAMILIES}", "tab:fresh-comparisons",
+        f"difference is zero. The smallest two-sided $p$ here is {_p(min(ptwo))}. Short names: C1, C2 initial-only and C3, C4 "
+        "correction-aware contracts (plain or audited), B2 the session-LLM baseline, B1 repository tests. "
+        + marker("fresh_comparisons_full"), "tab:fresh-comparisons-full",
         "lllr" + "r" * len(fams) + "rrrrrr",
         "A & B & Metric (n) & A$-$B & " + " & ".join(tex(t) for t in fams) + " & Disc. & $p_{>}$ & $p_{<}$ & $p$ 2-s. & "
         "$p$ 2-s.\\ (mean) & Floor", rows, size="\\scriptsize\\setlength{\\tabcolsep}{4pt}"))
@@ -890,10 +1235,9 @@ def fresh_tables(F: dict, led: SectionLedger, nums: Numbers, out: Path) -> None:
         nums.put(f"unspec.{sh}", f"{usb['accepted']}/{usb['n']}", f"{src} by_negative_type.{c}.unspecified.accepted, .n")
     (out / "fresh_correction_violating.tex").write_text(table(
         f"\\texttt{{u1}} attempts (given the first user request only) that violate a requirement the reference contract introduces "
-        f"after it, by family, and how many of them each condition accepts (accepted/violating), run {run_tt}, D19 labels. "
-        f"{NO_HUMAN} No generator wrote these negatives: agents that were not told the correction produced them. Last column: the "
-        "invalid units whose only violated requirement is the regression norm (accepted/total); they violate no correction "
-        f"requirement. {FOUR_FAMILIES}", "tab:fresh-cv", "l" + "r" * (len(fams) + 2),
+        f"after it, by family, and how many of them each condition accepts (accepted/violating), run {run_tt}, rule D19's labels. "
+        "Last column: the invalid attempts whose only violated requirement is the regression norm (accepted/total); they violate "
+        "no correction requirement. " + marker("fresh_correction_violating"), "tab:fresh-cv", "l" + "r" * (len(fams) + 2),
         " & " + " & ".join(tex(t) for t in fams) + " & Pooled & Regression only", rows, size="\\footnotesize"))
 
     # (c) solve rates by configuration and variant
@@ -911,10 +1255,10 @@ def fresh_tables(F: dict, led: SectionLedger, nums: Numbers, out: Path) -> None:
         if sum(ended) != d["attempts"]:
             raise ValueError(f"{src}: fresh_attempts.by_configuration_variant.{key}.ended has a value other than finished, gave_up, error")
         dl = d["independent_label"]
-        rows.append(f"{cfg} & \\texttt{{{tex(var)}}} & D19 & {d['solved']}/{d['attempts']} & " +
+        rows.append(f"{cfg} & \\texttt{{{tex(var)}}} & {RULE_ROW} & {d['solved']}/{d['attempts']} & " +
                     " & ".join(f"{d['per_family'][t]['solved']}/{d['per_family'][t]['attempts']}" for t in fams) +
                     f" & {'/'.join(map(str, ended))} \\\\")
-        rows.append(" & & labeler & " + f"{dl['solved']}/{d['attempts']} & " +
+        rows.append(f" & & {LABELER_ROW} & " + f"{dl['solved']}/{d['attempts']} & " +
                     " & ".join(f"{dl['per_family'][t]['solved']}/{dl['per_family'][t]['attempts']}" for t in fams) + " & \\\\" +
                     ("" if key == sorted(bcv)[-1] else "\\addlinespace"))
         base = f"{src} fresh_attempts.by_configuration_variant.{key}"
@@ -939,12 +1283,13 @@ def fresh_tables(F: dict, led: SectionLedger, nums: Numbers, out: Path) -> None:
             nums.put(f"solve.{var}.{_fk(t)}", f"{sv}/{n}", f"{src} fresh_attempts.by_configuration_variant.*/{var}.per_family.{t} "
                      "(summed over the configurations)")
     (out / "fresh_solve_rates.tex").write_text(table(
-        f"Solve rates of the fresh attempts (protocol \\S15.4, estimand 1), run {run_tt}: solved/attempts per configuration (A: the "
-        "build session's default agent model; B: the smallest model tier the agent tool offers; same template, tools and budget) and "
-        "instruction (\\texttt{u1}: the first user request only; \\texttt{final}: with the correction added), pooled and per family. "
-        "D19: solved when D19 labels the attempt valid (reference checks and regression norm); labeler: when the independent labeler "
-        f"passes it. {NO_HUMAN} Every attempt counts; the excluded one ({excl_txt}) counts nowhere. Ended: finished/gave up/error. "
-        "The \\texttt{u1}--\\texttt{final} contrast measures the information in the instruction, not the agents' capability.",
+        f"Solve rates of the fresh attempts (protocol \\S15.4, estimand 1), run {run_tt}: solved/attempts per configuration "
+        "(configurations A and B use different models of one model family of one provider, with the same template, tools and "
+        "budget) and instruction (\\texttt{u1}: the first user request only; \\texttt{final}: with the correction added), pooled "
+        f"and per family. {RULE_ROW}: solved when D19 labels the attempt valid (reference checks and regression norm); "
+        f"{LABELER_ROW}: when the independent labeler passes it. Every analysed attempt counts; the excluded one ({excl_txt}) counts "
+        "nowhere. Ended: finished/gave up/error. The \\texttt{u1}--\\texttt{final} contrast measures the information in the "
+        "instruction, not the agents' capability. " + marker("fresh_solve_rates"),
         "tab:fresh-solve", "lll" + "r" * (len(fams) + 2),
         "Config. & Instruction & Labels & Solved & " + " & ".join(tex(t) for t in fams) + " & Ended", rows, size="\\footnotesize"))
 
@@ -982,12 +1327,12 @@ def fresh_tables(F: dict, led: SectionLedger, nums: Numbers, out: Path) -> None:
     (out / "fresh_sensitivity.tex").write_text(fresh_per_family_table(
         F, s, ssrc, led, nums, name="fresh_sensitivity", label="tab:fresh-sensitivity", p="sens.",
         caption=f"Sensitivity view of run {run_tt} (protocol \\S18.1): every attempt the automated audit flagged is excluded "
-                f"({here} beyond the primary analysis, plus the {already} excluded there), leaving {s_units} units (D19: {s_inv} "
+                f"({here} beyond the primary analysis, plus the {already} excluded there), leaving {s_units} graded patches (D19: {s_inv} "
                 f"invalid, {s_val} valid; labeler: {s_lab['invalid']} invalid, {s_lab['valid']} valid). Cells as in the per-family "
                 f"table: accepted/invalid $\\cdot$ rejected/valid. Correction-violating \\texttt{{u1}} attempts: "
                 f"{s_cv['correction_violating']}/{s_cv['attempts']}; C1 accepts {g['initial_plain']['accepted']}/{g['initial_plain']['n']}, "
                 f"C3 {g['full_plain']['accepted']}/{g['full_plain']['n']}. D19 and the labeler agree on {s_ag['agree']}/{s_ag['n_units']} "
-                f"units ($\\kappa$ = {_r2(s_ag['kappa'])}, model--model agreement). {NO_HUMAN} {FOUR_FAMILIES}"))
+                f"graded patches ($\\kappa$ = {_r2(s_ag['kappa'])}, model--model agreement). " + marker("fresh_sensitivity")))
 
     # (d2) the oracle-gated view (secondary)
     og = a["oracle_gated"]
@@ -1028,8 +1373,8 @@ def fresh_tables(F: dict, led: SectionLedger, nums: Numbers, out: Path) -> None:
         nums.put(f"{k}.k", sp["k"], f"{src} oracle_gated.comparisons[{i}].signflip.pooled.k", "families kept")
     (out / "fresh_oracle_gated.tex").write_text(table(
         f"Oracle-gated view of run {run_tt} (secondary, protocol \\S15.7): a verifier's cell of a family is dropped when the "
-        "verifier does not pass that family's reference solution, and the dropped cell's units are the lost yield (invalid/valid). "
-        f"D19 labels. {NO_HUMAN} Gated C1$-$C3: " + "; ".join(gl) + f". {FOUR_FAMILIES}", "tab:fresh-oracle", "lrrlrll",
+        "verifier does not pass that family's reference solution, and the dropped cell's attempts are the lost yield (invalid/valid). "
+        "Rule D19's labels. Gated C1$-$C3: " + "; ".join(gl) + ". " + marker("fresh_oracle_gated"), "tab:fresh-oracle", "lrrlrll",
         "Condition & Ref.\\ passes & Cells kept & Dropped & Lost yield & FA & FR", rows, size="\\footnotesize"))
 
     # (g) B1 split by the origin of its checks
@@ -1135,12 +1480,13 @@ def fresh_tables(F: dict, led: SectionLedger, nums: Numbers, out: Path) -> None:
     nums.put("sens.b1.base.fr", _frac(srec["fr_num"], srec["fr_den"]), f"{ssrc} b1_upstream_only.fr_num, .fr_den")
     nums.put("b1.base.fa.rate", _r2(rec["fa"]), f"{src} b1_upstream_only.fa")
     (out / "fresh_b1_split.tex").write_text(table(
-        f"Repository tests (B1) split by the origin of their checks, run {run_tt}, D19 labels. {NO_HUMAN} The B1 suite is the "
+        f"Repository tests (B1) split by the origin of their checks, run {run_tt}, rule D19's labels. The B1 suite is the "
         "reference state's tests; ``base-commit checks'' exist in the base commit's own tests, the others were added by the session "
-        "agent. ``Base-commit checks only'' scores a unit on those checks alone (post hoc, as in the pilot). Under D19 the base "
-        "commit's tests are the regression norm, so that view cannot reject a valid unit (by construction). Origin rows: valid units that B1 rejects and that fail "
+        "agent. ``Base-commit checks only'' scores an attempt on those checks alone (post hoc, as in the pilot). Under D19 the "
+        "base commit's tests are the regression norm, so that view cannot reject a valid attempt (by construction). Origin rows: "
+        "valid attempts that B1 rejects and that fail "
         f"at least one check of that origin. Sensitivity view (every flagged attempt excluded): FA {srec['fa_num']}/{srec['fa_den']}, "
-        f"FR {srec['fr_num']}/{srec['fr_den']} on base-commit checks only. {FOUR_FAMILIES}", "tab:fresh-b1", "l" + "r" * (len(fams) + 1),
+        f"FR {srec['fr_num']}/{srec['fr_den']} on base-commit checks only. " + marker("fresh_b1_split"), "tab:fresh-b1", "l" + "r" * (len(fams) + 1),
         " & " + " & ".join(tex(t) for t in fams) + " & Pooled", lines, size="\\footnotesize"))
 
     # (h) attempt cost and time
@@ -1210,11 +1556,11 @@ def fresh_tables(F: dict, led: SectionLedger, nums: Numbers, out: Path) -> None:
     nums.put("il.ref", f"{sum(r['pass'] for r in refs)}/{sum(r['n'] for r in refs)}",
              f"{src} independent_labeling.sanity.<task>.reference.pass, .n (summed)", "references the labeler passes")
     (out / "fresh_agreement.tex").write_text(table(
-        f"D19 against the independent labeler on the units of run {run_tt}, each distinct graded patch once: the primary view and the "
+        f"D19 against the independent labeler on the graded patches of run {run_tt}, each distinct graded patch once: the primary view and the "
         f"sensitivity view (every flagged attempt excluded). Both labelings are model proposals, so this is agreement between two model "
-        f"labelings, not reviewer agreement; no human labels exist. The labeler has no regression part, so the disagreements on units "
-        f"that D19 labels invalid through the regression norm alone are structural.", "tab:fresh-agree", "lrrrr",
-        f" & \\multicolumn{{2}}{{c}}{{Primary ({ag['n_units']} units)}} & \\multicolumn{{2}}{{c}}{{Sensitivity ({s_ag['n_units']} units)}} \\\\"
+        f"labelings, not reviewer agreement; no human labels exist. The labeler has no regression part, so the disagreements on attempts "
+        "that D19 labels invalid through the regression norm alone are structural. " + marker("fresh_agreement"), "tab:fresh-agree", "lrrrr",
+        f" & \\multicolumn{{2}}{{c}}{{Primary ({ag['n_units']} graded patches)}} & \\multicolumn{{2}}{{c}}{{Sensitivity ({s_ag['n_units']} graded patches)}} \\\\"
         "\\cmidrule(lr){2-3}\\cmidrule(lr){4-5} & labeler valid & labeler invalid & labeler valid & labeler invalid", rows,
         size="\\footnotesize"))
 
@@ -1222,7 +1568,7 @@ def fresh_tables(F: dict, led: SectionLedger, nums: Numbers, out: Path) -> None:
     il_lab = a["independent_labeling"]["candidates"]
     mark = lambda o: "\\checkmark" if o == "pass" else ("--" if o is None else "$\\times$")  # noqa: E731
     ntype = {"correction_violating": "corr.", "unspecified": "regr.", "": "--"}
-    hdr = "Unit & Cfg. & Instr. & D19 & Type & Lab. & " + " & ".join(SHORT[c] for c in ORDER)
+    hdr = "Attempt & Cfg. & Instr. & D19 & Type & Lab. & " + " & ".join(SHORT[c] for c in ORDER)
     body = []
     for t in fams:
         for cid in sorted(cid for (tt, cid) in units if tt == t):
@@ -1243,10 +1589,10 @@ def fresh_tables(F: dict, led: SectionLedger, nums: Numbers, out: Path) -> None:
     ncol = 6 + len(ORDER)
     (out / "fresh_outcome_matrix.tex").write_text(
         "\\begingroup\\scriptsize\n\\begin{longtable}{lllllc" + "c" * len(ORDER) + "}\n"
-        f"\\caption{{Outcome of every condition on every unit of run {run_tt} (\\checkmark{{}} pass, $\\times$ any non-pass outcome). "
+        f"\\caption{{Outcome of every condition on every attempt of run {run_tt} (\\checkmark{{}} pass, $\\times$ any non-pass outcome). "
         "Cfg.: configuration; Instr.: instruction; D19: the primary label; Type: corr.\\ correction-violating, regr.\\ invalid through "
-        f"the regression norm only; Lab.: the independent labeler's verdict. {NO_HUMAN} The excluded attempt is listed last; it was "
-        "graded and counts in no rate.}\\label{tab:fresh-matrix}\\\\\n"
+        f"the regression norm only; Lab.: the independent labeler's verdict. The excluded attempt is listed last; it was "
+        "graded and counts in no rate. " + marker("fresh_outcome_matrix") + "}\\label{tab:fresh-matrix}\\\\\n"
         f"\\toprule {hdr} \\\\\\midrule\n\\endfirsthead\n\\toprule {hdr} \\\\\\midrule\n\\endhead\n"
         f"\\midrule\\multicolumn{{{ncol}}}{{r}}{{continued}} \\\\\n\\endfoot\n\\bottomrule\n\\endlastfoot\n"
         + "\n".join(body) + "\n\\midrule\n" + "\n".join(exrows) + "\n\\end{longtable}\n\\endgroup\n")
@@ -1279,8 +1625,11 @@ def fresh_tables(F: dict, led: SectionLedger, nums: Numbers, out: Path) -> None:
     (out / "fresh_bootstrap.tex").write_text(table(
         f"\\textbf{{Not inferential.}} Cluster-bootstrap 95\\% intervals over the {bmeta['n_families']} task families of run {run_tt} "
         "(fewer than 10 families, protocol \\S15.7), for the pooled rates (top) and the paired differences (bottom), D19 labels; "
-        f"$^{{*}}$: degenerate, every resample gives the same value. {NO_HUMAN}", "tab:fresh-boot", "lll",
+        "$^{*}$: degenerate, every resample gives the same value. " + marker("fresh_bootstrap"), "tab:fresh-boot", "lll",
         "Pooled rate & FA & FR", rows, size="\\footnotesize"))
+
+    # (l) the behaviours behind the violators, by family (restructure plan, part 6, Tab. 4), from the keys put above
+    fresh_behaviours(F, led, nums, out, units=units, viol=viol, unspec=unspec, violated=violated, marker=marker)
 
 
 def regrade_table(regrade: Path, led: SectionLedger, nums: Numbers, out: Path) -> None:
@@ -1353,6 +1702,498 @@ def regrade_table(regrade: Path, led: SectionLedger, nums: Numbers, out: Path) -
         " & " + " & ".join(c["run"] for c in cols), rows, size="\\footnotesize"))
 
 
+# -- the construction pilot's numbers for the prose (--pilot-numbers; restructure plan, parts 5.2 and 5.4) ---------------
+# Macros \plv{key} for the text of the pilot section and its appendix: the frozen run's analysis, its comparison files
+# (scripts/compare_runs.py), its results, the B1 check-origin files of the tasks, the verifier specs, and the exploratory
+# re-analysis and planning simulation of D49. No pilot table is written or changed.
+
+def pilot_inputs(run: Path) -> dict:
+    """Read the frozen pilot run and the records its numbers join with; the exploratory re-analysis is the directory
+    results/analyses/<run>-exploratory that scripts/exploratory_reanalysis.py writes."""
+    run = run.resolve()
+    exp = ROOT / "results" / "analyses" / f"{run.name}-exploratory"
+    for p in (run / "analysis.json", run / "manifest.json", run / "results.jsonl", exp / "analysis.json",
+              exp / "planning_simulation.json"):
+        if not p.is_file():
+            raise ValueError(f"--pilot-numbers: {rel(p)} does not exist")
+    a = json.loads((run / "analysis.json").read_text())
+    if "automated pilot" not in a["meta"]["label_policy"]:
+        raise ValueError(f"{rel(run / 'analysis.json')}: label policy {a['meta']['label_policy']!r}; the text calls every label a "
+                         "model proposal")
+    e = json.loads((exp / "analysis.json").read_text())
+    if e["meta"]["run_id"] != json.loads((run / "manifest.json").read_text())["run_id"]:
+        raise ValueError(f"{rel(exp / 'analysis.json')}: the exploratory re-analysis is not of {run.name}")
+    return {"a": a, "m": json.loads((run / "manifest.json").read_text()), "run": run,
+            "rows": [json.loads(x) for x in (run / "results.jsonl").read_text().split("\n") if x.strip()],
+            "e": e, "plan": json.loads((exp / "planning_simulation.json").read_text()),
+            "compares": [(p, json.loads(p.read_text())) for p in sorted(run.glob("compare_*.json"))],
+            "src": rel(run / "analysis.json"), "msrc": rel(run / "manifest.json"), "rsrc": rel(run / "results.jsonl"),
+            "esrc": rel(exp / "analysis.json"), "psrc": rel(exp / "planning_simulation.json")}
+
+
+def pilot_numbers(P: dict, led: SectionLedger, nums: Numbers) -> None:
+    a, m, rows, e, plan = P["a"], P["m"], P["rows"], P["e"], P["plan"]
+    src, msrc, rsrc, esrc, psrc = P["src"], P["msrc"], P["rsrc"], P["esrc"], P["psrc"]
+    for p in (src, msrc, rsrc, esrc, psrc):
+        led.add("inputs", f"{p} sha256", hashlib.sha256((ROOT / p).read_bytes()).hexdigest(), p)
+    fams = sorted(a["per_task"])
+    conds = [c for c, _ in ordered(a["conditions"])]
+    if conds != ORDER or a["n_families"] != len(fams):
+        raise ValueError(f"{src}: conditions {conds} and {a['n_families']} families; expected the six conditions of the protocol")
+    # The run.
+    oc = Counter(r["outcome"] for r in rows)
+    harness = sorted({r["harness_version"] for r in rows})
+    if len(harness) != 1 or a["meta"]["n_results"] != len(rows):
+        raise ValueError(f"{rsrc}: harness versions {harness}, {len(rows)} rows against meta.n_results {a['meta']['n_results']}")
+    nums.put("run", tex(m["run_id"]), f"{msrc} run_id")
+    nums.put("run.pairs", _int(len(rows)), f"{rsrc} (rows; = {src} meta.n_results)", "graded pairs")
+    nums.put("run.harness", harness[0].split("/")[-1], f"{rsrc} harness_version (one value in every row)")
+    nums.put("run.revision", m["code_revision"][:7], f"{msrc} code_revision")
+    nums.put("run.date", m["started_at"][:10], f"{msrc} started_at")
+    nums.put("run.started", m["started_at"][11:19], f"{msrc} started_at", "UTC")
+    nums.put("run.finished", m["finished_at"][11:19], f"{msrc} finished_at", "UTC")
+    nums.put_count("run.repeats", m["repeats"], f"{msrc} repeats")
+    nums.put("run.infrastructure", sum(v for k, v in oc.items() if k not in ("pass", "task_failure")),
+             f"{rsrc} outcome (count of any outcome but pass and task_failure)", "infrastructure or unresolved outcomes")
+    nums.put_count("run.families", len(fams), f"{src} n_families")
+    nums.put_count("run.conditions", len(conds), f"{src} conditions (count)")
+    per_pair = Counter((r["task_id"], r["verifier_id"]) for r in rows)
+    if len(set(per_pair.values())) != 1:
+        raise ValueError(f"{rsrc}: the verifiers of the families grade different numbers of candidates")
+    nums.put_count("run.candidates", next(iter(per_pair.values())), f"{rsrc} rows per (task_id, verifier_id)",
+                   "candidates per family: the held-out pool, the reference and the no-op")
+    nums.put("checks.results", _int(sum(len(r["checks"]) for r in rows)), f"{rsrc} checks[] (summed over the rows)",
+             "check results of the run")
+    # Labels and the review queue.
+    cn = {k: sum(d["counts"].get(k, 0) for d in a["labels"].values()) for k in ("valid", "invalid", "ambiguous", "unlabeled")}
+    for k, v in cn.items():
+        nums.put_count(f"labels.{k}", v, f"{src} labels.<task>.counts.{k} (summed)", f"held-out candidates labeled {k} by D19")
+    nums.put_count("heldout", sum(cn.values()), f"{src} labels.<task>.counts (summed)", "held-out candidates")
+    queued = sum(len(d["review_queue"]) for d in a["labels"].values())
+    nums.put_count("queue", queued, f"{src} labels.<task>.review_queue (lengths summed)", "candidates queued for human review")
+    nums.put_count("queue.disputed", queued - cn["ambiguous"] - cn["unlabeled"], f"{src} labels.<task>.review_queue, .counts",
+             "queued candidates with a label the independent construction check disputes")
+    # Rates per condition, pooled and per family; comparisons.
+    for c in ORDER:
+        d, sh = a["conditions"][c], SHORT[c].lower()
+        for mk, key in (("fa", "false_acceptance"), ("fr", "false_rejection")):
+            x = d[key]
+            nums.put(f"{sh}.{mk}", _frac(x["num"], x["den"]), f"{src} conditions.{c}.{key}.num, .den")
+            nums.put(f"{sh}.{mk}.rate", _r2(x["rate"]), f"{src} conditions.{c}.{key}.rate")
+            nums.put(f"{sh}.{mk}.macro", _r2(x["macro"]), f"{src} conditions.{c}.{key}.macro", "mean of the per-family rates")
+            nums.put(f"{sh}.{mk}.exact.upper", _r2((x.get("exact95") or [None, None])[1]), f"{src} conditions.{c}.{key}.exact95[1]",
+                     "upper bound of the exact binomial 95% interval")
+        nums.put(f"{sh}.j", _signed(d["youden_j"]), f"{src} conditions.{c}.youden_j")
+        tn = d["tasks_with_any_accepted_negative"]
+        nums.put(f"{sh}.famfa", f"{tn['num']}/{tn['den']}", f"{src} conditions.{c}.tasks_with_any_accepted_negative")
+        for t in fams:
+            rs = a["per_task"][t][c]
+            for mk, lab, acc in (("fa", "invalid", True), ("fr", "valid", False)):
+                sub = [r for r in rs if r["label"] == lab]
+                k = sum((r["outcome"] == "pass") == acc for r in sub)
+                nums.put(f"{sh}.{_fk(t)}.{mk}", _frac(k, len(sub)), f"{src} per_task.{t}.{c}[] (label {lab}; outcome)")
+            for name, origin, lab in (("nm", "constructed_near_miss", "invalid"), ("nm.amb", "constructed_near_miss", "ambiguous"),
+                                      ("pre", "observed_pre_correction", None)):
+                sub = [r for r in rs if r["origin"] == origin and (lab is None or r["label"] == lab)]
+                if sub:
+                    nums.put(f"{name}.{_fk(t)}.{sh}", _frac(sum(r["outcome"] == "pass" for r in sub), len(sub)),
+                             f"{src} per_task.{t}.{c}[] (origin {origin}" + (f", label {lab}" if lab else "") + "; outcome pass)")
+        bn = a["by_negative_type"][c]
+        nums.put(f"cv.{sh}", f"{bn['correction_violating']['accepted']}/{bn['correction_violating']['n']}",
+                 f"{src} by_negative_type.{c}.correction_violating", "correction-violating invalid candidates accepted")
+        pre = [r for t in fams for r in a["per_task"][t][c] if r["origin"] == "observed_pre_correction" and r["label"] == "invalid"]
+        nums.put(f"pre.{sh}", _frac(sum(r["outcome"] == "pass" for r in pre), len(pre)),
+                 f"{src} per_task.*.{c}[] (origin observed_pre_correction, label invalid; outcome pass)",
+                 "invalid pre-correction states accepted")
+    bnt = a["by_negative_type"]["initial_plain"]
+    nums.put_count("neg.cv.n", bnt["correction_violating"]["n"], f"{src} by_negative_type.initial_plain.correction_violating.n",
+             "invalid candidates that violate a correction requirement")
+    nums.put_count("neg.iv.n", bnt.get("initial_violating", {"n": 0})["n"], f"{src} by_negative_type.initial_plain.initial_violating.n",
+             "invalid candidates that violate first-request requirements only")
+    nums.put_count("pre.invalid", sum(r["origin"] == "observed_pre_correction" and r["label"] == "invalid"
+                                for t in fams for r in a["per_task"][t]["initial_plain"]),
+             f"{src} per_task.*.initial_plain[] (origin observed_pre_correction, label invalid)", "invalid pre-correction states")
+    for i, d in enumerate(a["comparisons"]):
+        k, base = f"cmp.{SHORT[d['a']].lower()}-{SHORT[d['b']].lower()}.{d['metric']}", f"{src} comparisons[{i}]"
+        nums.put(f"{k}.diff", _signed(d["difference"]), f"{base}.difference")
+        nums.put(f"{k}.n", d["n_metric"], f"{base}.n_metric")
+        nums.put(f"{k}.disc.ab", d["discordant"]["a_accepts_b_rejects"], f"{base}.discordant.a_accepts_b_rejects")
+        nums.put(f"{k}.disc.ba", d["discordant"]["a_rejects_b_accepts"], f"{base}.discordant.a_rejects_b_accepts")
+    # Exploratory views of the run (protocol v0.3 to v0.5): near misses by label status, construction-intent labels, the
+    # independent construction checks' labels, and the pool without duplicates.
+    xt = a["near_miss_crosstab"]
+    n_conf, n_amb = xt["initial_plain"]["confirmed_invalid"]["n"], xt["initial_plain"]["ambiguous"]["n"]
+    nums.put_count("nm.n", n_conf + n_amb, f"{src} near_miss_crosstab.initial_plain (confirmed_invalid.n + ambiguous.n)", "invalid-by-construction near misses")
+    nums.put_count("nm.confirmed", n_conf, f"{src} near_miss_crosstab.initial_plain.confirmed_invalid.n", "confirmed invalid by D19")
+    nums.put_count("nm.ambiguous", n_amb, f"{src} near_miss_crosstab.initial_plain.ambiguous.n", "left ambiguous by D19")
+    # The near misses whose D19 label records more than one violated requirement (the held-out pool's description).
+    multi = [len(c["violated"]) for d in a["labels"].values() for c in d["candidates"]
+             if c["origin"] == "constructed_near_miss" and len(c["violated"]) > 1]
+    if not multi:
+        raise ValueError(f"{src}: no near miss's label records more than one violated requirement")
+    how = f"{src} labels.<task>.candidates[] (origin constructed_near_miss; violated, counted)"
+    nums.put_count("nm.multi.n", len(multi), how, "near misses whose D19 label records more than one violated requirement")
+    nums.put("nm.multi.min", min(multi), how, "the fewest violated requirements among them")
+    nums.put("nm.multi.max", max(multi), how, "the most violated requirements among them")
+    for c in ORDER:
+        sh, x = SHORT[c].lower(), xt[c]
+        nums.put(f"nm.conf.{sh}", f"{x['confirmed_invalid']['accepted']}/{x['confirmed_invalid']['n']}", f"{src} near_miss_crosstab.{c}.confirmed_invalid")
+        nums.put(f"nm.amb.{sh}", f"{x['ambiguous']['accepted']}/{x['ambiguous']['n']}", f"{src} near_miss_crosstab.{c}.ambiguous")
+        for name, view in (("intent", "sensitivity_construction_labels"), ("checks", "sensitivity_check_labels"),
+                           ("nodup", "sensitivity_without_duplicates")):
+            v = a[view][c]
+            for mk in ("fa", "fr"):
+                nums.put(f"{name}.{sh}.{mk}", _frac(v[f"{mk}_num"], v[f"{mk}_den"]), f"{src} {view}.{c}.{mk}_num, .{mk}_den")
+    nums.put_count("duplicates", len(a["duplicates"]), f"{src} duplicates (count)", "held-out candidates that duplicate another")
+    # B1 by the origin of its checks.
+    b1 = a["b1_upstream_only"]
+    nums.put("b1.base.fa", _frac(b1["fa_num"], b1["fa_den"]), f"{src} b1_upstream_only.fa_num, .fa_den")
+    nums.put("b1.base.fr", _frac(b1["fr_num"], b1["fr_den"]), f"{src} b1_upstream_only.fr_num, .fr_den")
+    added, fr_added, fr_base = [], 0, 0
+    labels = {(t, r["candidate"]): r["label"] for t in fams for r in a["per_task"][t]["repo_tests"]}
+    for t in fams:
+        up_path = ROOT / "tasks" / t / "verifiers" / "repo_tests" / "upstream_check_ids.json"
+        up = set(json.loads(up_path.read_text())["upstream_check_ids"])
+        if len(up) != b1["n_checks"][t]:
+            raise ValueError(f"{rel(up_path)}: {len(up)} upstream checks, {src} b1_upstream_only.n_checks.{t} = {b1['n_checks'][t]}")
+        spec, _ = _spec(t, "repo_tests")
+        added.append(len(spec["checks"]) - len(up))
+        for r in rows:
+            if r["task_id"] == t and r["verifier_id"] == "repo_tests" and labels.get((t, r["candidate_id"])) == "valid" \
+                    and r["outcome"] != "pass":
+                bad = [ch["check_id"] for ch in r["checks"] if ch["status"] != "passed"]
+                fr_added += any(x not in up for x in bad)
+                fr_base += any(x in up for x in bad)
+    how = (f"{rsrc} (repo_tests rows of valid candidates: outcome; checks[].status) and tasks/<task>/verifiers/repo_tests/"
+           "upstream_check_ids.json; labels from per_task")
+    nums.put_count("b1.fr.added", fr_added, how, "B1 false rejections failing a check the session agent added")
+    nums.put_count("b1.fr.base", fr_base, how, "B1 false rejections failing a check of the base commit's tests")
+    nums.put("b1.checks.added.min", min(added), "tasks/<task>/verifiers/repo_tests/spec.json checks (count) less "
+             "upstream_check_ids.json (count), minimum over the families", "checks the session agent added")
+    nums.put("b1.checks.added.max", max(added), "the same, maximum over the families")
+    # The audit: audited verifiers identical to their plain counterparts, and the held-out outcomes it changed.
+    n_aud, same, outcomes, changed = 0, 0, 0, 0
+    for t in fams:
+        for plain, aud in (("initial_plain", "initial_audited"), ("full_plain", "full_audited")):
+            sp, _ = _spec(t, plain)
+            sa, _ = _spec(t, aud)
+            n_aud += 1
+            if sa["content_sha256"] == sp["content_sha256"]:
+                same += 1
+                continue
+            po = {r["candidate"]: r["outcome"] == "pass" for r in a["per_task"][t][plain]}
+            ao = {r["candidate"]: r["outcome"] == "pass" for r in a["per_task"][t][aud]}
+            if po.keys() != ao.keys():
+                raise ValueError(f"{src}: per_task.{t}: {plain} and {aud} graded different held-out candidates")
+            outcomes += len(ao)
+            changed += sum(po[cid] != ao[cid] for cid in ao)
+    how = f"tasks/<task>/verifiers/<plain|audited>/spec.json content_sha256; {src} per_task.<task>.<condition>[].outcome"
+    nums.put_count("audit.verifiers", n_aud, how, "audited verifiers (C2, C4)")
+    nums.put_count("audit.identical", same, how, "audited verifiers identical to their plain counterparts")
+    nums.put_count("audit.revised", n_aud - same, how, "audited verifiers the audit revised")
+    nums.put("audit.outcomes", outcomes, how, "held-out outcomes of the revised verifiers")
+    nums.put("audit.changed", _frac(changed, outcomes), how, "held-out outcomes the audit changed, of those")
+    nums.put_count("audit.changed.n", changed, how)
+    # Contract recovery and the mappers' agreement.
+    kap = [d["kappa"] for x in a["mapping_agreement"].values() for d in x.values() if d.get("kappa") is not None]
+    nums.put("kappa.min", _r2(min(kap)), f"{src} mapping_agreement.<task>.<contract>.kappa (minimum)", "agreement of the two model mappers")
+    nums.put("kappa.max", _r2(max(kap)), f"{src} mapping_agreement.<task>.<contract>.kappa (maximum)")
+    for v in ("initial_only", "full_session"):
+        covs = [a["coverage"][t]["variants"][v]["coverage"] for t in fams]
+        vk = v.split("_")[0]
+        nums.put(f"coverage.{vk}.min", _r2(min(covs)), f"{src} coverage.<task>.variants.{v}.coverage (minimum)")
+        nums.put(f"coverage.{vk}.max", _r2(max(covs)), f"{src} coverage.<task>.variants.{v}.coverage (maximum)")
+        for t in fams:
+            d, n_ref = a["coverage"][t]["variants"][v], len(a["coverage"][t]["reference_scored"])
+            base = f"{src} coverage.{t}.variants.{v}"
+            nums.put(f"cov.{_fk(t)}.{vk}", _r2(d["coverage"]), f"{base}.coverage")
+            nums.put(f"cov.{_fk(t)}.{vk}.covered", f"{len(d['covered'])}/{n_ref}", f"{base}.covered; coverage.{t}.reference_scored")
+            nums.put(f"cov.{_fk(t)}.{vk}.missing", len(d["missing"]), f"{base}.missing (count)")
+            nums.put(f"cov.{_fk(t)}.{vk}.contradicting", len(d["contradicting"]), f"{base}.contradicting (count)")
+            nums.put(f"cov.{_fk(t)}.{vk}.scored", d["n_recovered_scored"], f"{base}.n_recovered_scored")
+    # Harness reliability: the superseded runs against this one (scripts/compare_runs.py).
+    for p, d in P["compares"]:
+        if d["new_run"] != m["run_id"]:
+            raise ValueError(f"{rel(p)}: new_run {d['new_run']}, expected {m['run_id']}")
+        k, n = f"rel.{d['old_run'].removeprefix('pilot-')}", d["pairs_same_verifier"]
+        ch = d.get("changed_verifier_pairs", [])
+        ch_same = sum((c["old"] == "pass") == (c["new"] == "pass") for c in ch)
+        nums.put(f"{k}.both", d["pairs_in_both"], f"{rel(p)} pairs_in_both", "pairs graded in both runs")
+        nums.put(f"{k}.same", n, f"{rel(p)} pairs_same_verifier", "of them, with an unchanged verifier")
+        nums.put(f"{k}.changed", d["pairs_changed_verifier"], f"{rel(p)} pairs_changed_verifier")
+        nums.put(f"{k}.reward", _frac(n - len(d["reward_discordant"]), n), f"{rel(p)} pairs_same_verifier, reward_discordant (count)")
+        nums.put(f"{k}.outcome", _frac(n - len(d["outcome_discordant"]), n), f"{rel(p)} pairs_same_verifier, outcome_discordant (count)")
+        nums.put(f"{k}.changed.agree", _frac(ch_same, len(ch)), f"{rel(p)} changed_verifier_pairs[] (old, new: pass or not)",
+                 "changed-verifier pairs with the same reward")
+    # D49: the exploratory sign-flip tests, the B2 equivalence tests and the draft precision plan.
+    for name, d in e["paired_comparisons"]["comparisons"].items():
+        ca, cb = name.split("_vs_")
+        for mk in ("fa", "fr"):
+            x, k = d[mk], f"signflip.{SHORT[ca].lower()}-{SHORT[cb].lower()}.{mk}"
+            sp, base = x["signflip"]["pooled"], f"{esrc} paired_comparisons.comparisons.{name}.{mk}"
+            nums.put(f"{k}.diff", _signed(x["pooled_difference"]), f"{base}.pooled_difference")
+            nums.put(f"{k}.p1", _p(sp["p_greater"]), f"{base}.signflip.pooled.p_greater", "one-sided p, A > B")
+            nums.put(f"{k}.p2", _p(sp["p_two_sided"]), f"{base}.signflip.pooled.p_two_sided")
+            nums.put(f"{k}.floor", _p(sp["conditional_floor_one_sided"]), f"{base}.signflip.pooled.conditional_floor_one_sided")
+    eq = e["b2_equivalence"]
+    tost = [y["tost"][stat]["p_tost"] for x in eq["comparisons"].values() for lab in x.values() for y in lab.values()
+            for stat in ("pooled", "family_mean")]
+    nums.put("tost.min", _p(min(tost)), f"{esrc} b2_equivalence.comparisons.*.*.*.tost.{{pooled,family_mean}}.p_tost (minimum)",
+             "the smallest equivalence-test p")
+    nums.put("tost.margin", _r2(eq["margin"]), f"{esrc} b2_equivalence.margin")
+    nums.put("tost.alpha", _p(eq["alpha_one_sided"]), f"{esrc} b2_equivalence.alpha_one_sided")
+    # D49's scenario of the draft precision plan: one natural negative per family, a difference of 20 points, the middle
+    # between-family spread; the power at 30 families, the natural arm's family cap.
+    fc, neg, delta, tau = plan["family_counts"], "n_neg=1", "delta=20pp", "tau=mid"
+    cell, base = fc["min_families"][neg][delta][tau], f"{psrc} family_counts"
+    nums.put("plan.families", cell["power80"], f"{base}.min_families.{neg}.{delta}.{tau}.power80",
+             "families with one natural negative each for 80% power")
+    nums.put("plan.delta", f"{int(re.fullmatch(r'delta=(\d+)pp', delta).group(1)) / 100:.2f}",
+             f"{base}.min_families: the scenario key {delta}", "the false-acceptance difference planned for")
+    nums.put("plan.power.k30", _r2(fc["power"][neg][delta][tau]["K=30"]), f"{base}.power.{neg}.{delta}.{tau}.K=30",
+             "power with 30 families")
+    nums.put("plan.alpha", _p(fc["alpha_one_sided"]), f"{base}.alpha_one_sided")
+
+
+# -- the design's constants and the protocol's history (--design; restructure plan, parts 3 and 5.2) ---------------------
+# paper/design_constants.json lists each constant with its value and the checks that tie the value to its source: a quote
+# that must occur in the cited file and hold the value, a pattern of the code whose captured value gives it, a count of
+# files, or a field of recorded JSON files reduced to one value. The protocol's versions are recomputed from the git
+# objects of their commits (v0.1 to v0.5) or from byte prefixes of the current protocol (v0.6 on), and each hash and hash
+# time must be the one the decision log records. Nothing is written if a check fails.
+
+DESIGN = ROOT / "paper" / "design_constants.json"
+DESIGN_DIR = "design"  # paper/generated/design/ and paper/evidence_ledger_design.md
+HASH_DIGITS = 8  # the hex digits of a protocol version's sha256 that the text and the amendments table show
+_NUMBER_WORD = {w: i for i, w in enumerate(COUNT_WORDS)} | {"thirty": 30, "forty": 40, "fifty": 50, "hundred": 100}
+_COMPUTE = {
+    "int": lambda g: str(int(float(g))),
+    "mib_to_gib": lambda g: f"{int(g) / 1024:g}",
+    "alpha_percent": lambda g: f"{round((1 - float(g)) * 100, 6):g}",  # a significance level alpha as a confidence level
+    "as_is": lambda g: g,
+}
+
+
+def _norm_ws(s: str) -> str:
+    return " ".join(s.split())
+
+
+def _numbers_in(text: str) -> set:
+    """The numbers a text states, in digits (with thousands separators) or in words, as exact decimals."""
+    from decimal import Decimal
+    out = {Decimal(x.replace(",", "")) for x in re.findall(r"(?<![\w.])\d[\d,]*(?:\.\d+)?", text)}
+    out |= {Decimal(_NUMBER_WORD[w.lower()]) for w in re.findall(r"[A-Za-z]+", text) if w.lower() in _NUMBER_WORD}
+    return out
+
+
+def _states(value: str, quote: str) -> bool:
+    """Whether ``quote`` states ``value``: the same number (``2000`` in "2,000", ``3`` in "three"), or else the value's
+    text as a whole token."""
+    from decimal import Decimal, InvalidOperation
+    try:
+        return Decimal(value) in _numbers_in(quote)
+    except InvalidOperation:  # a date or a time: not part of a longer number (2026-11-21T17:42:36Z states both)
+        return re.search(r"(?<![0-9:.])" + re.escape(value) + r"(?![0-9:])", quote) is not None
+
+
+def _iso(v: str) -> datetime:
+    t = datetime.fromisoformat(v)  # Python 3.11 on reads a trailing Z
+    return t.astimezone(UTC) if t.tzinfo else t.replace(tzinfo=UTC)
+
+
+def _json_values(doc: object, path: str) -> list:
+    """The values at a dot path, where ``[*]`` takes every item of a list (``attempts[*].ended_at``)."""
+    cur = [doc]
+    for part in path.split("."):
+        name, star = (part[:-3], True) if part.endswith("[*]") else (part, False)
+        nxt = []
+        for x in cur:
+            if not isinstance(x, dict) or name not in x:
+                raise KeyError(path)
+            v = x[name]
+            nxt += (v if isinstance(v, list) else [v]) if star else [v]
+        cur = nxt
+    return cur
+
+
+class Design:
+    """paper/design_constants.json, read and checked. ``protocol``: the versions with their recomputed hashes."""
+
+    def __init__(self, path: Path) -> None:
+        self.path, self.doc = path, json.loads(path.read_text())
+        self.src = rel(path)
+        self.protocol: dict[str, dict] = {}
+
+    def _source_text(self, source: str) -> str:
+        p = ROOT / source
+        if not p.is_file():
+            raise ValueError(f"{self.src}: source {source} does not exist")
+        return p.read_text(encoding="utf-8")
+
+    def check(self, c: dict, ck: dict) -> str:
+        """Check one constant against one of its checks; returns how the value was found, for the ledger."""
+        key, value, source = c["key"], str(c["value"]), ck["source"]
+        if "quote" in ck:
+            q = _norm_ws(ck["quote"])
+            if q not in _norm_ws(self._source_text(source)):
+                raise ValueError(f"{self.src}: {key}: the quote {q[:60]!r} does not occur in {source}")
+            if not _states(value, q):
+                raise ValueError(f"{self.src}: {key}: its quote does not state the value {value!r}")
+            return f'{source}: "{q}"'
+        if "regex" in ck:
+            hits = re.findall(ck["regex"], self._source_text(source))
+            if len(hits) != 1:
+                raise ValueError(f"{self.src}: {key}: the pattern matches {len(hits)} times in {source}, not once")
+            got = _COMPUTE[ck.get("compute", "as_is")](hits[0])
+            if got != value:
+                raise ValueError(f"{self.src}: {key} = {value!r}, but {source} gives {got!r}")
+            return f"{source}: /{ck['regex']}/ -> {hits[0]}" + (f" ({ck['compute']})" if ck.get("compute") else "")
+        if "count" in ck:
+            files = sorted(p for p in ROOT.glob(ck["count"]) if p.is_file())
+            if str(len(files)) != value:
+                raise ValueError(f"{self.src}: {key} = {value!r}, but {len(files)} files match {ck['count']}")
+            return f"{ck['count']} (files counted: {len(files)})"
+        if "json" in ck:
+            files = sorted(ROOT.glob(source))
+            if not files:
+                raise ValueError(f"{self.src}: {key}: no file matches {source}")
+            vals = [v for p in files for v in _json_values(json.loads(p.read_text()), ck["json"])]
+            got = self._reduce(key, vals, ck.get("reduce", "one"), ck.get("format", "str"))
+            if got != value:
+                raise ValueError(f"{self.src}: {key} = {value!r}, but {source} {ck['json']} gives {got!r}")
+            return f"{source} {ck['json']} ({ck.get('reduce', 'one')}, {len(files)} file(s))"
+        raise ValueError(f"{self.src}: {key}: a check needs one of quote, regex, count or json")
+
+    def _reduce(self, key: str, vals: list, how: str, fmt: str) -> str:
+        if how.startswith(("count_after:", "count_before:")):
+            ref = how.split(":", 1)[1]
+            t = _iso(self.protocol[ref.removeprefix("@protocol.v")]["hashed_at"]) if ref.startswith("@protocol.v") else _iso(ref)
+            after = how.startswith("count_after:")
+            return str(sum((_iso(v) > t) if after else (_iso(v) < t) for v in vals))
+        if how == "pow2":
+            if len(set(vals)) != 1:
+                raise ValueError(f"{self.src}: {key}: the field holds {sorted(set(vals))}, not one value")
+            return str(2 ** int(vals[0]))
+        if how == "span_minutes":
+            ts = sorted(_iso(v) for v in vals)
+            return str(round((ts[-1] - ts[0]).total_seconds() / 60))
+        if how in ("min", "max"):
+            v = (min if how == "min" else max)(vals, key=lambda x: _iso(x) if fmt.startswith(("time", "date")) else x)
+        elif how == "one":
+            if len(set(map(str, vals))) != 1:
+                raise ValueError(f"{self.src}: {key}: the field holds {sorted(set(map(str, vals)))}, not one value")
+            v = vals[0]
+        else:
+            raise ValueError(f"{self.src}: {key}: unknown reduction {how!r}")
+        if fmt == "time":
+            return _iso(v).strftime("%H:%M:%S")
+        if fmt == "time.1":  # to the tenth of a second, rounded
+            t = _iso(v) + timedelta(microseconds=50000)
+            return t.strftime("%H:%M:%S") + f".{t.microsecond // 100000}"
+        if fmt == "date":
+            return _iso(v).strftime("%Y-%m-%d")
+        if fmt == "int":
+            return str(int(float(v)))
+        if fmt == "gib":  # a container memory limit as Docker writes it ("4g")
+            if not re.fullmatch(r"\d+g", str(v)):
+                raise ValueError(f"{self.src}: {key}: {v!r} is not a memory size in GiB")
+            return str(v)[:-1]
+        return str(v)
+
+    def protocol_versions(self) -> list[dict]:
+        """Recompute every version's sha256 (v0.1 to v0.5 from the git objects of their commits, which fails closed without
+        the repository's history; v0.6 on from the current file's byte prefix that ends one byte before the next section's
+        heading, the last from the whole file) and check it and its hash time against the decision log."""
+        P = self.doc["protocol"]
+        cur = (ROOT / P["file"]).read_bytes()
+        log = (ROOT / P["log"]).read_text(encoding="utf-8")
+        out = []
+        for v in P["versions"]:
+            if "commit" in v:
+                r = subprocess.run(["git", "-C", str(ROOT), "show", f"{v['commit']}:{P['file']}"], capture_output=True, check=False)
+                if r.returncode != 0:
+                    raise ValueError(f"{self.src}: protocol v{v['version']}: no git object of {P['file']} at {v['commit']} "
+                                     "(the repository's history is needed; nothing is written)")
+                body, how = r.stdout, f"git show {v['commit']}:{P['file']}"
+            elif "before_section" in v:
+                m = re.search(rb"^## " + str(v["before_section"]).encode() + rb"\. ", cur, re.MULTILINE)
+                if not m:
+                    raise ValueError(f"{self.src}: protocol v{v['version']}: no section {v['before_section']} in {P['file']}")
+                body, how = cur[:m.start() - 1], f"{P['file']}, bytes before the heading of section {v['before_section']} (less one)"
+            else:
+                body, how = cur, f"{P['file']} (the whole file)"
+            sha = hashlib.sha256(body).hexdigest()
+            m = re.search(rf"^### {re.escape(v['entry'])}\. .*?(?=^### D\d+\. |\Z)", log, re.MULTILINE | re.DOTALL)
+            if not m:
+                raise ValueError(f"{self.src}: protocol v{v['version']}: no entry {v['entry']} in {P['log']}")
+            if sha not in m.group(0):
+                raise ValueError(f"{self.src}: protocol v{v['version']}: sha256 {sha[:12]}... is not in {v['entry']} of {P['log']}")
+            if v["hashed_at"] not in m.group(0):
+                raise ValueError(f"{self.src}: protocol v{v['version']}: hash time {v['hashed_at']} is not in {v['entry']}")
+            rec = dict(v, sha256=sha, how=how)
+            self.protocol[v["version"]] = rec
+            out.append(rec)
+        return out
+
+
+def _design_text_ok(text: str, where: str) -> None:
+    """An authored table cell holds no number of its own: only macros and identifiers (paper/check_numbers.py's rule)."""
+    spec = importlib.util.spec_from_file_location("check_numbers", Path(__file__).with_name("check_numbers.py"))
+    cn = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(cn)
+    bad = cn.findings(text, where)
+    if bad:
+        raise ValueError(f"{where}: a number outside a macro: {', '.join(f.token for f in bad)}")
+
+
+def design_numbers(D: Design, led: SectionLedger, nums: Numbers, out: Path) -> None:
+    led.add("inputs", f"{D.src} sha256", hashlib.sha256(D.path.read_bytes()).hexdigest(), D.src)
+    versions = D.protocol_versions()  # first: the counts may refer to a version's hash time
+    for c in D.doc["constants"]:
+        hows = [D.check(c, ck) for ck in c["checks"]]
+        value = str(c["value"])
+        shown = _int(int(value)) if re.fullmatch(r"\d{4,}", value) else value
+        what = c["what"] + (f"; unit {c['unit']}" if c.get("unit") else "")
+        if c.get("words") and re.fullmatch(r"\d+", value):
+            nums.put_count(c["key"], int(value), " | ".join(hows), what)
+        else:
+            nums.put(c["key"], shown, " | ".join(hows), what)
+    # The protocol's history: per version its section, hash, date, time and entry; and the amendments table.
+    nums.put_count("protocol.versions", len(versions), f"{D.src} protocol.versions (count)", "protocol versions")
+    nums.put_count("protocol.amendments", len(versions) - 1, f"{D.src} protocol.versions (count, less v0.1)",
+                   "amendments after v0.1")
+    rows = []
+    for v in versions:
+        k, t = f"protocol.v{v['version']}", _iso(v["hashed_at"])
+        log = f"{D.doc['protocol']['log']} ({v['entry']})"
+        nums.put(f"{k}.hash", v["sha256"][:HASH_DIGITS], f"{v['how']}: sha256 {v['sha256']}, as {log} records it",
+                 f"first {HASH_DIGITS} hex digits")
+        nums.put(f"{k}.date", t.strftime("%Y-%m-%d"), f"{log}: {v['hashed_at']}", "UTC")
+        nums.put(f"{k}.time", t.strftime("%H:%M:%S"), f"{log}: {v['hashed_at']}", "UTC")
+        nums.put(f"{k}.entry", v["entry"], f"{log}")
+        if v.get("section"):
+            nums.put(f"{k}.section", v["section"], f"{D.doc['protocol']['file']} heading of section {v['section']}")
+        for col in ("fixes", "before", "after"):
+            _design_text_ok(v[col], f"{D.src} protocol v{v['version']} {col}")
+        sec = f" (\\S{v['section']})" if v.get("section") else ""
+        rows.append(f"v{v['version']}{sec}\\newline \\dv{{{k}.date}}\\newline \\dv{{{k}.time}}\\newline "
+                    f"\\texttt{{\\dv{{{k}.hash}}}}, \\dv{{{k}.entry}} & {v['fixes']} & {v['before']} & {v['after']} \\\\")
+        led.add("amendments", f"v{v['version']}: section; sha256; hashed at; entry", f"{v.get('section') or '--'}; {v['sha256']}; "
+                f"{v['hashed_at']}; {v['entry']}", f"{v['how']}; {log}")
+    led.add("amendments", "caption: hex digits shown of each hash", HASH_DIGITS, "paper/make_tables.py HASH_DIGITS")
+    head = "Version & What it fixes & Fixed before & After"
+    (out / "amendments_table.tex").write_text(  # a longtable: the twelve rows need more than a page
+        "\\begingroup\\scriptsize\n\\begin{longtable}{@{}p{0.12\\linewidth}p{0.36\\linewidth}p{0.21\\linewidth}"
+        "p{0.21\\linewidth}@{}}\n"
+        "\\caption{The protocol's versions (\\texttt{experiments/protocol.md}), each hashed and timestamped locally (UTC; the "
+        f"first {HASH_DIGITS} hex digits of its sha256, recomputed from the git object of its commit or from a byte prefix of "
+        "the current file, as the decision-log entry named records it). Fixed before: what did not exist yet when the version "
+        "was hashed; after: the relevant data that existed then.}\\label{tab:amendments}\\\\\n"
+        f"\\toprule {head} \\\\\\midrule\n\\endfirsthead\n\\toprule {head} \\\\\\midrule\n\\endhead\n"
+        "\\midrule\\multicolumn{4}{r}{continued} \\\\\n\\endfoot\n\\bottomrule\n\\endlastfoot\n"
+        + "\n".join(rows) + "\n\\end{longtable}\n\\endgroup\n")
+
+
 # -- natural PR-review arm and the Trace Commons screen -----------------------------------------------------------------
 
 NATURAL_INPUTS = {"M0": "data/manifests/screening_natural_aidev.json", "M9": "data/manifests/screening_natural_aidev_s9.json",
@@ -1389,7 +2230,10 @@ TC_REASONS = [("no recoverable base commit", "no recoverable base commit", "base
               ("no correction candidate under the correction-cue rule", "no correction candidate", "correction"),
               ("unsuitable task", "unsuitable_task", "unsuitable"), ("unsupported transcript format", "format:", "format"),
               ("environment failure", "environment_failure", "environment")]
-PENDING_S10 = "\\unfilled{pending: S10 of the S9 extension}"
+# The S9 extension has no S10 outcome: its S10 step was stopped at a usage limit, and its families are to be built again
+# for natural-pr-v2 (decision log D66, D75; protocol §20.2). The tables say so instead of marking a cell as pending.
+EXT_S10 = ("not run: the extension's S10 step was stopped at a usage limit, and its families are to be built again for "
+           "\\texttt{natural-pr-v2} (decision log D66, D75; protocol \\S20.2)")
 
 
 def _category(reason: str, table_: list[tuple[str, str, str]], where: str) -> str:
@@ -1444,6 +2288,12 @@ def natural_tables(N: dict, led: SectionLedger, nums: Numbers, out: Path) -> Non
                  "without the linked-issue requirement")
         led.add("natural_funnel", f"{sid} comments (without the linked-issue requirement; caption)", stages[sid]["count"],
                 f"{src['M0']} stages[id={sid}].count")
+    # The S8a comments of the agent product with the most of them (restructure plan, part 5.2); no product is named.
+    per_agent = [v["comments"] for v in stages["S8a"]["by_agent"].values()]
+    if sum(per_agent) != stages["S8a"]["count"]:
+        raise ValueError(f"{src['M0']}: stages[id=S8a].by_agent.*.comments do not sum to its count")
+    nums.put("aidev.s8a.topagent", _int(max(per_agent)), f"{src['M0']} stages[id=S8a].by_agent.<agent>.comments (the largest "
+             f"of its {len(per_agent)} values; they sum to stages[id=S8a].count)", "S8a comments of the agent product with the most")
     ck = N["M0"]["checks"]
     nums.put("aidev.check.join", _pct(ck["comment_to_pr"]["all_comments"]["match_rate"], 2),
              f"{src['M0']} checks.comment_to_pr.all_comments.match_rate", "comments joined to their PR")
@@ -1583,24 +2433,24 @@ def natural_tables(N: dict, led: SectionLedger, nums: Numbers, out: Path) -> Non
     passed = [t for t in processed if t["s10"]["outcome"] == "passed"]
     rejected = [t for t in processed if t["s10"]["outcome"] == "rejected"]
     if any((t.get("s10") or {}).get("outcome") in ("passed", "rejected") for t in by["ext"]):
-        raise ValueError(f"{src['NI']}: an extension family has an S10 outcome; the funnel prints S10 of the extension as pending")
+        raise ValueError(f"{src['NI']}: an extension family has an S10 outcome; the funnel prints S10 of the extension as not run")
     cats = Counter(_category(t["s10"]["reason"], S10_REASONS, f"{src['NI']} tasks[{t['task_id']}].s10.reason") for t in rejected)
     row("S10 processed / passed / rejected", [f"{len(processed)} / {len(passed)} / {len(rejected)}",
-                                              "\\parbox[t]{\\linewidth}{\\raggedright " + PENDING_S10 + "}"],
-        "S10 processed / passed / rejected (first sample)", [f"{src['NI']} tasks[] (sample first).s10.outcome", "pending"])
+                                              "not run"],
+        "S10 processed / passed / rejected (first sample)", [f"{src['NI']} tasks[] (sample first).s10.outcome", "not run (D66, D75)"])
     nums.put("s10.first.processed", len(processed), f"{src['NI']} tasks[] (sample first) with s10.outcome passed or rejected (count)")
     nums.put("s10.first.passed", len(passed), f"{src['NI']} tasks[] (sample first) with s10.outcome passed (count)")
     nums.put("s10.first.rejected", len(rejected), f"{src['NI']} tasks[] (sample first) with s10.outcome rejected (count)")
     nums.put("s10.first.yield", _pct(len(passed) / S["first"]["comments"]), f"{src['NI']} s10 passed (count) / {src['M9']} summary.comments")
     for cat, _, mk in S10_REASONS:
-        row(f"\\quad rejected: {cat}", [str(cats.get(cat, 0)), "\\unfilled{pending}"], f"S10 rejected (first sample): {cat}",
-            [f"{src['NI']} tasks[] (sample first, s10.outcome rejected).s10.reason, by category", "pending"])
+        row(f"\\quad rejected: {cat}", [str(cats.get(cat, 0)), "--"], f"S10 rejected (first sample): {cat}",
+            [f"{src['NI']} tasks[] (sample first, s10.outcome rejected).s10.reason, by category", "not run (D66, D75)"])
         nums.put(f"s10.first.reject.{mk}", cats.get(cat, 0), f"{src['NI']} tasks[] (sample first).s10.reason (category {cat!r}, count)")
     s11 = ni["s11_by_sample"]
     if s11["first"] != len(passed) or sum(t["s11"] for t in first) != len(passed):
         raise ValueError(f"{src['NI']}: s11_by_sample.first and the passed first-sample tasks disagree")
-    row("S11 accepted for building", [str(s11["first"]), "\\unfilled{pending}"], "S11 accepted (first sample)",
-        [f"{src['NI']} s11_by_sample.first", "pending"])
+    row("S11 accepted for building", [str(s11["first"]), "--"], "S11 accepted (first sample)",
+        [f"{src['NI']} s11_by_sample.first", "not run (D66, D75)"])
     nums.put("s11.first", s11["first"], f"{src['NI']} s11_by_sample.first")
     nums.put("s11.ids", ", ".join(t["task_id"] for t in passed), f"{src['NI']} tasks[] with s11 true (task_id)")
     exact = sum(t["fidelity"] == "exact" for t in passed)
@@ -1637,11 +2487,12 @@ def natural_tables(N: dict, led: SectionLedger, nums: Numbers, out: Path) -> Non
         "PRs. Without the linked-issue requirement of S8, " + _int(stages["S8'"]["count"]) + " comments would pass S8 and " +
         _int(stages["S8a'"]["count"]) + " would pass S8a. Bottom: S9 for the first sample (a random sample of the S8a comments) and for the "
         "extension (every other S8a comment, decided after the first sample's S10 yield was known, protocol \\S19), then families, "
-        "S10 (replayability) and S11. \\textbf{The S9 verdicts are model proposals of two judges, not human coding.} In the first "
+        "S10 (replayability) and S11; the extension's S10 step was stopped at a usage limit, so its S10 and S11 were not run "
+        "(decision log D66, D75). \\textbf{The S9 verdicts are model proposals of two judges, not human coding.} In the first "
         "sample the comments without reachable commits were judged without a diff and failed as not fetchable; in the extension they "
         "failed before judging. Extension, share of the judged comments: " + f"{_pct(jr['rate'])} ({_pct(jr['wilson_95'][0])}--"
         f"{_pct(jr['wilson_95'][1])}). First sample, judge $\\kappa$ over the {sec['n']} comments with reachable commits: "
-        + "; ".join(_r2(x) for x in sk) + ". No natural verifier, label or run exists yet.}\\label{tab:natural-funnel}\n"
+        + "; ".join(_r2(x) for x in sk) + ". The S9 shares are model-judged screening yields, not prevalence.}\\label{tab:natural-funnel}\n"
         "\\begin{tabular}{llrrr}\\toprule Stage & Rule & Comments & PRs & Repositories \\\\\\midrule\n" + "\n".join(rows1) +
         "\n\\bottomrule\\end{tabular}\n\n\\medskip\n"
         "\\begin{tabular}{p{0.42\\linewidth}p{0.22\\linewidth}p{0.22\\linewidth}}\\toprule S9 to S11 & First sample & Extension "
@@ -1679,7 +2530,7 @@ def natural_tables(N: dict, led: SectionLedger, nums: Numbers, out: Path) -> Non
         "rejection category of the funnel table (no dependency closure: no resolvable dependency closure; fetch over the cap: fetch "
         "over the repository cap). Reserves are built "
         f"only to replace a rejected family of their repository. The {n_ext} families and reserves of the S9 extension "
-        f"({tex(ext_ids[0])} to {tex(ext_ids[-1])}): {PENDING_S10}.", "tab:natural-s10", "llllrrrlllc",
+        f"({tex(ext_ids[0])} to {tex(ext_ids[-1])}) have no S10 outcome, {EXT_S10}.", "tab:natural-s10", "llllrrrlllc",
         "Task & Role & Fidelity & Licence & Pins & Subset & Base tests & B1 & S10 & Reason & S11", rows,
         size="\\scriptsize\\setlength{\\tabcolsep}{4pt}"))
     nums.put("ni.ext.rows", n_ext, f"{src['NI']} tasks[] with sample extension (count)")
@@ -2293,7 +3144,7 @@ def natural_run_construction_table(R: dict, led: SectionLedger, nums: Numbers, o
 
     line("Sample", sample)
     line("Reference contract: requirements, scored active, at the correction", reference)
-    line("Recovered contracts, scored active: initial-only, full-session", recovered, True)
+    line("Recovered contracts, scored active: initial-only, correction-aware", recovered, True)
     line("Checks: C1, C2, C3, C4", checks(["initial_plain", "initial_audited", "full_plain", "full_audited"]))
     line("Checks: B2, B1, B3", checks(["llm_freeform", "repo_tests", "diff_derived"]))
     line("Checks: reference checks, labeler", checks(["reference_check", "independent_label"]), True)
@@ -2468,9 +3319,18 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
                     help="a natural run analysed in case-study mode (analysis.json, manifest.json), e.g. "
                          "results/runs/natural-pr-v1: writes the per-family tables to paper/generated/natural_run/ and "
                          "paper/evidence_ledger_natural_run.md; an analysis outside case-study mode is refused")
+    ap.add_argument("--pilot-numbers", metavar="RUN_DIR",
+                    help="the construction pilot's numbers for the text (\\plv{key}) from the frozen run (analysis.json, "
+                         "manifest.json, results.jsonl, compare_<run>.json) and its exploratory re-analysis "
+                         "(results/analyses/<run>-exploratory/), e.g. results/runs/pilot-v0.3.3: writes "
+                         "paper/generated/pilot/numbers.tex and paper/evidence_ledger_pilot.md; no pilot table changes")
+    ap.add_argument("--design", action="store_true",
+                    help="the design's constants and the protocol's history (\\dv{key}) from paper/design_constants.json, "
+                         "each checked against its source: writes paper/generated/design/ (numbers.tex, the amendments "
+                         "table) and paper/evidence_ledger_design.md")
     a = ap.parse_args(argv)
-    if not (a.runs or a.fresh or a.natural or a.natural_run):
-        ap.error("give a pilot RUN_DIR, --fresh RUN_DIR, --natural or --natural-run RUN_DIR")
+    if not (a.runs or a.fresh or a.natural or a.natural_run or a.pilot_numbers or a.design):
+        ap.error("give a pilot RUN_DIR, --fresh RUN_DIR, --natural, --natural-run RUN_DIR, --pilot-numbers RUN_DIR or --design")
     if a.compare and not a.runs:
         ap.error("--compare needs a pilot RUN_DIR")
     for rd in a.runs:
@@ -2503,6 +3363,15 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         if not (ROOT / NATURAL_INPUTS["M0"]).is_file():  # the privacy check's agent product names (fails closed)
             ap.error(f"--natural-run: missing {NATURAL_INPUTS['M0']}, whose agent product names the privacy check of the "
                      "natural outputs refuses")
+    if a.pilot_numbers:
+        missing = [f for f in ("analysis.json", "manifest.json", "results.jsonl") if not (Path(a.pilot_numbers) / f).is_file()]
+        if missing:
+            ap.error(f"--pilot-numbers {a.pilot_numbers}: no {', '.join(missing)}")
+    if a.design:
+        missing = [p for p in (DESIGN, ROOT / NATURAL_INPUTS["M0"]) if not p.is_file()]
+        if missing:
+            ap.error(f"--design: missing {', '.join(rel(p) for p in missing)} (the constants; the agent product names of the "
+                     "privacy check)")
     return a
 
 
@@ -2539,7 +3408,7 @@ def _cmd(parts: list[str]) -> str:
 
 def main(argv: list[str]) -> None:
     a = parse_args(argv)  # --help and argument errors exit here, before anything is written
-    new_modes = bool(a.fresh or a.natural or a.natural_run)
+    new_modes = bool(a.fresh or a.natural or a.natural_run or a.pilot_numbers or a.design)
     # The pilot ledger names the pilot command only, so that adding a new-run mode never changes it.
     pilot_argv = argv if not new_modes else [*a.runs, *(["--compare", *a.compare] if a.compare else [])]
     led = Ledger(pilot_argv)
@@ -2571,6 +3440,7 @@ def main(argv: list[str]) -> None:
             fout.mkdir()
             F = fresh_inputs(Path(a.fresh))
             fresh_run_numbers(F, fled, fnums)
+            fresh_design_numbers(F, fled, fnums)
             fresh_tables(F, fled, fnums, fout)
             if a.regrade:
                 regrade_table(Path(a.regrade), fled, fnums, fout)
@@ -2583,7 +3453,7 @@ def main(argv: list[str]) -> None:
                                  "Every number in `paper/generated/natural/*.tex` (the tables and the number macros of `numbers.tex`, "
                                  "used in the text as `\\nat{key}`), with the file and field it is read from or computed from. "
                                  f"Generated by `{cmd}`; nothing is entered by hand. The S9 verdicts are model proposals, not human "
-                                 "coding. No natural verifier, label or run exists yet; those results are pending.")
+                                 "coding. The natural run's per-family tables and numbers have their own ledger, evidence_ledger_natural_run.md.")
             nnums = Numbers("nat", nled)
             nout = tmp / "natural"
             nout.mkdir()
@@ -2615,17 +3485,49 @@ def main(argv: list[str]) -> None:
             (rout / "numbers.tex").write_text(rnums.tex(cmd))
             (tmp / f"evidence_ledger_{NR_DIR}.md").write_text(rled.text())
             subs.append((NR_DIR, rout, len(rled)))
+        if a.pilot_numbers:
+            cmd = _cmd(["--pilot-numbers", rel(Path(a.pilot_numbers).resolve())])
+            pled = SectionLedger("Evidence ledger (construction pilot: numbers for the text)",
+                                 "Every number macro of `paper/generated/pilot/numbers.tex` (used in the text as `\\plv{key}`), "
+                                 "with the file and field it is read from or computed from: the frozen pilot run, its "
+                                 "comparison files, the B1 check-origin files and verifier specs of the tasks, and the "
+                                 f"exploratory re-analysis and planning simulation of D49. Generated by `{cmd}`; nothing is "
+                                 "entered by hand, and no pilot table is written. All labels are model proposals (D19); no "
+                                 "human labels exist. The exploratory numbers are post hoc.")
+            pnums = Numbers("plv", pled)
+            pout = tmp / "pilot"
+            pout.mkdir()
+            pilot_numbers(pilot_inputs(Path(a.pilot_numbers)), pled, pnums)
+            (pout / "numbers.tex").write_text(pnums.tex(cmd))
+            (tmp / "evidence_ledger_pilot.md").write_text(pled.text())
+            subs.append(("pilot", pout, len(pled)))
+        if a.design:
+            cmd = _cmd(["--design"])
+            dled = SectionLedger("Evidence ledger (the design's constants and the protocol's history)",
+                                 f"Every number macro of `paper/generated/{DESIGN_DIR}/numbers.tex` (used in the text as "
+                                 "`\\dv{key}`) and every value of its amendments table, with the check that ties it to its "
+                                 f"source: a quote of the cited file, a pattern of the code, a count of files, a field of "
+                                 f"recorded JSON files, or a recomputed hash. Generated by `{cmd}` from "
+                                 f"`{rel(DESIGN)}`; a value whose check fails is never written.")
+            dnums = Numbers("dv", dled)
+            dout = tmp / DESIGN_DIR
+            dout.mkdir()
+            design_numbers(Design(DESIGN), dled, dnums, dout)
+            (dout / "numbers.tex").write_text(dnums.tex(cmd))
+            (tmp / f"evidence_ledger_{DESIGN_DIR}.md").write_text(dled.text())
+            subs.append((DESIGN_DIR, dout, len(dled)))
         # Privacy: nothing a new-run mode writes may hold a URL, an owner placeholder, a session-local path or a model or
         # agent-product name; natural outputs (the arm's screening and a natural run) may not hold a digit run of 7 or more
         # (an id) either. The ledger's input hashes are exempt from the digit rule only.
         agent_names: tuple[str, ...] = ()
         if a.natural:
             agent_names = N["agent_names"]
-        elif a.natural_run:  # fails closed: without the screening record no agent product name could be checked
+        elif a.natural_run or a.design:  # fails closed: without the screening record no agent product name could be checked
             agent_names = _agent_names(json.loads((ROOT / NATURAL_INPUTS["M0"]).read_text()))
         for name, sub, _ in subs:
             natural = name in ("natural", NR_DIR)
-            names = agent_names if natural else ()
+            # The design's ledger quotes the protocol and the decision log, which name the natural arm's sources.
+            names = agent_names if natural or name == DESIGN_DIR else ()
             # A natural run's own code revisions (the study repository's commits) are no id of the data (_check_private).
             exempt = R["own_revisions"] if name == NR_DIR else ()
             for f in sorted(sub.iterdir()):

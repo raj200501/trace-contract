@@ -55,3 +55,37 @@ def test_the_papers_abstract_is_within_the_limit():
     text, problems = ca.plain_text(ca.DEFAULT.read_text(encoding="utf-8"))
     assert problems == []
     assert 0 < len(text) <= ca.LIMIT
+
+
+NUMBERS = {"fv": {"cv.n": "27", "cmp.c1-c3.fa.diff": "\\ensuremath{+}0.76", "run.pairs": "1{,}672", "cv.share": "67.5\\%",
+                  "excluded.1": "CS-02-fresh-A-final-1"},
+           "nat": {"s9.first.comments": "150"}, "nrv": {"families": "6"}, "plv": {"c1.fa": "6/17"}, "dv": {"design.k": "5"}}
+
+
+def test_number_macros_are_expanded_from_the_generated_numbers():
+    tex = ("\\begin{abstract}\\fv{cv.n} violators; difference \\fv{cmp.c1-c3.fa.diff}; \\fv{run.pairs} pairs; \\fv{cv.share}; "
+           "\\nat{s9.first.comments}, \\nrv{families}, \\plv{c1.fa}, $k=\\dv{design.k}$; \\texttt{\\fv{excluded.1}}.\\end{abstract}")
+    text, problems = ca.plain_text(tex, NUMBERS)
+    assert problems == []
+    assert text == "27 violators; difference +0.76; 1,672 pairs; 67.5%; 150, 6, 6/17, k=5; CS-02-fresh-A-final-1."
+
+
+def test_a_number_key_that_is_not_generated_is_a_problem(tmp_path, capsys):
+    text, problems = ca.plain_text("\\begin{abstract}We ran \\fv{attempts} attempts.\\end{abstract}", NUMBERS)
+    assert problems == ["missing number key: \\fv{attempts}"] and text == "We ran attempts."
+    p = tmp_path / "abstract.tex"
+    p.write_text("\\begin{abstract}\nWe test \\fv{families} tasks.\n\\end{abstract}\n", encoding="utf-8")
+    gen = tmp_path / "generated"
+    (gen / "fresh").mkdir(parents=True)
+    (gen / "fresh" / "numbers.tex").write_text("\\expandafter\\gdef\\csname fv:families\\endcsname{4}\n", encoding="utf-8")
+    assert ca.main([str(p), "--generated", str(gen), "--print"]) == 0  # read from the generated files
+    out = capsys.readouterr().out
+    assert "We test 4 tasks." in out and "16 characters without TeX markup" in out
+    assert ca.main([str(p), "--generated", str(tmp_path / "none")]) == 1  # generated nowhere: the count is unreliable
+    assert "UNRELIABLE" in capsys.readouterr().out
+
+
+def test_the_papers_abstract_expands_with_the_committed_numbers():
+    """Whatever macros the paper's abstract uses are generated, so the gate counts the text as it prints."""
+    text, problems = ca.plain_text(ca.DEFAULT.read_text(encoding="utf-8"), ca.check_numbers.load_numbers(ca.GENERATED))
+    assert problems == [] and "\\" not in text and "UNFILLED" not in text

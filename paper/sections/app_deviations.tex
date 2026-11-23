@@ -1,0 +1,170 @@
+% Appendix B, deviations, held-out discipline and harness context (restructure plan, part 3), as a table. Sources:
+% docs/decision_log.md (the D-ids in the rows); experiments/protocol.md §13, §14, §18.2; the fresh-attempt audit records
+% data/fresh/fresh-v1/audit_CS-0*.json. Moved here: protocol.tex's deviations, limitations.tex's held-out discipline and
+% costs, data.tex's sealing, path substitution, audit and harness context, and the natural arm's deviations and builder
+% decisions. Every number is a macro (\fv, \plv, \dv).
+\section{Deviations, held-out discipline and harness context}
+\label{app:deviations}\label{sec:deviations}
+The \emph{build session} is the agent session that ran the study and launched every other agent: the session agents,
+the generators, the fresh attempts, the natural agents and their host coordinators. Table~\ref{tab:deviations} lists the
+departures from the protocol, the published workflows or blind construction that the decision log records and that bear
+on the reported runs or on what the release shows, with the runs each concerns and what follows from it; the decision
+log is the full record (the natural templates' other marked deviations from their sources, for instance, are listed in
+D64). Every controlled task and every accepted natural task remains pending
+human review, and none has passed the acceptance gate (D51; Appendix~\ref{app:construction}), so every run is an
+automated pilot.
+
+\begingroup\scriptsize\setlength{\LTcapwidth}{\linewidth}
+\begin{longtable}{@{}p{0.44\linewidth}p{0.1\linewidth}p{0.4\linewidth}@{}}
+\caption{Deviations and disclosures, by the runs they concern (pilot: \texttt{\PILOTRUN}, with its superseded runs;
+fresh: \texttt{\FRESHRUN}; natural: \texttt{\NATURALRUN} and the screening behind it), with the decision-log entries that
+record them. Builder decisions not yet reviewed by a person are marked as such.}\label{tab:deviations}\\
+\toprule Deviation & Runs & Consequence \\\midrule
+\endfirsthead
+\toprule Deviation & Runs & Consequence \\\midrule
+\endhead
+\midrule\multicolumn{3}{r}{continued} \\
+\endfoot
+\bottomrule
+\endlastfoot
+\multicolumn{3}{l}{\emph{Generation and records}} \\
+Pilot generation did not run as the published workflow scripts: workflow agents refused to run some audits, the freeze
+step or an attack set, and some revisers rewrote audited tests from scratch (D17, D24). & pilot & Every audited verifier
+was reset to its plain tests, and the audit and freezing were run by the trusted host command line, with a context note
+added to the revisers' prompts and to the regenerated \texttt{humanize} attacks'; the \texttt{humanize} generation was
+stopped and resumed after a fix of the contract tooling. \\
+Generation cost per condition and per accepted task was not recorded for the verifiers, although the protocol asked for
+it (D42). & pilot, fresh & No cost comparison of the conditions. The fresh attempts record wall time, turns, tool calls
+and tokens, which include cache reads and so are not a cost (Table~\ref{tab:fresh-costs}); no money cost is recorded.
+The natural runs' costs are per family (Section~\ref{sec:natural-cases}). \\
+The audit records of CS-01's C2 and CS-03's C4 hide part of what happened (D62). & pilot, fresh & The files are kept as
+recorded (Appendix~\ref{app:construction}); new audit records keep every failing check and every check a revision adds
+or removes. \\
+The hash of each verifier's scored check list was added after the first final run, \texttt{pilot-v0.3} (D37). & pilot &
+No pilot spec records its freeze time, so the freeze order rests on git history (Appendix~\ref{app:construction}). \\
+Every agent of the controlled generate workflow \texttt{wf\_b796bb4f-1dd}, whose template
+Section~\ref{sec:design-conditions} quotes, and of a held-out workflow of the pilot, \texttt{wf\_b428f318-391}, began with a
+harness entry relaying the owner's message of that day, outside the workflow script and its hash; the labeler workflow
+and the fresh attempts carried none (D67). & pilot, fresh & The exported scripts, which also redact owner messages, do
+not show it, so the published prompts are not the whole of these agents' context. Nothing was regenerated for it: the
+pilot's frozen inputs, these agents' outputs among them, are unchanged (Section~\ref{sec:repro}). \\
+A commit wrote triage proposals into the controlled tasks' frozen provenance records, contrary to the rule that frozen
+task files are not edited (D47, D50). & pilot, fresh & These records are not hashed inputs of the analysis; the proposals
+moved to sidecar files, and the records were restored (D50). \\
+The first registration of the independent labelers appended them to the controlled tasks' frozen task manifests, which
+are hashed inputs of the frozen pilot analysis (D55). & pilot, fresh & The files were restored and the labelers registered
+in sidecar files; no run used the modified files, and the frozen pilot regenerates identically (D55;
+Appendix~\ref{app:construction}). \\
+\addlinespace
+\multicolumn{3}{l}{\emph{Held-out discipline in the construction pilot}} \\
+Generators and reference-check writers ran as the same user (root) in the repository checkout and shared the build
+session's scratch directory, which held other agents' files and some material derived from held-out candidates (D37,
+D41, D44). & pilot & Frozen verifiers, the reference patch and registered candidates were readable. Separation rested
+on instructions and on audits of tool inputs, which found no recorded read of forbidden material. \\
+The near-miss workspaces held the reference diff, whose test files are B1's tests, and the near-miss generators ran them
+(D37). & pilot & B1's outcomes on near misses are not blind to construction. \\
+The pool holds \plv{duplicates.w} held-out candidates that duplicate a development attack of their family's C4 audit: the
+\texttt{more-itertools} pre-correction state and a \texttt{more-itertools} near miss that omits the check of \texttt{step=0},
+which have the attack's graded patch, and a \texttt{humanize} near miss that breaks custom formats and differs from its
+attack by a docstring line (D40, D44). & pilot & Neither audit made a revision, but the pool counts the
+\texttt{more-itertools} behaviour in both candidates that have its patch; the rates without the duplicates are in
+Appendix~\ref{app:pilot}. \\
+The reference checks used for labeling were written while the pools were generated, with no recorded read of the pool;
+CS-03's were frozen before its pool was registered, and CS-02's were revised after its pool was complete (D37, D41). &
+pilot & The labels' first source is not separated in time from the pool. \\
+The held-out prompts of \dv{pilot.prompts.date} (the \texttt{humanize} near misses, and every \texttt{tinydb}
+held-out candidate and reference check) differ from the earlier ones (protocol~\S14; D41). & pilot & The candidate
+recipe differs between families. \\
+The first generator audit treated only the sealed parts of the shared scratch directory as forbidden. A stricter
+re-audit of all \dv{pilot.reaudit.transcripts} transcripts of the held-out generators and of the reference-check
+writers, reviewers and fixers resolves paths and covers the whole directory (D44, D46). & pilot & It found no read of
+candidate, verifier or sealed material, but some listings showed file names (\texttt{git status} among them, which named
+held-out \texttt{tinydb} candidate files), and a reviewer read an earlier reviewer's whole test runner there. Both
+audits' automatic checks read tool inputs only and do not resolve paths that inline code builds at run time; the
+re-audit's assessments rest on reading the transcripts only for the accesses it flags. \\
+The pre-correction state was captured during the session, before any verifier existed; B2's generator and the
+correction-aware contract proposer saw its edits, abbreviated, in the session text (protocol~\S13; D41). CS-04's B1 was
+re-selected after its pool existed (D31). & pilot & B2's, C3's and C4's verdicts on the pilot's pre-correction states
+are not blind (Appendix~\ref{app:pilot}). \\
+Scenarios and reference contracts were withheld from agents until a task's verifiers were frozen: for part of the pilot
+in a scratch directory that agents could have listed, then in a root-owned directory. The held-out prompts of
+\dv{pilot.prompts.date} and the natural templates name that directory in their do-not-read lists, and the agents ran as
+root, so the directory's mode was no barrier (D26, D41). & pilot, fresh, natural & Separation rested on instructions and
+on transcript scans, which found no read of sealed material except by a mapping agent whose task was to read the
+reference contract. \\
+\addlinespace
+\multicolumn{3}{l}{\emph{Fresh attempts}} \\
+The build session's old workspace, which the controlled prompts name and which still held the reference solution, the
+pre-correction state and the raw transcript, was sealed and removed before the attempts (D50); its paths in the
+instructions were replaced by those of the attempt's own workspace, each substitution recorded (protocol~\S16.2;
+D56). & fresh & The
+instructions are the session's $U_1$ and $U_2$ up to the recorded path substitutions. \\
+The attempts' context held harness material that is neither a tool input nor a tool output: an environment block naming
+the study repository as working directory and the build session's scratch directory for temporary files, and task-list
+reminders with the titles and, in CS-03 and CS-04, the descriptions of the build session's task-list items: in every
+attempt of CS-01 to CS-03
+and in \dv{fresh.reminders.cs04} of CS-04's \dv{fresh.attempts.family} (protocol~\S18.2, as corrected in D62). & fresh &
+It held no reference, transcript, verifier, candidate or label, but it showed the attempts the study repository's name,
+and an attempt may infer that it is part of a study (Section~\ref{sec:threats}). \\
+The fresh-attempt audit scans tool inputs and outputs and forbids everything outside the workspace. It flagged
+\fv{flagged} attempts (\fv{flagged.cs01}, \fv{flagged.cs02}, \fv{flagged.cs03} and \fv{flagged.cs04} in CS-01 to
+CS-04). Under the rule of protocol v0.10, fixed after CS-01's flags had been read, each flag was read in its transcript,
+and only a read, listing or search outside the workspace excludes (D57, D58, D62). & fresh & Of the
+flagged attempts, \fv{sens.excluded.here} pass: their flags are harness notices, parser artefacts or text of their own files, their own files in
+the container's temporary directory, or a denied call. \texttt{\fv{excluded.1}} is excluded: it wrote, read and ran
+helper files of its own in the build session's scratch directory, which the environment block named for temporary
+files, and opened nothing else there. The primary analysis has \fv{units} attempts, all distinct patches; a sensitivity
+view excludes all \fv{sens.excluded} flagged attempts (protocol~\S18.1). \\
+A configuration-B attempt (CS-04-fresh-B-final-1) tried an unrelated session-management tool, which the permission
+system denied (protocol~\S18.2). & fresh & The call had no effect, and it is no exclusion criterion. \\
+The audit reports of CS-01 and CS-04 name protocol v0.9, although CS-04 was reviewed after v0.10 was hashed (D58). &
+fresh & The recorded headers stay as they are; both reviews read every flag in its transcript and found no read,
+listing or search outside the workspace. \\
+\addlinespace
+\multicolumn{3}{l}{\emph{The natural arm}} \\
+Deviations of the natural screening: comments first judged on an empty diff (D50), and comments of a repository
+whose existing clone was over the fetch cap (D63, D66). & natural & Both corrected. D50's comments were judged again by
+new judges on compliant diffs, and \dv{screen.s9.rejudged.qualify} of the \dv{screen.s9.rejudged} now qualify; of
+D63's, those whose diff needs no fetch were judged by new judges, and none qualifies (D66). \\
+In the extension's screening, a repository whose first-sample clone had been stopped at the fetch cap was cloned again,
+then removed, although protocol~\S19.2 reuses existing clones (D63). & natural & It made no difference to any outcome
+(D63). \\
+An extension comment that qualifies was made before NP-05's correction. Protocol~\S15.6 makes a PR's earliest qualifying
+comment its correction, and \S19.3 forms families from both samples' comments together, but the family keeps the
+correction it was built with (D63, D66). & natural & A builder default, recorded before S10 of the extension's families,
+with no recorded review by a person (D63). \\
+Deviation~(i) of D64: the owner-context line of the held-out workflow's preambles is left out of the natural templates
+that use them. & natural & It changes no task instruction, input or output. A builder decision (D64, decision~17), not
+yet reviewed by a person. \\
+D64's numbered decisions other than decision~17, among them the construct (decision~1), B1 (decision~3), the second
+labeling of pre-review states (decision~4), D19's repeats (decision~7) and the near-miss targets (decision~14); and D63's
+decisions before S10 of the extension's families. & natural & Builder decisions that took effect with no recorded review
+by a person (D63, D65). \\
+Deviation~(k) of D64: the drafter of the reference contract also reads the reference diff, beyond the inputs that
+protocol~\S15.6 names. & natural & It adds the part of the change made before the review; a requirement that only the
+diffs support is inferred and introduced at the issue, so no requirement introduced at the correction rests on the
+diffs alone. \\
+The runs of P1 and of P5 carried, in their first message, a harness entry relaying the owner's latest message (about
+the usage budget at P1, about finishing the study at P5), which the harness ranks above the computed task where they
+conflict (D67, D68, D77). & natural & It names no task, input or output, but it could nudge an agent toward less or more
+work. Nothing was regenerated for it, a builder decision not yet reviewed by a person (D77). \\
+Some reference-check writers, labelers and their revisions, reviews, alternatives, near misses and fix rounds of P5 and
+P6 had in their context the titles of the build session's task-list items (about the paper's tables and review fixes),
+and so did some host coordinators, which write no generated content (D65, D72). & natural & No title names a family, requirement, check, target, label or candidate, and a search of
+each exposed run's own text and tool inputs for the titles' distinctive terms found none. Nothing was regenerated, a
+builder decision not yet reviewed by a person (D72). \\
+Some runs worked outside the recipe: they started the task image themselves, wrote temporary files outside their
+workspaces, or queried the container engine read-only; the harness gives every subagent the session's scratch directory
+for temporary files (D75). & natural & Each was assessed and none is excluded; the family paragraphs of
+Section~\ref{sec:natural-cases} name those that D75 names. \\
+The agent tool offers no per-call tool restriction, so each natural agent had its agent type's tools, as the controlled
+agents of the same source workflows had; an environment block naming the study repository as working directory was in
+every natural agent's context (D64, decision~11; D65). & natural & The natural-agent audit read every network use and
+tool call. \\
+D19 graded the frozen reference checks and the regression norm on every natural held-out candidate as the run's first
+step, once building had stopped for the first sample (D73, D74, D76). & natural & A builder reading of protocol~\S19.7
+and \S20.2, not yet reviewed by a person. \\
+The privacy tools' matching thresholds and scopes are builder defaults (D69). & natural & Not yet reviewed by a person;
+the paper prints only the study's task ids of the natural data (Section~\ref{sec:ethics}). \\
+\end{longtable}
+\endgroup

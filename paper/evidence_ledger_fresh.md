@@ -64,6 +64,12 @@ Every number in `paper/generated/fresh/*.tex` (the tables and the number macros 
 - [fresh_per_family] repo_tests CS-04 labeler FA; FR = 0/10; 0/10 <- `results/runs/fresh-v1/analysis.json independent_labeling.conditions.repo_tests.independent_label.per_family.CS-04`
 - [fresh_per_family] repo_tests pooled D19 FA; FR = 0/29; 34/50 <- `results/runs/fresh-v1/analysis.json conditions.repo_tests.false_acceptance, .false_rejection (num, den)`
 - [fresh_per_family] repo_tests pooled labeler FA; FR = 0/27; 36/52 <- `results/runs/fresh-v1/analysis.json independent_labeling.conditions.repo_tests.independent_label.false_acceptance, .false_rejection (num, den)`
+- [fresh_per_family] caption: harness; repeats; graded pairs; unresolved; units; invalid; valid = tc-harness/0.3.5; 3; 672; 0; 79; 29; 50 <- `results/runs/fresh-v1/results.jsonl harness_version, outcome (rows); results/runs/fresh-v1/manifest.json repeats; results/runs/fresh-v1/analysis.json distinct_patches.n_distinct, conditions.*.false_acceptance.den, .false_rejection.den`
+- [fresh_per_family] caption marker: controlled families = 4 <- `results/runs/fresh-v1/analysis.json n_families`
+
+## fresh_per_family_labeler
+
+- [fresh_per_family_labeler] caption marker: controlled families = 4 <- `results/runs/fresh-v1/analysis.json n_families`
 
 ## fresh_pooled
 
@@ -85,6 +91,7 @@ Every number in `paper/generated/fresh/*.tex` (the tables and the number macros 
 - [fresh_pooled] repo_tests false_acceptance rate (num/den), exact95, macro = 0.0 (0/29), [0.0, 0.11944486906950275], 0.0 <- `results/runs/fresh-v1/analysis.json conditions.repo_tests.false_acceptance`
 - [fresh_pooled] repo_tests false_rejection rate (num/den), exact95, macro = 0.68 (34/50), [0.5330061598852696, 0.8047958053371607], 0.6230769230769231 <- `results/runs/fresh-v1/analysis.json conditions.repo_tests.false_rejection`
 - [fresh_pooled] repo_tests youden_j; families with an accepted negative; infrastructure = 0.31999999999999995; 0/4; 0/79 <- `results/runs/fresh-v1/analysis.json conditions.repo_tests.youden_j, .tasks_with_any_accepted_negative, .infrastructure`
+- [fresh_pooled] caption marker: controlled families = 4 <- `results/runs/fresh-v1/analysis.json n_families`
 
 ## fresh_comparisons
 
@@ -103,6 +110,11 @@ Every number in `paper/generated/fresh/*.tex` (the tables and the number macros 
 - [fresh_comparisons] comparisons[12] repo_tests - full_audited fa: difference, n, per-family differences, discordant, pooled p_greater / p_less / p_two_sided / conditional floor, family-mean p_two_sided = -0.06896551724137931, 29, {'CS-01': 0.0, 'CS-02': -1.0, 'CS-03': 0.0, 'CS-04': 0.0}, {'a_accepts_b_rejects': 0, 'a_rejects_b_accepts': 2}, 1.0 / 0.5 / 1.0 / 0.5, 1.0 <- `results/runs/fresh-v1/analysis.json comparisons[12] (difference, n_metric, per_family_difference, discordant, signflip.pooled, signflip.family_mean)`
 - [fresh_comparisons] comparisons[13] repo_tests - full_audited fr: difference, n, per-family differences, discordant, pooled p_greater / p_less / p_two_sided / conditional floor, family-mean p_two_sided = 0.56, 50, {'CS-01': 0.8, 'CS-02': 1.0, 'CS-03': 0.23076923076923073, 'CS-04': 0.0}, {'a_accepts_b_rejects': 0, 'a_rejects_b_accepts': 28}, 0.125 / 1.0 / 0.25 / 0.125, 0.25 <- `results/runs/fresh-v1/analysis.json comparisons[13] (difference, n_metric, per_family_difference, discordant, signflip.pooled, signflip.family_mean)`
 - [fresh_comparisons] unconditional floors one-sided / two-sided (caption); smallest two-sided p (caption) = 0.0625 / 0.125; 0.25 <- `results/runs/fresh-v1/analysis.json comparisons[*].signflip.pooled.floor_one_sided, .floor_two_sided, .p_two_sided`
+- [fresh_comparisons] caption marker: controlled families = 4 <- `results/runs/fresh-v1/analysis.json n_families`
+
+## fresh_comparisons_full
+
+- [fresh_comparisons_full] caption marker: controlled families = 4 <- `results/runs/fresh-v1/analysis.json n_families`
 
 ## fresh_correction_violating
 
@@ -118,6 +130,7 @@ Every number in `paper/generated/fresh/*.tex` (the tables and the number macros 
 - [fresh_correction_violating] full_audited accepted correction-violating per family; pooled; accepted regression-only = 0/10, --, 0/7, 0/10; 0/27; 2/2 <- `results/runs/fresh-v1/analysis.json per_task.<task>.full_audited[] (negative_type, outcome); by_negative_type.full_audited.correction_violating, .unspecified`
 - [fresh_correction_violating] llm_freeform accepted correction-violating per family; pooled; accepted regression-only = 0/10, --, 0/7, 0/10; 0/27; 2/2 <- `results/runs/fresh-v1/analysis.json per_task.<task>.llm_freeform[] (negative_type, outcome); by_negative_type.llm_freeform.correction_violating, .unspecified`
 - [fresh_correction_violating] repo_tests accepted correction-violating per family; pooled; accepted regression-only = 0/10, --, 0/7, 0/10; 0/27; 0/2 <- `results/runs/fresh-v1/analysis.json per_task.<task>.repo_tests[] (negative_type, outcome); by_negative_type.repo_tests.correction_violating, .unspecified`
+- [fresh_correction_violating] caption marker: controlled families = 4 <- `results/runs/fresh-v1/analysis.json n_families`
 
 ## fresh_solve_rates
 
@@ -129,10 +142,12 @@ Every number in `paper/generated/fresh/*.tex` (the tables and the number macros 
 - [fresh_solve_rates] config-B/final labeler solved/attempts; per family = 20/20; [('CS-01', 5, 5), ('CS-02', 5, 5), ('CS-03', 5, 5), ('CS-04', 5, 5)] <- `results/runs/fresh-v1/analysis.json fresh_attempts.by_configuration_variant.config-B/final.independent_label (solved, per_family)`
 - [fresh_solve_rates] config-B/u1 D19 solved/attempts; per family; ended finished/gave_up/error = 5/20; [('CS-01', 0, 5), ('CS-02', 5, 5), ('CS-03', 0, 5), ('CS-04', 0, 5)]; 20/0/0 <- `results/runs/fresh-v1/analysis.json fresh_attempts.by_configuration_variant.config-B/u1 (solved, attempts, per_family, ended; an absent key of ended is 0)`
 - [fresh_solve_rates] config-B/u1 labeler solved/attempts; per family = 5/20; [('CS-01', 0, 5), ('CS-02', 5, 5), ('CS-03', 0, 5), ('CS-04', 0, 5)] <- `results/runs/fresh-v1/analysis.json fresh_attempts.by_configuration_variant.config-B/u1.independent_label (solved, per_family)`
+- [fresh_solve_rates] caption marker: controlled families = 4 <- `results/runs/fresh-v1/analysis.json n_families`
 
 ## fresh_sensitivity
 
 - [fresh_sensitivity] caption: excluded here / already; units (invalid, valid); labeler invalid / valid; correction-violating u1 attempts; C1, C3 accept; agreement; kappa = 25 / 1; 54 (21, 33); 20 / 34; 20/28; 18/20, 0/20; 53/54; 0.9606986899563319 <- `results/runs/fresh-v1/analysis_sensitivity.json meta.sensitivity; distinct_patches.n_distinct; conditions.initial_plain (dens); independent_labeling.labels; fresh_attempts.u1_correction_violating; independent_labeling.agreement.by_stratum`
+- [fresh_sensitivity] caption marker: controlled families = 4 <- `results/runs/fresh-v1/analysis.json n_families`
 - [fresh_sensitivity] initial_plain CS-01 D19 FA; FR = 7/7; 7/7 <- `results/runs/fresh-v1/analysis_sensitivity.json per_family.initial_plain.CS-01`
 - [fresh_sensitivity] initial_plain CS-01 labeler FA; FR = 7/7; 7/7 <- `results/runs/fresh-v1/analysis_sensitivity.json independent_labeling.conditions.initial_plain.independent_label.per_family.CS-01`
 - [fresh_sensitivity] initial_plain CS-02 D19 FA; FR = 0/1; 0/10 <- `results/runs/fresh-v1/analysis_sensitivity.json per_family.initial_plain.CS-02`
@@ -204,6 +219,7 @@ Every number in `paper/generated/fresh/*.tex` (the tables and the number macros 
 - [fresh_oracle_gated] repo_tests reference passes; cells kept; dropped; lost yield invalid/valid; FA; FR = 4/4; 4/4; []; 0/0; 0/29; 34/50 <- `results/runs/fresh-v1/analysis.json sanity.repo_tests.reference; oracle_gated.conditions.repo_tests (cells_kept, cells, dropped, lost_yield, false_acceptance, false_rejection)`
 - [fresh_oracle_gated] gated comparisons[0] C1 - C3 fa: difference; discordant; p_greater; conditional floor; k = 0.631578947368421; {'a_accepts_b_rejects': 14, 'a_rejects_b_accepts': 2}; 0.25; 0.125; 3 <- `results/runs/fresh-v1/analysis.json oracle_gated.comparisons[0]`
 - [fresh_oracle_gated] gated comparisons[1] C1 - C3 fr: difference; discordant; p_greater; conditional floor; k = 0.075; {'a_accepts_b_rejects': 0, 'a_rejects_b_accepts': 3}; 0.5; 0.5; 3 <- `results/runs/fresh-v1/analysis.json oracle_gated.comparisons[1]`
+- [fresh_oracle_gated] caption marker: controlled families = 4 <- `results/runs/fresh-v1/analysis.json n_families`
 
 ## fresh_b1_split
 
@@ -219,6 +235,7 @@ Every number in `paper/generated/fresh/*.tex` (the tables and the number macros 
 - [fresh_b1_split] u1 attempts rejected by the base-commit checks alone = 10/10, 2/10, 0/10, 0/10; pooled 12/40 <- `computed from results/runs/fresh-v1/results.jsonl (repo_tests rows: outcome; checks[].check_id, .status != passed) joined with results/runs/fresh-v1/analysis.json per_task labels and tasks/<task>/verifiers/repo_tests/upstream_check_ids.json upstream_check_ids; variant from data/fresh/fresh-v1/attempts_CS-01.json, data/fresh/fresh-v1/attempts_CS-02.json, data/fresh/fresh-v1/attempts_CS-03.json, data/fresh/fresh-v1/attempts_CS-04.json attempts[].variant`
 - [fresh_b1_split] B1 false rejections with no failing check recorded (must be 0 for the origin rows to be complete) = 0 <- `computed from results/runs/fresh-v1/results.jsonl (repo_tests rows: outcome; checks[].check_id, .status != passed) joined with results/runs/fresh-v1/analysis.json per_task labels and tasks/<task>/verifiers/repo_tests/upstream_check_ids.json upstream_check_ids`
 - [fresh_b1_split] sensitivity view: B1 FA; FR (base-commit checks only), pooled = 13/21; 0/33 <- `results/runs/fresh-v1/analysis_sensitivity.json b1_upstream_only`
+- [fresh_b1_split] caption marker: controlled families = 4 <- `results/runs/fresh-v1/analysis.json n_families`
 
 ## fresh_attempt_costs
 
@@ -232,11 +249,13 @@ Every number in `paper/generated/fresh/*.tex` (the tables and the number macros 
 
 - [fresh_agreement] fresh_agreement primary: table D19 x labeler; agree/n_units; agreement; kappa; disagreements = {'invalid': {'invalid': 27, 'valid': 2}, 'valid': {'invalid': 0, 'valid': 50}}; 77/79; 0.9746835443037974; 0.9447165850244926; ['CS-02-fresh-A-u1-4', 'CS-02-fresh-A-u1-5'] <- `results/runs/fresh-v1/analysis.json independent_labeling.agreement.by_stratum.fresh-v1 (table, agree, n_units, agreement, kappa, disagreements)`
 - [fresh_agreement] fresh_agreement sensitivity: table D19 x labeler; agree/n_units; agreement; kappa; disagreements = {'invalid': {'invalid': 20, 'valid': 1}, 'valid': {'invalid': 0, 'valid': 33}}; 53/54; 0.9814814814814815; 0.9606986899563319; ['CS-02-fresh-A-u1-5'] <- `results/runs/fresh-v1/analysis_sensitivity.json independent_labeling.agreement.by_stratum.fresh-v1 (table, agree, n_units, agreement, kappa, disagreements)`
+- [fresh_agreement] caption marker: controlled families = 4 <- `results/runs/fresh-v1/analysis.json n_families`
 
 ## fresh_outcome_matrix
 
 - [fresh_outcome_matrix] excluded attempt CS-02-fresh-A-final-1: outcomes (graded, counted nowhere) = {'initial_plain': 'pass', 'initial_audited': 'pass', 'full_plain': 'pass', 'full_audited': 'pass', 'llm_freeform': 'pass', 'repo_tests': 'task_failure'} <- `results/runs/fresh-v1/results.jsonl rows of CS-02-fresh-A-final-1; results/runs/fresh-v1/analysis.json fresh_attempts.excluded`
 - [fresh_outcome_matrix] unit rows = 79 <- `results/runs/fresh-v1/analysis.json per_task; independent_labeling.candidates; attempts[] of data/fresh/fresh-v1/attempts_CS-01.json, data/fresh/fresh-v1/attempts_CS-02.json, data/fresh/fresh-v1/attempts_CS-03.json, data/fresh/fresh-v1/attempts_CS-04.json`
+- [fresh_outcome_matrix] caption marker: controlled families = 4 <- `results/runs/fresh-v1/analysis.json n_families`
 
 ## fresh_bootstrap
 
@@ -267,6 +286,43 @@ Every number in `paper/generated/fresh/*.tex` (the tables and the number macros 
 - [fresh_bootstrap] comparisons[12] repo_tests - full_audited fa ci95; degenerate = [-0.375, 0.0]; False <- `results/runs/fresh-v1/analysis.json comparisons[12].ci95, .ci95_degenerate`
 - [fresh_bootstrap] comparisons[13] repo_tests - full_audited fr ci95; degenerate = [0.13043478260869568, 0.9259259259259259]; False <- `results/runs/fresh-v1/analysis.json comparisons[13].ci95, .ci95_degenerate`
 - [fresh_bootstrap] families; inferential (caption) = 4; False <- `results/runs/fresh-v1/analysis.json meta.bootstrap`
+- [fresh_bootstrap] caption marker: controlled families = 4 <- `results/runs/fresh-v1/analysis.json n_families`
+
+## fresh_behaviours
+
+- [fresh_behaviours] Correction | CS-01 = adds 3, retracts 1 <- `data/controlled/scenarios/CS-01.json intended_requirements[] (turn, final_status)`
+- [fresh_behaviours] Invalid u1 attempts: what they break | CS-01 = 10: R-default-unchanged, R-keep-meaningful, R-opt-in, REGRESSION (10); R-custom-format-unchanged (6) <- `results/runs/fresh-v1/analysis.json labels.CS-01.strata.fresh-v1.candidates[].violated of the family's invalid units (per_task labels)`
+- [fresh_behaviours] C1 passes its reference | CS-01 = no (12 of 14 checks fail) <- `results/runs/fresh-v1/results.jsonl row (CS-01, initial_plain, CS-01-reference)`
+- [fresh_behaviours] C1 checks on the retracted or broken requirement | CS-01 = 12 of 14 on the retracted R-default-trim <- `tasks/CS-01/verifiers/initial_plain/spec.json checks[].requirement_ids; tasks/CS-01/contracts/mapping_initial_only.json, mapping2_initial_only.json map`
+- [fresh_behaviours] C1 accepts | CS-01 = 10/10 <- `\fv{cv.c1.cs01}`
+- [fresh_behaviours] C3 accepts | CS-01 = 0/10 <- `\fv{cv.c3.cs01}`
+- [fresh_behaviours] Base tests accept | CS-01 = 0/10 <- `\fv{b1.base.fa.cs01}`
+- [fresh_behaviours] Regression only | CS-01 = 0 <- `\fv{unspec.cs01.n}`
+- [fresh_behaviours] Correction | CS-02 = adds 4, retracts none <- `data/controlled/scenarios/CS-02.json intended_requirements[] (turn, final_status)`
+- [fresh_behaviours] Invalid u1 attempts: what they break | CS-02 = 2: REGRESSION (2) <- `results/runs/fresh-v1/analysis.json labels.CS-02.strata.fresh-v1.candidates[].violated of the family's invalid units (per_task labels)`
+- [fresh_behaviours] C1 passes its reference | CS-02 = yes <- `results/runs/fresh-v1/results.jsonl row (CS-02, initial_plain, CS-02-reference)`
+- [fresh_behaviours] C1 checks on the retracted or broken requirement | CS-02 = -- <- `tasks/CS-02/verifiers/initial_plain/spec.json checks[].requirement_ids; tasks/CS-02/contracts/mapping_initial_only.json, mapping2_initial_only.json map`
+- [fresh_behaviours] C1 accepts | CS-02 = -- <- `\fv{cv.c1.cs02}`
+- [fresh_behaviours] C3 accepts | CS-02 = -- <- `\fv{cv.c3.cs02}`
+- [fresh_behaviours] Base tests accept | CS-02 = 0/2 <- `\fv{b1.base.fa.cs02}`
+- [fresh_behaviours] Regression only | CS-02 = 2 <- `\fv{unspec.cs02.n}`
+- [fresh_behaviours] Correction | CS-03 = adds 3, retracts none <- `data/controlled/scenarios/CS-03.json intended_requirements[] (turn, final_status)`
+- [fresh_behaviours] Invalid u1 attempts: what they break | CS-03 = 7: R-all-caps-input (7) <- `results/runs/fresh-v1/analysis.json labels.CS-03.strata.fresh-v1.candidates[].violated of the family's invalid units (per_task labels)`
+- [fresh_behaviours] C1 passes its reference | CS-03 = yes <- `results/runs/fresh-v1/results.jsonl row (CS-03, initial_plain, CS-03-reference)`
+- [fresh_behaviours] C1 checks on the retracted or broken requirement | CS-03 = 0 of 14 on R-all-caps-input <- `tasks/CS-03/verifiers/initial_plain/spec.json checks[].requirement_ids; tasks/CS-03/contracts/mapping_initial_only.json, mapping2_initial_only.json map`
+- [fresh_behaviours] C1 accepts | CS-03 = 4/7 <- `\fv{cv.c1.cs03}`
+- [fresh_behaviours] C3 accepts | CS-03 = 0/7 <- `\fv{cv.c3.cs03}`
+- [fresh_behaviours] Base tests accept | CS-03 = 7/7 <- `\fv{b1.base.fa.cs03}`
+- [fresh_behaviours] Regression only | CS-03 = 0 <- `\fv{unspec.cs03.n}`
+- [fresh_behaviours] Correction | CS-04 = adds 5, retracts none <- `data/controlled/scenarios/CS-04.json intended_requirements[] (turn, final_status)`
+- [fresh_behaviours] Invalid u1 attempts: what they break | CS-04 = 10: R-zero-step (10) <- `results/runs/fresh-v1/analysis.json labels.CS-04.strata.fresh-v1.candidates[].violated of the family's invalid units (per_task labels)`
+- [fresh_behaviours] C1 passes its reference | CS-04 = yes <- `results/runs/fresh-v1/results.jsonl row (CS-04, initial_plain, CS-04-reference)`
+- [fresh_behaviours] C1 checks on the retracted or broken requirement | CS-04 = 0 of 12 on R-zero-step <- `tasks/CS-04/verifiers/initial_plain/spec.json checks[].requirement_ids; tasks/CS-04/contracts/mapping_initial_only.json, mapping2_initial_only.json map`
+- [fresh_behaviours] C1 accepts | CS-04 = 10/10 <- `\fv{cv.c1.cs04}`
+- [fresh_behaviours] C3 accepts | CS-04 = 0/10 <- `\fv{cv.c3.cs04}`
+- [fresh_behaviours] Base tests accept | CS-04 = 10/10 <- `\fv{b1.base.fa.cs04}`
+- [fresh_behaviours] Regression only | CS-04 = 0 <- `\fv{unspec.cs04.n}`
+- [fresh_behaviours] caption marker: controlled families = 4 <- `results/runs/fresh-v1/analysis.json n_families`
 
 ## regrade_reliability
 
@@ -278,6 +334,7 @@ Every number in `paper/generated/fresh/*.tex` (the tables and the number macros 
 
 - [numbers] \fv{run.pairs} (graded pairs) = 672 <- `results/runs/fresh-v1/results.jsonl (rows; = results/runs/fresh-v1/analysis.json meta.n_results)`
 - [numbers] \fv{run.repeats} = 3 <- `results/runs/fresh-v1/manifest.json repeats`
+- [numbers] \fv{run.repeats.w} (in words) = three <- `results/runs/fresh-v1/manifest.json repeats`
 - [numbers] \fv{run.pass} = 427 <- `results/runs/fresh-v1/results.jsonl outcome (count of pass)`
 - [numbers] \fv{run.taskfailure} = 245 <- `results/runs/fresh-v1/results.jsonl outcome (count of task_failure)`
 - [numbers] \fv{run.other} (infrastructure or unresolved outcomes) = 0 <- `results/runs/fresh-v1/results.jsonl outcome (count of any other outcome: infrastructure, unresolved)`
@@ -291,6 +348,7 @@ Every number in `paper/generated/fresh/*.tex` (the tables and the number macros 
 - [numbers] \fv{run.candidates} (candidates per verifier: the attempts and the references) = 84 <- `results/runs/fresh-v1/results.jsonl verifier_id (rows per verifier)`
 - [numbers] \fv{attempts} = 80 <- `data/fresh/fresh-v1/attempts_CS-01.json summary.attempts; data/fresh/fresh-v1/attempts_CS-02.json summary.attempts; data/fresh/fresh-v1/attempts_CS-03.json summary.attempts; data/fresh/fresh-v1/attempts_CS-04.json summary.attempts`
 - [numbers] \fv{attempts.excluded} = 1 <- `results/runs/fresh-v1/analysis.json fresh_attempts.n_excluded`
+- [numbers] \fv{attempts.excluded.w} (in words) = one <- `results/runs/fresh-v1/analysis.json fresh_attempts.n_excluded`
 - [numbers] \fv{excluded.1} (excluded attempt) = CS-02-fresh-A-final-1 <- `results/runs/fresh-v1/analysis.json fresh_attempts.excluded[0].candidate_id`
 - [numbers] \fv{units} (distinct graded patches) = 79 <- `results/runs/fresh-v1/analysis.json distinct_patches.n_distinct`
 - [numbers] \fv{units.heldout} = 79 <- `results/runs/fresh-v1/analysis.json distinct_patches.n_heldout`
@@ -338,6 +396,28 @@ Every number in `paper/generated/fresh/*.tex` (the tables and the number macros 
 - [numbers] \fv{checks.cs04.b1} = 777 <- `tasks/CS-04/verifiers/repo_tests/spec.json checks (count)`
 - [numbers] \fv{checks.cs04.ref} = 19 <- `tasks/CS-04/verifiers/reference_check/spec.json checks (count)`
 - [numbers] \fv{checks.cs04.il} = 9 <- `tasks/CS-04/verifiers/independent_label/spec.json checks (count)`
+- [numbers] \fv{checks.generated.min} (scored checks of a generated verifier (C1-C4, B2)) = 12 <- `tasks/<task>/verifiers/{initial,full}_{plain,audited},llm_freeform/spec.json checks (count), minimum`
+- [numbers] \fv{checks.generated.max} = 15 <- `tasks/<task>/verifiers/{initial,full}_{plain,audited},llm_freeform/spec.json checks (count), maximum`
+- [numbers] \fv{checks.plain.min} (scored checks of a plain generated verifier (C1, C3, B2)) = 12 <- `tasks/<task>/verifiers/{initial_plain,full_plain,llm_freeform}/spec.json checks (count), minimum`
+- [numbers] \fv{checks.plain.max} = 14 <- `tasks/<task>/verifiers/{initial_plain,full_plain,llm_freeform}/spec.json checks (count), maximum`
+- [numbers] \fv{checks.audited.min} (scored checks of an audited verifier (C2, C4)) = 12 <- `tasks/<task>/verifiers/{initial_audited,full_audited}/spec.json checks (count), minimum`
+- [numbers] \fv{checks.audited.max} = 15 <- `tasks/<task>/verifiers/{initial_audited,full_audited}/spec.json checks (count), maximum`
+- [numbers] \fv{families} (controlled task families) = 4 <- `results/runs/fresh-v1/analysis.json n_families`
+- [numbers] \fv{families.w} (controlled task families; in words) = four <- `results/runs/fresh-v1/analysis.json n_families`
+- [numbers] \fv{run.configurations} (agent configurations) = 2 <- `results/runs/fresh-v1/analysis.json fresh_attempts.by_configuration_variant.*.configuration (distinct values: config-A, config-B)`
+- [numbers] \fv{run.configurations.w} (agent configurations; in words) = two <- `results/runs/fresh-v1/analysis.json fresh_attempts.by_configuration_variant.*.configuration (distinct values: config-A, config-B)`
+- [numbers] \fv{run.conditions} (verifier conditions (C1-C4, B2, B1)) = 6 <- `results/runs/fresh-v1/manifest.json conditions, less the label-support verifiers (reference_check)`
+- [numbers] \fv{run.conditions.w} (verifier conditions (C1-C4, B2, B1); in words) = six <- `results/runs/fresh-v1/manifest.json conditions, less the label-support verifiers (reference_check)`
+- [numbers] \fv{solve.final} (final attempts D19 labels valid) = 39/39 <- `results/runs/fresh-v1/analysis.json fresh_attempts.by_configuration_variant.{config-A/final,config-B/final}.solved, .attempts (summed)`
+- [numbers] \fv{final.invalid} (final attempts D19 labels invalid) = 0/39 <- `results/runs/fresh-v1/analysis.json fresh_attempts.by_configuration_variant.{config-A/final,config-B/final}.not_solved, .attempts (summed)`
+- [numbers] \fv{final.invalid.n} = 0 <- `results/runs/fresh-v1/analysis.json fresh_attempts.by_configuration_variant.{config-A/final,config-B/final}.not_solved (summed)`
+- [numbers] \fv{final.undecided} (neither valid nor invalid under D19) = 0 <- `results/runs/fresh-v1/analysis.json fresh_attempts.by_configuration_variant.{config-A/final,config-B/final}.undecided (summed)`
+- [numbers] \fv{final.attempts} = 39 <- `results/runs/fresh-v1/analysis.json fresh_attempts.by_configuration_variant.{config-A/final,config-B/final}.attempts (summed)`
+- [numbers] \fv{solve.u1} (u1 attempts D19 labels valid) = 11/40 <- `results/runs/fresh-v1/analysis.json fresh_attempts.by_configuration_variant.{config-A/u1,config-B/u1}.solved, .attempts (summed)`
+- [numbers] \fv{u1.invalid} (u1 attempts D19 labels invalid) = 29/40 <- `results/runs/fresh-v1/analysis.json fresh_attempts.by_configuration_variant.{config-A/u1,config-B/u1}.not_solved, .attempts (summed)`
+- [numbers] \fv{u1.invalid.n} = 29 <- `results/runs/fresh-v1/analysis.json fresh_attempts.by_configuration_variant.{config-A/u1,config-B/u1}.not_solved (summed)`
+- [numbers] \fv{u1.undecided} (neither valid nor invalid under D19) = 0 <- `results/runs/fresh-v1/analysis.json fresh_attempts.by_configuration_variant.{config-A/u1,config-B/u1}.undecided (summed)`
+- [numbers] \fv{u1.attempts} = 40 <- `results/runs/fresh-v1/analysis.json fresh_attempts.by_configuration_variant.{config-A/u1,config-B/u1}.attempts (summed)`
 - [numbers] \fv{c1.cs01.fa} = 10/10 <- `results/runs/fresh-v1/analysis.json per_family.initial_plain.CS-01.fa_num, .fa_den`
 - [numbers] \fv{il.c1.cs01.fa} = 10/10 <- `results/runs/fresh-v1/analysis.json independent_labeling.conditions.initial_plain.independent_label.per_family.CS-01.fa_num, .fa_den`
 - [numbers] \fv{c1.cs01.fr} = 10/10 <- `results/runs/fresh-v1/analysis.json per_family.initial_plain.CS-01.fr_num, .fr_den`
@@ -1134,6 +1214,173 @@ Every number in `paper/generated/fresh/*.tex` (the tables and the number macros 
 - [numbers] \fv{disagree.1} = CS-02-fresh-A-u1-4 <- `results/runs/fresh-v1/analysis.json independent_labeling.agreement.by_stratum.fresh-v1.disagreements[0].representative`
 - [numbers] \fv{disagree.2} = CS-02-fresh-A-u1-5 <- `results/runs/fresh-v1/analysis.json independent_labeling.agreement.by_stratum.fresh-v1.disagreements[1].representative`
 - [numbers] \fv{il.ref} (references the labeler passes) = 4/4 <- `results/runs/fresh-v1/analysis.json independent_labeling.sanity.<task>.reference.pass, .n (summed)`
+- [numbers] \fv{corr.cs01.initial} (requirements of the first request) = 2 <- `data/controlled/scenarios/CS-01.json intended_requirements[] (turn, final_status)`
+- [numbers] \fv{corr.cs01.superseded} (first-request requirements the correction retracts) = 1 <- `data/controlled/scenarios/CS-01.json intended_requirements[] (turn, final_status)`
+- [numbers] \fv{corr.cs01.superseded.w} (first-request requirements the correction retracts; in words) = one <- `data/controlled/scenarios/CS-01.json intended_requirements[] (turn, final_status)`
+- [numbers] \fv{corr.cs01.added} (requirements the correction adds) = 3 <- `data/controlled/scenarios/CS-01.json intended_requirements[] (turn, final_status)`
+- [numbers] \fv{corr.cs01.added.w} (requirements the correction adds; in words) = three <- `data/controlled/scenarios/CS-01.json intended_requirements[] (turn, final_status)`
+- [numbers] \fv{beh.cs01.n} (the family's invalid units) = 10 <- `results/runs/fresh-v1/analysis.json labels.CS-01.strata.fresh-v1.candidates[].violated of the family's invalid units (per_task labels)`
+- [numbers] \fv{beh.cs01.r-custom-format-unchanged} (invalid units that violate R-custom-format-unchanged) = 6 <- `results/runs/fresh-v1/analysis.json labels.CS-01.strata.fresh-v1.candidates[].violated of the family's invalid units (per_task labels)`
+- [numbers] \fv{beh.cs01.r-default-unchanged} (invalid units that violate R-default-unchanged) = 10 <- `results/runs/fresh-v1/analysis.json labels.CS-01.strata.fresh-v1.candidates[].violated of the family's invalid units (per_task labels)`
+- [numbers] \fv{beh.cs01.r-keep-meaningful} (invalid units that violate R-keep-meaningful) = 10 <- `results/runs/fresh-v1/analysis.json labels.CS-01.strata.fresh-v1.candidates[].violated of the family's invalid units (per_task labels)`
+- [numbers] \fv{beh.cs01.r-opt-in} (invalid units that violate R-opt-in) = 10 <- `results/runs/fresh-v1/analysis.json labels.CS-01.strata.fresh-v1.candidates[].violated of the family's invalid units (per_task labels)`
+- [numbers] \fv{beh.cs01.regression} (invalid units that violate REGRESSION) = 10 <- `results/runs/fresh-v1/analysis.json labels.CS-01.strata.fresh-v1.candidates[].violated of the family's invalid units (per_task labels)`
+- [numbers] \fv{unspec.cs01.n} (invalid units whose only violation is REGRESSION) = 0 <- `results/runs/fresh-v1/analysis.json labels.CS-01.strata.fresh-v1.candidates[].violated of the family's invalid units (per_task labels)`
+- [numbers] \fv{beh.cs01.broken} = R-default-unchanged, R-opt-in <- `results/runs/fresh-v1/analysis.json labels.CS-01.strata.fresh-v1.candidates[].violated of the family's invalid units (per_task labels); the correction's requirements every violator breaks`
+- [numbers] \fv{ref.c1.cs01} (the condition on the family's reference) = fails <- `results/runs/fresh-v1/results.jsonl row (CS-01, initial_plain, CS-01-reference): outcome, checks[].status`
+- [numbers] \fv{ref.c1.cs01.failed} (checks that fail on the reference) = 12 <- `results/runs/fresh-v1/results.jsonl row (CS-01, initial_plain, CS-01-reference): outcome, checks[].status`
+- [numbers] \fv{ref.c2.cs01} (the condition on the family's reference) = fails <- `results/runs/fresh-v1/results.jsonl row (CS-01, initial_audited, CS-01-reference): outcome, checks[].status`
+- [numbers] \fv{ref.c2.cs01.failed} (checks that fail on the reference) = 12 <- `results/runs/fresh-v1/results.jsonl row (CS-01, initial_audited, CS-01-reference): outcome, checks[].status`
+- [numbers] \fv{ref.c3.cs01} (the condition on the family's reference) = passes <- `results/runs/fresh-v1/results.jsonl row (CS-01, full_plain, CS-01-reference): outcome, checks[].status`
+- [numbers] \fv{ref.c3.cs01.failed} (checks that fail on the reference) = 0 <- `results/runs/fresh-v1/results.jsonl row (CS-01, full_plain, CS-01-reference): outcome, checks[].status`
+- [numbers] \fv{ref.c4.cs01} (the condition on the family's reference) = passes <- `results/runs/fresh-v1/results.jsonl row (CS-01, full_audited, CS-01-reference): outcome, checks[].status`
+- [numbers] \fv{ref.c4.cs01.failed} (checks that fail on the reference) = 0 <- `results/runs/fresh-v1/results.jsonl row (CS-01, full_audited, CS-01-reference): outcome, checks[].status`
+- [numbers] \fv{ref.b2.cs01} (the condition on the family's reference) = passes <- `results/runs/fresh-v1/results.jsonl row (CS-01, llm_freeform, CS-01-reference): outcome, checks[].status`
+- [numbers] \fv{ref.b2.cs01.failed} (checks that fail on the reference) = 0 <- `results/runs/fresh-v1/results.jsonl row (CS-01, llm_freeform, CS-01-reference): outcome, checks[].status`
+- [numbers] \fv{ref.b1.cs01} (the condition on the family's reference) = passes <- `results/runs/fresh-v1/results.jsonl row (CS-01, repo_tests, CS-01-reference): outcome, checks[].status`
+- [numbers] \fv{ref.b1.cs01.failed} (checks that fail on the reference) = 0 <- `results/runs/fresh-v1/results.jsonl row (CS-01, repo_tests, CS-01-reference): outcome, checks[].status`
+- [numbers] \fv{c1.cs01.checks.superseded} (C1 checks on the superseded requirement(s)) = 12 <- `tasks/CS-01/verifiers/initial_plain/spec.json checks[].requirement_ids through tasks/CS-01/contracts/mapping_initial_only.json map, onto R-default-trim`
+- [numbers] \fv{c1.cs01.checks.superseded.failed} (of them, checks that fail on the reference) = 12 <- `tasks/CS-01/verifiers/initial_plain/spec.json; mapping_initial_only.json map; results/runs/fresh-v1/results.jsonl row (CS-01, initial_plain, CS-01-reference) checks[].status`
+- [numbers] \fv{c1.cs01.checks.other.failed} (checks on other requirements that fail on it) = 0 <- `tasks/CS-01/verifiers/initial_plain/spec.json; mapping_initial_only.json map; results/runs/fresh-v1/results.jsonl row (CS-01, initial_plain, CS-01-reference) checks[].status`
+- [numbers] \fv{c1.cs01.checks.superseded.mapper2} (C1 checks on the superseded requirement(s)) = 12 <- `tasks/CS-01/verifiers/initial_plain/spec.json checks[].requirement_ids through tasks/CS-01/contracts/mapping2_initial_only.json map, onto R-default-trim`
+- [numbers] \fv{c1.cs01.checks.broken} (C1 checks on the broken requirement(s)) = 6 <- `tasks/CS-01/verifiers/initial_plain/spec.json checks[].requirement_ids through tasks/CS-01/contracts/mapping_initial_only.json map, onto R-default-unchanged, R-opt-in`
+- [numbers] \fv{c1.cs01.checks.broken.mapper2} (C1 checks on the broken requirement(s)) = 6 <- `tasks/CS-01/verifiers/initial_plain/spec.json checks[].requirement_ids through tasks/CS-01/contracts/mapping2_initial_only.json map, onto R-default-unchanged, R-opt-in`
+- [numbers] \fv{c1.cs01.cv.rejected} (correction violators C1 rejects) = 0 <- `results/runs/fresh-v1/results.jsonl rows (CS-01, initial_plain, <violator>) checks[].status; tasks/CS-01/verifiers/initial_plain/spec.json checks[].requirement_ids`
+- [numbers] \fv{audit.c2.cs01.added} (checks the audited verifier has and its plain one lacks) = 0 <- `tasks/CS-01/verifiers/initial_audited/spec.json checks[].check_id, audit; tasks/CS-01/verifiers/initial_plain/spec.json checks[].check_id, content_sha256`
+- [numbers] \fv{audit.c2.cs01.removed} (checks the plain verifier has and the audited one lacks) = 0 <- `tasks/CS-01/verifiers/initial_audited/spec.json checks[].check_id, audit; tasks/CS-01/verifiers/initial_plain/spec.json checks[].check_id, content_sha256`
+- [numbers] \fv{audit.c2.cs01.revisions} (audit revisions) = 1 <- `tasks/CS-01/verifiers/initial_audited/spec.json checks[].check_id, audit; tasks/CS-01/verifiers/initial_plain/spec.json checks[].check_id, content_sha256`
+- [numbers] \fv{audit.c2.cs01.revisions.w} (audit revisions; in words) = one <- `tasks/CS-01/verifiers/initial_audited/spec.json checks[].check_id, audit; tasks/CS-01/verifiers/initial_plain/spec.json checks[].check_id, content_sha256`
+- [numbers] \fv{audit.c2.cs01.passed} = not passed <- `tasks/CS-01/verifiers/initial_audited/spec.json checks[].check_id, audit; tasks/CS-01/verifiers/initial_plain/spec.json checks[].check_id, content_sha256`
+- [numbers] \fv{audit.c2.cs01.identical} (the audited tests against the plain ones) = revised <- `tasks/CS-01/verifiers/initial_audited/spec.json checks[].check_id, audit; tasks/CS-01/verifiers/initial_plain/spec.json checks[].check_id, content_sha256`
+- [numbers] \fv{c2.cs01.fr.added} (false rejections whose failing checks are all checks the audit's revision added) = 0 <- `results/runs/fresh-v1/results.jsonl rows (CS-01, initial_audited, <valid unit>) checks[].status; tasks/CS-01/verifiers/initial_audited/spec.json checks[].check_id, audit; tasks/CS-01/verifiers/initial_plain/spec.json checks[].check_id, content_sha256`
+- [numbers] \fv{audit.c4.cs01.added} (checks the audited verifier has and its plain one lacks) = 0 <- `tasks/CS-01/verifiers/full_audited/spec.json checks[].check_id, audit; tasks/CS-01/verifiers/full_plain/spec.json checks[].check_id, content_sha256`
+- [numbers] \fv{audit.c4.cs01.removed} (checks the plain verifier has and the audited one lacks) = 0 <- `tasks/CS-01/verifiers/full_audited/spec.json checks[].check_id, audit; tasks/CS-01/verifiers/full_plain/spec.json checks[].check_id, content_sha256`
+- [numbers] \fv{audit.c4.cs01.revisions} (audit revisions) = 0 <- `tasks/CS-01/verifiers/full_audited/spec.json checks[].check_id, audit; tasks/CS-01/verifiers/full_plain/spec.json checks[].check_id, content_sha256`
+- [numbers] \fv{audit.c4.cs01.revisions.w} (audit revisions; in words) = zero <- `tasks/CS-01/verifiers/full_audited/spec.json checks[].check_id, audit; tasks/CS-01/verifiers/full_plain/spec.json checks[].check_id, content_sha256`
+- [numbers] \fv{audit.c4.cs01.passed} = passed <- `tasks/CS-01/verifiers/full_audited/spec.json checks[].check_id, audit; tasks/CS-01/verifiers/full_plain/spec.json checks[].check_id, content_sha256`
+- [numbers] \fv{audit.c4.cs01.identical} (the audited tests against the plain ones) = identical <- `tasks/CS-01/verifiers/full_audited/spec.json checks[].check_id, audit; tasks/CS-01/verifiers/full_plain/spec.json checks[].check_id, content_sha256`
+- [numbers] \fv{c4.cs01.fr.added} (false rejections whose failing checks are all checks the audit's revision added) = 0 <- `results/runs/fresh-v1/results.jsonl rows (CS-01, full_audited, <valid unit>) checks[].status; tasks/CS-01/verifiers/full_audited/spec.json checks[].check_id, audit; tasks/CS-01/verifiers/full_plain/spec.json checks[].check_id, content_sha256`
+- [numbers] \fv{corr.cs02.initial} (requirements of the first request) = 2 <- `data/controlled/scenarios/CS-02.json intended_requirements[] (turn, final_status)`
+- [numbers] \fv{corr.cs02.superseded} (first-request requirements the correction retracts) = 0 <- `data/controlled/scenarios/CS-02.json intended_requirements[] (turn, final_status)`
+- [numbers] \fv{corr.cs02.superseded.w} (first-request requirements the correction retracts; in words) = zero <- `data/controlled/scenarios/CS-02.json intended_requirements[] (turn, final_status)`
+- [numbers] \fv{corr.cs02.added} (requirements the correction adds) = 4 <- `data/controlled/scenarios/CS-02.json intended_requirements[] (turn, final_status)`
+- [numbers] \fv{corr.cs02.added.w} (requirements the correction adds; in words) = four <- `data/controlled/scenarios/CS-02.json intended_requirements[] (turn, final_status)`
+- [numbers] \fv{beh.cs02.n} (the family's invalid units) = 2 <- `results/runs/fresh-v1/analysis.json labels.CS-02.strata.fresh-v1.candidates[].violated of the family's invalid units (per_task labels)`
+- [numbers] \fv{beh.cs02.regression} (invalid units that violate REGRESSION) = 2 <- `results/runs/fresh-v1/analysis.json labels.CS-02.strata.fresh-v1.candidates[].violated of the family's invalid units (per_task labels)`
+- [numbers] \fv{unspec.cs02.n} (invalid units whose only violation is REGRESSION) = 2 <- `results/runs/fresh-v1/analysis.json labels.CS-02.strata.fresh-v1.candidates[].violated of the family's invalid units (per_task labels)`
+- [numbers] \fv{beh.cs02.broken} = none <- `results/runs/fresh-v1/analysis.json labels.CS-02.strata.fresh-v1.candidates[].violated of the family's invalid units (per_task labels); the correction's requirements every violator breaks`
+- [numbers] \fv{ref.c1.cs02} (the condition on the family's reference) = passes <- `results/runs/fresh-v1/results.jsonl row (CS-02, initial_plain, CS-02-reference): outcome, checks[].status`
+- [numbers] \fv{ref.c1.cs02.failed} (checks that fail on the reference) = 0 <- `results/runs/fresh-v1/results.jsonl row (CS-02, initial_plain, CS-02-reference): outcome, checks[].status`
+- [numbers] \fv{ref.c2.cs02} (the condition on the family's reference) = passes <- `results/runs/fresh-v1/results.jsonl row (CS-02, initial_audited, CS-02-reference): outcome, checks[].status`
+- [numbers] \fv{ref.c2.cs02.failed} (checks that fail on the reference) = 0 <- `results/runs/fresh-v1/results.jsonl row (CS-02, initial_audited, CS-02-reference): outcome, checks[].status`
+- [numbers] \fv{ref.c3.cs02} (the condition on the family's reference) = passes <- `results/runs/fresh-v1/results.jsonl row (CS-02, full_plain, CS-02-reference): outcome, checks[].status`
+- [numbers] \fv{ref.c3.cs02.failed} (checks that fail on the reference) = 0 <- `results/runs/fresh-v1/results.jsonl row (CS-02, full_plain, CS-02-reference): outcome, checks[].status`
+- [numbers] \fv{ref.c4.cs02} (the condition on the family's reference) = passes <- `results/runs/fresh-v1/results.jsonl row (CS-02, full_audited, CS-02-reference): outcome, checks[].status`
+- [numbers] \fv{ref.c4.cs02.failed} (checks that fail on the reference) = 0 <- `results/runs/fresh-v1/results.jsonl row (CS-02, full_audited, CS-02-reference): outcome, checks[].status`
+- [numbers] \fv{ref.b2.cs02} (the condition on the family's reference) = passes <- `results/runs/fresh-v1/results.jsonl row (CS-02, llm_freeform, CS-02-reference): outcome, checks[].status`
+- [numbers] \fv{ref.b2.cs02.failed} (checks that fail on the reference) = 0 <- `results/runs/fresh-v1/results.jsonl row (CS-02, llm_freeform, CS-02-reference): outcome, checks[].status`
+- [numbers] \fv{ref.b1.cs02} (the condition on the family's reference) = passes <- `results/runs/fresh-v1/results.jsonl row (CS-02, repo_tests, CS-02-reference): outcome, checks[].status`
+- [numbers] \fv{ref.b1.cs02.failed} (checks that fail on the reference) = 0 <- `results/runs/fresh-v1/results.jsonl row (CS-02, repo_tests, CS-02-reference): outcome, checks[].status`
+- [numbers] \fv{audit.c2.cs02.added} (checks the audited verifier has and its plain one lacks) = 0 <- `tasks/CS-02/verifiers/initial_audited/spec.json checks[].check_id, audit; tasks/CS-02/verifiers/initial_plain/spec.json checks[].check_id, content_sha256`
+- [numbers] \fv{audit.c2.cs02.removed} (checks the plain verifier has and the audited one lacks) = 0 <- `tasks/CS-02/verifiers/initial_audited/spec.json checks[].check_id, audit; tasks/CS-02/verifiers/initial_plain/spec.json checks[].check_id, content_sha256`
+- [numbers] \fv{audit.c2.cs02.revisions} (audit revisions) = 0 <- `tasks/CS-02/verifiers/initial_audited/spec.json checks[].check_id, audit; tasks/CS-02/verifiers/initial_plain/spec.json checks[].check_id, content_sha256`
+- [numbers] \fv{audit.c2.cs02.revisions.w} (audit revisions; in words) = zero <- `tasks/CS-02/verifiers/initial_audited/spec.json checks[].check_id, audit; tasks/CS-02/verifiers/initial_plain/spec.json checks[].check_id, content_sha256`
+- [numbers] \fv{audit.c2.cs02.passed} = passed <- `tasks/CS-02/verifiers/initial_audited/spec.json checks[].check_id, audit; tasks/CS-02/verifiers/initial_plain/spec.json checks[].check_id, content_sha256`
+- [numbers] \fv{audit.c2.cs02.identical} (the audited tests against the plain ones) = identical <- `tasks/CS-02/verifiers/initial_audited/spec.json checks[].check_id, audit; tasks/CS-02/verifiers/initial_plain/spec.json checks[].check_id, content_sha256`
+- [numbers] \fv{c2.cs02.fr.added} (false rejections whose failing checks are all checks the audit's revision added) = 0 <- `results/runs/fresh-v1/results.jsonl rows (CS-02, initial_audited, <valid unit>) checks[].status; tasks/CS-02/verifiers/initial_audited/spec.json checks[].check_id, audit; tasks/CS-02/verifiers/initial_plain/spec.json checks[].check_id, content_sha256`
+- [numbers] \fv{audit.c4.cs02.added} (checks the audited verifier has and its plain one lacks) = 0 <- `tasks/CS-02/verifiers/full_audited/spec.json checks[].check_id, audit; tasks/CS-02/verifiers/full_plain/spec.json checks[].check_id, content_sha256`
+- [numbers] \fv{audit.c4.cs02.removed} (checks the plain verifier has and the audited one lacks) = 0 <- `tasks/CS-02/verifiers/full_audited/spec.json checks[].check_id, audit; tasks/CS-02/verifiers/full_plain/spec.json checks[].check_id, content_sha256`
+- [numbers] \fv{audit.c4.cs02.revisions} (audit revisions) = 1 <- `tasks/CS-02/verifiers/full_audited/spec.json checks[].check_id, audit; tasks/CS-02/verifiers/full_plain/spec.json checks[].check_id, content_sha256`
+- [numbers] \fv{audit.c4.cs02.revisions.w} (audit revisions; in words) = one <- `tasks/CS-02/verifiers/full_audited/spec.json checks[].check_id, audit; tasks/CS-02/verifiers/full_plain/spec.json checks[].check_id, content_sha256`
+- [numbers] \fv{audit.c4.cs02.passed} = passed <- `tasks/CS-02/verifiers/full_audited/spec.json checks[].check_id, audit; tasks/CS-02/verifiers/full_plain/spec.json checks[].check_id, content_sha256`
+- [numbers] \fv{audit.c4.cs02.identical} (the audited tests against the plain ones) = revised <- `tasks/CS-02/verifiers/full_audited/spec.json checks[].check_id, audit; tasks/CS-02/verifiers/full_plain/spec.json checks[].check_id, content_sha256`
+- [numbers] \fv{c4.cs02.fr.added} (false rejections whose failing checks are all checks the audit's revision added) = 0 <- `results/runs/fresh-v1/results.jsonl rows (CS-02, full_audited, <valid unit>) checks[].status; tasks/CS-02/verifiers/full_audited/spec.json checks[].check_id, audit; tasks/CS-02/verifiers/full_plain/spec.json checks[].check_id, content_sha256`
+- [numbers] \fv{corr.cs03.initial} (requirements of the first request) = 1 <- `data/controlled/scenarios/CS-03.json intended_requirements[] (turn, final_status)`
+- [numbers] \fv{corr.cs03.superseded} (first-request requirements the correction retracts) = 0 <- `data/controlled/scenarios/CS-03.json intended_requirements[] (turn, final_status)`
+- [numbers] \fv{corr.cs03.superseded.w} (first-request requirements the correction retracts; in words) = zero <- `data/controlled/scenarios/CS-03.json intended_requirements[] (turn, final_status)`
+- [numbers] \fv{corr.cs03.added} (requirements the correction adds) = 3 <- `data/controlled/scenarios/CS-03.json intended_requirements[] (turn, final_status)`
+- [numbers] \fv{corr.cs03.added.w} (requirements the correction adds; in words) = three <- `data/controlled/scenarios/CS-03.json intended_requirements[] (turn, final_status)`
+- [numbers] \fv{beh.cs03.n} (the family's invalid units) = 7 <- `results/runs/fresh-v1/analysis.json labels.CS-03.strata.fresh-v1.candidates[].violated of the family's invalid units (per_task labels)`
+- [numbers] \fv{beh.cs03.r-all-caps-input} (invalid units that violate R-all-caps-input) = 7 <- `results/runs/fresh-v1/analysis.json labels.CS-03.strata.fresh-v1.candidates[].violated of the family's invalid units (per_task labels)`
+- [numbers] \fv{unspec.cs03.n} (invalid units whose only violation is REGRESSION) = 0 <- `results/runs/fresh-v1/analysis.json labels.CS-03.strata.fresh-v1.candidates[].violated of the family's invalid units (per_task labels)`
+- [numbers] \fv{beh.cs03.broken} = R-all-caps-input <- `results/runs/fresh-v1/analysis.json labels.CS-03.strata.fresh-v1.candidates[].violated of the family's invalid units (per_task labels); the correction's requirements every violator breaks`
+- [numbers] \fv{ref.c1.cs03} (the condition on the family's reference) = passes <- `results/runs/fresh-v1/results.jsonl row (CS-03, initial_plain, CS-03-reference): outcome, checks[].status`
+- [numbers] \fv{ref.c1.cs03.failed} (checks that fail on the reference) = 0 <- `results/runs/fresh-v1/results.jsonl row (CS-03, initial_plain, CS-03-reference): outcome, checks[].status`
+- [numbers] \fv{ref.c2.cs03} (the condition on the family's reference) = passes <- `results/runs/fresh-v1/results.jsonl row (CS-03, initial_audited, CS-03-reference): outcome, checks[].status`
+- [numbers] \fv{ref.c2.cs03.failed} (checks that fail on the reference) = 0 <- `results/runs/fresh-v1/results.jsonl row (CS-03, initial_audited, CS-03-reference): outcome, checks[].status`
+- [numbers] \fv{ref.c3.cs03} (the condition on the family's reference) = passes <- `results/runs/fresh-v1/results.jsonl row (CS-03, full_plain, CS-03-reference): outcome, checks[].status`
+- [numbers] \fv{ref.c3.cs03.failed} (checks that fail on the reference) = 0 <- `results/runs/fresh-v1/results.jsonl row (CS-03, full_plain, CS-03-reference): outcome, checks[].status`
+- [numbers] \fv{ref.c4.cs03} (the condition on the family's reference) = passes <- `results/runs/fresh-v1/results.jsonl row (CS-03, full_audited, CS-03-reference): outcome, checks[].status`
+- [numbers] \fv{ref.c4.cs03.failed} (checks that fail on the reference) = 0 <- `results/runs/fresh-v1/results.jsonl row (CS-03, full_audited, CS-03-reference): outcome, checks[].status`
+- [numbers] \fv{ref.b2.cs03} (the condition on the family's reference) = passes <- `results/runs/fresh-v1/results.jsonl row (CS-03, llm_freeform, CS-03-reference): outcome, checks[].status`
+- [numbers] \fv{ref.b2.cs03.failed} (checks that fail on the reference) = 0 <- `results/runs/fresh-v1/results.jsonl row (CS-03, llm_freeform, CS-03-reference): outcome, checks[].status`
+- [numbers] \fv{ref.b1.cs03} (the condition on the family's reference) = passes <- `results/runs/fresh-v1/results.jsonl row (CS-03, repo_tests, CS-03-reference): outcome, checks[].status`
+- [numbers] \fv{ref.b1.cs03.failed} (checks that fail on the reference) = 0 <- `results/runs/fresh-v1/results.jsonl row (CS-03, repo_tests, CS-03-reference): outcome, checks[].status`
+- [numbers] \fv{c1.cs03.checks.broken} (C1 checks on the broken requirement(s)) = 0 <- `tasks/CS-03/verifiers/initial_plain/spec.json checks[].requirement_ids through tasks/CS-03/contracts/mapping_initial_only.json map, onto R-all-caps-input`
+- [numbers] \fv{c1.cs03.checks.broken.mapper2} (C1 checks on the broken requirement(s)) = 0 <- `tasks/CS-03/verifiers/initial_plain/spec.json checks[].requirement_ids through tasks/CS-03/contracts/mapping2_initial_only.json map, onto R-all-caps-input`
+- [numbers] \fv{c1.cs03.cv.rejected} (correction violators C1 rejects) = 3 <- `results/runs/fresh-v1/results.jsonl rows (CS-03, initial_plain, <violator>) checks[].status; tasks/CS-03/verifiers/initial_plain/spec.json checks[].requirement_ids`
+- [numbers] \fv{c1.cs03.cv.rejected.r3} (rejected violators failing a check of C1's R3) = 2 <- `results/runs/fresh-v1/results.jsonl rows (CS-03, initial_plain, <violator>) checks[].status; tasks/CS-03/verifiers/initial_plain/spec.json checks[].requirement_ids`
+- [numbers] \fv{c1.cs03.cv.rejected.r4} (rejected violators failing a check of C1's R4) = 3 <- `results/runs/fresh-v1/results.jsonl rows (CS-03, initial_plain, <violator>) checks[].status; tasks/CS-03/verifiers/initial_plain/spec.json checks[].requirement_ids`
+- [numbers] \fv{audit.c2.cs03.added} (checks the audited verifier has and its plain one lacks) = 1 <- `tasks/CS-03/verifiers/initial_audited/spec.json checks[].check_id, audit; tasks/CS-03/verifiers/initial_plain/spec.json checks[].check_id, content_sha256`
+- [numbers] \fv{audit.c2.cs03.removed} (checks the plain verifier has and the audited one lacks) = 0 <- `tasks/CS-03/verifiers/initial_audited/spec.json checks[].check_id, audit; tasks/CS-03/verifiers/initial_plain/spec.json checks[].check_id, content_sha256`
+- [numbers] \fv{audit.c2.cs03.revisions} (audit revisions) = 1 <- `tasks/CS-03/verifiers/initial_audited/spec.json checks[].check_id, audit; tasks/CS-03/verifiers/initial_plain/spec.json checks[].check_id, content_sha256`
+- [numbers] \fv{audit.c2.cs03.revisions.w} (audit revisions; in words) = one <- `tasks/CS-03/verifiers/initial_audited/spec.json checks[].check_id, audit; tasks/CS-03/verifiers/initial_plain/spec.json checks[].check_id, content_sha256`
+- [numbers] \fv{audit.c2.cs03.passed} = passed <- `tasks/CS-03/verifiers/initial_audited/spec.json checks[].check_id, audit; tasks/CS-03/verifiers/initial_plain/spec.json checks[].check_id, content_sha256`
+- [numbers] \fv{audit.c2.cs03.identical} (the audited tests against the plain ones) = revised <- `tasks/CS-03/verifiers/initial_audited/spec.json checks[].check_id, audit; tasks/CS-03/verifiers/initial_plain/spec.json checks[].check_id, content_sha256`
+- [numbers] \fv{c2.cs03.fr.added} (false rejections whose failing checks are all checks the audit's revision added) = 0 <- `results/runs/fresh-v1/results.jsonl rows (CS-03, initial_audited, <valid unit>) checks[].status; tasks/CS-03/verifiers/initial_audited/spec.json checks[].check_id, audit; tasks/CS-03/verifiers/initial_plain/spec.json checks[].check_id, content_sha256`
+- [numbers] \fv{audit.c4.cs03.added} (checks the audited verifier has and its plain one lacks) = 2 <- `tasks/CS-03/verifiers/full_audited/spec.json checks[].check_id, audit; tasks/CS-03/verifiers/full_plain/spec.json checks[].check_id, content_sha256`
+- [numbers] \fv{audit.c4.cs03.removed} (checks the plain verifier has and the audited one lacks) = 0 <- `tasks/CS-03/verifiers/full_audited/spec.json checks[].check_id, audit; tasks/CS-03/verifiers/full_plain/spec.json checks[].check_id, content_sha256`
+- [numbers] \fv{audit.c4.cs03.revisions} (audit revisions) = 1 <- `tasks/CS-03/verifiers/full_audited/spec.json checks[].check_id, audit; tasks/CS-03/verifiers/full_plain/spec.json checks[].check_id, content_sha256`
+- [numbers] \fv{audit.c4.cs03.revisions.w} (audit revisions; in words) = one <- `tasks/CS-03/verifiers/full_audited/spec.json checks[].check_id, audit; tasks/CS-03/verifiers/full_plain/spec.json checks[].check_id, content_sha256`
+- [numbers] \fv{audit.c4.cs03.passed} = passed <- `tasks/CS-03/verifiers/full_audited/spec.json checks[].check_id, audit; tasks/CS-03/verifiers/full_plain/spec.json checks[].check_id, content_sha256`
+- [numbers] \fv{audit.c4.cs03.identical} (the audited tests against the plain ones) = revised <- `tasks/CS-03/verifiers/full_audited/spec.json checks[].check_id, audit; tasks/CS-03/verifiers/full_plain/spec.json checks[].check_id, content_sha256`
+- [numbers] \fv{c4.cs03.fr.added} (false rejections whose failing checks are all checks the audit's revision added) = 6 <- `results/runs/fresh-v1/results.jsonl rows (CS-03, full_audited, <valid unit>) checks[].status; tasks/CS-03/verifiers/full_audited/spec.json checks[].check_id, audit; tasks/CS-03/verifiers/full_plain/spec.json checks[].check_id, content_sha256`
+- [numbers] \fv{corr.cs04.initial} (requirements of the first request) = 1 <- `data/controlled/scenarios/CS-04.json intended_requirements[] (turn, final_status)`
+- [numbers] \fv{corr.cs04.superseded} (first-request requirements the correction retracts) = 0 <- `data/controlled/scenarios/CS-04.json intended_requirements[] (turn, final_status)`
+- [numbers] \fv{corr.cs04.superseded.w} (first-request requirements the correction retracts; in words) = zero <- `data/controlled/scenarios/CS-04.json intended_requirements[] (turn, final_status)`
+- [numbers] \fv{corr.cs04.added} (requirements the correction adds) = 5 <- `data/controlled/scenarios/CS-04.json intended_requirements[] (turn, final_status)`
+- [numbers] \fv{corr.cs04.added.w} (requirements the correction adds; in words) = five <- `data/controlled/scenarios/CS-04.json intended_requirements[] (turn, final_status)`
+- [numbers] \fv{beh.cs04.n} (the family's invalid units) = 10 <- `results/runs/fresh-v1/analysis.json labels.CS-04.strata.fresh-v1.candidates[].violated of the family's invalid units (per_task labels)`
+- [numbers] \fv{beh.cs04.r-zero-step} (invalid units that violate R-zero-step) = 10 <- `results/runs/fresh-v1/analysis.json labels.CS-04.strata.fresh-v1.candidates[].violated of the family's invalid units (per_task labels)`
+- [numbers] \fv{unspec.cs04.n} (invalid units whose only violation is REGRESSION) = 0 <- `results/runs/fresh-v1/analysis.json labels.CS-04.strata.fresh-v1.candidates[].violated of the family's invalid units (per_task labels)`
+- [numbers] \fv{beh.cs04.broken} = R-zero-step <- `results/runs/fresh-v1/analysis.json labels.CS-04.strata.fresh-v1.candidates[].violated of the family's invalid units (per_task labels); the correction's requirements every violator breaks`
+- [numbers] \fv{ref.c1.cs04} (the condition on the family's reference) = passes <- `results/runs/fresh-v1/results.jsonl row (CS-04, initial_plain, CS-04-reference): outcome, checks[].status`
+- [numbers] \fv{ref.c1.cs04.failed} (checks that fail on the reference) = 0 <- `results/runs/fresh-v1/results.jsonl row (CS-04, initial_plain, CS-04-reference): outcome, checks[].status`
+- [numbers] \fv{ref.c2.cs04} (the condition on the family's reference) = passes <- `results/runs/fresh-v1/results.jsonl row (CS-04, initial_audited, CS-04-reference): outcome, checks[].status`
+- [numbers] \fv{ref.c2.cs04.failed} (checks that fail on the reference) = 0 <- `results/runs/fresh-v1/results.jsonl row (CS-04, initial_audited, CS-04-reference): outcome, checks[].status`
+- [numbers] \fv{ref.c3.cs04} (the condition on the family's reference) = passes <- `results/runs/fresh-v1/results.jsonl row (CS-04, full_plain, CS-04-reference): outcome, checks[].status`
+- [numbers] \fv{ref.c3.cs04.failed} (checks that fail on the reference) = 0 <- `results/runs/fresh-v1/results.jsonl row (CS-04, full_plain, CS-04-reference): outcome, checks[].status`
+- [numbers] \fv{ref.c4.cs04} (the condition on the family's reference) = passes <- `results/runs/fresh-v1/results.jsonl row (CS-04, full_audited, CS-04-reference): outcome, checks[].status`
+- [numbers] \fv{ref.c4.cs04.failed} (checks that fail on the reference) = 0 <- `results/runs/fresh-v1/results.jsonl row (CS-04, full_audited, CS-04-reference): outcome, checks[].status`
+- [numbers] \fv{ref.b2.cs04} (the condition on the family's reference) = passes <- `results/runs/fresh-v1/results.jsonl row (CS-04, llm_freeform, CS-04-reference): outcome, checks[].status`
+- [numbers] \fv{ref.b2.cs04.failed} (checks that fail on the reference) = 0 <- `results/runs/fresh-v1/results.jsonl row (CS-04, llm_freeform, CS-04-reference): outcome, checks[].status`
+- [numbers] \fv{ref.b1.cs04} (the condition on the family's reference) = passes <- `results/runs/fresh-v1/results.jsonl row (CS-04, repo_tests, CS-04-reference): outcome, checks[].status`
+- [numbers] \fv{ref.b1.cs04.failed} (checks that fail on the reference) = 0 <- `results/runs/fresh-v1/results.jsonl row (CS-04, repo_tests, CS-04-reference): outcome, checks[].status`
+- [numbers] \fv{c1.cs04.checks.broken} (C1 checks on the broken requirement(s)) = 0 <- `tasks/CS-04/verifiers/initial_plain/spec.json checks[].requirement_ids through tasks/CS-04/contracts/mapping_initial_only.json map, onto R-zero-step`
+- [numbers] \fv{c1.cs04.checks.broken.mapper2} (C1 checks on the broken requirement(s)) = 0 <- `tasks/CS-04/verifiers/initial_plain/spec.json checks[].requirement_ids through tasks/CS-04/contracts/mapping2_initial_only.json map, onto R-zero-step`
+- [numbers] \fv{c1.cs04.cv.rejected} (correction violators C1 rejects) = 0 <- `results/runs/fresh-v1/results.jsonl rows (CS-04, initial_plain, <violator>) checks[].status; tasks/CS-04/verifiers/initial_plain/spec.json checks[].requirement_ids`
+- [numbers] \fv{audit.c2.cs04.added} (checks the audited verifier has and its plain one lacks) = 0 <- `tasks/CS-04/verifiers/initial_audited/spec.json checks[].check_id, audit; tasks/CS-04/verifiers/initial_plain/spec.json checks[].check_id, content_sha256`
+- [numbers] \fv{audit.c2.cs04.removed} (checks the plain verifier has and the audited one lacks) = 0 <- `tasks/CS-04/verifiers/initial_audited/spec.json checks[].check_id, audit; tasks/CS-04/verifiers/initial_plain/spec.json checks[].check_id, content_sha256`
+- [numbers] \fv{audit.c2.cs04.revisions} (audit revisions) = 0 <- `tasks/CS-04/verifiers/initial_audited/spec.json checks[].check_id, audit; tasks/CS-04/verifiers/initial_plain/spec.json checks[].check_id, content_sha256`
+- [numbers] \fv{audit.c2.cs04.revisions.w} (audit revisions; in words) = zero <- `tasks/CS-04/verifiers/initial_audited/spec.json checks[].check_id, audit; tasks/CS-04/verifiers/initial_plain/spec.json checks[].check_id, content_sha256`
+- [numbers] \fv{audit.c2.cs04.passed} = passed <- `tasks/CS-04/verifiers/initial_audited/spec.json checks[].check_id, audit; tasks/CS-04/verifiers/initial_plain/spec.json checks[].check_id, content_sha256`
+- [numbers] \fv{audit.c2.cs04.identical} (the audited tests against the plain ones) = identical <- `tasks/CS-04/verifiers/initial_audited/spec.json checks[].check_id, audit; tasks/CS-04/verifiers/initial_plain/spec.json checks[].check_id, content_sha256`
+- [numbers] \fv{c2.cs04.fr.added} (false rejections whose failing checks are all checks the audit's revision added) = 0 <- `results/runs/fresh-v1/results.jsonl rows (CS-04, initial_audited, <valid unit>) checks[].status; tasks/CS-04/verifiers/initial_audited/spec.json checks[].check_id, audit; tasks/CS-04/verifiers/initial_plain/spec.json checks[].check_id, content_sha256`
+- [numbers] \fv{audit.c4.cs04.added} (checks the audited verifier has and its plain one lacks) = 0 <- `tasks/CS-04/verifiers/full_audited/spec.json checks[].check_id, audit; tasks/CS-04/verifiers/full_plain/spec.json checks[].check_id, content_sha256`
+- [numbers] \fv{audit.c4.cs04.removed} (checks the plain verifier has and the audited one lacks) = 0 <- `tasks/CS-04/verifiers/full_audited/spec.json checks[].check_id, audit; tasks/CS-04/verifiers/full_plain/spec.json checks[].check_id, content_sha256`
+- [numbers] \fv{audit.c4.cs04.revisions} (audit revisions) = 0 <- `tasks/CS-04/verifiers/full_audited/spec.json checks[].check_id, audit; tasks/CS-04/verifiers/full_plain/spec.json checks[].check_id, content_sha256`
+- [numbers] \fv{audit.c4.cs04.revisions.w} (audit revisions; in words) = zero <- `tasks/CS-04/verifiers/full_audited/spec.json checks[].check_id, audit; tasks/CS-04/verifiers/full_plain/spec.json checks[].check_id, content_sha256`
+- [numbers] \fv{audit.c4.cs04.passed} = passed <- `tasks/CS-04/verifiers/full_audited/spec.json checks[].check_id, audit; tasks/CS-04/verifiers/full_plain/spec.json checks[].check_id, content_sha256`
+- [numbers] \fv{audit.c4.cs04.identical} (the audited tests against the plain ones) = identical <- `tasks/CS-04/verifiers/full_audited/spec.json checks[].check_id, audit; tasks/CS-04/verifiers/full_plain/spec.json checks[].check_id, content_sha256`
+- [numbers] \fv{c4.cs04.fr.added} (false rejections whose failing checks are all checks the audit's revision added) = 0 <- `results/runs/fresh-v1/results.jsonl rows (CS-04, full_audited, <valid unit>) checks[].status; tasks/CS-04/verifiers/full_audited/spec.json checks[].check_id, audit; tasks/CS-04/verifiers/full_plain/spec.json checks[].check_id, content_sha256`
+- [numbers] \fv{cv.silent.n} (correction violators where C1 passes its reference) = 17 <- `results/runs/fresh-v1/analysis.json oracle_gated.conditions.initial_plain.dropped (the families C1 keeps: CS-02, CS-03, CS-04); per_task (negative_type, outcome) of their correction violators`
+- [numbers] \fv{cv.silent.families} = CS-03, CS-04 <- `results/runs/fresh-v1/analysis.json oracle_gated.conditions.initial_plain.dropped (the families C1 keeps: CS-02, CS-03, CS-04); per_task (negative_type, outcome) of their correction violators`
+- [numbers] \fv{cv.silent.c1} (of them, accepted by C1) = 14/17 <- `results/runs/fresh-v1/analysis.json oracle_gated.conditions.initial_plain.dropped (the families C1 keeps: CS-02, CS-03, CS-04); per_task (negative_type, outcome) of their correction violators`
+- [numbers] \fv{cv.silent.c2} (of them, accepted by C2) = 14/17 <- `results/runs/fresh-v1/analysis.json oracle_gated.conditions.initial_plain.dropped (the families C1 keeps: CS-02, CS-03, CS-04); per_task (negative_type, outcome) of their correction violators`
+- [numbers] \fv{cv.silent.c3} (of them, accepted by C3) = 0/17 <- `results/runs/fresh-v1/analysis.json oracle_gated.conditions.initial_plain.dropped (the families C1 keeps: CS-02, CS-03, CS-04); per_task (negative_type, outcome) of their correction violators`
+- [numbers] \fv{cv.silent.c4} (of them, accepted by C4) = 0/17 <- `results/runs/fresh-v1/analysis.json oracle_gated.conditions.initial_plain.dropped (the families C1 keeps: CS-02, CS-03, CS-04); per_task (negative_type, outcome) of their correction violators`
+- [numbers] \fv{cv.silent.b2} (of them, accepted by B2) = 0/17 <- `results/runs/fresh-v1/analysis.json oracle_gated.conditions.initial_plain.dropped (the families C1 keeps: CS-02, CS-03, CS-04); per_task (negative_type, outcome) of their correction violators`
+- [numbers] \fv{cv.silent.b1} (of them, accepted by B1) = 0/17 <- `results/runs/fresh-v1/analysis.json oracle_gated.conditions.initial_plain.dropped (the families C1 keeps: CS-02, CS-03, CS-04); per_task (negative_type, outcome) of their correction violators`
 - [numbers] \fv{rg.pairs} = 240 <- `results/runs/pilot-v0.3.5-regrade/results.jsonl (rows)`
 - [numbers] \fv{rg.pass} = 112 <- `results/runs/pilot-v0.3.5-regrade/results.jsonl outcome (count of pass)`
 - [numbers] \fv{rg.taskfailure} = 128 <- `results/runs/pilot-v0.3.5-regrade/results.jsonl outcome (count of task_failure)`

@@ -1,0 +1,39 @@
+% Appendix E, fresh-v1 detail tables (restructure plan, part 3). Every number is a macro of generated/fresh/numbers.tex
+% (\fv; evidence_ledger_fresh.md) or a cell of a generated table. Moved here: the appendix's fresh-v1 tables, the
+% correction-violator and B1 tables, the second labeler's per-family view, the full comparisons, and results_fresh.tex's
+% solve rates and cost.
+\section{Fresh-agent stratum: detail tables}
+\label{app:fresh}\suppressfloats[t]% no table above the heading
+These tables complete Section~\ref{sec:results-controlled}; every number in them is in
+\texttt{paper/evidence\_ledger\_fresh.md}, and all labels are model proposals.
+
+\paragraph{Solve rates and cost.} Under D19, configuration A solved \fv{solve.a.final} of its \texttt{final} attempts and
+\fv{solve.a.u1} of its \texttt{u1} attempts; configuration B solved \fv{solve.b.final} and \fv{solve.b.u1}
+(Table~\ref{tab:fresh-solve}). The tasks are easy once the correction is given: the \fv{u1.invalid.n} invalid \texttt{u1}
+attempts are the \fv{cv.n} correction violators and CS-02's \fv{unspec.n} regression-only attempts. Time, turns, tool
+calls and tokens of every attempt are recorded (Table~\ref{tab:fresh-costs}); the cost of generating the verifiers was not
+(D42).
+
+\paragraph{The other views.} Table~\ref{tab:fresh-cv} counts the correction violators each condition accepts, family by
+family, and Table~\ref{tab:fresh-b1} splits B1 by the origin of its checks. Under the second labeler, whose disagreements
+with D19 are \texttt{\fv{disagree.1}} and \texttt{\fv{disagree.2}}, C4 and B2 accept \fv{il.c4.fa} and \fv{il.b2.fa}
+invalid attempts (Table~\ref{tab:fresh-family-labeler}). In the sensitivity view, with \fv{sens.units} graded patches
+left, C1 accepts \fv{sens.c1.fa} invalid attempts and C3 \fv{sens.c3.fa} (Table~\ref{tab:fresh-sensitivity}).
+Table~\ref{tab:fresh-comparisons-full} gives the planned comparisons in full, with their per-family differences,
+Table~\ref{tab:fresh-pooled} the pooled rates with exact binomial intervals (a reference scale only, since they ignore
+clustering by family), Table~\ref{tab:fresh-boot} the cluster-bootstrap intervals, which are not inferential with
+\fv{families.w} families, and Table~\ref{tab:fresh-matrix} every graded patch's outcome under every condition.
+
+\IfFileExists{generated/fresh/fresh_correction_violating.tex}{\input{generated/fresh/fresh_correction_violating.tex}}{\unfilled{correction-violator table}}
+\IfFileExists{generated/fresh/fresh_b1_split.tex}{\input{generated/fresh/fresh_b1_split.tex}}{\unfilled{B1 split table}}
+\IfFileExists{generated/fresh/fresh_per_family_labeler.tex}{\input{generated/fresh/fresh_per_family_labeler.tex}}{\unfilled{second labeler's per-family table}}
+\IfFileExists{generated/fresh/fresh_comparisons_full.tex}{\input{generated/fresh/fresh_comparisons_full.tex}}{\unfilled{full comparisons table}}
+\IfFileExists{generated/fresh/fresh_pooled.tex}{\input{generated/fresh/fresh_pooled.tex}}{\unfilled{pooled rates table}}
+\IfFileExists{generated/fresh/fresh_agreement.tex}{\input{generated/fresh/fresh_agreement.tex}}{\unfilled{agreement table}}
+\IfFileExists{generated/fresh/fresh_sensitivity.tex}{\input{generated/fresh/fresh_sensitivity.tex}}{\unfilled{sensitivity table}}
+\IfFileExists{generated/fresh/fresh_oracle_gated.tex}{\input{generated/fresh/fresh_oracle_gated.tex}}{\unfilled{oracle-gated table}}
+\IfFileExists{generated/fresh/fresh_solve_rates.tex}{\input{generated/fresh/fresh_solve_rates.tex}}{\unfilled{solve-rate table}}
+\IfFileExists{generated/fresh/fresh_attempt_costs.tex}{\input{generated/fresh/fresh_attempt_costs.tex}}{\unfilled{attempt-cost table}}
+\IfFileExists{generated/fresh/fresh_bootstrap.tex}{\input{generated/fresh/fresh_bootstrap.tex}}{\unfilled{bootstrap table}}
+\clearpage
+\IfFileExists{generated/fresh/fresh_outcome_matrix.tex}{\input{generated/fresh/fresh_outcome_matrix.tex}}{\unfilled{outcome matrix}}

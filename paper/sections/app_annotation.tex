@@ -1,0 +1,27 @@
+% Appendix H, the annotation guide and the review packet (restructure plan, part 3), corrected to the code
+% (src/tracecontract/schemas.py, Candidate.final_label and human_disagreement; src/tracecontract/review.py). Sources:
+% docs/annotation_guide.md (v0.4); docs/decision_log.md D43, D44, D46, D64. Every number is a macro (\dv).
+\section{Annotation guide and review packet}
+\label{app:annotation}
+No human label exists: the procedure below has not been used yet. The guide for human reviewers is
+\texttt{docs/annotation\_guide.md} (v0.4). It covers:
+\begin{itemize}
+\item contract review: evidence, kind, status, supersession, observability;
+\item candidate labels, made from a blinded review packet (\texttt{tracecontract review-packet}, described below);
+\item label values: valid, invalid with the violated requirement ids or \texttt{REGRESSION}, or ambiguous;
+\item \dv{annotation.reviewers.w} reviewers per task, each under a pseudonymous id (\texttt{R1}, \texttt{R2}, \dots), who
+  each record their contract reviews, their labels and an origin guess per candidate in their own label file for the
+  task;
+\item merging once every task has \dv{annotation.reviewers.w} complete reviews (\texttt{tracecontract merge-reviews}),
+  and adjudicating disagreements: a candidate whose reviewers give different label values, or the same value with
+  different violated requirements, has no final label until an adjudicated label is added (D44, D46);
+\item the review queue and the evidence that a reviewer may consult only after the labels are merged.
+\end{itemize}
+Per task, the packet holds the user turns of the session, the reference contract, and each held-out candidate's change
+and file state under an unguessable random id, in shuffled order. Candidates with identical diffs share an id. The
+packet names no candidate id, origin, description, proposal or verifier outcome, and the key that maps ids to
+candidates stays with a coordinator (D43). It hides the origin field but not the origin, which a reviewer can still
+infer from the content: the user's corrections describe the agent's first attempt, near misses resemble each other and
+the reference, and in \texttt{tinydb} the diff structure differs by origin. The merge reports the share of origin
+guesses that are right, as a measure of how blind the labels are; the guesses are never used as labels. Every analysed fresh
+attempt is queued for the packet (protocol~\S15.4); for the natural arm no packet has been prepared (D64, decision~8).

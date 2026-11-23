@@ -1,0 +1,116 @@
+% Appendix A, protocol history and analysis plan (restructure plan, part 3). Sources: experiments/protocol.md (§1, §3,
+% §5-§7, §15-§20); docs/decision_log.md (D15, D22, D32, D39, D40, D44, D48, D49, D51, D53-D61, D64, D71); the attempt
+% records data/fresh/fresh-v1/attempts_CS-0*.json and the labelers' specs (frozen_at). Every number is a macro: \dv
+% (evidence_ledger_design.md: each value checked against its source, each protocol hash recomputed), \fv, \plv.
+% Moved here: protocol.tex's versions, the three amendments and the fresh stratum's timeline, its runs, its secondary
+% measures and its reporting rules.
+\section{Protocol history and analysis plan}
+\label{app:protocol}\label{sec:protocol}\label{sec:amendments}
+The protocol (\texttt{experiments/protocol.md}) was hashed and timestamped locally before the first evaluation run
+(v0.1, \dv{protocol.v0.1.date}; D15); it is not a formal preregistration. Amendments v0.2 to v0.6
+(\dv{protocol.v0.2.date} to \dv{protocol.v0.6.date}) served the construction pilot (D22, D32, D39, D40, D44). Later
+ones are appended as new sections while the version line deliberately still reads v0.6, so each version from v0.6 on
+is a byte prefix of the current file and its logged hash can be recomputed. Table~\ref{tab:amendments} lists every
+version: what it fixes, what did not exist yet when it was hashed, and the relevant data that existed then. The
+question of protocol~\S1 asks for the frequency with which omitted user corrections make a verifier reward an
+unacceptable solution, and for the reconstruction and validation methods that reduce that error without rejecting valid
+alternatives. This paper answers a conditional form of it (Section~\ref{sec:intro}): given a correction that adds or
+retracts requirements, whether verifiers built without it accept violations of it, on controlled tasks. The design
+cannot say how often corrections are lost in practice.
+
+\IfFileExists{generated/design/amendments_table.tex}{\input{generated/design/amendments_table.tex}}{\unfilled{amendments table (make\_tables.py -{}-design)}}
+
+\paragraph{The amendments that bear on what the results can show.}
+\begin{itemize}
+\item v0.7 made the pilot's families development families, which the fresh-agent stratum, designed after the pilot's
+  results were known, reuses with their frozen verifiers. It also fixed, before any grading of the new strata, the
+  per-family table as the primary display and the oracle-gated view as secondary (protocol~\S15.7).
+\item v0.10 fixed how the audit flags of fresh attempts are reviewed after the first family's flags had been read, but
+  before any grading or label. Its preamble says it followed the \dv{design.attempts} attempts, which the attempt
+  records contradict for \dv{fresh.attempts.after.v0.10.ended}; the sensitivity view does not depend on the review.
+\item v0.11 extended the natural screening after the first replay yield was known (D59, D60): a post hoc design change,
+  made before any natural contract, verifier, held-out candidate or label existed.
+\item v0.12 gave each natural sample a run of its own (\S20). We made it to report the first sample's families before
+  the extension is built, which needs agent usage beyond the budget (\S20.1). It was hashed after phases P1 to P4 of the
+  first sample's families and before any P5 step or natural held-out candidate (D70, D71), and it is post hoc,
+  disclosed as v0.11 is.
+\end{itemize}
+
+\paragraph{The fresh-agent stratum's order of work.} On \dv{fresh.date} (UTC):
+\begin{itemize}
+\item the independent labelers were frozen from \dv{fresh.labelers.first} to \dv{fresh.labelers.last} (D55);
+\item the instructions and their hashes were logged at \dv{fresh.instructions.logged} (D56);
+\item the attempts ran from \dv{fresh.attempts.first} to \dv{fresh.attempts.last} (D58); CS-01's audit flags were read at
+  \dv{fresh.flags.read}, and protocol v0.10 was hashed at \dv{protocol.v0.10.time}, while the last
+  \dv{fresh.attempts.after.v0.10.ended} attempts ran (\dv{fresh.attempts.after.v0.10.started} of them started after the
+  hash);
+\item D19's labels were proposed from \dv{fresh.labels.first} to \dv{fresh.labels.last}, and the transcripts of the
+  labelers' writers were audited at \dv{fresh.audit.writers} (D58);
+\item the run graded from \fv{run.started} to \fv{run.finished} (D61).
+\end{itemize}
+The natural arm's generation recipe was fixed, and its \dv{natural.templates.w} prompt templates hashed on
+\dv{natural.templates.date} at \dv{natural.templates.time}, before any natural agent started (D64). Its builder
+decisions await the owner's review (D65; Appendix~\ref{app:deviations}).
+
+\paragraph{The natural run's order of work.} On \nrv{run.date} (UTC):
+\begin{itemize}
+\item D19's labels of the first sample's held-out candidates were proposed from \dv{natural.d19.first} to
+  \dv{natural.d19.last}, as the run's first step, and the pre-flight passed (D73, D74, D76);
+\item the run started at \nrv{run.started}; its first invocation was stopped before any pair was graded, and the run
+  started again at \dv{natural.run.restarted} (D76);
+\item the template of Section~\ref{sec:natural-cases} and the analysis fields were committed before any analysis of the
+  run, while grading was still in progress (D77 records its state at \dv{natural.template.graded}); by then the build
+  session's progress checks had shown it counts of outcomes over all graded pairs together, naming no verifier or
+  candidate (D77);
+\item the run ended at \nrv{run.finished}, and was then analysed in case-study mode and published, and its tables were
+  generated (D78); the closing paragraph's first sentence and the restructure's other changes to the template followed
+  (Section~\ref{sec:natural-cases}).
+\end{itemize}
+
+\paragraph{Strata and runs.} Each stratum has its own runs and analyses, never pooled without saying so
+(protocol~\S15.2).
+\begin{itemize}
+\item \texttt{\PILOTRUN}, the construction pilot, graded every condition on the constructed pool under harness
+  \plv{run.harness}, a container at a time, with no other sandbox workload on the host. Its analysis,
+  planned in protocol v0.1 to v0.6, stands; since v0.7 it is a development study, whose later re-analyses are
+  exploratory and reported apart (D49; Appendix~\ref{app:pilot}).
+\item \texttt{\REGRADERUN} re-graded the same pairs under harness \fv{rg.harness} with \fv{rg.repeats} repeats, as a
+  reliability run, not a new pilot result (D54).
+\item \texttt{\FRESHRUN} graded every fresh attempt and each family's reference under the \fv{run.conditions.w}
+  conditions, the reference checks and the independent labeler, \fv{run.repeats.w} times per pair under harness
+  \fv{run.harness}, after a passed pre-flight (D61).
+\item \texttt{\NATURALRUN} graded the first sample's accepted families, every pair \nrv{run.repeats} times, after D19's
+  labels and a passed pre-flight (protocol~\S20.2; D76, D78; Section~\ref{sec:natural-cases}).
+\end{itemize}
+In the new runs a pair whose repeats disagree is \emph{unresolved}, counts as a rejection and is reported.
+
+\paragraph{Measures beyond FA and FR.} The protocol also asks for macro rates with their per-family counts; Youden's
+$J$, the share of valid candidates passed less the share of invalid candidates passed; the number of families with an
+accepted negative; and negatives by type, that is whether a violated requirement was introduced after the first
+request (protocol~\S6). Infrastructure outcomes are reported apart. Its secondary measures are the requirement coverage
+of the recovered contracts by a first and a second model mapper, with their agreement (the second mapper, and the
+first for \texttt{tinydb}, received an extra instruction; D41), agreement between runs, flakiness over repeated gradings,
+valid-task yield with rejection reasons, and generation cost, which was not recorded for the verifiers
+(Appendix~\ref{app:deviations}).
+
+\paragraph{Reporting rules.} The pilot keeps the reporting of protocol~\S3: cluster-bootstrap percentile intervals over
+families (\dv{design.bootstrap.resamples} resamples), which with \plv{run.families.w} families describe variability
+rather than evidence of an effect, with exact binomial intervals as a reference scale. New runs follow protocol~\S15.7
+and \S16.6:
+\begin{itemize}
+\item per-family tables are the primary display, with null results stated alongside;
+\item each paired comparison has an exact sign-flip p-value over families with its attainable floor;
+\item each distinct graded patch counts once;
+\item the oracle-gated view, which drops a verifier in each family where it fails its own reference and reports the lost
+  yield, is secondary;
+\item bootstrap intervals go to an appendix, marked as not inferential below \dv{design.bootstrap.families} families
+  (Table~\ref{tab:fresh-boot}).
+\end{itemize}
+The estimands are fixed in protocol~\S15.4 for fresh attempts (among them the share of \texttt{u1} attempts that violate
+a correction requirement, and how C1 and C3 grade them) and in \S15.6 for the natural arm (among them each condition's
+acceptance of the pre-review states under the source-evidence label). Each natural run is reported on its own; with
+fewer than \dv{design.size.threshold} accepted tasks, its tasks are exploratory case studies with per-family tables
+only and no pooled rate, interval or p-value (protocol~\S19.6, \S20.3). No confirmatory study has been run. A draft
+precision plan, not adopted, puts the need at about \plv{plan.families} eligible families, with a natural negative
+each, to detect a difference in false acceptance of \plv{plan.delta}; against it, the arm's cap of
+\dv{design.family.cap} tasks gives a power of \plv{plan.power.k30} (D49).

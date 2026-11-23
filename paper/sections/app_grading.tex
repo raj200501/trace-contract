@@ -1,0 +1,97 @@
+% Appendix C, grading sandbox and isolation (restructure plan, part 3). Sources: src/tracecontract/sandbox/ (the
+% runner, the harness and its limits); tests/test_sandbox_isolation.py (the probes); docs/decision_log.md D28-D31, D35,
+% D36, D40, D42, D44-D46, D51, D52, D54. Moved here: method.tex's process-separated grading, reproducibility.tex's
+% isolation probes and exploit surface, limitations.tex's harness defects (condensed), the introduction's list of fixed
+% forged-grade paths and the Harbor sentence. Every number is a macro (\dv: the harness limits, read from the code;
+% \plv, \fv).
+\section{Grading sandbox and isolation}
+\label{app:grading}\label{sec:grading}
+Hidden tests run in a trusted grader process (root) inside the container. Candidate code runs only in child processes
+that a test starts through a small API (\texttt{run\_python}, \texttt{run\_cmd}), under an unprivileged user ID allocated
+for that container alone, which cannot read the tests, write the results or signal the grader. A \texttt{run\_python}
+child ignores user-site and startup hooks and imports the trusted modules that serialise and sign its result, those of
+its error path included, before adding the candidate directories to its module path; when the snippet returns or
+raises, it restores its own \texttt{sys.path} and \texttt{sys.meta\_path} and clears the importer cache before
+formatting, serialising and signing. Code that the snippet imports still runs in that process and controls what that
+call reports (below). A \texttt{run\_cmd} child starts with the candidate directories on \texttt{PYTHONPATH} and reports
+nothing authenticated; no generated test, reference check or labeler check calls it, but the grader runs the
+repository's tests through it.
+\begin{itemize}
+\item \emph{Authentication.} Each \texttt{run\_python} result is authenticated with a per-call key passed through an
+  inherited pipe.
+\item \emph{Trusted aggregation.} The host recomputes the outcome from a root-owned results file and a per-run nonce.
+  Missing, stale, unparseable or incomplete results are verifier errors, never passes.
+\item \emph{Container.} No network; all capabilities dropped except those needed to switch users, signal and hand over
+  files; \texttt{no-new-privileges}, a read-only root filesystem, tmpfs scratch space and an init process.
+\item \emph{Limits.} Each container gets \dv{harness.cpus} CPUs, \dv{harness.memory}\,GiB of memory and
+  \dv{harness.pids} PIDs. Candidate processes also get CPU-time, \dv{harness.as}\,GiB address-space,
+  \dv{harness.fsize}\,MiB file-size and \dv{harness.nproc}-process limits, with bounded malloc arenas.
+\item \emph{Protected files.} Candidate edits to test files and test configuration (\texttt{tests/},
+  \texttt{test\_*.py}, \texttt{conftest.py}, \texttt{pytest.ini}, \texttt{tox.ini}, \texttt{setup.cfg},
+  \texttt{sitecustomize.py}, \texttt{*.pth}, \dots) are discarded before grading.
+\item \emph{Patch policy.} Patches with path traversal, binary content or symbolic links are rejected.
+\end{itemize}
+Outcomes are \emph{pass}, \emph{task\_failure}, \emph{environment\_failure}, \emph{verifier\_error}, \emph{timeout} and
+\emph{unresolved} (repeated runs disagree); only \emph{pass} yields reward.
+
+\paragraph{Harness versions.} The pilot was graded under harness \plv{run.harness}; its re-grade and the fresh-agent run
+use \fv{run.harness} (protocol v0.8), and so does the natural run (\nrv{run.harness}). That version differs from the
+pilot's only in this: formatting
+or encoding a value or an exception for a result message never turns a successful call into a failed call and never
+leaves a call without a result. Values that JSON cannot encode are converted by trusted code that calls no candidate
+method, or replaced by a placeholder naming their type; candidate code that runs during formatting can still end or
+stall the call. Harness 0.3.4, whose fix was too narrow, was never used (D51, D52). Defects of earlier versions in
+resource isolation (D29--D31), and paths through which a candidate module could forge signed results, which the
+internal reviews found after the isolation probes had missed them (D36, D40, D44), were each fixed with a regression
+probe before the runs reported here; runs under earlier versions are kept as superseded. In detail:
+\begin{itemize}
+\item The resource-isolation defects and the first start-up paths for forged results, the second left by the first fix,
+  were found after evaluation runs and are fixed in harness 0.3.2.
+\item A later verification found a further path for forged results in the error handling of 0.3.2, which harness 0.3.3
+  closes; no candidate patch in the pool ships an \texttt{ast} or \texttt{unicodedata} module (D44). Every reported pilot
+  result was re-run under 0.3.3, with the same outcome on every pair (D45).
+\item In 0.3.3, methods that candidate objects define and that the wrapper calls while it formats a result
+  (\texttt{\_\_repr\_\_}, \texttt{\_\_str\_\_}) run without the candidate directories on the module path, so such a method
+  that imports a candidate module fails. No check in the pool is affected: all \plv{checks.results} check results equal those
+  under 0.3.2 (D46).
+\item A later verification found a second way in which 0.3.3 can report a successful call as failed: a result that JSON
+  cannot encode, such as a dictionary with keys of mixed types (D51). Harness 0.3.5 keeps both from changing whether a
+  call succeeded (D52), and a re-grade of all \fv{rg.pairs} pilot pairs under it gives the same outcome on every pair
+  (\fv{rg.vs.pilotv033.outcome}; run \texttt{\REGRADERUN}, D54; Table~\ref{tab:regrade}).
+\end{itemize}
+The development audits ran under earlier harness versions.
+
+\paragraph{Isolation probes.} The grading boundary is covered by Docker integration tests, run as part of the test
+suite. Candidate code:
+\begin{itemize}
+\item cannot write the results directory, read the hidden tests, signal the grader or read the grader's environment;
+\item has no network;
+\item runs as an unprivileged user ID unique to the container;
+\item is bounded by per-call timeouts, and its fork bombs are contained and daemonised processes reaped.
+\end{itemize}
+Forged or rewritten results are detected. Candidate edits to test files are removed before grading, and path-traversal
+patches are rejected. Regression probes target the defects found during the pilot and its reviews:
+\begin{itemize}
+\item per-user limits are not shared with other containers;
+\item concurrent UID allocations are distinct;
+\item thread creation survives allocation churn under the address-space limit;
+\item a candidate module that shadows the standard library cannot forge results;
+\item a candidate \texttt{encodings} package, which the interpreter would import while it starts, cannot forge results;
+\item startup hooks and packages written at runtime never load in later calls;
+\item a candidate \texttt{ast} module, which Python's \texttt{traceback} imports while it formats an exception, cannot
+  forge the report of a snippet that raises.
+\end{itemize}
+Further probes check harness 0.3.5: a candidate \texttt{\_\_repr\_\_} or \texttt{\_\_str\_\_} that fails while a result
+is formatted becomes a placeholder, and a result that cannot be encoded never changes the outcome of a call.
+
+\paragraph{Known exploit surface.} Within a sandbox call, candidate code controls the value it reports, and it can detect
+that it is being graded. Tests therefore assert on concrete values computed by the trusted grader, but they cannot rule
+out behaviour that differs under test. The repository-test baseline (B1) runs pytest with candidate code imported into
+the reporting process, so a deliberately adversarial candidate can forge B1's report. A characterisation probe shows it:
+a candidate whose exit hook rewrites the report passes, while an honestly wrong candidate fails (D42). B1 is meaningful
+only for non-adversarial candidates, such as the held-out candidates here, and is unsuitable as a reward for
+adversarial policies; the process-separated verifiers do not have this exposure, and they resist the tampering probes
+above.
+
+\paragraph{Harbor export.} The tasks' Harbor export uses a per-run sandbox user ID (D35); it can be re-validated from a
+clone with \texttt{scripts/harbor\_validate.sh}, which records its outputs in \texttt{results/harbor\_validation/}.

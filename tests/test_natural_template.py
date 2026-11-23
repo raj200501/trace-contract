@@ -11,16 +11,21 @@
   rendering does not contradict itself, and :func:`template_problems` checks the cells that measure them: here, and on the
   run's own numbers once they are published (the integration check; restructure plan, order of work 4).
 * (b) A document with main.tex's preamble (its packages and macros) that inputs the generated numbers and the template
-  compiles with pdflatex, with no error, no reference left undefined, no TODO marker and no UNFILLED marker but the one of
-  the closing paragraph's integration slot, which the integration replaces. The preamble alone compiles without the
-  natural run's numbers, as main.tex does until the run is published.
+  compiles with pdflatex, with no error, no TODO marker and no UNFILLED marker, and with no reference left undefined but
+  the template's pointers to the appendices (:data:`CROSS_REFS`, re-added by the restructure as D77's open item asked),
+  which the manuscript defines: the closing paragraph's integration slot was written after the run was published and
+  analysed (decision-log entry D79). The preamble alone compiles without
+  the natural run's numbers.
+* The integration: the closing paragraph's one sentence that names families by the run's cells (:data:`INTEGRATION`),
+  within the scope that the template fixed before the analysis (D77: one sentence for each pattern of the C1 and C3
+  cells of the table of the pre-review states, each family named once), states what the run's own numbers hold.
 * (c) The template holds none of the words that the plan bans (part 2; "how often" only to say that the case studies
   cannot show it), no model identifier, agent-tool name or tier wording, no digit outside a macro or an identifier, no
   count written as a word, and no option written so that it prints as an en dash.
 * Its records: every decision-log entry it cites is logged, or is the pending next entry its header declares; the
   disclosures that the records require are in their paragraphs; and its own table defines every term its cells can hold.
 * main.tex defines ``\\nrv`` as it defines ``\\fv`` and ``\\nat``, in the form numbers.tex names, inputs
-  generated/natural_run/numbers.tex where it exists, and does not input the template yet.
+  generated/natural_run/numbers.tex where it exists, and inputs the template as the manuscript's natural section.
 
 Synthetic fixtures only (tests/test_analysis_natural.py's build_world in a scratch git repository; nothing is graded, no
 Docker); they check the template and the code, and are not research evidence. The construction facts given to the world
@@ -75,13 +80,29 @@ IDENTIFIERS = (r"\\(?:nrv|nat|fv|ref|label|input|IfFileExists)\{[^{}]*\}", r"\\S
 NUMBER_WORDS = (r"\b(?:zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|"
                 r"sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|half|"
                 r"dozen)\b")
-# The closing paragraph's integration slot: the one UNFILLED marker the template prints on purpose, until the integration
-# writes, from the run's cells, the sentences that name families by them (restructure plan, part 7, item 6).
-SLOT = "integration slot: sentences naming the families by their C1 and C3 cells in the table of the pre-review states"
 
 
 def _fk(family: str) -> str:
     return family.lower().replace("-", "")
+
+
+# The closing paragraph's integration slot, the one UNFILLED marker the template printed on purpose until the run was
+# published; the integration replaced it with the sentence its rule asks for (restructure plan, part 7, item 6; pending
+# decision-log entry D79).
+SLOT = "integration slot: sentences naming the families by their C1 and C3 cells in the table of the pre-review states"
+# The slot's scope as the template fixed it before any analysis (D77): one sentence for each pattern of Table
+# tab:nr-source's C1 and C3 cells (se.c1.<family>, se.c3.<family>), each family named once and none counted. The run's
+# cells hold one pattern, so the slot is one sentence; a cell the run's numbers do not bear out means the sentence is
+# rewritten from the cells, within the same scope.
+INTEGRATION_TEXT = "In NP-03, NP-04, NP-05, NP-18, NP-19 and NP-20, C1 and C3 rejected the pre-review state."
+INTEGRATION: tuple[tuple[str, str], ...] = tuple((f"se.{c}.{_fk(f)}", "rejected") for c in ("c1", "c3") for f in FAMILIES)
+
+
+def integration_problems(numbers: dict[str, str]) -> list[str]:
+    """The cells the integration's sentence states (:data:`INTEGRATION`) that ``numbers`` (a natural run's generated
+    macros) does not bear out."""
+    return [f"{k}: the sentence states {v!r}; the numbers hold {numbers.get(k, 'nothing')!r}"
+            for k, v in INTEGRATION if numbers.get(k) != v]
 
 
 # --------------------------------------------------------------------------- the recorded construction facts, and the premises
@@ -298,6 +319,29 @@ def test_the_run_s_own_numbers_bear_out_the_template_s_premises():
     assert not template_problems(macros(REAL_NUMBERS, "nrv"))
 
 
+@pytest.mark.skipif(not REAL_NUMBERS.is_file(), reason="natural-pr-v1 is not published yet (restructure plan, order of work 4)")
+def test_the_integration_s_sentence_states_the_run_s_own_cells():
+    """The closing paragraph's sentence that names families (written after the run was published and analysed; pending
+    entry D79) states the C1 and C3 cells of the run's table of the pre-review states, every cell it names holds on the
+    run's numbers, and the paragraph opens with it as written and goes no further from the cells: outside the per-family
+    cost list, which the template fixed before the analysis, the rest of the paragraph names no family."""
+    assert not integration_problems(macros(REAL_NUMBERS, "nrv"))
+    closing = paragraphs(template())["What the case studies can and cannot show."]
+    assert closing.startswith(INTEGRATION_TEXT + " Table~\\ref{tab:nr-source} gives, per family,"), closing[:400]
+    rest = closing[len(INTEGRATION_TEXT):]
+    outside_costs = rest[:rest.index("Cost per family")] + rest[rest.index("This cost leaves out"):]
+    assert not re.search(r"\bNP-\d+\b", outside_costs), outside_costs[:400]
+
+
+def test_integration_problems_reports_a_cell_the_sentence_misstates():
+    """The check reports each cell that differs from what the sentence states, and nothing on the cells it states."""
+    stated = {k: v for k, v in INTEGRATION}
+    assert integration_problems(stated) == []
+    changed = {**stated, "se.c1.np03": "accepted", "se.c3.np20": "not graded"}
+    assert [p.split(":")[0] for p in integration_problems(changed)] == ["se.c1.np03", "se.c3.np20"]
+    assert [p.split(":")[0] for p in integration_problems({})] == [k for k, _ in INTEGRATION]
+
+
 # --------------------------------------------------------------------------- (b) it compiles, with every number filled
 
 
@@ -326,6 +370,13 @@ def _pdflatex(build: Path, body: str) -> str:
 
 needs_pdflatex = pytest.mark.skipif(shutil.which("pdflatex") is None, reason="pdflatex is not installed")
 
+# The template's only pointers outside itself and its generated tables: the two that D77 left open until the restructure
+# gave them their content, each with the file of the manuscript that defines its label (Appendix A's generated table of
+# the protocol's versions, with its v0.12 row; Appendix G and its comparison of the natural arm with the controlled study).
+CROSS_REFS = {"tab:amendments": PAPER / "generated" / "design" / "amendments_table.tex",
+              "tab:natural-vs-controlled": PAPER / "sections" / "app_natural.tex",
+              "app:natural": PAPER / "sections" / "app_natural.tex"}
+
 
 @needs_pdflatex
 def test_the_template_compiles_with_main_tex_s_preamble_and_every_number_filled(world, tmp_path):
@@ -340,14 +391,15 @@ def test_the_template_compiles_with_main_tex_s_preamble_and_every_number_filled(
             shutil.copy2(src, build / "generated" / sub / "numbers.tex")
     log = _pdflatex(build, "\\input{sections/natural}\n")
     assert not re.search(r"^! ", log, re.MULTILINE), log[-3000:]
-    # The integration slot is the one marker: every number is filled, and no TODO is left.
-    assert log.count("UNFILLED-MARKER") == 1 and "UNFILLED-MARKER: integration slot" in log and "TODO-MARKER" not in log
-    # Every reference resolves: the template's own labels and its generated tables', none of another section.
-    assert not re.findall(r"Reference `([^']+)' on page \d+ undefined", log)
+    # No marker: every number is filled, the integration slot is written, and no TODO is left.
+    assert "UNFILLED-MARKER" not in log and "TODO-MARKER" not in log
+    # Every reference resolves but the pointers to the appendices, which the whole manuscript defines
+    # (test_the_template_points_outside_itself_only_to_the_appendices_d77_left_open).
+    assert set(re.findall(r"Reference `([^']+)' on page \d+ undefined", log)) <= set(CROSS_REFS)
     if shutil.which("pdftotext"):
         text = " ".join(subprocess.run(["pdftotext", "-layout", "doc.pdf", "-"], cwd=build, capture_output=True, text=True,
                                        check=True).stdout.split())
-        assert text.count("UNFILLED") == 1 and f"[UNFILLED: {SLOT}]" in text, text[text.find("UNFILLED") - 20:][:200]
+        assert "UNFILLED" not in text and SLOT not in text, text[text.find("UNFILLED") - 20:][:200]
         assert "missing number" not in text and "TODO" not in text
         assert "eval-alt-1 (construction valid but checks fail), eval-nm-2 (construction invalid" in text  # as generated
         assert "make_tables.py --natural-run" in text and "\u2013natural-run" not in text  # two hyphens, no en dash
@@ -363,7 +415,24 @@ def test_main_tex_s_preamble_compiles_without_the_natural_run_s_numbers(tmp_path
     assert "UNFILLED-MARKER: missing number run.date" in log
 
 
-def test_main_tex_defines_the_nrv_lookup_and_does_not_input_the_template_yet(world):
+def test_the_template_points_outside_itself_only_to_the_appendices_d77_left_open():
+    """D77 left two pointers open until the restructure gave them their content: the table of the protocol's versions
+    (its v0.12 row) and the comparison of the natural arm with the controlled study. The template now holds them and no
+    other reference outside its own labels and its generated tables', and the manuscript defines both labels."""
+    tex = "\n".join(re.sub(r"(?<!\\)%.*", "", ln) for ln in template().splitlines())
+    refs = set(re.findall(r"\\ref\{([^{}]+)\}", tex))
+    own = set(re.findall(r"\\label\{([^{}]+)\}", tex))
+    own |= {lab for f in (PAPER / "generated" / "natural_run").glob("*.tex")
+            for lab in re.findall(r"\\label\{([^{}]+)\}", f.read_text())}
+    assert refs - own == set(CROSS_REFS), sorted(refs - own)
+    for lab, f in CROSS_REFS.items():
+        assert f"\\label{{{lab}}}" in f.read_text(), (lab, f)
+    main = (PAPER / "main.tex").read_text(encoding="utf-8")
+    assert "\\input{sections/app_natural}" in main  # the appendix that holds the comparison is in the manuscript
+    assert "Table~\\ref{tab:amendments}, its v0.12 row" in " ".join(tex.split())
+
+
+def test_main_tex_defines_the_nrv_lookup_and_inputs_the_template(world):
     main = (PAPER / "main.tex").read_text(encoding="utf-8")
     for p in ("fv", "nat", "nrv"):
         assert (f"\\newcommand{{\\{p}}}[1]{{\\ifcsname {p}:#1\\endcsname\\csname {p}:#1\\endcsname\\else"
@@ -371,18 +440,18 @@ def test_main_tex_defines_the_nrv_lookup_and_does_not_input_the_template_yet(wor
     lookup = (world / "numbers.tex").read_text(encoding="utf-8").splitlines()[2]  # the lookup that numbers.tex names
     assert lookup.startswith("% \\newcommand{\\nrv}") and lookup.removeprefix("% ") in main
     assert "\\IfFileExists{generated/natural_run/numbers.tex}{\\input{generated/natural_run/numbers.tex}}{}" in main
-    assert not re.search(r"\\input\{sections/natural(?:\.tex)?\}", main)  # the manuscript restructure places it
+    assert len(re.findall(r"^\\input\{sections/natural(?:\.tex)?\}", main, re.MULTILINE)) == 1  # placed by the restructure
 
 
-def test_the_template_s_one_unfilled_marker_is_the_integration_slot():
-    """Outside the fallbacks of the generated tables' inputs, the template prints UNFILLED once on purpose: the closing
-    paragraph's integration slot, which the posted PDF's check is to fail on until the integration replaces it."""
+def test_the_integration_slot_is_written_and_no_unfilled_marker_is_left():
+    """Outside the fallbacks of the generated tables' inputs, the template prints no UNFILLED marker: the closing
+    paragraph's integration slot, which the posted PDF's check fails on, was replaced by the integration's sentences."""
     tex = uncommented(template())
     fallbacks = re.findall(r"\\IfFileExists\{[^{}]*\}\{\\input\{[^{}]*\}\}\{\\unfilled\{", tex)
-    assert tex.count("\\unfilled{") == len(fallbacks) + 1 == 3
+    assert tex.count("\\unfilled{") == len(fallbacks) == 2 and SLOT not in tex
     closing = tex[tex.index("\\paragraph{What the case studies can and cannot show.}"):]
     assert " ".join(closing.split()).startswith("\\paragraph{What the case studies can and cannot show.} "
-                                                f"\\unfilled{{{SLOT}}}")
+                                                + INTEGRATION_TEXT)
 
 
 # --------------------------------------------------------------------------- (c) words, identifiers and numbers

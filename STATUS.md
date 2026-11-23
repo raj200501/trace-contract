@@ -1,7 +1,7 @@
 # Status
 
-Last updated: 2026-11-22 (UTC), at the wrap-up of round 4 (decision log D47 to D66). Nothing here is peer reviewed, and
-no human labels exist.
+Last updated: 2026-11-23 (UTC), after the run `natural-pr-v1` (decision log D76 to D78) and the manuscript's restructure.
+Nothing here is peer reviewed, and no human labels exist.
 
 ## Where the study stands
 
@@ -19,21 +19,25 @@ no human labels exist.
   * Screening is done for both samples: 31 of 150 and 91 of 534 comments qualify at S9 (model-judged; D63, D66).
   * S10 is done for the first sample, with 6 of 22 families accepted. The extension's S10 was stopped and is to be
     redone.
-  * The recipe is fixed (D64, D65). Round 5 ran its phases P1 to P4 for all six families: the three contracts and the
-    seven verifiers are frozen, and each phase end is committed (D70).
+  * The recipe is fixed (D64, D65). Its phases P1 to P7 ran for all six families, each phase end committed
+    (D70, D72, D75).
   * At the first audit, the natural reference fails 9 of the 12 audited verifiers. Five audits stay failing after
     three revisions (D27).
-  * Every natural result is pending: P5 to P7, the extension's S10 and the run come next.
-* **Manuscript (`paper/`).** Rebuilt findings-first around fresh-v1 (D66). It compiles, and every number in it is a
-  generated macro with a ledger entry, or a decision-log count. Natural results are marked `UNFILLED`. Authors are a
-  TODO for the human authors.
+  * `natural-pr-v1` graded the six families, and its analysis is published in `results/runs/natural-pr-v1` (D76 to
+    D78). The paper reports them as exploratory case studies, per family only. The extension's S10 is to be redone,
+    for `natural-pr-v2`.
+* **Manuscript (`paper/`).** Restructured under the restructure plan, with the natural section written from the run's
+  cells into the template fixed before its analysis (D77; D79 records the integration). It compiles
+  with no `UNFILLED` marker, and every number in it is a generated macro with a ledger entry. Authors are a TODO for the
+  human authors.
 
 ## Where round 5 stopped, and how to resume
 
 * **Usage cap.** After the reset of 2026-11-22, the owner asked the build session to keep going while using at most half
   of the plan's total usage. Round 5 used about 37M reported agent tokens against a plan of about 40M, and stops at the
   end of P4 for all six families (D68, D70).
-* **To resume the natural arm,** in this order:
+* **To resume the natural arm,** in this order (steps 1 and 3 are done for the first sample's six families: D72, D75 to
+  D78; step 2 and the extension's own run, `natural-pr-v2`, remain):
   1. For each family, run D64's phases P5 to P7: reference checks and labeler, held-out pool, mappers and audits. Use
      `experiments/natural_workflow/natural_phase.js` with args `{task, phase, transcripts, config_b_model}`. After
      each phase, run `scripts/record_phase_end.py` and commit the log alone. The P5 line must be pushed before P6 starts
@@ -46,8 +50,14 @@ no human labels exist.
 * **Done in round 5:** the natural analysis and the privacy tools (D69); the recipe's citations of D64; P1 to P4 for the
   six families (D70); a phase-end log with each line committed and pushed (D65).
 * **Owner decisions pending.**
-  * Deviation (i) and the other builder decisions of D64.
+  * Deviation (i) and the other builder decisions of D64; D63's builder defaults; D69's privacy-tool defaults; D72;
+    D73's reading of when D19 runs; D77's decision on the harness relay.
+  * Whether the screening download records keep the fetched repositories' URLs before publication (D50, D63).
   * How the scan treats organisation accounts, before its `--aidev-logins` mode loads both S9 samples (D66).
+  * Whether the pilot's frozen tables (`paper/generated/*.tex`, `evidence_ledger.md`) are re-frozen with the
+    restructure's captions and names; until then they keep theirs, which the paper's Appendix F explains.
+  * The natural section's length, over the restructure plan's budget, and whether its construction lists move to an
+    appendix unchanged.
   * The human labels, and SWE-chat's access terms (below).
 
 ## Completed

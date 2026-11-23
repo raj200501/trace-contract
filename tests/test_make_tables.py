@@ -112,3 +112,31 @@ def test_the_readme_command_reproduces_the_tracked_tables(outputs, monkeypatch):
     assert mt.LEDGER.read_bytes() == (ROOT / "paper" / "evidence_ledger.md").read_bytes()
     assert (mt.GEN / "exploratory" / "per_family_table.tex").read_text() == "written by scripts/exploratory_reanalysis.py\n"
     assert not list(outputs.glob(".make_tables-*"))
+
+
+def test_the_new_number_modes_are_offered_and_their_bad_arguments_change_nothing(outputs, tmp_path, capsys):
+    before = _tree(outputs)
+    with pytest.raises(SystemExit) as e:
+        mt.main(["--help"])
+    assert e.value.code == 0
+    out = " ".join(capsys.readouterr().out.split())
+    assert "--pilot-numbers RUN_DIR" in out and "--design" in out
+    partial = tmp_path / "runs" / "partial"  # a pilot run directory without results.jsonl
+    partial.mkdir(parents=True)
+    for f in ("analysis.json", "manifest.json"):
+        (partial / f).write_text("{}\n")
+    with pytest.raises(SystemExit) as e:
+        mt.main(["--pilot-numbers", str(partial)])
+    assert e.value.code == 2
+    assert "results.jsonl" in capsys.readouterr().err
+    _unchanged(outputs, before)
+
+
+def test_the_frozen_pilot_tables_keep_their_names_while_the_new_runs_use_the_restructure_s():
+    """The pilot's tables are frozen at c5ede4c (scripts/verify_frozen_inputs.py, check e), so they keep the condition
+    names they were frozen with; the new runs' tables name the conditions as the restructured text does (restructure plan,
+    finding 13): initial-only, correction-aware, the session-LLM baseline."""
+    assert mt.PILOT_COND_TEX["full_plain"] == "C3 full, plain" and mt.COND_TEX["full_plain"] == "C3 correction-aware, plain"
+    assert mt.COND_TEX["llm_freeform"] == "B2 session-LLM baseline" and mt.NR_TEX["full_plain"] == mt.COND_TEX["full_plain"]
+    assert "C3 full, plain" in (ROOT / "paper" / "generated" / "results_summary.tex").read_text()
+    assert "C3 correction-aware, plain" in (ROOT / "paper" / "generated" / "fresh" / "fresh_per_family.tex").read_text()
