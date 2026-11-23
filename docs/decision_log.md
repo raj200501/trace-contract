@@ -3050,3 +3050,27 @@ were graded at 08:23Z. No analysis of the run had been made and no report writte
   * Check the template's premises on the run's own numbers before writing the family paragraphs.
   * Re-add the cross-references to the amendments table and the natural comparison table once the restructure gives
     them their content.
+
+### D78. `natural-pr-v1` graded, analysed and published
+Times are UTC, 2026-11-23.
+* **The run** ended at 08:35:10. It graded 432 pairs: 9 verifiers and 8 candidates in each of 6 families, every pair 3
+  times. No pair was unresolved and none ended in an infrastructure outcome. The manifest records its two invocations
+  (D76), both at revision `e9c9c91`.
+* **The analysis** (`tracecontract analyze ... --allow-proposed-labels --tasks-root data/natural/tasks`, at `cd5cee4`)
+  ran under reporting rules v0.8, in case-study mode: 6 accepted tasks of the run's own, fewer than 10, so nothing is
+  pooled over the families (§19.6, §20.3). The private report was written beside it.
+* **Publication** (`d05dd39`). `scripts/publish_natural_run.py` wrote `results/runs/natural-pr-v1`: `manifest.json`,
+  `analysis.json` and `analysis.md` byte for byte, and `results_public.jsonl`, which holds ids, outcomes and hashes
+  only. Before writing, it checked all four against the natural texts of 32 task directories, the 684 screened comments
+  of S9 and S9x, the AIDev logins, the repositories' names, the tasks' code lines and the private markers.
+* **The paper's tables.** `paper/make_tables.py --natural-run` wrote the four per-family tables and their numbers
+  (`\nrv`), with an evidence ledger of 861 entries. The premises of the template committed before the analysis
+  (`tests/test_natural_template.py`, D77) hold on the run's own numbers.
+* **A scan finding outside the push gate.** The build session also scanned with the screening texts, which the push
+  gate does not use. The scan matched one line of two screened comments' linked issue (`from abc import ABC`, a Python
+  import) in files of the controlled arm committed before S9 existed: the CS-02 transcript and reports built from it. It
+  also matched one further comment once. The scan applies the idiom rule (D72) to natural code lines but not to
+  screening texts matched whole. Nothing was changed. The published files passed the publisher's own check against
+  these texts, and the gate's scan has no finding.
+* **The labels** are model proposals, and no human label exists. The run is an automated pilot: every family's
+  provenance awaits a human reviewer (§16.4).
