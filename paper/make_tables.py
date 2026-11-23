@@ -27,13 +27,17 @@ with its own ledger, and never touches the pilot's top-level tables or ledger:
   is written, every natural output is checked to hold no URL, owner placeholder, digit run
   of 7 or more (an id), session-local path or agent product name;
 * ``--natural-run RUN``: a natural run analysed in case-study mode (protocol §19.6, §20.3; the
-  run's analysis.json, and its manifest.json for the run id) -> four per-family tables in
+  run's analysis.json, and its manifest.json for the run's id, times, code revision, repeats,
+  pilot flag and invocations) -> four per-family tables in
   paper/generated/natural_run/ (false acceptance and false rejection per condition under D19,
   B3 apart; the pre-review states under the source-evidence label; the second labeling; the
-  construction facts), the number macros paper/generated/natural_run/numbers.tex (``\\nrv{key}``)
-  and paper/evidence_ledger_natural_run.md. Each table cell is a ledger entry that names the
-  analysis.json fields it is made from, with their values; every field belongs to one family,
-  so nothing is pooled over families. An analysis that is not a natural run's, or that is not
+  construction facts), the number macros paper/generated/natural_run/numbers.tex (``\\nrv{key}``:
+  the tables' values, the run's facts ``run.*`` and, per family, D19's labels ``d19.<family>.*``
+  with the reason category of each ambiguous candidate) and paper/evidence_ledger_natural_run.md.
+  Each table cell is a ledger entry that names the analysis.json fields it is made from, with
+  their values; every field belongs to one family, or to the run,
+  so nothing is pooled over families. Every caption ends with the marker that points to the
+  natural section's caveats (``NR_MARKER``). An analysis that is not a natural run's, or that is not
   in case-study mode (the run grades 10 or more accepted tasks of its own, protocol §20.3: each
   run is reported on its own; §15.7's pooled tables then apply), is refused. Its outputs get the
   natural arm's privacy check, which also reads the AIDev screening record
@@ -65,6 +69,7 @@ import statistics
 import sys
 import tempfile
 from collections import Counter
+from datetime import UTC, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -520,17 +525,24 @@ def wilson(k: int, n: int, z: float = 1.959963984540054) -> tuple[float, float]:
     return c - h, c + h
 
 
-def _check_private(text: str, where: str, *, digit_runs: bool, names: tuple[str, ...] = ()) -> None:
+def _check_private(text: str, where: str, *, digit_runs: bool, names: tuple[str, ...] = (),
+                   exempt: tuple[str, ...] = ()) -> None:
     """Refuse to write a URL, an owner placeholder, a session-local path, a model or agent-product name, or (natural
-    outputs) a digit run of 7 or more, which would be a PR, comment, issue or repository id."""
-    pats = [(r"https?:|github\.com|\{owner\}", "a URL or an owner placeholder"),
-            (r"/home/|/tmp/|/root/|scratchpad", "a session-local path"),
-            (r"\bclaude|\bopus\b|\bsonnet\b|\bhaiku\b|\bgemini\b|\bgpt-?\d", "a model or agent-product identifier")]
+    outputs) a digit run of 7 or more, which would be a PR, comment, issue or repository id. ``exempt``: strings that the
+    digit-run rule skips where each stands as a whole token (no letter or digit next to it): a natural run's own code
+    revisions, which name commits of the study's repository, never a PR, comment, issue or repository of the data. Every
+    other rule reads the whole text."""
+    runs = text  # the text the digit-run rule reads
+    for e in sorted(set(exempt), key=len, reverse=True):
+        runs = re.sub(r"(?<![0-9A-Za-z])" + re.escape(e) + r"(?![0-9A-Za-z])", " ", runs)
+    pats = [(r"https?:|github\.com|\{owner\}", "a URL or an owner placeholder", text),
+            (r"/home/|/tmp/|/root/|scratchpad", "a session-local path", text),
+            (r"\bclaude|\bopus\b|\bsonnet\b|\bhaiku\b|\bgemini\b|\bgpt-?\d", "a model or agent-product identifier", text)]
     if digit_runs:
-        pats.append((r"\d{7,}", "a digit run of 7 or more (an id)"))
-    pats += [(r"\b" + re.escape(n) + r"\b", "an agent product name") for n in names]
-    for pat, why in pats:
-        hit = re.search(pat, text, re.I)
+        pats.append((r"\d{7,}", "a digit run of 7 or more (an id)", runs))
+    pats += [(r"\b" + re.escape(n) + r"\b", "an agent product name", text) for n in names]
+    for pat, why, where_text in pats:
+        hit = re.search(pat, where_text, re.I)
         if hit:
             raise ValueError(f"{where}: refusing to write {why}: {hit.group(0)!r}")
 
@@ -1723,6 +1735,9 @@ NR_SECONDARY = ("diff_derived",)  # protocol §15.6: B3 is reported apart from t
 NR_SHORT = {**SHORT, "diff_derived": "B3"}
 NR_TEX = {**COND_TEX, "diff_derived": "B3 diff-derived (secondary)"}
 NR_DIR = "natural_run"  # paper/generated/natural_run/ and paper/evidence_ledger_natural_run.md
+# The end of every natural-run caption: the case studies' caveats are stated once, at the head of the natural section
+# (paper/sections/natural.tex, whose own table carries the same marker; restructure plan, part 7).
+NR_MARKER = "$^{\\ddagger}$Natural case study; caveats in Section~\\ref{sec:natural-cases}."
 ABSENT = object()  # a field the analysis does not hold (written "absent" in the ledger)
 
 
@@ -1804,10 +1819,15 @@ class NRTable:
 
 
 def natural_run_inputs(run: Path) -> dict:
-    """Read a natural run's analysis.json (and its manifest's run id) and check what the tables take for granted. Refused
-    (:class:`Refused`): an analysis that is not a natural run's; one whose size rule counted the committed index over both
-    samples, as analyses made before protocol §20.3 was implemented do (no ``meta.case_study.accepted_in_run``); or one
-    outside case-study mode, whose tables are §15.7's (pooled rates, intervals, sign-flip p-values) and not this mode's."""
+    """Read a natural run's analysis.json and its manifest.json (the run's id, times, code revision, repeats, pilot flag and
+    invocations) and check what the tables take for granted. Refused (:class:`Refused`): an analysis that is not a natural
+    run's; one whose size rule counted the committed index over both samples, as analyses made before protocol §20.3 was
+    implemented do (no ``meta.case_study.accepted_in_run``); one outside case-study mode, whose tables are §15.7's (pooled
+    rates, intervals, sign-flip p-values) and not this mode's; and one with no ``labels.<task>.d19`` for a family (D19's
+    labels with the reason category of each ambiguous candidate, analysis.D19_RULE), which analyses made before it was
+    carried lack. D19's counts must equal the label block's own (``labels.<task>.counts``), since the tables say that each
+    label is D19's proposal. ``own_revisions``: the run's and its invocations' code revisions, which name commits of the
+    study's repository, for the privacy check's digit-run rule (:func:`_check_private`)."""
     shown = _shown(run)
     src, msrc = f"{shown}/analysis.json", f"{shown}/manifest.json"
     raw, mraw = (run / "analysis.json").read_bytes(), (run / "manifest.json").read_bytes()
@@ -1842,7 +1862,31 @@ def natural_run_inputs(run: Path) -> dict:
     for c, pf in (*prim.items(), *sec.items()):
         if set(pf) - set(fams):
             raise ValueError(f"{src}: per-family rates of {c} for {sorted(set(pf) - set(fams))}, which are not the run's families")
-    return {"a": a, "m": m, "fams": fams, "run_id": m["run_id"], "src": src, "msrc": msrc,
+    labels = a.get("labels") if isinstance(a.get("labels"), dict) else {}
+    for t in fams:
+        block = labels.get(t) if isinstance(labels.get(t), dict) else {}
+        d19 = block.get("d19")
+        if not isinstance(d19, dict) or not isinstance(d19.get("ambiguous_reasons"), dict):
+            raise Refused(f"--natural-run {shown}: refused: {src} has no labels.{t}.d19 (D19's labels of the family's held-out "
+                          "candidates, with the reason category of each ambiguous one), which `tracecontract analyze` writes "
+                          "for a natural run (analysis.D19_RULE). Analyse the run again (`tracecontract analyze`)")
+        counts = block.get("counts") if isinstance(block.get("counts"), dict) else {}
+        proposals = {v: d19.get(v) for v in ("valid", "invalid", "ambiguous", "unlabeled")}
+        if any(counts.get(v, 0) != n for v, n in proposals.items()):
+            raise ValueError(f"{src}: labels.{t}.d19 counts D19's proposals and labels.{t}.counts the labels the analysis uses, "
+                             f"and they differ ({proposals} against {counts}): a label other than D19's is in use, and the "
+                             "tables say each is D19's model proposal")
+        ambiguous = sorted(r.get("candidate") for r in block.get("candidates", []) if r.get("proposed") == "ambiguous")
+        if sorted(d19["ambiguous_reasons"]) != ambiguous:
+            raise ValueError(f"{src}: labels.{t}.d19.ambiguous_reasons names {sorted(d19['ambiguous_reasons'])}, while the "
+                             f"family's label rows label {ambiguous} ambiguous")
+    # The study repository's commits that the run's manifest names (the run's and each invocation's code revision): the
+    # privacy check's digit-run rule skips them (_check_private), and nothing else.
+    invocations = m.get("invocations") if isinstance(m.get("invocations"), list) else []
+    revisions = [m.get("code_revision"), *(x.get("code_revision") for x in invocations if isinstance(x, dict))]
+    own = tuple(sorted({form for r in revisions if isinstance(r, str) and r.removesuffix("+dirty")
+                        for form in (r, r.removesuffix("+dirty"), r.removesuffix("+dirty")[:7])}))
+    return {"a": a, "m": m, "fams": fams, "run_id": m["run_id"], "src": src, "msrc": msrc, "own_revisions": own,
             "sha256": {src: hashlib.sha256(raw).hexdigest(), msrc: hashlib.sha256(mraw).hexdigest()}}
 
 
@@ -1921,7 +1965,7 @@ def natural_run_fa_fr_table(R: dict, led: SectionLedger, nums: Numbers, out: Pat
                "analysis does not hold the value. none: no such pair. "
                "$^{\\dagger}$: the verifier does not pass the family's reference solution in the run, so the secondary "
                "oracle-gated view (protocol \\S15.7) drops the cell and counts its units as lost yield."
-               + (f" Not graded in this run: {', '.join(absent)}." if absent else ""))
+               + (f" Not graded in this run: {', '.join(absent)}." if absent else "") + " " + NR_MARKER)
     # Sized as the fresh-v1 tables are; a cell wraps only when it does not fit (six families of two-digit counts fit).
     size, spec = _nr_layout(fams, small=True)
     head = "Condition & " + " & ".join(tex(t) for t in fams)
@@ -2017,7 +2061,8 @@ def natural_run_source_table(R: dict, led: SectionLedger, nums: Numbers, out: Pa
                "reference checks' outcome on it in the run. A rejection is any outcome other than a pass: one that is not a "
                "task failure (an infrastructure outcome, or an unresolved pair whose repeats disagree, protocol \\S15.3) is "
                "named in brackets. Terms: --: the run did not grade the condition for the family; not graded: the run did not "
-               "grade the state with that verifier; none: no label (no D19 proposal, or no label in the second labeling).")
+               "grade the state with that verifier; none: no label (no D19 proposal, or no label in the second labeling). "
+               + NR_MARKER)
     size, spec = _nr_layout(fams)
     head = "Condition & " + " & ".join(tex(t) for t in fams)
     (out / "natural_run_source_evidence.tex").write_text(table(caption, "tab:nr-source", spec, head, T.rows, size=size))
@@ -2092,7 +2137,7 @@ def natural_run_labeler_table(R: dict, led: SectionLedger, nums: Numbers, out: P
                "of all, with those not after it and those whose order is not shown (no frozen time, or no generation start). "
                "Terms: not recorded: no status record; graded: in the second labeling; left out: its labeler is not usable; "
                "--: not in the analysis; n/a: recorded as null. " + _nr_case_study(T)
-               + " No agreement is pooled over the families.")
+               + " No agreement is pooled over the families. " + NR_MARKER)
     size, spec = _nr_layout(fams)
     head = "Second labeling & " + " & ".join(tex(t) for t in fams)
     (out / "natural_run_labeler.tex").write_text(table(caption, "tab:nr-labeler", spec, head, T.rows, size=size))
@@ -2281,10 +2326,99 @@ def natural_run_construction_table(R: dict, led: SectionLedger, nums: Numbers, o
                "run's grading time and the S10 build time. Terms: --: not in the analysis; n/a: recorded as null; not "
                "recorded: no record of it (codes not recorded: an audit record without its iterations; fix rounds not "
                "recorded: no integer for them); unrecognised status: a record with neither status; not known: no "
-               "regression-norm overlay. " + _nr_case_study(T) + " No total is given.")
+               "regression-norm overlay. " + _nr_case_study(T) + " No total is given. " + NR_MARKER)
     size, spec = _nr_layout(fams, small=True)
     head = "Fact & " + " & ".join(tex(t) for t in fams)
     (out / "natural_run_construction.tex").write_text(table(caption, "tab:nr-construction", spec, head, T.rows, size=size))
+
+
+NOT_RECORDED = "not recorded"  # a macro whose field the manifest or the analysis does not hold, or holds in no usable form
+
+
+def _utc(v: object) -> datetime | None:
+    """``v`` as a time in UTC, when it is an ISO 8601 text with a time zone (as evaluate records the run's times)."""
+    try:
+        t = datetime.fromisoformat(v) if isinstance(v, str) else None
+    except ValueError:
+        return None
+    return t.astimezone(UTC) if t is not None and t.tzinfo is not None else None
+
+
+def _revision(rev: object) -> str | None:
+    """A code revision as the paper names it: its first 7 characters, said to have had uncommitted changes where evaluate
+    recorded ``+dirty`` (tracked files that differed from the commit); None for no revision."""
+    if not isinstance(rev, str) or not rev.removesuffix("+dirty"):
+        return None
+    return rev.removesuffix("+dirty")[:7] + (" (with uncommitted changes)" if rev.endswith("+dirty") else "")
+
+
+def _candidate_name(cid: str, task: str) -> str:
+    """A family's candidate as the paper names it beside the family: without the family's id in front (``<task>-eval-nm-1``
+    is eval-nm-1, as the recipe names the pool, D64)."""
+    rest = cid[len(task) + 1:] if cid.startswith(task + "-") else ""
+    return rest or cid
+
+
+def natural_run_numbers(R: dict, led: SectionLedger, nums: Numbers) -> None:
+    """The run's facts from its manifest (its times, code revision, repeats, pilot flag and invocations) and from its analysis
+    (the harness versions of its results), and per family D19's labels of its held-out candidates with the reason category
+    of each ambiguous one (``labels.<task>.d19``; analysis.D19_RULE): each a macro with its ledger entry, each put once."""
+    m, msrc = R["m"], R["msrc"]
+    T = NRTable(R, led, nums, "numbers")
+
+    def mfields(*keys: str) -> list[tuple[str, object]]:
+        return [(k, _get(m, k)) for k in keys]
+
+    def mput(key: str, value: str, fs: list[tuple[str, object]], what: str) -> None:
+        nums.put(key, value, T.src(fs, msrc), what)
+
+    fs = mfields("started_at")
+    start = _utc(fs[0][1])
+    mput("run.date", NOT_RECORDED if start is None else start.strftime("%Y-%m-%d"), fs, "the run's start date, UTC")
+    mput("run.started", NOT_RECORDED if start is None else start.strftime("%H:%M:%S"), fs,
+         "the run's start, UTC, as its manifest records it: that of its first invocation")
+    fs = mfields("finished_at")
+    end = _utc(fs[0][1])
+    same_day = start is not None and end is not None and end.date() == start.date()
+    mput("run.finished", NOT_RECORDED if end is None else end.strftime("%H:%M:%S" if same_day else "%Y-%m-%d %H:%M:%S"), fs,
+         "the run's end, UTC, with its date where that is not the start's")
+    invocations = _get(m, "invocations")
+    listed = invocations if isinstance(invocations, list) else []
+    fs = mfields("code_revision", *(("invocations",) if isinstance(invocations, list) else ()))
+    revisions = [*(x.get("code_revision") for x in listed if isinstance(x, dict)), fs[0][1]]  # in the invocations' order
+    shown = list(dict.fromkeys(r for r in map(_revision, revisions) if r))
+    mput("run.revision", ", ".join(shown) or NOT_RECORDED, fs,
+         "the code revision of the run's invocations, first 7 characters, each distinct one once")
+    fs = mfields("repeats")
+    rep = fs[0][1]
+    mput("run.repeats", _num(rep) if isinstance(rep, int) and not isinstance(rep, bool) else NOT_RECORDED, fs,
+         "repeats per graded pair")
+    fs = mfields("pilot")
+    mput("run.pilot", "set" if fs[0][1] is True else "not set" if fs[0][1] is False else NOT_RECORDED, fs,
+         "the manifest's pilot flag: an invocation graded the tasks without requiring the acceptance gate")
+    fs = mfields("invocations")
+    mput("run.invocations", _int(len(invocations)) if isinstance(invocations, list) else NOT_RECORDED, fs,
+         "the run's invocations, as its manifest records them")
+    fs = T.fields("meta.harness_versions")
+    hv = fs[0][1]
+    versions = sorted({str(k).split("/")[-1] for k in hv}) if isinstance(hv, dict) else []
+    nums.put("run.harness", ", ".join(tex(v) for v in versions) or NOT_RECORDED, T.src(fs),
+             "the harness versions of the run's results, each once")
+    for t in R["fams"]:
+        fk, p = _fk(t), f"labels.{t}.d19"
+        for v, what in (("valid", "labels valid"), ("invalid", "labels invalid"), ("ambiguous", "labels ambiguous"),
+                        ("unlabeled", "leaves without a proposal")):
+            fs = T.fields(f"{p}.{v}")
+            T.put(f"d19.{fk}.{v}", _num(fs[0][1]), fs, f"the family's held-out candidates D19 {what}")
+        fs = T.fields(f"{p}.ambiguous_reasons")
+        reasons = fs[0][1]
+        names = {cid: tex(_candidate_name(cid, t)) for cid in reasons}
+        T.put(f"d19.{fk}.ambiguous.ids", ", ".join(names.values()) or "none", fs,
+              "the candidates D19 labels ambiguous, without the family's id in front; none: no such candidate")
+        # Each candidate with its reason in brackets, as analysis.md writes them: some of D19's reasons hold a comma or a
+        # semicolon, and the text around the macro separates its own items with semicolons.
+        T.put(f"d19.{fk}.ambiguous.reasons", ", ".join(f"{names[c]} ({tex(why)})" for c, why in reasons.items()) or "none",
+              fs, "each candidate D19 labels ambiguous, with the category of D19's reason in brackets; none: no such candidate")
 
 
 def natural_run_tables(R: dict, led: SectionLedger, nums: Numbers, out: Path) -> None:
@@ -2293,10 +2427,13 @@ def natural_run_tables(R: dict, led: SectionLedger, nums: Numbers, out: Path) ->
     T = NRTable(R, led, nums, "numbers")
     nums.put("run", tex(R["run_id"]), T.src([("run_id", R["run_id"])], R["msrc"]))
     nums.put("families", _int(len(R["fams"])), T.src(T.fields("natural.tasks")), "the run's families (count)")
+    nums.put("run.families", ", ".join(tex(t) for t in R["fams"]), T.src(T.fields("natural.tasks")),
+             "the run's families, in its order")
     nums.put("accepted", _num(R["a"]["meta"]["case_study"]["accepted_in_run"]),
              T.src(T.fields("meta.case_study.accepted_in_run")), "the run's own accepted tasks (the size rule, protocol §20.3)")
     nums.put("threshold", _num(R["a"]["meta"]["case_study"]["threshold"]), T.src(T.fields("meta.case_study.threshold")),
              "the size threshold of protocol §19.6")
+    natural_run_numbers(R, led, nums)
     natural_run_fa_fr_table(R, led, nums, out)
     natural_run_source_table(R, led, nums, out)
     natural_run_labeler_table(R, led, nums, out)
@@ -2465,8 +2602,9 @@ def main(argv: list[str]) -> None:
                                  "= <cell>`; a caption's is `caption | <what> = <value>`. Each entry names the fields of its file "
                                  "as `<dot path>=<JSON value>`, and `absent` for a field the analysis does not hold. Every field "
                                  "belongs to one family, or to the run (its id, its families, the families of its second "
-                                 "labeling, the size rule): the run is in case-study mode (protocol §19.6, §20.3), so nothing is pooled "
-                                 "over the families. The labels are D19's "
+                                 "labeling, the size rule; its manifest's times, code revision, repeats, pilot flag and "
+                                 "invocations, and the harness versions of its results): the run is in case-study mode "
+                                 "(protocol §19.6, §20.3), so nothing is pooled over the families. The labels are D19's "
                                  "model proposals, the independent labeler's verdicts and the source-evidence labels; no human "
                                  "labels exist.")
             rnums = Numbers("nrv", rled)
@@ -2488,13 +2626,15 @@ def main(argv: list[str]) -> None:
         for name, sub, _ in subs:
             natural = name in ("natural", NR_DIR)
             names = agent_names if natural else ()
+            # A natural run's own code revisions (the study repository's commits) are no id of the data (_check_private).
+            exempt = R["own_revisions"] if name == NR_DIR else ()
             for f in sorted(sub.iterdir()):
-                _check_private(f.read_text(), f"{name}/{f.name}", digit_runs=natural, names=names)
+                _check_private(f.read_text(), f"{name}/{f.name}", digit_runs=natural, names=names, exempt=exempt)
             text = (tmp / f"evidence_ledger_{name}.md").read_text()
             _check_private(text, f"evidence_ledger_{name}.md", digit_runs=False, names=names)
             if natural:
                 _check_private("\n".join(x for x in text.splitlines() if not x.startswith("- [inputs]")),
-                               f"evidence_ledger_{name}.md", digit_runs=True, names=names)
+                               f"evidence_ledger_{name}.md", digit_runs=True, names=names, exempt=exempt)
         # Every output has been written: replace them.
         if a.runs:
             n = _replace_outputs(out, tmp / "evidence_ledger.md")

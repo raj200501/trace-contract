@@ -23,6 +23,7 @@ import json
 import re
 import shutil
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -34,9 +35,9 @@ from natural_task_layout import (
     PR_TEXT,
     REPLY_TEXT,
 )
-from test_analysis_natural import SECRET_FINDING, build_world
+from test_analysis_natural import SECRET_FINDING, build_world, d19_note, relabel_d19
 
-from tracecontract.analysis import analyze
+from tracecontract.analysis import D19_NO_REASON, D19_REPEATS_DISAGREE, analyze
 
 ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location("make_tables_natural_run", ROOT / "paper" / "make_tables.py")
@@ -44,14 +45,22 @@ mt = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(mt)
 
 TABLES = ("natural_run_fa_fr", "natural_run_source_evidence", "natural_run_labeler", "natural_run_construction")
-# The fields of the run as a whole that an entry may name: its id, its families, those of its second labeling, the size rule.
+# The fields of the run as a whole that an entry may name: its id, its families, those of its second labeling, the size rule;
+# its manifest's times, code revision, repeats, pilot flag and invocations, and the harness versions of its results.
 RUN_LEVEL = {"run_id", "natural.tasks", "independent_labeling.tasks", "meta.case_study.accepted_in_run",
-             "meta.case_study.threshold"}
+             "meta.case_study.threshold", "started_at", "finished_at", "code_revision", "repeats", "pilot", "invocations",
+             "meta.harness_versions"}
+# Macros whose values are formatted from a field, not counted (a date or time of day of a manifest's time, a revision's first
+# characters, a harness version, the run's family ids): their digits are not counts, so
+# test_the_run_s_facts_come_from_its_manifest checks each value against its field exactly.
+FORMATTED = {"run.date", "run.started", "run.finished", "run.revision", "run.harness", "run.families"}
 # Blocks that hold numbers pooled over the families (absent in case-study mode, or pooled by construction).
 POOLED = ("conditions", "comparisons", "natural.cost.totals", "natural.cost.per_accepted_task", "natural.cost.s10_every_family",
           "natural.reliability.run")
-# Digits that are names, not numbers: protocol sections, decision-log entries, conditions and stages, families, audit:v1.
-LABELS = (r"\\S\d+(?:\.\d+)*", r"\bD\d+\b", r"\b[BCS]\d+a?\b", r"\bNP-\d+\b", r"audit:v\d+", r"decision \d+")
+# Digits that are names, not numbers: protocol sections, decision-log entries, conditions and stages, families, audit:v1,
+# and the held-out pool's candidates (eval-alt-1, eval-nm-3; D64).
+LABELS = (r"\\S\d+(?:\.\d+)*", r"\bD\d+\b", r"\b[BCS]\d+a?\b", r"\bNP-\d+\b", r"audit:v\d+", r"decision \d+",
+          r"\beval-(?:alt|nm)-\d+\b")
 ENTRY = re.compile(r"^- \[(?P<table>[^\]]+)\] (?P<what>.+?) = (?P<value>.*) <- `(?P<src>[^`]*)`$")
 FIELD = re.compile(r"([A-Za-z0-9_/-]+(?:\.[A-Za-z0-9_/-]+)*)=")
 ABSENT = object()
@@ -75,8 +84,11 @@ class Made:
         return {f"{self.run.name}/analysis.json": self.a, f"{self.run.name}/manifest.json": self.m}
 
 
-def _make(root: Path, construction: bool) -> Made:
+def _make(root: Path, construction: bool, prepare=None) -> Made:
+    """A world of three families, analysed, and the mode's outputs; ``prepare(tasks)`` changes the world before the analysis."""
     run, tasks = build_world(root / "repo", 3, construction=construction)
+    if prepare is not None:
+        prepare(tasks)
     analyze(run, tasks[0].tasks_root, allow_proposed=True, n_boot=50)
     paper = root / "paper"
     (paper / "generated").mkdir(parents=True)
@@ -148,6 +160,11 @@ def entries(ledger: str) -> list[dict]:
             assert m, line
             out.append(m.groupdict())
     return out
+
+
+def macro_key(e: dict) -> str:
+    """The key of a ledger entry of the numbers section (``\\nrv{key} (what)``)."""
+    return re.match(r"\\nrv\{([^}]+)\}", e["what"]).group(1)
 
 
 def fields(src: str) -> tuple[str, list[tuple[str, object]]]:
@@ -297,14 +314,14 @@ def test_every_number_of_the_tex_files_is_in_the_ledger(made):
         assert numbers(text) <= {e["value"] for e in caps if e["value"].isdigit()}, name
     tex = (made.out / "numbers.tex").read_text()
     macros = dict(re.findall(r"^\\expandafter\\gdef\\csname nrv:([^\\]+)\\endcsname\{(.*)\}$", tex, re.MULTILINE))
-    ledgered = {re.match(r"\\nrv\{([^}]+)\}", e["what"]).group(1): e for e in led if e["table"] == "numbers"}
+    ledgered = {macro_key(e): e for e in led if e["table"] == "numbers"}
     assert macros and macros.keys() == ledgered.keys()
     assert len(tex.splitlines()) == len(macros) + 3  # three comment lines, then one definition per macro
     for key, value in macros.items():
         e = ledgered[key]
         assert e["value"] == value, key
         fs = check_fields(made, e, None)
-        assert numbers(value, fs) <= derivable(fs), (key, value, fs)
+        assert key in FORMATTED or numbers(value, fs) <= derivable(fs), (key, value, fs)
     assert {"run", "families", "accepted", "threshold", "c1.np90.fa", "c1.np90.fr", "se.c1.np90", "il.np90.status",
             "il.np90.pool.agree", "cost.np90.turns"} <= set(macros)
     assert (macros["run"], macros["families"], macros["accepted"], macros["threshold"]) == ("natural-pr-v1", "3", "3", "10")
@@ -315,7 +332,8 @@ def test_nothing_is_pooled_over_the_families(made):
     texts = "\n".join(p.read_text() for p in made.out.iterdir())
     assert "\\%" not in texts and "$p" not in texts and "\\pm" not in texts  # no rate in percent, no p-value, no interval
     led = entries(made.ledger)
-    shown = [e["value"] for e in led if e["table"] in (*TABLES, "numbers") and not e["what"].startswith("caption | ")]
+    shown = [e["value"] for e in led if e["table"] in (*TABLES, "numbers") and not e["what"].startswith("caption | ")
+             and not (e["table"] == "numbers" and macro_key(e) in FORMATTED)]  # a revision's hex digits are no count
     fractions = {x for v in shown for x in re.findall(r"\d+/\d+", v)}
     tokens = {x for v in shown for x in re.findall(r"\d+", v.replace("{,}", ""))}
     a = made.a
@@ -497,9 +515,21 @@ def test_the_tables_of_a_run_with_its_construction_records(built):
     assert "Source evidence, not a human label" in captions[1] and "Not graded in this run" not in captions[0]
 
 
+def test_every_caption_points_to_the_natural_section_s_caveats(made):
+    """The case studies' caveats are stated once, at the head of the natural section (paper/sections/natural.tex): every
+    caption of this mode ends with its marker, the one the section's own table of caveats carries, and names that
+    section's label."""
+    template = (ROOT / "paper" / "sections" / "natural.tex").read_text()
+    assert mt.NR_MARKER == "$^{\\ddagger}$Natural case study; caveats in Section~\\ref{sec:natural-cases}."
+    assert mt.NR_MARKER in " ".join(template.split()) and "\\label{sec:natural-cases}" in template
+    for name in TABLES:
+        caption, _, _ = parse_table((made.out / f"{name}.tex").read_text())
+        assert caption.endswith(" " + mt.NR_MARKER) and caption.count("ddagger") == 1, name
+
+
 def test_the_tables_of_a_run_without_construction_records(plain):
     caption, _, _ = parse_table((plain.out / "natural_run_fa_fr.tex").read_text())
-    assert caption.endswith("Not graded in this run: C2, B2.")
+    assert caption.endswith("Not graded in this run: C2, B2. " + mt.NR_MARKER)
     t1 = cells(plain, "natural_run_fa_fr")
     assert {r for r, _ in t1} == {"C1 initial, plain", "C3 full, plain", "C4 full, audited", "B1 repository tests",
                                   "B3 diff-derived (secondary)", "The run's pairs: graded, unresolved",
@@ -626,6 +656,165 @@ def test_an_analysis_made_under_the_superseded_size_rule_is_refused(outputs, bui
     _unchanged(outputs, before)
 
 
+# --------------------------------------------------------------------------- the run's facts and D19's labels (run.*, d19.*)
+
+
+def macros_of(out: Path) -> dict[str, str]:
+    """The number macros of the mode's numbers.tex in ``out``, by key."""
+    return dict(re.findall(r"^\\expandafter\\gdef\\csname nrv:([^\\]+)\\endcsname\{(.*)\}$", (out / "numbers.tex").read_text(),
+                           re.MULTILINE))
+
+
+def numbers_entries(ledger: str) -> dict[str, dict]:
+    """The ledger's entries of the numbers section, by macro key."""
+    return {macro_key(e): e for e in entries(ledger) if e["table"] == "numbers"}
+
+
+def utc(t: str) -> datetime:
+    return datetime.fromisoformat(t).astimezone(UTC)
+
+
+def _with_records(built: Made, tmp_path: Path, name: str, manifest=None, analysis=None) -> Path:
+    """A copy of the built world's run whose manifest.json ``manifest`` and analysis.json ``analysis`` have changed."""
+    copy = tmp_path / name / built.run.name
+    shutil.copytree(built.run, copy)
+    for file, mutate in (("manifest.json", manifest), ("analysis.json", analysis)):
+        if mutate is not None:
+            doc = json.loads((copy / file).read_text())
+            mutate(doc)
+            (copy / file).write_text(json.dumps(doc))
+    return copy
+
+
+def test_the_run_s_facts_come_from_its_manifest_and_analysis(built):
+    """run.*: the run's start date, start and end (UTC), the code revision of its invocations (first 7 characters), the
+    harness versions of its results, its repeats, its pilot flag and its invocations, each from the manifest's or the
+    analysis's field that its ledger entry names, with its value; and the run's families, in its order, from the analysis's
+    natural.tasks (not the committed index's accepted families, which span both samples)."""
+    macros, led, m, a = macros_of(built.out), numbers_entries(built.ledger), built.m, built.a
+    assert macros["run.families"] == ", ".join(a["natural"]["tasks"]) == "NP-90, NP-91, NP-92"
+    assert fields(led["run.families"]["src"]) == (f"{built.run.name}/analysis.json", [("natural.tasks", a["natural"]["tasks"])])
+    start, end = utc(m["started_at"]), utc(m["finished_at"])
+    assert macros["run.date"] == start.strftime("%Y-%m-%d") == "2026-11-21"
+    assert (macros["run.started"], macros["run.finished"]) == (start.strftime("%H:%M:%S"), end.strftime("%H:%M:%S"))
+    assert macros["run.revision"] == m["code_revision"][:7] == m["invocations"][0]["code_revision"][:7]
+    assert macros["run.harness"] == "0.3.5" and list(a["meta"]["harness_versions"]) == ["tc-harness/0.3.5"]
+    assert (macros["run.repeats"], macros["run.pilot"], macros["run.invocations"]) == ("3", "set", "1")
+    for key, cited in (("run.date", ["started_at"]), ("run.started", ["started_at"]), ("run.finished", ["finished_at"]),
+                       ("run.revision", ["code_revision", "invocations"]), ("run.repeats", ["repeats"]), ("run.pilot", ["pilot"]),
+                       ("run.invocations", ["invocations"])):
+        file, fs = fields(led[key]["src"])
+        assert (file, fs) == (f"{built.run.name}/manifest.json", [(p, m[p]) for p in cited]), key
+    assert fields(led["run.harness"]["src"]) == (f"{built.run.name}/analysis.json",
+                                                 [("meta.harness_versions", a["meta"]["harness_versions"])])
+
+
+def test_the_run_s_facts_say_what_its_manifest_holds(outputs, built, tmp_path):
+    """A start recorded in another time zone is given in UTC, and an end on a later day with its date; a revision with
+    uncommitted changes says so, and each distinct revision of the invocations is named once, in their order; a pilot flag
+    that is not set says so; each harness version is named once; and a field the manifest does not hold is not recorded."""
+    first, last = "ab12cd3" + "f" * 33, "1234567" + "ef" * 16  # the run's own revisions; the last starts with a digit run
+
+    def changed(m: dict) -> None:
+        m.update(started_at="2026-11-23T06:14:36+02:00", finished_at="2026-11-24T01:02:03+00:00", pilot=False,
+                 code_revision=last + "+dirty",
+                 invocations=[{"at": "2026-11-23T04:14:36+00:00", "code_revision": first, "pilot": True, "tasks": built.fams},
+                              {"at": "2026-11-23T04:15:05+00:00", "code_revision": last + "+dirty", "pilot": False,
+                               "tasks": built.fams}])
+
+    def versions(a: dict) -> None:
+        a["meta"]["harness_versions"] = {"tc-harness/0.3.6": 2, "tc-harness/0.3.5": 10}
+
+    mt.main(["--natural-run", str(_with_records(built, tmp_path, "changed", changed, versions))])
+    macros = macros_of(outputs / "generated" / "natural_run")
+    assert (macros["run.date"], macros["run.started"], macros["run.finished"]) == ("2026-11-23", "04:14:36", "2026-11-24 01:02:03")
+    assert macros["run.revision"] == "ab12cd3, 1234567 (with uncommitted changes)"
+    assert (macros["run.pilot"], macros["run.invocations"], macros["run.harness"]) == ("not set", "2", "0.3.5, 0.3.6")
+
+    def dropped(m: dict) -> None:
+        for k in ("started_at", "finished_at", "code_revision", "repeats", "pilot", "invocations"):
+            del m[k]
+
+    mt.main(["--natural-run", str(_with_records(built, tmp_path, "dropped", dropped))])
+    macros = macros_of(outputs / "generated" / "natural_run")
+    for key in ("run.date", "run.started", "run.finished", "run.revision", "run.repeats", "run.pilot", "run.invocations"):
+        assert macros[key] == "not recorded", key
+    assert "started_at=absent" in numbers_entries((outputs / "evidence_ledger_natural_run.md").read_text())["run.date"]["src"]
+
+
+def test_the_digit_run_rule_skips_the_run_s_own_revisions_alone(outputs, built, tmp_path):
+    """The run's code revisions name commits of the study's repository, so the privacy check's digit-run rule skips them,
+    where each stands as a whole token; any other digit run of 7 or more, one that starts like a revision included, is
+    still refused, and nothing is written."""
+    assert mt._check_private("revision 1234567 and 1234567ab", "probe", digit_runs=True, exempt=("1234567", "1234567ab")) is None
+    for text in ("revision 12345678", "revision 1234567 beside 7654321"):
+        with pytest.raises(ValueError, match="refusing to write a digit run of 7 or more"):
+            mt._check_private(text, "probe", digit_runs=True, exempt=("1234567",))
+    rev = "1234567" + "ef" * 16 + "a"
+
+    def own(m: dict) -> None:
+        m.update(code_revision=rev, invocations=[{**m["invocations"][0], "code_revision": rev}])
+
+    mt.main(["--natural-run", str(_with_records(built, tmp_path, "own", own))])
+    assert macros_of(outputs / "generated" / "natural_run")["run.revision"] == "1234567"
+    before = _tree(outputs)
+    with pytest.raises(ValueError, match="refusing to write a digit run of 7 or more"):
+        mt.main(["--natural-run", str(_with_records(built, tmp_path, "id", lambda m: (own(m), m.update(run_id="natural-pr-12345670"))))])
+    _unchanged(outputs, before)
+
+
+PASSES = "construction invalid but reference checks and regression norm pass"
+PRE = "natural pre-review state passes the reference checks: the correction is not observable by the checks"
+
+
+def _relabel(tasks) -> None:
+    """D19's proposals with their reasons (as scripts/propose_labels.py writes them): two ambiguous candidates in NP-90, the
+    pre-review state and a near miss whose repeats disagree in NP-91, none in NP-92."""
+    relabel_d19(tasks[0], "eval-nm-1", "ambiguous", [], d19_note(PASSES))
+    relabel_d19(tasks[0], "eval-alt-2", "ambiguous", ["REGRESSION"], d19_note("construction valid but checks fail"))
+    relabel_d19(tasks[1], "pre-review", "ambiguous", [], d19_note(PRE))
+    relabel_d19(tasks[1], "eval-nm-2", "ambiguous", [], d19_note(
+        "the 3 repeats give different proposals (invalid ['R-reply']; ambiguous []; invalid ['R-reply']): a missing decision"))
+
+
+@pytest.fixture(scope="module")
+def relabelled(tmp_path_factory) -> Made:
+    """Three families with their construction records whose D19 labels carry their reasons (:func:`_relabel`)."""
+    return _make(tmp_path_factory.mktemp("relabelled"), True, _relabel)
+
+
+def test_d19_s_labels_per_family_with_the_reason_of_each_ambiguous_candidate(relabelled):
+    """d19.<family>.*: D19's labels of the family's held-out candidates, each value counted, and the candidates it labels
+    ambiguous, named without the family's id, each with the category of D19's reason in brackets (some reasons hold a comma
+    or a semicolon, so a bracket is what separates them); none where there is no such candidate. Each is put once, from the
+    family's label block, which its ledger entry names."""
+    made = relabelled
+    macros, led, a = macros_of(made.out), numbers_entries(made.ledger), made.a
+    for t in made.fams:
+        fk, d19 = t.lower().replace("-", ""), a["labels"][t]["d19"]
+        for v in ("valid", "invalid", "ambiguous", "unlabeled"):
+            assert macros[f"d19.{fk}.{v}"] == str(d19[v])
+            assert fields(led[f"d19.{fk}.{v}"]["src"]) == (f"{made.run.name}/analysis.json", [(f"labels.{t}.d19.{v}", d19[v])])
+        for k in ("ids", "reasons"):
+            assert fields(led[f"d19.{fk}.ambiguous.{k}"]["src"]) == (
+                f"{made.run.name}/analysis.json", [(f"labels.{t}.d19.ambiguous_reasons", d19["ambiguous_reasons"])])
+    assert [macros[f"d19.np90.{v}"] for v in ("valid", "invalid", "ambiguous", "unlabeled")] == ["1", "3", "2", "0"]
+    assert macros["d19.np90.ambiguous.ids"] == "eval-alt-2, eval-nm-1"
+    assert macros["d19.np90.ambiguous.reasons"] == f"eval-alt-2 (construction valid but checks fail), eval-nm-1 ({PASSES})"
+    assert macros["d19.np91.ambiguous.ids"] == "eval-nm-2, pre-review"
+    assert macros["d19.np91.ambiguous.reasons"] == f"eval-nm-2 ({D19_REPEATS_DISAGREE}), pre-review ({PRE})"
+    assert (macros["d19.np92.ambiguous"], macros["d19.np92.ambiguous.ids"], macros["d19.np92.ambiguous.reasons"]) == (
+        "0", "none", "none")
+    assert "R-reply'" not in made.ledger + (made.out / "numbers.tex").read_text()  # a reason's list of proposals stays out
+
+
+def test_an_ambiguous_candidate_without_a_reason_says_so(built):
+    """The world as built gives its D19 labels no note: NP-91's pre-review state, which its reference checks pass, is
+    ambiguous with no reason recorded."""
+    macros = macros_of(built.out)
+    assert (macros["d19.np91.ambiguous.ids"], macros["d19.np91.ambiguous.reasons"]) == ("pre-review", f"pre-review ({D19_NO_REASON})")
+
+
 # --------------------------------------------------------------------------- refusals, errors and the other outputs
 
 
@@ -677,6 +866,16 @@ GUARDS = {
     "no generation order of a family's pool": (
         lambda a: _pop(a["independent_labeling"]["agreement"]["per_family"]["NP-91"]["natural"]["generated_after_labeler"],
                        "order"), ValueError, "does not record the pool's generation order"),
+    # D19's labels with their reasons (analysis.D19_RULE): an analysis made before they were carried is refused, and they
+    # must be the labels the analysis uses.
+    "no D19 labels of a family": (lambda a: _pop(a["labels"]["NP-91"], "d19"), mt.Refused,
+                                  "has no labels.NP-91.d19 (D19's labels of the family's held-out candidates"),
+    "D19's counts that differ from the label block's": (
+        lambda a: a["labels"]["NP-90"]["d19"].update(valid=9), ValueError,
+        "labels.NP-90.d19 counts D19's proposals and labels.NP-90.counts the labels the analysis uses, and they differ"),
+    "reasons of a candidate that is not ambiguous": (
+        lambda a: a["labels"]["NP-91"]["d19"]["ambiguous_reasons"].update({"NP-91-eval-nm-1": "construction valid but checks fail"}),
+        ValueError, "labels.NP-91.d19.ambiguous_reasons names ['NP-91-eval-nm-1', 'NP-91-pre-review']"),
 }
 
 

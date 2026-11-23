@@ -2999,3 +2999,54 @@ families had been graded on a held-out candidate before D19 ran.
     two-hour limit of the build session's tool.
   * It was started again (04:15:05), detached from the tool. The manifest records both invocations, at code revision
     `e9c9c91`.
+
+### D77. Before any analysis of `natural-pr-v1`: its reporting template and analysis fields fixed, and three records confirmed
+Times are UTC, 2026-11-23. When this entry was committed, grading was still in progress: 398 of the run's 432 pairs
+were graded at 08:23Z. No analysis of the run had been made and no report written.
+* **What the build session had seen of the results.** Its progress checks counted graded pairs per family. Twice, at
+  about 04:20Z and 04:49Z, they also printed the counts of outcomes over all graded pairs together (8 passes and 3 task
+  failures; then 75 and 95). Those counts name no verifier and no candidate.
+* **The template and the fields** (restructure plan, order of work 2). Built in an isolated worktree, reviewed through
+  two lenses (correctness; pre-commitment and fidelity to this log), and fixed. 32 findings were confirmed, none high;
+  27 were fixed and the rest are open items below. This commit holds:
+  * `src/tracecontract/analysis.py`: each natural family's label block also counts D19's proposals for the held-out
+    candidates. It gives each ambiguous candidate a category of D19's reason, from a fixed list with no text of the note
+    copied.
+  * `paper/make_tables.py --natural-run`: the run's date, start and end, revision, harness, repeats, pilot flag,
+    invocations and families, and D19's counts, ambiguous ids and reason categories per family. Each key is put once,
+    with its ledger entry.
+  * `paper/main.tex`: the `\nrv` lookup.
+  * `paper/sections/natural.tex`: the natural section's template, not yet placed in the manuscript. Its six family
+    paragraphs, in a fixed order, write every value as a macro and presuppose no outcome. Its one sentence that needs
+    the results is a visible slot.
+  * Tests. Every macro key the template uses is generated on a synthetic six-family world. The template compiles with
+    only that slot unfilled. It holds no banned word, model or tool name, and no digit outside a macro. Every
+    construction fact it states is checked against the analysis's own cells. Each test fails without its change.
+* **No near-miss writer ran the repository's tests** (D64, "Audits"; the disclosure beside B1).
+  * The P7 audit records of NP-03, NP-04, NP-05, NP-18 and NP-19 say so per near-miss writer. That includes NP-03's
+    eval-nm-3, whose writer started the task image itself (D75): no tool input of NP-03's three near-miss writers holds
+    a pytest, unittest or `tests/` run.
+  * NP-20's records do not say. The build session searched the tool inputs of its three near-miss writers for a
+    test-run command (pytest, run_tests, unittest, tox, nox, make test) and found none.
+* **Where the audits keep runs outside the recipe.** The audit records (`labels/generator_audit.json`) keep them, and any
+  near-miss test run, only in their written assessments. The records hold hits and exposures as leads, each assessed in
+  writing. So the analysis has no field for them, and the paper states them in writing (D75; restructure plan, part
+  5.2).
+* **The reference checks' fix rounds.** All six status records hold an integer `fix_rounds`, as the analysis reads it:
+  NP-03 0, NP-04 0, NP-05 2, NP-18 0, NP-19 1, NP-20 0.
+* **The harness relay in P5, as in P1** (a deviation like D67's).
+  * The harness relays the owner's latest message into workflows launched from an owner turn (D67, D68). The six P5
+    workflows were launched from the owner's turn of D71.
+  * So all 28 natural agent runs of P5 carried that message in their first message: 6 reference-check writers, 6
+    labelers, 4 labeler revisions, 9 reviews and 3 fix rounds. So did the 12 proposer runs of P1 (D67, D68). No run of
+    P6 or P7 did.
+  * The relay names no task, input or output. Its wording ranks the message above the computed task where the two
+    conflict, and the message asked the build session to keep going until the paper was finished.
+  * Of the P7 audits, NP-04's record it per transcript: 5 of its 24, its P1 proposers and its P5 runs. The other
+    families' records do not.
+  * Builder decision, pending the owner's review: nothing is regenerated for it, as for P1.
+* **Open, for the integration after the run.**
+  * Write the closing paragraph's slot from the C1 and C3 cells, naming families, never counting them.
+  * Check the template's premises on the run's own numbers before writing the family paragraphs.
+  * Re-add the cross-references to the amendments table and the natural comparison table once the restructure gives
+    them their content.

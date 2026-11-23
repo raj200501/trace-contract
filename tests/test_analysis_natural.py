@@ -30,8 +30,10 @@ graded, no Docker). They check code behaviour and are not research evidence.
 from __future__ import annotations
 
 import hashlib
+import importlib.util
 import json
 import shutil
+import sys
 from dataclasses import dataclass
 from fractions import Fraction
 from pathlib import Path
@@ -60,6 +62,8 @@ from tracecontract.verifier import build_spec
 REPO = Path(__file__).resolve().parents[1]
 HARNESS = "tc-harness/0.3.5"
 RUN_ID = "natural-pr-v1"
+REPEATS = 3  # the run's repeats per pair, as its manifest records them
+T1 = "2026-11-21T11:30:00+00:00"  # the run's end, as its manifest records it
 # verifier id -> condition; the reference checks and the labeler are label support (condition reference_check)
 VERIFIERS = {"initial_plain": "initial_plain", "full_plain": "full_plain", "full_audited": "full_audited",
              "repo_tests": "repo_tests", "diff_derived": "diff_derived", "reference_check": "reference_check",
@@ -106,6 +110,21 @@ def _req(rid: str, event: str) -> Requirement:
 
 def _d19(value: str, violated: list[str]) -> Label:
     return Label(value=value, violated_requirements=violated, labeler=PILOT_LABELER, labeler_kind=LabelerKind.model, timestamp=T0)
+
+
+def d19_note(why: str) -> str:
+    """A D19 label's note as scripts/propose_labels.py writes it: the reason, then its details (outcomes, failing checks)."""
+    return why + " | " + json.dumps({"refcheck_outcome": "task_failure", "refcheck_failed": ["test_x.py::test_y"],
+                                     "regression_outcome": "pass", "regression_failed": [], "repeats": 3})
+
+
+def relabel_d19(nt: NaturalTask, kind: str, value: str, violated: list[str], note: str) -> None:
+    """Give the candidate ``kind`` of ``nt`` (``eval-nm-1``, ``pre-review``, ...) the D19 proposal ``value`` with ``note``, in
+    place of its D19 label, as scripts/propose_labels.py replaces it; its other labels are kept."""
+    path = nt.task_dir / "candidates" / f"{nt.candidate_id(kind)}.json"
+    c = load(path, Candidate)
+    label = _d19(value, violated).model_copy(update={"note": note})
+    dump(c.model_copy(update={"labels": [lb for lb in c.labels if lb.labeler != PILOT_LABELER] + [label]}), path)
 
 
 def _outcome(i: int, vid: str, kind: str) -> str:
@@ -205,11 +224,11 @@ def _audit_record(revisions: int, passed: bool, codes: list[str] | None) -> Audi
                        history=history, revisions=[AuditRevision(revision=k) for k in range(1, revisions + 1)])
 
 
-def _construct(nt: NaturalTask, i: int) -> None:
+def _construct(nt: NaturalTask, i: int, b3_taken_out: tuple[int, ...] = B3_TAKEN_OUT) -> None:
     """The construction records of family ``i`` (D64, D70), by ``k = i % 3``: every verifier of the recipe registered with
     its checks (family ``i`` has ``i`` more checks per verifier), the audit records of C2 and C4 (:data:`AUDITS`), B3 taken
-    out by its selection for k = 2 (unavailable.json, its spec not registered), the reference checks' status record
-    (:data:`REFCHECK_STATUS_RECORDS`; none for k = 2) and the two recovered contracts."""
+    out by its selection for k in ``b3_taken_out`` (unavailable.json, its spec not registered), the reference checks' status
+    record (:data:`REFCHECK_STATUS_RECORDS`; none for k = 2) and the two recovered contracts."""
     td = nt.task_dir
     m = load(td / "task.json", TaskManifest)
     registered = list(m.verifiers)
@@ -224,7 +243,7 @@ def _construct(nt: NaturalTask, i: int) -> None:
         if vid in AUDITS[k]:
             spec = spec.model_copy(update={"audit": _audit_record(*AUDITS[k][vid])})
         dump(spec, td / "verifiers" / vid / "spec.json")
-        if vid == "diff_derived" and k in B3_TAKEN_OUT:  # as scripts/select_b3_tests.py leaves a B3 that kept no test
+        if vid == "diff_derived" and k in b3_taken_out:  # as scripts/select_b3_tests.py leaves a B3 that kept no test
             write_json({"schema": "verifier-unavailable:v1", "condition": "diff_derived", "available": False,
                         "reason": "synthetic"}, td / "verifiers" / vid / "unavailable.json")
             continue
@@ -263,24 +282,29 @@ def build_world(root: Path, n: int, *, harness: str = HARNESS, extra_s11: tuple[
                 unresolved: bool = True, code_revision: str | None = None, labeler_graded: bool = True,
                 extra_rows: tuple[tuple[str, dict], ...] = (), unscored_at_comment: bool = False,
                 no_correction: tuple[int, ...] = (), labeler_frozen_at: dict[int, str] | None = None,
-                construction: bool = False) -> tuple[Path, list[NaturalTask]]:
-    """``n`` accepted families NP-90 on, their index rows (and ``extra_s11`` accepted rows without a task, and
-    ``extra_rows``: ``(task id, write_index_row's arguments)``), three rejected or unbuilt rows, the screening records and
-    the fetch log; and the run natural-pr-v1 over the ``n`` families. The run's manifest records the commit of those
-    records as its code revision, as ``evaluate`` records HEAD (``code_revision`` names another). ``labeler_graded``: the
+                construction: bool = False, task_ids: tuple[str, ...] | None = None,
+                b3_taken_out: tuple[int, ...] = B3_TAKEN_OUT) -> tuple[Path, list[NaturalTask]]:
+    """``n`` accepted families NP-90 on (``task_ids``: these ids instead, in their order), their index rows (and ``extra_s11``
+    accepted rows without a task, and ``extra_rows``: ``(task id, write_index_row's arguments)``), three rejected or unbuilt
+    rows, the screening records and the fetch log; and the run natural-pr-v1 over the ``n`` families. The run's manifest
+    records what ``evaluate`` records: the commit of those records as its code revision, as ``evaluate`` records HEAD
+    (``code_revision`` names another), with its start, end, repeats, pilot flag and one invocation. ``labeler_graded``: the
     run grades the independent labeler. ``no_correction`` and ``labeler_frozen_at`` (by family number): see
-    :func:`_decorate`. ``construction``: every family also gets the construction records of :func:`_construct`, and the
-    run also grades C2 and B2, and no B3 where B3 was taken out."""
+    :func:`_decorate`. ``construction``: every family also gets the construction records of :func:`_construct` (B3 taken out
+    where ``i % 3`` is in ``b3_taken_out``), and the run also grades C2 and B2, and no B3 where B3 was taken out."""
+    ids = [f"NP-{90 + i:02d}" for i in range(n)] if task_ids is None else list(task_ids)
+    if len(ids) != n:
+        raise ValueError(f"{n} families, {len(ids)} task ids")
     root.mkdir(parents=True, exist_ok=True)
     init_git(root)
-    tasks = [build_natural_task(root, f"NP-{90 + i:02d}", index=False) for i in range(n)]
+    tasks = [build_natural_task(root, tid, index=False) for tid in ids]
     graded = {nt.task_id: _decorate(nt, i, commit_requirement=commit_requirement, no_issue_requirement=no_issue_requirement,
                                     duplicate_of_pre=duplicate_of_pre, unscored_at_comment=unscored_at_comment,
                                     no_correction=i in no_correction,
                                     labeler_frozen_at=(labeler_frozen_at or {}).get(i)) for i, nt in enumerate(tasks)}
     if construction:
         for i, nt in enumerate(tasks):
-            _construct(nt, i)
+            _construct(nt, i, b3_taken_out)
     for i, nt in enumerate(tasks):
         write_index_row(root, nt.task_id, s11=nt.task_id not in not_s11, commit=False, sample="first" if i < 6 else "extension",
                         repo_id=900 + i // 2)
@@ -304,12 +328,15 @@ def build_world(root: Path, n: int, *, harness: str = HARNESS, extra_s11: tuple[
         {"stage": "S9", "repo_id": 900, "delta": 5}, {"stage": "S10", "repo_id": 777, "delta": 300})), encoding="utf-8")
     run = root / "data" / "natural" / "runs" / RUN_ID
     run.mkdir(parents=True)
-    manifest: dict = {"run_id": RUN_ID, "started_at": T0, "code_revision": revision, "tasks": []}
+    manifest: dict = {"run_id": RUN_ID, "started_at": T0, "code_revision": revision, "split": "eval", "repeats": REPEATS,
+                      "conditions": None, "tasks": [],
+                      "invocations": [{"at": T0, "tasks": [nt.task_id for nt in tasks], "code_revision": revision, "pilot": True}],
+                      "pilot": True, "extra_verifiers": True, "finished_at": T1}
     graded_by_all = {**VERIFIERS, **(CONSTRUCTION_GRADED if construction else {})}
     for i, nt in enumerate(tasks):
         cands = graded[nt.task_id]
         verifiers = {v: c for v, c in graded_by_all.items() if (labeler_graded or v != INDEPENDENT_LABELER)
-                     and not (construction and v == "diff_derived" and i % 3 in B3_TAKEN_OUT)}
+                     and not (construction and v == "diff_derived" and i % 3 in b3_taken_out)}
         manifest["tasks"].append({
             "task_id": nt.task_id, "family_id": nt.task_id, "task_dir": f"data/natural/tasks/{nt.task_id}", "image": IMAGE,
             "image_id": IMAGE_ID if i != 3 else "sha256:" + "11" * 32,  # family 3: the run's image is another one
@@ -1047,6 +1074,104 @@ def test_the_pool_is_checked_to_be_generated_after_the_labeler_was_frozen(tmp_pa
     assert ("Generated after the labeler was frozen: 4 of 5 candidate(s); not shown for NP-90/NP-90-eval-nm-3 (no generation "
             "record).") in md
     assert "Generated after the labeler was frozen: 0 of 5 candidate(s); not after it: NP-91/NP-91-eval-alt-1, " in md
+
+
+# --------------------------------------------------------------------------- D19's reason for each ambiguous candidate
+
+
+def propose_labels_module():
+    """scripts/propose_labels.py as a module: it loads without Docker, and its grader is not called here."""
+    spec = importlib.util.spec_from_file_location("propose_labels_d19_reasons", REPO / "scripts" / "propose_labels.py")
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = mod
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def test_each_reason_d19_gives_an_ambiguous_label_is_a_category():
+    """The reasons that scripts/propose_labels.py's d19 gives an ambiguous proposal, over every input, are exactly the
+    analysis's fixed reasons, and each is its own category, read from the head of the label's note; repeats that disagree
+    (combine_repeats) are one category whatever proposals they list; a note with no reason, or with a reason D19 does not
+    give, gets a category that holds nothing of its text."""
+    pl = propose_labels_module()
+    targeted = Label(value="invalid", violated_requirements=["R1"], labeler="nearmiss:v1",
+                     labeler_kind=LabelerKind.construction, timestamp=T0)
+    built_valid = Label(value="valid", labeler="altimpl:v1", labeler_kind=LabelerKind.construction, timestamp=T0)
+    reasons = set()
+    for origin in CandidateOrigin:
+        for construction in (None, built_valid, targeted):
+            for infra, rc_ok in ((True, False), (False, True), (False, False)):
+                for violated_rc in ([], ["R1"], ["R2"]):
+                    for reg_fail in ([], ["tests/test_mod.py::test_add"]):
+                        for reg_infra in (False, True):
+                            value, _, why = pl.d19(origin, construction, infra=infra, rc_ok=rc_ok, violated_rc=violated_rc,
+                                                   reg_fail=reg_fail, reg_infra=reg_infra)
+                            if value == "ambiguous":
+                                reasons.add(why)
+    assert reasons == set(analysis.D19_AMBIGUOUS_REASONS)
+    for why in reasons:
+        assert analysis.d19_reason_category(d19_note(why)) == why
+        assert analysis.d19_reason_category(why) == why  # a note that holds the reason alone
+    for proposals in ([("invalid", ["R1"], "a"), ("ambiguous", [], "b"), ("invalid", ["R1"], "a")],
+                      [("valid", [], "c"), ("invalid", ["R2", "REGRESSION"], "d"), ("valid", [], "c")]):
+        value, violated, why = pl.combine_repeats(proposals)
+        assert (value, violated) == ("ambiguous", []) and analysis.d19_reason_category(d19_note(why)) == analysis.D19_REPEATS_DISAGREE
+    assert analysis.d19_reason_category("") == analysis.d19_reason_category(None) == analysis.D19_NO_REASON
+    for other in (SECRET_FINDING, d19_note("construction valid, confirmed by reference checks and regression norm")):
+        assert analysis.d19_reason_category(other) == analysis.D19_UNRECOGNISED  # never its text, nor a reason of no ambiguity
+
+
+def test_the_label_block_carries_d19_s_reason_for_each_ambiguous_candidate(tmp_path):
+    """A natural run's per-family label block keeps every field and gains d19: D19's proposals of the held-out candidates,
+    each value counted, zero included, and the reason category of each ambiguous candidate, read from its D19 label's
+    note (the candidate files, hashed in meta.inputs); analysis.md lists them. Nothing of a note but its category is
+    written."""
+    run, tasks = build_world(tmp_path / "repo", 3)
+    pl = propose_labels_module()
+    repeats = pl.combine_repeats([("invalid", ["R-corr"], "x"), ("ambiguous", [], "y"), ("invalid", ["R-corr"], "x")])[2]
+    pre = "natural pre-review state passes the reference checks: the correction is not observable by the checks"
+    passes = "construction invalid but reference checks and regression norm pass"
+    relabel_d19(tasks[0], "eval-nm-1", "ambiguous", [], d19_note(passes))
+    relabel_d19(tasks[0], "eval-alt-2", "ambiguous", ["REGRESSION"], d19_note("construction valid but checks fail"))
+    relabel_d19(tasks[1], "pre-review", "ambiguous", [], d19_note(pre))  # the world's reference checks pass it
+    relabel_d19(tasks[1], "eval-nm-2", "ambiguous", [], d19_note(repeats))
+    relabel_d19(tasks[2], "eval-nm-3", "ambiguous", [], SECRET_FINDING + " | {}")  # a note that names no reason of D19
+    relabel_d19(tasks[2], "eval-nm-1", "ambiguous", [], "")
+    tr = tasks[0].tasks_root
+    a = analyze(run, tr, allow_proposed=True, n_boot=50)
+    labels = a["labels"]
+    plain = analysis.label_summary([tr / nt.task_id for nt in tasks])  # as for a run that is not natural
+    for nt in tasks:  # every field of the block is kept as it was
+        assert {k: v for k, v in labels[nt.task_id].items() if k != "d19"} == plain[nt.task_id] and "d19" not in plain[nt.task_id]
+        counts, d19 = labels[nt.task_id]["counts"], labels[nt.task_id]["d19"]
+        assert {v: counts.get(v, 0) for v in ("valid", "invalid", "ambiguous", "unlabeled")} == {
+            v: d19[v] for v in ("valid", "invalid", "ambiguous", "unlabeled")}
+    assert labels["NP-90"]["d19"] == {"valid": 1, "invalid": 3, "ambiguous": 2, "unlabeled": 0, "ambiguous_reasons": {
+        "NP-90-eval-alt-2": "construction valid but checks fail", "NP-90-eval-nm-1": passes}}
+    assert labels["NP-91"]["d19"]["ambiguous_reasons"] == {"NP-91-eval-nm-2": analysis.D19_REPEATS_DISAGREE,
+                                                           "NP-91-pre-review": pre}
+    assert labels["NP-92"]["d19"] == {"valid": 2, "invalid": 2, "ambiguous": 2, "unlabeled": 0, "ambiguous_reasons": {
+        "NP-92-eval-nm-1": analysis.D19_NO_REASON, "NP-92-eval-nm-3": analysis.D19_UNRECOGNISED}}
+    assert a["natural"]["d19_rule"] == analysis.D19_RULE
+    files = a["meta"]["inputs"]["files_sha256"]
+    for nt, kind in ((tasks[0], "eval-nm-1"), (tasks[1], "pre-review"), (tasks[2], "eval-nm-3")):
+        path = nt.task_dir / "candidates" / f"{nt.candidate_id(kind)}.json"
+        assert files[f"{nt.task_id}/candidates/{nt.candidate_id(kind)}.json"] == hashlib.sha256(path.read_bytes()).hexdigest()
+    text = (run / "analysis.json").read_text() + (run / "analysis.md").read_text()
+    for secret in ("test_never_copied", "test_x.py", "refcheck_failed", "R-corr'"):  # the notes' details stay out
+        assert secret not in text, secret
+    md = (run / "analysis.md").read_text()
+    assert (f"* NP-90: 1, 3, 2, 0; ambiguous: NP-90-eval-alt-2 (construction valid but checks fail); NP-90-eval-nm-1 "
+            f"({passes})") in md
+    assert f"* NP-92: 2, 2, 2, 0; ambiguous: NP-92-eval-nm-1 ({analysis.D19_NO_REASON}); NP-92-eval-nm-3 " in md
+    assert to_markdown(a) == md
+
+
+def test_the_label_block_of_a_natural_run_outside_case_study_mode_has_d19_s_labels_too(ten):
+    assert all(set(d["d19"]) == {"valid", "invalid", "ambiguous", "unlabeled", "ambiguous_reasons"}
+               for d in ten.a["labels"].values())
+    assert ten.a["labels"]["NP-91"]["d19"]["ambiguous_reasons"] == {"NP-91-pre-review": analysis.D19_NO_REASON}
+    assert ten.a["natural"]["d19_rule"] == analysis.D19_RULE
 
 
 # --------------------------------------------------------------------------- the recorded runs

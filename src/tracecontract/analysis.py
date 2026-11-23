@@ -87,12 +87,16 @@ with another population gets none of the following). For a natural run:
   norm, by the manifests of B1's overlay and ``labels/base_tests_overlay``; the family's sample; the near
   misses on the correction; the construction facts, :data:`CONSTRUCTION_RULE`: contract counts, checks per
   verifier, the audits of C2 and C4 in counts and codes, whether B3 is available, and the status record of the
-  reference checks), the funnel S1 to S11 of both samples with reasons, build and replay
+  reference checks; and ``d19_rule``, the rule of the label block's ``d19`` key below), the funnel S1 to S11 of both
+  samples with reasons, build and replay
   reliability, and cost and time per accepted task with the parts that are not recorded (S10's cost per
   accepted task counts its time and its fetches on one basis, every family S10 processed, rejected ones
   included; the run's families' own S10 time is given beside it); every
   file it reads is hashed in ``meta.inputs`` (a directory by its manifest hash, under a key ending in
-  ``/``). No text of a thread, no local path and no file name under a verifier's tests is recorded.
+  ``/``). No text of a thread, no local path and no file name under a verifier's tests is recorded;
+* the per-task label block (``labels.<task>``) keeps every field and gains ``d19``: D19's proposals for the task's
+  held-out candidates, every value counted, and the reason category of each candidate D19 labels ambiguous, derived from
+  the reason that scripts/propose_labels.py writes at the head of the label's note (:data:`D19_RULE`).
 
 The repository's records (the natural index and the screening records) are read as the run's code revision
 holds them (``manifest.json`` ``code_revision``, the commit whose index the run's gate read), so a later commit
@@ -1119,6 +1123,31 @@ NATURAL_RULE = ("natural PR-review arm (protocol §15.6, §17, §19): per family
                 "C4, whether B3 is available, the reference checks' status record; construction_rule); the funnel S1 to S11 "
                 "of both samples with reasons; build and replay reliability; and cost and time per accepted task. Ids, "
                 "outcomes, counts and hashes only")
+# D19's reasons for an ambiguous proposal, as scripts/propose_labels.py writes them (its d19 and combine_repeats): it starts
+# the note of each label with the reason (``<reason> | <details>``). Each fixed reason is its own category, and repeats that
+# disagree are one category, whatever proposals the reason lists (labels.<task>.d19 of a natural run; D19_RULE).
+D19_AMBIGUOUS_REASONS = (
+    "reference checks did not produce a decision",
+    "natural pre-review state passes the reference checks: the correction is not observable by the checks",
+    "natural candidate passes reference checks; the regression norm did not produce a decision",
+    "construction valid, reference checks pass; the regression norm did not produce a decision",
+    "construction valid but checks fail",
+    "construction invalid but failing checks map to other requirements",
+    "construction invalid, reference checks pass; the regression norm did not produce a decision",
+    "construction invalid but reference checks and regression norm pass",
+)
+D19_REPEATS_DISAGREE = "the repeats give different proposals: a missing decision"
+D19_NO_REASON = "no reason recorded"
+D19_UNRECOGNISED = "unrecognised reason"
+_D19_REPEATS = re.compile(r"the \d+ repeats give different proposals \(.*\): a missing decision", re.DOTALL)
+D19_RULE = (f"labels.<task>.d19, for a natural run only: D19's proposals (labeler {PILOT_LABELER}) for the task's held-out "
+            "candidates, the reference and the no-op left out as in counts, with every value counted, zero included "
+            "(unlabeled: no D19 proposal); and, for each candidate that D19 labels ambiguous, the category of its reason, "
+            "read from the head of its label's note, where scripts/propose_labels.py writes the reason (its d19 and "
+            "combine_repeats; decision log D19, D64): the reason itself where it is one of D19's fixed reasons for an "
+            f"ambiguous label; '{D19_REPEATS_DISAGREE}' where the repeats disagree, whatever proposals the reason lists; "
+            f"'{D19_NO_REASON}' for a note that holds none; and '{D19_UNRECOGNISED}' otherwise, with nothing of its text. "
+            "Ids and categories only; the candidate files read are hashed in meta.inputs")
 # What the cost block cannot count: no record of it exists in the repository or the task directories.
 UNRECORDED_COST = (
     ("stages S1 to S9: the funnel queries, the S9 fetches and the S9 judges' agent runs (their records are kept outside "
@@ -2135,7 +2164,7 @@ def _analysis(run_dir: Path, tasks_root: Path, *, allow_proposed: bool, n_boot: 
     for t, f in kept_cands.items():
         for name, _, c in f.values():
             by_name.setdefault(t, {}).setdefault(name, []).append(c)
-    out["labels"] = label_summary([tasks_root / t for t in tasks], strata=by_name)
+    out["labels"] = label_summary([tasks_root / t for t in tasks], strata=by_name, natural=nat is not None)
     out["coverage"] = {t: contract_coverage(tasks_root / t) for t in tasks}
     out["mapping_agreement"] = {t: mapping_agreement(tasks_root / t) for t in tasks}
     natural_inputs: dict[str, str] = {}
@@ -2235,8 +2264,8 @@ def _natural_block(run_dir: Path, tasks_root: Path, repo_root: Path, manifest: d
     results = read_jsonl(run_dir / "results.jsonl", VerificationResult)
     funnel, funnel_inputs = _natural_funnel(repo_root, nat["index_rows"], nat["records"])
     cost, cost_inputs = _natural_cost(tasks_root, repo_root, nat["tasks"], nat["index_rows"], results)
-    block = {"rule": NATURAL_RULE, "construction_rule": CONSTRUCTION_RULE, "decision": NATURAL_DECISION, "tasks": nat["tasks"],
-             "records": nat["records"], "index": nat["index"], "families": nat["families"], "funnel": funnel,
+    block = {"rule": NATURAL_RULE, "construction_rule": CONSTRUCTION_RULE, "d19_rule": D19_RULE, "decision": NATURAL_DECISION,
+             "tasks": nat["tasks"], "records": nat["records"], "index": nat["index"], "families": nat["families"], "funnel": funnel,
              "reliability": _natural_reliability(manifest, tasks_root, nat["tasks"], results, cands), "cost": cost}
     return block, {**nat["inputs"], **funnel_inputs, **cost_inputs}
 
@@ -2402,7 +2431,7 @@ def _case_study_analysis(run_dir: Path, tasks_root: Path, repo_root: Path, *, me
     for t, f in kept_cands.items():
         for name, _, c in f.values():
             by_name.setdefault(t, {}).setdefault(name, []).append(c)
-    out["labels"] = label_summary([tasks_root / t for t in tasks], strata=by_name)
+    out["labels"] = label_summary([tasks_root / t for t in tasks], strata=by_name, natural=True)
     out["coverage"] = {t: contract_coverage(tasks_root / t) for t in tasks}
     out["mapping_agreement"] = {t: mapping_agreement(tasks_root / t) for t in tasks}
     out["natural"], natural_inputs = _natural_block(run_dir, tasks_root, repo_root, manifest, nat, cands)
@@ -3398,6 +3427,13 @@ def _labels_markdown(a: dict) -> list[str]:
         for t, d in a["labels"].items():
             lines.append(_label_row(t, d))
             lines += [_label_row(f"{t} (stratum {s})", sd) for s, sd in d.get("strata", {}).items()]
+        d19 = {t: d["d19"] for t, d in a["labels"].items() if "d19" in d}  # a natural run only (D19_RULE)
+        if d19:
+            lines += ["", ("D19's proposals per task (valid, invalid, ambiguous, unlabeled), with the reason category of each "
+                           "candidate D19 labels ambiguous (natural.d19_rule):"), ""]
+            lines += [f"* {t}: {x['valid']}, {x['invalid']}, {x['ambiguous']}, {x['unlabeled']}; ambiguous: "
+                      + ("; ".join(f"{cid} ({why})" for cid, why in x["ambiguous_reasons"].items()) or "none")
+                      for t, x in d19.items()]
     return lines
 
 
@@ -3669,7 +3705,8 @@ def mapping_agreement(task_dir: Path) -> dict:
     return out
 
 
-def label_summary(task_dirs: list[Path], strata: dict[str, dict[str, list[Candidate]]] | None = None) -> dict:
+def label_summary(task_dirs: list[Path], strata: dict[str, dict[str, list[Candidate]]] | None = None, *,
+                  natural: bool = False) -> dict:
     """Proposed-label counts per task and the queue of candidates needing human review.
 
     Queued: candidates the D19 rule marked ambiguous, candidates without a proposal,
@@ -3679,16 +3716,54 @@ def label_summary(task_dirs: list[Path], strata: dict[str, dict[str, list[Candid
 
     ``strata`` (``{task_id: {stratum: candidates}}``) adds, under the task's ``strata`` key,
     the same summary for each stratum's candidates.
+
+    ``natural`` (a natural run only, so the recorded runs keep their output) adds, under the
+    task's ``d19`` key, D19's proposals and the reason category of each candidate D19 labels
+    ambiguous (:data:`D19_RULE`).
     """
     out: dict = {}
     for tdir in task_dirs:
         m = load(tdir / "task.json", TaskManifest)
         checks_p = tdir / "labels" / "construction_checks.json"
         checks = json.loads(checks_p.read_text()).get("checks", {}) if checks_p.exists() else {}
-        out[m.task_id] = _label_pool([load(tdir / p, Candidate) for p in m.candidates], checks)
+        cands = [load(tdir / p, Candidate) for p in m.candidates]
+        out[m.task_id] = _label_pool(cands, checks)
         if (strata or {}).get(m.task_id):
             out[m.task_id]["strata"] = {name: _label_pool(cs, checks) for name, cs in strata[m.task_id].items()}
+        if natural:
+            out[m.task_id]["d19"] = _d19_labels(cands)
     return out
+
+
+def d19_reason_category(note: object) -> str:
+    """The category of D19's reason for an ambiguous proposal (:data:`D19_RULE`), from the note of its label, whose head
+    (up to the first ``" | "``) is the reason as scripts/propose_labels.py writes it."""
+    if not isinstance(note, str) or not note.strip():
+        return D19_NO_REASON
+    reason = note.split(" | ", 1)[0].strip()
+    if reason in D19_AMBIGUOUS_REASONS:
+        return reason
+    if _D19_REPEATS.fullmatch(reason):
+        return D19_REPEATS_DISAGREE
+    return D19_UNRECOGNISED
+
+
+def _d19_labels(cands: list[Candidate]) -> dict:
+    """D19's proposals for one task's held-out candidates (no reference, no no-op), each value counted, zero included, and
+    the reason category of each candidate it labels ambiguous, by candidate id (:data:`D19_RULE`)."""
+    counts = dict.fromkeys(("valid", "invalid", "ambiguous", "unlabeled"), 0)
+    reasons: dict[str, str] = {}
+    for c in cands:
+        if c.split.value != "eval" or c.origin in (CandidateOrigin.noop, CandidateOrigin.reference):
+            continue
+        d19 = [lb for lb in c.labels if lb.labeler == PILOT_LABELER]  # the proposal candidate_label takes: the last one
+        if not d19:
+            counts["unlabeled"] += 1
+            continue
+        counts[d19[-1].value] += 1
+        if d19[-1].value == "ambiguous":
+            reasons[c.candidate_id] = d19_reason_category(d19[-1].note)
+    return {**counts, "ambiguous_reasons": dict(sorted(reasons.items()))}
 
 
 def _label_pool(cands: list[Candidate], checks: dict) -> dict:
