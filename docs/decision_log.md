@@ -2898,3 +2898,78 @@ entry records it before its first use.
     `verify_frozen_inputs` are as the commit says.
 * **Effect now.** D19 and the pre-flight refuse every first-sample family until all six have committed their P7 line.
   This is the order D73 describes.
+
+### D75. Construction closes for the first sample: P5 to P7 of all six families, the audits, and what runs did outside the recipe
+Times are UTC, 2026-11-23. This continues D72.
+* **P5 of NP-05 and NP-19.**
+
+  | Family | Reference checks | Review loop | Labeler |
+  | --- | --- | --- | --- |
+  | NP-05 | 18 checks, usable, frozen 01:50:57 | 2 fix rounds; the third review says needs_fix (8 issues, recorded only, D33) | 17 checks, usable after its revision |
+  | NP-19 | 10 checks, usable, frozen 02:03:42 | 1 fix round; the second review ok, 1 coverage remark (R1) | unusable after its revision |
+
+  NP-19's labeler fails on the reference: three of its R1 checks fail there, and its R4 checks pass on the no-op. It is
+  left out of the second labeling (§15.5), as NP-03's is (D72). So two of the six families have no second labeling.
+* **P6 of NP-05 and NP-19.** Each has two alternatives and three near misses, every one generated after its family's
+  last freeze (F7). Each near miss names its own target: NP-05 R8, R7, R1; NP-19 R4, R3, R1.
+  * NP-05's eval-nm-3 adds that a strict reader could also count it against R8.
+  * NP-19's near-miss writers report that the reference's fallback compares an error text case-sensitively, so the
+    reference fails R1 in their mocked setups. NP-19's frozen reference checks pass the reference in all three repeats.
+  * These remarks are recorded with the families. They change no label: D19 decides the labels.
+* **P7 of all six.** Two mappers each; their files were copied byte for byte, with no correction. No family has a
+  same-code duplicate. In NP-19 both mappers agree, and neither contract covers reference R4.
+* **The audits.** Each natural agent's transcript was audited with the natural-agent profile, and each flag was read in
+  its transcript and assessed.
+
+  | Family | Records | Flagged | Hits | Exposures |
+  | --- | --- | --- | --- | --- |
+  | NP-03 | 29 | 17 | 52 | 11 |
+  | NP-04 | 24 | 13 | 47 | 10 |
+  | NP-05 | 34 | 19 | 124 | 21 |
+  | NP-18 | 23 | 17 | 69 | 34 |
+  | NP-19 | 30 | 27 | 161 | 105 |
+  | NP-20 | 23 | 14 | 125 | 29 |
+
+  No record is excluded. Of the 578 hits:
+  * 452 are inside forbidden material, as the profile resolves paths:
+    * 420 are tokens of the agents' commands, or relative paths in the agent's own repository copy, resolved under
+      the study's repository. 15 of these look like the study's `src/` or `docs/` but are the natural repository's own
+      paths.
+    * 28 are relative paths resolved into the family's workspace root.
+    * 4 use the study's environment: three existence checks of the CLI that the prompt names, and one use of its Python
+      to parse the agent's own test file.
+  * 66 are host Python code that names a network module, mostly snippets that parse or compile the agent's own test
+    file. The assessments record no network use.
+  * 23 are container-engine calls made directly (below).
+  * 17 are outside the agent's workspace, 17 are a Claude session directory (the harness's copy of a saved tool
+    output), and 3 are CLI calls outside the allowlist.
+* **The strict re-audit (D44).** It applied the same profile and found the same hits and exposures as the P7 audit in
+  all 163 records. Each record's assessment therefore applies, and the build session wrote that into the record's block.
+* **What runs did outside the recipe.** Each was assessed as not excluded and is disclosed with its family.
+  * Three runs started the task image with `docker run` themselves instead of through the workspace wrappers: NP-03
+    eval-nm-3, NP-04 refcheck-review-1 and NP-19 refcheck-fix-1.
+    * Each used `--network none`, its own read-only repository, and the wrappers' isolation options.
+    * Five other runs queried the container engine read-only (images, processes).
+    * NP-04's review verdict rests partly on its own runs.
+    * The audit missed one of NP-04's calls. Both audits use the same profile, so the strict re-audit missed it too.
+      That gap is noted here, not fixed mid-audit.
+  * Four runs wrote temporary files outside their workspaces, against their templates:
+    * NP-04 eval-alt-1 wrote and ran a mutation-check helper in the build session's scratch directory. The build
+      session moved the helper into the family's private run records.
+    * NP-05's labeler made a stub module there and then removed the directory with `rm -rf`. That also removed a stale
+      stub of the controlled arm's tooling (2026-11-13 and 11-18), whose content is in those agents' transcripts.
+    * NP-19's diff-derived writer wrote an empty file there and removed it.
+    * NP-20's freeform verifier writer wrote stderr files to the host's `/tmp`.
+
+    The cause is the harness: it gives every subagent the session's scratch directory as the place for temporary
+    files. By the audits, none of these runs read the build session's files there.
+  * NP-05's mappers map an initial-only requirement to an explicit but unscored reference requirement. They also name a
+    contradiction with an unresolved, unscored one. Coverage counts scored requirements only, so neither changes a
+    number.
+* **The index after P7** (`4dae422`, D65). Only the six families' rows change: their file hashes and their candidates.
+  It was written from the first sample's task directories, so the ten directories left by the extension's stopped
+  S10 step are not recorded, as D66 decided. Those directories hold S10 outcomes that the stopped step wrote after the
+  usage limit, and they are to be built again from the start.
+* **Next (D73, D74).** D19 runs on the six families as the first step of `natural-pr-v1`. Then come the pre-flight and
+  the run, with `--pilot`: every family's acceptance gate is pending, because provenance eligibility needs a human
+  reviewer (§16.4). The manifest records the pilot flag.
