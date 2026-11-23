@@ -29,5 +29,25 @@ Tables and figures of the later runs (decision log D66):
   `evidence_ledger_figures.md`.
 * `generated/fresh/numbers.tex` and `generated/natural/numbers.tex` define number macros, used in the text as `\fv{key}`
   and `\nat{key}`; an undefined key prints as `UNFILLED`. Each value is in its ledger with its file and field.
+* The natural run (protocol §20): once `results/runs/natural-pr-v1` exists (as `scripts/publish_natural_run.py` publishes
+  it), `.venv/bin/python paper/make_tables.py --natural-run results/runs/natural-pr-v1` writes `generated/natural_run/`
+  with `evidence_ledger_natural_run.md`, and the macros `\nrv{key}` in `generated/natural_run/numbers.tex` (`main.tex` is
+  to define `\nrv` as it defines `\fv` and `\nat`). Its rules:
+  * It reads the run's `analysis.json` (and `manifest.json`, for the run id), and for its privacy check the agent product
+    names of the AIDev screening record (`data/manifests/screening_natural_aidev.json`); nothing else. An analysis that is
+    not a natural run's, or that is not in case-study mode, is refused. Each run is reported on its own (§20.3), so the
+    size rule counts the run's own accepted tasks, never the committed index's over both samples: with 10 or more, §15.6
+    and §15.7 apply in full, and their pooled tables are not this mode's. An analysis made before that rule (with no
+    `meta.case_study.accepted_in_run`) is refused too.
+  * Four per-family tables: false acceptance and false rejection per condition under D19 (C1 to C4, B2, B1, and B3 apart
+    as the secondary arm; a cell the oracle-gated view drops is marked); which conditions accept each family's pre-review
+    state under the source-evidence label, with its D19 and second labels; the second labeling (the labeler's status, the
+    labels, the agreement with D19, apart for the pre-review states and the pool); and the construction facts (contract
+    counts, checks per verifier, the audits of C2 and C4, B3, B1, the reference checks' status record, cost).
+  * Nothing is pooled over the families: no pooled rate, interval or p-value, and no total.
+  * Every table cell is a ledger entry `<row> | <family> = <cell>` that names the `analysis.json` fields it is made from,
+    each as `<dot path>=<JSON value>`; each field belongs to one family, or to the run. The numbers in the captions and
+    the macros are entries too. `tests/test_make_tables_natural_run.py` checks every cell against its fields.
+  * Its outputs get the natural arm's privacy check, as `--natural`'s do.
 * All labels behind these numbers are model proposals; no human labels exist. Natural-arm results are marked
   `UNFILLED` until the run `natural-pr-v1` exists.

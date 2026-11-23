@@ -19,12 +19,13 @@ A run that graded the independent labeler shows its second labeling (``independe
 the primary labels, with the agreement between D19 and the labeler, and a label-support verifier's
 column is marked as such.
 
-A natural PR-review run (``natural`` in the analysis; protocol §15.6, §19.6) also shows its banner (case-study mode
-or not, and its families against the committed index), the source-evidence block with each pre-review state, the
-natural families' flags and the cost per accepted task. B3 is shown apart from the primary conditions, as a secondary
-condition (``secondary``). In case-study mode (``meta.case_study.applies``: fewer than 10 accepted tasks) every table
-is per task family and nothing pooled is shown, since the analysis records no pooled rate, interval or p-value. With
-10 or more accepted tasks the reporting rules of a new run apply, with the exploratory view clustered by repository.
+A natural PR-review run (``natural`` in the analysis; protocol §15.6, §19.6, §20) also shows its banner (case-study
+mode or not, and its families against the accepted families of their sample in the committed index, §20.2), the
+source-evidence block with each pre-review state, the natural families' flags and the cost per accepted task. B3 is
+shown apart from the primary conditions, as a secondary condition (``secondary``). In case-study mode
+(``meta.case_study.applies``: the run grades fewer than 10 accepted tasks of its own, §20.3) every table is per task
+family and nothing pooled is shown, since the analysis records no pooled rate, interval or p-value. With 10 or more
+the reporting rules of a new run apply, with the exploratory view clustered by repository.
 
 When the run directory holds the sensitivity view of protocol §18.1
 (``analysis_sensitivity.json`` and ``.md``, written by ``tracecontract analyze --sensitivity-exclusions``),
@@ -304,25 +305,29 @@ def _secondary_name(c: str) -> str:
 
 
 def _natural_banner(analysis: dict) -> str:
-    """The banner of a natural run: case-study mode or not (§19.6), where its records were read, and its families against
-    the committed index (§19.7)."""
+    """The banner of a natural run: case-study mode or not (§19.6, §20.3), where its records were read, and its families
+    against the accepted families of their sample in the committed index (§20.2)."""
     cs, nat = analysis["meta"].get("case_study", {}), analysis.get("natural", {})
     if cs.get("applies"):
-        out = [(f"<div class='banner'><b>Exploratory case studies</b> (protocol §19.6): {_e(cs.get('why'))}. Every table below "
-                "is per task family: no pooled rate, interval or p-value is reported, and the tasks are exploratory case "
+        out = [(f"<div class='banner'><b>Exploratory case studies</b> (protocol §19.6, §20.3): {_e(cs.get('why'))}. Every table "
+                "below is per task family: no pooled rate, interval or p-value is reported, and the tasks are exploratory case "
                 "studies.</div>")]
     else:
-        out = [f"<div class='banner'><b>Natural PR-review arm</b> (protocol §15.6, §19.6): {_e(cs.get('why', 'not recorded'))}.</div>"]
+        out = [(f"<div class='banner'><b>Natural PR-review arm</b> (protocol §15.6, §19.6, §20.3): "
+                f"{_e(cs.get('why', 'not recorded'))}.</div>")]
     rec, idx = nat.get("records", {}), nat.get("index", {})
     if rec.get("basis") == "head":
         out.append(f"<div class='banner'><b>Records read at HEAD</b>: {_e(rec.get('why'))}, so the natural index and the screening "
                    "records are read as the HEAD commit holds them when the analysis runs.</div>")
     if idx and not idx.get("matches"):
+        samples = ", ".join(idx.get("run_samples", [])) or "none"
         parts = ([f"the committed index cannot be read ({_e(idx.get('why'))})"] if not idx.get("readable") else []) + (
             ["not accepted (S11) there: " + _e(", ".join(idx["run_families_not_s11"]))] if idx.get("run_families_not_s11") else []) + (
-            ["accepted families the run leaves out: " + _e(", ".join(idx["s11_not_in_run"]))] if idx.get("s11_not_in_run") else [])
+            [f"accepted families of its sample(s) ({_e(samples)}) that the run leaves out: " + _e(", ".join(idx["s11_not_in_run"]))]
+            if idx.get("s11_not_in_run") else [])
         out.append(f"<div class='banner'><b>The run's families against the committed index</b> ({_e(idx.get('source'))}): "
-                   + "; ".join(parts) + ". The run natural-pr-v1 grades every accepted family together (protocol §19.7).</div>")
+                   + "; ".join(parts) + ". Each natural run grades the accepted families of its sample: natural-pr-v1 the first "
+                   "sample's, natural-pr-v2 the extension's (protocol §20.2).</div>")
     return "".join(out)
 
 

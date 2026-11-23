@@ -44,15 +44,15 @@ from natural_task_layout import (
 )
 from tracecontract import analysis, cli
 from tracecontract.analysis import (
-    INDEPENDENT_LABELER, NATURAL_FETCH_LOG, NATURAL_FUNNEL, NATURAL_INDEX, NATURAL_S9, NATURAL_SIZE_THRESHOLD,
+    INDEPENDENT_LABELER, INDEX_CHECK_RULE, NATURAL_FETCH_LOG, NATURAL_FUNNEL, NATURAL_INDEX, NATURAL_S9, NATURAL_SIZE_THRESHOLD,
     NO_CORRECTION_REQUIREMENT, ORDER_RULE, PILOT_LABELER, SECONDARY_CONDITIONS, NaturalRunError, analyze, independent_label,
     natural_first_prompt, repository_root, to_markdown,
 )
 from tracecontract.report import build_report
 from tracecontract.schemas import (
-    Candidate, CandidateOrigin, ContractVariant, EvidenceSpan, GenerationRecord, Isolation, Label, LabelerKind, Outcome,
-    Population, Requirement, RequirementKind, RequirementStatus, Split, TaskContract, TaskManifest, VerificationResult,
-    VerifierCondition, sha256_text,
+    AuditFindingEntry, AuditIteration, AuditRecord, AuditRevision, Candidate, CandidateOrigin, ContractVariant, EvidenceSpan,
+    GenerationRecord, Isolation, Label, LabelerKind, Outcome, Population, Requirement, RequirementKind, RequirementStatus, Split,
+    TaskContract, TaskManifest, VerificationResult, VerifierCondition, VerifierSpec, sha256_text,
 )
 from tracecontract.store import append_jsonl, dump, load, write_json
 from tracecontract.verifier import build_spec
@@ -79,6 +79,19 @@ STAGES = [("S1", "pull_request", 1000), ("S2", "pull_request", 500), ("S3", "rev
           ("S4", "review_comment", 300), ("S5", "review_comment", 200), ("S6", "review_comment", 150),
           ("S7", "review_comment", 120), ("S8", "review_comment", 100), ("S8'", "review_comment", 999),
           ("S8a", "review_comment", 80)]
+# The construction world (build_world's ``construction``; D64, D70). The checks of each verifier of the recipe in family 0
+# (its id is its condition here), and the reference checks'; B2 and C2 are graded too.
+CONSTRUCTION_CHECKS = {"initial_plain": 3, "initial_audited": 4, "full_plain": 5, "full_audited": 6, "llm_freeform": 2,
+                       "diff_derived": 3, "reference_check": 4}
+CONSTRUCTION_GRADED = {"initial_audited": "initial_audited", "llm_freeform": "llm_freeform"}
+# family number -> condition -> (revisions, passed, finding codes of the last iteration; None: a record without history)
+AUDITS = {0: {"initial_audited": (2, True, []), "full_audited": (3, False, ["reference_not_passing"])},
+          1: {"initial_audited": (0, True, []), "full_audited": (3, False, ["false_acceptance_dev", "uncovered_requirement"])},
+          2: {"initial_audited": (1, False, None), "full_audited": (1, True, [])}}
+B3_TAKEN_OUT = (2,)  # family 2: B3's selection kept no test, so the run grades no B3 for it
+SECRET_FINDING = "test_secret_mod.py::test_never_copied failed"  # a finding message: never in the analysis
+REFCHECK_STATUS_RECORDS = {0: {"status": "usable", "fix_rounds": 1, "reasons": [SECRET_FINDING]},
+                           1: {"status": "unusable", "fix_rounds": 2, "reasons": [SECRET_FINDING]}}
 
 
 def _patch(nt: NaturalTask, body: str) -> str:
@@ -179,6 +192,58 @@ def _decorate(nt: NaturalTask, i: int, *, commit_requirement: bool, no_issue_req
     return {k: cands[k] for k in GRADED}
 
 
+def _audit_record(revisions: int, passed: bool, codes: list[str] | None) -> AuditRecord:
+    """An audit:v1 record with ``revisions`` revisions; ``codes``: the finding codes of its last iteration, each with a
+    message naming a check (never to be copied), or None for a record without history (as written before D62)."""
+    if codes is None:
+        return AuditRecord(procedure="audit:v1", iterations=revisions, passed=passed, findings=[f"lint_x: {SECRET_FINDING}"])
+    history = [AuditIteration(iteration=k, passed=passed and k == revisions, content_sha256=f"{k:064x}", checks_sha256=f"{k:064x}",
+                              findings=[AuditFindingEntry(code=c, message=SECRET_FINDING)
+                                        for c in (codes if k == revisions else ["reference_not_passing"])])
+               for k in range(revisions + 1)]
+    return AuditRecord(procedure="audit:v1", iterations=revisions, passed=passed, findings=[f"{c}: {SECRET_FINDING}" for c in codes],
+                       history=history, revisions=[AuditRevision(revision=k) for k in range(1, revisions + 1)])
+
+
+def _construct(nt: NaturalTask, i: int) -> None:
+    """The construction records of family ``i`` (D64, D70), by ``k = i % 3``: every verifier of the recipe registered with
+    its checks (family ``i`` has ``i`` more checks per verifier), the audit records of C2 and C4 (:data:`AUDITS`), B3 taken
+    out by its selection for k = 2 (unavailable.json, its spec not registered), the reference checks' status record
+    (:data:`REFCHECK_STATUS_RECORDS`; none for k = 2) and the two recovered contracts."""
+    td = nt.task_dir
+    m = load(td / "task.json", TaskManifest)
+    registered = list(m.verifiers)
+    k = i % 3
+    for vid, n in CONSTRUCTION_CHECKS.items():
+        tests = td / "verifiers" / vid / "tests"
+        tests.mkdir(parents=True)
+        names = [f"test_{vid}_{j}" for j in range(n + i)]
+        (tests / f"test_{vid}.py").write_text("".join(f"def {x}():\n    assert True\n\n\n" for x in names), encoding="utf-8")
+        spec = build_spec(verifier_id=vid, task_id=nt.task_id, condition=VerifierCondition(vid), test_dir=tests, task_dir=td,
+                          check_ids=[f"test_{vid}.py::{x}" for x in names], generation=GEN)
+        if vid in AUDITS[k]:
+            spec = spec.model_copy(update={"audit": _audit_record(*AUDITS[k][vid])})
+        dump(spec, td / "verifiers" / vid / "spec.json")
+        if vid == "diff_derived" and k in B3_TAKEN_OUT:  # as scripts/select_b3_tests.py leaves a B3 that kept no test
+            write_json({"schema": "verifier-unavailable:v1", "condition": "diff_derived", "available": False,
+                        "reason": "synthetic"}, td / "verifiers" / vid / "unavailable.json")
+            continue
+        registered.append(f"verifiers/{vid}/spec.json")
+    if k in REFCHECK_STATUS_RECORDS:
+        write_json(REFCHECK_STATUS_RECORDS[k], td / "verifiers" / "reference_check" / "status.json")
+    contracts = dict(m.contracts)
+    for variant, extra in (("initial_only", 0), ("full_session", 1)):
+        reqs = [_req(f"R{j}", nt.event("issue")) for j in range(2 + extra + i)]
+        reqs += [_req("R-unscored", nt.event("issue")).model_copy(update={"scored": False}),
+                 _req("R-old", nt.event("issue")).model_copy(update={"status": RequirementStatus.superseded,
+                                                                     "superseded_by": "R0"})]
+        dump(TaskContract(contract_id=f"{nt.task_id}-{variant}", task_id=nt.task_id, session_id=nt.session_id,
+                          variant=ContractVariant(variant), requirements=reqs, created_by="fixture", created_at=T0, generation=GEN),
+             td / "contracts" / f"{variant}.json")
+        contracts[variant] = f"contracts/{variant}.json"
+    dump(m.model_copy(update={"verifiers": registered, "contracts": contracts}), td / "task.json")
+
+
 def _screening(root: Path) -> None:
     """Synthetic screening records (ids and counts only), committed with the index."""
     write_json({"stages": [{"id": s, "unit": u, "count": n, "prs": n // 2, "repos": n // 10} for s, u, n in STAGES]},
@@ -197,14 +262,15 @@ def build_world(root: Path, n: int, *, harness: str = HARNESS, extra_s11: tuple[
                 commit_requirement: bool = False, no_issue_requirement: bool = False, duplicate_of_pre: bool = False,
                 unresolved: bool = True, code_revision: str | None = None, labeler_graded: bool = True,
                 extra_rows: tuple[tuple[str, dict], ...] = (), unscored_at_comment: bool = False,
-                no_correction: tuple[int, ...] = (), labeler_frozen_at: dict[int, str] | None = None
-                ) -> tuple[Path, list[NaturalTask]]:
+                no_correction: tuple[int, ...] = (), labeler_frozen_at: dict[int, str] | None = None,
+                construction: bool = False) -> tuple[Path, list[NaturalTask]]:
     """``n`` accepted families NP-90 on, their index rows (and ``extra_s11`` accepted rows without a task, and
     ``extra_rows``: ``(task id, write_index_row's arguments)``), three rejected or unbuilt rows, the screening records and
     the fetch log; and the run natural-pr-v1 over the ``n`` families. The run's manifest records the commit of those
     records as its code revision, as ``evaluate`` records HEAD (``code_revision`` names another). ``labeler_graded``: the
     run grades the independent labeler. ``no_correction`` and ``labeler_frozen_at`` (by family number): see
-    :func:`_decorate`."""
+    :func:`_decorate`. ``construction``: every family also gets the construction records of :func:`_construct`, and the
+    run also grades C2 and B2, and no B3 where B3 was taken out."""
     root.mkdir(parents=True, exist_ok=True)
     init_git(root)
     tasks = [build_natural_task(root, f"NP-{90 + i:02d}", index=False) for i in range(n)]
@@ -212,6 +278,9 @@ def build_world(root: Path, n: int, *, harness: str = HARNESS, extra_s11: tuple[
                                     duplicate_of_pre=duplicate_of_pre, unscored_at_comment=unscored_at_comment,
                                     no_correction=i in no_correction,
                                     labeler_frozen_at=(labeler_frozen_at or {}).get(i)) for i, nt in enumerate(tasks)}
+    if construction:
+        for i, nt in enumerate(tasks):
+            _construct(nt, i)
     for i, nt in enumerate(tasks):
         write_index_row(root, nt.task_id, s11=nt.task_id not in not_s11, commit=False, sample="first" if i < 6 else "extension",
                         repo_id=900 + i // 2)
@@ -236,9 +305,11 @@ def build_world(root: Path, n: int, *, harness: str = HARNESS, extra_s11: tuple[
     run = root / "data" / "natural" / "runs" / RUN_ID
     run.mkdir(parents=True)
     manifest: dict = {"run_id": RUN_ID, "started_at": T0, "code_revision": revision, "tasks": []}
-    verifiers = {v: c for v, c in VERIFIERS.items() if labeler_graded or v != INDEPENDENT_LABELER}
+    graded_by_all = {**VERIFIERS, **(CONSTRUCTION_GRADED if construction else {})}
     for i, nt in enumerate(tasks):
         cands = graded[nt.task_id]
+        verifiers = {v: c for v, c in graded_by_all.items() if (labeler_graded or v != INDEPENDENT_LABELER)
+                     and not (construction and v == "diff_derived" and i % 3 in B3_TAKEN_OUT)}
         manifest["tasks"].append({
             "task_id": nt.task_id, "family_id": nt.task_id, "task_dir": f"data/natural/tasks/{nt.task_id}", "image": IMAGE,
             "image_id": IMAGE_ID if i != 3 else "sha256:" + "11" * 32,  # family 3: the run's image is another one
@@ -304,8 +375,10 @@ POOLED_KEYS = {"ci95", "exact95", "macro", "rate", "youden_j", "signflip", "p_gr
 def test_three_families_are_case_studies_with_per_family_tables_only(three):
     run, a = three.run, three.a
     cs = a["meta"]["case_study"]
-    assert cs["applies"] is True and cs["accepted_in_index"] == 3 and cs["threshold"] == NATURAL_SIZE_THRESHOLD == 10
-    assert "fewer than 10" in cs["why"]
+    assert cs["applies"] is True and cs["accepted_in_run"] == cs["accepted_in_index"] == 3
+    assert cs["threshold"] == NATURAL_SIZE_THRESHOLD == 10
+    assert cs["why"] == ("the run grades 3 accepted task(s) of its own (its families accepted, S11, in the committed index), "
+                         "fewer than 10; each run is reported on its own (protocol §20.3)")
     assert a["conditions"] == {} and a["comparisons"] == [] and "bootstrap" not in a["meta"]
     assert not POOLED_KEYS & _keys(a), POOLED_KEYS & _keys(a)  # no pooled rate, interval or p-value anywhere
     assert json.loads((run / "analysis.json").read_text()) == a
@@ -326,7 +399,10 @@ def test_three_families_are_case_studies_with_per_family_tables_only(three):
     assert og["dropped"] == {"NP-90": "does not pass its reference (task_failure)"} and og["cells_kept"] == 2
     assert og["lost_yield_per_family"] == {"NP-90": {"invalid": 4, "valid": 2}} and "NP-90" not in og["per_family"]
     md = (run / "analysis.md").read_text()
-    assert md.startswith("# Analysis (proposed labels allowed (automated pilot))\n\n> **Exploratory case studies** (protocol §19.6)")
+    assert md.startswith("# Analysis (proposed labels allowed (automated pilot))\n\n> **Exploratory case studies** (protocol "
+                         "§19.6, §20.3): the run grades 3 accepted task(s) of its own")
+    assert ("The run's 3 families are the 3 accepted families (S11) of its sample(s), first, in the committed index "
+            "(data/manifests/natural_tasks_index.json at the run's code revision") in md
     for absent in ("All FA", "p (A > B)", "Null results", "Appendix: cluster-bootstrap", "Pooled false acceptance", "95%"):
         assert absent not in md, absent
     for present in ("## Primary display: false acceptance and false rejection per task family",
@@ -340,8 +416,9 @@ def test_three_families_are_case_studies_with_per_family_tables_only(three):
 
 def test_ten_families_get_the_full_rules_with_sign_flip_tests(ten):
     run, a = ten.run, ten.a
-    assert a["meta"]["case_study"]["applies"] is False and a["meta"]["case_study"]["accepted_in_index"] == 10
-    assert "§15.6 and §15.7 apply in full" in a["meta"]["case_study"]["why"]
+    cs = a["meta"]["case_study"]
+    assert cs["applies"] is False and cs["accepted_in_run"] == cs["accepted_in_index"] == 10
+    assert "§15.6 and §15.7 apply in full to the run (protocol §20.3)" in cs["why"]
     assert a["meta"]["reporting_rules"]["rules"] == "v0.8" and a["meta"]["bootstrap"]["inferential"] is True
     assert list(a["conditions"]) == ["initial_plain", "full_plain", "full_audited", "repo_tests"]
     c1c3 = next(d for d in a["comparisons"] if (d["a"], d["b"], d["metric"]) == ("initial_plain", "full_plain", "fa"))
@@ -353,7 +430,9 @@ def test_ten_families_get_the_full_rules_with_sign_flip_tests(ten):
     assert se["conditions"]["initial_plain"]["invalid"] == {"accepted": 10, "n": 10}
     assert {d["metric"] for d in se["comparisons"]} == {"fa"}  # every source-evidence label is invalid
     md = (run / "analysis.md").read_text()
-    assert "> **Natural PR-review arm** (protocol §15.6, §19.6): the committed index counts 10 accepted tasks" in md
+    assert "> **Natural PR-review arm** (protocol §15.6, §19.6, §20.3): the run grades 10 accepted tasks of its own" in md
+    # One run over both samples is checked against the accepted families of both (§20.2 checks each run by its samples).
+    assert a["natural"]["index"]["run_samples"] == ["first", "extension"] and a["natural"]["index"]["matches"] is True
     assert "### Paired comparisons under the source-evidence labels: exact sign-flip tests over task families" in md
     assert "## Appendix: cluster-bootstrap intervals" in md and "Secondary condition (B3):" in md
 
@@ -435,7 +514,10 @@ def test_the_source_evidence_block(three):
         "source_labeler": "source-evidence:aidev-s9", "correction_requirements": ["R-corr", "R-reply"],
         "reference_observes_correction": True, "d19": "invalid",
         "independent_label": "ambiguous", "independent_label_left_out": False, "independent_label_outcome": "pass",
-        "reference_checks_outcome": "task_failure"}
+        "reference_checks_outcome": "task_failure",
+        # each condition's outcome on it (so that a rejection that is no task failure can be named)
+        "outcomes": {"diff_derived": "task_failure", "full_audited": "task_failure", "full_plain": "task_failure",
+                     "initial_plain": "pass", "repo_tests": "pass"}}
     assert pre["NP-91/NP-91-pre-review"]["d19"] == "ambiguous" and pre["NP-91/NP-91-pre-review"]["reference_checks_outcome"] == "pass"
     assert pre["NP-92/NP-92-pre-review"]["independent_label"] is None and pre["NP-92/NP-92-pre-review"]["independent_label_left_out"]
     md = (run / "analysis.md").read_text()
@@ -507,6 +589,65 @@ def test_per_family_flags(three):
     assert fams["NP-90"]["b3"] == {"graded": True} and fams["NP-90"]["session_readable"] is True
 
 
+def test_per_family_construction_facts(tmp_path):
+    """D64, D70: each family's construction facts in ids, counts and codes: its contracts' counts (the reference
+    contract's also at the correction), the checks of each registered verifier, the audits of C2 and C4 (passed,
+    revisions, the codes of the last iteration's findings, never a message), whether B3 is available, and the reference
+    checks' status record (its status and fix rounds, never its reasons); the records read are hashed in meta.inputs."""
+    run, tasks = build_world(tmp_path / "repo", 3, construction=True)
+    a = analyze(run, tasks[0].tasks_root, allow_proposed=True, n_boot=50)
+    nat = a["natural"]
+    assert nat["construction_rule"] == analysis.CONSTRUCTION_RULE
+    c0, c1, c2 = (nat["families"][t.task_id]["construction"] for t in tasks)
+    assert c0["contracts"] == {"reference": {"requirements": 3, "active": 3, "scored_active": 3, "at_correction": 2},
+                               "initial_only": {"requirements": 4, "active": 3, "scored_active": 2},
+                               "full_session": {"requirements": 5, "active": 4, "scored_active": 3}}
+    assert c1["contracts"]["initial_only"] == {"requirements": 5, "active": 4, "scored_active": 3}
+    b1 = len(load(tasks[0].task_dir / "verifiers" / "repo_tests" / "spec.json", VerifierSpec).checks)
+    assert c0["checks"] == {**CONSTRUCTION_CHECKS, "independent_label": 1, "repo_tests": b1}
+    assert c1["checks"]["full_audited"] == CONSTRUCTION_CHECKS["full_audited"] + 1 and "diff_derived" not in c2["checks"]
+    audit = {"verifier_id": "full_audited", "procedure": "audit:v1"}
+    assert c0["audits"] == {"full_audited": {**audit, "passed": False, "revisions": 3, "last_finding_codes": ["reference_not_passing"]},
+                            "initial_audited": {**audit, "verifier_id": "initial_audited", "passed": True, "revisions": 2,
+                                                "last_finding_codes": []}}
+    assert c1["audits"]["full_audited"]["last_finding_codes"] == ["false_acceptance_dev", "uncovered_requirement"]
+    assert c2["audits"]["initial_audited"] == {**audit, "verifier_id": "initial_audited", "passed": False, "revisions": 1,
+                                               "last_finding_codes": None}  # a record without history
+    assert (c0["b3"], c1["b3"]) == ({"available": True, "checks": 3}, {"available": True, "checks": 4})
+    assert c2["b3"] == {"available": False, "taken_out": True,
+                        "why": "its per-test selection kept no test, so it was taken out (unavailable.json; protocol §15.6)"}
+    assert nat["families"]["NP-92"]["b3"] == {"graded": False} and "NP-92" not in a["secondary"]["per_family"]["diff_derived"]
+    assert c0["reference_checks"] == {"recorded": True, "status": "usable", "usable": True, "fix_rounds": 1}
+    assert c1["reference_checks"] == {"recorded": True, "status": "unusable", "usable": False, "fix_rounds": 2}
+    assert c2["reference_checks"] == {"recorded": False, "status": None, "usable": None, "fix_rounds": None,
+                                      "why": "no readable verifiers/reference_check/status.json"}
+    files = a["meta"]["inputs"]["files_sha256"]
+    assert {"NP-90/verifiers/reference_check/status.json", "NP-92/verifiers/diff_derived/unavailable.json"} <= set(files)
+    text = (run / "analysis.json").read_text() + (run / "analysis.md").read_text()
+    assert SECRET_FINDING not in text and "test_never_copied" not in text
+    # analysis.md shows the construction facts that its natural rule announces.
+    md = (run / "analysis.md").read_text()
+    assert "construction_rule" in nat["rule"] and "### Construction facts per family" in md
+    assert (f"| NP-90 | 3, 3, 2 | 2, 3 | 3, 4, 5, 6, 2, {b1}, 3 | 4, 1 | 2 revision(s), passed | 3 revision(s), failed "
+            "(reference_not_passing) | available | usable; fix rounds 1 |") in md
+    assert (f"| NP-92 | 3, 3, 2 | 4, 5 | 5, 6, 7, 8, 4, {b1}, - | 6, 1 | 1 revision(s), failed (codes not recorded) | "
+            "1 revision(s), passed | not available (its per-test selection kept no test, so it was taken out (unavailable.json; "
+            "protocol §15.6)) | not recorded (no readable verifiers/reference_check/status.json) |") in md
+    # A status other than usable or unusable is not copied, and a record is told from no record; fix rounds under another
+    # key than fix_rounds (D64 fixes none) are not taken, and the analysis says so instead of dropping them silently.
+    write_json({"status": "fine, " + SECRET_FINDING}, tasks[1].task_dir / "verifiers" / "reference_check" / "status.json")
+    write_json({"status": "usable", "rounds": 2}, tasks[0].task_dir / "verifiers" / "reference_check" / "status.json")
+    b = analyze(run, tasks[0].tasks_root, allow_proposed=True, n_boot=50)
+    rec = "verifiers/reference_check/status.json"
+    assert b["natural"]["families"]["NP-91"]["construction"]["reference_checks"] == {
+        "recorded": True, "status": None, "usable": None, "fix_rounds": None,
+        "why": f"{rec} records no status usable or unusable; {rec} records no fix rounds as an integer fix_rounds"}
+    assert b["natural"]["families"]["NP-90"]["construction"]["reference_checks"] == {
+        "recorded": True, "status": "usable", "usable": True, "fix_rounds": None,
+        "why": f"{rec} records no fix rounds as an integer fix_rounds"}
+    assert "test_never_copied" not in (run / "analysis.json").read_text()
+
+
 def test_the_funnel_of_both_samples(three):
     run, a = three.run, three.a
     f = a["natural"]["funnel"]
@@ -560,17 +701,51 @@ def test_the_inputs_are_hashed_and_nothing_private_is_written(three):
 
 
 def test_the_run_families_are_checked_against_the_index(tmp_path):
-    run, tasks = build_world(tmp_path / "repo", 2, extra_s11=("NP-99",), not_s11=("NP-91",))
+    """§20.2: a run grades the accepted families of its sample, so its families are checked against the accepted families
+    of the samples their rows name: NP-99 (first sample) is one the run leaves out, NP-98 (extension) is not the run's."""
+    run, tasks = build_world(tmp_path / "repo", 2, extra_s11=("NP-98",), not_s11=("NP-91",),
+                             extra_rows=(("NP-99", {"s11": True, "sample": "first", "repo_id": 991}),))
     a = analyze(run, tasks[0].tasks_root, allow_proposed=True, n_boot=50)
     idx = a["natural"]["index"]
-    assert (idx["s11"], idx["run_families"]) == (["NP-90", "NP-99"], ["NP-90", "NP-91"])
+    assert (idx["s11"], idx["run_families"]) == (["NP-90", "NP-98", "NP-99"], ["NP-90", "NP-91"])
+    assert (idx["run_samples"], idx["s11_of_run_samples"], idx["rule"]) == (["first"], ["NP-90", "NP-99"], INDEX_CHECK_RULE)
     assert (idx["run_families_not_s11"], idx["s11_not_in_run"], idx["matches"]) == (["NP-91"], ["NP-99"], False)
     md = (run / "analysis.md").read_text()
     # The index is read as the run's code revision holds it (the commit its acceptance gate read).
     rev = json.loads((run / "manifest.json").read_text())["code_revision"]
     assert idx["source"] == f"{NATURAL_INDEX} at the run's code revision {rev[:12]}"
     assert ("> **The run's families against the committed index** (data/manifests/natural_tasks_index.json at the run's "
-            f"code revision {rev[:12]}): not accepted (S11) there: NP-91; accepted families the run leaves out: NP-99.") in md
+            f"code revision {rev[:12]}): not accepted (S11) there: NP-91; accepted families of its sample(s) (first) that the "
+            "run leaves out: NP-99. Each natural run grades the accepted families of its sample: natural-pr-v1 the first "
+            "sample's, natural-pr-v2 the extension's (protocol §20.2).") in md
+    # The size rule counts the run's own accepted tasks: NP-90 alone (NP-91 is not accepted; NP-98 and NP-99 are not graded).
+    assert (a["meta"]["case_study"]["accepted_in_run"], a["meta"]["case_study"]["accepted_in_index"]) == (1, 3)
+    html = build_report(run, tasks[0].tasks_root, tmp_path / "repo", tmp_path / "report.html").read_text()
+    assert ("not accepted (S11) there: NP-91; accepted families of its sample(s) (first) that the run leaves out: NP-99. Each "
+            "natural run grades the accepted families of its sample: natural-pr-v1 the first sample's, natural-pr-v2 the "
+            "extension's (protocol §20.2).</div>") in html
+    assert "grades every accepted family together" not in html + md
+
+
+def test_each_run_is_reported_on_its_own(tmp_path):
+    """§20.3: each run is reported on its own, so the size rule counts the run's own accepted tasks. Three families of the
+    first sample, while the committed index counts 3 + 8 = 11 accepted tasks over both samples: case-study mode, and the
+    extension's accepted families are not ones the run leaves out (§20.2)."""
+    ext = tuple(f"NP-{60 + k}" for k in range(8))
+    run, tasks = build_world(tmp_path / "repo", 3, extra_s11=ext)
+    a = analyze(run, tasks[0].tasks_root, allow_proposed=True, n_boot=50)
+    cs, idx = a["meta"]["case_study"], a["natural"]["index"]
+    assert (cs["applies"], cs["accepted_in_run"], cs["accepted_in_index"]) == (True, 3, 11)
+    assert cs["why"].startswith("the run grades 3 accepted task(s) of its own") and cs["rule"] == analysis.CASE_STUDY_RULE
+    assert a["conditions"] == {} and a["comparisons"] == [] and "bootstrap" not in a["meta"]
+    assert not POOLED_KEYS & _keys(a), POOLED_KEYS & _keys(a)
+    assert (idx["accepted"], idx["accepted_by_sample"]) == (11, {"first": 3, "extension": 8})
+    assert (idx["run_samples"], idx["s11_not_in_run"], idx["matches"]) == (["first"], [], True)
+    md = (run / "analysis.md").read_text()
+    assert ("The run's 3 families are the 3 accepted families (S11) of its sample(s), first, in the committed index "
+            f"({idx['source']}), which counts 11 over both samples (first 3, extension 8); each run grades the accepted "
+            "families of its sample (protocol §20.2).") in md
+    assert "The run's families against the committed index" not in md
 
 
 def test_an_unreadable_committed_index_means_case_study_mode(tmp_path):
@@ -691,7 +866,7 @@ def test_the_report_of_a_case_study_run_shows_per_family_tables_only(three, tmp_
     pooled; it builds without a refusal."""
     html = build_report(three.run, three.tasks[0].tasks_root, three.root, tmp_path / "report.html").read_text()
     summary = html[:html.index("<h2>Task NP-90</h2>")]
-    for text in ("<b>Exploratory case studies</b> (protocol §19.6): the committed index counts 3 accepted task(s)",
+    for text in ("<b>Exploratory case studies</b> (protocol §19.6, §20.3): the run grades 3 accepted task(s) of its own",
                  "Primary display: false acceptance and false rejection per task family", "Secondary condition: B3 (diff-derived)",
                  "Sanity checks per family", "Source-evidence labels (reported apart from D19)",
                  "Independent labeler: a second labeling, per task family", "Left out of the second labeling (1;",
@@ -711,7 +886,7 @@ def test_the_report_of_a_natural_run_of_ten_families_shows_b3_apart(ten, tmp_pat
     """With 10 or more accepted tasks the report follows the reporting rules of a new run, and B3, which the analysis keeps
     under ``secondary``, is shown apart from the primary conditions instead of being dropped."""
     html = build_report(ten.run, ten.tasks[0].tasks_root, ten.root, tmp_path / "report.html").read_text()
-    for text in ("<b>Natural PR-review arm</b> (protocol §15.6, §19.6)", "<b>Reporting rules of a new run</b>",
+    for text in ("<b>Natural PR-review arm</b> (protocol §15.6, §19.6, §20.3)", "<b>Reporting rules of a new run</b>",
                  "Summary by verifier condition", "Secondary condition: B3 (diff-derived)", "Secondary paired comparisons (B3)",
                  "Oracle-gated secondary paired comparisons (B3)", "Paired comparisons under the source-evidence labels",
                  "Exploratory view clustered by repository (not pre-specified)", "Secondary condition (B3):",
@@ -740,13 +915,15 @@ def test_the_records_are_read_at_the_run_s_code_revision(tmp_path):
     run, tasks = build_world(root, 3)
     rev = json.loads((run / "manifest.json").read_text())["code_revision"]
     at_run = git(root, "show", f"{rev}:{NATURAL_INDEX}").stdout
-    for k in range(7):  # a later commit: 10 accepted families in all, as the HEAD commit now holds them
-        write_index_row(root, f"NP-{60 + k}", commit=False, sample="extension", repo_id=960 + k)
+    for k in range(7):  # a later commit: 7 more accepted families of the run's sample, and NP-92 no longer accepted
+        write_index_row(root, f"NP-{60 + k}", commit=False, sample="first", repo_id=960 + k)
+    write_index_row(root, "NP-92", s11=False, commit=False, sample="first", repo_id=901)
     git(root, "add", "--", NATURAL_INDEX)
     git(root, "commit", "-q", "--no-verify", "-m", "later index (synthetic fixture)")
     a = analyze(run, tasks[0].tasks_root, allow_proposed=True, n_boot=50)
     assert a["natural"]["records"]["basis"] == "run" and a["natural"]["records"]["revision"] == rev
-    assert a["meta"]["case_study"]["applies"] is True and a["meta"]["case_study"]["accepted_in_index"] == 3
+    assert a["meta"]["case_study"]["applies"] is True
+    assert (a["meta"]["case_study"]["accepted_in_run"], a["meta"]["case_study"]["accepted_in_index"]) == (3, 3)
     assert a["natural"]["index"]["s11"] == ["NP-90", "NP-91", "NP-92"] and a["natural"]["index"]["matches"] is True
     assert a["natural"]["funnel"]["S11"]["accepted"] == 3
     assert a["meta"]["inputs"]["files_sha256"][NATURAL_INDEX] == hashlib.sha256(at_run).hexdigest()
@@ -755,11 +932,14 @@ def test_the_records_are_read_at_the_run_s_code_revision(tmp_path):
     m = json.loads((run / "manifest.json").read_text())
     write_json({**m, "code_revision": rev + "+dirty"}, run / "manifest.json")
     assert analyze(run, tasks[0].tasks_root, allow_proposed=True, n_boot=50)["natural"]["records"]["revision"] == rev
-    # A code revision that is no commit of the repository: read at HEAD, which now counts 10, and said so.
+    # A code revision that is no commit of the repository: read at HEAD, which now counts 9 over the samples and 2 of
+    # the run's, and said so.
     write_json({**m, "code_revision": "unknown"}, run / "manifest.json")
     b = analyze(run, tasks[0].tasks_root, allow_proposed=True, n_boot=50)
-    assert b["natural"]["records"]["basis"] == "head" and b["meta"]["case_study"]["applies"] is False
+    assert b["natural"]["records"]["basis"] == "head" and b["meta"]["case_study"]["applies"] is True
+    assert (b["meta"]["case_study"]["accepted_in_run"], b["meta"]["case_study"]["accepted_in_index"]) == (2, 9)
     assert b["natural"]["index"]["s11_not_in_run"] == [f"NP-{60 + k}" for k in range(7)]
+    assert b["natural"]["index"]["run_families_not_s11"] == ["NP-92"]
     assert ("> **Records read at HEAD**: the run's code revision 'unknown' is not a commit of this repository, so the natural "
             "index and the screening records are read as the HEAD commit holds them") in (run / "analysis.md").read_text()
 

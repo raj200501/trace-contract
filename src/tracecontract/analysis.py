@@ -85,7 +85,9 @@ with another population gets none of the following). For a natural run:
   each pre-review state's D19 value and second-labeling label;
 * ``natural`` holds the per-family flags (B1 unavailable by ``s10.json``; B1 equal to the D19 regression
   norm, by the manifests of B1's overlay and ``labels/base_tests_overlay``; the family's sample; the near
-  misses on the correction), the funnel S1 to S11 of both samples with reasons, build and replay
+  misses on the correction; the construction facts, :data:`CONSTRUCTION_RULE`: contract counts, checks per
+  verifier, the audits of C2 and C4 in counts and codes, whether B3 is available, and the status record of the
+  reference checks), the funnel S1 to S11 of both samples with reasons, build and replay
   reliability, and cost and time per accepted task with the parts that are not recorded (S10's cost per
   accepted task counts its time and its fetches on one basis, every family S10 processed, rejected ones
   included; the run's families' own S10 time is given beside it); every
@@ -102,13 +104,17 @@ Under the reporting rules of new runs (every natural run is graded with tc-harne
 * B3 (``diff_derived``) is a secondary condition (:data:`SECONDARY_CONDITIONS`): its rates, per-family
   table and comparisons are reported under ``secondary``, apart from the primary tables, and its
   comparisons stay out of the primary null tally;
-* case-study mode (§19.6): while the natural index at the run's code revision counts fewer than
-  :data:`NATURAL_SIZE_THRESHOLD` accepted tasks over both samples (or cannot be read), the run's tasks
-  are exploratory case studies: every table is per family, with no pooled rate, interval or p-value
-  (``conditions`` is empty and so is ``comparisons``; no bootstrap), and a banner says so. With 10 or
-  more, §15.6 and §15.7 apply in full, the source-evidence block also carries paired sign-flip
-  comparisons, and one exploratory view clusters the families by repository (``repository_clustered``;
-  D64, decision 10). Either way the run's families are checked against the index's S11 set (§19.7).
+* case-study mode (§19.6, §20.3): each natural run is reported on its own, so while the run grades fewer
+  than :data:`NATURAL_SIZE_THRESHOLD` accepted tasks of its own (its families accepted, S11, in the
+  natural index at the run's code revision; or the index cannot be read), the run's tasks are
+  exploratory case studies: every table is per family, with no pooled rate, interval or p-value
+  (``conditions`` is empty and so is ``comparisons``; no bootstrap), and a banner says so. The index's
+  accepted tasks over both samples (``accepted_in_index``) decide nothing; only a combined report over
+  both runs applies the threshold to their union (§20.3). With 10 or more, §15.6 and §15.7 apply in
+  full, the source-evidence block also carries paired sign-flip comparisons, and one exploratory view
+  clusters the families by repository (``repository_clustered``; D64, decision 10). Either way the
+  run's families are checked against the accepted families of their samples in the index (§20.2:
+  each run grades the accepted families of its sample).
 
 A natural run analysed under the pilot rules (only a test run, whose grader records no tc-harness/0.3.4
 or later) keeps the pilot tables; the pilot rules are refused for a natural run whose default is the
@@ -174,11 +180,13 @@ FUNNEL_STAGES = ("S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8", "S8a")
 S10_RECORD = "s10.json"  # a natural family's S10 record (natural_pr.S10_RECORD)
 S10_REJECTION = "rejection.json"  # all a family rejected during the build keeps (natural_pr.REJECTION; no start time)
 LABELER_STATUS = "verifiers/independent_label/status.json"  # the labeler's usability record (§15.5)
+REFCHECK_STATUS = "verifiers/reference_check/status.json"  # the reference checks' usability record, written at P5 (D64)
+B3_UNAVAILABLE = "verifiers/*/unavailable.json"  # beside the tests of a B3 its selection took out (scripts/select_b3_tests.py)
 B1_OVERLAY = "verifiers/repo_tests/overlay"  # B1: the base-test subset at the addressing commit (§17.2)
 NORM_OVERLAY = "labels/base_tests_overlay"  # D19's regression norm: the subset at the base (scripts/propose_labels.py)
 # Files of a natural task that the natural sections read, hashed in meta.inputs (directories by their manifest hash).
 NATURAL_INPUTS = ("session.json", "snapshot.json", S10_RECORD, "reconstruction_check.json", "verifiers_extra.json",
-                  "verifiers/*/spec.json", LABELER_STATUS, "labels/proposed_labels.json")
+                  "verifiers/*/spec.json", LABELER_STATUS, REFCHECK_STATUS, B3_UNAVAILABLE, "labels/proposed_labels.json")
 NATURAL_CODE = ("contract.py", "tasks.py", "snapshot.py")  # the modules the natural sections run, hashed in meta.inputs
 NATURAL_PRE_REVIEW = CandidateOrigin.natural_pre_review.value
 # The candidates ranked first as the representative of held-out duplicates (post hoc, item 3): a natural state.
@@ -787,7 +795,11 @@ def _natural_source_evidence(base: dict | None, rows: list[Row], cands: dict[tup
                              "reference_observes_correction": flags.get("reference_observes_correction"), "d19": _d19_value(c),
                              "independent_label": None if left else labelled.get(f"{t}/{cid}", {}).get("label"),
                              "independent_label_left_out": left, "independent_label_outcome": sup.get(INDEPENDENT_LABELER),
-                             "reference_checks_outcome": sup.get("reference_check")}
+                             "reference_checks_outcome": sup.get("reference_check"),
+                             # each condition's outcome, so that a rejection by an infrastructure outcome or an unresolved
+                             # pair (a rejection, §6, §15.3) can be told from a task failure
+                             "outcomes": dict(sorted((r.condition, r.outcome) for r in se_rows
+                                                     if (r.task_id, r.candidate_id) == (t, cid)))}
     out: dict = {"rule": (base or {}).get("rule"), "banner": SOURCE_EVIDENCE_BANNER,
                  "candidates": (base or {}).get("candidates", {}), "pre_review": pre,
                  "per_family": _source_per_family(se_rows, primary_c)}
@@ -1084,10 +1096,16 @@ def _left_out_outcomes(support: dict[tuple[str, str], dict[str, str]], cands: di
     return {o: dict(sorted(c.items())) for o, c in sorted(out.items())}
 
 
-CASE_STUDY_RULE = (f"protocol §19.6 (§15.6): the size threshold counts the accepted tasks of both samples together (S11 in the "
-                   f"committed index); with fewer than {NATURAL_SIZE_THRESHOLD}, the built tasks are exploratory case studies, "
+CASE_STUDY_RULE = ("protocol §20.3 (§19.6, §15.6): each natural run is reported on its own, so the size threshold counts the "
+                   "run's own accepted tasks (its families accepted, S11, in the committed index), not the accepted tasks of "
+                   f"both samples; with fewer than {NATURAL_SIZE_THRESHOLD}, the run's tasks are exploratory case studies, "
                    "reported in per-family tables only, with no pooled rate, interval or p-value; with "
-                   f"{NATURAL_SIZE_THRESHOLD} or more, §15.6 and §15.7 apply in full, and each task's sample is reported")
+                   f"{NATURAL_SIZE_THRESHOLD} or more, §15.6 and §15.7 apply in full to the run, and each task's sample is "
+                   "reported. Only a combined report over both runs applies the threshold to their union")
+INDEX_CHECK_RULE = ("protocol §20.2: each natural run grades the accepted families of its sample (natural-pr-v1 the first "
+                    "sample's, natural-pr-v2 the extension's), so the run's families are checked against the accepted families "
+                    "(S11 in the committed index) of the samples their index rows name; accepted families of another sample are "
+                    "not the run's")
 SECONDARY_RULE = ("B3 (diff_derived) is a secondary arm of the natural PR-review arm (protocol §15.6): its rates, per-family "
                   "table and paired comparisons are reported here, apart from the primary conditions, and its comparisons "
                   "stay out of the primary null tally")
@@ -1096,9 +1114,11 @@ SOURCE_EVIDENCE_BANNER = ("source evidence, not a human label: the reviewer's re
 NATURAL_RULE = ("natural PR-review arm (protocol §15.6, §17, §19): per family, its sample, whether B1 is available (s10.json) "
                 "and whether its overlay equals D19's regression norm (labels/base_tests_overlay, by file), the correction "
                 f"requirements (the reference contract's scored active requirements introduced at the review comment or one of "
-                f"the reviewer's replies; {NATURAL_DECISION}, decision 14) and the held-out near misses that name one in their "
-                "construction label; the funnel S1 to S11 of both samples with reasons; build and replay reliability; and "
-                "cost and time per accepted task. Ids, outcomes, counts and hashes only")
+                f"the reviewer's replies; {NATURAL_DECISION}, decision 14), the held-out near misses that name one in their "
+                "construction label, and its construction facts (contract counts, checks per verifier, the audits of C2 and "
+                "C4, whether B3 is available, the reference checks' status record; construction_rule); the funnel S1 to S11 "
+                "of both samples with reasons; build and replay reliability; and cost and time per accepted task. Ids, "
+                "outcomes, counts and hashes only")
 # What the cost block cannot count: no record of it exists in the repository or the task directories.
 UNRECORDED_COST = (
     ("stages S1 to S9: the funnel queries, the S9 fetches and the S9 judges' agent runs (their records are kept outside "
@@ -1201,6 +1221,11 @@ def _index_rows(index: object) -> dict[str, dict]:
     return {r["task_id"]: r for r in rows if isinstance(r, dict) and isinstance(r.get("task_id"), str)}
 
 
+def _row_sample(row: dict) -> str:
+    """The S9 sample an index row names (``first`` or ``extension``), or ``unknown``."""
+    return str(row.get("sample") or "unknown")
+
+
 def repository_root(tasks_root: Path, manifest: dict) -> Path:
     """The repository that holds a run's tasks and records: from the first manifest entry whose repository-relative
     ``task_dir`` (``evaluate`` records one) names ``tasks_root/<task id>``; else the directory above ``tasks_root``, or
@@ -1227,9 +1252,14 @@ def _natural_task_ids(manifest: dict, tasks_root: Path) -> list[str]:
     return sorted(found, key=_task_order)
 
 
-def _case_study(index_ok: bool, why: str | None, accepted: int | None, new_rules: bool, source: str = "the HEAD commit") -> dict:
-    """Whether case-study mode (§19.6) applies to a natural run, and why (``source``: the commit the index was read at)."""
-    out: dict = {"rule": CASE_STUDY_RULE, "threshold": NATURAL_SIZE_THRESHOLD, "accepted_in_index": accepted}
+def _case_study(index_ok: bool, why: str | None, accepted: int | None, in_run: int | None, new_rules: bool,
+                source: str = "the HEAD commit") -> dict:
+    """Whether case-study mode (§19.6, §20.3) applies to a natural run, and why: the size rule counts the run's own accepted
+    tasks (``in_run``: its families accepted, S11, in the committed index), since each run is reported on its own;
+    ``accepted``, the index's accepted tasks over both samples, is kept beside it and decides nothing (``source``: the
+    commit the index was read at)."""
+    out: dict = {"rule": CASE_STUDY_RULE, "threshold": NATURAL_SIZE_THRESHOLD, "accepted_in_run": in_run,
+                 "accepted_in_index": accepted}
     if not new_rules:
         return {**out, "applies": False,
                 "why": "the run is analysed under the pilot rules (no result graded with tc-harness/0.3.4 or later, which only a "
@@ -1237,15 +1267,15 @@ def _case_study(index_ok: bool, why: str | None, accepted: int | None, new_rules
                        "tables are the pilot rules'"}
     if not index_ok:
         return {**out, "applies": True,
-                "why": f"the committed index ({NATURAL_INDEX} at {source}) cannot be read ({why}), so nothing shows "
-                       f"{NATURAL_SIZE_THRESHOLD} accepted tasks"}
-    if accepted is None or accepted < NATURAL_SIZE_THRESHOLD:
+                "why": f"the committed index ({NATURAL_INDEX} at {source}) cannot be read ({why}), so nothing shows that the "
+                       f"run grades {NATURAL_SIZE_THRESHOLD} accepted tasks"}
+    if in_run is None or in_run < NATURAL_SIZE_THRESHOLD:
         return {**out, "applies": True,
-                "why": f"the committed index counts {accepted} accepted task(s) over both samples, fewer than "
-                       f"{NATURAL_SIZE_THRESHOLD}"}
+                "why": f"the run grades {in_run} accepted task(s) of its own (its families accepted, S11, in the committed "
+                       f"index), fewer than {NATURAL_SIZE_THRESHOLD}; each run is reported on its own (protocol §20.3)"}
     return {**out, "applies": False,
-            "why": f"the committed index counts {accepted} accepted tasks over both samples, at least {NATURAL_SIZE_THRESHOLD}: "
-                   "§15.6 and §15.7 apply in full"}
+            "why": f"the run grades {in_run} accepted tasks of its own (its families accepted, S11, in the committed index), at "
+                   f"least {NATURAL_SIZE_THRESHOLD}: §15.6 and §15.7 apply in full to the run (protocol §20.3)"}
 
 
 def _overlay_manifest(path: Path) -> list[tuple[str, str]] | None:
@@ -1285,19 +1315,95 @@ def _labeler_status(task_dir: Path) -> tuple[bool, str | None, dict]:
     return True, None, shown
 
 
-def _labeler_spec(task_dir: Path, m: TaskManifest) -> VerifierSpec | None:
-    """The spec of a natural task's independent labeler (verifier ``independent_label``), registered in ``task.json`` or in
-    ``verifiers_extra.json`` (as ``evaluate`` adds it); None when there is none, or it does not load."""
+def _registered_specs(task_dir: Path, m: TaskManifest) -> list[VerifierSpec]:
+    """The verifier specs a task registers, in ``task.json`` and then in ``verifiers_extra.json`` (as ``evaluate`` adds
+    them), each once; a spec that is missing or does not load is left out."""
+    specs = []
     for rel in list(m.verifiers) + [x for x in _extra_verifiers(task_dir) if x not in m.verifiers]:
         if not (task_dir / rel).is_file():
             continue
         try:
-            spec = load(task_dir / rel, VerifierSpec)
+            specs.append(load(task_dir / rel, VerifierSpec))
         except (OSError, ValueError):
             continue
-        if spec.verifier_id == INDEPENDENT_LABELER:
-            return spec
-    return None
+    return specs
+
+
+def _labeler_spec(task_dir: Path, m: TaskManifest) -> VerifierSpec | None:
+    """The spec of a natural task's independent labeler (verifier ``independent_label``), registered in ``task.json`` or in
+    ``verifiers_extra.json`` (as ``evaluate`` adds it); None when there is none, or it does not load."""
+    return next((s for s in _registered_specs(task_dir, m) if s.verifier_id == INDEPENDENT_LABELER), None)
+
+
+AUDITED_CONDITIONS = (VerifierCondition.initial_audited, VerifierCondition.full_audited)  # C2 and C4 (audit:v1, D27)
+REFCHECK_STATUSES = ("usable", "unusable")  # D64: the only statuses the reference checks' status record may hold
+_FINDING_CODE = re.compile(r"[A-Za-z][A-Za-z0-9_]*")  # an audit finding's code (audit.AuditFinding.code), never its message
+CONSTRUCTION_RULE = (f"per family, from its task directory ({NATURAL_DECISION}; the counts of D70): each contract's "
+                     "requirements, active ones and scored active ones (the reference contract's also at the correction: its "
+                     "correction requirements); the checks of each registered verifier, by condition (the label-support "
+                     "verifiers by id); the audit of C2 and C4 from each spec's audit record (whether it passed, its revisions, "
+                     "the finding codes of its last iteration; never a finding's message); whether B3 is available (a "
+                     f"registered B3 spec, else why not); and the reference checks' status record ({REFCHECK_STATUS}: whether "
+                     "a readable record exists, its status, usable or unusable, and its fix rounds, an integer fix_rounds; "
+                     "usable is null without a readable record holding one of the two statuses, fix_rounds is null without "
+                     "that integer, and why says which). Ids, counts and codes only")
+
+
+def _contract_counts(c: TaskContract) -> dict:
+    active = c.active()
+    return {"requirements": len(c.requirements), "active": len(active), "scored_active": sum(r.scored for r in active)}
+
+
+def _audit_summary(spec: VerifierSpec) -> dict:
+    """An audited verifier's audit record in ids, counts and codes (:data:`CONSTRUCTION_RULE`): the finding codes of its
+    last iteration are None when the record keeps no history."""
+    a = spec.audit
+    codes = sorted({f.code for f in a.history[-1].findings if _FINDING_CODE.fullmatch(f.code)}) if a.history else None
+    return {"verifier_id": spec.verifier_id, "procedure": a.procedure, "passed": a.passed, "revisions": a.iterations,
+            "last_finding_codes": codes}
+
+
+def _reference_checks_status(task_dir: Path) -> dict:
+    """The reference checks' status record (:data:`REFCHECK_STATUS`), which the host writes when they are frozen at P5
+    (D64): whether a readable record exists (``recorded``), its status (only usable or unusable is kept) and its fix rounds
+    (an integer ``fix_rounds``; null otherwise, and ``why`` says so, since D64 fixes no key for them). Its reasons are free
+    text and are not read."""
+    rec = _json_file(task_dir / REFCHECK_STATUS)
+    if not isinstance(rec, dict):
+        return {"recorded": False, "status": None, "usable": None, "fix_rounds": None, "why": f"no readable {REFCHECK_STATUS}"}
+    status = rec.get("status") if rec.get("status") in REFCHECK_STATUSES else None
+    rounds = rec.get("fix_rounds")
+    rounds = rounds if isinstance(rounds, int) and not isinstance(rounds, bool) else None
+    why = ([f"{REFCHECK_STATUS} records no status usable or unusable"] if status is None else []) + (
+        [f"{REFCHECK_STATUS} records no fix rounds as an integer fix_rounds"] if rounds is None else [])
+    return {"recorded": True, "status": status, "usable": None if status is None else status == "usable", "fix_rounds": rounds,
+            **({"why": "; ".join(why)} if why else {})}
+
+
+def _construction(task_dir: Path, m: TaskManifest, ref: TaskContract | None, corrections: list[str]) -> dict:
+    """A natural family's construction facts (:data:`CONSTRUCTION_RULE`)."""
+    contracts: dict[str, dict] = {}
+    for variant, rel in sorted(m.contracts.items()):
+        if variant == "reference":
+            if ref is not None:
+                contracts[variant] = {**_contract_counts(ref), "at_correction": len(corrections)}
+        elif (task_dir / rel).is_file():
+            contracts[variant] = _contract_counts(load(task_dir / rel, TaskContract))
+    specs = _registered_specs(task_dir, m)
+    checks = {s.verifier_id if s.condition == VerifierCondition.reference_check else s.condition.value: len(s.checks)
+              for s in specs}
+    audits = {s.condition.value: _audit_summary(s) for s in specs if s.condition in AUDITED_CONDITIONS and s.audit is not None}
+    b3 = [s for s in specs if s.condition == VerifierCondition.diff_derived]
+    if b3:
+        b3_block: dict = {"available": True, "checks": len(b3[0].checks)}
+    else:
+        taken_out = any(_dict(_json_file(p)).get("condition") == VerifierCondition.diff_derived.value
+                        for p in sorted(task_dir.glob(B3_UNAVAILABLE)))
+        b3_block = {"available": False, "taken_out": taken_out,
+                    "why": ("its per-test selection kept no test, so it was taken out (unavailable.json; protocol §15.6)"
+                            if taken_out else "no B3 verifier is registered")}
+    return {"contracts": contracts, "checks": dict(sorted(checks.items())), "audits": dict(sorted(audits.items())),
+            "b3": b3_block, "reference_checks": _reference_checks_status(task_dir)}
 
 
 NO_CORRECTION_REQUIREMENT = ("the reference contract does not observe the correction: none of its scored active requirements "
@@ -1308,8 +1414,8 @@ NO_CORRECTION_REQUIREMENT = ("the reference contract does not observe the correc
 def _natural_context(tasks_root: Path, repo_root: Path, manifest: dict, natural_ids: list[str], new_rules: bool,
                      cands: dict[tuple[str, str], Candidate] | None = None) -> dict:
     """What the sections of a natural PR-review run read: the committed index at the run's code revision
-    (:func:`_records_revision`; each family's S11 and sample, the case-study rule, the run's families against the S11
-    set) and, per natural task, its session's correction events, its reference contract's correction requirements (its
+    (:func:`_records_revision`; each family's S11 and sample, the case-study rule on the run's own accepted tasks, the
+    run's families against the accepted families of their samples, :data:`INDEX_CHECK_RULE`) and, per natural task, its session's correction events, its reference contract's correction requirements (its
     scored active requirements introduced at the review comment or a reply, as ``contract.correction_event_ids`` and the
     pre-flight read them; D64, decision 14) and the near misses that name one (``cands``: the run's candidates), its S10
     record, its labeler's status and freezing time, and its overlays. ``inputs`` are the hashes of everything read, for
@@ -1323,7 +1429,7 @@ def _natural_context(tasks_root: Path, repo_root: Path, manifest: dict, natural_
     readable = index_sha is not None and isinstance(_dict(index).get("tasks"), list)
     why = index_why or (None if readable else "it lists no tasks")
     accepted = sorted((t for t, r in index_rows.items() if r.get("s11") is True), key=_task_order) if readable else []
-    by_sample = Counter(str(index_rows[t].get("sample") or "unknown") for t in accepted)
+    by_sample = Counter(_row_sample(index_rows[t]) for t in accepted)
     inputs: dict[str, str] = {NATURAL_INDEX: index_sha} if index_sha else {}
     entries = {t["task_id"]: t for t in manifest.get("tasks", [])}
     families: dict[str, dict] = {}
@@ -1368,6 +1474,7 @@ def _natural_context(tasks_root: Path, repo_root: Path, manifest: dict, natural_
             "reference_observes_correction": None if ref is None else bool(corrections[tid]),
             "near_misses_on_correction": {"near_misses": len(near), "on_correction": on},
             **({"correction_note": NO_CORRECTION_REQUIREMENT} if ref is not None and not corrections[tid] else {}),
+            "construction": _construction(td, m, ref, corrections[tid]),
         }
         for pat in NATURAL_INPUTS:
             for f in sorted(td.glob(pat)):
@@ -1378,16 +1485,23 @@ def _natural_context(tasks_root: Path, repo_root: Path, manifest: dict, natural_
             if entries_ is not None:  # a directory by its manifest hash (path in it and sha256 of each file), never by file
                 inputs[f"{tid}/{rel}/"] = manifest_sha256(entries_)
     run_ids = set(natural_ids)
+    # §20.2: each run grades the accepted families of its sample (natural-pr-v1 the first sample's, natural-pr-v2 the
+    # extension's), so the run's families are checked against the accepted families of the samples their rows name.
+    samples = sorted({_row_sample(index_rows[t]) for t in natural_ids if t in index_rows}, key=_sample_order) if readable else []
+    of_samples = [t for t in accepted if _row_sample(index_rows[t]) in samples]
+    in_run = [t for t in accepted if t in run_ids]  # the run's own accepted tasks, which the size rule counts (§20.3)
     check = {"source": f"{NATURAL_INDEX} at {records['source']}", "readable": readable, **({"why": why} if not readable else {}),
              "sha256": index_sha, "rows": len(index_rows) if readable else None,
              "accepted": len(accepted) if readable else None,
              "accepted_by_sample": dict(sorted(by_sample.items(), key=lambda kv: _sample_order(kv[0]))),
-             "s11": accepted, "run_families": list(natural_ids),
+             "s11": accepted, "rule": INDEX_CHECK_RULE, "run_samples": samples, "s11_of_run_samples": of_samples,
+             "run_families": list(natural_ids),
              "run_families_not_s11": sorted((t for t in natural_ids if t not in set(accepted)), key=_task_order) if readable else [],
-             "s11_not_in_run": sorted((t for t in accepted if t not in run_ids), key=_task_order)}
+             "s11_not_in_run": sorted((t for t in of_samples if t not in run_ids), key=_task_order)}
     check["matches"] = bool(readable and not check["run_families_not_s11"] and not check["s11_not_in_run"])
     return {"tasks": list(natural_ids), "index": check, "index_rows": index_rows if readable else {}, "records": records,
-            "case_study": _case_study(readable, why, len(accepted) if readable else None, new_rules, records["source"]),
+            "case_study": _case_study(readable, why, len(accepted) if readable else None, len(in_run) if readable else None,
+                                      new_rules, records["source"]),
             "families": families, "left_out": left_out, "corrections": corrections, "inputs": inputs}
 
 
@@ -1731,8 +1845,8 @@ COST_RULE = ("per family: the generation records of its generated artifacts (con
              "candidates; a combined record sums its runs), its S10 record's time from built_at to passed_at and its base-test "
              "run, the S10 fetch log's bytes of the family's repository (a repository's fetches include those made for any "
              "family of it) and the run's grading time (the sum of each pair's wall time); the totals over the run's families, "
-             "and each total divided by their number (per accepted task, when the run grades every S11 family: see the index "
-             "check); a total is n/a when a family lacks the value. S10's cost per accepted task counts its time and its "
+             "and each total divided by their number (per accepted task, when the run grades every accepted family of its "
+             "sample: see the index check); a total is n/a when a family lacks the value. S10's cost per accepted task counts its time and its "
              "fetches on one basis, the S10 work of every family S10 processed, both samples, rejected families included "
              "(s10_every_family: the time from built_at to passed_at or rejected_at; every S10 fetch in the log, its bytes and "
              "seconds), divided by the same number; the run's families' own S10 time (s10_seconds_run_families) and their "
@@ -2121,8 +2235,8 @@ def _natural_block(run_dir: Path, tasks_root: Path, repo_root: Path, manifest: d
     results = read_jsonl(run_dir / "results.jsonl", VerificationResult)
     funnel, funnel_inputs = _natural_funnel(repo_root, nat["index_rows"], nat["records"])
     cost, cost_inputs = _natural_cost(tasks_root, repo_root, nat["tasks"], nat["index_rows"], results)
-    block = {"rule": NATURAL_RULE, "decision": NATURAL_DECISION, "tasks": nat["tasks"], "records": nat["records"],
-             "index": nat["index"], "families": nat["families"], "funnel": funnel,
+    block = {"rule": NATURAL_RULE, "construction_rule": CONSTRUCTION_RULE, "decision": NATURAL_DECISION, "tasks": nat["tasks"],
+             "records": nat["records"], "index": nat["index"], "families": nat["families"], "funnel": funnel,
              "reliability": _natural_reliability(manifest, tasks_root, nat["tasks"], results, cands), "cost": cost}
     return block, {**nat["inputs"], **funnel_inputs, **cost_inputs}
 
@@ -2219,7 +2333,8 @@ def _case_study_analysis(run_dir: Path, tasks_root: Path, repo_root: Path, *, me
     primary_c = [c for c in conds if c not in secondary]
     sec_c = [c for c in conds if c in secondary]
     meta["reporting_rules"] = {"rules": NEW_RUN_RULES, "basis": basis,
-                               "protocol": "experiments/protocol.md v0.7 §15.7 and v0.8 §16.6, in case-study mode (v0.11 §19.6)"}
+                               "protocol": "experiments/protocol.md v0.7 §15.7 and v0.8 §16.6, in case-study mode (v0.11 §19.6, "
+                                           "v0.12 §20.3)"}
     meta["case_study"] = {**nat["case_study"], "omitted": CASE_STUDY_OMITTED}
     meta["secondary_conditions"] = {"conditions": list(secondary), "rule": SECONDARY_RULE}
     out: dict = {"meta": meta, "conditions": {}, "comparisons": []}
@@ -2812,19 +2927,21 @@ def _natural_banner(a: dict) -> list[str]:
     """The banner of a natural run: case-study mode or not (§19.6), and its families against the committed index."""
     nat, cs = a["natural"], a["meta"].get("case_study", {})
     if cs.get("applies"):
-        lines = [(f"> **Exploratory case studies** (protocol §19.6): {cs['why']}. Every table below is per task family: no "
-                  "pooled rate, interval or p-value is reported, and the tasks are exploratory case studies."), ""]
+        lines = [(f"> **Exploratory case studies** (protocol §19.6, §20.3): {cs['why']}. Every table below is per task family: "
+                  "no pooled rate, interval or p-value is reported, and the tasks are exploratory case studies."), ""]
     else:
-        lines = [f"> **Natural PR-review arm** (protocol §15.6, §19.6): {cs.get('why', 'not recorded')}.", ""]
+        lines = [f"> **Natural PR-review arm** (protocol §15.6, §19.6, §20.3): {cs.get('why', 'not recorded')}.", ""]
     idx, rec = nat["index"], nat.get("records", {})
     if rec.get("basis") == "head":  # the run's manifest names no commit of the repository
         lines += [(f"> **Records read at HEAD**: {rec['why']}, so the natural index and the screening records are read as the "
                    "HEAD commit holds them when the analysis runs, and a later commit of the index can change this analysis."),
                   ""]
     by_sample = ", ".join(f"{k} {n}" for k, n in idx.get("accepted_by_sample", {}).items()) or "none"
+    samples = ", ".join(idx.get("run_samples", [])) or "none"
     if idx["matches"]:
-        lines += [(f"The run's {len(idx['run_families'])} families are the {idx['accepted']} accepted families (S11) of the "
-                   f"committed index ({idx['source']}), over both samples ({by_sample})."), ""]
+        lines += [(f"The run's {len(idx['run_families'])} families are the {len(idx['s11_of_run_samples'])} accepted families "
+                   f"(S11) of its sample(s), {samples}, in the committed index ({idx['source']}), which counts {idx['accepted']} "
+                   f"over both samples ({by_sample}); each run grades the accepted families of its sample (protocol §20.2)."), ""]
     else:
         parts = []
         if not idx["readable"]:
@@ -2832,9 +2949,10 @@ def _natural_banner(a: dict) -> list[str]:
         if idx["run_families_not_s11"]:
             parts.append("not accepted (S11) there: " + ", ".join(idx["run_families_not_s11"]))
         if idx["s11_not_in_run"]:
-            parts.append("accepted families the run leaves out: " + ", ".join(idx["s11_not_in_run"]))
+            parts.append(f"accepted families of its sample(s) ({samples}) that the run leaves out: " + ", ".join(idx["s11_not_in_run"]))
         lines += [(f"> **The run's families against the committed index** ({idx['source']}): " + "; ".join(parts)
-                   + ". The run natural-pr-v1 grades every accepted family together (protocol §19.7)."), ""]
+                   + ". Each natural run grades the accepted families of its sample: natural-pr-v1 the first sample's, "
+                     "natural-pr-v2 the extension's (protocol §20.2)."), ""]
     return lines
 
 
@@ -3015,7 +3133,43 @@ def _natural_flags_markdown(nat: dict) -> list[str]:
                      f"{'yes' if f['b3']['graded'] else 'no'} | {labeler} | {corr} | {on} |")
         if f.get("correction_note"):
             notes.append(f"* {t}: {f['correction_note']}.")
-    return lines + ([""] + notes if notes else [])
+    return lines + ([""] + notes if notes else []) + _natural_construction_markdown(nat)
+
+
+def _audit_markdown(x: dict | None) -> str:
+    if x is None:
+        return "-"
+    codes = x["last_finding_codes"]
+    named = "codes not recorded" if codes is None else ", ".join(codes)
+    return f"{x['revisions']} revision(s), " + ("passed" if x["passed"] else "failed" + (f" ({named})" if named else ""))
+
+
+def _natural_construction_markdown(nat: dict) -> list[str]:
+    """Each family's construction facts (:data:`CONSTRUCTION_RULE`), which the natural rule above announces."""
+    fams = {t: f["construction"] for t, f in nat["families"].items() if "construction" in f}
+    if not fams:
+        return []
+    lines = ["", "### Construction facts per family", "", _sentence(nat.get("construction_rule", CONSTRUCTION_RULE)), "",
+             ("| Family | Reference contract: requirements, scored active, at the correction | Recovered contracts, scored "
+              "active: initial-only, full-session | Checks: C1, C2, C3, C4, B2, B1, B3 | Checks: reference checks, labeler | "
+              "C2 audit | C4 audit | B3 | Reference checks' status record |"),
+             "| --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
+    for t, c in fams.items():
+        ref, con, n = c["contracts"].get("reference"), c["contracts"], c["checks"]
+        rc = c["reference_checks"]
+        status = (f"{_v(rc.get('status'))}; fix rounds {_v(rc.get('fix_rounds'))}" if rc.get("recorded") else "not recorded")
+        lines.append(" | ".join([
+            f"| {t}",
+            "none" if ref is None else f"{ref['requirements']}, {ref['scored_active']}, {ref['at_correction']}",
+            ", ".join(_v(con.get(v, {}).get("scored_active")) for v in ("initial_only", "full_session")),
+            ", ".join(_v(n.get(k)) for k in ("initial_plain", "initial_audited", "full_plain", "full_audited", "llm_freeform",
+                                              "repo_tests", "diff_derived")),
+            ", ".join(_v(n.get(k)) for k in ("reference_check", INDEPENDENT_LABELER)),
+            _audit_markdown(c["audits"].get(VerifierCondition.initial_audited.value)),
+            _audit_markdown(c["audits"].get(VerifierCondition.full_audited.value)),
+            "available" if c["b3"]["available"] else f"not available ({c['b3']['why']})",
+            status + (f" ({rc['why']})" if rc.get("why") else "") + " |"]))
+    return lines
 
 
 def _funnel_markdown(f: dict) -> list[str]:

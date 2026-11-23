@@ -3,6 +3,7 @@
 Usage:
   python paper/make_tables.py results/runs/<final run> [--compare results/runs/<run> ...]
   python paper/make_tables.py --fresh results/runs/fresh-v1 [--regrade results/runs/pilot-v0.3.5-regrade] [--natural]
+  python paper/make_tables.py --natural-run results/runs/natural-pr-v1
 
 The first form (the construction pilot) writes paper/generated/*.tex and
 paper/evidence_ledger.md. Every number printed in a table is listed in the ledger with
@@ -24,7 +25,19 @@ with its own ledger, and never touches the pilot's top-level tables or ledger:
   Trace Commons screen (the manifests under data/manifests/) -> paper/generated/natural/*.tex,
   paper/generated/natural/numbers.tex and paper/evidence_ledger_natural.md. Before anything
   is written, every natural output is checked to hold no URL, owner placeholder, digit run
-  of 7 or more (an id), session-local path or agent product name.
+  of 7 or more (an id), session-local path or agent product name;
+* ``--natural-run RUN``: a natural run analysed in case-study mode (protocol §19.6, §20.3; the
+  run's analysis.json, and its manifest.json for the run id) -> four per-family tables in
+  paper/generated/natural_run/ (false acceptance and false rejection per condition under D19,
+  B3 apart; the pre-review states under the source-evidence label; the second labeling; the
+  construction facts), the number macros paper/generated/natural_run/numbers.tex (``\\nrv{key}``)
+  and paper/evidence_ledger_natural_run.md. Each table cell is a ledger entry that names the
+  analysis.json fields it is made from, with their values; every field belongs to one family,
+  so nothing is pooled over families. An analysis that is not a natural run's, or that is not
+  in case-study mode (the run grades 10 or more accepted tasks of its own, protocol §20.3: each
+  run is reported on its own; §15.7's pooled tables then apply), is refused. Its outputs get the
+  natural arm's privacy check, which also reads the AIDev screening record
+  (data/manifests/screening_natural_aidev.json) for the agent product names.
 Both forms can be combined in one invocation.
 
 The arguments are parsed and checked before anything is written: every run directory
@@ -1374,14 +1387,20 @@ def _category(reason: str, table_: list[tuple[str, str, str]], where: str) -> st
     return hits[0]
 
 
+def _agent_names(m0: dict) -> tuple[str, ...]:
+    """The agent product names of the AIDev screening record (its stages' ``by_agent`` keys, with their parts of five
+    letters or more), which no natural output may hold (:func:`_check_private`)."""
+    names = set()
+    for st in m0["stages"]:
+        for k in st.get("by_agent", {}):
+            names |= {k, k.replace("_", " ")} | {part for part in k.split("_") if len(part) >= 5}
+    return tuple(sorted(names))
+
+
 def natural_inputs() -> dict:
     N = {k: json.loads((ROOT / p).read_text()) for k, p in NATURAL_INPUTS.items()}
     N["sha256"] = {k: hashlib.sha256((ROOT / p).read_bytes()).hexdigest() for k, p in NATURAL_INPUTS.items()}
-    names = set()
-    for st in N["M0"]["stages"]:
-        for k in st.get("by_agent", {}):
-            names |= {k, k.replace("_", " ")} | {part for part in k.split("_") if len(part) >= 5}
-    N["agent_names"] = tuple(sorted(names))
+    N["agent_names"] = _agent_names(N["M0"])
     return N
 
 
@@ -1694,17 +1713,608 @@ def natural_tables(N: dict, led: SectionLedger, nums: Numbers, out: Path) -> Non
         size="\\footnotesize"))
 
 
+# -- a natural run in case-study mode (protocol §19.6, §20.3) ----------------------------------------------------------
+# Every cell of these tables is a ledger entry "<row> | <family> = <cell>" whose source names the analysis.json fields it
+# is made from, each as "<dot path>=<its JSON value>" ("absent" for a field the analysis does not hold), so that a reader
+# can check each cell against its fields. Every field names one family: nothing is pooled over the families.
+
+NR_CONDITIONS = [*ORDER, "diff_derived"]  # C1-C4, B2, B1 in the paper's order, then B3, the natural arm's secondary arm
+NR_SECONDARY = ("diff_derived",)  # protocol §15.6: B3 is reported apart from the primary conditions
+NR_SHORT = {**SHORT, "diff_derived": "B3"}
+NR_TEX = {**COND_TEX, "diff_derived": "B3 diff-derived (secondary)"}
+NR_DIR = "natural_run"  # paper/generated/natural_run/ and paper/evidence_ledger_natural_run.md
+ABSENT = object()  # a field the analysis does not hold (written "absent" in the ledger)
+
+
+class Refused(SystemExit):
+    """An analysis that --natural-run does not report: not a natural run's, not in case-study mode (protocol §19.6,
+    §20.3), or made before §20.3's size rule was implemented. Raised before any output is replaced, so every file is left
+    as it was; the message says why (exit status 1)."""
+
+
+def _shown(p: Path) -> str:
+    """How the outputs name a run directory: relative to the repository if it lies in it, else by its name alone, so
+    that no local path is written."""
+    p = p.resolve()
+    return str(p.relative_to(ROOT)) if p.is_relative_to(ROOT) else p.name
+
+
+def _get(doc: dict, path: str) -> object:
+    """The value at a dot path of ``doc`` (keys hold no dot), or :data:`ABSENT`."""
+    x: object = doc
+    for k in path.split("."):
+        if not isinstance(x, dict) or k not in x:
+            return ABSENT
+        x = x[k]
+    return x
+
+
+def _jv(v: object) -> str:
+    return "absent" if v is ABSENT else json.dumps(v, sort_keys=True, ensure_ascii=False)
+
+
+def _num(v: object) -> str:
+    """A recorded count or time in a cell: an integer with thousands separators (a time rounded to the second); n/a for
+    a value recorded as null; -- for a field the analysis does not hold."""
+    if v is ABSENT:
+        return "--"
+    if v is None:
+        return "n/a"
+    if isinstance(v, bool) or not isinstance(v, (int, float)):
+        raise TypeError(f"not a count or a time: {v!r}")
+    return _int(round(v))
+
+
+def _words(code: str) -> str:
+    return tex(code.replace("_", " "))
+
+
+class NRTable:
+    """One table of the natural run: rows of one cell per family, each cell a ledger entry with its fields. A ``ragged``
+    table has wrapping columns (:func:`_nr_columns`): each cell starts with :data:`RAGGED` (``\\raggedright``, and
+    ``\\hspace{0pt}`` so that its first word can be hyphenated), so each row ends with ``\\tabularnewline`` (``\\\\`` would
+    end a line of the cell's paragraph); the ledger holds the cell's text without it."""
+
+    RAGGED = "\\raggedright\\hspace{0pt}"
+
+    def __init__(self, R: dict, led: SectionLedger, nums: Numbers, name: str, ragged: bool = False) -> None:
+        self.R, self.led, self.nums, self.name, self.ragged, self.rows = R, led, nums, name, ragged, []
+
+    def fields(self, *paths: str) -> list[tuple[str, object]]:
+        return [(p, _get(self.R["a"], p)) for p in paths]
+
+    def src(self, fields: list[tuple[str, object]], file: str | None = None) -> str:
+        return f"{file or self.R['src']} " + "; ".join(f"{p}={_jv(v)}" for p, v in fields)
+
+    def row(self, label: str, cells: list[tuple[str, list]], last_of_group: bool = False) -> None:
+        """A row: its label and, per family in the run's order, its cell text and the fields it is made from."""
+        for t, (text, fields) in zip(self.R["fams"], cells):
+            self.led.add(self.name, f"{label} | {t}", text, self.src(fields))
+        r = self.RAGGED if self.ragged else ""
+        self.rows.append(" & ".join(r + x for x in (label, *(text for text, _ in cells)))
+                         + (" \\tabularnewline" if self.ragged else " \\\\") + ("\\midrule" if last_of_group else ""))
+
+    def put(self, key: str, value: object, fields: list[tuple[str, object]], what: str = "") -> None:
+        self.nums.put(key, value, self.src(fields), what)
+
+    def caption_value(self, what: str, value: object, fields: list[tuple[str, object]], file: str | None = None) -> str:
+        """A number or id that a caption states, as a ledger entry ``caption | <what>``; returns it as the caption shows it."""
+        self.led.add(self.name, f"caption | {what}", value, self.src(fields, file))
+        return str(value)
+
+
+def natural_run_inputs(run: Path) -> dict:
+    """Read a natural run's analysis.json (and its manifest's run id) and check what the tables take for granted. Refused
+    (:class:`Refused`): an analysis that is not a natural run's; one whose size rule counted the committed index over both
+    samples, as analyses made before protocol §20.3 was implemented do (no ``meta.case_study.accepted_in_run``); or one
+    outside case-study mode, whose tables are §15.7's (pooled rates, intervals, sign-flip p-values) and not this mode's."""
+    shown = _shown(run)
+    src, msrc = f"{shown}/analysis.json", f"{shown}/manifest.json"
+    raw, mraw = (run / "analysis.json").read_bytes(), (run / "manifest.json").read_bytes()
+    a, m = json.loads(raw), json.loads(mraw)
+    meta = a.get("meta") if isinstance(a.get("meta"), dict) else {}
+    cs, nat = meta.get("case_study"), a.get("natural")
+    if not isinstance(nat, dict) or not isinstance(cs, dict):
+        raise Refused(f"--natural-run {shown}: refused: {src} is not the analysis of a natural PR-review run (it has no natural "
+                      "block and no meta.case_study); this mode writes the case-study tables of a natural run only")
+    if "accepted_in_run" not in cs:
+        raise Refused(f"--natural-run {shown}: refused: {src} applies the size rule to the committed index's accepted tasks over "
+                      "both samples (meta.case_study has no accepted_in_run), the rule that protocol §20.3 replaced: each run is "
+                      "reported on its own. Analyse the run again (`tracecontract analyze`)")
+    if cs.get("applies") is not True:
+        raise Refused(f"--natural-run {shown}: refused: the analysis is not in case-study mode ({cs.get('why')}). Outside it "
+                      f"(the run grades {cs.get('threshold')} or more accepted tasks of its own, protocol §20.3) protocol §15.6 "
+                      "and §15.7 apply in full, with pooled rates, intervals and sign-flip p-values; that mode's tables are not "
+                      "this mode's, which writes the per-family case-study tables of §19.6 only")
+    if a.get("conditions") or a.get("comparisons"):
+        raise ValueError(f"{src}: case-study mode leaves conditions and comparisons empty, yet they hold pooled values")
+    if "automated pilot" not in meta.get("label_policy", ""):
+        raise ValueError(f"{src}: label policy {meta.get('label_policy')!r}; the captions say every label is a model proposal")
+    fams = list(nat["tasks"])
+    for t in fams:
+        if nat["families"][t]["family_id"] != t:
+            raise ValueError(f"{src}: natural.families.{t}.family_id is {nat['families'][t]['family_id']!r}; the tables name "
+                             "each family by its task, one task per family")
+    prim, sec = a["per_family"], (a.get("secondary") or {}).get("per_family", {})
+    if set(prim) - set(ORDER) or set(sec) - set(NR_SECONDARY):
+        raise ValueError(f"{src}: primary conditions {sorted(prim)} and secondary {sorted(sec)}; expected C1-C4, B2 and B1, "
+                         "with B3 secondary")
+    for c, pf in (*prim.items(), *sec.items()):
+        if set(pf) - set(fams):
+            raise ValueError(f"{src}: per-family rates of {c} for {sorted(set(pf) - set(fams))}, which are not the run's families")
+    return {"a": a, "m": m, "fams": fams, "run_id": m["run_id"], "src": src, "msrc": msrc,
+            "sha256": {src: hashlib.sha256(raw).hexdigest(), msrc: hashlib.sha256(mraw).hexdigest()}}
+
+
+def _nr_case_study(T: NRTable) -> str:
+    """The case-study sentence of every caption, with the size rule's numbers as ledger entries: the run's own accepted
+    tasks (protocol §20.3: each run is reported on its own), never the committed index's count over both samples."""
+    cs = T.R["a"]["meta"]["case_study"]
+    thr = T.caption_value("size threshold", _num(cs["threshold"]), T.fields("meta.case_study.threshold"))
+    run = T.caption_value("run", tex(T.R["run_id"]), [("run_id", T.R["run_id"])], T.R["msrc"])
+    if cs.get("accepted_in_run") is None:  # the analysis could not read the committed index (meta.case_study.why)
+        T.led.add(T.name, "caption | the run's accepted tasks", "not readable", T.src(T.fields("meta.case_study.accepted_in_run")))
+        size = f"the committed index cannot be read, so nothing shows that the run grades {thr} accepted tasks"
+    else:
+        acc = T.caption_value("the run's accepted tasks", _num(cs["accepted_in_run"]), T.fields("meta.case_study.accepted_in_run"))
+        size = (f"the run grades {acc} accepted tasks of its own (its families accepted in the committed index), fewer than "
+                f"{thr}, and each run is reported on its own")
+    return (f"Run \\texttt{{{run}}} in case-study mode, as exploratory case studies (protocol \\S19.6, \\S20.3): {size}, so "
+            "every number is per family. Nothing is pooled over the families: no pooled rate, no interval and no p-value.")
+
+
+def _nr_columns(fams: list[str], first: float = 0.25, sep: float = 0.027) -> str:
+    """A label column and one wrapping column per family (plain p columns: main.tex loads no array package), together no
+    wider than the line; ``sep``: the column separation per column as a share of the line (2 x 6pt, the default, is
+    about 0.027 of a 6.5in line; 2 x 4pt about 0.018, 2 x 3pt about 0.013)."""
+    w = min(0.15, (1 - first - sep * (len(fams) + 1)) / len(fams))
+    return f"p{{{first}\\linewidth}}" + f"p{{{w:.3f}\\linewidth}}" * len(fams)
+
+
+def _nr_layout(fams: list[str], small: bool = False) -> tuple[str, str]:
+    """The size command and column spec of a natural-run table: up to six families (natural-pr-v1 has six) in the given
+    size, more (case-study mode allows up to nine) in the smallest, so that a word of a cell still fits its column."""
+    if len(fams) > 6:
+        return "\\scriptsize\\setlength{\\tabcolsep}{3pt}", _nr_columns(fams, 0.18, 0.013)
+    if small:
+        return "\\scriptsize\\setlength{\\tabcolsep}{4pt}", _nr_columns(fams, 0.2, 0.018)
+    return "\\footnotesize", _nr_columns(fams)
+
+
+def natural_run_fa_fr_table(R: dict, led: SectionLedger, nums: Numbers, out: Path) -> None:
+    """(1) False acceptance and false rejection per family and condition under D19, B3 apart; the oracle-gated view's
+    drops are marked."""
+    a, fams = R["a"], R["fams"]
+    T = NRTable(R, led, nums, "natural_run_fa_fr", ragged=True)
+    prim, sec = a["per_family"], (a.get("secondary") or {}).get("per_family", {})
+    og = a["oracle_gated"]["conditions"]
+    graded = [c for c in NR_CONDITIONS if c in prim or c in sec]
+    for i, c in enumerate(graded):
+        base, sh = ("secondary.per_family" if c in NR_SECONDARY else "per_family"), NR_SHORT[c].lower()
+        if c not in og:
+            raise ValueError(f"{R['src']}: oracle_gated.conditions has no {c}")
+        cells = []
+        for t in fams:
+            if _get(a, f"{base}.{c}.{t}") is ABSENT:
+                cells.append(("--", T.fields(f"{base}.{c}.{t}")))
+                continue
+            fs = T.fields(*(f"{base}.{c}.{t}.{k}" for k in ("fa_num", "fa_den", "fr_num", "fr_den")),
+                          f"oracle_gated.conditions.{c}.dropped.{t}")
+            fa_num, fa_den, fr_num, fr_den, dropped = (v for _, v in fs)
+            text = f"{_frac(fa_num, fa_den)} $\\cdot$ {_frac(fr_num, fr_den)}" + ("" if dropped is ABSENT else "$^{\\dagger}$")
+            T.put(f"{sh}.{_fk(t)}.fa", _frac(fa_num, fa_den), fs[:2], "accepted/invalid under D19")
+            T.put(f"{sh}.{_fk(t)}.fr", _frac(fr_num, fr_den), fs[2:4], "rejected/valid under D19")
+            T.put(f"og.{sh}.{_fk(t)}", "kept" if dropped is ABSENT else "dropped", fs[4:], "the oracle-gated view")
+            cells.append((text, fs))
+        primary_ends = c not in NR_SECONDARY and i + 1 < len(graded) and graded[i + 1] in NR_SECONDARY
+        T.row(tex(NR_TEX[c]), cells, last_of_group=primary_ends or i + 1 == len(graded))
+    _nr_pairs_rows(T)
+    absent = [NR_SHORT[c] for c in NR_CONDITIONS if c not in graded]
+    caption = (f"False acceptance $\\cdot$ false rejection per family and condition, as accepted/invalid $\\cdot$ "
+               "rejected/valid, under D19's model-proposed labels, each distinct graded patch once; the reference solution and "
+               "the no-op are excluded. A rejection is any outcome other than a pass, so an infrastructure outcome "
+               "(environment failure, verifier error or timeout) and an unresolved pair (repeats that disagree, protocol "
+               "\\S15.3) count as rejections. Below the conditions: the family's pairs graded in the run (every verifier and "
+               "candidate, label support included), those unresolved, and those that ended in an infrastructure outcome. "
+               f"{NO_HUMAN} {_nr_case_study(T)} B3 (diff-derived) is a secondary arm (protocol \\S15.6). n/a: "
+               "the family has no unit of that kind under D19. --: the run did not grade the condition for the family, or the "
+               "analysis does not hold the value. none: no such pair. "
+               "$^{\\dagger}$: the verifier does not pass the family's reference solution in the run, so the secondary "
+               "oracle-gated view (protocol \\S15.7) drops the cell and counts its units as lost yield."
+               + (f" Not graded in this run: {', '.join(absent)}." if absent else ""))
+    # Sized as the fresh-v1 tables are; a cell wraps only when it does not fit (six families of two-digit counts fit).
+    size, spec = _nr_layout(fams, small=True)
+    head = "Condition & " + " & ".join(tex(t) for t in fams)
+    (out / "natural_run_fa_fr.tex").write_text(table(caption, "tab:nr-fa-fr", spec, head, T.rows, size=size))
+
+
+def _nr_pairs_rows(T: NRTable) -> None:
+    """Each family's pairs in the run (every verifier and candidate graded, label support included): how many, how many
+    are unresolved and how many ended in an infrastructure outcome, by outcome; a rejection in the tables either way."""
+    graded, infra = [], []
+    for t in T.R["fams"]:
+        fk, p = _fk(t), f"natural.reliability.families.{t}"
+        fs = T.fields(f"{p}.pairs", f"{p}.unresolved")
+        T.put(f"pairs.{fk}", _num(fs[0][1]), fs[:1], "the family's graded pairs in the run")
+        T.put(f"pairs.{fk}.unresolved", _num(fs[1][1]), fs[1:], "pairs whose repeats disagree (unresolved, a rejection)")
+        graded.append((", ".join(_num(v) for _, v in fs), fs))
+        fs = T.fields(f"{p}.infrastructure")
+        v = fs[0][1]
+        text = "--" if v is ABSENT else ", ".join(f"{_num(n)} {_words(k)}" for k, n in v.items()) or "none"
+        if v is not ABSENT:
+            T.put(f"pairs.{fk}.infrastructure", text, fs, "pairs that ended in an infrastructure outcome (a rejection)")
+        infra.append((text, fs))
+    T.row("The run's pairs: graded, unresolved", graded)
+    T.row("The run's pairs ending in an infrastructure outcome", infra)
+
+
+def natural_run_source_table(R: dict, led: SectionLedger, nums: Numbers, out: Path) -> None:
+    """(2) Which conditions accept each family's pre-review state under the source-evidence label, and that state's
+    other labels."""
+    a, fams = R["a"], R["fams"]
+    se = a["source_evidence"]
+    T = NRTable(R, led, nums, "natural_run_source_evidence", ragged=True)
+    pre: dict[str, str] = {}
+    for t in fams:
+        keys = [k for k, x in se["pre_review"].items() if x["family_id"] == t]
+        if len(keys) != 1:
+            raise ValueError(f"{R['src']}: source_evidence.pre_review holds {len(keys)} pre-review states of {t}; the table "
+                             "shows one per family")
+        pre[t] = keys[0]
+    views = {**{c: "source_evidence.per_family" for c in se["per_family"]},
+             **{c: "source_evidence.secondary_per_family" for c in se.get("secondary_per_family", {})}}
+    for c, base in views.items():
+        for t, d in _get(a, f"{base}.{c}").items():
+            if d["valid"]["n"]:
+                raise ValueError(f"{R['src']}: {base}.{c}.{t}.valid.n = {d['valid']['n']}; a source-evidence label is invalid "
+                                 "with respect to the correction (protocol §15.6)")
+    graded = [c for c in NR_CONDITIONS if c in views]
+    for i, c in enumerate(graded):
+        base, sh, cells = views[c], NR_SHORT[c].lower(), []
+        for t in fams:
+            if _get(a, f"{base}.{c}.{t}") is ABSENT:
+                cells.append(("--", T.fields(f"{base}.{c}.{t}")))
+                continue
+            fs = T.fields(f"{base}.{c}.{t}.invalid.accepted", f"{base}.{c}.{t}.invalid.n",
+                          f"source_evidence.pre_review.{pre[t]}.outcomes.{c}")
+            acc, n, outcome = (v for _, v in fs)
+            text = "--" if not n else ("accepted" if acc else "rejected") if n == 1 else f"{acc}/{n} accepted"
+            if text == "rejected" and isinstance(outcome, str) and outcome != "task_failure":
+                text += f" ({_words(outcome)})"  # an infrastructure outcome or an unresolved pair, a rejection (§6, §15.3)
+            if n:
+                T.put(f"se.{sh}.{_fk(t)}", text, fs, "the pre-review state under the source-evidence label")
+            cells.append((text, fs))
+        last = i + 1 == len(graded) or (c not in NR_SECONDARY and graded[i + 1] in NR_SECONDARY)
+        T.row(tex(NR_TEX[c]), cells, last_of_group=last)
+    cells_d19, cells_il, cells_ref = [], [], []
+    for t in fams:
+        p = f"source_evidence.pre_review.{pre[t]}"
+        fs = T.fields(f"{p}.d19")
+        d19 = fs[0][1]
+        cells_d19.append(("none" if d19 in (None, ABSENT) else tex(d19), fs))
+        T.put(f"pre.{_fk(t)}.d19", cells_d19[-1][0], fs, "D19's label of the pre-review state")
+        fs = T.fields(f"{p}.independent_label", f"{p}.independent_label_outcome", f"{p}.independent_label_left_out")
+        label, outcome, left = (v for _, v in fs)
+        text = ("left out" if left is True else "not graded" if outcome in (None, ABSENT) else
+                f"{tex(label) if isinstance(label, str) else 'none'} ({_words(outcome)})")
+        cells_il.append((text, fs))
+        T.put(f"pre.{_fk(t)}.il", text, fs, "the second labeling of the pre-review state (the labeler's outcome)")
+        fs = T.fields(f"{p}.reference_checks_outcome")
+        out_ = fs[0][1]
+        cells_ref.append(("not graded" if out_ in (None, ABSENT) else _words(out_), fs))
+        T.put(f"pre.{_fk(t)}.refchecks", cells_ref[-1][0], fs, "the reference checks' outcome on the pre-review state")
+    T.row("Its D19 label", cells_d19)
+    T.row("Its second label (the labeler's outcome)", cells_il)
+    T.row("The reference checks' outcome on it", cells_ref)
+    caption = ("Acceptance of each family's pre-review state, the tree the reviewer commented on before the correction, by "
+               "condition, under the source-evidence label: invalid with respect to the correction, on the strength of the "
+               "reviewer's request, the addressing commit and the agreement of both S9 judges (protocol \\S15.6), so an "
+               "accepted state is a false acceptance under this labeling. \\textbf{Source evidence, not a human label}, reported "
+               "apart from D19; D19's labels and the second labeling are model proposals, and no human labels exist. "
+               f"{_nr_case_study(T)} Below the conditions: the same state's D19 label (ambiguous where its reference "
+               "checks pass it, \\S15.6), its label in the second labeling with the independent labeler's outcome (a pass on a "
+               "pre-review state is ambiguous, decision log D64; left out: the family's labeler is not usable), and the "
+               "reference checks' outcome on it in the run. A rejection is any outcome other than a pass: one that is not a "
+               "task failure (an infrastructure outcome, or an unresolved pair whose repeats disagree, protocol \\S15.3) is "
+               "named in brackets. Terms: --: the run did not grade the condition for the family; not graded: the run did not "
+               "grade the state with that verifier; none: no label (no D19 proposal, or no label in the second labeling).")
+    size, spec = _nr_layout(fams)
+    head = "Condition & " + " & ".join(tex(t) for t in fams)
+    (out / "natural_run_source_evidence.tex").write_text(table(caption, "tab:nr-source", spec, head, T.rows, size=size))
+
+
+def natural_run_labeler_table(R: dict, led: SectionLedger, nums: Numbers, out: Path) -> None:
+    """(3) The second labeling per family: the labeler's status, the labels, and the agreement with D19 apart for the
+    pre-review states and the held-out pool, with the pool's generation order."""
+    a, fams = R["a"], R["fams"]
+    if "independent_labeling" not in a:
+        raise ValueError(f"{R['src']}: the run did not grade the independent labeler, whose second labeling protocol §15.6 "
+                         "reports")
+    T = NRTable(R, led, nums, "natural_run_labeler", ragged=True)
+    rows: dict[str, list] = {k: [] for k in ("status", "second", "valid", "invalid", "ambiguous", "not_graded", "pre", "pool",
+                                             "order")}
+    for t in fams:
+        fk, fam = _fk(t), f"natural.families.{t}.labeler"
+        fs = T.fields(f"{fam}.status", f"{fam}.round", f"{fam}.usable")
+        status, rnd, _ = (v for _, v in fs)
+        text = ("not recorded" if status in (None, ABSENT) else tex(status)) + ("" if rnd is ABSENT else f" ({_num(rnd)})")
+        rows["status"].append((text, fs))
+        T.put(f"il.{fk}.status", "not recorded" if status in (None, ABSENT) else tex(status), fs[:1], "the labeler's status record")
+        if rnd is not ABSENT:
+            T.put(f"il.{fk}.round", _num(rnd), fs[1:2], "the labeler's round: one as written, two after its revision")
+        fs = T.fields("independent_labeling.tasks", f"independent_labeling.left_out.{t}.why")
+        text = "left out" if fs[1][1] is not ABSENT else "graded" if t in fs[0][1] else "not graded"
+        rows["second"].append((text, fs))
+        T.put(f"il.{fk}.second", text, fs, "in the second labeling")
+        for v in ("valid", "invalid", "ambiguous", "not_graded"):
+            fs = T.fields(f"independent_labeling.labels_per_family.{t}.{v}")
+            rows[v].append((_num(fs[0][1]), fs))
+            T.put(f"il.{fk}.{v.replace('_', '')}", _num(fs[0][1]), fs, f"held-out candidates labelled {v.replace('_', ' ')}")
+        g = f"independent_labeling.agreement.per_family.{t}.natural"
+        for part in ("existed_before_labeler", "generated_after_labeler"):
+            if _get(a, f"{g}.{part}") is ABSENT:
+                raise ValueError(f"{R['src']}: {g}.{part} is not in the analysis; the table shows the agreement of every "
+                                 "family, apart for the pre-review states and the held-out pool")
+        for key, part in (("pre", "existed_before_labeler"), ("pool", "generated_after_labeler")):
+            fs = T.fields(f"{g}.{part}.agree", f"{g}.{part}.n_decided_by_both", f"{g}.{part}.n_units")
+            agree, both, units = (v for _, v in fs)
+            rows[key].append((f"{_num(agree)}/{_num(both)} ({_num(units)})", fs))
+            T.put(f"il.{fk}.{key}.agree", _num(agree), fs[:1], "units D19 and the labeler label alike")
+            T.put(f"il.{fk}.{key}.decided", _num(both), fs[1:2], "units both label valid or invalid")
+            T.put(f"il.{fk}.{key}.units", _num(units), fs[2:], "distinct graded patches")
+        o = f"{g}.generated_after_labeler.order"
+        fs = T.fields(f"{o}.after", f"{o}.candidates", f"{o}.not_after", f"{o}.not_shown")
+        after, cands, not_after, not_shown = (v for _, v in fs)
+        if any(v is ABSENT for v in (after, cands, not_after, not_shown)):
+            raise ValueError(f"{R['src']}: {o} does not record the pool's generation order (after, candidates, not_after, "
+                             "not_shown)")
+        text = (f"{_num(after)} of {_num(cands)}" + (f"; not after it {len(not_after)}" if not_after else "")
+                + (f"; not shown {len(not_shown)}" if not_shown else ""))
+        rows["order"].append((text, fs))
+        T.put(f"il.{fk}.pool.after", _num(after), fs[:1], "pool candidates generated after the labeler was frozen")
+        T.put(f"il.{fk}.pool.candidates", _num(cands), fs[1:2], "pool candidates")
+    T.row("Labeler status (round)", rows["status"])
+    T.row("In the second labeling", rows["second"], last_of_group=True)
+    for v in ("valid", "invalid", "ambiguous"):
+        T.row(f"Held-out candidates labelled {v}", rows[v])
+    T.row("Held-out candidates not graded", rows["not_graded"], last_of_group=True)
+    T.row("Agreement with D19, pre-review states", rows["pre"])
+    T.row("Agreement with D19, held-out pool", rows["pool"])
+    T.row("Pool generated after the labeler was frozen", rows["order"])
+    caption = ("The second labeling per family: the independent labeler (protocol \\S15.5), a model proposal like D19. "
+               "\\textbf{Both labelings are model proposals; no human labels exist.} Status: "
+               "the labeler's status record, with its round (one as written, two after its one revision); a labeler that is not "
+               "usable is left out of the second labeling and reported. Labels: the family's held-out candidates under the "
+               "second labeling (not graded: left out, or not graded by the labeler). Agreement with D19, each distinct graded "
+               "patch once: agree/both decide (units), where both decide a unit both label valid or invalid; apart for the "
+               "pre-review states, which existed before the labeler was written, and for the held-out pool. The pool's order: "
+               "how many of its candidates the generation records show to have been generated after the labeler was frozen, "
+               "of all, with those not after it and those whose order is not shown (no frozen time, or no generation start). "
+               "Terms: not recorded: no status record; graded: in the second labeling; left out: its labeler is not usable; "
+               "--: not in the analysis; n/a: recorded as null. " + _nr_case_study(T)
+               + " No agreement is pooled over the families.")
+    size, spec = _nr_layout(fams)
+    head = "Second labeling & " + " & ".join(tex(t) for t in fams)
+    (out / "natural_run_labeler.tex").write_text(table(caption, "tab:nr-labeler", spec, head, T.rows, size=size))
+
+
+def _audit_cell(revisions: object, passed: object, codes: object) -> str:
+    if revisions is ABSENT:
+        return "--"
+    if passed is True:
+        return f"{_num(revisions)}, passed"
+    named = "codes not recorded" if codes is None else ", ".join(_words(c) for c in codes)
+    return f"{_num(revisions)}, failed" + (f" ({named})" if named else "")
+
+
+def natural_run_construction_table(R: dict, led: SectionLedger, nums: Numbers, out: Path) -> None:
+    """(4) Per-family construction facts from the analysis's flags, construction, reliability and cost blocks."""
+    fams = R["fams"]
+    T = NRTable(R, led, nums, "natural_run_construction", ragged=True)
+    lines: list[tuple[str, list, bool]] = []
+
+    def line(label: str, make, last_of_group: bool = False) -> None:
+        """A row whose cell for family ``t`` is ``make(t, fk) -> (text, fields)``; ``make`` puts the row's macros."""
+        lines.append((label, [make(t, _fk(t)) for t in fams], last_of_group))
+
+    fam = "natural.families.{t}"
+    con = fam + ".construction"
+    cost = "natural.cost.families.{t}"
+
+    def sample(t, fk):
+        fs = T.fields(fam.format(t=t) + ".sample")
+        text = "--" if fs[0][1] in (None, ABSENT) else tex(fs[0][1])
+        T.put(f"sample.{fk}", text, fs, "the family's S9 sample")
+        return text, fs
+
+    def reference(t, fk):
+        p = con.format(t=t) + ".contracts.reference"
+        fs = T.fields(f"{p}.requirements", f"{p}.scored_active", f"{p}.at_correction")
+        for (path, v), k in zip(fs, ("requirements", "scored", "correction")):
+            if v is not ABSENT:
+                T.put(f"ref.{fk}.{k}", _num(v), [(path, v)], "the reference contract's requirements")
+        return ", ".join(_num(v) for _, v in fs), fs
+
+    def recovered(t, fk):
+        p = con.format(t=t) + ".contracts"
+        fs = T.fields(f"{p}.initial_only.scored_active", f"{p}.full_session.scored_active")
+        for (path, v), k in zip(fs, ("ini", "full")):
+            if v is not ABSENT:
+                T.put(f"{k}.{fk}.scored", _num(v), [(path, v)], "scored active requirements of the recovered contract")
+        return ", ".join(_num(v) for _, v in fs), fs
+
+    def checks(conds: list[str]):
+        def make(t, fk):
+            p = con.format(t=t) + ".checks"
+            fs = T.fields(*(f"{p}.{c}" for c in conds))
+            for (path, v), c in zip(fs, conds):
+                if v is not ABSENT:
+                    k = {"reference_check": "ref", "independent_label": "il"}.get(c) or NR_SHORT[c].lower()
+                    T.put(f"checks.{k}.{fk}", _num(v), [(path, v)], f"scored checks of {c}")
+            return ", ".join(_num(v) for _, v in fs), fs
+        return make
+
+    def audit(cond: str, short: str):
+        def make(t, fk):
+            p = con.format(t=t) + f".audits.{cond}"
+            fs = T.fields(f"{p}.revisions", f"{p}.passed", f"{p}.last_finding_codes")
+            revisions, passed, codes = (v for _, v in fs)
+            if revisions is not ABSENT:
+                T.put(f"audit.{short}.{fk}.revisions", _num(revisions), fs[:1], f"revisions of {short.upper()}'s audit")
+                T.put(f"audit.{short}.{fk}.result", "passed" if passed is True else "failed", fs[1:2], "audit:v1")
+            return _audit_cell(revisions, passed, codes), fs
+        return make
+
+    def b3(t, fk):
+        p = con.format(t=t) + ".b3"
+        fs = T.fields(f"{p}.available", f"{p}.taken_out")
+        available, taken_out = (v for _, v in fs)
+        text = ("--" if available is ABSENT else "available" if available is True else
+                "taken out (no test kept)" if taken_out is True else "not registered")
+        T.put(f"b3.{fk}.available", "--" if available is ABSENT else "yes" if available is True else "no", fs[:1], "B3")
+        return text, fs
+
+    def b1(t, fk):
+        p = fam.format(t=t) + ".b1"
+        fs = T.fields(f"{p}.available", f"{p}.n_checks")
+        available, n = (v for _, v in fs)
+        word = "not recorded" if available in (None, ABSENT) else "yes" if available else "no"
+        T.put(f"b1.{fk}.available", word, fs[:1], "B1 by S10")
+        if n not in (None, ABSENT):
+            T.put(f"b1.{fk}.checks", _num(n), fs[1:], "B1's checks by S10")
+        return word + ("" if n in (None, ABSENT) else f" ({_num(n)})"), fs
+
+    def b1_norm(t, fk):
+        p = fam.format(t=t) + ".b1_equals_regression_norm"
+        fs = T.fields(f"{p}.equal", f"{p}.identical_files", f"{p}.b1_files", f"{p}.norm_files")
+        equal, same, b1_files, norm_files = (v for _, v in fs)
+        word = ("not known" if equal in (None, ABSENT) else "yes" if equal else
+                "in part" if isinstance(same, int) and same > 0 else "no")
+        T.put(f"b1.{fk}.norm", word, fs[:2], "B1 equals D19's regression norm: yes, in part or no")
+        if word in ("yes", "in part", "no") and same is not ABSENT:  # D64 decision 3: the files B1 shares with the norm
+            T.put(f"b1.{fk}.norm.files", f"{_num(same)} of {_num(b1_files)}", fs[1:3], "B1's files identical to the norm's")
+            return f"{word} ({_num(same)} of {_num(b1_files)}; norm {_num(norm_files)})", fs
+        return word, fs
+
+    def refchecks(t, fk):
+        p = con.format(t=t) + ".reference_checks"
+        fs = T.fields(f"{p}.recorded", f"{p}.status", f"{p}.fix_rounds")
+        recorded, status, rounds = (v for _, v in fs)
+        if recorded is not True:  # no readable status record (or an analysis that does not say)
+            word, text = "not recorded", "not recorded"
+        else:  # a record whose status is neither usable nor unusable, or whose fix rounds are no integer, says so
+            word = "unrecognised status" if status in (None, ABSENT) else tex(status)
+            text = f"{word} ({'fix rounds not recorded' if rounds in (None, ABSENT) else _num(rounds)})"
+        T.put(f"refchecks.{fk}.status", word, fs[:2], "the reference checks' status record")
+        if recorded is True and rounds not in (None, ABSENT):
+            T.put(f"refchecks.{fk}.rounds", _num(rounds), fs[2:], "fix rounds of the reference checks")
+        return text, fs
+
+    def refchecks_run(t, fk):
+        p = f"natural.reliability.families.{t}.sanity"
+        fs = T.fields(*(f"{p}.{o}.reference_check.{k}" for o in ("reference", "noop") for k in ("pass", "n")))
+        rp, rn, np_, nn = (v for _, v in fs)
+        text = f"{_num(rp)}/{_num(rn)}, {_num(np_)}/{_num(nn)}"
+        T.put(f"refchecks.{fk}.run.reference", f"{_num(rp)}/{_num(rn)}", fs[:2], "the reference passes (the run's grading)")
+        T.put(f"refchecks.{fk}.run.noop", f"{_num(np_)}/{_num(nn)}", fs[2:], "the no-op passes (the run's grading)")
+        return text, fs
+
+    def near_misses(t, fk):
+        p = fam.format(t=t) + ".near_misses_on_correction"
+        fs = T.fields(f"{p}.on_correction", f"{p}.near_misses")
+        on, n = (v for _, v in fs)
+        text = "--" if on is ABSENT else f"{len(on)} of {_num(n)}"
+        if on is not ABSENT:
+            T.put(f"nm.{fk}.correction", _int(len(on)), fs[:1], "held-out near misses that target a correction requirement")
+            T.put(f"nm.{fk}.all", _num(n), fs[1:], "held-out near misses")
+        return text, fs
+
+    def artifacts(t, fk):
+        p = cost.format(t=t)
+        fs = T.fields(f"{p}.recorded", f"{p}.artifacts")
+        rec, n = (v for _, v in fs)
+        T.put(f"cost.{fk}.recorded", _num(rec), fs[:1], "generated artifacts with a generation record")
+        T.put(f"cost.{fk}.artifacts", _num(n), fs[1:], "generated artifacts")
+        return f"{_num(rec)} of {_num(n)}", fs
+
+    def cost_of(keys: list[tuple[str, str]], what: str):
+        def make(t, fk):
+            fs = T.fields(*(f"{cost.format(t=t)}.{k}" for k, _ in keys))
+            for (path, v), (_, mk) in zip(fs, keys):
+                T.put(f"cost.{fk}.{mk}", _num(v), [(path, v)], what)
+            return ", ".join(_num(v) for _, v in fs), fs
+        return make
+
+
+    line("Sample", sample)
+    line("Reference contract: requirements, scored active, at the correction", reference)
+    line("Recovered contracts, scored active: initial-only, full-session", recovered, True)
+    line("Checks: C1, C2, C3, C4", checks(["initial_plain", "initial_audited", "full_plain", "full_audited"]))
+    line("Checks: B2, B1, B3", checks(["llm_freeform", "repo_tests", "diff_derived"]))
+    line("Checks: reference checks, labeler", checks(["reference_check", "independent_label"]), True)
+    line("C2 audit: revisions, result", audit("initial_audited", "c2"))
+    line("C4 audit: revisions, result", audit("full_audited", "c4"))
+    line("B3", b3)
+    line("B1 by S10: available (checks)", b1)
+    line("B1 equals D19's regression norm", b1_norm, True)
+    line("Reference checks: status (fix rounds)", refchecks)
+    line("Reference checks in the run: reference, no-op passes", refchecks_run)
+    line("Held-out near misses on the correction", near_misses, True)
+    line("Generated artifacts with a generation record", artifacts)
+    line("Agent turns, tool calls", cost_of([("turns", "turns"), ("tool_calls", "toolcalls")], "agent turns and tool calls"))
+    line("Agent wall time (s)", cost_of([("wall_s", "wall")], "agent wall time (s)"))
+    line("Grading wall time (s)", cost_of([("grading_wall_s", "grading")], "the run's grading time (s)"))
+    line("S10 build time (s)", cost_of([("s10_seconds", "s10")], "S10 build time (s)"))
+    for label, cells, last in lines:
+        T.row(tex(label), cells, last_of_group=last)
+    caption = ("Construction facts per family (decision log D64, D70), from the analysis's per-family flags, construction, "
+               "reliability and cost blocks. Contracts: requirements, scored active ones and those introduced at the correction "
+               "(the review comment or a reply; with none, the reference contract does not observe the correction, D64 "
+               "decision 14). Checks: the scored checks of each registered verifier. Audits (audit:v1, D27): revisions and the "
+               "result, with the codes of the last iteration's findings when it failed. B3: available, taken out (its per-test "
+               "selection kept no test) or not registered. B1 by S10: available, with its checks. B1 equals D19's regression "
+               "norm: yes, "
+               "in part or no, with B1's files that are the norm's, of B1's, and the norm's count; where they are equal, wholly "
+               "or in part, a D19-labelled false rejection of B1 is uninformative to that extent (D64, decision 3). Reference "
+               "checks: the status record written when they were frozen, with its fix rounds, and their passes on the "
+               "reference and the no-op in the run. Cost: the generation records of the family's generated artifacts, the "
+               "run's grading time and the S10 build time. Terms: --: not in the analysis; n/a: recorded as null; not "
+               "recorded: no record of it (codes not recorded: an audit record without its iterations; fix rounds not "
+               "recorded: no integer for them); unrecognised status: a record with neither status; not known: no "
+               "regression-norm overlay. " + _nr_case_study(T) + " No total is given.")
+    size, spec = _nr_layout(fams, small=True)
+    head = "Fact & " + " & ".join(tex(t) for t in fams)
+    (out / "natural_run_construction.tex").write_text(table(caption, "tab:nr-construction", spec, head, T.rows, size=size))
+
+
+def natural_run_tables(R: dict, led: SectionLedger, nums: Numbers, out: Path) -> None:
+    for name, sha in R["sha256"].items():
+        led.add("inputs", f"{name} sha256", sha, name)
+    T = NRTable(R, led, nums, "numbers")
+    nums.put("run", tex(R["run_id"]), T.src([("run_id", R["run_id"])], R["msrc"]))
+    nums.put("families", _int(len(R["fams"])), T.src(T.fields("natural.tasks")), "the run's families (count)")
+    nums.put("accepted", _num(R["a"]["meta"]["case_study"]["accepted_in_run"]),
+             T.src(T.fields("meta.case_study.accepted_in_run")), "the run's own accepted tasks (the size rule, protocol §20.3)")
+    nums.put("threshold", _num(R["a"]["meta"]["case_study"]["threshold"]), T.src(T.fields("meta.case_study.threshold")),
+             "the size threshold of protocol §19.6")
+    natural_run_fa_fr_table(R, led, nums, out)
+    natural_run_source_table(R, led, nums, out)
+    natural_run_labeler_table(R, led, nums, out)
+    natural_run_construction_table(R, led, nums, out)
+
+
 def parse_args(argv: list[str]) -> argparse.Namespace:
     """Parse and check the arguments; nothing is read beyond the directories' listings, and nothing is written."""
     ap = argparse.ArgumentParser(
         prog="paper/make_tables.py",
         description="Generate paper/generated/*.tex and paper/evidence_ledger.md from recorded runs (the construction pilot), "
-                    "and, with --fresh, --regrade and --natural, the tables of the new runs in paper/generated/fresh/ and "
-                    "paper/generated/natural/ with their own ledgers. The outputs are replaced only after every table has been "
-                    "written; on any error every file is left as it was.")
+                    "and, with --fresh, --regrade, --natural and --natural-run, the tables of the new runs in "
+                    "paper/generated/fresh/, paper/generated/natural/ and paper/generated/natural_run/ with their own ledgers. "
+                    "The outputs are replaced only after every table has been written; on any error every file is left as it "
+                    "was.")
     ap.add_argument("runs", nargs="*", metavar="RUN_DIR",
                     help="pilot run directory with analysis.json and manifest.json, e.g. results/runs/pilot-v0.3.3 (optional "
-                         "only when --fresh or --natural is given)")
+                         "only when --fresh, --natural or --natural-run is given)")
     ap.add_argument("--compare", nargs="+", default=[], metavar="OLD_RUN_DIR",
                     help="earlier run directories (with results.jsonl) for the reliability table; it uses the "
                          "compare_<run>.json files that scripts/compare_runs.py wrote into the run directory")
@@ -1717,9 +2327,13 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     ap.add_argument("--natural", action="store_true",
                     help="the natural arm's screening tables from data/manifests/: writes paper/generated/natural/ and "
                          "paper/evidence_ledger_natural.md")
+    ap.add_argument("--natural-run", metavar="RUN_DIR",
+                    help="a natural run analysed in case-study mode (analysis.json, manifest.json), e.g. "
+                         "results/runs/natural-pr-v1: writes the per-family tables to paper/generated/natural_run/ and "
+                         "paper/evidence_ledger_natural_run.md; an analysis outside case-study mode is refused")
     a = ap.parse_args(argv)
-    if not (a.runs or a.fresh or a.natural):
-        ap.error("give a pilot RUN_DIR, --fresh RUN_DIR or --natural")
+    if not (a.runs or a.fresh or a.natural or a.natural_run):
+        ap.error("give a pilot RUN_DIR, --fresh RUN_DIR, --natural or --natural-run RUN_DIR")
     if a.compare and not a.runs:
         ap.error("--compare needs a pilot RUN_DIR")
     for rd in a.runs:
@@ -1744,6 +2358,14 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         missing = [p for p in NATURAL_INPUTS.values() if not (ROOT / p).is_file()]
         if missing:
             ap.error(f"--natural: missing {', '.join(missing)}")
+    if a.natural_run:
+        missing = [f for f in ("analysis.json", "manifest.json") if not (Path(a.natural_run) / f).is_file()]
+        if missing:
+            ap.error(f"--natural-run {a.natural_run}: no {' or '.join(missing)} (run `tracecontract analyze` on the natural run "
+                     "first)")
+        if not (ROOT / NATURAL_INPUTS["M0"]).is_file():  # the privacy check's agent product names (fails closed)
+            ap.error(f"--natural-run: missing {NATURAL_INPUTS['M0']}, whose agent product names the privacy check of the "
+                     "natural outputs refuses")
     return a
 
 
@@ -1780,7 +2402,7 @@ def _cmd(parts: list[str]) -> str:
 
 def main(argv: list[str]) -> None:
     a = parse_args(argv)  # --help and argument errors exit here, before anything is written
-    new_modes = bool(a.fresh or a.natural)
+    new_modes = bool(a.fresh or a.natural or a.natural_run)
     # The pilot ledger names the pilot command only, so that adding a new-run mode never changes it.
     pilot_argv = argv if not new_modes else [*a.runs, *(["--compare", *a.compare] if a.compare else [])]
     led = Ledger(pilot_argv)
@@ -1833,18 +2455,46 @@ def main(argv: list[str]) -> None:
             (nout / "numbers.tex").write_text(nnums.tex(cmd))
             (tmp / "evidence_ledger_natural.md").write_text(nled.text())
             subs.append(("natural", nout, len(nled)))
+        if a.natural_run:
+            run = Path(a.natural_run)
+            cmd = _cmd(["--natural-run", _shown(run)])
+            rled = SectionLedger("Evidence ledger (natural run: per-family case-study tables)",
+                                 f"Every number in `paper/generated/{NR_DIR}/*.tex` (the tables and the number macros of "
+                                 "`numbers.tex`, used in the text as `\\nrv{key}`), with the file and fields it is read from. "
+                                 f"Generated by `{cmd}`; nothing is entered by hand. A table cell's entry is `<row> | <family> "
+                                 "= <cell>`; a caption's is `caption | <what> = <value>`. Each entry names the fields of its file "
+                                 "as `<dot path>=<JSON value>`, and `absent` for a field the analysis does not hold. Every field "
+                                 "belongs to one family, or to the run (its id, its families, the families of its second "
+                                 "labeling, the size rule): the run is in case-study mode (protocol §19.6, §20.3), so nothing is pooled "
+                                 "over the families. The labels are D19's "
+                                 "model proposals, the independent labeler's verdicts and the source-evidence labels; no human "
+                                 "labels exist.")
+            rnums = Numbers("nrv", rled)
+            rout = tmp / NR_DIR
+            rout.mkdir()
+            R = natural_run_inputs(run)
+            natural_run_tables(R, rled, rnums, rout)
+            (rout / "numbers.tex").write_text(rnums.tex(cmd))
+            (tmp / f"evidence_ledger_{NR_DIR}.md").write_text(rled.text())
+            subs.append((NR_DIR, rout, len(rled)))
         # Privacy: nothing a new-run mode writes may hold a URL, an owner placeholder, a session-local path or a model or
-        # agent-product name; natural outputs may not hold a digit run of 7 or more (an id) either. The ledger's input
-        # hashes are exempt from the digit rule only.
+        # agent-product name; natural outputs (the arm's screening and a natural run) may not hold a digit run of 7 or more
+        # (an id) either. The ledger's input hashes are exempt from the digit rule only.
+        agent_names: tuple[str, ...] = ()
+        if a.natural:
+            agent_names = N["agent_names"]
+        elif a.natural_run:  # fails closed: without the screening record no agent product name could be checked
+            agent_names = _agent_names(json.loads((ROOT / NATURAL_INPUTS["M0"]).read_text()))
         for name, sub, _ in subs:
-            names = N["agent_names"] if name == "natural" else ()
+            natural = name in ("natural", NR_DIR)
+            names = agent_names if natural else ()
             for f in sorted(sub.iterdir()):
-                _check_private(f.read_text(), f"{name}/{f.name}", digit_runs=name == "natural", names=names)
+                _check_private(f.read_text(), f"{name}/{f.name}", digit_runs=natural, names=names)
             text = (tmp / f"evidence_ledger_{name}.md").read_text()
             _check_private(text, f"evidence_ledger_{name}.md", digit_runs=False, names=names)
-            if name == "natural":
+            if natural:
                 _check_private("\n".join(x for x in text.splitlines() if not x.startswith("- [inputs]")),
-                               "evidence_ledger_natural.md", digit_runs=True, names=names)
+                               f"evidence_ledger_{name}.md", digit_runs=True, names=names)
         # Every output has been written: replace them.
         if a.runs:
             n = _replace_outputs(out, tmp / "evidence_ledger.md")
