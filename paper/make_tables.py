@@ -341,7 +341,7 @@ def comparisons(new_run: Path, old_runs: list[Path], led: Ledger, out: Path) -> 
         ch = d.get("changed_verifier_pairs", [])
         ch_same = sum((c["old"] == "pass") == (c["new"] == "pass") for c in ch)
         ch_txt = f"{ch_same}/{len(ch)}" if ch else "--"
-        harness = sorted({json.loads(x).get("harness_version") or "?" for x in (old / "results.jsonl").read_text().splitlines() if x.strip()})
+        harness = sorted({json.loads(x).get("harness_version") or "?" for x in (old / "results.jsonl").read_text().split("\n") if x.strip()})
         h_txt = ", ".join(h.split("/")[-1] for h in harness)
         r_txt, o_txt = (f"{n - rd}/{n}", f"{n - od}/{n}") if n else ("--", "--")
         rows.append(f"\\texttt{{{tex(d['old_run'])}}} & {tex(h_txt)} & {n} & {r_txt} & {o_txt} & {ch_txt} \\\\")
@@ -546,7 +546,7 @@ def fresh_inputs(run: Path) -> dict:
     a = json.loads((run / "analysis.json").read_text())
     s = json.loads((run / "analysis_sensitivity.json").read_text())
     m = json.loads((run / "manifest.json").read_text())
-    rows = [json.loads(x) for x in (run / "results.jsonl").read_text().splitlines() if x.strip()]
+    rows = [json.loads(x) for x in (run / "results.jsonl").read_text().split("\n") if x.strip()]
     src = rel(run / "analysis.json")
     if "automated pilot" not in a["meta"]["label_policy"]:
         raise ValueError(f"{src}: label policy {a['meta']['label_policy']!r}; the captions say every label is a model proposal")
@@ -1281,7 +1281,7 @@ def regrade_table(regrade: Path, led: SectionLedger, nums: Numbers, out: Path) -
 
     def run_col(run_dir: Path, run_id: str, agree: tuple[str, str] | None) -> None:
         mm = json.loads((run_dir / "manifest.json").read_text())
-        rr = [json.loads(x) for x in (run_dir / "results.jsonl").read_text().splitlines() if x.strip()]
+        rr = [json.loads(x) for x in (run_dir / "results.jsonl").read_text().split("\n") if x.strip()]
         oc = Counter(r["outcome"] for r in rr)
         hv = sorted({r["harness_version"].split("/")[-1] for r in rr})
         other = sum(v for k, v in oc.items() if k not in ("pass", "task_failure"))

@@ -60,6 +60,7 @@ from typing import Any
 from pydantic import ValidationError
 
 from tracecontract.schemas import CONFIG_LABEL, GenerationRecord
+from tracecontract.store import jsonl_lines
 from tracecontract.verifier import generation_record, generation_record_problems
 
 # The harness frame of a workflow agent's computed task: a fixed first line, then the text, each line indented.
@@ -91,7 +92,7 @@ def read_entries(path: Path) -> list[dict[str, Any]]:
     except (OSError, UnicodeDecodeError) as exc:
         raise RecordError(f"{path.name}: cannot be read ({exc.__class__.__name__})") from None
     rows = []
-    for n, line in enumerate(text.splitlines(), 1):
+    for n, line in enumerate(jsonl_lines(text), 1):
         if not line.strip():
             continue
         try:
@@ -269,7 +270,7 @@ def journal_state(path: Path) -> str | None:
     if not journal.is_file():
         return None
     started = finished = False
-    for line in journal.read_text(encoding="utf-8", errors="replace").splitlines():
+    for line in jsonl_lines(journal.read_text(encoding="utf-8", errors="replace")):
         try:
             e = json.loads(line)
         except json.JSONDecodeError:

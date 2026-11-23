@@ -64,7 +64,7 @@ def main(*dirs: str, tasks_root: Path | str = TASKS_ROOT) -> None:
     per_task: dict[str, dict] = {}
     for d in dirs:
         journal = Path(d) / "journal.jsonl"
-        entries = [json.loads(line) for line in journal.read_text().splitlines()]
+        entries = [json.loads(line) for line in journal.read_text().split("\n") if line.strip()]  # JSON Lines: line feeds only
         labels = {e["agentId"]: e.get("label", "") for e in entries if e.get("type") == "started"}
         for e in entries:
             e["label"] = labels.get(e.get("agentId"), "")

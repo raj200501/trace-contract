@@ -41,6 +41,7 @@ from typing import Any
 from tracecontract.contract import propose_correction_events
 from tracecontract.ingest.claude_code import parse_claude_code_jsonl
 from tracecontract.ingest.replay import PathMap, infer_root, load_raw_extras, replay_session
+from tracecontract.store import jsonl_lines
 from tracecontract.ingest.repo_evidence import commit_evidence, licence_evidence, raw_entries
 from tracecontract.ingest.sanitize_natural import SANITIZER_VERSION, sanitize_session
 from tracecontract.schemas import (
@@ -73,7 +74,7 @@ def load_cursor(path: Path) -> Session:
     """A Cursor agent JSONL file (``role`` user/assistant, ``tool_use`` blocks, no tool results)."""
     raw = path.read_bytes()
     sid, rel, events = path.stem, f"sessions/cursor/{path.name}", []
-    for lineno, line in enumerate(raw.decode("utf-8", errors="replace").splitlines(), start=1):
+    for lineno, line in enumerate(jsonl_lines(raw.decode("utf-8", errors="replace")), start=1):
         try:
             entry = json.loads(line) if line.strip() else None
         except json.JSONDecodeError:

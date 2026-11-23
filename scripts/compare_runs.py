@@ -39,7 +39,7 @@ def results_file(run: Path) -> Path:
 
 def load(run: Path) -> dict[tuple[str, str], dict]:
     out = {}
-    for line in results_file(run).read_text().splitlines():
+    for line in results_file(run).read_text().split("\n"):  # JSON Lines: line feeds only
         if not line.strip():
             continue
         r = json.loads(line)

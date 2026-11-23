@@ -21,6 +21,7 @@ from pathlib import Path
 from typing import Any
 
 from ..schemas import Event, EventKind, Session, sha256_text
+from ..store import jsonl_lines
 from .replay import EDIT_TOOLS, SHELL_TOOLS, PathMap, RawExtra, read_view
 from .shell_writes import command_words, logical_lines, simple_commands
 
@@ -79,7 +80,7 @@ class CommitEvidence:
 def raw_entries(path: str | Path, entry_type: str) -> list[dict[str, Any]]:
     """Raw JSONL entries of one ``type`` (e.g. ``pr-link``), which the parser does not keep."""
     out = []
-    for line in Path(path).read_bytes().decode("utf-8", errors="replace").splitlines():
+    for line in jsonl_lines(Path(path).read_bytes().decode("utf-8", errors="replace")):
         try:
             e = json.loads(line) if line.strip() else None
         except json.JSONDecodeError:

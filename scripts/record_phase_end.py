@@ -35,6 +35,7 @@ from typing import Any
 
 from tracecontract import roots
 from tracecontract.natural_pr import file_hashes
+from tracecontract.store import jsonl_lines
 
 R = Path(__file__).resolve().parents[1]
 LOG = R / "data" / "manifests" / "natural_phase_ends.jsonl"
@@ -73,7 +74,7 @@ def last_phase(log: Path, task_id: str) -> str | None:
     if not log.is_file():
         return None
     last = None
-    for n, line in enumerate(log.read_text(encoding="utf-8").splitlines(), 1):
+    for n, line in enumerate(jsonl_lines(log.read_text(encoding="utf-8")), 1):
         if not line.strip():
             continue
         try:

@@ -31,6 +31,7 @@ from pathlib import Path
 from typing import Any
 
 from ..schemas import EventKind, Session, sha256_bytes
+from ..store import jsonl_lines
 from .claude_code import _redact_emails
 
 SANITIZER_VERSION = "sanitize-natural:v1"
@@ -205,7 +206,7 @@ def sanitize_file(src: str | Path, dst: str | Path) -> dict[str, Any]:
     text = raw.decode("utf-8", errors="replace")
     if src.suffix == ".jsonl":
         lines = []
-        for line in text.splitlines():
+        for line in jsonl_lines(text):
             try:
                 lines.append(json.dumps(sanitize_obj(json.loads(line), c), ensure_ascii=False) if line.strip() else line)
             except json.JSONDecodeError:

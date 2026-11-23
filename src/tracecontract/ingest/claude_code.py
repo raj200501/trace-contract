@@ -23,6 +23,7 @@ from pathlib import Path
 from typing import Any
 
 from ..schemas import Author, Event, EventKind, Population, Session, SourceRef, sha256_bytes
+from ..store import jsonl_lines
 
 SOURCE_FORMAT = "claude_code_jsonl"
 
@@ -117,7 +118,7 @@ def parse_claude_code_jsonl(
     def add(**kw: Any) -> None:
         events.append(Event(index=len(events), **kw))
 
-    for lineno, line in enumerate(raw.decode("utf-8", errors="replace").splitlines(), start=1):
+    for lineno, line in enumerate(jsonl_lines(raw.decode("utf-8", errors="replace")), start=1):
         if not line.strip():
             continue
         try:
@@ -282,7 +283,7 @@ def sanitize_transcript(src: str | Path, dst: str | Path, *, session_id: str,
     out_lines = []
     dropped: dict[str, int] = {}
     redactions: dict[str, int] = {}
-    for line in raw.decode("utf-8", errors="replace").splitlines():
+    for line in jsonl_lines(raw.decode("utf-8", errors="replace")):
         if not line.strip():
             continue
         try:

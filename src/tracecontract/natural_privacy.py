@@ -785,7 +785,7 @@ def screening_texts(path: str | Path) -> Iterator[tuple[int, str]]:
     """The texts of each comment in a screening text file (``scripts/screen_aidev.py --texts-out``: one JSON line per
     sampled comment, kept outside the repository), as ``(comment id, text)``: the comment, its linked issue (title and
     body), its PR's title and its diff hunk. ValueError on a line that is no such row."""
-    for n, line in enumerate(Path(path).read_text(encoding="utf-8").splitlines(), 1):
+    for n, line in enumerate(Path(path).read_text(encoding="utf-8").split("\n"), 1):  # JSON Lines: line feeds only
         if not line.strip():
             continue
         try:

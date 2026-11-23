@@ -51,6 +51,7 @@ from pathlib import Path
 from typing import Any
 
 from ..schemas import Event, EventKind, Fidelity, Session
+from ..store import jsonl_lines
 from .edit_tool import apply_edit as apply_edit  # re-exported: the one edit function of both replays
 from .edit_tool import apply_edits, edits_of
 from .shell_writes import COPIES, DELETIONS, ShellWrite, shell_writes
@@ -87,7 +88,7 @@ class RawExtra:
 def load_raw_extras(path: str | Path) -> dict[int, RawExtra]:
     """``cwd`` and ``toolUseResult`` by 1-based JSONL line (the line numbers of :class:`SourceRef`)."""
     out: dict[int, RawExtra] = {}
-    for lineno, line in enumerate(Path(path).read_bytes().decode("utf-8", errors="replace").splitlines(), start=1):
+    for lineno, line in enumerate(jsonl_lines(Path(path).read_bytes().decode("utf-8", errors="replace")), start=1):
         try:
             entry = json.loads(line) if line.strip() else None
         except json.JSONDecodeError:

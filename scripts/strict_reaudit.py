@@ -138,6 +138,7 @@ from tracecontract.controlled import (
 from tracecontract.ingest.claude_code import _redact_emails, parse_claude_code_jsonl
 from tracecontract.roots import is_natural_pr, snapshot_dir, snapshot_root
 from tracecontract.schemas import EventKind, Population
+from tracecontract.store import jsonl_lines
 
 R = Path(__file__).resolve().parents[1]
 REPO, HOME = "/home/user/trace-contract", "/home/user"
@@ -233,7 +234,7 @@ def _expand(t: str, env: dict) -> str:
 
 
 def _tool_calls(path: Path):
-    rows = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    rows = [json.loads(line) for line in jsonl_lines(path.read_text(encoding="utf-8")) if line.strip()]
     for n, e in enumerate(rows, 1):
         c = e.get("message", {}).get("content")
         if e.get("type") == "assistant" and isinstance(c, list):
@@ -266,7 +267,7 @@ def _scratch_ops(path: Path, scratch: str):
 
 def _prompt_text(path: Path) -> str:
     out = []
-    for line in path.read_text(encoding="utf-8").splitlines()[:6]:
+    for line in jsonl_lines(path.read_text(encoding="utf-8"))[:6]:
         e = json.loads(line)
         if e.get("type") == "user":
             c = e["message"]["content"]
@@ -789,7 +790,7 @@ def _lines_of(p: Path) -> set[str]:
         return set()
     texts = [raw]
     if p.suffix in (".json", ".jsonl"):
-        for chunk in (raw.splitlines() if p.suffix == ".jsonl" else [raw]):
+        for chunk in (jsonl_lines(raw) if p.suffix == ".jsonl" else [raw]):
             try:
                 texts += list(_json_strings(json.loads(chunk))) if chunk.strip() else []
             except ValueError:
@@ -1015,7 +1016,7 @@ def audit_labeler_transcript(path: Path, *, task: str, index: dict, round_no: in
     material and the writer's own directory (:class:`LabelerLayout`; by default the controlled tasks' layout); for a
     natural task the result also names the writer's workspace (``own_workspace``).
     """
-    rows = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    rows = [json.loads(line) for line in jsonl_lines(path.read_text(encoding="utf-8")) if line.strip()]
     prompts, reminders = _user_texts(rows)
     prompt = prompts[0] if prompts else ""
     cand = _candidate_re(index)
@@ -1032,7 +1033,7 @@ def audit_labeler_transcript(path: Path, *, task: str, index: dict, round_no: in
 
     writer_prompt, checks = "", None
     if writer is not None:
-        wrows = [json.loads(line) for line in writer.read_text(encoding="utf-8").splitlines() if line.strip()]
+        wrows = [json.loads(line) for line in jsonl_lines(writer.read_text(encoding="utf-8")) if line.strip()]
         writer_prompt = (_user_texts(wrows)[0] or [""])[0]
         checks = _written_checks(writer, writer_own or own_dir)
         for _, _, _, ti in _tool_calls(writer):

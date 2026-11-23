@@ -140,7 +140,7 @@ from .schemas import (
     CONSTRUCTED_ORIGINS, Candidate, CandidateOrigin, GenerationRecord, LabelerKind, Population, Snapshot, TaskContract,
     TaskManifest, VerificationResult, VerifierCondition, VerifierSpec,
 )
-from .store import load, read_jsonl, write_json
+from .store import jsonl_lines, load, read_jsonl, write_json
 from .strata import TASK_STRATUM, StratumError, run_stratum_candidates
 
 PILOT_LABELER = "builder:refcheck+regression+construction:v1"  # decision log D19
@@ -1761,7 +1761,7 @@ def _natural_cost(tasks_root: Path, repo_root: Path, natural_ids: list[str], ind
     fetch_ok = log.is_file()
     if fetch_ok:
         hashes[NATURAL_FETCH_LOG] = _sha(log)
-        for line in log.read_text(encoding="utf-8").splitlines():
+        for line in jsonl_lines(log.read_text(encoding="utf-8")):
             try:
                 e = json.loads(line)
             except ValueError:
