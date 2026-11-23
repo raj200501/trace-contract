@@ -2973,3 +2973,29 @@ Times are UTC, 2026-11-23. This continues D72.
 * **Next (D73, D74).** D19 runs on the six families as the first step of `natural-pr-v1`. Then come the pre-flight and
   the run, with `--pilot`: every family's acceptance gate is pending, because provenance eligibility needs a human
   reviewer (§16.4). The manifest records the pilot flag.
+
+### D76. `natural-pr-v1` begins: D19's labels, the pre-flight, and the run's start
+Times are UTC, 2026-11-23. Every result in this entry is a label of a held-out candidate. No verifier of the six
+families had been graded on a held-out candidate before D19 ran.
+* **D19** ran with `scripts/propose_labels.py` on the six families, two at a time, from 03:41 to 04:12. It is the run's
+  first step (D73), and its gate (D74) passed for all six. Each candidate's reference checks and regression norm were
+  graded three times. Of the 36 held-out candidates (12 alternatives, 18 near misses, 6 pre-review states):
+  * 11 are valid: every alternative but one.
+  * 21 are invalid: 15 near misses, and all six pre-review states, each failing the reference checks or the regression
+    norm.
+  * 4 are ambiguous, so they are left out of false acceptance and false rejection and queued for human review (D19):
+    * NP-03 eval-nm-1 and NP-20 eval-nm-3 were built invalid, but the reference checks and the regression norm pass them;
+    * NP-05 eval-nm-3's failing checks map to requirements other than its target;
+    * NP-04 eval-alt-2 was built valid but fails the regression norm.
+* **The index again** (`e9c9c91`), written from the first sample's task directories as after P7. Only the six rows'
+  file hashes change, so this commit records the task files the run grades.
+* **The pre-flight** for `natural-pr-v1`, with `--repeats 3 --with-extra-verifiers --pilot` and every verifier, passed.
+  * It warns that each family's acceptance gate is pending: provenance eligibility needs a human reviewer (§16.4). So
+    the run grades the six as an automated pilot, and its manifest says so.
+  * It notes that the second labeling leaves out NP-03 and NP-19 (§15.5).
+* **The run** grades the eight frozen verifiers of each family (C1 to C4, B1, B2, B3 and the reference checks) and the
+  independent labeler on every held-out candidate. Each pair is graded three times, under `data/natural/runs`.
+  * The first invocation (04:14:36) was stopped within seconds, before any pair was graded, because it ran under a
+    two-hour limit of the build session's tool.
+  * It was started again (04:15:05), detached from the tool. The manifest records both invocations, at code revision
+    `e9c9c91`.
