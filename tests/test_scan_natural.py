@@ -635,6 +635,123 @@ def test_a_line_the_corpus_holds_within_a_line_is_no_code_line():
     assert npv._held_within({head}, frozenset()) == set()
 
 
+def test_a_screened_text_the_corpus_holds_within_a_line_is_not_looked_for():
+    """The idiom rule of code lines (decision log D72) for the screened comments' texts (D78, D81): under an idiom
+    label, a text with no window of words that a line of the pre-natural corpus holds, as the line or within it,
+    whitespace collapsed and case kept, also without a leading diff marker, is not looked for, neither whole nor by its
+    character windows. A text with a word of its own, one that the corpus holds only joined to a word character, one
+    with a copy under its label that is no idiom, one with a window of words, and every text under another label (a
+    natural task's) are looked for as without the corpus."""
+    call = "frobnicate_widget_totals(alpha_value, beta_value, gamma_value, delta_value, epsilon_value)"
+    kwargs = "alpha=1, beta=2, gamma=3, delta=4, epsilon=5, zeta=6, eta=7, theta=8"
+    corpus = f"from abc import ABC, abstractmethod\n    total = {call} + 1\n    configure({kwargs})\n"
+    generic = npv.generic_lines([corpus])
+    texts = [("S1", "from abc import ABC"),  # held within a corpus line: an idiom
+             ("S2", "from abc import ABCMeta"),  # a word of its own
+             ("S3", "from abc import AB"),  # in the corpus line only joined to "C"
+             ("S4", call),  # character windows but no window of words, and held within a corpus line: an idiom
+             ("S5", "FROM ABC IMPORT ABC"), ("S5", "from abc import ABC"),  # the first copy is no idiom (case counts)
+             ("S6", "Please keep the old default for the cache size here."),
+             ("S7", "import ABC"),  # held within too, but below the minimum: nothing to look for, so not counted
+             ("S8", "+from abc import ABC"),  # a diff hunk's added line: an idiom without its marker
+             ("S9", "from abc\nimport ABC"),  # two lines that one corpus line holds, whitespace collapsed: an idiom
+             ("S10", kwargs),  # held within a corpus line, but with a window of words: looked for
+             ("NP-90", "from abc import ABC")]  # a natural task's own text: looked for
+    labels = {f"S{i}" for i in range(1, 11)}
+    tw, plain = npv.TextWindows(texts, generic=generic, idiom_labels=labels), npv.TextWindows(texts)
+    assert (tw.n_idioms, plain.n_idioms) == (4, 0)  # S1, S4, S8 and S9
+
+    def found(t: npv.TextWindows, text: str) -> set[str]:
+        return {label for _, _, label in t.find(text)}
+
+    corpus_line = "from abc import ABC, abstractmethod\n"
+    assert found(plain, corpus_line) == {"S1", "S5", "S8", "S9", "NP-90"} and found(tw, corpus_line) == {"S5", "NP-90"}
+    assert found(plain, f"y = {call}\n") == {"S4"} and found(tw, f"y = {call}\n") == set()
+    assert found(tw, f"configure({kwargs})\n") == found(plain, f"configure({kwargs})\n") == {"S10"}
+    assert found(tw, "from abc import ABCMeta\n") == {"S2"} and found(tw, "from abc import AB\n") == {"S3"}
+    assert found(tw, "Note: please keep the old default for the cache size here.") == {"S6"}
+    # Without idiom labels, or with a corpus that holds none of the texts, nothing is left out.
+    assert npv.TextWindows(texts, generic=generic).n_idioms == 0
+    assert npv.TextWindows(texts, generic=npv.generic_lines(["import os\n"]), idiom_labels=labels).n_idioms == 0
+
+
+def test_only_screened_idioms_with_no_window_of_words_are_left_out():
+    """With a corpus, the matcher finds what it finds without one, less the texts under an idiom label that have no
+    window of words and that a corpus line holds, as the line or within it (whitespace collapsed, case kept, also
+    without a leading diff marker): a naive check over random texts and corpora."""
+    vocab = ["from", "abc", "import", "ABC", "x_1", "Path", "os", "alpha", "beta", "gamma", "42", "a"]
+    rng = random.Random(23)
+
+    def words(n: int) -> str:
+        return " ".join(rng.choice(vocab) for _ in range(n))
+
+    def forms(text: str) -> list[str]:
+        c = " ".join(text.split())
+        rest = c[1:].lstrip() if c[:1] in ("+", "-") else ""
+        return [x for x in (c, rest) if x]
+
+    for _ in range(200):
+        lines = [words(rng.randint(2, 9)) for _ in range(4)]
+        generic = npv.generic_lines(["\n".join(lines) + "\n"])
+        texts = []
+        for i in range(6):
+            if rng.random() < 0.5:
+                toks = rng.choice(lines).split()
+                a = rng.randint(0, len(toks) - 1)
+                text = " ".join(toks[a:rng.randint(a + 1, len(toks))])
+                if rng.random() < 0.3:
+                    text = rng.choice("+-") + text
+                if rng.random() < 0.3:
+                    text = text.replace(" ", "\n", 1)
+            else:
+                text = words(rng.randint(1, 10))
+            texts.append((f"S{i}", text))
+        labels = {f"S{i}" for i in range(6) if rng.random() < 0.6}
+        tw, plain = npv.TextWindows(texts, generic=generic, idiom_labels=labels), npv.TextWindows(texts)
+        searched = "\n".join(rng.sample(lines, 2)) + " " + words(rng.randint(0, 12))
+        left_out = {label for label, text in texts if label in labels
+                    and npv.TextWindows([(label, text)]).n_word_windows == 0
+                    and any(_occurs(f, g) for f in forms(text) for g in generic)}
+        expected = {label for _, _, label in plain.find(searched)} - left_out
+        assert {label for _, _, label in tw.find(searched)} == expected, (lines, texts, labels, searched)
+
+
+def test_a_screened_import_line_left_alone_by_the_cuts_is_an_idiom(tasks_root, tmp_path):
+    """D78's finding: a screened issue's import line, left on its own between lines that the corpus holds (and that are
+    cut), was matched whole in the study's own files, which hold a longer line that holds it within it. It is an idiom
+    now (D81). The comment's own text is still found; so is the same line in a natural task's own text, which the
+    pre-push gate looks for as before; and the scan's last line counts the text left out."""
+    rows = [{"comment_id": 601, "comment_body": "Please register the widget plugins before the loader starts up.",
+             "issue_title": "", "issue_body": "import os\nfrom abc import ABC\nimport sys\n", "pr_title": "",
+             "diff_hunk": ""}]
+    texts = tmp_path / "outside" / "s9_idiom.jsonl"
+    texts.parent.mkdir(exist_ok=True)
+    texts.write_text("".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
+    cuts = "import os\nimport sys\n"
+    with_line = npv.generic_lines([cuts + "from abc import ABC, abstractmethod\n"])
+    before = npv.NaturalMaterial.load(tasks_root, screening=[texts], generic=npv.generic_lines([cuts]))
+    nm = npv.NaturalMaterial.load(tasks_root, screening=[texts], generic=with_line)
+    where = "src/tracecontract/x.py"
+    line = "from abc import ABC, abstractmethod\n"
+    assert _report(line, where, before) == (1, f"{where}:1: natural short text (screened comment 601)\n")
+    assert _report(line, where, nm) == (0, "")
+    comment = "# Please register the widget plugins before the loader starts up.\n"
+    assert _report(comment, where, nm) == (1, f"{where}:1: natural text window (screened comment 601)\n")
+    assert (before.windows.n_idioms, nm.windows.n_idioms) == (0, 1)
+    assert (f"short text(s) matched whole, 1 screened short text(s) left out as idioms of the repository at "
+            f"{scan.PRE_NATURAL_REV}), ") in scan.natural_summary(nm)
+    assert "left out as idioms" not in scan.natural_summary(before)
+    # A natural task whose own text holds the same lines: the gate's texts are all looked for.
+    td = tasks_root / "NP-98"
+    td.mkdir()
+    (td / "session.json").write_text(json.dumps({"session_id": "s98", "population": "natural:pr-review", "events": [
+        {"event_id": "s98/0", "author": "human", "text": "import os\nfrom abc import ABC\nimport sys\n"}]}),
+        encoding="utf-8")
+    gate = npv.NaturalMaterial.load(tasks_root, screening=[texts], generic=with_line)
+    assert _report(line, where, gate) == (1, f"{where}:1: natural short text (NP-98)\n")
+    assert gate.windows.n_idioms == 1
+
+
 def test_handle_exemptions_apply_only_where_natural_texts_adds_the_scope(natural, capsys):
     """The CSS at-rules and template references count as code in results/ and experiments/ only: --natural-texts leaves
     the @handle check of tasks/ and data/ as it was."""

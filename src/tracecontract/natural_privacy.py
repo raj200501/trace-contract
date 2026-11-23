@@ -11,7 +11,10 @@ and the task (or screened comment) it comes from, never by the text matched.
 * :class:`TextWindows`: verbatim thread text. A window is 60 consecutive characters, or 8 consecutive words, of a
   session event's text, of a contract quote or of a screened comment's texts. A text too short for a window of words is
   matched whole, down to a minimum below which it is too generic to tell apart (``MIN_WHOLE_WORDS`` words with a letter
-  and ``MIN_WHOLE_CHARS`` characters, or ``MIN_WHOLE_DENSE`` characters of a script written without spaces).
+  and ``MIN_WHOLE_CHARS`` characters, or ``MIN_WHOLE_DENSE`` characters of a script written without spaces). A screened
+  comment's text with no window of words that a line of the corpus written before any natural task existed holds, as
+  the line or within it, is an idiom and is not looked for, as for :class:`CodeLines`; the natural tasks' own texts are
+  all looked for.
 * :class:`RepositoryNames`: a natural task's repository, by its name and by its owner in the URL form ``/<owner>``.
 * :class:`CodeLines`: lines of a natural task's code (its candidates' patches, its verifiers' files, and the lines of
   its base snapshot's Python files that name something of their own, :func:`distinctive_line`), or the check ids of
@@ -422,9 +425,20 @@ class TextWindows:
 
     def __init__(self, texts: Iterable[tuple[str, str]], *, chars: int = WINDOW_CHARS, words: int = WINDOW_WORDS,
                  min_words: int = MIN_WINDOW_WORDS, min_dense: int = MIN_WINDOW_DENSE, char_stride: int = CHAR_STRIDE,
-                 word_stride: int = WORD_STRIDE) -> None:
+                 word_stride: int = WORD_STRIDE, generic: frozenset[str] | set[str] = frozenset(),
+                 idiom_labels: frozenset[str] | set[str] = frozenset()) -> None:
         """``texts``: ``(label, text)``: its windows are used, and it is matched whole if it has no usable window of
-        words and reaches the minimum."""
+        words and reaches the minimum.
+
+        ``generic`` and ``idiom_labels``: the lines of a corpus written before any natural task existed
+        (:func:`generic_lines`), and the labels whose texts the idiom rule of :class:`CodeLines` covers (decision log
+        D72; the screened comments' labels, :meth:`NaturalMaterial.load`). A text under such a label that has no usable
+        window of words is an idiom if each copy of it (each text given under the label with the same :func:`normalise`
+        form), compared with its whitespace collapsed and its case kept, and also without a leading diff marker as
+        :func:`_generic_line` compares lines, is one of those lines or is held within one (:func:`_held_within`, with
+        the word boundaries of :class:`CodeLines`). An idiom is not looked for at all, neither whole nor by its character
+        windows, since all of it lies within that corpus line; those left out that had something to look for are counted
+        (:attr:`n_idioms`). Every other text is indexed as it is without ``generic``."""
         if not (0 < char_stride <= chars and 0 < word_stride <= words):
             raise ValueError("a stride must lie between 1 and the window's length")
         self.chars, self.words, self.min_words, self.min_dense = chars, words, min_words, min_dense
@@ -434,12 +448,21 @@ class TextWindows:
         self._char_seeds: dict[str, list[tuple[int, int]]] = {}
         self._word_seeds: dict[tuple[str, ...], list[tuple[int, int]]] = {}
         self._whole: dict[str, list[tuple[tuple[str, ...], str]]] = {}  # first token -> (tokens, label)
-        seen: set[tuple[str, str]] = set()
+        given: dict[tuple[str, str], list[str]] = {}  # (label, normalise form) -> each copy, whitespace collapsed
         for label, text in texts:
-            norm = normalise(text)
-            if (label, norm) not in seen:
-                seen.add((label, norm))
-                self._add(label, norm)
+            given.setdefault((label, normalise(text)), []).append(" ".join(text.split()))
+        idioms: set[str] = set()
+        if generic and idiom_labels:
+            forms = {g for (label, _), copies in given.items() if label in idiom_labels
+                     for f in copies for g in _unmarked(f)}
+            idioms = {f for f in forms if f in generic}
+            idioms |= _held_within(forms - idioms, generic)
+        self.n_idioms = 0  # the texts under idiom_labels with something to look for that are left out as idioms
+        for (label, norm), copies in given.items():
+            idiom = bool(idioms) and label in idiom_labels and all(
+                any(g in idioms for g in _unmarked(f)) for f in copies)
+            if self._add(label, norm, idiom=idiom):
+                self.n_idioms += 1
 
     @property
     def n_texts(self) -> int:
@@ -472,7 +495,10 @@ class TextWindows:
             return None
         return tuple(_WHOLE_TOKEN.findall(stripped)) or None
 
-    def _add(self, label: str, norm: str) -> None:
+    def _add(self, label: str, norm: str, *, idiom: bool = False) -> bool:
+        """Index the usable windows of ``norm`` and, if it has no usable window of words, the tokens by which it is
+        matched whole; with ``idiom``, a text with no usable window of words is not indexed at all. Whether ``idiom``
+        left out a text that had something to look for."""
         idx = len(self._sources)
         matches = list(_WORD.finditer(norm))
         tokens = [m.group() for m in matches]
@@ -493,10 +519,13 @@ class TextWindows:
         wl = list(accumulate((_lettered(t) for t in tokens), initial=0))
         words = [t for t in range(len(tokens) - ww + 1)
                  if ws_ids[t] != ws_ids[t + ww - 1] and wl[t + ww] - wl[t] >= self.min_words]
-        if not words and (toks := self.whole_tokens(norm)) is not None:
+        toks = None if words else self.whole_tokens(norm)
+        if idiom and not words:
+            return bool(chars or toks)
+        if toks is not None:
             self._whole.setdefault(toks[0], []).append((toks, label))
         if not chars and not words:
-            return
+            return False
         self._sources.append(_Source(label, norm, chars, tokens, words))
         # A seed at r lies inside a usable window starting at q iff r - (length - seed) <= q <= r.
         cs, slack = self._cseed, cw - self._cseed
@@ -509,6 +538,7 @@ class TextWindows:
             i = bisect.bisect_left(words, r - wslack)
             if i < len(words) and words[i] <= r:
                 self._word_seeds.setdefault(tuple(tokens[r:r + ws_]), []).append((idx, r))
+        return False
 
     def find(self, text: str, views: Sequence[_View] | None = None) -> list[tuple[int, str, str]]:
         """Each match in ``text``: (offset in ``text``, ``"characters"``, ``"words"`` or ``"whole"``, the label of the
@@ -708,6 +738,14 @@ def library_frames(text: str, own: Callable[[str], bool | None] | None = None) -
         elif marks >= 0:
             add(marks, end)
     return spans
+
+
+def _unmarked(line: str) -> tuple[str, ...]:
+    """``line`` (whitespace collapsed) and, if it starts with a diff marker, also the line without it, as
+    :func:`_generic_line` compares a line with the corpus; none for an empty line."""
+    if line[:1] in ("+", "-") and (rest := line[1:].lstrip()):
+        return (line, rest)
+    return (line,) if line else ()
 
 
 def _generic_line(line: str, generic: frozenset[str] | set[str]) -> bool:
@@ -1219,7 +1257,9 @@ class NaturalMaterial:
         their own (:func:`distinctive_line`), else all of them (but the generic lines).
 
         Each text gives its segments (:func:`thread_segments`): the windows of each, and each segment with no window of
-        words matched whole (:class:`TextWindows`). FileNotFoundError without a task directory, or when no directory
+        words matched whole (:class:`TextWindows`). A screened comment's segment with no window of words that a
+        ``generic`` line holds, as the line or within it, is an idiom and is not looked for (``windows.n_idioms``); the
+        natural tasks' own segments are all looked for. FileNotFoundError without a task directory, or when no directory
         under ``tasks_root`` holds a ``task.json`` or ``session.json`` (a root one level too high or too low);
         :class:`MaterialError` on a task file that exists but cannot be read, and for a task whose ``snapshot.json``
         records a base snapshot that is missing or yields no code line; ValueError on a screening text file that cannot
@@ -1250,6 +1290,7 @@ class NaturalMaterial:
             for t in natural_texts(d):
                 add(d.name, t, own)
         screened: set[int] = set()
+        screened_labels: set[str] = set()  # the labels whose texts the idiom rule covers (TextWindows)
         for path in screening:
             try:
                 rows = list(screening_texts(path))
@@ -1257,6 +1298,7 @@ class NaturalMaterial:
                 raise ValueError(f"{path}: {exc.strerror or exc}") from None
             for cid, text in rows:
                 screened.add(cid)
+                screened_labels.add(f"screened comment {cid}")
                 add(f"screened comment {cid}", text)
         binary: list[Path] = []
         code = CodeLines(((d.name, x) for d in dirs for x in task_code_lines(d, binary=binary)), generic=generic)
@@ -1277,7 +1319,8 @@ class NaturalMaterial:
             if not read[tid] and (root / tid / "snapshot.json").exists():
                 raise MaterialError(f"{tid}: no code line could be read from its base snapshot at {base} (no Python file, "
                                     "or none with a line long enough to tell apart)")
-        return cls(tuple(d.name for d in dirs), TextWindows(texts), RepositoryNames(repositories(dirs)), code, ids,
+        windows = TextWindows(texts, generic=generic, idiom_labels=screened_labels)
+        return cls(tuple(d.name for d in dirs), windows, RepositoryNames(repositories(dirs)), code, ids,
                    frozenset(screened), base_code, tuple((t, b, read[t]) for t, b in bases.items()), tuple(binary))
 
 

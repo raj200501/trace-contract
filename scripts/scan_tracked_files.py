@@ -64,10 +64,15 @@ that a task's ``snapshot.json`` records is missing or holds no code line:
   spaces; a shorter text ("Looks good") is too generic to tell apart;
 * ``--screening-texts <file.jsonl>`` (repeatable; the S9 and S9x sample texts that ``scripts/screen_aidev.py
   --texts-out`` wrote outside the repository) adds the same checks for the texts of every sampled comment,
-  built or not: the comment, its issue, its PR's title and its diff hunk. The files must hold every comment
-  id of both screening manifests (``SCREENING_MANIFESTS``). Without them, the last line of the output says
-  that the sampled comments that no natural task holds were not checked (the natural export guard and
-  ``scripts/publish_natural_run.py`` require them);
+  built or not: the comment, its issue, its PR's title and its diff hunk, but for one idiom rule (D72, as
+  for code lines below; D81). A screened text (or a part of one between the cuts) with no window of words
+  that a line of the repository at ``PRE_NATURAL_REV`` holds, as the line or within it, whitespace
+  collapsed, case kept, also without a leading diff marker, and with no word character joined to either
+  end (``from abc import ABC`` in ``from abc import ABC, abstractmethod``), is not looked for, and the last
+  line of the output counts such texts. The natural tasks' own texts are all looked for. The files must
+  hold every comment id of both screening manifests (``SCREENING_MANIFESTS``). Without them, the last line
+  of the output says that the sampled comments that no natural task holds were not checked (the natural
+  export guard and ``scripts/publish_natural_run.py`` require them);
 * the natural tasks' repositories: the owner in the URL form ``/<owner>`` and the name in the forms that
   name a repository (``<owner>/<name>``, a URL path ``<host>/<account>/<name>``) in any file, and the name as
   a whole word in the natural arm's own files (:func:`bare_name_scope`: under ``NATURAL_SCOPES``, a path
@@ -81,10 +86,11 @@ that a task's ``snapshot.json`` records is missing or holds no code line:
 * upstream code: the check ids of the natural tasks' verifiers (B1's upstream test names) in any file,
   and the lines of their candidates' patches and of their verifiers' files (B1's overlay) everywhere except
   the study's own code (:func:`study_code`) and the controlled tasks' material, where common idioms are
-  expected. A line that the repository already held at ``PRE_NATURAL_REV`` (``from pathlib import Path``)
-  is an idiom and is not used. The lines of every Python file of their base snapshots, whatever its size,
-  are used too where they name something of their own (a word that at most one line of the repository at
-  ``PRE_NATURAL_REV`` holds, :func:`tracecontract.natural_privacy.distinctive_line`), and are reported
+  expected. A line that the repository already held at ``PRE_NATURAL_REV`` (``from pathlib import Path``),
+  or held within one of its lines (D72), is an idiom and is not used. The lines of every Python file of
+  their base snapshots, whatever its size, are used too where they name something of their own (a word
+  that at most one line of the repository at ``PRE_NATURAL_REV`` holds,
+  :func:`tracecontract.natural_privacy.distinctive_line`), and are reported
   everywhere except the study's own code and the controlled arm's outputs (:func:`base_code_scope`). A file
   that cannot be read stops the scan; a file with a NUL byte holds no line of code, and the last line of
   the output counts such files;
@@ -596,7 +602,10 @@ def natural_summary(natural: NaturalMaterial) -> str:
     w = natural.windows
     return (f"natural texts of {len(natural.task_ids)} task(s) and {len(natural.screened)} screened comment(s) "
             f"({w.n_texts} text(s), {w.n_char_windows} character and {w.n_word_windows} word window(s), {w.n_whole} short "
-            f"text(s) matched whole), {len(natural.repos.repos)} natural repositories, {natural.code.n_needles} code "
+            f"text(s) matched whole"
+            + (f", {w.n_idioms} screened short text(s) left out as idioms of the repository at {PRE_NATURAL_REV}"
+               if w.n_idioms else "")
+            + f"), {len(natural.repos.repos)} natural repositories, {natural.code.n_needles} code "
             f"line(s) of patches and verifiers, {natural.base_code.n_needles} code line(s) of "
             f"{len(natural.base_snapshots)} base snapshot(s) and {natural.check_ids.n_needles} check id(s)"
             + (f" ({len(natural.binary)} binary file(s) not read as code)" if natural.binary else "")

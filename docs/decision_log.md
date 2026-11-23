@@ -3278,3 +3278,76 @@ of that round by a reviewer, and a second fix round. It corrects one statement o
   * The venue. The reviewer that checked this round judged the paper close to a credible preprint as a methods or
     negative-results note, fit for a workshop or an arXiv note but not a main track; for a workshop the main text (22
     pages) would have to be cut to its page limit.
+
+### D81. The scanner's idiom rule (D72) applied to the screened comments' short texts
+Times are UTC, 2026-11-23.
+* **Why.** D78 recorded a finding of the scan's optional screening-texts mode, outside the push gate. A screened
+  issue's import line was left on its own between lines that the pre-natural corpus holds and the scan cuts. It was
+  then matched whole in files of the controlled arm, which hold a longer line that holds it within it. D72's rule
+  leaves out such a line among the natural code lines, but the scan did not apply it to the screened texts.
+* **The change** (`src/tracecontract/natural_privacy.py`, `scripts/scan_tracked_files.py`):
+  * `TextWindows` takes the pre-natural corpus and the labels its idiom rule covers. `NaturalMaterial.load` passes the
+    screened comments' labels, so the rule reaches every user of the matcher: the scan, the natural export guard and
+    the publisher.
+  * A screened comment's text with no window of words is an idiom if a corpus line holds it, as the line or within it.
+    Such a text is a segment between the cuts: a short text matched whole, or one with character windows only. The
+    comparison is on its whitespace-collapsed form, case kept, and also on that form without a leading diff marker, as
+    the cuts compare lines. It uses the word boundaries of D72's rule (`_held_within`, as for `CodeLines`).
+  * An idiom is not looked for, neither whole nor by its character windows, since all of it lies within that corpus
+    line. A text is left out only if every copy of it under its label is such an idiom.
+  * The scan's last line counts the screened texts left out that would otherwise have been looked for. The scan's
+    documented rules and the publisher's docstring say so. No finding is suppressed, and nothing is listed by name.
+* **What is not changed.** The natural tasks' own texts, all that the pre-push gate looks for, are looked for as
+  before, and so is every text with a window of words. A first version of this change applied the rule to every
+  text; the reviewer below found that it would also have narrowed the gate, which nobody had decided. It was
+  narrowed before the commit.
+* **Why the scan's guarantees hold.** The corpus is the repository at `c5ede4c`, before any natural task existed (D47).
+  A screened text left out lies, as written, within a line that the repository held then. Finding it in a tracked
+  file therefore tells nothing about a screened comment. These are still looked for:
+  * a text that adds a word of its own;
+  * a text that the corpus holds only joined to a word character;
+  * a text whose lines no single corpus line holds;
+  * a text with a copy under its label that is no idiom.
+
+  The rule is stricter than the matcher: a text that differs from a corpus line's part in case or punctuation is
+  still looked for, and still matched there. So D78's kind of finding can come back for such a variant. That is
+  expected, not a regression.
+* **Effect on the real data,** as counts; no text was printed.
+  * The pre-push gate scan, without screening texts, is unchanged: exit code 0, 300 texts, 161,860 character and
+    21,618 word windows, and 60 short texts matched whole.
+  * With the screening texts of both samples, one of the 273 distinct segments matched whole is held within a corpus
+    line: D78's import line, under two comments' labels. The findings fall from 223 to 1, and the scan reports 2
+    screened short texts left out as idioms. Every window count is unchanged; the short texts matched whole fall from
+    548 to 546.
+  * The remaining finding: one screened comment's segment matches a standard-library import line of the study's own
+    code (`src/tracecontract/ingest/edit_tool.py`, line 25). That line was added on 2026-11-21 (`a0542bb`), after
+    `c5ede4c`, and no pre-natural line holds it, so D72's rule does not cover it. A rule that took later files as its
+    corpus would be circular. It stays a finding of the optional mode and does not touch the push gate. Treating
+    standard-library import lines as idioms would be a new rule, for the owner to decide.
+* **Tests** (`tests/test_scan_natural.py`), three synthetic tests:
+  * The matcher. An idiom is left out, both whole and by its character windows; so are a diff-marked line and a
+    two-line text that one corpus line holds. Still looked for: a text with a word of its own, a text held only joined
+    to a word character, a copy in another case, a text with a window of words, a natural task's text and a
+    distinctive sentence. An idiom below the matching minimum is not counted.
+  * A random check against a naive oracle. With the corpus, the matcher finds what it finds without it, less exactly
+    the screened texts with no window of words that a corpus line holds.
+  * The loader and the scan, on D78's case of an import line left alone by the cuts:
+    * it is reported without the corpus line, and not with it;
+    * the comment's own text is still reported;
+    * the scan's last line counts the text left out;
+    * the same lines in a natural task's own text are still reported (the gate's path).
+
+  All three fail with the rule switched off. Applying it to every label, dropping the diff-marker comparison, or
+  taking texts with a window of words each makes at least two of them fail.
+* **Verification.**
+  * An independent read-only reviewer tried to make the change leave out a distinctive text: multi-line texts,
+    Unicode whitespace, case, composed and decomposed forms, escapes, word boundaries, the copies rule, and very long
+    texts. It found no way. Over 3,300 random texts that are not idioms, the matcher's state and finds were identical
+    to those before the change. Its findings were fixed before the commit:
+    * the scope, which narrowed the gate (above);
+    * diff-marked lines, now compared without their marker;
+    * the publisher's docstring, the summary line's wording, two overlong lines, and the missing test cases.
+  * The build session checked the result:
+    * the full offline suite passes (1,354 passed; Docker's tests are left out);
+    * ruff reports no finding in the changed files;
+    * the gate scan and the screening-texts scan give the counts above.

@@ -19,7 +19,8 @@ Before anything is written, each of the four texts is checked as the pre-push sc
 --aidev-logins --natural-texts --screening-texts``) will read it at its new place: windows of the natural thread texts
 and of the screening texts (every sampled comment of S9 and S9x, built or not), and those texts too short for a window,
 matched whole down to the scan's minimum (3 words with a letter and 12 characters, or 8 characters of a script written
-without spaces); the AIDev logins of the S9 sample (the scan's login list, D66); @handles; the natural repositories'
+without spaces), less the scan's idioms among the screened texts too short for a window of words (those that a line of
+the repository before any natural task existed holds, as the line or within it; D81); the AIDev logins of the S9 sample (the scan's login list, D66); @handles; the natural repositories'
 names and owners (also in URLs); the natural tasks' code lines (patches, verifiers' files and base snapshots, less the
 scan's idioms: every base line, where the scan looks only for those that name something of their own) and check ids;
 credentials, session-local paths, e-mail addresses and the private markers. A finding is reported by its location and
