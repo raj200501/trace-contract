@@ -603,13 +603,36 @@ def test_code_line_search_is_exact():
         expected = set()
         for label, line in needles:
             n = " ".join(line.split())
-            if not n or n in generic or not re.search(r"\w", n):
+            if not n or n in generic or not re.search(r"\w", n) or any(_occurs(n, g) for g in generic):
                 continue
-            for i in range(len(flat) - len(n) + 1):
-                if flat.startswith(n, i) and not (i > 0 and re.match(r"\w", n[0]) and re.match(r"\w", flat[i - 1])) and not (
-                        i + len(n) < len(flat) and re.match(r"\w", n[-1]) and re.match(r"\w", flat[i + len(n)])):
-                    expected.add(label)
+            if _occurs(n, flat):
+                expected.add(label)
         assert got == expected, (needles, searched)
+
+
+def _occurs(n: str, text: str) -> bool:
+    """Whether ``n`` is a substring of ``text`` with no word character joined to either end (naively, at every offset)."""
+    return any(text.startswith(n, i) and not (i > 0 and re.match(r"\w", n[0]) and re.match(r"\w", text[i - 1])) and not (
+        i + len(n) < len(text) and re.match(r"\w", n[-1]) and re.match(r"\w", text[i + len(n)]))
+        for i in range(len(text) - len(n) + 1))
+
+
+def test_a_line_the_corpus_holds_within_a_line_is_no_code_line():
+    """A natural line that a line of the pre-natural corpus holds within it (the head of a call that the corpus line
+    completes) is left out, as a whole corpus line is: the corpus was written before any natural task existed. A line
+    that adds a word of its own, or that the corpus holds only joined to a word character, is still looked for."""
+    generic = npv.generic_lines(["    r = run_python(_snippet(cases), timeout=60.0)\n    assert r.ok_flag\n"])
+    head = "r = run_python(_snippet("
+    own = "r = run_python(_snippet(fx_widget_spec), timeout=TIMEOUT)"
+    joined = "un_python(_snippet(cases"  # in the corpus line only inside the words "run_python" and "cases)"
+    code = npv.CodeLines([("NP-90", head), ("NP-90", own), ("NP-91", joined)], generic=generic)
+    assert code.n_needles == 2 and code.labels == frozenset({"NP-90", "NP-91"})
+    assert code.find("x = 1\nr = run_python(_snippet(\n    other))\n") == []
+    assert [label for _, label in code.find(f"y\n{own}\n")] == ["NP-90"]
+    assert code.find("q = run_python(_snippet(cases_two)") == []  # joined to "r" here too
+    assert [label for _, label in code.find("q = un_python(_snippet(cases)\n")] == ["NP-91"]
+    assert npv._held_within({head, own, joined, "never_in_the_corpus("}, generic) == {head}
+    assert npv._held_within({head}, frozenset()) == set()
 
 
 def test_handle_exemptions_apply_only_where_natural_texts_adds_the_scope(natural, capsys):

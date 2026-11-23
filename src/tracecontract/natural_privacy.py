@@ -1072,6 +1072,40 @@ def _line_counts(generic: frozenset[str] | set[str]) -> dict[str, int]:
     return counts
 
 
+def _held_within(needles: Iterable[str], generic: frozenset[str] | set[str]) -> set[str]:
+    """The ``needles`` (whitespace collapsed) that a line of ``generic`` holds within it, with no word character joined
+    to either end: the head of a call that a corpus line completes (``r = run_python(_snippet(`` in
+    ``r = run_python(_snippet(cases))``). A needle with a word that no line of ``generic`` holds is held by none; each
+    other is looked up in the lines that hold its rarest word."""
+    counts = _line_counts(generic)
+    rarest: dict[str, str] = {}
+    for n in needles:
+        words = _WORD.findall(n)
+        if words and all(counts.get(w, 0) for w in words):
+            rarest[n] = min(words, key=lambda w: (counts[w], w))
+    if not rarest:
+        return set()
+    wanted = set(rarest.values())
+    lines: dict[str, list[str]] = {}
+    for line in generic:
+        for w in wanted.intersection(_WORD.findall(line)):
+            lines.setdefault(w, []).append(line)
+    held: set[str] = set()
+    for n, w in rarest.items():
+        for line in lines.get(w, ()):
+            at = line.find(n)
+            while at >= 0:
+                end = at + len(n)
+                if not ((at > 0 and _wordchar(n[0]) and _wordchar(line[at - 1])) or (
+                        end < len(line) and _wordchar(n[-1]) and _wordchar(line[end]))):
+                    held.add(n)
+                    break
+                at = line.find(n, at + 1)
+            if n in held:
+                break
+    return held
+
+
 def distinctive_line(line: str, counts: dict[str, int]) -> bool:
     """Whether a base snapshot's code line names something of its own: one of its words of ``MIN_CODE_WORD`` characters
     or more is in at most ``BASE_RARE_LINES`` lines of the corpus written before any natural task (``counts``: the
@@ -1085,8 +1119,10 @@ def distinctive_line(line: str, counts: dict[str, int]) -> bool:
 class CodeLines:
     """Where a text holds a natural task's code line or check id (:func:`task_code`), after its whitespace is collapsed,
     with no word character joined to either end; the text is also read in the views of :class:`TextWindows`. Case
-    counts. Lines in ``generic`` (common idioms, such as ``from pathlib import Path``) are left out; with ``require``,
-    only a text that holds that string in some view is searched (``::`` for check ids).
+    counts. Lines that ``generic`` holds, as a line (common idioms, such as ``from pathlib import Path``) or within one
+    (:func:`_held_within`: the head of a call that a corpus line completes), are left out: the corpus was written before
+    any natural task existed, so a text that holds such a line tells nothing about one. With ``require``, only a text
+    that holds that string in some view is searched (``::`` for check ids).
 
     Each line is indexed by one of its words (a run of letters, digits and underscores): of its words of 4 characters
     or more (else of all), the one in the fewest lines of ``generic`` (the study's own corpus, which the searched texts
@@ -1099,9 +1135,10 @@ class CodeLines:
         self._require = require
         common = _line_counts(generic)
         seen: set[tuple[str, str]] = set()
-        for label, needle in needles:
-            n = " ".join(needle.split())
-            if not n or n in generic or (label, n) in seen or require not in n:
+        given = [(label, " ".join(needle.split())) for label, needle in needles]
+        held = _held_within({n for _, n in given if n and n not in generic}, generic) if generic else set()
+        for label, n in given:
+            if not n or n in generic or n in held or (label, n) in seen or require not in n:
                 continue
             words = list(_WORD.finditer(n))
             if not words:
