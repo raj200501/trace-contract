@@ -22,6 +22,13 @@
 % lists its key in verified_bibliography.bib under `ids`, so biber resolves either key to the
 % same entry.
 %
+% Four entries were added on 2026-11-23 for the literatures that the threats to validity named as a gap (patch
+% overfitting in program repair, the test oracle problem, requirements change): smith2015cure, qi2015plausibility,
+% barr2015oracle and mcgee2012causes. Each was checked that day against its dblp record (read through a web search of
+% dblp.org, whose pages refused a direct fetch) and against the Crossref record of its DOI, deposited by the publisher;
+% the dblp and DOI links are in the comment above each entry. The text describes each only as far as its abstract goes;
+% the abstracts were read on 2026-11-23 from the OpenAlex record of each DOI (https://api.openalex.org/works/doi:<DOI>).
+%
 % Do not add entries without verification; see paper/README.md.
 
 % --- Industry problem statement ---------------------------------------------------------------
@@ -421,4 +428,59 @@
   archivePrefix = {arXiv},
   primaryClass  = {cs.CL},
   url           = {https://arxiv.org/abs/2606.03889}
+}
+
+% --- Program repair, test oracles and requirements change (added 2026-11-23) ------------------------------------------
+
+% verified 2026-11-23: dblp https://dblp.org/rec/conf/sigsoft/SmithBGB15 (ESEC/SIGSOFT FSE 2015: 532-543); Crossref
+% https://doi.org/10.1145/2786805.2786825 (ACM, Proceedings of the 2015 10th Joint Meeting on Foundations of Software
+% Engineering, pp. 532-543). Title as registered.
+@inproceedings{smith2015cure,
+  title     = {{Is the cure worse than the disease? overfitting in automated program repair}},
+  author    = {Smith, Edward K. and Barr, Earl T. and Le Goues, Claire and Brun, Yuriy},
+  booktitle = {Proceedings of the 2015 10th Joint Meeting on Foundations of Software Engineering (ESEC/FSE)},
+  pages     = {532--543},
+  publisher = {ACM},
+  year      = {2015},
+  doi       = {10.1145/2786805.2786825}
+}
+
+% verified 2026-11-23: dblp https://dblp.org/rec/conf/issta/QiLAR15 (ISSTA 2015: 24-36); Crossref
+% https://doi.org/10.1145/2771783.2771791 (ACM, Proceedings of the 2015 International Symposium on Software Testing and
+% Analysis, pp. 24-36). Title as registered.
+@inproceedings{qi2015plausibility,
+  title     = {{An analysis of patch plausibility and correctness for generate-and-validate patch generation systems}},
+  author    = {Qi, Zichao and Long, Fan and Achour, Sara and Rinard, Martin C.},
+  booktitle = {Proceedings of the 2015 International Symposium on Software Testing and Analysis (ISSTA)},
+  pages     = {24--36},
+  publisher = {ACM},
+  year      = {2015},
+  doi       = {10.1145/2771783.2771791}
+}
+
+% verified 2026-11-23: dblp https://dblp.org/rec/journals/tse/BarrHMSY15 (authors, title and journal, IEEE Trans.
+% Software Eng.; its volume and pages were not read there); Crossref
+% https://doi.org/10.1109/TSE.2014.2372785 (IEEE Transactions on Software Engineering 41(5), pp. 507-525, May 2015).
+@article{barr2015oracle,
+  title   = {{The Oracle Problem in Software Testing: A Survey}},
+  author  = {Barr, Earl T. and Harman, Mark and McMinn, Phil and Shahbaz, Muzammil and Yoo, Shin},
+  journal = {IEEE Transactions on Software Engineering},
+  volume  = {41},
+  number  = {5},
+  pages   = {507--525},
+  year    = {2015},
+  doi     = {10.1109/TSE.2014.2372785}
+}
+
+% verified 2026-11-23: dblp https://dblp.org/rec/journals/re/McGeeG12 (Requir. Eng. 17(2): 133-155, 2012); Crossref
+% https://doi.org/10.1007/s00766-012-0149-0 (Requirements Engineering 17(2), pp. 133-155, Springer). Title as registered.
+@article{mcgee2012causes,
+  title   = {{Towards an understanding of the causes and effects of software requirements change: two case studies}},
+  author  = {McGee, Sharon and Greer, Des},
+  journal = {Requirements Engineering},
+  volume  = {17},
+  number  = {2},
+  pages   = {133--155},
+  year    = {2012},
+  doi     = {10.1007/s00766-012-0149-0}
 }

@@ -105,9 +105,9 @@ misses whose violation the reference checks did not detect. These are the subtle
 \item all-uppercase input with digits or symbols (\texttt{inflection}).
 \end{itemize}
 The correction-aware verifiers accept the \texttt{tinydb}, \texttt{more-itertools} and plural-acronym cases and reject
-the other \texttt{inflection} cases. The reference checks and the
-correction-aware verifiers are written by models of one model family of one provider, the checks from the reference
-contract and the verifiers from the correction-aware contract, which covers every active reference requirement
+the other \texttt{inflection} cases. By the study's procedure, the reference checks and the correction-aware verifiers
+are written by models of one model family of one provider, the checks from the reference contract and the verifiers
+from the correction-aware contract, which covers every active reference requirement
 (Table~\ref{tab:coverage}), and the writers of both saw the base repository and the reference diff, so their blind
 spots are likely correlated. Split by label status, the correction-aware verifiers accept \plv{nm.conf.c3} of the
 confirmed-invalid near misses but \plv{nm.amb.c3} of the ambiguous ones. If constructed candidates are labeled by

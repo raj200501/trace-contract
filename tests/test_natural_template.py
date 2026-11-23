@@ -16,9 +16,16 @@
   which the manuscript defines: the closing paragraph's integration slot was written after the run was published and
   analysed (decision-log entry D79). The preamble alone compiles without
   the natural run's numbers.
-* The integration: the closing paragraph's one sentence that names families by the run's cells (:data:`INTEGRATION`),
+* The integration: the closing paragraph's sentences that name families by the run's cells (:data:`INTEGRATION`),
   within the scope that the template fixed before the analysis (D77: one sentence for each pattern of the C1 and C3
-  cells of the table of the pre-review states, each family named once), states what the run's own numbers hold.
+  cells of the table of the pre-review states, each family named once), state what the run's own numbers hold. They
+  were written after the run was analysed (D79) and rewritten once that table marked the cells the oracle-gated view
+  drops (D80); so was the paragraph that reads the families with that gate, whose every
+  family statement :data:`READING_CELLS` and :data:`READING_ORDER` check against the run's own numbers and its
+  published analysis.
+* The template's part in Appendix G (paper/sections/app_natural_cases.tex, :data:`MOVED`): its caveats on the build's
+  process, its table of per-family caveats, its family paragraphs and the cost per family, moved there unchanged after
+  the analysis (D80). Every check here reads both files as the template.
 * (c) The template holds none of the words that the plan bans (part 2; "how often" only to say that the case studies
   cannot show it), no model identifier, agent-tool name or tier wording, no digit outside a macro or an identifier, no
   count written as a word, and no option written so that it prints as an en dash.
@@ -53,6 +60,9 @@ from tracecontract.store import dump, load, write_json
 ROOT = Path(__file__).resolve().parents[1]
 PAPER = ROOT / "paper"
 TEMPLATE = PAPER / "sections" / "natural.tex"
+# The template's part in Appendix G: what was moved there unchanged after the analysis (D80).
+MOVED = PAPER / "sections" / "app_natural_cases.tex"
+RUN = ROOT / "results" / "runs" / "natural-pr-v1"  # the published run, once it exists
 REAL_NUMBERS = PAPER / "generated" / "natural_run" / "numbers.tex"  # the run's own numbers, once it is published
 spec = importlib.util.spec_from_file_location("make_tables_natural_template", PAPER / "make_tables.py")
 mt = importlib.util.module_from_spec(spec)
@@ -87,15 +97,26 @@ def _fk(family: str) -> str:
 
 
 # The closing paragraph's integration slot, the one UNFILLED marker the template printed on purpose until the run was
-# published; the integration replaced it with the sentence its rule asks for (restructure plan, part 7, item 6; pending
-# decision-log entry D79).
+# published; the integration replaced it with the sentences its rule asks for (restructure plan, part 7, item 6;
+# decision-log entry D79, and D80 for the sentences as they now stand).
 SLOT = "integration slot: sentences naming the families by their C1 and C3 cells in the table of the pre-review states"
 # The slot's scope as the template fixed it before any analysis (D77): one sentence for each pattern of Table
-# tab:nr-source's C1 and C3 cells (se.c1.<family>, se.c3.<family>), each family named once and none counted. The run's
-# cells hold one pattern, so the slot is one sentence; a cell the run's numbers do not bear out means the sentence is
-# rewritten from the cells, within the same scope.
-INTEGRATION_TEXT = "In NP-03, NP-04, NP-05, NP-18, NP-19 and NP-20, C1 and C3 rejected the pre-review state."
-INTEGRATION: tuple[tuple[str, str], ...] = tuple((f"se.{c}.{_fk(f)}", "rejected") for c in ("c1", "c3") for f in FAMILIES)
+# tab:nr-source's C1 and C3 cells, each family named once and none counted. A cell is the condition's outcome on the
+# pre-review state (se.c1.<family>, se.c3.<family>) with the marker of the cells that the oracle-gated view drops
+# (og.c1.<family>, og.c3.<family>, which the table reads from the same grading of the reference as the sanity table,
+# sanity.<condition>.<family>.reference). The run's cells hold three patterns, so the slot is three sentences; a cell
+# the run's numbers do not bear out means the sentences are rewritten from the cells, within the same scope.
+INTEGRATION_TEXT = ("In NP-03, NP-05, NP-18 and NP-19, C1 and C3 rejected the pre-review state and failed the family's "
+                    "reference, so the oracle-gated view drops both cells. In NP-04, C1 and C3 rejected the pre-review state "
+                    "and passed the reference. In NP-20, C1 and C3 rejected the pre-review state; C1 failed the reference, so "
+                    "the oracle-gated view drops its cell, and C3 passed it.")
+_FAILED = {"c1": ("NP-03", "NP-05", "NP-18", "NP-19", "NP-20"), "c3": ("NP-03", "NP-05", "NP-18", "NP-19")}
+INTEGRATION: tuple[tuple[str, str], ...] = (
+    *((f"se.{c}.{_fk(f)}", "rejected") for c in ("c1", "c3") for f in FAMILIES),
+    *((f"og.{c}.{_fk(f)}", "dropped" if f in _FAILED[c] else "kept") for c in ("c1", "c3") for f in FAMILIES),
+    *((f"sanity.{c}.{_fk(f)}.reference", "rejected" if f in _FAILED[c] else "accepted") for c in ("c1", "c3")
+      for f in FAMILIES),
+)
 
 
 def integration_problems(numbers: dict[str, str]) -> list[str]:
@@ -152,8 +173,13 @@ PREMISES: tuple[tuple[str, str, str], ...] = (
 )
 
 
+def template_parts() -> tuple[str, ...]:
+    """The template's files, the main-text section and its part in Appendix G, in reading order."""
+    return tuple(f.read_text(encoding="utf-8") for f in (TEMPLATE, MOVED))
+
+
 def template() -> str:
-    return TEMPLATE.read_text(encoding="utf-8")
+    return "\n".join(template_parts())
 
 
 def uncommented(tex: str) -> str:
@@ -321,16 +347,210 @@ def test_the_run_s_own_numbers_bear_out_the_template_s_premises():
 
 @pytest.mark.skipif(not REAL_NUMBERS.is_file(), reason="natural-pr-v1 is not published yet (restructure plan, order of work 4)")
 def test_the_integration_s_sentence_states_the_run_s_own_cells():
-    """The closing paragraph's sentence that names families (written after the run was published and analysed; pending
-    entry D79) states the C1 and C3 cells of the run's table of the pre-review states, every cell it names holds on the
-    run's numbers, and the paragraph opens with it as written and goes no further from the cells: outside the per-family
-    cost list, which the template fixed before the analysis, the rest of the paragraph names no family."""
+    """The closing paragraph's sentences that name families (written after the run was published and analysed, D79, and
+    rewritten with the gate's marker, D80) state the C1 and C3 cells of the run's table of the pre-review
+    states, every cell they name holds on the run's numbers, and the paragraph opens with them as written and goes no
+    further from the cells: the rest of the paragraph names no family (the per-family cost list, which the template fixed
+    before the analysis, was moved to its part in Appendix G)."""
     assert not integration_problems(macros(REAL_NUMBERS, "nrv"))
-    closing = paragraphs(template())["What the case studies can and cannot show."]
+    closing = paragraphs(*template_parts())["What the case studies can and cannot show."]
     assert closing.startswith(INTEGRATION_TEXT + " Table~\\ref{tab:nr-source} gives, per family,"), closing[:400]
     rest = closing[len(INTEGRATION_TEXT):]
-    outside_costs = rest[:rest.index("Cost per family")] + rest[rest.index("This cost leaves out"):]
-    assert not re.search(r"\bNP-\d+\b", outside_costs), outside_costs[:400]
+    assert not re.search(r"\bNP-\d+\b", rest), rest[:400]
+    assert "Cost per family" in paragraphs(*template_parts())["Cost per family."]
+
+
+# The paragraph that reads the families with the reference gate (written after the analysis,
+# D80): every family statement it makes, as cells of the run's numbers (READING_CELLS) and as comparisons of its false
+# acceptance and false rejection cells (READING_ORDER). A list of families it gives is whole: a family it does not name
+# must not hold the property either. Its statements about single candidates are checked on the published analysis.
+READING_TITLE = "The families read with the reference gate."
+_WHOLE = ("NP-03", "NP-05", "NP-19", "NP-20")  # where B1 passes every candidate, the no-op included
+READING_CELLS: tuple[tuple[str, str], ...] = (
+    # the conditions that reject every candidate, the reference and the valid alternatives included
+    ("nd.np03.reject", "C1, C3 and C4"), ("nd.np04.reject", "none"), ("nd.np05.reject", "C1 and C3"),
+    ("nd.np18.reject", "C1 and C3"), ("nd.np19.reject", "none"), ("nd.np20.reject", "C1"),
+    *((f"nd.{_fk(f)}.accept", "B1" if f in _WHOLE else "none") for f in FAMILIES),
+    *((f"noop.{_fk(f)}.accepted", "B1" if f in _WHOLE else "none") for f in FAMILIES),
+    # NP-04: C1 and C3 pass the reference; the correction requirements each recovered contract leaves uncovered
+    ("sanity.c1.np04.reference", "accepted"), ("sanity.c3.np04.reference", "accepted"),
+    ("ref.np04.correction.ids", "R4, R5"),
+    *((f"full.np04.corr.missing.{m}", "R5") for m in ("m1", "m2")),
+    *((f"ini.np04.corr.missing.{m}", "R4, R5") for m in ("m1", "m2")),
+    # NP-19: neither recovered contract covers R4
+    *((f"full.np19.corr.missing.{m}", "R4") for m in ("m1", "m2")),
+    *((f"ini.np19.corr.missing.{m}", "R3, R4") for m in ("m1", "m2")),
+    # the correction-aware contract's coverage of the correction requirements; the initial-only one's in NP-05 and NP-18
+    *((f"full.{fk}.corr.missing.{m}", "none") for fk in ("np03", "np05", "np18") for m in ("m1", "m2")),
+    *((f"full.np20.corr.missing.{m}", "R11") for m in ("m1", "m2")),
+    *((f"ini.{fk}.corr.missing.{m}", "none") for fk in ("np05", "np18") for m in ("m1", "m2")),
+)
+# (relation, condition A, condition B, rate, the families where it holds): "<" A's cell below B's, "=" equal, "all" the
+# rejection of every unit of the rate. Each family list is whole for its relation and pair.
+READING_ORDER: tuple[tuple[str, str, str, str, tuple[str, ...]], ...] = (
+    ("all", "c3", "", "fr", ("NP-03", "NP-05", "NP-18")), ("all", "c4", "", "fr", ("NP-03",)),
+    ("=", "b2", "c3", "fr", ("NP-04", "NP-19", "NP-20")), ("<", "b2", "c3", "fr", ("NP-03", "NP-05", "NP-18")),
+    ("=", "b2", "c4", "fr", ("NP-04", "NP-05", "NP-18", "NP-19", "NP-20")), ("<", "b2", "c4", "fr", ("NP-03",)),
+    ("<", "b2", "c3", "fa", ("NP-04",)), ("<", "b2", "c4", "fa", ("NP-04",)),
+    ("=", "b2", "c3", "fa", ("NP-03", "NP-05", "NP-18", "NP-19", "NP-20")),
+    ("=", "b2", "c4", "fa", ("NP-03", "NP-05", "NP-18", "NP-19", "NP-20")),
+    ("<", "c3", "c1", "fa", ("NP-04", "NP-19")), ("=", "c3", "c1", "fa", ("NP-03", "NP-05", "NP-18", "NP-20")),
+    ("<", "c3", "c1", "fr", ("NP-20",)), ("=", "c3", "c1", "fr", ("NP-03", "NP-04", "NP-05", "NP-18", "NP-19")),
+    ("<", "c2", "c1", "fr", ("NP-05", "NP-18", "NP-20")), ("<", "c4", "c3", "fr", ("NP-05", "NP-18")),
+    ("<", "c1", "c2", "fa", ("NP-03", "NP-05", "NP-20")), ("<", "c2", "c1", "fa", ("NP-19",)),
+)
+# The recovered contracts' requirements that contradict the reference contract (both contracts, both mappers) and those
+# they mark superseded, as the paragraph states them: contradictions in NP-05 and NP-20 only, in both recovered contracts
+# under both mappers, and NP-20's correction-aware contract marking a requirement superseded.
+_CONTRADICTING = ("NP-05", "NP-20")
+READING_SUPERSEDED: tuple[tuple[str, str], ...] = (("full.np20.superseded", "1"),)
+
+
+def _frac(cell: str) -> tuple[int, int] | None:
+    m = re.fullmatch(r"(\d+)/(\d+)", cell or "")
+    return (int(m.group(1)), int(m.group(2))) if m else None
+
+
+def reading_problems(numbers: dict[str, str], analysis: dict | None = None) -> list[str]:
+    """The statements of the paragraph that reads the families with the reference gate that ``numbers`` (a natural run's
+    generated macros) and ``analysis`` (its published analysis.json, where given) do not bear out."""
+    out = [f"{k}: the paragraph states {v!r}; the numbers hold {numbers.get(k, 'nothing')!r}"
+           for k, v in READING_CELLS if numbers.get(k) != v]
+    for rel, a, b, rate, where in READING_ORDER:
+        for f in FAMILIES:
+            x, y = _frac(numbers.get(f"{a}.{_fk(f)}.{rate}", "")), _frac(numbers.get(f"{b}.{_fk(f)}.{rate}", ""))
+            if x is None or (rel != "all" and (y is None or x[1] != y[1])):
+                out.append(f"{a}, {b} {rate} in {f}: not a pair of cells over the same units")
+                continue
+            holds = x[0] == x[1] > 0 if rel == "all" else x[0] < y[0] if rel == "<" else x[0] == y[0]
+            if holds != (f in where):
+                out.append(f"{a} {rel} {b} on {rate} in {f}: the paragraph says {'so' if f in where else 'not so'}")
+    for f in FAMILIES:  # no family where B2 is above C3 or C4, or C3 above C1
+        for a, b in (("b2", "c3"), ("b2", "c4"), ("c3", "c1")):
+            for rate in ("fa", "fr"):
+                x, y = _frac(numbers.get(f"{a}.{_fk(f)}.{rate}", "")), _frac(numbers.get(f"{b}.{_fk(f)}.{rate}", ""))
+                if x and y and x[0] > y[0]:
+                    out.append(f"{a} above {b} on {rate} in {f}")
+    for f in FAMILIES:  # contradictions of the reference contract: in both recovered contracts, under both mappers, or none
+        for k in ("ini", "full"):
+            for m in ("m1", "m2"):
+                x = _frac(numbers.get(f"{k}.{_fk(f)}.contra.{m}", ""))
+                if x is None or (x[0] > 0) != (f in _CONTRADICTING):
+                    out.append(f"{k}.{_fk(f)}.contra.{m}: the paragraph says {'some' if f in _CONTRADICTING else 'none'}; "
+                               f"the numbers hold {numbers.get(f'{k}.{_fk(f)}.contra.{m}', 'nothing')!r}")
+    out += [f"{k}: the paragraph states {v!r}; the numbers hold {numbers.get(k, 'nothing')!r}"
+            for k, v in READING_SUPERSEDED if numbers.get(k) != v]
+    if analysis is None:
+        return out
+    per, labels = analysis["per_task"], analysis["labels"]
+    fams = analysis["natural"]["families"]
+
+    def passes(f: str, cond: str) -> set[str]:
+        return {r["candidate"] for r in per[f][cond] if r["outcome"] == "pass"}
+
+    def label(f: str, cand: str) -> tuple[str, list]:
+        x = next(c for c in labels[f]["candidates"] if c["candidate"] == cand)
+        return x["proposed"], x["violated"]
+
+    for f, cand, conds, violated in (("NP-04", "NP-04-eval-nm-2", ("full_plain", "full_audited"), ["R5"]),
+                                     ("NP-19", "NP-19-eval-nm-1", ("full_plain", "full_audited", "llm_freeform"), None)):
+        for cond in conds:
+            if cand not in passes(f, cond):
+                out.append(f"{cond} does not pass {cand}")
+        value, viol = label(f, cand)
+        if value != "invalid" or (violated is not None and viol != violated):
+            out.append(f"{cand}: D19 proposes {value} {viol}")
+        if cand not in fams[f]["near_misses_on_correction"]["on_correction"]:
+            out.append(f"{cand} is not a near miss on the correction")
+    nms = {r["candidate"] for r in per["NP-04"]["initial_plain"] if r["origin"] == "constructed_near_miss"}
+    if not nms or not nms <= passes("NP-04", "initial_plain"):
+        out.append("C1 does not pass every near miss of NP-04")
+    coverage = analysis["coverage"]
+
+    def covered(f: str) -> list[set]:  # the reference requirements the correction-aware contract covers, per mapper
+        return [set(coverage[f][v]["full_session"]["covered"]) for v in ("variants", "variants_mapper2")]
+
+    # NP-04: C3 and C4 accept eval-nm-2 and eval-nm-3, and these are their whole false acceptance; eval-nm-3 targets R1
+    # (D72; not a near miss on the correction), D19 finds it invalid on R1, R4 and R5, the correction-aware contract covers
+    # R1 and R4 under both mappers, and every condition passes it.
+    for cond in ("full_plain", "full_audited"):
+        accepted = passes("NP-04", cond) & {r["candidate"] for r in per["NP-04"][cond] if r["label"] == "invalid"}
+        if accepted != {"NP-04-eval-nm-2", "NP-04-eval-nm-3"}:
+            out.append(f"{cond} accepts {sorted(accepted)} of NP-04's invalid candidates")
+    value, viol = label("NP-04", "NP-04-eval-nm-3")
+    if value != "invalid" or viol != ["R1", "R4", "R5"]:
+        out.append(f"NP-04-eval-nm-3: D19 proposes {value} {viol}")
+    if "NP-04-eval-nm-3" in fams["NP-04"]["near_misses_on_correction"]["on_correction"]:
+        out.append("NP-04-eval-nm-3 is a near miss on the correction")
+    if any(not {"R1", "R4"} <= c or "R5" in c for c in covered("NP-04")):
+        out.append(f"the correction-aware contract of NP-04 covers {covered('NP-04')}")
+    for cond in per["NP-04"]:
+        if "NP-04-eval-nm-3" not in passes("NP-04", cond):
+            out.append(f"{cond} does not pass NP-04-eval-nm-3")
+    # NP-19: eval-nm-1 breaks R1 to R4; R3 is a correction requirement the correction-aware contract covers, R4 is not.
+    value, viol = label("NP-19", "NP-19-eval-nm-1")
+    if viol != ["R1", "R2", "R3", "R4"] or "R3" not in fams["NP-19"]["correction_requirements"]:
+        out.append(f"NP-19-eval-nm-1: D19 proposes {value} {viol}")
+    if any("R3" not in c or "R4" in c for c in covered("NP-19")):
+        out.append(f"the correction-aware contract of NP-19 covers {covered('NP-19')}")
+    for f in FAMILIES:  # an invalid candidate that C2 accepts and C1 rejects: in NP-03, NP-05 and NP-20, one each
+        invalid = {r["candidate"] for r in per[f]["initial_plain"] if r["label"] == "invalid"}
+        extra = (passes(f, "initial_audited") - passes(f, "initial_plain")) & invalid
+        if len(extra) != (1 if f in ("NP-03", "NP-05", "NP-20") else 0):
+            out.append(f"C2 accepts {sorted(extra)} that C1 rejects in {f}")
+        # and one that C1 accepts and C2 rejects: NP-19's eval-nm-1 alone
+        fewer = (passes(f, "initial_plain") - passes(f, "initial_audited")) & invalid
+        if fewer != ({"NP-19-eval-nm-1"} if f == "NP-19" else set()):
+            out.append(f"C2 rejects {sorted(fewer)} that C1 accepts in {f}")
+    return out
+
+
+@pytest.mark.skipif(not REAL_NUMBERS.is_file() or not (RUN / "analysis.json").is_file(),
+                    reason="natural-pr-v1 is not published yet")
+def test_the_reading_with_the_gate_states_the_run_s_own_cells():
+    """The paragraph that reads the families with the reference gate (written after the analysis; D80)
+    opens as written, and every family statement it makes holds on the run's numbers and its published analysis."""
+    reading = paragraphs(*template_parts())[READING_TITLE]
+    assert reading.startswith("A rejection of the pre-review state tells that state from the reference only where the "
+                              "verifier passes the reference"), reading[:200]
+    for text in ("In NP-03, C1, C3 and C4 reject every candidate", "and so do C1 and C3 in NP-05 and NP-18, and C1 in NP-20",
+                 "In NP-03, NP-05, NP-19 and NP-20, B1 passes every candidate, the no-op included",
+                 "C3 and C4 accept eval-nm-2 and eval-nm-3", "In NP-19, C3, C4 and B2 accept eval-nm-1",
+                 "the coverage gap accounts for this acceptance and for no other",
+                 "The near miss eval-nm-3 targets R1 (D72)", "every condition accepts it",
+                 "it targets R4, which neither recovered contract covers (D75)", "R3 among them, a correction requirement",
+                 "(Table~\\ref{tab:coverage})", "C3's false acceptance is below C1's in NP-04 and NP-19",
+                 "In NP-20 the correction-aware contract marks a requirement superseded, and in NP-05 and NP-20",
+                 "in NP-03, NP-04, NP-18 and NP-19 none does (Table~\\ref{tab:nr-coverage})",
+                 "and C2 rejects an invalid candidate that C1 accepts in NP-19 (eval-nm-1)"):
+        assert text in reading, text
+    analysis = json.loads((RUN / "analysis.json").read_text(encoding="utf-8"))
+    assert not reading_problems(macros(REAL_NUMBERS, "nrv"), analysis)
+
+
+def test_reading_problems_reports_a_statement_the_numbers_do_not_bear_out():
+    stated = dict(READING_CELLS)
+    cells = {"c1": ("0/3 2/2", "3/4 0/1", "0/3 2/2", "0/4 2/2", "2/4 0/2", "0/3 2/2"),
+             "c2": ("1/3 2/2", "3/4 0/1", "1/3 0/2", "0/4 0/2", "1/4 0/2", "1/3 0/2"),
+             "c3": ("0/3 2/2", "2/4 0/1", "0/3 2/2", "0/4 2/2", "1/4 0/2", "0/3 0/2"),
+             "c4": ("0/3 2/2", "2/4 0/1", "0/3 0/2", "0/4 0/2", "1/4 0/2", "0/3 0/2"),
+             "b2": ("0/3 0/2", "1/4 0/1", "0/3 0/2", "0/4 0/2", "1/4 0/2", "0/3 0/2")}
+    for c, per_family in cells.items():
+        for f, cell in zip(FAMILIES, per_family):
+            stated[f"{c}.{_fk(f)}.fa"], stated[f"{c}.{_fk(f)}.fr"] = cell.split()
+    for f in FAMILIES:
+        for k in ("ini", "full"):
+            for m in ("m1", "m2"):
+                stated[f"{k}.{_fk(f)}.contra.{m}"] = "1/3" if f in _CONTRADICTING else "0/3"
+    stated.update(READING_SUPERSEDED)
+    assert reading_problems(stated) == []
+    changed = {**stated, "nd.np18.reject": "C1", "b2.np19.fa": "2/4", "c2.np19.fa": "2/4"}
+    problems = reading_problems(changed)
+    assert problems[0].startswith("nd.np18.reject:") and any(p.startswith("b2 = c3 on fa in NP-19") for p in problems)
+    assert "b2 above c3 on fa in NP-19" in problems and "c2 < c1 on fa in NP-19: the paragraph says so" in problems
+    changed = {**stated, "full.np04.contra.m2": "1/3", "ini.np20.contra.m1": "0/3", "full.np20.superseded": "0"}
+    assert [p.split(":")[0] for p in reading_problems(changed)] == [
+        "full.np04.contra.m2", "ini.np20.contra.m1", "full.np20.superseded"]
 
 
 def test_integration_problems_reports_a_cell_the_sentence_misstates():
@@ -375,7 +595,9 @@ needs_pdflatex = pytest.mark.skipif(shutil.which("pdflatex") is None, reason="pd
 # the protocol's versions, with its v0.12 row; Appendix G and its comparison of the natural arm with the controlled study).
 CROSS_REFS = {"tab:amendments": PAPER / "generated" / "design" / "amendments_table.tex",
               "tab:natural-vs-controlled": PAPER / "sections" / "app_natural.tex",
-              "app:natural": PAPER / "sections" / "app_natural.tex"}
+              "app:natural": PAPER / "sections" / "app_natural.tex",
+              # the controlled tasks' coverage of their reference contracts, beside the natural families' (D80)
+              "tab:coverage": PAPER / "generated" / "coverage_table.tex"}
 
 
 @needs_pdflatex
@@ -383,13 +605,16 @@ def test_the_template_compiles_with_main_tex_s_preamble_and_every_number_filled(
     build = tmp_path / "build"
     (build / "sections").mkdir(parents=True)
     shutil.copy2(TEMPLATE, build / "sections" / "natural.tex")
+    shutil.copy2(MOVED, build / "sections" / MOVED.name)
     shutil.copytree(world, build / "generated" / "natural_run")
     for sub in ("natural", "fresh"):
         src = PAPER / "generated" / sub / "numbers.tex"
         if src.is_file():
             (build / "generated" / sub).mkdir(parents=True)
             shutil.copy2(src, build / "generated" / sub / "numbers.tex")
-    log = _pdflatex(build, "\\input{sections/natural}\n")
+    # The template's two files, and the generated tables that Appendix G inputs and the template points to.
+    log = _pdflatex(build, f"\\input{{sections/natural}}\n\\input{{sections/{MOVED.stem}}}\n"
+                    + "".join(f"\\input{{generated/natural_run/natural_run_{n}}}\n" for n in ("sanity", "coverage")))
     assert not re.search(r"^! ", log, re.MULTILINE), log[-3000:]
     # No marker: every number is filled, the integration slot is written, and no TODO is left.
     assert "UNFILLED-MARKER" not in log and "TODO-MARKER" not in log
@@ -429,6 +654,8 @@ def test_the_template_points_outside_itself_only_to_the_appendices_d77_left_open
         assert f"\\label{{{lab}}}" in f.read_text(), (lab, f)
     main = (PAPER / "main.tex").read_text(encoding="utf-8")
     assert "\\input{sections/app_natural}" in main  # the appendix that holds the comparison is in the manuscript
+    app = uncommented((PAPER / "sections" / "app_natural.tex").read_text(encoding="utf-8"))
+    assert f"\\input{{sections/{MOVED.stem}}}" in app  # and the template's part there
     assert "Table~\\ref{tab:amendments}, its v0.12 row" in " ".join(tex.split())
 
 
@@ -507,11 +734,16 @@ def test_every_decision_log_entry_the_template_cites_is_logged_or_the_next_one()
     assert sorted(pending) == list(range(max(logged) + 1, max(logged) + 1 + len(pending))), (sorted(pending), max(logged))
 
 
-def paragraphs(tex: str) -> dict[str, str]:
-    """The template's paragraphs by their titles (``\\paragraph{...}``), each to the next one, with comments left out and
-    whitespace collapsed."""
-    parts = re.split(r"\\paragraph\{([^}]*)\}", uncommented(tex))
-    return {title: " ".join(body.split()) for title, body in zip(parts[1::2], parts[2::2])}
+def paragraphs(*texts: str) -> dict[str, str]:
+    """The paragraphs of ``texts`` (the template's files, in order) by their titles (``\\paragraph{...}``), each to the
+    next one of its file, with comments left out and whitespace collapsed."""
+    out: dict[str, str] = {}
+    for tex in texts:
+        parts = re.split(r"\\paragraph\{([^}]*)\}", uncommented(tex))
+        for title, body in zip(parts[1::2], parts[2::2]):
+            assert title not in out, title
+            out[title] = " ".join(body.split())
+    return out
 
 
 # The disclosures that the records require of the template, each in its paragraph (its text with comments left out and
@@ -536,6 +768,13 @@ DISCLOSURES = {
         ("which rests on the reviewer's request, the addressing commit and the agreement of the model judges of S9 "
          "(protocol~\\S15.6)"),
         "the second labeling leaves them out (D72, D75, D76)",
+        ("Caveats on how the families were built hold here too and are listed in "
+         "Appendix~\\ref{app:natural-cases}"),  # the pointer to those moved to Appendix G (D80)
+        ("with no pooled rate, interval or p-value (protocol~\\S19.6, \\S20.3). Nor do we give a total over the "
+         "families, or pool anything with the controlled arm (protocol~\\S2)."),
+    ),
+    # Moved unchanged from the list of caveats to the template's part in Appendix G (D80).
+    "Caveats on the build's process.": (
         ("as the run's first step, once building had stopped for the first sample: a builder reading of "
          "protocol~\\S19.7 and \\S20.2, pending the owner's review (D73, D74, D76)"),
         "and so did some host coordinators, which write no generated content (D65, D72)",
@@ -550,9 +789,11 @@ DISCLOSURES = {
          "tool call (D64, ``Agents'' and decision~11; D65)."),
         ("An environment block naming the study repository as the working directory was in every natural agent's "
          "context, as in the fresh attempts (D65; protocol~\\S18.2)."),
-        ("with no pooled rate, interval or p-value (protocol~\\S19.6, \\S20.3). Nor do we give a total over the "
-         "families, or pool anything with the controlled arm (protocol~\\S2)."),
     ),
+    "Reading the tables and the family paragraphs.": (
+        "are in Appendix~\\ref{app:natural-cases}, with Table~\\ref{tab:nr-caveats}.",  # where they were moved (D80)
+    ),
+    "The parts of a family paragraph.": ("Each family paragraph gives, in this order, (a)~its construction facts",),
     "NP-03.": (
         ("No near-miss writer ran the repository's tests, the writer of eval-nm-3 included, which started the task "
          "image itself, as the family's audit records of P7 say (D75, D77)."),
@@ -574,6 +815,11 @@ DISCLOSURES = {
     "What the case studies can and cannot show.": (
         ("S10 passed \\nat{s10.first.passed} of the \\nat{s10.first.processed} families of the first sample that it "
          "processed (D59)"),
+        "no statement here counts families by their outcomes in the run.",  # corrected after the analysis (D80)
+        "These case studies cannot show how often anything they show happens, nor whether it holds beyond these families.",
+    ),
+    # Moved unchanged from the closing paragraph to the template's part in Appendix G (D80).
+    "Cost per family.": (
         ("This cost leaves out what no such record holds, as the run's analysis lists it: the host's own steps, which "
          "the host coordinators run (D65), apart from the run's grading; agent runs that leave no generation record, "
          "the mappers among them; stages S1 to S9"),
@@ -598,9 +844,12 @@ NOT_SAID = (
 def test_the_template_carries_the_disclosures_its_records_require():
     """Each disclosure of :data:`DISCLOSURES` is in its paragraph, and nothing of :data:`NOT_SAID` is anywhere: the
     template's statements as the records word them (the reviews' findings), so that an edit that drops one fails."""
-    pars = paragraphs(template())
+    pars = paragraphs(*template_parts())
     assert list(pars) == ["Status.", "What was built.", "Caveats.", "Reading the tables and the family paragraphs.",
-                          *(f"{f}." for f in FAMILIES), "What the case studies can and cannot show."]
+                          "The families read with the reference gate.", "What the case studies can and cannot show.",
+                          # the template's part in Appendix G (D80)
+                          "Caveats on the build's process.", "The parts of a family paragraph.",
+                          *(f"{f}." for f in FAMILIES), "Cost per family."]
     for title, said in DISCLOSURES.items():
         for text in said:
             assert text in pars[title], (title, text)

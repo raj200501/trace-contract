@@ -1,18 +1,25 @@
 """paper/make_tables.py --natural-run: the per-family tables of a natural run in case-study mode (protocol §19.6, §20.3).
 
-The mode reads a natural run's analysis.json (and its manifest's run id) and writes four tables, the number macros
+The mode reads a natural run's analysis.json (and its manifest's run id) and writes six tables, the number macros
 (``\\nrv{key}``) and a ledger in which every table cell names the analysis.json fields it is made from, with their values.
 Checked here: every cell against those fields, and every row re-derived from analysis.json alone; every number of the
 .tex files in the ledger; no number pooled over the families; every term a cell uses in place of a value defined in its
 caption; the size rule on the run's own accepted tasks (protocol §20.3) and the refusal of an analysis outside case-study
 mode (the run grades 10 or more accepted tasks of its own), of one made under the superseded rule and of a run that is not
 natural; each check of what the tables take for granted; the privacy check, its digit runs and its agent product names;
-and that only the mode's own outputs change, and none on an error.
+and that only the mode's own outputs change, and none on an error. Added after the final review of the manuscript: the
+gate's marker on the cells of the table of the pre-review states (as the false-acceptance table marks them), that table's
+rows of each condition's outcome on the family's reference solution and no-op, the coverage table (the reference
+contract's correction requirements, and its coverage by each recovered contract under each mapper with the correction
+requirements left uncovered, the recovered requirements that contradict it and those each contract marks superseded),
+and the per-family keys naming the conditions that reject (or accept) every candidate of a family and those that pass
+its no-op.
 
 Synthetic fixtures only: the natural worlds of tests/test_analysis_natural.py (natural families in a scratch repository
-and a hand-written run, analysed with ``analysis.analyze``; nothing is graded). The generator's outputs (``GEN``,
-``LEDGER``) point at a temporary directory, so no tracked file can change. They check code behaviour and are not
-research evidence.
+and a hand-written run, analysed with ``analysis.analyze``; nothing is graded), with model mappings of their recovered
+contracts written here and, in one world, outcomes changed so that some conditions tell no candidate apart. The
+generator's outputs (``GEN``, ``LEDGER``) point at a temporary directory, so no tracked file can change. They check code
+behaviour and are not research evidence.
 """
 
 from __future__ import annotations
@@ -35,16 +42,24 @@ from natural_task_layout import (
     PR_TEXT,
     REPLY_TEXT,
 )
-from test_analysis_natural import SECRET_FINDING, build_world, d19_note, relabel_d19
+from test_analysis_natural import (
+    RUN_ID,
+    SECRET_FINDING,
+    build_world,
+    d19_note,
+    relabel_d19,
+)
 
 from tracecontract.analysis import D19_NO_REASON, D19_REPEATS_DISAGREE, analyze
+from tracecontract.store import write_json
 
 ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location("make_tables_natural_run", ROOT / "paper" / "make_tables.py")
 mt = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(mt)
 
-TABLES = ("natural_run_fa_fr", "natural_run_source_evidence", "natural_run_labeler", "natural_run_construction")
+TABLES = ("natural_run_fa_fr", "natural_run_source_evidence", "natural_run_labeler", "natural_run_construction",
+          "natural_run_sanity", "natural_run_coverage")
 # The fields of the run as a whole that an entry may name: its id, its families, those of its second labeling, the size rule;
 # its manifest's times, code revision, repeats, pilot flag and invocations, and the harness versions of its results.
 RUN_LEVEL = {"run_id", "natural.tasks", "independent_labeling.tasks", "meta.case_study.accepted_in_run",
@@ -101,10 +116,69 @@ def _make(root: Path, construction: bool, prepare=None) -> Made:
                 [t.task_id for t in tasks])
 
 
+# The model mappings of the recovered contracts (analysis.contract_coverage reads contracts/mapping_<variant>.json, and
+# mapping2_<variant>.json for the second mapper): (family, mapper, variant) -> (map, contradicts). The reference contract
+# holds R-issue and its correction requirements R-corr (the review comment) and R-reply (the reply); the recovered ones
+# hold R0, R1, ... (tests/test_analysis_natural.py, _construct). NP-91's second mapper did not map its initial-only contract.
+MAPPINGS: dict[tuple[str, int, str], tuple[dict, dict]] = {
+    **{(t, m, "initial_only"): ({"R0": ["R-issue"]}, {}) for t in ("NP-90", "NP-91", "NP-92") for m in (1, 2)},
+    **{(t, m, "full_session"): ({"R0": ["R-issue"], "R1": ["R-corr"]}, {}) for t in ("NP-90", "NP-92") for m in (1, 2)},
+    **{("NP-91", m, "full_session"): ({"R0": ["R-issue"], "R1": ["R-corr"], "R2": ["R-reply"]}, {}) for m in (1, 2)},
+    ("NP-90", 2, "full_session"): ({"R0": ["R-issue"], "R1": ["R-corr"]}, {"R1": ["R-corr"]}),  # mapped, but contradicted
+    ("NP-92", 2, "initial_only"): ({"R0": ["R-issue"], "R1": ["R-corr"]}, {}),  # the first request implies the correction
+}
+del MAPPINGS[("NP-91", 2, "initial_only")]
+
+
+def _map_contracts(tasks) -> None:
+    """Write :data:`MAPPINGS` into the families' contracts, as the mappers of P7 write them."""
+    for nt in tasks:
+        for (t, m, variant), (mapping, contradicts) in MAPPINGS.items():
+            if t == nt.task_id:
+                write_json({"mapper": f"fixture:mapper:{m}", "mapper_kind": "model", "map": mapping,
+                            "contradicts": contradicts},
+                           nt.task_dir / "contracts" / f"{'mapping' if m == 1 else 'mapping2'}_{variant}.json")
+
+
+def _rewrite_outcomes(tasks, change) -> None:
+    """Change the outcomes of the world's run before its analysis: ``change(family, verifier, kind, outcome)`` gives each
+    pair's outcome (``kind``: the candidate's id without its family's, as tests/test_analysis_natural.py's GRADED names it)."""
+    results = tasks[0].root / "data" / "natural" / "runs" / RUN_ID / "results.jsonl"
+    rows = [json.loads(x) for x in results.read_text().splitlines() if x.strip()]
+    for r in rows:
+        r["outcome"] = change(r["task_id"], r["verifier_id"], r["candidate_id"].removeprefix(r["task_id"] + "-"), r["outcome"])
+        r["reward"] = 1.0 if r["outcome"] == "pass" else 0.0
+    results.write_text("".join(json.dumps(r) + "\n" for r in rows))
+
+
+# The world in which some conditions tell no candidate apart (:func:`_undiscriminating`): the conditions that reject every
+# candidate of a family, its reference solution and its valid alternatives included.
+REJECT_ALL = {"NP-90": ("initial_plain", "initial_audited", "full_plain"), "NP-91": ("full_plain",),
+              "NP-92": ("initial_plain", "full_audited")}
+
+
+def _undiscriminating(tasks) -> None:
+    """The world of :func:`built` with these outcomes changed: the conditions of :data:`REJECT_ALL` pass nothing in their
+    family (C3's reference in NP-91 is unresolved: repeats that disagree, a rejection); B3 passes every candidate of NP-91,
+    the no-op included; B1 rejects NP-92's no-op; and B2's no-op of NP-90 ends in an environment failure. B1 still passes
+    every candidate of NP-90 and NP-91, as the world gives it."""
+    def change(t: str, vid: str, kind: str, outcome: str) -> str:
+        if vid in REJECT_ALL.get(t, ()):
+            return "unresolved" if (t, vid, kind) == ("NP-91", "full_plain", "reference") else (
+                "task_failure" if outcome == "pass" else outcome)
+        if (t, vid) == ("NP-91", "diff_derived"):
+            return "pass"
+        return {("NP-92", "repo_tests", "noop-eval"): "task_failure",
+                ("NP-90", "llm_freeform", "noop-eval"): "environment_failure"}.get((t, vid, kind), outcome)
+
+    _rewrite_outcomes(tasks, change)
+
+
 @pytest.fixture(scope="module")
 def built(tmp_path_factory) -> Made:
-    """Three families with their construction records (audits, B3 taken out in NP-92, the reference checks' status)."""
-    return _make(tmp_path_factory.mktemp("built"), True)
+    """Three families with their construction records (audits, B3 taken out in NP-92, the reference checks' status) and
+    the model mappings of their recovered contracts (:data:`MAPPINGS`)."""
+    return _make(tmp_path_factory.mktemp("built"), True, _map_contracts)
 
 
 @pytest.fixture(scope="module")
@@ -113,7 +187,14 @@ def plain(tmp_path_factory) -> Made:
     return _make(tmp_path_factory.mktemp("plain"), False)
 
 
-@pytest.fixture(params=["built", "plain"])
+@pytest.fixture(scope="module")
+def undiscriminating(tmp_path_factory) -> Made:
+    """The world of :func:`built` whose run has conditions that tell no candidate of a family apart (:func:`_undiscriminating`)."""
+    return _make(tmp_path_factory.mktemp("undiscriminating"), True, lambda tasks: (_map_contracts(tasks),
+                                                                                    _undiscriminating(tasks)))
+
+
+@pytest.fixture(params=["built", "plain", "undiscriminating"])
 def made(request) -> Made:
     return request.getfixturevalue(request.param)
 
@@ -384,7 +465,8 @@ def test_the_cells_follow_the_analysis(made):
             (pre,) = [p for p in a["source_evidence"]["pre_review"].values() if p["family_id"] == f]
             if want == "rejected" and pre["outcomes"].get(c, "task_failure") != "task_failure":
                 want += f" ({words(pre['outcomes'][c])})"
-            assert t2[(row, f)] == want, (c, f)
+            # The cell of a verifier that does not pass the family's reference carries the gate's marker, as in Table 8.
+            assert t2[(row, f)] == want + (dagger if want != "--" else ""), (c, f)
     il = a["independent_labeling"]
     for f in made.fams:
         n = il["labels_per_family"][f]
@@ -483,8 +565,18 @@ def test_the_tables_of_a_run_with_its_construction_records(built):
     assert t1[("C1 initial-only, plain", "NP-90")] == "3/4 $\\cdot$ 0/2$^{\\dagger}$" and t1[("C1 initial-only, plain", "NP-91")] == "2/3 $\\cdot$ 0/2"
     assert t1[("C4 correction-aware, audited", "NP-90")] == "0/4 $\\cdot$ 1/2" and t1[("B3 diff-derived (secondary)", "NP-92")] == "--"
     t2 = cells(built, "natural_run_source_evidence")
-    assert [t2[("C1 initial-only, plain", f)] for f in built.fams] == ["accepted"] * 3
+    # C1 fails its reference in NP-90, so its cell there carries the gate's marker, as in Table 8; its macro does not.
+    assert [t2[("C1 initial-only, plain", f)] for f in built.fams] == ["accepted$^{\\dagger}$", "accepted", "accepted"]
+    assert [macros_of(built.out)[f"se.c1.{f.lower().replace('-', '')}"] for f in built.fams] == ["accepted"] * 3
     assert [t2[("C3 correction-aware, plain", f)] for f in built.fams] == ["rejected"] * 3 and t2[("B3 diff-derived (secondary)", "NP-92")] == "--"
+    assert [r for r, f in t2 if f == "NP-90"][7:] == [
+        "Its D19 label", "Its second label (the labeler's outcome)", "The reference checks' outcome on it"]
+    t5 = cells(built, "natural_run_sanity")
+    assert [r for r, f in t5 if f == "NP-90"] == list(ROW.values())  # one row per condition, in the paper's order
+    assert [t5[("C1 initial-only, plain", f)] for f in built.fams] == [f"{NO}, {NO}", *[f"{YES}, {NO}"] * 2]
+    assert [t5[("B1 repository tests", f)] for f in built.fams] == [f"{YES}, {YES}"] * 3
+    assert t5[("B3 diff-derived (secondary)", "NP-92")] == "--"
+    assert [macros_of(built.out)[f"sanity.c1.np90.{k}"] for k in ("reference", "noop")] == ["rejected", "rejected"]
     assert [t2[("Its D19 label", f)] for f in built.fams] == ["invalid", "ambiguous", "invalid"]
     assert [t2[("Its second label (the labeler's outcome)", f)] for f in built.fams] == [
         "ambiguous (pass)", "invalid (task failure)", "left out"]
@@ -515,13 +607,242 @@ def test_the_tables_of_a_run_with_its_construction_records(built):
     assert "Source evidence, not a human label" in captions[1] and "Not graded in this run" not in captions[0]
 
 
+# --------------------------------------------------------------------------- the gate, the sanity grading and the coverage
+
+
+YES, NO = "\\checkmark", "$\\times$"  # the marks of the sanity rows: accepted, rejected (as the outcome matrices mark them)
+
+
+def fk_of(family: str) -> str:
+    return family.lower().replace("-", "")
+
+
+def sanity_word(x: dict | None) -> str:
+    """A condition's outcome on a family's reference solution or its no-op, from its sanity block alone."""
+    if not x or not x["n"]:
+        return "not graded"
+    if x["n"] != 1:
+        return f"{x['pass']}/{x['n']} accepted"
+    other = [words(o) for o in x["outcomes"] if o not in ("pass", "task_failure")]
+    return "accepted" if x["pass"] else "rejected" + (f" ({', '.join(other)})" if other else "")
+
+
+def mark(word: str) -> str:
+    """A sanity row's cell part for an outcome in words (the macro's form)."""
+    return YES if word == "accepted" else NO + word.removeprefix("rejected") if word.startswith("rejected") else word
+
+
+def test_the_sanity_rows_follow_the_analysis(made):
+    """The sanity table gives each condition's outcome on the family's reference solution and on its no-op, the unchanged
+    base (sanity_per_family, which the rates leave out), each with its macro; -- where the run did not grade the
+    condition for the family. The gate's marker on a condition's cell of Table 7 holds exactly where the condition does
+    not pass the family's reference in every pair, so the two tables never disagree."""
+    a, t2, t5, macros = (made.a, cells(made, "natural_run_source_evidence"), cells(made, "natural_run_sanity"),
+                         macros_of(made.out))
+    for c, row in ROW.items():
+        if c not in a["sanity_per_family"]:
+            assert not [r for r, _ in t5 if r == row] and not [r for r, _ in t2 if r == row], c
+            continue
+        for f in made.fams:
+            keys = [f"sanity.{row.split()[0].lower()}.{fk_of(f)}.{k}" for k in ("reference", "noop")]
+            s = a["sanity_per_family"][c].get(f)
+            if s is None:
+                assert t5[(row, f)] == "--" == t2[(row, f)] and not set(keys) & set(macros), (c, f)
+                continue
+            want = [sanity_word(s.get(k)) for k in ("reference", "noop")]
+            assert t5[(row, f)] == ", ".join(mark(w) for w in want), (c, f)  # the cell in marks, the macros in words
+            assert [macros.get(k, "not graded") for k in keys] == want, (c, f)
+            passes = bool(s.get("reference")) and s["reference"]["pass"] == s["reference"]["n"]
+            assert t2[(row, f)].endswith("$^{\\dagger}$") == (not passes), (c, f)
+    caption = parse_table((made.out / "natural_run_sanity.tex").read_text())[0]
+    assert ("each condition's outcome on the family's reference solution and on its no-op, the unchanged base, in the run, "
+            "as reference, no-op: \\checkmark{} accepted, $\\times$ rejected") in caption
+    assert "Tables~\\ref{tab:nr-source} and~\\ref{tab:nr-fa-fr} mark with $^{\\dagger}$ the cells it drops" in caption
+    assert ("$^{\\dagger}$: the verifier does not pass the family's reference solution in the run, so the secondary "
+            "oracle-gated view drops the cell, as in Table~\\ref{tab:nr-fa-fr}") in parse_table(
+        (made.out / "natural_run_source_evidence.tex").read_text())[0]
+
+
+def test_the_sanity_rows_name_what_the_run_records(undiscriminating):
+    """An unresolved reference (repeats that disagree) and an infrastructure outcome on the no-op are rejections named in
+    brackets; a condition that fails its reference carries the gate's marker on its cell of Table 7, an unresolved
+    reference included, and its macro does not."""
+    t2, t5, macros = (cells(undiscriminating, "natural_run_source_evidence"), cells(undiscriminating, "natural_run_sanity"),
+                      macros_of(undiscriminating.out))
+    assert t5[("C3 correction-aware, plain", "NP-91")] == f"{NO} (unresolved), {NO}"
+    assert t5[("B2 session-LLM baseline", "NP-90")] == f"{YES}, {NO} (environment failure)"
+    assert (macros["sanity.c3.np91.reference"], macros["sanity.b2.np90.noop"]) == ("rejected (unresolved)",
+                                                                                 "rejected (environment failure)")
+    assert [t5[("B1 repository tests", f)] for f in undiscriminating.fams] == [
+        f"{YES}, {YES}", f"{YES}, {YES}", f"{YES}, {NO}"]
+    marked = {(r, f) for (r, f), cell in t2.items() if cell.endswith("$^{\\dagger}$")}
+    assert marked == {("C1 initial-only, plain", "NP-90"), ("C2 initial-only, audited", "NP-90"),
+                      ("C3 correction-aware, plain", "NP-90"), ("C3 correction-aware, plain", "NP-91"),
+                      ("C1 initial-only, plain", "NP-92"), ("C4 correction-aware, audited", "NP-92")}
+    assert (t2[("C3 correction-aware, plain", "NP-91")], macros["se.c3.np91"], macros["og.c3.np91"]) == (
+        "rejected$^{\\dagger}$", "rejected", "dropped")
+
+
+def _req_sorted(ids) -> list[str]:
+    return sorted(ids, key=lambda r: [int(x) if x.isdigit() else x for x in re.split(r"(\d+)", r)])
+
+
+def test_the_coverage_rows_follow_the_analysis(made):
+    """The coverage table, derived here from the analysis's coverage block and each family's correction requirements alone:
+    the reference contract's correction requirements, and under each mapper the reference contract's scored active
+    requirements that each recovered contract covers, of all, and the correction requirements it does not cover (those it
+    does not cover, by the requirements it does), in the order of their numbers; each with its macro, and -- where the
+    mapper did not map the contract."""
+    a, t4, macros = made.a, cells(made, "natural_run_coverage"), macros_of(made.out)
+    for f in made.fams:
+        cov, corr = a["coverage"][f], a["natural"]["families"][f]["correction_requirements"]
+        assert t4[("Correction requirements of the reference contract", f)] == macros[f"ref.{fk_of(f)}.correction.ids"] == (
+            ", ".join(_req_sorted(corr)) or "none"), f
+        for which, variants, m in (("first", "variants", "m1"), ("second", "variants_mapper2", "m2")):
+            shares, uncovered = [], []
+            for v, k in (("initial_only", "ini"), ("full_session", "full")):
+                d = cov.get(variants, {}).get(v)
+                if d is None:
+                    shares.append("--")
+                    uncovered.append("--")
+                    assert not {f"{k}.{fk_of(f)}.cov.{m}", f"{k}.{fk_of(f)}.corr.missing.{m}"} & set(macros), (f, m, v)
+                    continue
+                shares.append(f"{len(d['covered'])}/{len(cov['reference_scored'])}")
+                uncovered.append(", ".join(_req_sorted(set(corr) - set(d["covered"]))) or "none")
+                assert (macros[f"{k}.{fk_of(f)}.cov.{m}"], macros[f"{k}.{fk_of(f)}.corr.missing.{m}"]) == (
+                    shares[-1], uncovered[-1]), (f, m, v)
+            assert t4[(f"Coverage, {which} mapper: initial-only, correction-aware", f)] == ", ".join(shares), (f, m)
+            assert t4[(f"Correction requirements not covered, {which} mapper: initial-only; correction-aware", f)] == (
+                "; ".join(uncovered)), (f, m)
+        # The columns the controlled coverage table also gives: the recovered requirements that the mapper judges to
+        # contradict the reference contract, of the contract's scored active ones, and those the contract marks superseded.
+        for which, variants, m in (("first", "variants", "m1"), ("second", "variants_mapper2", "m2")):
+            contra = []
+            for v, k in (("initial_only", "ini"), ("full_session", "full")):
+                d = cov.get(variants, {}).get(v)
+                contra.append("--" if d is None else f"{len(d['contradicting'])}/{d['n_recovered_scored']}")
+                assert macros.get(f"{k}.{fk_of(f)}.contra.{m}", "--") == contra[-1], (f, m, v)
+            assert t4[(f"Contradicting the reference contract, {which} mapper: initial-only, correction-aware", f)] == (
+                ", ".join(contra)), (f, m)
+        sup = []
+        for v, k in (("initial_only", "ini"), ("full_session", "full")):
+            d = cov.get("variants", {}).get(v) or cov.get("variants_mapper2", {}).get(v)
+            sup.append("--" if d is None else str(len(d["superseded_requirements"])))
+            assert macros.get(f"{k}.{fk_of(f)}.superseded", "--") == sup[-1], (f, v)
+        assert t4[("Marked superseded by the recovered contract: initial-only, correction-aware", f)] == ", ".join(sup), f
+
+
+def test_the_coverage_rows_of_a_run_with_its_mappings(built, plain):
+    """The mappings of :data:`MAPPINGS`: a correction requirement mapped but contradicted is not covered (NP-90, second
+    mapper), an initial-only contract can cover one (NP-92, second mapper), a contract the mapper did not map is -- (NP-91),
+    and a run without recovered contracts has no coverage. The ids sort by their numbers, as the run's R4 and R11 do."""
+    t4 = cells(built, "natural_run_coverage")
+
+    def row(label: str) -> list[str]:
+        return [t4[(label, f)] for f in built.fams]
+
+    assert row("Correction requirements of the reference contract") == ["R-corr, R-reply"] * 3
+    assert row("Coverage, first mapper: initial-only, correction-aware") == ["1/3, 2/3", "1/3, 3/3", "1/3, 2/3"]
+    assert row("Coverage, second mapper: initial-only, correction-aware") == ["1/3, 1/3", "--, 3/3", "2/3, 2/3"]
+    assert row("Correction requirements not covered, first mapper: initial-only; correction-aware") == [
+        "R-corr, R-reply; R-reply", "R-corr, R-reply; none", "R-corr, R-reply; R-reply"]
+    assert row("Correction requirements not covered, second mapper: initial-only; correction-aware") == [
+        "R-corr, R-reply; R-corr, R-reply", "--; none", "R-reply; R-reply"]
+    # NP-90's second mapper judges its correction-aware R1 to contradict R-corr; every recovered contract of the world marks
+    # R-old superseded (tests/test_analysis_natural.py, _construct), the same under both mappers.
+    assert row("Contradicting the reference contract, first mapper: initial-only, correction-aware") == [
+        "0/2, 0/3", "0/3, 0/4", "0/4, 0/5"]
+    assert row("Contradicting the reference contract, second mapper: initial-only, correction-aware") == [
+        "0/2, 1/3", "--, 0/4", "0/4, 0/5"]
+    assert row("Marked superseded by the recovered contract: initial-only, correction-aware") == ["1, 1"] * 3
+    assert [r for r, f in t4 if f == "NP-90"] == [
+        "Correction requirements of the reference contract", "Coverage, first mapper: initial-only, correction-aware",
+        "Coverage, second mapper: initial-only, correction-aware",
+        "Correction requirements not covered, first mapper: initial-only; correction-aware",
+        "Correction requirements not covered, second mapper: initial-only; correction-aware",
+        "Contradicting the reference contract, first mapper: initial-only, correction-aware",
+        "Contradicting the reference contract, second mapper: initial-only, correction-aware",
+        "Marked superseded by the recovered contract: initial-only, correction-aware"]
+    macros = macros_of(built.out)
+    assert (macros["full.np90.cov.m2"], macros["full.np90.corr.missing.m2"], macros["ini.np92.corr.missing.m2"]) == (
+        "1/3", "R-corr, R-reply", "R-reply")
+    assert (macros["full.np90.contra.m2"], macros["full.np90.contra.m1"], macros["ini.np91.superseded"]) == ("1/3", "0/3", "1")
+    assert "ini.np91.contra.m2" not in macros  # the second mapper did not map NP-91's initial-only contract
+    text = (built.out / "natural_run_coverage.tex").read_text()
+    caption = parse_table(text)[0]
+    assert "\\label{tab:nr-coverage}" in text
+    assert ("under each of the two model mappers, whose mappings are proposals: the reference contract's scored active "
+            "requirements that a requirement of the recovered contract maps to without contradicting it, of all") in caption
+    assert ("Contradicting: the recovered contract's scored active requirements that the mapper judges to contradict a "
+            "requirement of the reference contract, of all its scored active requirements") in caption
+    assert ("Marked superseded: the recovered contract's requirements whose status is superseded and which it does not "
+            "mark unscored; they are not scored") in caption
+    assert "--: not in the analysis (in the rows of a mapper: that mapper did not map that contract); none: no such" in caption
+    t4 = cells(plain, "natural_run_coverage")
+    for f in plain.fams:
+        assert t4[("Coverage, first mapper: initial-only, correction-aware", f)] == "--, --"
+        assert t4[("Correction requirements not covered, second mapper: initial-only; correction-aware", f)] == "--; --"
+        assert t4[("Contradicting the reference contract, second mapper: initial-only, correction-aware", f)] == "--, --"
+        assert t4[("Marked superseded by the recovered contract: initial-only, correction-aware", f)] == "--, --"
+    # The construction facts fill their page (Table 44 at the run's records), so the coverage is a table of its own.
+    assert not [r for r, _ in cells(built, "natural_run_construction") if "overage" in r or "not covered" in r]
+    assert sorted(["R11", "R4", "R13", "R-corr", "R5"], key=mt._req_order) == ["R4", "R5", "R11", "R13", "R-corr"]
+
+
+def test_the_conditions_that_tell_no_candidate_apart_follow_the_analysis(made):
+    """nd.<family>.reject, nd.<family>.accept and noop.<family>.accepted, derived here from the per-task outcomes of the
+    held-out candidates and the sanity grading alone, not from the outcome counts the generator reads: the conditions that
+    graded the reference, the no-op and the held-out candidates and passed none of them (or every one), and those that pass
+    the no-op, in the order of the conditions, as a sentence lists them."""
+    a, macros, led = made.a, macros_of(made.out), numbers_entries(made.ledger)
+    for f in made.fams:
+        reject, accept, noop = [], [], []
+        for c, row in ROW.items():
+            s, held = a["sanity_per_family"].get(c, {}).get(f), a["per_task"][f].get(c, [])
+            if not s and not held:
+                continue
+            outcomes = [r["outcome"] for r in held] + [o for k in ("reference", "noop") for o, n in
+                                                       (s or {}).get(k, {}).get("outcomes", {}).items() for _ in range(n)]
+            graded = bool(held) and all((s or {}).get(k, {}).get("n") for k in ("reference", "noop"))
+            if graded and "pass" not in outcomes:
+                reject.append(row.split()[0])
+            if graded and set(outcomes) == {"pass"}:
+                accept.append(row.split()[0])
+            if (s or {}).get("noop") and s["noop"]["pass"] == s["noop"]["n"]:
+                noop.append(row.split()[0])
+        for key, names in (("nd.{}.reject", reject), ("nd.{}.accept", accept), ("noop.{}.accepted", noop)):
+            want = "none" if not names else names[0] if len(names) == 1 else ", ".join(names[:-1]) + " and " + names[-1]
+            assert macros[key.format(fk_of(f))] == want, (key, f)
+            fs = check_fields(made, led[key.format(fk_of(f))], f)  # every field is the family's own
+            assert {p.split(".")[0] for p, _ in fs} <= {"outcome_counts_per_family", "sanity_per_family"}, key
+
+
+def test_the_conditions_that_tell_no_candidate_apart(undiscriminating, built):
+    """In the world of :func:`_undiscriminating`, the conditions that reject every candidate of a family, its reference
+    and its valid alternatives included (an unresolved pair is a rejection), and those that accept every one, the no-op
+    included; in the built world, B1 accepts every candidate of every family and nothing rejects them all."""
+    macros = macros_of(undiscriminating.out)
+    assert [macros[f"nd.{fk}.reject"] for fk in ("np90", "np91", "np92")] == ["C1, C2 and C3", "C3", "C1 and C4"]
+    assert [macros[f"nd.{fk}.accept"] for fk in ("np90", "np91", "np92")] == ["B1", "B1 and B3", "none"]
+    assert [macros[f"noop.{fk}.accepted"] for fk in ("np90", "np91", "np92")] == ["B1", "B1 and B3", "none"]
+    macros = macros_of(built.out)
+    assert [(macros[f"nd.{fk}.reject"], macros[f"nd.{fk}.accept"], macros[f"noop.{fk}.accepted"])
+            for fk in ("np90", "np91", "np92")] == [("none", "B1", "B1")] * 3
+    assert (mt._listed([]), mt._listed(["C1"]), mt._listed(["C1", "C3"]), mt._listed(["C1", "C3", "C4"])) == (
+        "none", "C1", "C1 and C3", "C1, C3 and C4")
+
+
 def test_every_caption_points_to_the_natural_section_s_caveats(made):
     """The case studies' caveats are stated once, at the head of the natural section (paper/sections/natural.tex): every
-    caption of this mode ends with its marker, the one the section's own table of caveats carries, and names that
-    section's label."""
-    template = (ROOT / "paper" / "sections" / "natural.tex").read_text()
+    caption of this mode ends with its marker, the one the section's own table of caveats carries (moved unchanged to
+    the template's part in Appendix G, paper/sections/app_natural_cases.tex; decision log D80), and names that section's
+    label."""
+    sections = ROOT / "paper" / "sections"
+    template = (sections / "natural.tex").read_text()
+    moved = (sections / "app_natural_cases.tex").read_text()
     assert mt.NR_MARKER == "$^{\\ddagger}$Natural case study; caveats in Section~\\ref{sec:natural-cases}."
-    assert mt.NR_MARKER in " ".join(template.split()) and "\\label{sec:natural-cases}" in template
+    assert mt.NR_MARKER in " ".join(moved.split()) and "\\label{sec:natural-cases}" in template
+    assert "\\paragraph{Caveats.}" in template  # the caveats themselves stay at the head of the natural section
     for name in TABLES:
         caption, _, _ = parse_table((made.out / f"{name}.tex").read_text())
         assert caption.endswith(" " + mt.NR_MARKER) and caption.count("ddagger") == 1, name
@@ -876,6 +1197,25 @@ GUARDS = {
     "reasons of a candidate that is not ambiguous": (
         lambda a: a["labels"]["NP-91"]["d19"]["ambiguous_reasons"].update({"NP-91-eval-nm-1": "construction valid but checks fail"}),
         ValueError, "labels.NP-91.d19.ambiguous_reasons names ['NP-91-eval-nm-1', 'NP-91-pre-review']"),
+    # The gate's marker and the sanity rows of Table 7 read the same grading of the reference; the conditions that tell no
+    # candidate apart are read from outcome counts that must hold the sanity grading they count.
+    "a gate that disagrees with the sanity grading": (
+        lambda a: a["sanity_per_family"]["initial_plain"]["NP-90"].update(reference={"n": 1, "outcomes": {"pass": 1}, "pass": 1}),
+        ValueError, ("oracle_gated.conditions.initial_plain.dropped and sanity_per_family.initial_plain.NP-90.reference "
+                     "disagree on whether initial_plain passes NP-90's reference solution")),
+    "outcome counts that leave out the sanity grading": (
+        lambda a: a["outcome_counts_per_family"]["repo_tests"].update({"NP-90": {"pass": 1}}), ValueError,
+        "outcome_counts_per_family.repo_tests.NP-90 counts fewer pass outcomes than the sanity grading of repo_tests in NP-90"),
+    "outcome counts of an unknown condition": (
+        lambda a: a["outcome_counts_per_family"].update(other_condition={}), ValueError,
+        "expected conditions of C1-C4, B2, B1 and B3 only"),
+    "the sanity grading of an unknown condition": (
+        lambda a: a["sanity_per_family"].update(other_condition={}), ValueError,
+        "expected conditions of C1-C4, B2, B1 and B3 only"),
+    # A contract's superseded requirements are its own statuses, which both mappers' blocks read: they may not differ.
+    "superseded requirements that differ by mapper": (
+        lambda a: a["coverage"]["NP-92"]["variants_mapper2"]["full_session"].update(superseded_requirements=[]), ValueError,
+        "coverage.NP-92: the mappers' superseded_requirements of the full_session contract differ"),
 }
 
 

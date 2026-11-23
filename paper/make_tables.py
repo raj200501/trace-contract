@@ -28,12 +28,17 @@ with its own ledger, and never touches the pilot's top-level tables or ledger:
   of 7 or more (an id), session-local path or agent product name;
 * ``--natural-run RUN``: a natural run analysed in case-study mode (protocol §19.6, §20.3; the
   run's analysis.json, and its manifest.json for the run's id, times, code revision, repeats,
-  pilot flag and invocations) -> four per-family tables in
+  pilot flag and invocations) -> six per-family tables in
   paper/generated/natural_run/ (false acceptance and false rejection per condition under D19,
-  B3 apart; the pre-review states under the source-evidence label; the second labeling; the
-  construction facts), the number macros paper/generated/natural_run/numbers.tex (``\\nrv{key}``:
-  the tables' values, the run's facts ``run.*`` and, per family, D19's labels ``d19.<family>.*``
-  with the reason category of each ambiguous candidate) and paper/evidence_ledger_natural_run.md.
+  B3 apart; the pre-review states under the source-evidence label; the sanity grading, each
+  condition's outcome on the family's reference solution and no-op; the second labeling; the
+  construction facts; the recovered contracts' coverage of the reference contract under each
+  mapper, with their requirements that contradict it and those they mark superseded), the
+  number macros paper/generated/natural_run/numbers.tex (``\\nrv{key}``: the
+  tables' values, the run's facts ``run.*`` and, per family, D19's labels ``d19.<family>.*``
+  with the reason category of each ambiguous candidate, and the conditions that tell none of
+  the family's candidates apart, ``nd.<family>.*`` and ``noop.<family>.accepted``) and
+  paper/evidence_ledger_natural_run.md.
   Each table cell is a ledger entry that names the analysis.json fields it is made from, with
   their values; every field belongs to one family, or to the run,
   so nothing is pooled over families. Every caption ends with the marker that points to the
@@ -1233,6 +1238,19 @@ def fresh_tables(F: dict, led: SectionLedger, nums: Numbers, out: Path) -> None:
         nums.put(f"cv.{sh}", f"{cvb['accepted']}/{cvb['n']}", f"{src} by_negative_type.{c}.correction_violating.accepted, .n")
         nums.put(f"cv.{sh}.accepted", cvb["accepted"], f"{src} by_negative_type.{c}.correction_violating.accepted")
         nums.put(f"unspec.{sh}", f"{usb['accepted']}/{usb['n']}", f"{src} by_negative_type.{c}.unspecified.accepted, .n")
+    # How far the pooled counts of the violators are from independent observations: the distinct patterns of pass and
+    # non-pass over the six conditions among each family's correction violators (the rows of Tab. tab:fresh-matrix), and
+    # their sum over the families, each pattern counted within its family (a description of the per_task outcomes).
+    conds = ", ".join(SHORT[c] for c in ORDER)
+    patterns = {t: {tuple(units[(t, cid)]["outcome"][c] == "pass" for c in ORDER) for cid in viol[t]} for t in fams}
+    for t in fams:
+        if viol[t]:
+            nums.put_count(f"cv.patterns.{_fk(t)}", len(patterns[t]),
+                           f"{src} per_task.{t}.<condition>[] (correction_violating; distinct pass/non-pass patterns over "
+                           f"{conds})", "distinct outcome patterns of the family's correction violators over the six conditions")
+    nums.put_count("cv.patterns", sum(len(p) for p in patterns.values()),
+                   f"{src} per_task.<task>.<condition>[] (correction_violating; distinct pass/non-pass patterns over {conds}, "
+                   "per family, summed)", "distinct outcome patterns of the correction violators, each counted within its family")
     (out / "fresh_correction_violating.tex").write_text(table(
         f"\\texttt{{u1}} attempts (given the first user request only) that violate a requirement the reference contract introduces "
         f"after it, by family, and how many of them each condition accepts (accepted/violating), run {run_tt}, rule D19's labels. "
@@ -2635,6 +2653,47 @@ def _words(code: str) -> str:
     return tex(code.replace("_", " "))
 
 
+def _listed(names: list[str]) -> str:
+    """Names as a sentence lists them: ``C1``, ``C1 and C3``, ``C1, C3 and C4``; none for no name."""
+    return "none" if not names else names[0] if len(names) == 1 else f"{', '.join(names[:-1])} and {names[-1]}"
+
+
+def _req_order(rid: str) -> list:
+    """A requirement id's sort key, its digits read as a number: R4 before R11 (the analysis sorts them as text)."""
+    return [int(x) if x.isdigit() else x for x in re.split(r"(\d+)", rid)]
+
+
+def _sanity_part(x: object) -> str:
+    """A condition's outcome on a family's reference solution or on its no-op in the run (a block
+    ``sanity_per_family.<condition>.<family>.<origin>``): accepted or rejected, a rejection that is not a task failure (an
+    infrastructure outcome, or an unresolved pair) named in brackets, as the table of the pre-review states writes its
+    cells; k/n accepted for several such pairs; not graded where the run did not grade that candidate with the condition."""
+    if not isinstance(x, dict) or not x.get("n"):
+        return "not graded"
+    n, passed, outcomes = x["n"], x.get("pass", 0), x.get("outcomes") if isinstance(x.get("outcomes"), dict) else {}
+    if n != 1:
+        return f"{_num(passed)}/{_num(n)} accepted"
+    if passed:
+        return "accepted"
+    other = [o for o in outcomes if o not in ("pass", "task_failure")]
+    return "rejected" + (f" ({', '.join(_words(o) for o in other)})" if other else "")
+
+
+def _sanity_mark(word: str) -> str:
+    """The cell form of :func:`_sanity_part`, as the outcome matrices mark outcomes: \\checkmark for accepted and
+    $\\times$ for rejected (with its outcome in brackets, where it names one); any other value as it is."""
+    if word == "accepted":
+        return "\\checkmark"
+    return "$\\times$" + word.removeprefix("rejected") if word.startswith("rejected") else word
+
+
+def _passes_every_pair(sanity: object) -> bool:
+    """Whether a condition passes a family's reference solution, or its no-op, in every pair the run graded it in (a block
+    ``sanity_per_family.<condition>.<family>.<origin>``); for the reference, the rule by which the oracle-gated view keeps
+    a cell."""
+    return isinstance(sanity, dict) and bool(sanity.get("n")) and sanity.get("pass") == sanity.get("n")
+
+
 class NRTable:
     """One table of the natural run: rows of one cell per family, each cell a ledger entry with its fields. A ``ragged``
     table has wrapping columns (:func:`_nr_columns`): each cell starts with :data:`RAGGED` (``\\raggedright``, and
@@ -2677,8 +2736,10 @@ def natural_run_inputs(run: Path) -> dict:
     rates, intervals, sign-flip p-values) and not this mode's; and one with no ``labels.<task>.d19`` for a family (D19's
     labels with the reason category of each ambiguous candidate, analysis.D19_RULE), which analyses made before it was
     carried lack. D19's counts must equal the label block's own (``labels.<task>.counts``), since the tables say that each
-    label is D19's proposal. ``own_revisions``: the run's and its invocations' code revisions, which name commits of the
-    study's repository, for the privacy check's digit-run rule (:func:`_check_private`)."""
+    label is D19's proposal; and the per-family outcome counts and sanity grading (``outcome_counts_per_family``,
+    ``sanity_per_family``) must name the conditions only. ``own_revisions``: the run's and its invocations' code
+    revisions, which name commits of the study's repository, for the privacy check's digit-run rule
+    (:func:`_check_private`)."""
     shown = _shown(run)
     src, msrc = f"{shown}/analysis.json", f"{shown}/manifest.json"
     raw, mraw = (run / "analysis.json").read_bytes(), (run / "manifest.json").read_bytes()
@@ -2713,6 +2774,10 @@ def natural_run_inputs(run: Path) -> dict:
     for c, pf in (*prim.items(), *sec.items()):
         if set(pf) - set(fams):
             raise ValueError(f"{src}: per-family rates of {c} for {sorted(set(pf) - set(fams))}, which are not the run's families")
+    for block in ("outcome_counts_per_family", "sanity_per_family"):  # read by the sanity table and the statement keys
+        if not isinstance(a.get(block, {}), dict) or set(a.get(block, {})) - set(NR_CONDITIONS):
+            raise ValueError(f"{src}: {block} holds {sorted(a.get(block) or {})}; expected conditions of C1-C4, B2, B1 and "
+                             "B3 only")
     labels = a.get("labels") if isinstance(a.get("labels"), dict) else {}
     for t in fams:
         block = labels.get(t) if isinstance(labels.get(t), dict) else {}
@@ -2844,10 +2909,14 @@ def _nr_pairs_rows(T: NRTable) -> None:
 
 
 def natural_run_source_table(R: dict, led: SectionLedger, nums: Numbers, out: Path) -> None:
-    """(2) Which conditions accept each family's pre-review state under the source-evidence label, and that state's
-    other labels."""
+    """(2) Which conditions accept each family's pre-review state under the source-evidence label, each cell of a
+    condition that does not pass the family's reference solution marked as the oracle-gated view of the false-acceptance
+    table marks it (the sanity table gives the reference's outcome, and the two must agree), and that state's other
+    labels. The table sits in the main text as a top float, whose height the layout bounds (``\\topfraction``): the
+    sanity grading is a table of its own (:func:`natural_run_sanity_table`)."""
     a, fams = R["a"], R["fams"]
     se = a["source_evidence"]
+    og = a["oracle_gated"]["conditions"]
     T = NRTable(R, led, nums, "natural_run_source_evidence", ragged=True)
     pre: dict[str, str] = {}
     for t in fams:
@@ -2866,18 +2935,26 @@ def natural_run_source_table(R: dict, led: SectionLedger, nums: Numbers, out: Pa
     graded = [c for c in NR_CONDITIONS if c in views]
     for i, c in enumerate(graded):
         base, sh, cells = views[c], NR_SHORT[c].lower(), []
+        if c not in og:
+            raise ValueError(f"{R['src']}: oracle_gated.conditions has no {c}")
         for t in fams:
             if _get(a, f"{base}.{c}.{t}") is ABSENT:
                 cells.append(("--", T.fields(f"{base}.{c}.{t}")))
                 continue
             fs = T.fields(f"{base}.{c}.{t}.invalid.accepted", f"{base}.{c}.{t}.invalid.n",
-                          f"source_evidence.pre_review.{pre[t]}.outcomes.{c}")
-            acc, n, outcome = (v for _, v in fs)
+                          f"source_evidence.pre_review.{pre[t]}.outcomes.{c}", f"oracle_gated.conditions.{c}.dropped.{t}")
+            acc, n, outcome, dropped = (v for _, v in fs)
             text = "--" if not n else ("accepted" if acc else "rejected") if n == 1 else f"{acc}/{n} accepted"
             if text == "rejected" and isinstance(outcome, str) and outcome != "task_failure":
                 text += f" ({_words(outcome)})"  # an infrastructure outcome or an unresolved pair, a rejection (§6, §15.3)
             if n:
-                T.put(f"se.{sh}.{_fk(t)}", text, fs, "the pre-review state under the source-evidence label")
+                # The marker and the sanity table read the same grading of the reference: they may not disagree.
+                if _passes_every_pair(_get(a, f"sanity_per_family.{c}.{t}.reference")) == (dropped is not ABSENT):
+                    raise ValueError(f"{R['src']}: oracle_gated.conditions.{c}.dropped and sanity_per_family.{c}.{t}.reference "
+                                     f"disagree on whether {c} passes {t}'s reference solution; the table marks the cells "
+                                     "the oracle-gated view drops, and the sanity table gives the reference's outcome")
+                T.put(f"se.{sh}.{_fk(t)}", text, fs[:3], "the pre-review state under the source-evidence label")
+                text += "" if dropped is ABSENT else "$^{\\dagger}$"  # the cell's gate, as Table tab:nr-fa-fr marks it
             cells.append((text, fs))
         last = i + 1 == len(graded) or (c not in NR_SECONDARY and graded[i + 1] in NR_SECONDARY)
         T.row(tex(NR_TEX[c]), cells, last_of_group=last)
@@ -2909,7 +2986,9 @@ def natural_run_source_table(R: dict, led: SectionLedger, nums: Numbers, out: Pa
                f"{_nr_case_study(T)} Below the conditions: the same state's D19 label (ambiguous where its reference "
                "checks pass it, \\S15.6), its label in the second labeling with the independent labeler's outcome (a pass on a "
                "pre-review state is ambiguous, decision log D64; left out: the family's labeler is not usable), and the "
-               "reference checks' outcome on it in the run. A rejection is any outcome other than a pass: one that is not a "
+               "reference checks' outcome on it in the run. $^{\\dagger}$: the verifier does not pass the family's reference "
+               "solution in the run, so the secondary oracle-gated view drops the cell, as in Table~\\ref{tab:nr-fa-fr}. A "
+               "rejection is any outcome other than a pass: one that is not a "
                "task failure (an infrastructure outcome, or an unresolved pair whose repeats disagree, protocol \\S15.3) is "
                "named in brackets. Terms: --: the run did not grade the condition for the family; not graded: the run did not "
                "grade the state with that verifier; none: no label (no D19 proposal, or no label in the second labeling). "
@@ -2917,6 +2996,46 @@ def natural_run_source_table(R: dict, led: SectionLedger, nums: Numbers, out: Pa
     size, spec = _nr_layout(fams)
     head = "Condition & " + " & ".join(tex(t) for t in fams)
     (out / "natural_run_source_evidence.tex").write_text(table(caption, "tab:nr-source", spec, head, T.rows, size=size))
+
+
+def natural_run_sanity_table(R: dict, led: SectionLedger, nums: Numbers, out: Path) -> None:
+    """(2a) The sanity grading per family (``sanity_per_family``; protocol §15.7's reference solution and no-op, which
+    the rates leave out): each condition's outcome on the family's reference solution and on its no-op, the unchanged
+    base, as marks in the cells and as words in the macros ``sanity.<condition>.<family>.reference`` and ``.noop``. Where a
+    condition rejects the reference, its rejection of the pre-review state does not tell the state from the reference;
+    where it accepts the no-op, its acceptance does not tell the state from the base. The gate's marker of the tables of
+    the pre-review states and of false acceptance reads the same grading (:func:`natural_run_source_table` checks that the
+    two agree)."""
+    a, fams = R["a"], R["fams"]
+    T = NRTable(R, led, nums, "natural_run_sanity", ragged=True)
+    graded = [c for c in NR_CONDITIONS if c in a.get("sanity_per_family", {})]  # its conditions: natural_run_inputs
+    for i, c in enumerate(graded):
+        sh, cells = NR_SHORT[c].lower(), []
+        for t in fams:
+            if _get(a, f"sanity_per_family.{c}.{t}") is ABSENT:  # the run did not grade the condition for the family
+                cells.append(("--", T.fields(f"sanity_per_family.{c}.{t}")))
+                continue
+            fs = T.fields(f"sanity_per_family.{c}.{t}.reference", f"sanity_per_family.{c}.{t}.noop")
+            parts = []
+            for (path, x), k, what in zip(fs, ("reference", "noop"), ("reference solution", "no-op (the unchanged base)")):
+                word = _sanity_part(x)
+                if word != "not graded":  # the macro in words, for statements; the cell in the marks of its caption
+                    T.put(f"sanity.{sh}.{_fk(t)}.{k}", word, [(path, x)], f"{NR_SHORT[c]}'s outcome on the family's {what}")
+                parts.append(_sanity_mark(word))
+            cells.append((", ".join(parts), fs))
+        T.row(tex(NR_TEX[c]), cells,
+              last_of_group=c not in NR_SECONDARY and i + 1 < len(graded) and graded[i + 1] in NR_SECONDARY)
+    caption = ("The sanity grading per family: each condition's outcome on the family's reference solution and on its no-op, "
+               "the unchanged base, in the run, as reference, no-op: \\checkmark{} accepted, $\\times$ rejected, with a "
+               "rejection that is not a task failure (an infrastructure outcome, or an unresolved pair whose repeats "
+               "disagree, protocol \\S15.3) named in brackets. The rates leave both out (protocol \\S15.7). The secondary "
+               "oracle-gated view keeps a condition's cell only where the condition accepts the reference, and "
+               "Tables~\\ref{tab:nr-source} and~\\ref{tab:nr-fa-fr} mark with $^{\\dagger}$ the cells it drops. Terms: --: "
+               "the run did not grade the condition for the family; not graded: the run did not grade that candidate with "
+               "the condition. " + _nr_case_study(T) + " " + NR_MARKER)
+    size, spec = _nr_layout(fams)
+    head = "Condition & " + " & ".join(tex(t) for t in fams)
+    (out / "natural_run_sanity.tex").write_text(table(caption, "tab:nr-sanity", spec, head, T.rows, size=size))
 
 
 def natural_run_labeler_table(R: dict, led: SectionLedger, nums: Numbers, out: Path) -> None:
@@ -3183,6 +3302,120 @@ def natural_run_construction_table(R: dict, led: SectionLedger, nums: Numbers, o
     (out / "natural_run_construction.tex").write_text(table(caption, "tab:nr-construction", spec, head, T.rows, size=size))
 
 
+def natural_run_coverage_table(R: dict, led: SectionLedger, nums: Numbers, out: Path) -> None:
+    """(5) Per family, the reference contract's correction requirements and its coverage by the two recovered contracts
+    under each of the two model mappers (the analysis's ``coverage`` block, analysis.contract_coverage: a reference
+    requirement is covered when a scored active requirement of the recovered contract maps to it without contradicting
+    it), with the correction requirements that each recovered contract does not cover; then, as the controlled study's
+    coverage table gives them, the recovered requirements that each mapper judges to contradict a reference requirement
+    (``contradicting``, of ``n_recovered_scored``) and the requirements each contract marks superseded
+    (``superseded_requirements``, the contract's own, which both mappers' blocks must agree on). A table of its own
+    beside the construction facts, which fill their page."""
+    fams = R["fams"]
+    T = NRTable(R, led, nums, "natural_run_coverage", ragged=True)
+    contracts = {"ini": ("initial_only", "initial-only"), "full": ("full_session", "correction-aware")}
+    mappers = {"m1": ("variants", "first"), "m2": ("variants_mapper2", "second")}
+
+    def ids(rids: list) -> str:
+        return ", ".join(tex(r) for r in sorted(rids, key=_req_order)) or "none"
+
+    cells = []
+    for t in fams:
+        fs = T.fields(f"natural.families.{t}.correction_requirements")
+        corr = fs[0][1]
+        cells.append(("--" if not isinstance(corr, list) else ids(corr), fs))
+        if isinstance(corr, list):
+            T.put(f"ref.{_fk(t)}.correction.ids", cells[-1][0], fs,
+                  "the reference contract's correction requirements (scored, active, introduced at the correction), in "
+                  "the order of their numbers; none: no such requirement")
+    T.row("Correction requirements of the reference contract", cells, last_of_group=True)
+    for m, (variants, which) in mappers.items():
+        cells = []
+        for t in fams:
+            p = f"coverage.{t}"
+            fs = T.fields(f"{p}.reference_scored", *(f"{p}.{variants}.{v}.covered" for v, _ in contracts.values()))
+            scored, parts = fs[0][1], []
+            for (path, covered), (k, (_, name)) in zip(fs[1:], contracts.items()):
+                if not isinstance(covered, list) or not isinstance(scored, list):
+                    parts.append("--")
+                    continue
+                parts.append(f"{_int(len(covered))}/{_int(len(scored))}")
+                T.put(f"{k}.{_fk(t)}.cov.{m}", parts[-1], [fs[0], (path, covered)],
+                      f"the reference contract's scored active requirements that the {name} contract covers, of all, "
+                      f"under the {which} mapper")
+            cells.append((", ".join(parts), fs))
+        T.row(f"Coverage, {which} mapper: initial-only, correction-aware", cells, last_of_group=m == "m2")
+    for m, (variants, which) in mappers.items():
+        cells = []
+        for t in fams:
+            fs = T.fields(f"natural.families.{t}.correction_requirements",
+                          *(f"coverage.{t}.{variants}.{v}.missing" for v, _ in contracts.values()))
+            corr, parts = fs[0][1], []
+            for (path, missing), (k, (_, name)) in zip(fs[1:], contracts.items()):
+                if not isinstance(missing, list) or not isinstance(corr, list):
+                    parts.append("--")
+                    continue
+                parts.append(ids(sorted(set(corr) & set(missing))))
+                T.put(f"{k}.{_fk(t)}.corr.missing.{m}", parts[-1], [fs[0], (path, missing)],
+                      f"the reference contract's correction requirements that the {name} contract does not cover, under "
+                      f"the {which} mapper, in the order of their numbers; none: no such requirement")
+            cells.append(("; ".join(parts), fs))
+        T.row(f"Correction requirements not covered, {which} mapper: initial-only; correction-aware", cells,
+              last_of_group=m == "m2")
+    # The columns the controlled study's coverage table also gives (tab:coverage): the recovered requirements that the
+    # mapper judges to contradict a reference requirement, of the contract's scored active ones, under each mapper; and,
+    # once (it is the contract's, not the mapper's), the requirements the contract marks superseded, as CS-01's
+    # correction-aware contract marks the request its correction retracts.
+    for m, (variants, which) in mappers.items():
+        cells = []
+        for t in fams:
+            p = f"coverage.{t}.{variants}"
+            fs = T.fields(*(f"{p}.{v}.{x}" for v, _ in contracts.values() for x in ("contradicting", "n_recovered_scored")))
+            parts = []
+            for (k, (_, name)), ((cpath, contra), (npath, n)) in zip(contracts.items(), (fs[:2], fs[2:])):
+                if not isinstance(contra, list) or not isinstance(n, int):
+                    parts.append("--")
+                    continue
+                parts.append(f"{_int(len(contra))}/{_int(n)}")
+                T.put(f"{k}.{_fk(t)}.contra.{m}", parts[-1], [(cpath, contra), (npath, n)],
+                      f"the {name} contract's scored active requirements that the {which} mapper judges to contradict a "
+                      "requirement of the reference contract, of all its scored active requirements")
+            cells.append((", ".join(parts), fs))
+        T.row(f"Contradicting the reference contract, {which} mapper: initial-only, correction-aware", cells)
+    cells = []
+    for t in fams:
+        fs = T.fields(*(f"coverage.{t}.{variants}.{v}.superseded_requirements" for v, _ in contracts.values()
+                        for variants, _ in mappers.values()))
+        parts = []
+        for (k, (v, name)), pair in zip(contracts.items(), (fs[:2], fs[2:])):
+            lists = [x for _, x in pair if isinstance(x, list)]
+            if not lists:
+                parts.append("--")
+                continue
+            if any(sorted(x) != sorted(lists[0]) for x in lists):  # the contract's own statuses: both mappers read them
+                raise ValueError(f"{R['src']}: coverage.{t}: the mappers' superseded_requirements of the {v} contract "
+                                 f"differ ({[x for _, x in pair]}); they are the contract's, not the mapper's")
+            parts.append(_int(len(lists[0])))
+            T.put(f"{k}.{_fk(t)}.superseded", parts[-1], list(pair),
+                  f"the requirements that the {name} contract marks superseded and not unscored (not scored)")
+        cells.append((", ".join(parts), fs))
+    T.row("Marked superseded by the recovered contract: initial-only, correction-aware", cells)
+    caption = ("Coverage of each family's reference contract by its two recovered contracts, the initial-only and the "
+               "correction-aware one, under each of the two model mappers, whose mappings are proposals: the reference "
+               "contract's scored active requirements that a requirement of the recovered contract maps to without "
+               "contradicting it, of all. Correction requirements: the reference contract's scored active requirements "
+               "introduced at the correction (the review comment or a reply; decision log D64, decision 14), with, below, "
+               "those that each recovered contract does not cover. Contradicting: the recovered contract's scored active "
+               "requirements that the mapper judges to contradict a requirement of the reference contract, of all its "
+               "scored active requirements. Marked superseded: the recovered contract's requirements whose status is "
+               "superseded and which it does not mark unscored; they are not scored. Terms: --: not in the analysis (in "
+               "the rows of a mapper: that mapper did not map that contract); none: no such requirement. "
+               + _nr_case_study(T) + " " + NR_MARKER)
+    size, spec = _nr_layout(fams)
+    head = "Coverage & " + " & ".join(tex(t) for t in fams)
+    (out / "natural_run_coverage.tex").write_text(table(caption, "tab:nr-coverage", spec, head, T.rows, size=size))
+
+
 NOT_RECORDED = "not recorded"  # a macro whose field the manifest or the analysis does not hold, or holds in no usable form
 
 
@@ -3272,6 +3505,60 @@ def natural_run_numbers(R: dict, led: SectionLedger, nums: Numbers) -> None:
               fs, "each candidate D19 labels ambiguous, with the category of D19's reason in brackets; none: no such candidate")
 
 
+def natural_run_discrimination(R: dict, led: SectionLedger, nums: Numbers) -> None:
+    """Per family, for statements: the conditions that do not tell its candidates apart, each list in the run's order of
+    the conditions (C1 to C4, B2, B1, B3) and written as a sentence lists names (``none`` for no condition).
+
+    * ``nd.<family>.reject``: the conditions that graded the family's reference solution, its no-op and its held-out
+      candidates (the pre-review state and the pool, the valid alternatives among them), and passed none of them: no pass
+      among the condition's graded pairs of the family (``outcome_counts_per_family``, every pair of the condition and the
+      family, the reference and the no-op included), a rejection being any outcome other than a pass.
+    * ``nd.<family>.accept``: those that graded the same and passed every one, the no-op (the unchanged base) included.
+    * ``noop.<family>.accepted``: those that pass the family's no-op in the run (``sanity_per_family``).
+
+    Each list is one ledger entry with the fields of every condition graded for the family: nothing is pooled over the
+    families. The outcome counts must hold the sanity grading's outcomes, which they count."""
+    a = R["a"]
+    T = NRTable(R, led, nums, "numbers")
+    conds = [c for c in NR_CONDITIONS if c in a.get("outcome_counts_per_family", {})]  # its conditions: natural_run_inputs
+    for t in R["fams"]:
+        fk, both, noop_fields = _fk(t), [], []
+        reject, accept, noop = [], [], []
+        for c in conds:
+            fs = T.fields(f"outcome_counts_per_family.{c}.{t}", f"sanity_per_family.{c}.{t}.reference",
+                          f"sanity_per_family.{c}.{t}.noop")
+            counts, ref, nop = (v for _, v in fs)
+            if counts is ABSENT:  # the run did not grade the condition for the family
+                continue
+            both += fs
+            noop_fields.append(fs[2])
+            sanity = [x for x in (ref, nop) if isinstance(x, dict)]
+            need: Counter = Counter()
+            for x in sanity:
+                need.update(x.get("outcomes") or {})
+            short = sorted(o for o, n in need.items() if counts.get(o, 0) < n)
+            if short:
+                raise ValueError(f"{R['src']}: outcome_counts_per_family.{c}.{t} counts fewer {', '.join(short)} outcomes "
+                                 f"than the sanity grading of {c} in {t} (sanity_per_family.{c}.{t}), which it counts")
+            total, passed = sum(counts.values()), counts.get("pass", 0)
+            graded = len(sanity) == 2 and all(x.get("n") for x in sanity) and total > sum(x["n"] for x in sanity)
+            if graded and passed == 0:
+                reject.append(NR_SHORT[c])
+            if graded and passed == total:
+                accept.append(NR_SHORT[c])
+            if _passes_every_pair(nop):
+                noop.append(NR_SHORT[c])
+        T.put(f"nd.{fk}.reject", _listed(reject), both,
+              "the conditions that graded the family's reference solution, its no-op and its held-out candidates, the valid "
+              "alternatives among them, and rejected every one (no pass among their graded pairs of the family); none: no "
+              "such condition")
+        T.put(f"nd.{fk}.accept", _listed(accept), both,
+              "the conditions that graded the family's reference solution, its no-op and its held-out candidates, and "
+              "accepted every one, the no-op (the unchanged base) included; none: no such condition")
+        T.put(f"noop.{fk}.accepted", _listed(noop), noop_fields,
+              "the conditions that accept the family's no-op, the unchanged base, in the run; none: no such condition")
+
+
 def natural_run_tables(R: dict, led: SectionLedger, nums: Numbers, out: Path) -> None:
     for name, sha in R["sha256"].items():
         led.add("inputs", f"{name} sha256", sha, name)
@@ -3285,10 +3572,13 @@ def natural_run_tables(R: dict, led: SectionLedger, nums: Numbers, out: Path) ->
     nums.put("threshold", _num(R["a"]["meta"]["case_study"]["threshold"]), T.src(T.fields("meta.case_study.threshold")),
              "the size threshold of protocol §19.6")
     natural_run_numbers(R, led, nums)
+    natural_run_discrimination(R, led, nums)
     natural_run_fa_fr_table(R, led, nums, out)
     natural_run_source_table(R, led, nums, out)
+    natural_run_sanity_table(R, led, nums, out)
     natural_run_labeler_table(R, led, nums, out)
     natural_run_construction_table(R, led, nums, out)
+    natural_run_coverage_table(R, led, nums, out)
 
 
 def parse_args(argv: list[str]) -> argparse.Namespace:

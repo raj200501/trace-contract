@@ -155,6 +155,24 @@ def test_the_violators_c1_rejects_and_the_requirements_of_their_failing_checks(m
         {r.lower(): str(v) for r, v in by_req.items()} == {"r3": "2", "r4": "3"}
 
 
+def test_the_violators_distinct_outcome_patterns_are_counted_within_each_family(made):
+    """The correction violators' distinct patterns of pass and non-pass over the six conditions (the rows of the outcome
+    matrix), per family and summed over the families with each pattern counted within its family: what the pooled
+    counts of the violators rest on (the final verification's finding on their clustering)."""
+    n, a = made["n"], made["a"]
+    units = _units(a)
+    pats = {t: {tuple(u[2][c] == "pass" for c in CONDS) for (tt, _), u in units.items()
+                if tt == t and u[1] == "correction_violating"} for t in FAMS}
+    for t in FAMS:
+        if pats[t]:
+            assert n[f"cv.patterns.{_fk(t)}"] == str(len(pats[t]))
+        else:
+            assert f"cv.patterns.{_fk(t)}" not in n  # a family without correction violators has no pattern
+    assert n["cv.patterns"] == str(sum(len(p) for p in pats.values()))
+    assert [n[k] for k in ("cv.patterns.cs01", "cv.patterns.cs03", "cv.patterns.cs04", "cv.patterns", "cv.patterns.w")] == \
+        ["1", "2", "1", "4", "four"]
+
+
 def test_what_each_correction_changed_comes_from_the_scenarios(made):
     n = made["n"]
     for t in FAMS:

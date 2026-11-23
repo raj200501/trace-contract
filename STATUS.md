@@ -1,6 +1,7 @@
 # Status
 
-Last updated: 2026-11-23 (UTC), after the run `natural-pr-v1` (decision log D76 to D78) and the manuscript's restructure.
+Last updated: 2026-11-23 (UTC), after the run `natural-pr-v1` (decision log D76 to D78), the manuscript's restructure
+(D79) and a final fix round after a fresh verification (D80).
 Nothing here is peer reviewed, and no human labels exist.
 
 ## Where the study stands
@@ -26,10 +27,19 @@ Nothing here is peer reviewed, and no human labels exist.
   * `natural-pr-v1` graded the six families, and its analysis is published in `results/runs/natural-pr-v1` (D76 to
     D78). The paper reports them as exploratory case studies, per family only. The extension's S10 is to be redone,
     for `natural-pr-v2`.
+  * Read with the reference gate, the case studies say little about corrections (D80): C1 and C3 reject every
+    candidate, their reference included, in NP-03, NP-05 and NP-18 (C4 too in NP-03, C1 alone in NP-20), and the
+    repository tests pass the unchanged base in NP-03, NP-05, NP-19 and NP-20. In NP-04 and NP-19 the
+    correction-aware verifiers accept near misses that break a correction requirement.
 * **Manuscript (`paper/`).** Restructured under the restructure plan, with the natural section written from the run's
-  cells into the template fixed before its analysis (D77; D79 records the integration). It compiles
-  with no `UNFILLED` marker, and every number in it is a generated macro with a ledger entry. Authors are a TODO for the
-  human authors.
+  cells into the template fixed before its analysis (D77; D79 records the integration), then revised after a fresh
+  verification (D80): the lead contrast stated as largely fixed by construction, the shared source of the labels and
+  the correction-aware verifiers stated, the natural case studies read family by family with the reference gate, the
+  natural per-family detail moved unchanged to App. G, and four verified references on patch overfitting, test
+  oracles and requirements change. It compiles to 76 pages (main text 22) with no `UNFILLED` marker, and every number
+  in it is a generated macro with a ledger entry. The reviewer of the last round judged it close to a credible
+  preprint as a methods or negative-results note (a workshop or an arXiv note, not a main track). Authors are a TODO
+  for the human authors, who must review it before any submission.
 
 ## Where round 5 stopped, and how to resume
 
@@ -56,8 +66,11 @@ Nothing here is peer reviewed, and no human labels exist.
   * How the scan treats organisation accounts, before its `--aidev-logins` mode loads both S9 samples (D66).
   * Whether the pilot's frozen tables (`paper/generated/*.tex`, `evidence_ledger.md`) are re-frozen with the
     restructure's captions and names; until then they keep theirs, which the paper's Appendix F explains.
-  * The natural section's length, over the restructure plan's budget, and whether its construction lists move to an
-    appendix unchanged.
+  * The builder decisions of D80: the move of the natural section's per-family detail, unchanged, to App. G; the
+    model statement's wording; two template sentences changed where the records contradict them; and counting
+    natural correction violators as the controlled tasks do.
+  * The author line and the human authors' review of the paper before any submission; whether to name the models;
+    and whether the committed controlled transcripts keep the model identifier in their raw records (D79, D80).
   * The human labels, and SWE-chat's access terms (below).
 
 ## Completed

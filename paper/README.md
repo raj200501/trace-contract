@@ -15,7 +15,7 @@ The restructure plan (parts 2 and 3) set the order: the main text, then the appe
 | 2 Study design | `sections/design.tex` | Tab. 1 (`tab:roles`), Tab. 2 (`tab:label-rules`) |
 | 3 Controlled results | `sections/results_controlled.tex` | Tab. 3 to 5, Fig. 2 |
 | 4 What the construction pilot adds | `sections/pilot.tex` | |
-| 5 Natural case studies | `sections/natural.tex` | the template fixed before the run's analysis (D77); Tab. 6 to 8 |
+| 5 Natural case studies | `sections/natural.tex` | the template fixed before the run's analysis (D77), with the reading of the families written after it; the tables of the pre-review states (`tab:nr-source`) and of false acceptance and false rejection (`tab:nr-fa-fr`) |
 | 6 Related work | `sections/related.tex` | |
 | 7 Discussion | `sections/discussion.tex` | |
 | 8 Threats to validity | `sections/threats.tex` | |
@@ -27,7 +27,7 @@ The restructure plan (parts 2 and 3) set the order: the main text, then the appe
 | D Construction details | `sections/app_construction.tex` | `tab:conditions`; the pilot's verifier, task, coverage and scenario tables |
 | E Fresh-agent stratum: detail tables | `sections/app_fresh.tex` | the fresh-v1 tables the main text does not hold |
 | F The construction pilot | `sections/app_pilot.tex` | the pilot's tables, its re-grade and D49's exploratory tables |
-| G Natural arm: screening, replay and construction | `sections/app_natural.tex` | `tab:natural-vs-controlled`; the funnel, S10, Trace Commons and the run's construction and second-labeling tables |
+| G Natural arm: screening, replay and construction | `sections/app_natural.tex`, `sections/app_natural_cases.tex` | `tab:natural-vs-controlled`; the funnel, S10, Trace Commons and the run's construction, second-labeling, sanity and coverage tables; then the template's part moved from Section 5 (D80): its caveats on the build's process, `tab:nr-caveats`, the family paragraphs and the cost per family |
 | H Annotation guide and review packet | `sections/app_annotation.tex` | |
 | I Provenance | `sections/app_provenance.tex` | `tab:provenance`; the index of the evidence ledgers |
 
@@ -45,9 +45,12 @@ Rules for this directory:
   literature that no verified entry covers yet is named as a gap in the threats to validity, without a citation.
 * The posted PDF holds no `UNFILLED` marker, no undefined reference and no `TODO` but the author line, which stays a TODO
   for the human authors, as the working-draft subtitle stays until posting (the owner's defaults).
-* No model identifier, agent-tool name or product name, and no wording that ranks the models: the configurations are A
-  and B, models of one model family of one provider that the paper does not name; the AI-assistance statement says "an
-  AI coding agent".
+* No model identifier, agent-tool name or product name. The paper says what the records name and no more anonymity than
+  they keep: the protocol and the decision log name the agent tool and define configuration A as the build session's
+  default model and B as the smallest model tier the tool offers, of one model family of one provider; the commit
+  messages' co-author lines and the committed controlled-session transcripts carry model names; the paper names none
+  (Section 2.1; the AI-assistance statement says "an AI coding agent"). The natural template keeps its stricter rule:
+  no tier wording (`tests/test_natural_template.py`).
 
 Tables and figures of the later runs (decision log D66):
 
@@ -69,7 +72,9 @@ Tables and figures of the later runs (decision log D66):
   One invocation writes both and deletes any other file of the directory.
 * `generated/fresh/numbers.tex` and `generated/natural/numbers.tex` define number macros, used in the text as `\fv{key}`
   and `\nat{key}`; an undefined key prints as `UNFILLED`. Each value is in its ledger with its file and field.
-  `--fresh` also writes the behaviours table (`fresh_behaviours.tex`, `tab:fresh-behaviours`), the primary per-family
+  `--fresh` also writes the correction violators' distinct outcome patterns per family (`cv.patterns.<family>`,
+  and `cv.patterns`, their sum, each pattern counted within its family), the behaviours table (`fresh_behaviours.tex`,
+  `tab:fresh-behaviours`), the primary per-family
   table split into false acceptance and false rejection with rule D19's rows only (`tab:fresh-family`) and the second
   labeler's view apart (`fresh_per_family_labeler.tex`, `tab:fresh-family-labeler`), and the comparisons in a compact
   table (`tab:fresh-comparisons`) and in full (`fresh_comparisons_full.tex`, `tab:fresh-comparisons-full`). Every caption
@@ -115,17 +120,28 @@ Tables and figures of the later runs (decision log D66):
     size rule counts the run's own accepted tasks, never the committed index's over both samples: with 10 or more, §15.6
     and §15.7 apply in full, and their pooled tables are not this mode's. An analysis made before that rule (with no
     `meta.case_study.accepted_in_run`) is refused too.
-  * Four per-family tables: false acceptance and false rejection per condition under D19 (C1 to C4, B2, B1, and B3 apart
+  * Six per-family tables: false acceptance and false rejection per condition under D19 (C1 to C4, B2, B1, and B3 apart
     as the secondary arm; a cell the oracle-gated view drops is marked); which conditions accept each family's pre-review
-    state under the source-evidence label, with its D19 and second labels; the second labeling (the labeler's status, the
-    labels, the agreement with D19, apart for the pre-review states and the pool); and the construction facts (contract
-    counts, checks per verifier, the audits of C2 and C4, B3, B1, the reference checks' status record, cost).
+    state under the source-evidence label (marked as that view marks them), with its D19 and second labels; the sanity
+    grading, each condition's outcome on the family's reference solution and on its no-op (`sanity_per_family`; the
+    marker and these outcomes must agree); the second labeling (the labeler's status, the labels, the agreement with D19,
+    apart for the pre-review states and the pool); the construction facts (contract counts, checks per verifier, the
+    audits of C2 and C4, B3, B1, the reference checks' status record, cost); and the coverage of the reference contract's
+    scored requirements by each recovered contract under each of the two mappers, with the reference contract's
+    correction requirements and those each recovered contract leaves uncovered, and, as the controlled study's
+    coverage table gives them, the recovered requirements that each mapper judges to contradict the reference contract
+    and those each recovered contract marks superseded. The sanity and coverage tables are
+    tables of their own in App. G: the table of the pre-review states is a main-text top float, whose height the layout
+    bounds, and the construction facts fill their page.
   * Besides the tables' values, the macros give the run's facts (`run.date`, `run.started`, `run.finished` in UTC,
     `run.revision`, `run.harness`, `run.repeats`, `run.pilot`, `run.invocations`, and `run.families`, the run's own
     families from the analysis's `natural.tasks`) and, per family, D19's labels of its held-out candidates
     (`d19.<family>.valid`, `.invalid`, `.ambiguous`, `.unlabeled`, and `.ambiguous.ids` and `.ambiguous.reasons`: each
     ambiguous candidate with the category of D19's reason in brackets, which `tracecontract analyze` carries into the
-    run's label block, `labels.<task>.d19`). An analysis without that block is refused.
+    run's label block, `labels.<task>.d19`). An analysis without that block is refused. For statements about a family,
+    `nd.<family>.reject` names the conditions that graded its reference solution, its no-op and its held-out candidates
+    and passed none of them, `nd.<family>.accept` those that passed every one, and `noop.<family>.accepted` those that
+    pass its no-op, each as a sentence lists names (`none` for no condition).
   * Nothing is pooled over the families: no pooled rate, interval or p-value, and no total.
   * Every caption ends with the marker "‡ Natural case study; caveats in Section~\ref{sec:natural-cases}": the caveats
     are stated once, at the head of the natural section.
@@ -136,21 +152,26 @@ Tables and figures of the later runs (decision log D66):
     revisions, which are commits of this repository.
 * `sections/natural.tex` is the template of the natural case-study section, fixed before any analysis of the run: every
   value in it is a `\nrv` or `\nat` macro, and it prints `UNFILLED` until `--natural-run` has run. `main.tex` inputs it as
-  the natural section. Outside itself and its generated tables it points only to the two places D77 left open until
-  the restructure gave them their content: Appendix A's `tab:amendments` (its v0.12 row) and Appendix G's
-  `tab:natural-vs-controlled` (`CROSS_REFS`). `tests/test_natural_template.py` checks that every key it
-  uses is generated, that it compiles with `main.tex`'s preamble, its wording, the disclosures its records require, and
-  that every decision-log entry it cites is logged (its header declares D77 as pending: the build session logs it with the
-  template, as the next entry, and removes that line). Its fixed sentences state construction facts that the analysis
-  also computes; the test's `PREMISES` lists them, and `test_the_run_s_own_numbers_bear_out_the_template_s_premises` runs
-  on `generated/natural_run/numbers.tex` once the run is published: a premise that fails means the sentence is rewritten
-  from the records. The closing paragraph's integration slot, its one visible `UNFILLED` marker until then, was replaced
-  after `--natural-run` by the one sentence its rule asks for, within the scope the template fixed before the analysis
-  (D77: one sentence for each pattern of the C1 and C3 cells of the table of the pre-review states, each family named
-  once and none counted); `test_the_integration_s_sentence_states_the_run_s_own_cells` checks each cell it states
-  (`INTEGRATION`). The template's header lists what else changed after the analysis (the two cross-references and review
-  corrections of statements about the records, none of which states an outcome of the run) and declares the pending
-  decision-log entry D79 that records it: the build session logs D79 when it commits the restructure and removes that
-  header line.
+  the natural section. After the analysis its per-family detail was moved unchanged to Appendix G
+  (`sections/app_natural_cases.tex`, which `app_natural.tex` inputs; D80): the caveats on the
+  build's process, the table of per-family caveats (`tab:nr-caveats`), the family paragraphs and the cost per family.
+  Both files are the template: every rule of its header holds for both, and `tests/test_natural_template.py` reads both.
+  Outside them and the generated tables the template points only to the two places D77 left open until the restructure
+  gave them their content, Appendix A's `tab:amendments` (its v0.12 row) and Appendix G's `tab:natural-vs-controlled`,
+  and to the controlled study's coverage table (`tab:coverage`), to which the reading with the gate points
+  (`CROSS_REFS`). The test checks that every key it uses is generated, that it compiles with `main.tex`'s preamble, its
+  wording, the disclosures its records require, and that every decision-log entry it cites is logged or is the pending
+  next entry its header declares. Its fixed
+  sentences state construction facts that the analysis also computes; the test's `PREMISES` lists them, and
+  `test_the_run_s_own_numbers_bear_out_the_template_s_premises` runs on `generated/natural_run/numbers.tex`: a premise
+  that fails means the sentence is rewritten from the records. The closing paragraph's integration slot was replaced
+  after `--natural-run` by the sentence its rule asks for (D79), and rewritten once the table of the pre-review states
+  marked the cells the oracle-gated view drops (D80), within the scope the template fixed before the analysis (D77: one
+  sentence for each pattern of the C1 and C3 cells of that table, each family named once and none counted);
+  `test_the_integration_s_sentence_states_the_run_s_own_cells` checks each cell they state (`INTEGRATION`). The
+  paragraph that reads the families with the reference gate was written after the analysis too (D80), outside the
+  pre-commitment; `test_the_reading_with_the_gate_states_the_run_s_own_cells` checks each family statement it makes on the
+  run's numbers and its published analysis (`READING_CELLS`, `READING_ORDER` and the coverage cells it names). The
+  template's header lists what changed after the analysis, in D79's round and in D80's.
 * All labels behind these numbers are model proposals; no human labels exist. The natural run `natural-pr-v1` is
   published (`results/runs/natural-pr-v1`), and its tables and `\nrv` numbers are generated.

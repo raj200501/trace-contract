@@ -3137,3 +3137,144 @@ Times are UTC, 2026-11-23.
   * The model identifier in the committed controlled transcripts (450 assistant messages carry it in their `model`
     field): keep it as the raw session record, or redact it in a new sanitiser version with the hashes renewed.
   * Whether the screening download records keep the fetched repositories' URLs (D50, D63).
+
+### D80. The manuscript after a fresh verification: the natural cells read with the gate, the claims scoped, the natural detail moved to App. G, related work
+Times are UTC, 2026-11-23. This entry covers the work since `bb2a1ed`: a fix round after a fresh verification, a check
+of that round by a reviewer, and a second fix round. It corrects one statement of D79 (below).
+* **Why.** A fresh read-only verification of the D79 manuscript had two lenses.
+  * The accuracy reviewer traced more than 40 numbers from their macros to their records and found none wrong. It
+    raised three low points and three nits: the Status paragraph cited D79 for what D79 does not say (below); App. G
+    said that the extension's stopped S10 directories hold no S10 outcome, which D75 contradicts; the introduction
+    stated as fact that every model-written artifact comes from one model family, which Table 1 says no record can
+    confirm for several roles; a D62 citation for a count D62 does not give; a sentence that read as if the scenarios
+    held no partial retraction; and "no statement here counts families" beside a count of S10's families.
+  * The venue reviewer judged the manuscript honest and traceable, but not yet a credible preprint: no human author
+    has reviewed it; the lead controlled contrast is largely fixed by the design, and the text did not say so; the
+    natural case studies were summed up by a sentence that presents non-discriminating outcomes as findings; related
+    work lacked the program-repair overfitting, test-oracle and requirements-change literatures; and the main text read
+    as a lab notebook, Section 5 filling eight of its pages.
+  * A reviewer then checked the fix round. Of its eleven findings, one is the owner's (below) and ten were fixed in
+    the second round: the audit's effect in NP-19 was missing from a list of its effects; NP-04's accepted eval-nm-3,
+    half of C3's and C4's false acceptance there, was not named, and the violated sets of NP-04's eval-nm-3 and NP-19's
+    eval-nm-1 hold correction requirements that the correction-aware contract covers; this entry did not exist yet;
+    the discussion implied that no record supports a retraction reading, while NP-20's recovered contracts record a
+    superseded request, and the natural coverage table lacked the contradiction counts the controlled one gives; two
+    citations were described beyond their abstracts; the threats section put a hedge into the protocol's mouth; two
+    statements of the introduction went beyond the records; and three wordings (the abstract's "requirement list",
+    App. F's one-model-family sentence, and the commit messages' co-author line, which is not their last line).
+* **Code.** `paper/make_tables.py`, with its tests:
+  * `--natural-run` writes six tables. The table of the pre-review states (`tab:nr-source`) marks with a dagger the
+    cells that the oracle-gated view drops, read from the same grading of the reference as the new sanity table, and
+    the generator refuses an analysis in which the two disagree.
+  * The sanity table (`tab:nr-sanity`): each condition's outcome on each family's reference solution and on its no-op,
+    with the keys `sanity.<condition>.<family>.reference` and `.noop`.
+  * The coverage table (`tab:nr-coverage`): the reference contract's correction requirements
+    (`ref.<family>.correction.ids`); each recovered contract's coverage of the reference contract under each mapper
+    (`ini|full.<family>.cov.m1|m2`) and the correction requirements it leaves uncovered (`.corr.missing.m1|m2`); its
+    requirements that each mapper judges to contradict the reference contract, of its scored active ones
+    (`.contra.m1|m2`); and those it marks superseded (`.superseded`), which both mappers' blocks must agree on.
+  * For statements about a family: the conditions that graded its reference, its no-op and its held-out candidates and
+    rejected every one (`nd.<family>.reject`) or accepted every one (`nd.<family>.accept`), and those that pass its
+    no-op (`noop.<family>.accepted`). The natural-run ledger has 1,149 entries.
+  * `--fresh`: the correction violators' distinct outcome patterns over the six conditions, per family
+    (`cv.patterns.<family>`) and summed with each pattern counted within its family (`cv.patterns`).
+  * Tests: `tests/test_make_tables_natural_run.py` (every new row re-derived from the analysis alone; the guards),
+    `tests/test_make_tables_fresh.py` (the patterns), `tests/test_check_numbers.py` (App. G's part of the template) and
+    `tests/test_natural_template.py`: the template's two files; the integration's cells; and every family statement of
+    the new reading paragraph, as cells of the run's numbers (`READING_CELLS`, the coverage cells), as comparisons of
+    false acceptance and false rejection (`READING_ORDER`, each family list whole), and its statements about single
+    candidates on the published analysis.
+* **Text.**
+  * The lead contrast is said to be largely fixed by the design (abstract, introduction, Section 3), and what the
+    design does not fix is named. The post hoc reading is scoped to its families (CS-03 and CS-04; CS-01). The
+    violators' outcome patterns are counted within families. The audit's null is scoped to the fresh attempts, and the
+    pilot's one audit-attributable change is a bullet of Section 4.
+  * The shared source of the labels and of the correction-aware verifiers (one model family by the study's procedure,
+    the same reference diff, requirement lists that cover the same requirements) is stated in the abstract's caveat and
+    in Sections 1, 2.3 and 3, and the zeros of C3 and C4 are qualified as partly agreement between renderings of the
+    same requirements.
+  * The natural case studies. The introduction's and the discussion's sentences on them, and the closing slot, are
+    rewritten family by family with the reference gate. A new paragraph of Section 5 reads the families with the gate:
+    where C1, C3 and C4 reject every candidate; where B1 passes every one; the near misses that C3, C4 and B2 accept in
+    NP-04 and NP-19, with their targets, their violated sets and the contracts' coverage; the contradictions and the
+    superseded requirement of the recovered contracts (NP-05, NP-20); B2 against C3 and C4, and C3 against C1; and the
+    audit's effect in both directions, NP-19's included. The discussion counts natural correction violators as the
+    controlled tasks do (invalid candidates whose violated set holds a requirement introduced at the correction), names
+    the gate's drops of C3 and C4 with D70's recorded reasons, and says that in NP-20 the recovered contracts record a
+    superseded request, as CS-01's scenario does, while D70 gives no reason for C1's drop there.
+  * What holds only by the study's procedure is said to be so: one model family of one provider (Sections 1, 2, 8 and
+    9, App. F).
+  * The model statement (Section 2.1, the AI-assistance statement, `paper/README.md`): the protocol and this log name
+    the agent tool and define configuration A as the build session's default model and B as the smallest model tier the
+    agent tool offers, two tiers of one model family of one provider; every commit message carries a co-author line that
+    names a model, and the committed controlled transcripts carry the session agent's model identifier in their raw
+    records (D79); the paper names no model, and writes that configuration B also writes the independent labeler. The
+    natural template keeps its stricter rule (no tier wording).
+  * The accuracy review's corrections: App. G says that the ten directories of the stopped S10 step hold outcomes that
+    the committed index does not record (D66, D75); the REGRESSION clause cites the behaviours table, not D62; the
+    discussion's future work names several or mutually conflicting corrections; the Status paragraph no longer cites
+    D79 for what this entry records.
+  * Related work: a paragraph on overfitting in program repair, the test oracle problem and requirements change cites
+    four new entries of `paper/references.bib` (`smith2015cure`, `qi2015plausibility`, `barr2015oracle`,
+    `mcgee2012causes`). Each was checked against the Crossref record of its DOI, which its publisher deposited, and
+    against dblp's record as dblp's search results show it (dblp's record pages answer automated requests with a bot
+    check). Each is described only as far as its abstract goes, as the OpenAlex record of each DOI holds it; the second
+    round narrowed the sentences on `qi2015plausibility` and `barr2015oracle` to their abstracts. The threats section's
+    item on the literature says these are entry points, not a survey; its contamination item says what protocol §15.6
+    states.
+  * Process terms: the main text calls D19 "the label rule" and defines "owner".
+* **The move to App. G** (`paper/sections/app_natural_cases.tex`, which `app_natural.tex` inputs after its tables).
+  From Section 5, with the text unchanged: the caveats on the build's process (five items of the list of caveats), the
+  sentence that names the parts of a family paragraph, Table `tab:nr-caveats`, the six family paragraphs and the cost
+  per family. Every passage is the committed text byte for byte, except the cost per family and the sentence on the
+  parts, which were re-wrapped (line breaks only). The subsection's heading, its first paragraph, the paragraph titles
+  and the sentences of Section 5 that point to the moved parts are new. D79 had left this move to the owner; the
+  verification ranked the section's length among the reasons the paper read as a lab notebook. Section 5 now fills
+  pp. 12 to 17.
+* **What was written after the analysis, and a correction of D79.** D79 calls the closing slot's sentence "the only
+  text written from the run's cells". That holds for the template only: the abstract's last sentence, and the
+  introduction's and the discussion's sentences on the case studies, were also written from the run's cells after the
+  analysis, in D79's round, outside D77's pre-commitment. This round rewrote them; rewrote the slot within the scope
+  that D77 fixed (one sentence for each pattern of the C1 and C3 cells, now with the gate's marker, each family named
+  once); and wrote the new reading paragraph and the Status paragraph's last sentences. Two sentences that D77 fixed
+  were changed where the records contradict them: "no statement here counts families", which the paragraph's own count
+  of S10's families contradicts, now reads "no statement here counts families by their outcomes in the run"; and the
+  caveat that the pull requests predate the generators' training data is followed by a new sentence that, with no
+  model named, the paper cannot check it.
+* **Builder decisions in this round,** each reversible and pending the owner's review: the move to App. G; the model
+  statement's wording; the two template sentences changed where the records contradict them; and counting natural
+  correction violators as the controlled tasks do.
+* **Verification by the build session**, on the merged tree of this entry, before the commit:
+  * A clean LaTeX build from a scratch copy of the tracked paper files gives 76 pages: the main text ends on page 22,
+    the references fill pages 23 to 25 and the appendices start on page 26. The log has no overfull box, no undefined
+    reference or citation and no LaTeX warning; the PDF has no unfilled number and one TODO (the author line). Its text
+    holds no model, provider or agent-product name; the configurations are described by model tier in Sections 2.1
+    and 3, as the model statement above says.
+  * The abstract gate passes (1,900 of 1,900 characters), and the number checker passes on every section (22 files).
+  * Every generator mode (the pilot's tables, `--fresh` with `--regrade` and `--natural`, `--pilot-numbers`,
+    `--design`, `--natural-run`, and `make_figures.py`), rerun in place, reproduces its outputs byte for byte, and
+    `verify_frozen_inputs` passes, with the base snapshots in place (4 of 4).
+  * The full offline suite passes in the main checkout (1,351 passed, 20 Docker tests deselected), and ruff reports
+    the same findings in the changed files as at `bb2a1ed`, by code and message.
+  * Independently of the tests, the build session recomputed from `results_public.jsonl` and `analysis.json` alone
+    every family statement on the natural case studies in Sections 1, 5 and 7: the conditions that reject or accept
+    every candidate, the near misses that C3, C4 and B2 accept with their targets and violated sets, the coverage,
+    superseded and contradicting cells, B2 against C3 and C4, C3 against C1, and the audit's effects in both
+    directions. Each holds.
+  * It also checked the four new references against the Crossref records of their DOIs and read their abstracts:
+    Qi et al. in the authors' copy of the ISSTA paper, Smith et al. in the authors' technical report of the same study,
+    Barr et al. in a copy of the published survey, and McGee and Greer in the Crossref record. The sentences that
+    describe them hold at that level.
+* **Left to the owner.**
+  * The author line, and the human authors' review of the paper before any submission (the ethics statement).
+  * The builder decisions still pending review: D64 (decision 17 and deviation (i)), D69, D72, D73, D77 and this
+    entry's.
+  * Human labels from two blinded reviewers, with the existing review packet.
+  * Naming the models, and a second model family.
+  * The model identifier in the committed controlled transcripts: keep it as the raw session record, or redact it in a
+    new sanitiser version with the hashes renewed (D79).
+  * The frozen pilot tables' recorded captions (D79), and whether the screening download records keep the fetched
+    repositories' URLs (D50, D63).
+  * The venue. The reviewer that checked this round judged the paper close to a credible preprint as a methods or
+    negative-results note, fit for a workshop or an arXiv note but not a main track; for a workshop the main text (22
+    pages) would have to be cut to its page limit.

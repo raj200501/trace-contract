@@ -16,9 +16,9 @@ TraceContract measures both directly.
 >   attempts an independent model labeler gives a second labeling.
 > * The verifier results are on four *controlled* task families: real agent runs with user turns scripted by
 >   the study's AI agent, not natural user traffic.
-> * A natural PR-review arm (AIDev v5) has a recorded screening funnel and six accepted tasks. Its recipe is
->   fixed (D64, D65), but its verifiers, labels and run have not been made. Trace Commons was screened, and all
->   30 sessions were rejected.
+> * A natural PR-review arm (AIDev v5) has a recorded screening funnel and six accepted tasks, built by a fixed
+>   recipe (D64, D65) and graded in the run `natural-pr-v1` (D76 to D78). The paper reports them as exploratory
+>   case studies, per family only. Trace Commons was screened, and all 30 sessions were rejected.
 > * Nothing here is peer reviewed.
 >
 > See [STATUS.md](STATUS.md).
@@ -33,7 +33,7 @@ Run `results/runs/fresh-v1` (decision log D61, D62):
 * 1 attempt excluded after the reviewed audit, so 79 distinct graded patches: 29 invalid, 50 valid (D19);
 * harness 0.3.5, every pair graded 3 times, no unresolved outcome.
 
-The analysis is `results/runs/fresh-v1/analysis.md`; the paper's section 6.1 reports it.
+The analysis is `results/runs/fresh-v1/analysis.md`; the paper's Section 3 reports it.
 
 | Condition | False acceptance | False rejection |
 | --- | --- | --- |
@@ -55,7 +55,10 @@ How to read this:
 * **B1's false rejections come from the session agent's tests.** All 34 come from the 40 checks that the session
   agent added to the reference state. The base commit's tests reject none, and alone they would accept 17 of the
   29 invalid attempts.
-* **The effect is concentrated and partly mechanical.**
+* **The effect is concentrated and largely fixed by construction.** Each violator breaks a requirement that only
+  the correction states; C1's contract lacks it and C3's covers it, and the reference checks behind the labels were
+  written from a reference contract that states it (paper, Section 3.1). The 27 violators form 4 distinct outcome
+  patterns within their families.
   * C1's false acceptances come from three families. In CS-01, C1 also fails its own reference.
   * The 2/29 of C3, C4 and B2 are two CS-02 attempts that are invalid only through the regression norm (D62).
 * **Robustness.**
@@ -82,8 +85,14 @@ How to read this:
   * audit:v1's revisers loosened checks toward the reference, and five audits stay failing after three revisions.
 * **Built and graded (D75 to D78).** P5 to P7 ran for all six families. The run `natural-pr-v1` graded them, and its
   analysis and its id-and-outcome release are published in `results/runs/natural-pr-v1`. The paper reports the six
-  families as exploratory case studies, one table per family, with no pooled rate, interval, p-value or total; all
+  families as exploratory case studies, in per-family tables, with no pooled rate, interval, p-value or total; all
   labels are model proposals.
+  * Read with the reference gate, the case studies are mostly uninformative about corrections (D80): C1 and C3
+    reject every candidate, their reference and the valid alternatives included, in NP-03, NP-05 and NP-18 (C4 too
+    in NP-03, C1 alone in NP-20), and the repository tests pass the unchanged base in NP-03, NP-05, NP-19 and NP-20.
+  * In NP-04 and NP-19 the correction-aware verifiers accept near misses that the label rule marks invalid for
+    breaking a correction requirement; of these, only NP-04's eval-nm-2 breaks no correction requirement that their
+    contract covers.
 * **Still to come:** the extension's replay, which was stopped at a usage limit and is to be redone, its families, and
   their own run, `natural-pr-v2` (protocol §20).
 
@@ -432,8 +441,10 @@ cd paper && latexmk -pdf main.tex
 
 Model-generated artifacts (sessions, contracts, tests, candidates, label proposals,
 checks and mappings) are recorded in the repository. The prompts that produced them
-are in `experiments/prompts/`, with owner messages and session paths redacted; the
-full agent transcripts are not published. Regenerating these artifacts is not
+are in `experiments/prompts/`, with owner messages and session paths redacted. The
+controlled sessions' own transcripts are committed in sanitised form
+(`data/controlled/transcripts/`); the transcripts of the other agents, the generators
+and the fresh attempts among them, are not published. Regenerating these artifacts is not
 bit-reproducible. From the recorded results, the analysis, tables, evidence ledger,
 report and run comparisons regenerate byte for byte, except `analysis.json`: it records
 the current git revision and the hashes of the analysis code, which has changed since

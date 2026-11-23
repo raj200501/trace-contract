@@ -95,9 +95,10 @@ reserves NP-21 and NP-22 replaced NP-01 and NP-02 and were also rejected) and pa
 them (D64). Their licences, as AIDev records them and as the LICENSE files at their bases state them, are in
 Table~\ref{tab:natural-s10}. NP-03's snapshot is approximate, and those of NP-04, NP-05,
 NP-18, NP-19 and NP-20 are exact (Appendix~\ref{app:construction}). The extension's \nat{fam.ext} families and
-\nat{fam.ext.reserves} reserves (\nat{ni.ext.first} to \nat{ni.ext.last}) have no S10 outcome: its S10 step was stopped
-at a usage limit, and the task directories it left are to be built again from the start (D66, D75), for
-\texttt{natural-pr-v2} (protocol~\S20.2).
+\nat{fam.ext.reserves} reserves (\nat{ni.ext.first} to \nat{ni.ext.last}) have no S10 outcome in the committed index:
+its S10 step was stopped at a usage limit. The task directories that the stopped step left, NP-26 to NP-35, hold S10
+outcomes that it wrote after the limit, which the index does not record, and they are to be built again from the start
+(D66, D75), for \texttt{natural-pr-v2} (protocol~\S20.2).
 
 \paragraph{Infrastructure attrition.} The first sample's S10 rejections are environmental or follow from S10's rules:
 base tests that fail to collect (\nat{s10.first.reject.collect}), no resolvable dependency closure
@@ -130,9 +131,12 @@ rendered inputs and proposer prompts of each family. Each family's held-out pool
 \end{itemize}
 The host's steps of a phase (the repository's commands and scripts) are run by \emph{host coordinators}: subagents of the
 build session in configuration A, a coordinator per step, which write no generated content and whose context
-reaches no generator (D65). The run is in Section~\ref{sec:natural-cases}. Table~\ref{tab:natural-vs-controlled} sets the arm beside the controlled study,
-Table~\ref{tab:nr-construction} gives each family's construction facts, and Table~\ref{tab:nr-labeler} its second
-labeling.
+reaches no generator (D65). The run is in Section~\ref{sec:natural-cases}, and its family paragraphs are in
+Appendix~\ref{app:natural-cases}. Table~\ref{tab:natural-vs-controlled} sets the arm beside the controlled study,
+Table~\ref{tab:nr-construction} gives each family's construction facts, Table~\ref{tab:nr-labeler} its second
+labeling, Table~\ref{tab:nr-sanity} each condition's outcome on its reference and on its no-op, and
+Table~\ref{tab:nr-coverage} the coverage of its reference contract by the recovered contracts, with their
+requirements that contradict it and those they mark superseded.
 
 \begin{table}[t]\centering\scriptsize
 \caption{How the natural arm differs from the controlled study (protocol~\S15.4 to \S15.6, \S20; decision log D64, D70).
@@ -166,3 +170,8 @@ tables only, with no pooled rate, interval, p-value or total \\
 
 \IfFileExists{generated/natural_run/natural_run_construction.tex}{\input{generated/natural_run/natural_run_construction.tex}}{\unfilled{construction table (make\_tables.py -{}-natural-run)}}
 \IfFileExists{generated/natural_run/natural_run_labeler.tex}{\input{generated/natural_run/natural_run_labeler.tex}}{\unfilled{second-labeling table (make\_tables.py -{}-natural-run)}}
+\IfFileExists{generated/natural_run/natural_run_sanity.tex}{\input{generated/natural_run/natural_run_sanity.tex}}{\unfilled{sanity table (make\_tables.py -{}-natural-run)}}
+\IfFileExists{generated/natural_run/natural_run_coverage.tex}{\input{generated/natural_run/natural_run_coverage.tex}}{\unfilled{coverage table (make\_tables.py -{}-natural-run)}}
+
+% The natural section's per-family detail, moved here unchanged after the analysis (D80).
+\clearpage\input{sections/app_natural_cases}

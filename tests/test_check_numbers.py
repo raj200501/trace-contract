@@ -27,7 +27,7 @@ MAIN_TEXT = ("abstract.tex", "introduction.tex", "design.tex", "results_controll
              "related.tex", "discussion.tex", "threats.tex", "ethics.tex", "reproducibility.tex")
 # The appendices in the plan's order (part 3: A to I), after the main text.
 APPENDICES = ("app_protocol.tex", "app_deviations.tex", "app_grading.tex", "app_construction.tex", "app_fresh.tex",
-              "app_pilot.tex", "app_natural.tex", "app_annotation.tex", "app_provenance.tex")
+              "app_pilot.tex", "app_natural.tex", "app_natural_cases.tex", "app_annotation.tex", "app_provenance.tex")
 
 
 def kinds(tex: str, numbers=None) -> list[tuple[str, str]]:
@@ -140,7 +140,8 @@ def test_the_exit_status_follows_the_findings(tmp_path, capsys):
 
 
 def test_the_natural_template_holds_no_literal_number_and_every_key_is_generated():
-    out = cn.check([ROOT / "paper" / "sections" / "natural.tex"], cn.load_numbers())
+    # the template and its part in Appendix G, which App. G inputs (decision log D80)
+    out = cn.check([ROOT / "paper" / "sections" / n for n in ("natural.tex", "app_natural_cases.tex")], cn.load_numbers())
     assert out == [], [str(f) for f in out]
 
 

@@ -1,0 +1,299 @@
+% Appendix G's part of the natural case studies (Section sec:natural-cases): detail of the template of
+% paper/sections/natural.tex, moved here unchanged after the analysis (D80), so
+% that the main-text section stays short. It is part of the template: every rule of natural.tex's
+% header holds for it, and tests/test_natural_template.py reads it with natural.tex.
+% * Moved unchanged: the caveats on the build's process (from the list of caveats), the sentence that names the parts of
+%   a family paragraph (from the paragraph on reading the tables), Table tab:nr-caveats, the six family paragraphs and
+%   the cost per family (from the closing paragraph).
+% * Written after the analysis (D80): the subsection's heading and first paragraph, and the titles of the paragraphs of
+%   the caveats, of the parts and of the cost.
+\subsection{The case studies in detail}
+\label{app:natural-cases}
+This subsection holds the parts of Section~\ref{sec:natural-cases} that were moved here unchanged after the
+analysis: its caveats on the build's process, its table of per-family caveats, its family paragraphs and the cost per
+family. The caveats of Section~\ref{sec:natural-cases} hold for all of it.
+
+\paragraph{Caveats on the build's process.}
+\begin{itemize}
+\item D19 graded the frozen reference checks and the regression norm on every held-out candidate as the run's first
+  step, once building had stopped for the first sample: a builder reading of protocol~\S19.7 and \S20.2, pending the
+  owner's review (D73, D74, D76).
+\item Some reference-check writers, labelers and their revisions, reviews, alternatives, near misses and fix rounds of P5
+  and P6 had in their context the titles of the build session's task-list items (about the paper's tables and review
+  fixes), and so did some host coordinators, which write no generated content (D65, D72). No title names a family, requirement, check, target, label or candidate; a search of
+  each exposed generator run's text and tool inputs for the titles' distinctive terms found none; and nothing was
+  regenerated, a builder decision not yet reviewed by a person (D72).
+\item Some runs worked outside the recipe: they started the task image themselves, wrote temporary files outside their
+  workspaces, or queried the container engine read-only. Each was assessed and none is excluded (D75); the family
+  paragraphs name those that D75 names.
+\item The templates whose sources carry an owner-context line leave it out, a builder decision pending the owner's
+  review (D64, deviation~(i) and decision~17). The drafter of the reference contract reads the reference diff beyond the
+  inputs that protocol~\S15.6 names (D64, deviation~(k)).
+\item The harness context. The runs of P1 and of P5 carried, in their first message, a harness entry relaying the
+  owner's latest message (about the usage budget at P1, about finishing the study at P5), which names no task, input or
+  output and which the harness ranks above the computed task where they conflict. It could still nudge an agent
+  toward less or more work. The decision log records which runs carried it, and nothing was regenerated for it, a
+  builder decision pending the owner's review (D67, D68, D77). The agent tool offers no per-call tool restriction, so each natural agent had its
+  agent type's tools, as the controlled agents of the same source workflows had, and the natural-agent audit read every
+  network use and tool call (D64, ``Agents'' and decision~11; D65). An environment block naming the study repository as
+  the working directory was in every natural agent's context, as in the fresh attempts (D65; protocol~\S18.2).
+\end{itemize}
+
+\paragraph{The parts of a family paragraph.}
+Each family paragraph gives, in this order, (a)~its construction facts, (b)~its pre-review state under the
+source-evidence label, (c)~its held-out candidates under D19, (d)~its second labeling, (e)~its unresolved and
+infrastructure pairs, and (f)~its own caveats.
+
+\begin{table}[t]\centering\scriptsize\setlength{\tabcolsep}{4pt}
+\caption{Per-family caveats of \texttt{\NATURALRUN}, each cell a value of the run's analysis (\texttt{make\_tables.py
+-{}-natural-run}; decision log D64, D70, D72, D75, D76). Reference checks: the status record written when they were
+frozen, with its fix rounds. Labeler: its status record, and whether the second labeling grades the family or leaves it
+out. Oracle-gated view: kept where the verifier passes the family's reference solution in the run, dropped otherwise
+(protocol~\S15.7). B1: whether it equals D19's regression norm (yes, in part or no), with its checks. Near misses: those
+that target a correction requirement, of all. D19 ambiguous: the candidates D19 labels ambiguous, left out of false
+acceptance and false rejection. Terms: not recorded: no status record; unrecognised status: a record with neither
+status; not known: no regression-norm overlay; graded: in the second labeling; left out: the family's labeler is not
+usable; not graded: the run did not grade the family's labeler; none: no such candidate. $^{\ddagger}$Natural case
+study; caveats in Section~\ref{sec:natural-cases}.}\label{tab:nr-caveats}
+\begin{tabular}{p{0.2\linewidth}p{0.112\linewidth}p{0.112\linewidth}p{0.112\linewidth}p{0.112\linewidth}p{0.112\linewidth}p{0.112\linewidth}}
+\toprule
+\nrcaveat{Caveat} & \nrcaveat{NP-03} & \nrcaveat{NP-04} & \nrcaveat{NP-05} & \nrcaveat{NP-18} & \nrcaveat{NP-19} &
+\nrcaveat{NP-20} \tabularnewline\midrule
+\nrcaveat{Reference checks: status (fix rounds)}
+& \nrcaveat{\nrv{refchecks.np03.status} (\nrv{refchecks.np03.rounds})}
+& \nrcaveat{\nrv{refchecks.np04.status} (\nrv{refchecks.np04.rounds})}
+& \nrcaveat{\nrv{refchecks.np05.status} (\nrv{refchecks.np05.rounds})}
+& \nrcaveat{\nrv{refchecks.np18.status} (\nrv{refchecks.np18.rounds})}
+& \nrcaveat{\nrv{refchecks.np19.status} (\nrv{refchecks.np19.rounds})}
+& \nrcaveat{\nrv{refchecks.np20.status} (\nrv{refchecks.np20.rounds})} \tabularnewline
+\nrcaveat{Labeler: status; second labeling}
+& \nrcaveat{\nrv{il.np03.status}; \nrv{il.np03.second}}
+& \nrcaveat{\nrv{il.np04.status}; \nrv{il.np04.second}}
+& \nrcaveat{\nrv{il.np05.status}; \nrv{il.np05.second}}
+& \nrcaveat{\nrv{il.np18.status}; \nrv{il.np18.second}}
+& \nrcaveat{\nrv{il.np19.status}; \nrv{il.np19.second}}
+& \nrcaveat{\nrv{il.np20.status}; \nrv{il.np20.second}} \tabularnewline
+\nrcaveat{Oracle-gated view: C1, C3}
+& \nrcaveat{\nrv{og.c1.np03}, \nrv{og.c3.np03}}
+& \nrcaveat{\nrv{og.c1.np04}, \nrv{og.c3.np04}}
+& \nrcaveat{\nrv{og.c1.np05}, \nrv{og.c3.np05}}
+& \nrcaveat{\nrv{og.c1.np18}, \nrv{og.c3.np18}}
+& \nrcaveat{\nrv{og.c1.np19}, \nrv{og.c3.np19}}
+& \nrcaveat{\nrv{og.c1.np20}, \nrv{og.c3.np20}} \tabularnewline
+\nrcaveat{B1: equals the norm (checks)}
+& \nrcaveat{\nrv{b1.np03.norm} (\nrv{b1.np03.checks})}
+& \nrcaveat{\nrv{b1.np04.norm} (\nrv{b1.np04.checks})}
+& \nrcaveat{\nrv{b1.np05.norm} (\nrv{b1.np05.checks})}
+& \nrcaveat{\nrv{b1.np18.norm} (\nrv{b1.np18.checks})}
+& \nrcaveat{\nrv{b1.np19.norm} (\nrv{b1.np19.checks})}
+& \nrcaveat{\nrv{b1.np20.norm} (\nrv{b1.np20.checks})} \tabularnewline
+\nrcaveat{Near misses on the correction}
+& \nrcaveat{\nrv{nm.np03.correction} of \nrv{nm.np03.all}}
+& \nrcaveat{\nrv{nm.np04.correction} of \nrv{nm.np04.all}}
+& \nrcaveat{\nrv{nm.np05.correction} of \nrv{nm.np05.all}}
+& \nrcaveat{\nrv{nm.np18.correction} of \nrv{nm.np18.all}}
+& \nrcaveat{\nrv{nm.np19.correction} of \nrv{nm.np19.all}}
+& \nrcaveat{\nrv{nm.np20.correction} of \nrv{nm.np20.all}} \tabularnewline
+\nrcaveat{D19 ambiguous}
+& \nrcaveat{\nrv{d19.np03.ambiguous.ids}}
+& \nrcaveat{\nrv{d19.np04.ambiguous.ids}}
+& \nrcaveat{\nrv{d19.np05.ambiguous.ids}}
+& \nrcaveat{\nrv{d19.np18.ambiguous.ids}}
+& \nrcaveat{\nrv{d19.np19.ambiguous.ids}}
+& \nrcaveat{\nrv{d19.np20.ambiguous.ids}} \tabularnewline
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{NP-03.}
+NP-03 has no second labeling: its independent labeler is unusable, since some of its checks state observables that the
+reference does not meet (D72).
+(a)~Construction (D64, D70, D72). Reference contract (requirements; scored and active; at the correction):
+\nrv{ref.np03.requirements}; \nrv{ref.np03.scored}; \nrv{ref.np03.correction}. Reference checks:
+\nrv{refchecks.np03.status}, fix rounds \nrv{refchecks.np03.rounds}. Labeler: \nrv{il.np03.status}; second labeling:
+\nrv{il.np03.second}. B1 by S10 (available; checks; equal to D19's regression norm): \nrv{b1.np03.available};
+\nrv{b1.np03.checks}; \nrv{b1.np03.norm}. Near misses on the correction: \nrv{nm.np03.correction} of
+\nrv{nm.np03.all}. D19's labels of the held-out candidates (valid; invalid; ambiguous; no proposal):
+\nrv{d19.np03.valid}; \nrv{d19.np03.invalid}; \nrv{d19.np03.ambiguous}; \nrv{d19.np03.unlabeled}; the ambiguous ones
+with D19's reason: \nrv{d19.np03.ambiguous.reasons}.
+(b)~The pre-review state, invalid under the source-evidence label (protocol~\S15.6): C1 \nrv{se.c1.np03}, C3
+\nrv{se.c3.np03}; C2 \nrv{se.c2.np03} and C4 \nrv{se.c4.np03}, audited against an unreliable oracle (D70); B2
+\nrv{se.b2.np03}; B1 \nrv{se.b1.np03}; B3, the secondary arm, \nrv{se.b3.np03}. Its D19 label: \nrv{pre.np03.d19}; the
+reference checks' outcome on it in the run: \nrv{pre.np03.refchecks}.
+(c)~Under D19: C1 \nrv{c1.np03.fa} and \nrv{c1.np03.fr}, C3 \nrv{c3.np03.fa} and \nrv{c3.np03.fr}; in the oracle-gated
+view C1's cell is \nrv{og.c1.np03} and C3's \nrv{og.c3.np03}. B1 equals D19's regression norm here, so its false
+rejection, \nrv{b1.np03.fr}, is uninformative, and its verdicts on the alternatives are not blind: they were developed
+against B1's own test files (D64, decision~3). No near-miss writer ran the repository's tests, the writer of eval-nm-3
+included, which started the task image itself, as the family's audit records of P7 say (D75, D77).
+(d)~Second labeling: none, since the labeler is unusable (D72).
+(e)~Pairs of the run (graded; unresolved; infrastructure outcomes): \nrv{pairs.np03}; \nrv{pairs.np03.unresolved};
+\nrv{pairs.np03.infrastructure}.
+(f)~The reference-check writer found that the reference cannot meet the reference contract's observables R1, R8 and
+R9, and wrote checks that hold either way there; the near misses target R8, R9 and R1, so D19's labels for them do not
+rest on checks of the targeted observables as the contract states them (D72). The review of the reference checks was
+ok, with coverage remarks on R2 and R5, so no fix round ran (D33, D72). The base snapshot is approximate (D59). At the
+audit's first iteration the reference fails C1 and C3, and the audit of C4 failed after its last revision with the
+reference not passing (D70). The writer of eval-nm-3 started the task image with no network, its own read-only
+repository and the wrappers' isolation options (D75).
+
+\paragraph{NP-04.}
+(a)~Construction (D64, D70, D72). Reference contract (requirements; scored and active; at the correction):
+\nrv{ref.np04.requirements}; \nrv{ref.np04.scored}; \nrv{ref.np04.correction}. Reference checks:
+\nrv{refchecks.np04.status}, fix rounds \nrv{refchecks.np04.rounds}. Labeler: \nrv{il.np04.status}; second labeling:
+\nrv{il.np04.second}. B1 by S10 (available; checks; equal to D19's regression norm): \nrv{b1.np04.available};
+\nrv{b1.np04.checks}; \nrv{b1.np04.norm}. Near misses on the correction: \nrv{nm.np04.correction} of
+\nrv{nm.np04.all}. D19's labels of the held-out candidates (valid; invalid; ambiguous; no proposal):
+\nrv{d19.np04.valid}; \nrv{d19.np04.invalid}; \nrv{d19.np04.ambiguous}; \nrv{d19.np04.unlabeled}; the ambiguous ones
+with D19's reason: \nrv{d19.np04.ambiguous.reasons}.
+(b)~The pre-review state, invalid under the source-evidence label (protocol~\S15.6): C1 \nrv{se.c1.np04}, C3
+\nrv{se.c3.np04}; C2 \nrv{se.c2.np04} and C4 \nrv{se.c4.np04}, audited against an unreliable oracle (D70); B2
+\nrv{se.b2.np04}; B1 \nrv{se.b1.np04}; B3, the secondary arm, \nrv{se.b3.np04}. Its D19 label: \nrv{pre.np04.d19}; the
+reference checks' outcome on it in the run: \nrv{pre.np04.refchecks}.
+(c)~Under D19: C1 \nrv{c1.np04.fa} and \nrv{c1.np04.fr}, C3 \nrv{c3.np04.fa} and \nrv{c3.np04.fr}; in the oracle-gated
+view C1's cell is \nrv{og.c1.np04} and C3's \nrv{og.c3.np04}. No near-miss writer ran the repository's tests, as the
+family's audit records of P7 say (D77).
+(d)~Second labeling, on the held-out pool (units both label alike, of the units both decide): \nrv{il.np04.pool.agree}
+of \nrv{il.np04.pool.decided}.
+(e)~Pairs of the run (graded; unresolved; infrastructure outcomes): \nrv{pairs.np04}; \nrv{pairs.np04.unresolved};
+\nrv{pairs.np04.infrastructure}.
+(f)~NP-04 shares its repository with NP-05 (D63). At the audit's first iteration the reference passes C1 and C3 (D70).
+The audit of C2 failed after its last revision by rejecting the development alternative, which, by the revisers'
+account, cannot be told apart from the reference on the requirement it targets (D70). The writer of eval-alt-1 wrote and
+ran a helper outside its workspace; a review of the reference checks started the task image itself, its verdict rests
+partly on those runs, and the audit of P7 and the strict re-audit missed a call it made (D75).
+
+\paragraph{NP-05.}
+(a)~Construction (D64, D70, D75). Reference contract (requirements; scored and active; at the correction):
+\nrv{ref.np05.requirements}; \nrv{ref.np05.scored}; \nrv{ref.np05.correction}. Reference checks:
+\nrv{refchecks.np05.status}, fix rounds \nrv{refchecks.np05.rounds}. Labeler: \nrv{il.np05.status}; second labeling:
+\nrv{il.np05.second}. B1 by S10 (available; checks; equal to D19's regression norm): \nrv{b1.np05.available};
+\nrv{b1.np05.checks}; \nrv{b1.np05.norm}. Near misses on the correction: \nrv{nm.np05.correction} of
+\nrv{nm.np05.all}. D19's labels of the held-out candidates (valid; invalid; ambiguous; no proposal):
+\nrv{d19.np05.valid}; \nrv{d19.np05.invalid}; \nrv{d19.np05.ambiguous}; \nrv{d19.np05.unlabeled}; the ambiguous ones
+with D19's reason: \nrv{d19.np05.ambiguous.reasons}.
+(b)~The pre-review state, invalid under the source-evidence label (protocol~\S15.6): C1 \nrv{se.c1.np05}, C3
+\nrv{se.c3.np05}; C2 \nrv{se.c2.np05} and C4 \nrv{se.c4.np05}, audited against an unreliable oracle (D70); B2
+\nrv{se.b2.np05}; B1 \nrv{se.b1.np05}; B3, the secondary arm, \nrv{se.b3.np05}. Its D19 label: \nrv{pre.np05.d19}; the
+reference checks' outcome on it in the run: \nrv{pre.np05.refchecks}.
+(c)~Under D19: C1 \nrv{c1.np05.fa} and \nrv{c1.np05.fr}, C3 \nrv{c3.np05.fa} and \nrv{c3.np05.fr}; in the oracle-gated
+view C1's cell is \nrv{og.c1.np05} and C3's \nrv{og.c3.np05}. B1 equals D19's regression norm here, so its false
+rejection, \nrv{b1.np05.fr}, is uninformative, and its verdicts on the alternatives are not blind: they were developed
+against B1's own test files (D64, decision~3). No near-miss writer ran the repository's tests, as the family's audit
+records of P7 say (D77).
+(d)~Second labeling, on the held-out pool (units both label alike, of the units both decide): \nrv{il.np05.pool.agree}
+of \nrv{il.np05.pool.decided}.
+(e)~Pairs of the run (graded; unresolved; infrastructure outcomes): \nrv{pairs.np05}; \nrv{pairs.np05.unresolved};
+\nrv{pairs.np05.infrastructure}.
+(f)~NP-05 shares its repository with NP-04 (D63). A qualifying comment of the extension was made before the family's
+correction, and the family keeps the correction it was built with, a builder default that departs from the
+earliest-comment rule of protocol~\S15.6 (D63, D66). At the audit's first iteration the
+reference fails C1 and C3, and the audits of C2 and C4 failed after their last revision by accepting a development
+attack that, by the revisers' account, cannot be told apart from the reference on the requirement it targets (D70). Its
+reference checks were frozen after \nrv{refchecks.np05.rounds} fix rounds while the last review still asked for fixes,
+which the review loop records without a further round (D33, D75). The writer of eval-nm-3 remarks that a strict reader
+could also count it against R8; D19 decides its label (D75). The labeler's writer made a stub module outside its
+workspace and then removed that directory, which also removed a stale stub of the controlled arm's tooling, whose
+content is in those agents' transcripts (D75).
+
+\paragraph{NP-18.}
+(a)~Construction (D64, D70, D72). Reference contract (requirements; scored and active; at the correction):
+\nrv{ref.np18.requirements}; \nrv{ref.np18.scored}; \nrv{ref.np18.correction}. Reference checks:
+\nrv{refchecks.np18.status}, fix rounds \nrv{refchecks.np18.rounds}. Labeler: \nrv{il.np18.status}; second labeling:
+\nrv{il.np18.second}. B1 by S10 (available; checks; equal to D19's regression norm): \nrv{b1.np18.available};
+\nrv{b1.np18.checks}; \nrv{b1.np18.norm}. Near misses on the correction: \nrv{nm.np18.correction} of
+\nrv{nm.np18.all}. D19's labels of the held-out candidates (valid; invalid; ambiguous; no proposal):
+\nrv{d19.np18.valid}; \nrv{d19.np18.invalid}; \nrv{d19.np18.ambiguous}; \nrv{d19.np18.unlabeled}; the ambiguous ones
+with D19's reason: \nrv{d19.np18.ambiguous.reasons}.
+(b)~The pre-review state, invalid under the source-evidence label (protocol~\S15.6): C1 \nrv{se.c1.np18}, C3
+\nrv{se.c3.np18}; C2 \nrv{se.c2.np18} and C4 \nrv{se.c4.np18}, audited against an unreliable oracle (D70); B2
+\nrv{se.b2.np18}; B1 \nrv{se.b1.np18}; B3, the secondary arm, \nrv{se.b3.np18}. Its D19 label: \nrv{pre.np18.d19}; the
+reference checks' outcome on it in the run: \nrv{pre.np18.refchecks}.
+(c)~Under D19: C1 \nrv{c1.np18.fa} and \nrv{c1.np18.fr}, C3 \nrv{c3.np18.fa} and \nrv{c3.np18.fr}; in the oracle-gated
+view C1's cell is \nrv{og.c1.np18} and C3's \nrv{og.c3.np18}. No near-miss writer ran the repository's tests, as the
+family's audit records of P7 say (D77).
+(d)~Second labeling, on the held-out pool (units both label alike, of the units both decide): \nrv{il.np18.pool.agree}
+of \nrv{il.np18.pool.decided}.
+(e)~Pairs of the run (graded; unresolved; infrastructure outcomes): \nrv{pairs.np18}; \nrv{pairs.np18.unresolved};
+\nrv{pairs.np18.infrastructure}.
+(f)~At the audit's first iteration the reference fails C1 and C3, and revisers relaxed checks that the reference fails,
+so C2 and C4 can accept what the contract rules out (D70). The review of the reference checks was ok, with a coverage
+remark on R4, so no fix round ran (D33, D72).
+
+\paragraph{NP-19.}
+NP-19 has no second labeling: its independent labeler is unusable after its revision, since some of its checks fail on
+the reference and others pass on the no-op (D75).
+(a)~Construction (D64, D70, D75). Reference contract (requirements; scored and active; at the correction):
+\nrv{ref.np19.requirements}; \nrv{ref.np19.scored}; \nrv{ref.np19.correction}. Reference checks:
+\nrv{refchecks.np19.status}, fix rounds \nrv{refchecks.np19.rounds}. Labeler: \nrv{il.np19.status}; second labeling:
+\nrv{il.np19.second}. B1 by S10 (available; checks; equal to D19's regression norm): \nrv{b1.np19.available};
+\nrv{b1.np19.checks}; \nrv{b1.np19.norm}. Near misses on the correction: \nrv{nm.np19.correction} of
+\nrv{nm.np19.all}. D19's labels of the held-out candidates (valid; invalid; ambiguous; no proposal):
+\nrv{d19.np19.valid}; \nrv{d19.np19.invalid}; \nrv{d19.np19.ambiguous}; \nrv{d19.np19.unlabeled}; the ambiguous ones
+with D19's reason: \nrv{d19.np19.ambiguous.reasons}.
+(b)~The pre-review state, invalid under the source-evidence label (protocol~\S15.6): C1 \nrv{se.c1.np19}, C3
+\nrv{se.c3.np19}; C2 \nrv{se.c2.np19} and C4 \nrv{se.c4.np19}, audited against an unreliable oracle (D70); B2
+\nrv{se.b2.np19}; B1 \nrv{se.b1.np19}; B3, the secondary arm, \nrv{se.b3.np19}. Its D19 label: \nrv{pre.np19.d19}; the
+reference checks' outcome on it in the run: \nrv{pre.np19.refchecks}.
+(c)~Under D19: C1 \nrv{c1.np19.fa} and \nrv{c1.np19.fr}, C3 \nrv{c3.np19.fa} and \nrv{c3.np19.fr}; in the oracle-gated
+view C1's cell is \nrv{og.c1.np19} and C3's \nrv{og.c3.np19}. B1 equals D19's regression norm in part here, so its false
+rejection, \nrv{b1.np19.fr}, is uninformative to that extent (D64, decision~3). No near-miss writer ran the repository's
+tests, as the family's audit records of P7 say (D77).
+(d)~Second labeling: none, since the labeler is unusable (D75).
+(e)~Pairs of the run (graded; unresolved; infrastructure outcomes): \nrv{pairs.np19}; \nrv{pairs.np19.unresolved};
+\nrv{pairs.np19.infrastructure}.
+(f)~At the audit's first iteration the reference fails C1 and C3; the audit of C4 failed after its last revision with
+the reference not passing, and that revision changed nothing; and the generators report that the fix does not take
+effect in the task's environment (D70). The second review of the reference checks, after their fix round, was ok, with a
+coverage remark on R1, so no further fix round ran (D33, D75). The near-miss writers report that the reference fails R1
+in their mocked setups, while the frozen reference checks pass the reference in every repeat of their validation (D75).
+Neither recovered contract covers the reference contract's R4 (D75). A fix round of the reference checks started the
+task image itself, and the writer of B3 wrote a file outside its workspace (D75).
+
+\paragraph{NP-20.}
+(a)~Construction (D64, D70, D72). Reference contract (requirements; scored and active; at the correction):
+\nrv{ref.np20.requirements}; \nrv{ref.np20.scored}; \nrv{ref.np20.correction}. Reference checks:
+\nrv{refchecks.np20.status}, fix rounds \nrv{refchecks.np20.rounds}. Labeler: \nrv{il.np20.status}; second labeling:
+\nrv{il.np20.second}. B1 by S10 (available; checks; equal to D19's regression norm): \nrv{b1.np20.available};
+\nrv{b1.np20.checks}; \nrv{b1.np20.norm}. Near misses on the correction: \nrv{nm.np20.correction} of
+\nrv{nm.np20.all}. D19's labels of the held-out candidates (valid; invalid; ambiguous; no proposal):
+\nrv{d19.np20.valid}; \nrv{d19.np20.invalid}; \nrv{d19.np20.ambiguous}; \nrv{d19.np20.unlabeled}; the ambiguous ones
+with D19's reason: \nrv{d19.np20.ambiguous.reasons}.
+(b)~The pre-review state, invalid under the source-evidence label (protocol~\S15.6): C1 \nrv{se.c1.np20}, C3
+\nrv{se.c3.np20}; C2 \nrv{se.c2.np20} and C4 \nrv{se.c4.np20}, audited against an unreliable oracle (D70); B2
+\nrv{se.b2.np20}; B1 \nrv{se.b1.np20}; B3, the secondary arm, \nrv{se.b3.np20}. Its D19 label: \nrv{pre.np20.d19}; the
+reference checks' outcome on it in the run: \nrv{pre.np20.refchecks}.
+(c)~Under D19: C1 \nrv{c1.np20.fa} and \nrv{c1.np20.fr}, C3 \nrv{c3.np20.fa} and \nrv{c3.np20.fr}; in the oracle-gated
+view C1's cell is \nrv{og.c1.np20} and C3's \nrv{og.c3.np20}. B1 equals D19's regression norm here, so its false
+rejection, \nrv{b1.np20.fr}, is uninformative, and its verdicts on the alternatives are not blind: they were developed
+against B1's own test files (D64, decision~3). The family's audit records of P7 do not say whether a near-miss writer ran
+the repository's tests; a search of its near-miss writers' tool inputs for a fixed list of test-run commands
+found none (D77).
+(d)~Second labeling, on the held-out pool (units both label alike, of the units both decide): \nrv{il.np20.pool.agree}
+of \nrv{il.np20.pool.decided}.
+(e)~Pairs of the run (graded; unresolved; infrastructure outcomes): \nrv{pairs.np20}; \nrv{pairs.np20.unresolved};
+\nrv{pairs.np20.infrastructure}.
+(f)~The labeler is usable after its revision; as written it missed R15 (D72). The review of the reference checks was ok,
+with a coverage remark on R11, so no fix round ran (D33, D72). At the audit's first iteration the reference fails C1 and
+passes C3, and a reviser relaxed a check that the reference fails (D70). The writer of B2 wrote files of its error output
+outside its workspace, in the host's temporary directory (D75).
+
+\paragraph{Cost per family.}
+Cost per family, from the generation records of the family's generated artifacts, the run's grading and its S10 record
+(agent turns; tool calls; agent wall time, grading time and S10 build time in seconds; artifacts with a generation
+record, of all; D64, ``Generation records''): NP-03 \nrv{cost.np03.turns}; \nrv{cost.np03.toolcalls};
+\nrv{cost.np03.wall}, \nrv{cost.np03.grading} and \nrv{cost.np03.s10}; \nrv{cost.np03.recorded} of
+\nrv{cost.np03.artifacts}. NP-04 \nrv{cost.np04.turns}; \nrv{cost.np04.toolcalls}; \nrv{cost.np04.wall},
+\nrv{cost.np04.grading} and \nrv{cost.np04.s10}; \nrv{cost.np04.recorded} of \nrv{cost.np04.artifacts}. NP-05
+\nrv{cost.np05.turns}; \nrv{cost.np05.toolcalls}; \nrv{cost.np05.wall}, \nrv{cost.np05.grading} and \nrv{cost.np05.s10};
+\nrv{cost.np05.recorded} of \nrv{cost.np05.artifacts}. NP-18 \nrv{cost.np18.turns}; \nrv{cost.np18.toolcalls};
+\nrv{cost.np18.wall}, \nrv{cost.np18.grading} and \nrv{cost.np18.s10}; \nrv{cost.np18.recorded} of
+\nrv{cost.np18.artifacts}. NP-19 \nrv{cost.np19.turns}; \nrv{cost.np19.toolcalls}; \nrv{cost.np19.wall},
+\nrv{cost.np19.grading} and \nrv{cost.np19.s10}; \nrv{cost.np19.recorded} of \nrv{cost.np19.artifacts}. NP-20
+\nrv{cost.np20.turns}; \nrv{cost.np20.toolcalls}; \nrv{cost.np20.wall}, \nrv{cost.np20.grading} and \nrv{cost.np20.s10};
+\nrv{cost.np20.recorded} of \nrv{cost.np20.artifacts}. This cost leaves out what no such record holds, as the run's
+analysis lists it: the host's own steps, which the host coordinators run (D65), apart from the run's grading; agent runs
+that leave no generation record, the mappers among them; stages S1 to S9; re-runs of S10 and the part of its compile
+step that its record does not time; and image builds and wheel downloads (D64, ``Generation records''). So it is not the
+whole cost of building a family: D68 reports the host coordinators' share of a phase. No total over the families is
+given. The protocol's cost and time per accepted task (protocol~\S15.6), which the analysis computes over the families
+that S10 processed, rejected ones included (D69), is a quantity over families and is not reported (protocol~\S19.6).

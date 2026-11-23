@@ -6,7 +6,8 @@
 \section{Deviations, held-out discipline and harness context}
 \label{app:deviations}\label{sec:deviations}
 The \emph{build session} is the agent session that ran the study and launched every other agent: the session agents,
-the generators, the fresh attempts, the natural agents and their host coordinators. Table~\ref{tab:deviations} lists the
+the generators, the fresh attempts, the natural agents and their host coordinators (the subagents that run the host's
+steps of a natural phase, Appendix~\ref{app:natural}). Table~\ref{tab:deviations} lists the
 departures from the protocol, the published workflows or blind construction that the decision log records and that bear
 on the reported runs or on what the release shows, with the runs each concerns and what follows from it; the decision
 log is the full record (the natural templates' other marked deviations from their sources, for instance, are listed in
@@ -156,7 +157,7 @@ builder decision not yet reviewed by a person (D72). \\
 Some runs worked outside the recipe: they started the task image themselves, wrote temporary files outside their
 workspaces, or queried the container engine read-only; the harness gives every subagent the session's scratch directory
 for temporary files (D75). & natural & Each was assessed and none is excluded; the family paragraphs of
-Section~\ref{sec:natural-cases} name those that D75 names. \\
+Appendix~\ref{app:natural-cases} name those that D75 names. \\
 The agent tool offers no per-call tool restriction, so each natural agent had its agent type's tools, as the controlled
 agents of the same source workflows had; an environment block naming the study repository as working directory was in
 every natural agent's context (D64, decision~11; D65). & natural & The natural-agent audit read every network use and

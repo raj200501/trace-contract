@@ -12,16 +12,29 @@
 %   fix_rounds, a key D64 does not fix: the build session confirms that the six records hold it before the run is
 %   analysed, since the published analysis is a byte copy (scripts/publish_natural_run.py).
 % * Families are named, never counted; no thread text, repository name, login or agent product is written.
-% * main.tex inputs this file as the manuscript's natural section (the restructure). Its only pointers outside itself and
-%   its generated tables are the two that D77 left open, re-added once the appendix moves gave them their content: App. A's
-%   generated table of amendments (its v0.12 row) and App. G's comparison of the natural arm with the controlled study.
-% * What changed after the run's analysis (D79), and nothing else: (1) the closing paragraph's integration
-%   slot, replaced by the one sentence its rule asks for, the only text written from the run's cells; (2) the two
-%   pointers above; (3) review corrections of statements about the records, none of which states an outcome of the run:
-%   what was fixed before the analysis and what the build session had seen (Status), the caveat on D70's construction
-%   facts and the wording of the task-list exposure (Caveats), NP-05's correction as a builder default and NP-20's
-%   near-miss disclosure as D77 records it (their paragraphs), and the planned cost per accepted task, not reported
-%   (closing paragraph).
+% * main.tex inputs this file as the manuscript's natural section (the restructure). Its only pointers outside itself,
+%   its generated tables and its part in App. G are the two that D77 left open, re-added once the appendix moves gave
+%   them their content (App. A's generated table of amendments, its v0.12 row, and App. G's comparison of the natural arm
+%   with the controlled study), and the controlled study's coverage table, to which the reading with the gate points.
+% * Its part in App. G is paper/sections/app_natural_cases.tex (D80): what was moved there unchanged, so that the
+%   main-text section stays short. Every rule of this header holds for it, and tests/test_natural_template.py reads both.
+% * What changed after the run's analysis (D79): (1) the closing paragraph's integration slot, replaced by the one
+%   sentence its rule asks for, the only text of the template written from the run's cells (the abstract's, the
+%   introduction's and the discussion's sentences on the case studies, outside the template, were written after the
+%   analysis too; D80); (2) the two pointers above; (3) review corrections of statements about the records, none of
+%   which states an outcome of the run: what was fixed before the analysis and what the build session had seen (Status),
+%   the caveat on D70's construction facts and the wording of the task-list exposure (Caveats), NP-05's correction as a
+%   builder default and NP-20's near-miss disclosure as D77 records it (their paragraphs), and the planned cost per
+%   accepted task, not reported (closing paragraph).
+% * What changed in the next round after the analysis (D80): (4) the slot, rewritten with the gate's marker that Table
+%   tab:nr-source now carries, by D77's rule (one sentence per pattern of the C1 and C3 cells, each family named once);
+%   (5) the new paragraph that reads the families with the reference gate, and the pointer to the coverage table; (6) the
+%   Status paragraph's last sentences; (7) moved unchanged to App. G (app_natural_cases.tex): the caveats on the build's
+%   process, Table tab:nr-caveats, the sentence that names the parts of a family paragraph, the family paragraphs and the
+%   cost per family, with new sentences that point to them; (8) where the records contradict the text: the closing
+%   paragraph's "no statement here counts families", which its own screening count of S10 contradicts, now reads "by
+%   their outcomes in the run"; and an added sentence after the caveat on the generators' training data, which the
+%   paper cannot check.
 \providecommand{\nrcaveat}[1]{\raggedright\hspace{0pt}#1}
 
 \section{Natural case studies}
@@ -42,10 +55,12 @@ candidate existed (D71; Table~\ref{tab:amendments}, its v0.12 row). When this ru
 directories it left are to be built again from the start (D66, D75), with the results of this run known
 (protocol~\S20.3). This section's wording and the run's analysis fields were fixed before any analysis of the run, while
 grading was still in progress; before then, the build session's progress checks had shown it counts of outcomes over all
-graded pairs together, naming no verifier or candidate (D77). After the analysis, the closing paragraph's first sentence
-was written from the run's cells, as were the sentences on these case studies in the abstract, the introduction and the
-discussion, and review corrected or added statements about the records in this section, none of which states an outcome
-of the run (D79).
+graded pairs together, naming no verifier or candidate (D77). After the analysis, the opening of the closing paragraph
+was written from the run's cells, and review corrected or added statements about the records in this section, none of
+which states an outcome of the run (D79). The sentences on these case studies in the abstract, the introduction and the
+discussion were also written after the analysis, from the run's cells. A later round rewrote that opening with the
+reference gate, added the reading of the families with it, and moved the family paragraphs and other detail of this
+section, unchanged, to Appendix~\ref{app:natural-cases} (D80).
 
 \paragraph{What was built.}
 Each family follows the recipe of D64 in phases P0 to P7, and the end of each of P1 to P7 is a committed record (D65,
@@ -87,29 +102,9 @@ $^{\ddagger}$.
 \item The independent labelers of NP-03 and NP-19 are unusable, so the second labeling leaves them out (D72, D75, D76).
 \item A candidate that D19 labels ambiguous is left out of false acceptance and false rejection, and is queued for human
   review (D19; D76).
-\item D19 graded the frozen reference checks and the regression norm on every held-out candidate as the run's first
-  step, once building had stopped for the first sample: a builder reading of protocol~\S19.7 and \S20.2, pending the
-  owner's review (D73, D74, D76).
 \item The run is an automated pilot, as the status paragraph says (D64, decision~9; D76).
-\item Some reference-check writers, labelers and their revisions, reviews, alternatives, near misses and fix rounds of P5
-  and P6 had in their context the titles of the build session's task-list items (about the paper's tables and review
-  fixes), and so did some host coordinators, which write no generated content (D65, D72). No title names a family, requirement, check, target, label or candidate; a search of
-  each exposed generator run's text and tool inputs for the titles' distinctive terms found none; and nothing was
-  regenerated, a builder decision not yet reviewed by a person (D72).
-\item Some runs worked outside the recipe: they started the task image themselves, wrote temporary files outside their
-  workspaces, or queried the container engine read-only. Each was assessed and none is excluded (D75); the family
-  paragraphs name those that D75 names.
-\item The templates whose sources carry an owner-context line leave it out, a builder decision pending the owner's
-  review (D64, deviation~(i) and decision~17). The drafter of the reference contract reads the reference diff beyond the
-  inputs that protocol~\S15.6 names (D64, deviation~(k)).
-\item The harness context. The runs of P1 and of P5 carried, in their first message, a harness entry relaying the
-  owner's latest message (about the usage budget at P1, about finishing the study at P5), which names no task, input or
-  output and which the harness ranks above the computed task where they conflict. It could still nudge an agent
-  toward less or more work. The decision log records which runs carried it, and nothing was regenerated for it, a
-  builder decision pending the owner's review (D67, D68, D77). The agent tool offers no per-call tool restriction, so each natural agent had its
-  agent type's tools, as the controlled agents of the same source workflows had, and the natural-agent audit read every
-  network use and tool call (D64, ``Agents'' and decision~11; D65). An environment block naming the study repository as
-  the working directory was in every natural agent's context, as in the fresh attempts (D65; protocol~\S18.2).
+\item Caveats on how the families were built hold here too and are listed in Appendix~\ref{app:natural-cases}:
+  the run's first step, the agents' context, and the runs that worked outside the recipe.
 \item The run grades \nrv{accepted} accepted tasks of its own, fewer than \nrv{threshold}, so its families are
   exploratory case studies, each reported on its own, in per-family tables only, with no pooled rate, interval or
   p-value (protocol~\S19.6, \S20.3). Nor do we give a total over the families, or pool anything with the controlled arm
@@ -118,7 +113,8 @@ $^{\ddagger}$.
   of \texttt{natural-pr-v2} (protocol~\S20.3).
 \item The construct differs from an in-session correction, as the first item of the list above says (D64, decision~1).
 \item The pull requests and their repositories predate the generators' training data, so public merged fixes may be
-  memorised (protocol~\S15.6).
+  memorised (protocol~\S15.6). The protocol states this order of dates; no model identifier is named, so the paper
+  cannot check it.
 \item NP-04 and NP-05 come from the same repository (D63; the committed index's repository ids).
 \end{itemize}
 
@@ -129,245 +125,49 @@ false acceptance and false rejection per condition under D19. Below, false accep
 false rejection rejected/valid, under D19's labels, each distinct graded patch once (protocol~\S15.7); the pre-review
 state counts under its D19 label, since Table~\ref{tab:nr-fa-fr} leaves out only the reference and the no-op. The
 secondary oracle-gated view keeps a verifier's cell where the verifier passes the family's reference in the run and
-drops it otherwise, a $^{\dagger}$ in Table~\ref{tab:nr-fa-fr} (protocol~\S15.7). Each family paragraph gives, in this
-order, (a)~its construction facts, (b)~its pre-review state under the source-evidence label, (c)~its held-out
-candidates under D19, (d)~its second labeling, (e)~its unresolved and infrastructure pairs, and (f)~its own caveats.
-
-\begin{table}[t]\centering\scriptsize\setlength{\tabcolsep}{4pt}
-\caption{Per-family caveats of \texttt{\NATURALRUN}, each cell a value of the run's analysis (\texttt{make\_tables.py
--{}-natural-run}; decision log D64, D70, D72, D75, D76). Reference checks: the status record written when they were
-frozen, with its fix rounds. Labeler: its status record, and whether the second labeling grades the family or leaves it
-out. Oracle-gated view: kept where the verifier passes the family's reference solution in the run, dropped otherwise
-(protocol~\S15.7). B1: whether it equals D19's regression norm (yes, in part or no), with its checks. Near misses: those
-that target a correction requirement, of all. D19 ambiguous: the candidates D19 labels ambiguous, left out of false
-acceptance and false rejection. Terms: not recorded: no status record; unrecognised status: a record with neither
-status; not known: no regression-norm overlay; graded: in the second labeling; left out: the family's labeler is not
-usable; not graded: the run did not grade the family's labeler; none: no such candidate. $^{\ddagger}$Natural case
-study; caveats in Section~\ref{sec:natural-cases}.}\label{tab:nr-caveats}
-\begin{tabular}{p{0.2\linewidth}p{0.112\linewidth}p{0.112\linewidth}p{0.112\linewidth}p{0.112\linewidth}p{0.112\linewidth}p{0.112\linewidth}}
-\toprule
-\nrcaveat{Caveat} & \nrcaveat{NP-03} & \nrcaveat{NP-04} & \nrcaveat{NP-05} & \nrcaveat{NP-18} & \nrcaveat{NP-19} &
-\nrcaveat{NP-20} \tabularnewline\midrule
-\nrcaveat{Reference checks: status (fix rounds)}
-& \nrcaveat{\nrv{refchecks.np03.status} (\nrv{refchecks.np03.rounds})}
-& \nrcaveat{\nrv{refchecks.np04.status} (\nrv{refchecks.np04.rounds})}
-& \nrcaveat{\nrv{refchecks.np05.status} (\nrv{refchecks.np05.rounds})}
-& \nrcaveat{\nrv{refchecks.np18.status} (\nrv{refchecks.np18.rounds})}
-& \nrcaveat{\nrv{refchecks.np19.status} (\nrv{refchecks.np19.rounds})}
-& \nrcaveat{\nrv{refchecks.np20.status} (\nrv{refchecks.np20.rounds})} \tabularnewline
-\nrcaveat{Labeler: status; second labeling}
-& \nrcaveat{\nrv{il.np03.status}; \nrv{il.np03.second}}
-& \nrcaveat{\nrv{il.np04.status}; \nrv{il.np04.second}}
-& \nrcaveat{\nrv{il.np05.status}; \nrv{il.np05.second}}
-& \nrcaveat{\nrv{il.np18.status}; \nrv{il.np18.second}}
-& \nrcaveat{\nrv{il.np19.status}; \nrv{il.np19.second}}
-& \nrcaveat{\nrv{il.np20.status}; \nrv{il.np20.second}} \tabularnewline
-\nrcaveat{Oracle-gated view: C1, C3}
-& \nrcaveat{\nrv{og.c1.np03}, \nrv{og.c3.np03}}
-& \nrcaveat{\nrv{og.c1.np04}, \nrv{og.c3.np04}}
-& \nrcaveat{\nrv{og.c1.np05}, \nrv{og.c3.np05}}
-& \nrcaveat{\nrv{og.c1.np18}, \nrv{og.c3.np18}}
-& \nrcaveat{\nrv{og.c1.np19}, \nrv{og.c3.np19}}
-& \nrcaveat{\nrv{og.c1.np20}, \nrv{og.c3.np20}} \tabularnewline
-\nrcaveat{B1: equals the norm (checks)}
-& \nrcaveat{\nrv{b1.np03.norm} (\nrv{b1.np03.checks})}
-& \nrcaveat{\nrv{b1.np04.norm} (\nrv{b1.np04.checks})}
-& \nrcaveat{\nrv{b1.np05.norm} (\nrv{b1.np05.checks})}
-& \nrcaveat{\nrv{b1.np18.norm} (\nrv{b1.np18.checks})}
-& \nrcaveat{\nrv{b1.np19.norm} (\nrv{b1.np19.checks})}
-& \nrcaveat{\nrv{b1.np20.norm} (\nrv{b1.np20.checks})} \tabularnewline
-\nrcaveat{Near misses on the correction}
-& \nrcaveat{\nrv{nm.np03.correction} of \nrv{nm.np03.all}}
-& \nrcaveat{\nrv{nm.np04.correction} of \nrv{nm.np04.all}}
-& \nrcaveat{\nrv{nm.np05.correction} of \nrv{nm.np05.all}}
-& \nrcaveat{\nrv{nm.np18.correction} of \nrv{nm.np18.all}}
-& \nrcaveat{\nrv{nm.np19.correction} of \nrv{nm.np19.all}}
-& \nrcaveat{\nrv{nm.np20.correction} of \nrv{nm.np20.all}} \tabularnewline
-\nrcaveat{D19 ambiguous}
-& \nrcaveat{\nrv{d19.np03.ambiguous.ids}}
-& \nrcaveat{\nrv{d19.np04.ambiguous.ids}}
-& \nrcaveat{\nrv{d19.np05.ambiguous.ids}}
-& \nrcaveat{\nrv{d19.np18.ambiguous.ids}}
-& \nrcaveat{\nrv{d19.np19.ambiguous.ids}}
-& \nrcaveat{\nrv{d19.np20.ambiguous.ids}} \tabularnewline
-\bottomrule
-\end{tabular}
-\end{table}
+drops it otherwise, a $^{\dagger}$ in Table~\ref{tab:nr-fa-fr} (protocol~\S15.7). Table~\ref{tab:nr-source} marks
+the same cells, Table~\ref{tab:nr-sanity} gives each condition's outcome on the reference and on the no-op, the
+unchanged base, and Table~\ref{tab:nr-coverage} how much of the reference contract each recovered contract covers, how
+many of its requirements contradict the reference contract, and how many it marks superseded.
+The family paragraphs, which set each family's cells beside its construction facts, its second labeling, its pairs and
+its own caveats, are in Appendix~\ref{app:natural-cases}, with Table~\ref{tab:nr-caveats}.
 
 \IfFileExists{generated/natural_run/natural_run_source_evidence.tex}{\input{generated/natural_run/natural_run_source_evidence.tex}}{\unfilled{table of the pre-review states (make\_tables.py -{}-natural-run)}}
 \IfFileExists{generated/natural_run/natural_run_fa_fr.tex}{\input{generated/natural_run/natural_run_fa_fr.tex}}{\unfilled{table of false acceptance and false rejection (make\_tables.py -{}-natural-run)}}
 
-\paragraph{NP-03.}
-NP-03 has no second labeling: its independent labeler is unusable, since some of its checks state observables that the
-reference does not meet (D72).
-(a)~Construction (D64, D70, D72). Reference contract (requirements; scored and active; at the correction):
-\nrv{ref.np03.requirements}; \nrv{ref.np03.scored}; \nrv{ref.np03.correction}. Reference checks:
-\nrv{refchecks.np03.status}, fix rounds \nrv{refchecks.np03.rounds}. Labeler: \nrv{il.np03.status}; second labeling:
-\nrv{il.np03.second}. B1 by S10 (available; checks; equal to D19's regression norm): \nrv{b1.np03.available};
-\nrv{b1.np03.checks}; \nrv{b1.np03.norm}. Near misses on the correction: \nrv{nm.np03.correction} of
-\nrv{nm.np03.all}. D19's labels of the held-out candidates (valid; invalid; ambiguous; no proposal):
-\nrv{d19.np03.valid}; \nrv{d19.np03.invalid}; \nrv{d19.np03.ambiguous}; \nrv{d19.np03.unlabeled}; the ambiguous ones
-with D19's reason: \nrv{d19.np03.ambiguous.reasons}.
-(b)~The pre-review state, invalid under the source-evidence label (protocol~\S15.6): C1 \nrv{se.c1.np03}, C3
-\nrv{se.c3.np03}; C2 \nrv{se.c2.np03} and C4 \nrv{se.c4.np03}, audited against an unreliable oracle (D70); B2
-\nrv{se.b2.np03}; B1 \nrv{se.b1.np03}; B3, the secondary arm, \nrv{se.b3.np03}. Its D19 label: \nrv{pre.np03.d19}; the
-reference checks' outcome on it in the run: \nrv{pre.np03.refchecks}.
-(c)~Under D19: C1 \nrv{c1.np03.fa} and \nrv{c1.np03.fr}, C3 \nrv{c3.np03.fa} and \nrv{c3.np03.fr}; in the oracle-gated
-view C1's cell is \nrv{og.c1.np03} and C3's \nrv{og.c3.np03}. B1 equals D19's regression norm here, so its false
-rejection, \nrv{b1.np03.fr}, is uninformative, and its verdicts on the alternatives are not blind: they were developed
-against B1's own test files (D64, decision~3). No near-miss writer ran the repository's tests, the writer of eval-nm-3
-included, which started the task image itself, as the family's audit records of P7 say (D75, D77).
-(d)~Second labeling: none, since the labeler is unusable (D72).
-(e)~Pairs of the run (graded; unresolved; infrastructure outcomes): \nrv{pairs.np03}; \nrv{pairs.np03.unresolved};
-\nrv{pairs.np03.infrastructure}.
-(f)~The reference-check writer found that the reference cannot meet the reference contract's observables R1, R8 and
-R9, and wrote checks that hold either way there; the near misses target R8, R9 and R1, so D19's labels for them do not
-rest on checks of the targeted observables as the contract states them (D72). The review of the reference checks was
-ok, with coverage remarks on R2 and R5, so no fix round ran (D33, D72). The base snapshot is approximate (D59). At the
-audit's first iteration the reference fails C1 and C3, and the audit of C4 failed after its last revision with the
-reference not passing (D70). The writer of eval-nm-3 started the task image with no network, its own read-only
-repository and the wrappers' isolation options (D75).
-
-\paragraph{NP-04.}
-(a)~Construction (D64, D70, D72). Reference contract (requirements; scored and active; at the correction):
-\nrv{ref.np04.requirements}; \nrv{ref.np04.scored}; \nrv{ref.np04.correction}. Reference checks:
-\nrv{refchecks.np04.status}, fix rounds \nrv{refchecks.np04.rounds}. Labeler: \nrv{il.np04.status}; second labeling:
-\nrv{il.np04.second}. B1 by S10 (available; checks; equal to D19's regression norm): \nrv{b1.np04.available};
-\nrv{b1.np04.checks}; \nrv{b1.np04.norm}. Near misses on the correction: \nrv{nm.np04.correction} of
-\nrv{nm.np04.all}. D19's labels of the held-out candidates (valid; invalid; ambiguous; no proposal):
-\nrv{d19.np04.valid}; \nrv{d19.np04.invalid}; \nrv{d19.np04.ambiguous}; \nrv{d19.np04.unlabeled}; the ambiguous ones
-with D19's reason: \nrv{d19.np04.ambiguous.reasons}.
-(b)~The pre-review state, invalid under the source-evidence label (protocol~\S15.6): C1 \nrv{se.c1.np04}, C3
-\nrv{se.c3.np04}; C2 \nrv{se.c2.np04} and C4 \nrv{se.c4.np04}, audited against an unreliable oracle (D70); B2
-\nrv{se.b2.np04}; B1 \nrv{se.b1.np04}; B3, the secondary arm, \nrv{se.b3.np04}. Its D19 label: \nrv{pre.np04.d19}; the
-reference checks' outcome on it in the run: \nrv{pre.np04.refchecks}.
-(c)~Under D19: C1 \nrv{c1.np04.fa} and \nrv{c1.np04.fr}, C3 \nrv{c3.np04.fa} and \nrv{c3.np04.fr}; in the oracle-gated
-view C1's cell is \nrv{og.c1.np04} and C3's \nrv{og.c3.np04}. No near-miss writer ran the repository's tests, as the
-family's audit records of P7 say (D77).
-(d)~Second labeling, on the held-out pool (units both label alike, of the units both decide): \nrv{il.np04.pool.agree}
-of \nrv{il.np04.pool.decided}.
-(e)~Pairs of the run (graded; unresolved; infrastructure outcomes): \nrv{pairs.np04}; \nrv{pairs.np04.unresolved};
-\nrv{pairs.np04.infrastructure}.
-(f)~NP-04 shares its repository with NP-05 (D63). At the audit's first iteration the reference passes C1 and C3 (D70).
-The audit of C2 failed after its last revision by rejecting the development alternative, which, by the revisers'
-account, cannot be told apart from the reference on the requirement it targets (D70). The writer of eval-alt-1 wrote and
-ran a helper outside its workspace; a review of the reference checks started the task image itself, its verdict rests
-partly on those runs, and the audit of P7 and the strict re-audit missed a call it made (D75).
-
-\paragraph{NP-05.}
-(a)~Construction (D64, D70, D75). Reference contract (requirements; scored and active; at the correction):
-\nrv{ref.np05.requirements}; \nrv{ref.np05.scored}; \nrv{ref.np05.correction}. Reference checks:
-\nrv{refchecks.np05.status}, fix rounds \nrv{refchecks.np05.rounds}. Labeler: \nrv{il.np05.status}; second labeling:
-\nrv{il.np05.second}. B1 by S10 (available; checks; equal to D19's regression norm): \nrv{b1.np05.available};
-\nrv{b1.np05.checks}; \nrv{b1.np05.norm}. Near misses on the correction: \nrv{nm.np05.correction} of
-\nrv{nm.np05.all}. D19's labels of the held-out candidates (valid; invalid; ambiguous; no proposal):
-\nrv{d19.np05.valid}; \nrv{d19.np05.invalid}; \nrv{d19.np05.ambiguous}; \nrv{d19.np05.unlabeled}; the ambiguous ones
-with D19's reason: \nrv{d19.np05.ambiguous.reasons}.
-(b)~The pre-review state, invalid under the source-evidence label (protocol~\S15.6): C1 \nrv{se.c1.np05}, C3
-\nrv{se.c3.np05}; C2 \nrv{se.c2.np05} and C4 \nrv{se.c4.np05}, audited against an unreliable oracle (D70); B2
-\nrv{se.b2.np05}; B1 \nrv{se.b1.np05}; B3, the secondary arm, \nrv{se.b3.np05}. Its D19 label: \nrv{pre.np05.d19}; the
-reference checks' outcome on it in the run: \nrv{pre.np05.refchecks}.
-(c)~Under D19: C1 \nrv{c1.np05.fa} and \nrv{c1.np05.fr}, C3 \nrv{c3.np05.fa} and \nrv{c3.np05.fr}; in the oracle-gated
-view C1's cell is \nrv{og.c1.np05} and C3's \nrv{og.c3.np05}. B1 equals D19's regression norm here, so its false
-rejection, \nrv{b1.np05.fr}, is uninformative, and its verdicts on the alternatives are not blind: they were developed
-against B1's own test files (D64, decision~3). No near-miss writer ran the repository's tests, as the family's audit
-records of P7 say (D77).
-(d)~Second labeling, on the held-out pool (units both label alike, of the units both decide): \nrv{il.np05.pool.agree}
-of \nrv{il.np05.pool.decided}.
-(e)~Pairs of the run (graded; unresolved; infrastructure outcomes): \nrv{pairs.np05}; \nrv{pairs.np05.unresolved};
-\nrv{pairs.np05.infrastructure}.
-(f)~NP-05 shares its repository with NP-04 (D63). A qualifying comment of the extension was made before the family's
-correction, and the family keeps the correction it was built with, a builder default that departs from the
-earliest-comment rule of protocol~\S15.6 (D63, D66). At the audit's first iteration the
-reference fails C1 and C3, and the audits of C2 and C4 failed after their last revision by accepting a development
-attack that, by the revisers' account, cannot be told apart from the reference on the requirement it targets (D70). Its
-reference checks were frozen after \nrv{refchecks.np05.rounds} fix rounds while the last review still asked for fixes,
-which the review loop records without a further round (D33, D75). The writer of eval-nm-3 remarks that a strict reader
-could also count it against R8; D19 decides its label (D75). The labeler's writer made a stub module outside its
-workspace and then removed that directory, which also removed a stale stub of the controlled arm's tooling, whose
-content is in those agents' transcripts (D75).
-
-\paragraph{NP-18.}
-(a)~Construction (D64, D70, D72). Reference contract (requirements; scored and active; at the correction):
-\nrv{ref.np18.requirements}; \nrv{ref.np18.scored}; \nrv{ref.np18.correction}. Reference checks:
-\nrv{refchecks.np18.status}, fix rounds \nrv{refchecks.np18.rounds}. Labeler: \nrv{il.np18.status}; second labeling:
-\nrv{il.np18.second}. B1 by S10 (available; checks; equal to D19's regression norm): \nrv{b1.np18.available};
-\nrv{b1.np18.checks}; \nrv{b1.np18.norm}. Near misses on the correction: \nrv{nm.np18.correction} of
-\nrv{nm.np18.all}. D19's labels of the held-out candidates (valid; invalid; ambiguous; no proposal):
-\nrv{d19.np18.valid}; \nrv{d19.np18.invalid}; \nrv{d19.np18.ambiguous}; \nrv{d19.np18.unlabeled}; the ambiguous ones
-with D19's reason: \nrv{d19.np18.ambiguous.reasons}.
-(b)~The pre-review state, invalid under the source-evidence label (protocol~\S15.6): C1 \nrv{se.c1.np18}, C3
-\nrv{se.c3.np18}; C2 \nrv{se.c2.np18} and C4 \nrv{se.c4.np18}, audited against an unreliable oracle (D70); B2
-\nrv{se.b2.np18}; B1 \nrv{se.b1.np18}; B3, the secondary arm, \nrv{se.b3.np18}. Its D19 label: \nrv{pre.np18.d19}; the
-reference checks' outcome on it in the run: \nrv{pre.np18.refchecks}.
-(c)~Under D19: C1 \nrv{c1.np18.fa} and \nrv{c1.np18.fr}, C3 \nrv{c3.np18.fa} and \nrv{c3.np18.fr}; in the oracle-gated
-view C1's cell is \nrv{og.c1.np18} and C3's \nrv{og.c3.np18}. No near-miss writer ran the repository's tests, as the
-family's audit records of P7 say (D77).
-(d)~Second labeling, on the held-out pool (units both label alike, of the units both decide): \nrv{il.np18.pool.agree}
-of \nrv{il.np18.pool.decided}.
-(e)~Pairs of the run (graded; unresolved; infrastructure outcomes): \nrv{pairs.np18}; \nrv{pairs.np18.unresolved};
-\nrv{pairs.np18.infrastructure}.
-(f)~At the audit's first iteration the reference fails C1 and C3, and revisers relaxed checks that the reference fails,
-so C2 and C4 can accept what the contract rules out (D70). The review of the reference checks was ok, with a coverage
-remark on R4, so no fix round ran (D33, D72).
-
-\paragraph{NP-19.}
-NP-19 has no second labeling: its independent labeler is unusable after its revision, since some of its checks fail on
-the reference and others pass on the no-op (D75).
-(a)~Construction (D64, D70, D75). Reference contract (requirements; scored and active; at the correction):
-\nrv{ref.np19.requirements}; \nrv{ref.np19.scored}; \nrv{ref.np19.correction}. Reference checks:
-\nrv{refchecks.np19.status}, fix rounds \nrv{refchecks.np19.rounds}. Labeler: \nrv{il.np19.status}; second labeling:
-\nrv{il.np19.second}. B1 by S10 (available; checks; equal to D19's regression norm): \nrv{b1.np19.available};
-\nrv{b1.np19.checks}; \nrv{b1.np19.norm}. Near misses on the correction: \nrv{nm.np19.correction} of
-\nrv{nm.np19.all}. D19's labels of the held-out candidates (valid; invalid; ambiguous; no proposal):
-\nrv{d19.np19.valid}; \nrv{d19.np19.invalid}; \nrv{d19.np19.ambiguous}; \nrv{d19.np19.unlabeled}; the ambiguous ones
-with D19's reason: \nrv{d19.np19.ambiguous.reasons}.
-(b)~The pre-review state, invalid under the source-evidence label (protocol~\S15.6): C1 \nrv{se.c1.np19}, C3
-\nrv{se.c3.np19}; C2 \nrv{se.c2.np19} and C4 \nrv{se.c4.np19}, audited against an unreliable oracle (D70); B2
-\nrv{se.b2.np19}; B1 \nrv{se.b1.np19}; B3, the secondary arm, \nrv{se.b3.np19}. Its D19 label: \nrv{pre.np19.d19}; the
-reference checks' outcome on it in the run: \nrv{pre.np19.refchecks}.
-(c)~Under D19: C1 \nrv{c1.np19.fa} and \nrv{c1.np19.fr}, C3 \nrv{c3.np19.fa} and \nrv{c3.np19.fr}; in the oracle-gated
-view C1's cell is \nrv{og.c1.np19} and C3's \nrv{og.c3.np19}. B1 equals D19's regression norm in part here, so its false
-rejection, \nrv{b1.np19.fr}, is uninformative to that extent (D64, decision~3). No near-miss writer ran the repository's
-tests, as the family's audit records of P7 say (D77).
-(d)~Second labeling: none, since the labeler is unusable (D75).
-(e)~Pairs of the run (graded; unresolved; infrastructure outcomes): \nrv{pairs.np19}; \nrv{pairs.np19.unresolved};
-\nrv{pairs.np19.infrastructure}.
-(f)~At the audit's first iteration the reference fails C1 and C3; the audit of C4 failed after its last revision with
-the reference not passing, and that revision changed nothing; and the generators report that the fix does not take
-effect in the task's environment (D70). The second review of the reference checks, after their fix round, was ok, with a
-coverage remark on R1, so no further fix round ran (D33, D75). The near-miss writers report that the reference fails R1
-in their mocked setups, while the frozen reference checks pass the reference in every repeat of their validation (D75).
-Neither recovered contract covers the reference contract's R4 (D75). A fix round of the reference checks started the
-task image itself, and the writer of B3 wrote a file outside its workspace (D75).
-
-\paragraph{NP-20.}
-(a)~Construction (D64, D70, D72). Reference contract (requirements; scored and active; at the correction):
-\nrv{ref.np20.requirements}; \nrv{ref.np20.scored}; \nrv{ref.np20.correction}. Reference checks:
-\nrv{refchecks.np20.status}, fix rounds \nrv{refchecks.np20.rounds}. Labeler: \nrv{il.np20.status}; second labeling:
-\nrv{il.np20.second}. B1 by S10 (available; checks; equal to D19's regression norm): \nrv{b1.np20.available};
-\nrv{b1.np20.checks}; \nrv{b1.np20.norm}. Near misses on the correction: \nrv{nm.np20.correction} of
-\nrv{nm.np20.all}. D19's labels of the held-out candidates (valid; invalid; ambiguous; no proposal):
-\nrv{d19.np20.valid}; \nrv{d19.np20.invalid}; \nrv{d19.np20.ambiguous}; \nrv{d19.np20.unlabeled}; the ambiguous ones
-with D19's reason: \nrv{d19.np20.ambiguous.reasons}.
-(b)~The pre-review state, invalid under the source-evidence label (protocol~\S15.6): C1 \nrv{se.c1.np20}, C3
-\nrv{se.c3.np20}; C2 \nrv{se.c2.np20} and C4 \nrv{se.c4.np20}, audited against an unreliable oracle (D70); B2
-\nrv{se.b2.np20}; B1 \nrv{se.b1.np20}; B3, the secondary arm, \nrv{se.b3.np20}. Its D19 label: \nrv{pre.np20.d19}; the
-reference checks' outcome on it in the run: \nrv{pre.np20.refchecks}.
-(c)~Under D19: C1 \nrv{c1.np20.fa} and \nrv{c1.np20.fr}, C3 \nrv{c3.np20.fa} and \nrv{c3.np20.fr}; in the oracle-gated
-view C1's cell is \nrv{og.c1.np20} and C3's \nrv{og.c3.np20}. B1 equals D19's regression norm here, so its false
-rejection, \nrv{b1.np20.fr}, is uninformative, and its verdicts on the alternatives are not blind: they were developed
-against B1's own test files (D64, decision~3). The family's audit records of P7 do not say whether a near-miss writer ran
-the repository's tests; a search of its near-miss writers' tool inputs for a fixed list of test-run commands
-found none (D77).
-(d)~Second labeling, on the held-out pool (units both label alike, of the units both decide): \nrv{il.np20.pool.agree}
-of \nrv{il.np20.pool.decided}.
-(e)~Pairs of the run (graded; unresolved; infrastructure outcomes): \nrv{pairs.np20}; \nrv{pairs.np20.unresolved};
-\nrv{pairs.np20.infrastructure}.
-(f)~The labeler is usable after its revision; as written it missed R15 (D72). The review of the reference checks was ok,
-with a coverage remark on R11, so no fix round ran (D33, D72). At the audit's first iteration the reference fails C1 and
-passes C3, and a reviser relaxed a check that the reference fails (D70). The writer of B2 wrote files of its error output
-outside its workspace, in the host's temporary directory (D75).
+\paragraph{The families read with the reference gate.}
+% Written after the analysis, from the run's cells (D80): outside the template's
+% pre-commitment. tests/test_natural_template.py (READING_CELLS, READING_ORDER) checks each family it names against the
+% run's own numbers and the published analysis.
+A rejection of the pre-review state tells that state from the reference only where the verifier passes the reference,
+and from valid work only where it also passes the valid alternatives; an acceptance says more than the base's only where
+the verifier rejects the no-op. In NP-03, C1, C3 and C4 reject every candidate, the reference and both valid
+alternatives included, and so do C1 and C3 in NP-05 and NP-18, and C1 in NP-20: their rejections of the pre-review state
+there carry no information about the correction. In NP-03, NP-05, NP-19 and NP-20, B1 passes every candidate, the no-op
+included, so its acceptance of the pre-review state there is the base's. In NP-04, where C1 and C3 pass the reference,
+C3 and C4 accept eval-nm-2 and eval-nm-3 (false acceptance \nrv{c3.np04.fa} and \nrv{c4.np04.fa}). The near miss
+eval-nm-2 targets R5, a correction requirement, and the label rule labels it invalid for breaking R5 alone, which the
+correction-aware contract leaves uncovered under both mappers, so the coverage gap accounts for this acceptance and for
+no other. The near miss eval-nm-3 targets R1 (D72), and the label rule labels it invalid for breaking R1, R4 and R5, of
+which the correction-aware contract covers R1 and R4 under both mappers; every condition accepts it. C1, whose contract
+covers neither correction requirement, accepts every near miss (\nrv{c1.np04.fa}). In NP-19, C3, C4 and B2 accept
+eval-nm-1 (\nrv{c3.np19.fa}, \nrv{c4.np19.fa} and \nrv{b2.np19.fa}), a near miss on the correction; it targets R4, which
+neither recovered contract covers (D75), but the label rule labels it invalid for breaking R1 to R4, R3 among them, a
+correction requirement that the correction-aware contract covers under both mappers. The correction-aware contract
+covers both correction requirements in NP-03, NP-05 and NP-18, and all but R11 in NP-20, and in NP-05 and NP-18 the
+initial-only contract covers both as well; in the controlled tasks, by contrast, every correction-aware contract covers
+its whole reference contract (Table~\ref{tab:coverage}). In NP-20 the correction-aware contract marks a requirement
+superseded, and in NP-05 and NP-20 requirements of both recovered contracts contradict the reference contract under both
+mappers; in NP-03, NP-04, NP-18 and NP-19 none does (Table~\ref{tab:nr-coverage}). B2's false acceptance and false
+rejection are no higher than C3's or C4's in NP-03, NP-04, NP-05, NP-18, NP-19 and NP-20: B2 passes both valid
+alternatives where C3 rejects them (NP-03, NP-05 and NP-18) and where C4 does (NP-03), accepts fewer near misses than
+both in NP-04 (\nrv{b2.np04.fa}), and has the same cells as both in NP-19 and NP-20. C3's false acceptance is below C1's
+in NP-04 and NP-19, its false rejection is below C1's in NP-20, and their cells are equal in NP-03, NP-05 and NP-18. The
+audit cuts both ways: C2 passes the valid alternatives that C1 rejects in NP-05, NP-18 and NP-20, and C4 those that C3
+rejects in NP-05 and NP-18, and C2 rejects an invalid candidate that C1 accepts in NP-19 (eval-nm-1), but C2 accepts an
+invalid candidate that C1 rejects in NP-03, NP-05 and NP-20. These comparisons favour verifiers that agree with the
+reference: the reference checks were validated on the addressing commit, whose diff the drafter of the reference
+contract read, and a reference may not meet the contract recovered from its own thread.
 
 \paragraph{What the case studies can and cannot show.}
 % INTEGRATION SLOT (restructure plan, part 7, item 6). Its rule, as the template committed it before any analysis of
@@ -375,31 +175,17 @@ outside its workspace, in the host's temporary directory (D75).
 % replaced by sentences that name families by their cells and never count them, in the form "In NP-xx and NP-yy C1
 % accepted the pre-review state and C3 rejected it", one sentence for each pattern of Table 7's C1 and C3 cells that
 % occurs, each family named once. Nothing is written from the cells before then."
-% Written after make_tables.py --natural-run had written the run's cells (D79): Table
-% tab:nr-source's C1 and C3 cells (se.c1.<family>, se.c3.<family>) hold one pattern, so the slot is the one sentence
-% below. tests/test_natural_template.py (INTEGRATION) checks the cells it states against the run's own numbers.
-In NP-03, NP-04, NP-05, NP-18, NP-19 and NP-20, C1 and C3 rejected the pre-review state.
+% Written after make_tables.py --natural-run had written the run's cells (D79), and rewritten after the gate's marker
+% was added to Table tab:nr-source (D80): its C1 and C3 cells (se.c1.<family>,
+% se.c3.<family>, and the marker that og.c1.<family> and og.c3.<family> hold) form three patterns, so the slot is the three
+% sentences below, each family named once. tests/test_natural_template.py (INTEGRATION) checks the cells they state
+% against the run's own numbers.
+In NP-03, NP-05, NP-18 and NP-19, C1 and C3 rejected the pre-review state and failed the family's
+reference, so the oracle-gated view drops both cells. In NP-04, C1 and C3 rejected the pre-review state and passed the
+reference. In NP-20, C1 and C3 rejected the pre-review state; C1 failed the reference, so the oracle-gated view drops
+its cell, and C3 passed it.
 Table~\ref{tab:nr-source} gives, per family, whether C1 and C3 accept the pre-review state, and the family paragraphs
-set each family's cells beside its caveats; no statement here counts families. S10 passed \nat{s10.first.passed} of the
-\nat{s10.first.processed} families of the first sample that it processed (D59): a screening count, not a prevalence.
-Cost per family, from the generation records of the family's generated artifacts, the run's grading and its S10 record
-(agent turns; tool calls; agent wall time, grading time and S10 build time in seconds; artifacts with a generation
-record, of all; D64, ``Generation records''): NP-03 \nrv{cost.np03.turns}; \nrv{cost.np03.toolcalls};
-\nrv{cost.np03.wall}, \nrv{cost.np03.grading} and \nrv{cost.np03.s10}; \nrv{cost.np03.recorded} of
-\nrv{cost.np03.artifacts}. NP-04 \nrv{cost.np04.turns}; \nrv{cost.np04.toolcalls}; \nrv{cost.np04.wall},
-\nrv{cost.np04.grading} and \nrv{cost.np04.s10}; \nrv{cost.np04.recorded} of \nrv{cost.np04.artifacts}. NP-05
-\nrv{cost.np05.turns}; \nrv{cost.np05.toolcalls}; \nrv{cost.np05.wall}, \nrv{cost.np05.grading} and
-\nrv{cost.np05.s10}; \nrv{cost.np05.recorded} of \nrv{cost.np05.artifacts}. NP-18 \nrv{cost.np18.turns};
-\nrv{cost.np18.toolcalls}; \nrv{cost.np18.wall}, \nrv{cost.np18.grading} and \nrv{cost.np18.s10};
-\nrv{cost.np18.recorded} of \nrv{cost.np18.artifacts}. NP-19 \nrv{cost.np19.turns}; \nrv{cost.np19.toolcalls};
-\nrv{cost.np19.wall}, \nrv{cost.np19.grading} and \nrv{cost.np19.s10}; \nrv{cost.np19.recorded} of
-\nrv{cost.np19.artifacts}. NP-20 \nrv{cost.np20.turns}; \nrv{cost.np20.toolcalls}; \nrv{cost.np20.wall},
-\nrv{cost.np20.grading} and \nrv{cost.np20.s10}; \nrv{cost.np20.recorded} of \nrv{cost.np20.artifacts}. This cost leaves
-out what no such record holds, as the run's analysis lists it: the host's own steps, which the host coordinators run
-(D65), apart from the run's grading; agent runs that leave no generation record, the mappers among them; stages S1 to
-S9; re-runs of S10 and the part of its compile step that its record does not time; and image builds and wheel downloads
-(D64, ``Generation records''). So it is not the whole cost of building a family: D68 reports the host coordinators'
-share of a phase. No total over the families is given. The protocol's cost and time per accepted task
-(protocol~\S15.6), which the analysis computes over the families that S10 processed, rejected ones included (D69), is a
-quantity over families and is not reported (protocol~\S19.6). These case studies cannot show how often anything they show
-happens, nor whether it holds beyond these families.
+set each family's cells beside its caveats; no statement here counts families by their outcomes in the run. S10 passed
+\nat{s10.first.passed} of the \nat{s10.first.processed} families of the first sample that it processed (D59): a
+screening count, not a prevalence.
+These case studies cannot show how often anything they show happens, nor whether it holds beyond these families.
