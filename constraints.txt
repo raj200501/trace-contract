@@ -1,0 +1,17 @@
+# Exact versions of the developer environment (Python 3.13.18; packages installed on 2026-11-13 and unchanged since)
+# in which the offline suite, the byte-for-byte regenerations and the paper's generators were checked.
+# The sandbox images grade with their own pinned wheels, not these. pyproject.toml keeps the ranges a library needs.
+# Install: uv pip install --python .venv/bin/python -c constraints.txt -e ".[dev,data]"
+annotated-types==0.8.0
+duckdb==2.0.0
+iniconfig==2.3.1
+packaging==26.3
+pip==26.3
+pluggy==1.7.0
+pyarrow==26.0.1
+pydantic==2.14.3
+pydantic-core==2.50.4
+pygments==2.21.0
+pytest==9.2.0
+typing-extensions==4.16.0
+typing-inspection==0.4.5

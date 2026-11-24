@@ -180,4 +180,7 @@ def main(old_dir: str, new_dir: str) -> None:
 
 
 if __name__ == "__main__":
+    if len(sys.argv) != 3 or {"-h", "--help"} & set(sys.argv[1:]):
+        print(__doc__.strip())
+        sys.exit(0 if {"-h", "--help"} & set(sys.argv[1:]) else 2)
     main(*sys.argv[1:])
