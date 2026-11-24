@@ -19,8 +19,8 @@ and grades them in a sandbox on held-out agent patches, against labels from a pr
 >   the corrections included, the study scripted. They are not natural user traffic.
 > * **Natural case studies.** Six pull-request-review families from AIDev v5 were built and graded (run
 >   `natural-pr-v1`) and are reported as exploratory case studies, family by family.
-> * **Manuscript.** [`paper/`](paper/README.md) builds a 76-page working draft (main text 22 pages), which awaits
->   review by its human authors. Current state and open decisions: [STATUS.md](STATUS.md).
+> * **Manuscript.** [`paper/`](paper/README.md) builds a 77-page working draft (main text about 23 pages), which
+>   awaits review by its human authors. Current state and open decisions: [STATUS.md](STATUS.md).
 
 ## In short
 
@@ -42,18 +42,21 @@ and 50 valid (run `fresh-v1`).
    C1 accepts 24 of the 27 violators, C3 none. Each violator breaks a requirement that only the correction states: C1's
    contract lacks it, C3's has it, and the reference checks behind the labels were written from a contract that states
    it.
-3. **What the design does not fix: a reference gate misses silent loss** (a post hoc reading of two families). Where
-   the correction only adds requirements (CS-03, CS-04), C1 passes the reference solution, so a gate that keeps only
-   verifiers passing their reference keeps it, yet it accepts 14 of the 17 violators there. None of its checks maps to
-   the requirement those violators break, although its generator saw the reference diff that implements it. Where
-   the correction retracts part of the request (CS-01), C1 fails 12 of its 14 checks on the reference, and a gate
-   catches it.
+3. **A reference gate misses silent loss** (a post hoc reading of two families; which families show it follows largely
+   from what their corrections do: C1 passes the reference wherever the correction only adds requirements, CS-02 to
+   CS-04, and fails it in CS-01, whose correction retracts a requirement C1 encodes). In CS-03 and CS-04, the two of
+   those families with correction violators, C1 passes the reference solution, so a gate that keeps only verifiers
+   passing their reference keeps it, yet it accepts 14 of the 17 violators there. None of its checks maps to the
+   requirement those violators break, as its generator's template asks: it tests its contract and is told not to
+   over-fit the reference diff it is given. Where the correction retracts part of the request (CS-01), C1 fails 12 of
+   its 14 checks on the reference, and a gate catches it.
 4. **Repository tests at the final state cut both ways.** They reject 34 of the 50 valid attempts, all through 40
    checks that the session agent added. The base commit's own tests reject none, but alone they pass 17 of the 29
-   invalid attempts.
+   invalid attempts. Both follow from the label rule, whose regression norm the base tests are; what the run measures
+   is that the 40 added checks reject 34 valid attempts and catch those 17.
 5. **More machinery did not help.** On the fresh attempts the audit removed no false acceptance and raised false
-   rejection from 0/50 (C3) to 6/50 (C4). The transcript-only baseline B2 matched the structured contracts on false
-   acceptance (2/29 each).
+   rejection from 0/50 (C3) to 6/50 (C4). The transcript-only baseline B2 matched the correction-aware contracts
+   (C3, C4) on false acceptance (2/29 each).
 6. **The natural case studies are mostly uninformative about corrections.** In six pull-request-review families,
    where a reviewer's comment plays the correction (run `natural-pr-v1`), C1 and C3 reject every candidate, the
    addressing commit and the valid alternatives included, in NP-03, NP-05 and NP-18, and the repository tests pass the
@@ -67,8 +70,12 @@ between renderings of the same requirements. The 27 violators form only 4 distin
 families. With four families no exact sign-flip test can go below p = 0.0625 one-sided, and none of the 14 planned
 comparisons reaches that floor. No candidate was optimised against a verifier, so these false-acceptance rates,
 including the 0 of 27 violators that C3, C4 and B2 accept, say nothing about a verifier used as a reward under
-optimisation (paper §8). These numbers describe these tasks; they are not evidence of an effect beyond them. See
-[Limitations](#limitations).
+optimisation (paper §8). C1 is not a pipeline in use: no cited pipeline builds a verifier from a contract of the first
+request (paper §6, Positioning); the baselines tied to practice that paper §7 lists (a first-request suite gated on
+the pre-correction state, a full-session task statement with test refinement, an LLM judge) were not built; and B3,
+which keeps tests from the first request and the reference diff only if they fail on the base and pass on the
+reference, ran in the natural arm only. These numbers describe these tasks; they are not evidence of an effect beyond
+them. See [Limitations](#limitations).
 
 Sources: `results/runs/fresh-v1/analysis.md`, `results/runs/natural-pr-v1/analysis.md`, and the paper's generated
 numbers (`paper/generated/*/numbers.tex`, each value listed with its file and field in `paper/evidence_ledger_*.md`);
@@ -91,21 +98,25 @@ paper Sections 3 and 5.
 * **An evidence ledger.** Every number in the manuscript's text is a generated macro and every table is generated
   from recorded files; each value has a ledger entry naming the file and field it comes from
   (`paper/evidence_ledger*.md`), and `paper/check_numbers.py` fails on any digit or count word outside a macro.
-* **Byte-for-byte regeneration.** From the recorded runs, the analyses, reports, tables, figures and ledgers
-  regenerate byte for byte, apart from the git revision and code hashes that an `analysis.json` records.
+* **Byte-for-byte regeneration.** From the recorded controlled runs, the analyses, reports, tables, figures and
+  ledgers regenerate byte for byte, apart from the git revision and code hashes that an `analysis.json` records; the
+  natural run's tables regenerate from its published `analysis.json` (see Reproduce in full).
 * **Privacy scanning** (`scripts/scan_tracked_files.py`): the working tree and every file version a push would send
   are checked for credentials, session-local paths, e-mail addresses, private markers and, for the natural arm, the
-  logins tied to the sampled pull requests. The natural run is published as identifiers, hashes and outcomes only.
+  logins tied to the sampled pull requests, the natural tasks' thread texts, their repositories' names and their
+  upstream code lines. The natural run is published as identifiers, hashes and outcomes only; the screening records
+  hold more (`docs/data_card.md`, Personal information).
 * **A downstream-training plan, not run** (`experiments/downstream_plan_v0.1-draft.md`): rejection-sampling
   fine-tuning and then RL, with first-request against whole-session verifiers as the data filters and rewards,
   matched budgets, held-out repositories and human labels as the judge, and why the present families cannot support
   it. Its tested data step (`scripts/build_training_selection.py`, `configs/downstream/`) lists what each verifier
   would admit from the recorded fresh attempts (`results/analyses/fresh-v1-training-selection/`): a post hoc
   illustration that measures no training value.
-* **Tests:** 1,464 (1,444 offline, 20 Docker). On 2026-11-24 all of them passed in the build checkout; in a fresh
-  clone, 9 offline tests skip, since they need the unpublished natural data.
+* **Tests:** 1,464 (1,444 offline, 20 Docker). On 2026-11-24 all of them passed in the build checkout; in a clone
+  with the base snapshots built, 9 offline tests skip, since they need the unpublished natural data; in a fresh clone,
+  before the snapshots are built, 14 more skip.
 * **Records:** a protocol hashed and logged locally before each run it governs (`experiments/protocol.md`; not a
-  formal preregistration), a decision log (D1 to D82), run manifests with code revisions, image identifiers and
+  formal preregistration), a decision log (D1 to D83), run manifests with code revisions, image identifiers and
   hashes, and the prompts that produced the model-written artifacts (`experiments/prompts/`).
 
 ## Quick start
@@ -152,7 +163,8 @@ Each item names its evidence and its caveat; section, table and figure numbers r
    correction, as the study's mappers do against the reference contract (Table 11 in App. D), shows that gap before
    any candidate is graded. *Caveat:* a post hoc reading of the secondary, reference-gated view, in two families.
 3. **Rebuild the task from the whole session, not the first request.** *Evidence:* verifiers from the first request
-   accept 24 of the 27 agent-made violators, verifiers from the whole session none (§3.1). *Caveat:* largely fixed by
+   (C1, which no cited pipeline builds as such) accept 24 of the 27 agent-made violators, verifiers from the whole
+   session none (§3.1). *Caveat:* largely fixed by
    construction, and the labels' reference checks share a model family, the reference diff and the requirements with
    the whole-session verifiers. An initial-only contract can already hold the correction: CS-02's covers everything
    its correction adds.
@@ -167,7 +179,8 @@ Each item names its evidence and its caveat; section, table and figure numbers r
    caused 6 false rejections (§3.2; D62). In the construction pilot it changed one held-out outcome (§4). *Caveat:*
    one audit design (`audit:v1`).
 6. **Compare against a plain transcript-to-tests baseline.** *Evidence:* B2, written from the transcript without a
-   contract, matched the structured contracts on false acceptance (2/29) with 2/50 false rejections (§3.2).
+   contract, matched the correction-aware contracts (C3, C4) on false acceptance (2/29) with 2/50 false rejections
+   (§3.2).
    *Caveat:* four families cannot show equivalence, and no scenario has several or conflicting corrections, where
    contracts might matter most (§7).
 7. **Withhold the correction to get agent-made negatives, and count distinct behaviours, not attempts.** *Evidence:*
@@ -177,7 +190,8 @@ Each item names its evidence and its caveat; section, table and figure numbers r
 8. **Treat the grader as an attack surface.** *Evidence:* the study's reviews found paths by which candidate code
    could forge a grade (a module shadowing the standard library, an `encodings` package, an `ast.py` on the error
    path), and Harbor's world-writable reward directory gave two reward-planting probes 1.0 under the earlier exporter.
-   Each path now has a regression probe (App. C; `results/runs/README.md`; `results/harbor_validation/`). *Caveat:*
+   Each path now has a regression probe (the grader paths: App. C and `results/runs/README.md`; the reward directory:
+   App. C, D51, D52 and `results/harbor_validation/tc-harbor-export-0.3.0/summary.json`). *Caveat:*
    within one call, code that the snippet runs still controls what that call reports, and the in-process B1 baseline
    can be forged.
 
@@ -223,7 +237,7 @@ Each item names its evidence and its caveat; section, table and figure numbers r
     among them, which named held-out CS-02 candidate files), and one reviewer of CS-02's checks read all of another
     reviewer's test runner there, which holds no candidate or other verifier material (`strict_reaudit` in
     `tasks/*/labels/generator_audit.json`; D44, D46);
-  * near-miss generators could run B1's tests;
+  * near-miss generators had and ran B1's tests (D37), so B1's outcomes on near misses are not blind to construction;
   * three held-out candidates duplicate a development attack;
   * the reference checks were written while the pools were being generated; CS-03's were frozen before its pool was
     registered, and CS-02's were revised mostly after its pool was complete;
@@ -231,6 +245,10 @@ Each item names its evidence and its caveat; section, table and figure numbers r
     differ from the earlier CS-03/CS-04 prompts, which CS-01's alternatives and reference checks also used;
   * CS-04's B1 was re-selected after its pool existed;
   * the hash of each scored check list was added only after the run `pilot-v0.3`.
+* **The fresh attempts' context held harness material:** an environment block naming the study repository and the
+  build session's scratch directory, and the build session's task-list reminders (How the measurement works). It holds
+  no reference, verifier, candidate or label, but it names the study repository, so an attempt may infer that it is
+  part of a study (paper §8, item 5).
 * **No training experiment and no optimisation pressure.** No training was run, and nothing here claims a model
   improvement. No candidate was optimised against a verifier, so the false-acceptance rates say nothing about a
   verifier used as a reward under optimisation, where a policy can search out what the verifier does not check
@@ -276,7 +294,8 @@ How to read this:
   * The full-session LLM baseline (B2) matches C3 and C4 on false acceptance.
 * **B1's false rejections come from the session agent's tests.** All 34 come from the 40 checks that the session agent
   added to the reference state. The base commit's tests reject none, and alone they would accept 17 of the 29 invalid
-  attempts.
+  attempts. Both follow from the label rule, whose regression norm the base tests are; what the run measures is that
+  the 40 added checks reject 34 valid attempts and catch those 17.
 * **The effect is concentrated and largely fixed by construction.** Each violator breaks a requirement that only the
   correction states; C1's contract lacks it and C3's covers it, and the reference checks behind the labels were
   written from a reference contract that states it (paper, Section 3.1). The 27 violators form 4 distinct outcome
@@ -402,8 +421,12 @@ How to read this:
   The pre-correction state is captured during the session. It existed before the verifiers, and its edits appear,
   abbreviated, in the session text that B2's generator and the full-session contract proposer read. The alternatives
   and near misses are generated only after the task's verifiers are frozen (CS-04's B1 was re-selected afterwards,
-  decision log D31). The fresh-agent stratum adds attempts by agents that saw only the first request, or the first
-  request and its correction, and nothing else (protocol §15.4). The conditions form a 2×2 grid:
+  decision log D31). The fresh-agent stratum adds attempts by agents given only the first request, or the first
+  request and its correction: no reference, transcript, verifier, candidate or label (protocol §15.4). Their context
+  also held harness material: an environment block naming the study repository and the build session's scratch
+  directory, and task-list reminders with the titles (in CS-03 and CS-04 also the descriptions) of the build session's
+  task-list items, in every attempt of CS-01 to CS-03 and in 16 of CS-04's 20 (protocol §18.2 as corrected in D62;
+  paper §2.1, App. B). The conditions form a 2×2 grid:
 
   | | plain generated tests | + predefined audit (audit:v1) |
   | --- | --- | --- |
@@ -496,10 +519,13 @@ How to read this:
 
 Related work: [docs/research_brief.md](docs/research_brief.md), adversarially verified by model agents (not yet
 reviewed by a human), and `paper/sections/related.tex`. Each component of the design has partial precedents, notably
-SessionFarmer, SWE-Together and Trace2Eval. The claim is limited to their *combination*: initial-only vs
-correction-aware verifiers from one frozen procedure, scored on one held-out pool anchored on the session's own
-pre-correction states, against independent human labels (decision log D34). The last element does not exist yet, and
-the pool's departures from blindness are listed under Limitations.
+SessionFarmer, SWE-Together and Trace2Eval. What the paper adds is narrow (paper §6, Positioning): initial-only and
+correction-aware verifiers from the same frozen procedure, scored on attempts by agents that did or did not see the
+correction, with their own violations as negatives; and natural case studies. The claim that decision log D34 records
+is a conjunction that also needs a held-out pool anchored on the sessions' own pre-correction states (the construction
+pilot's) and independent human labels, which do not exist yet; that wording awaits the owner's confirmation
+(`docs/ownership_and_defense.md`, §4 item 9), and paper §7 describes the design to aim for once human labels exist.
+The pool's departures from blindness are listed under Limitations.
 
 ## Reproduce in full
 
@@ -687,17 +713,27 @@ the analysis code: `analysis.json` (with a sensitivity view's `analysis_sensitiv
 `analysis.json` that its `analysis_sensitivity.md` names). The analysis code has changed since the runs without
 changing any output (D46 records the first such change, to `schemas.py`). `scripts/verify_frozen_inputs.py` checks
 the analysis and report of `pilot-v0.3.3`, and the frozen inputs, at the end of every phase. Re-grading reproduces
-outcomes, not bytes: results carry timestamps and durations, and tests have time limits. The natural arm publishes
-only identifiers, hashes, counts and outcomes (`results/runs/natural-pr-v1`); its thread-derived material stays in the
-git-ignored `data/natural/`, and its raw results are git-ignored too, so it can be neither re-graded nor re-analysed
-from the release. Its tables regenerate from the published `analysis.json`. Every number in the paper's generated
-tables and macros has an entry in an evidence ledger (`paper/evidence_ledger*.md`) with its source file.
+outcomes, not bytes: results carry timestamps and durations, and tests have time limits. The natural run publishes
+only identifiers, hashes, counts and outcomes (`results/runs/natural-pr-v1`); its tasks, with their pseudonymised
+threads, stay in the git-ignored `data/natural/`, and its raw results are git-ignored too, so it can be neither
+re-graded nor re-analysed from the release. Its tables regenerate from the published `analysis.json`. The natural
+arm's screening and download records (`data/manifests/`) also hold the commented files' paths, 120 checked
+model-written paraphrases of qualifying review comments, and the URLs of the 63 repositories of stage S9 with the
+pull-request refs fetched there (owners that act in AIDev masked as `{owner}`); whether the URLs stay before
+publication is the owner's decision (`docs/data_card.md`, Personal information; STATUS.md). Every number in the
+paper's generated tables and macros has an entry in an evidence ledger (`paper/evidence_ledger*.md`) with its source
+file.
 
-Before each push, `scripts/scan_tracked_files.py --private-markers <file kept outside the repository> --aidev-logins
-<AIDev directory>` is run as a manual step, not as a git hook. It checks the working tree and every file version in
+Before each push, `.venv/bin/python -I scripts/scan_tracked_files.py --private-markers <file kept outside the
+repository> --aidev-logins <AIDev directory> --natural-texts data/natural/tasks` is run as a manual step, not as a git
+hook (`-I`, since the AIDev parquet files are third-party data). It checks the working tree and every file version in
 the commits the push would send for credentials, session-local paths, e-mail addresses and the private markers
 (decision log D44). With `--aidev-logins` it also checks for the 119 logins and names tied to the sampled AIDev pull
 requests, loaded in memory from the AIDev files, and for @handles in files under `tasks/` and `data/` (D48, D52).
+With `--natural-texts` (since D69) it also checks for the natural tasks' thread texts, their repositories' names and
+owners, and the upstream code lines of their candidates, verifiers and base snapshots, and for @handles under
+`results/` and `experiments/` (protocol §17.4); `--screening-texts <file.jsonl>` (the S9 and S9x sample texts, kept
+outside the repository) adds the texts of every sampled comment.
 Earlier commits, already pushed, still hold material that has since been removed; STATUS.md lists it.
 
 ## Layout
@@ -711,14 +747,16 @@ tasks/<id>/          task manifests, provenance, triage proposals, contracts (+ 
 data/                manifests (incl. natural-data screening records), sanitised controlled transcripts, scenarios,
                      reference proposals, fresh-attempt records (data/fresh/), labeler audits
 experiments/         protocol.md (amendments up to v0.12, §20), precision_plan_v1.0-draft.md (not adopted),
-                     prompts/ (workflow scripts and agent prompts), natural_workflow/ (the natural recipe's workflow)
+                     downstream_plan_v0.1-draft.md (a draft, not run, not adopted), prompts/ (workflow scripts and
+                     agent prompts), natural_workflow/ (the natural recipe's workflow)
+configs/             the downstream plan's data-step configuration (configs/downstream/), applied post hoc to fresh-v1
 results/runs/<id>/   manifest, raw results, analysis, comparisons, report (logs are local only); the natural run as
                      identifiers, hashes and outcomes
 results/analyses/    post hoc, exploratory re-analyses of frozen runs
 results/harbor_validation/  recorded Harbor validation outputs (fixture task)
 scripts/             label proposals, construction checks, review queues, duplicates, preflight, run comparison,
                      publication scan, frozen-input check, exploratory re-analysis, natural-data screening and
-                     publication, agent workspaces, abstract check
+                     publication, agent workspaces, abstract check, training selection
 docs/                research brief, decision log, data card, annotation guide, internal review, status docs
 THIRD_PARTY_LICENSES/ licence notices of the redistributed upstream code
 paper/               LaTeX draft, bibliography checked by model agents, table and figure generators, number checker,

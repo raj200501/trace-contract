@@ -23,7 +23,8 @@ file of theirs has changed since.
 Superseded runs are kept for the reliability comparison only and are not reported as
 pilot results. `logs/` folders are local only (git-ignored). Post hoc re-analyses of
 `pilot-v0.3.3` are not runs: they are in `results/analyses/pilot-v0.3.3-exploratory/`
-(protocol §15.1, decision log D49).
+(protocol §15.1, decision log D49); `results/analyses/fresh-v1-training-selection/` holds a
+post hoc, exploratory selection over `fresh-v1` that measures no training value (D82).
 
 | Run | Harness | Graded (UTC) | Pairs | Repeats | Code revision | Status | Why superseded |
 | --- | --- | --- | --- | --- | --- | --- | --- |

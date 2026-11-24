@@ -1,8 +1,10 @@
 # Ownership and defense
 
 Updated at commit `2daa725` (decision log through D81). The commands it reports were run for this update on 2026-11-23
-and 2026-11-24 (UTC). Its passages on the review packet's candidate strata (§4 items 1 and 2, Q2, E1 and E11) describe
-the change that D82 records; their commands ran on 2026-11-24 with that change applied. The previous
+and 2026-11-24 (UTC). Its passages on the review packet's candidate strata (§4 items 1 and 2, Q2, E1 and E11), on
+`constraints.txt` (§2.3) and on the threat 'No optimisation pressure' (Q8) describe the changes that D82 records; their
+commands ran on 2026-11-24 with those changes applied. Some passages were corrected afterwards, after read-only reviews
+of commit `f3ae845` by model agents (D83); each cites the record it rests on. The previous
 version (last committed in `4aecca0` on 2026-11-21; its licences read on 2026-11-18) predates the fresh-agent run, the
 natural arm's construction and run, the manuscript's restructure and D79 to D81.
 
@@ -18,9 +20,12 @@ exercises for understanding and changing the core system. It claims no personal 
 
 **Where the numbers come from.** Each number names its record: a decision-log entry (`Dnn`), a file, or "ran" for a
 command run for this update in an isolated worktree at `2daa725`, or for the strata passages in a scratch clone with the
-change applied, with the build environment's `.venv` (Python 3.13). Section 6 gives every such command. The Docker
-daemon was down during this update, so nothing was graded in Docker: where an exercise grades (the Docker suite of E1,
-the grades of E5, and E12), this document gives the recorded outcome and says so.
+change applied, or, for the passages corrected after the reviews of `f3ae845`, in a scratch copy of `f3ae845` with those
+corrections applied (2026-11-24; D83), with the build environment's `.venv` (Python 3.13). Section 6 gives every such
+command. The Docker
+daemon was down during the checks at `2daa725`, so they graded nothing in Docker: where an exercise grades (the Docker
+suite of E1, the grades of E5, and E12), this document gives the recorded outcome and says so. For D82 the build
+session ran the 20 Docker tests with the daemon restarted (E1).
 
 **Terms.** C1 and C2 are the verifiers built from the first request (the initial-only contract), plain and audited; C3
 and C4 the correction-aware ones (the full-session contract); B1 the repository's tests at the reference state that
@@ -38,11 +43,14 @@ view) keeps a verifier only where it passes its own reference.
   reviewed audit, 79 distinct graded patches: 29 invalid and 50 valid under D19. Harness 0.3.5, every pair graded
   three times, no unresolved pair. 27 of the 40 `u1` attempts violate the correction; C1 and C2 accept 24 of them, and
   C3, C4, B2 and B1 accept none.
-* **What the design fixes, and what it does not.** The contrast of C1 (24/29 false acceptance) with C3 (2/29) is largely
-  fixed by construction, and the paper says so (abstract, §1, §3; D80). Not fixed by it:
+* **What the design fixes, and what it does not.** The contrast on the planned measure (protocol §15.4, estimand 3),
+  C1 accepting 24 of the 27 correction violators and C3 none, is largely fixed by construction, and the paper says so
+  (abstract, §1, §3; D80). C3's 2/29 false acceptance are CS-02's two regression-only attempts, which the design does
+  not fix. Which families show a silent loss also follows largely from what each correction does: in CS-03 and CS-04,
+  whose corrections only add requirements, C1 passes its reference yet accepts 14 of their 17 violators, against 0 for
+  C3 (`paper/generated/fresh/numbers.tex`, keys `cv.silent.*`), while in CS-01, whose correction retracts a requirement
+  C1 encodes, C1 fails its reference. Not fixed by it:
   * agents made the violators; no generator wrote them;
-  * the silent loss: in CS-03 and CS-04, C1 passes its reference yet accepts 14 of their 17 violators, against 0 for C3
-    (`paper/generated/fresh/numbers.tex`, keys `cv.silent.*`);
   * B1 rejects 34 of the 50 valid attempts, all through the 40 of its 2,219 checks that the session agent added (keys
     `b1.*` there; D62).
 * **Nulls.** The audit removed no false acceptance and raised false rejection from 0/50 (C3) to 6/50 (C4). B2 matches
@@ -53,7 +61,7 @@ view) keeps a verifier only where it passes its own reference.
 * **Natural case studies `natural-pr-v1`** (D76 to D78, D80): six pull-request review families, reported per family
   only. Read with the reference gate they say little about corrections (D80): C1 fails its own reference in five
   families and C3 in four (ran, E8).
-* **Manuscript** (`paper/main.tex`): 76 pages, the references starting on page 23, so a main text of 22 pages; no
+* **Manuscript** (`paper/main.tex`): 77 pages, the main text ending on page 23, where the references start; no
   overfull box and no LaTeX warning in the log; one TODO, the author line (ran, E2). `paper/check_numbers.py` finds no
   number outside a macro in its 22 files (ran, E2).
 * **No human label exists.** Every label is a model proposal, and every review so far is by model agents
@@ -155,7 +163,7 @@ session's default model, and B, the smallest model tier the agent tool offers, t
 provider (D56, D80). This document names no model, as the paper names none; whether to name them is an owner decision
 (§4, item 6).
 
-* **Code.** The package, CLI, tests, scripts, report and Harbor exporter. Through D81 that includes:
+* **Code.** The package, CLI, tests, scripts, report and Harbor exporter. Through D82 that includes:
   * the harnesses 0.3.1 to 0.3.5 and the exporter's fixes (D36, D40, D44, D51, D52);
   * the reconstruction check v2 (D52) and the frozen-input check (`scripts/verify_frozen_inputs.py`);
   * the strata and fresh-attempt tooling, and the sidecar registration of the labelers (D52, D55);
@@ -163,10 +171,13 @@ provider (D56, D80). This document names no model, as the paper names none; whet
   * the natural analysis (WP-G) and the privacy and publication tools (WP-H1; D69);
   * the pre-flight and label-gate rules (D73, D74);
   * the table, figure and number-checking code of `paper/` (D66, D79, D80);
-  * the scanner's idiom rules (D72, D81).
+  * the scanner's idiom rules (D72, D81);
+  * the review packet's candidate strata (`src/tracecontract/review.py`, `src/tracecontract/cli.py`) and the downstream
+    plan's data step (`scripts/build_training_selection.py`, `configs/downstream/rft_selection_v0.1.json`, output in
+    `results/analyses/fresh-v1-training-selection/`) (D82).
 * **Protocol and records.** Protocol v0.1 and its amendments v0.2 to v0.12, each hashed before the runs it governs (D15
-  to D71); the decision log D1 to D81; the annotation guide, data card, status and readiness documents, and this
-  document.
+  to D71); the decision log D1 to D83; the draft downstream-training plan (`experiments/downstream_plan_v0.1-draft.md`;
+  not run, not adopted; D82); the annotation guide, data card, status and readiness documents, and this document.
 * **Controlled sessions.** The study's agent, the same model as the session agent, wrote the scenarios, including the
   scripted user turns, the corrections and the intended requirements that define the labels, and their reference
   operationalisation (`STATUS.md`). Agents produced the sessions, the recovered contracts, every verifier, the
@@ -184,16 +195,19 @@ provider (D56, D80). This document names no model, as the paper names none; whet
     (configuration B), the held-out pool generators and the mappers (D70, D72, D75);
   * the audits of their transcripts (D75), the D19 labels (D76), and the run, its analysis and its publication (D76 to
     D78).
-* **Manuscript.** Drafted, restructured and revised by agents (D66, D79, D80), including the bibliography checks of D80.
+* **Manuscript.** Drafted, restructured and revised by agents (D66, D79, D80, D82, D83), including the bibliography
+  checks of D80.
 * **Reviews and verifications**, all by model agents:
   * the six-lens internal review, the dispositions review, the claims audit and the verifications of rounds 3 and 4
     (D36 to D46, D51);
   * the re-audit against the original specification (D47);
   * the two-lens reviews of D74 and D77, the three-lens reviews of D79, the accuracy and venue reviews of D80 and the
-    check of its fix round, and the reviewer of D81.
+    check of its fix round, and the reviewer of D81;
+  * D82's two reviewers (the round's parts, and the downstream plan), and the four-lens review of `f3ae845` with the
+    check of its fix round (D83).
 * **This update.** Written by an agent from read-only checks that model agents made after D81: a critical read of the
-  whole repository, a clean-clone run of the README's commands and a re-check of the arXiv guidance. The decision log
-  does not record them yet.
+  whole repository, a clean-clone run of the README's commands and a re-check of the arXiv guidance. D82 records them.
+  Some passages were then corrected after read-only reviews of `f3ae845` by model agents (D83).
 
 Where the decision log records an instruction or decision of the owner, this document cites it as such: for example
 the approval to use SWE-chat (D4), the request for the re-audit (D47), and the reply that the build session took as
@@ -201,7 +215,7 @@ approval of per-sample natural runs (D71). The records cited here attribute none
 
 ## 4. Decisions and reviews only the human author(s) can make
 
-From `STATUS.md` ("Owner decisions pending" and "Blocked") and D79 to D81, with items 1, 4, 5 and 20 completed from
+From `STATUS.md` ("Owner decisions pending" and "Blocked") and D79 to D83, with items 1, 4, 5 and 20 completed from
 the checks behind this update. The records show none of them as taken; where the build applied a default, it is named
 as one.
 
@@ -245,11 +259,17 @@ as one.
    includes opening each reference and confirming each sentence that cites it.
 5. **The venue and the length.** The model reviewer that checked D80's round judged the paper close to a credible
    preprint as a methods or negative-results note, fit for a workshop or an arXiv note but not a main track; for a
-   workshop the 22-page main text would have to be cut to its page limit (D80). For arXiv, the primary category, which
+   workshop the main text (22 pages at D80, about 23 now) would have to be cut to its page limit (D80, D83). For arXiv,
+   the primary category, which
    decides the endorsement route (`docs/submission_readiness.md`).
-6. **Naming the models.** Also the model identifier in the committed controlled transcripts, which 450 assistant
-   messages carry in their `model` field: keep it as the raw session record, or redact it in a new sanitiser version
-   with the hashes renewed (D79, D80).
+6. **Naming the models.** Also the model identifier in the committed controlled transcripts, which 439 assistant
+   entries carry in their `model` field (CS-01 114, CS-02 162, CS-03 62, CS-04 101; counted in
+   `data/controlled/transcripts/*.jsonl`; D79 gives 450, D83): keep it as the raw session
+   record, or redact it in a new sanitiser version with the hashes renewed (D79, D80). The decision covers every place
+   where the repository names a model family or the agent tool; `paper/README.md` names the main ones, among them the
+   decision log (the model family in D14 and D47), `STATUS.md`, `docs/data_card.md`, `data/controlled/README.md`,
+   `data/manifests/provenance_index.json` and the commit messages' co-author and session lines; the generator and mapper
+   ids under `tasks/*/`, the runs' `analysis.json` files and some scripts, modules and tests also name the agent tool.
 7. **D79's defaults**: the title; the AI-assistance statement's "an AI coding agent", with no model named; D72 and D75
    reported by role and kind, without counts; costs per family only; future work without sizes; builder decisions
    disclosed as such; and the author line as a TODO and the working-draft subtitle until posting.
@@ -294,7 +314,9 @@ as one.
 21. **Any paid model, compute or annotation budget** (default zero). Uses: a second model family; human reviewers;
     `natural-pr-v2`, for which the extension's S10 is to be redone (D66, D71); and a controlled expansion (§7). A
     confirmatory run also needs the draft precision plan adopted by a later protocol version (D49).
-22. **Whether and when to submit anything** (`docs/submission_readiness.md`).
+22. **The downstream-training plan.** Whether to run it at all, and its open decisions O1 to O8 (plan section 11;
+    D82); a later protocol version must adopt it before any part runs.
+23. **Whether and when to submit anything** (`docs/submission_readiness.md`).
 
 ## 5. Ten hard questions a skeptical expert would ask
 
@@ -302,12 +324,14 @@ as one.
 Largely, yes, and the paper says so (abstract, §1, §3; D80). Every correction violator breaks a requirement that only
 the correction states. C1's contract lacks that requirement (in CS-01 it encodes the retracted request instead), C3's
 covers it, and the reference checks behind the D19 labels were written from a reference contract that states it. So
-24/29 against 2/29 mostly restates the design. Three things are not fixed by it:
+24/27 against 0/27 mostly restates the design. Which families show a silent loss and which a loud inversion also follows
+largely from what each correction does: C1 passes the reference wherever the correction only adds requirements (CS-02
+to CS-04) and fails it in CS-01, whose correction retracts a requirement C1 encodes; and its generator, which saw the
+reference diff, did not test the added requirement, as its template asks: it tests its contract and is told not to
+over-fit that diff (Q3; paper §1, §3.1). Two things are not fixed by it:
 * the violators are agent-made: 27 of the 40 `u1` attempts violate the correction, while with the correction every
   analysed attempt solves its task (19/19 for configuration A and 20/20 for B; D61). The attempts measure information
   lost when the correction is withheld, not an agent's skill (D61);
-* C1 fails silently where the correction only adds requirements (Q3); its generator saw the reference diff that
-  implements the correction and still did not test it (paper §1);
 * B1 fails in the other direction (Q4).
 
 The C3, C4 and B2 zeros on the 27 violators hold only for what the reference checks exercise. Those checks share a
@@ -466,7 +490,8 @@ What a candidate can still do:
 
 The runs that the harness fixes superseded agree with the final pilot on all 240 pairs (D45), and so does the 0.3.5
 re-grade (D54): no recorded outcome changed when a path was closed. No candidate patch in the pool ships a module named
-`ast` or `unicodedata` (D44). The Docker probes were not re-run for this update (E1).
+`ast` or `unicodedata` (D44). The Docker probes were not re-run in the checks at `2daa725`; the build session ran
+them for D82 (E1).
 *Look at:* `src/tracecontract/sandbox/harness/tc_sandbox.py`, `src/tracecontract/sandbox/docker_runner.py`,
 `tests/test_sandbox_isolation.py`, `src/tracecontract/harbor_export.py`, `scripts/harbor_validate.sh`,
 `results/harbor_validation/`; D29 to D31, D36, D40, D44, D51, D52; paper App. C, §8 ("B1's exploit surface");
@@ -474,12 +499,14 @@ exercises E1 and E12.
 
 **Q8. What would a verifier's behaviour under optimisation pressure need that this study did not test?**
 Nothing here measures it. Every graded candidate is an agent's honest attempt, a state captured from a session, or a
-constructed alternative or near miss written to satisfy or to break a requirement, not to pass a verifier. No verifier
-was used as a reward and no training ran (paper §1; §8, "No optimisation pressure"; App. F). The nearest thing to
-selection is that the pilot's near-miss generators ran B1's tests before registering their near misses, so B1's outcomes
-on them are not blind to construction (D37). What the study does measure is each verifier as a binary reward on honest
-patches: on the 79 fresh-attempt patches, pooled, Youden's J is −0.09 for C1 and C2, +0.93 for C3, +0.81 for C4, +0.89
-for B2 and +0.32 for B1 (`analysis.md`, pooled table; descriptive). An optimiser does not sample honest patches; it
+constructed alternative or near miss written to satisfy or to break a requirement. No verifier was used as a reward
+and no training ran (paper §1; §8, "No optimisation pressure"; App. F). The nearest things to selection are that the
+pilot's near-miss generators ran B1's tests before registering their near misses (D37), and that the valid alternatives
+ran the repository's tests while they were built, which in NP-03, NP-05 and NP-20 are B1's own files (D64, decision 3;
+paper App. G.1); B1's outcomes on those candidates are therefore not blind to construction. What the study does
+measure is each verifier as a binary reward on honest patches: on the 79 fresh-attempt patches, pooled, Youden's J
+is −0.09 for C1 and C2, +0.93 for C3, +0.81 for C4, +0.89 for B2 and +0.32 for B1 (`analysis.md`, pooled table;
+descriptive). An optimiser does not sample honest patches; it
 searches for what a verifier accepts, so what matters is whether any invalid behaviour passes at all, not how often
 honest attempts hit one. A test of that would need, at least:
 * candidates found by search against each frozen verifier (best-of-n selection or a trained policy), graded by every
@@ -496,6 +523,11 @@ honest attempts hit one. A test of that would need, at least:
   the contract lacks (Q4);
 * more tasks and attempts: four families and k = 5 attempts per family, configuration and variant cannot show the
   absence of an exploit (D56; paper §8, items 4 and 5).
+
+`experiments/downstream_plan_v0.1-draft.md` drafts an experiment of this kind (C1 and C3 as data filters, then as RL
+rewards behind the cell gate, human labels as the judge, and a stop rule that, for each condition, reads only the
+reference checks of the requirements its own contract covers and stops stage 2 for both conditions when the reward
+rises while their pass rate falls, its §7); it is not run and not adopted (D82, D83).
 
 *Look at:* `paper/sections/app_grading.tex` ("Known exploit surface"), `paper/sections/threats.tex` ("No optimisation
 pressure"), `paper/sections/ethics.tex` ("Misuse"), `src/tracecontract/verifier.py` (`ok_only`),
@@ -541,15 +573,21 @@ Not as built. The records show where the cost lies.
   and the merge rule. The accepted tasks lean toward small repositories with plain test setups (D59).
 * **Agent cost.** Each natural family has 26 generated artifacts with a generation record. On average an accepted
   natural task took 947.7 agent turns, 1,178.0 tool calls and 32,404.9 s of agent wall time
-  (`results/runs/natural-pr-v1/analysis.md`, "Cost and time per accepted task"). Phases P1 to P4 of the six families
-  used about 37.2M reported agent tokens; per family, P2 alone took 2.3M to 3.3M (D70). The cost of generating the
+  (`results/runs/natural-pr-v1/analysis.md`, "Cost and time per accepted task"). Round 5, which ran phases P1 to P4
+  for the six families and also finished D69's analysis and privacy packages, used about 37.2M reported agent tokens
+  since the reset; per family, P1 took about 0.6M, P2 2.3M to 3.3M, P3 0.7M to 2.8M and P4 about 0.4M to 0.5M (D70;
+  `STATUS.md`, "Done in round 5"). The cost of generating the
   controlled verifiers was not recorded (paper §3.4; D42).
 * **Audits.** The agents' transcripts are audited and their flags read by hand: 26 of the 80 fresh attempts were
   flagged automatically (D61), and the natural audits found 578 hits in 163 records, each assessed in writing (D75).
   Those transcripts stay outside the repository, identified by hash, so a third party cannot re-check the audits
   (paper §10).
-* **Labels.** Human annotation was estimated for planning at 1.5 to 3 annotator-hours per task family
-  (`docs/research_brief.md`). Model labels share a model family and a reference contract with what they score (Q2).
+* **Labels.** The latest planning estimate, from assumed times and not measurements, is the draft precision plan's
+  (`experiments/precision_plan_v1.0-draft.md` §9; D49): with two reviewers per task and adjudication, 20.5 / 38.9 /
+  78.2 person-hours for the pilot's 31-item packet and 4.1 / 7.8 / 15.6 hours per confirmatory family with 6 items. The
+  research brief's earlier figure, 1.5 to 3 annotator-hours per task family (`docs/research_brief.md` §7.2), is lower.
+  With the fresh attempts the packet holds 110 items (D82), which §9 did not size. Model labels share a model family
+  and a reference contract with what they score (Q2).
 * **Grading** is the cheap part: on average 2,598.9 s of summed pair wall time per accepted natural task (same table).
   Before per-container UIDs, outcomes could depend on unrelated concurrent load; since harness 0.2.0 they cannot in
   that way (D29), which parallel grading would need.
@@ -578,15 +616,16 @@ repository. Every command below was run for this update, except where an exercis
 
 **E1. Run the tests.**
 `.venv/bin/python -m pytest -q -m "not docker"`, then `.venv/bin/python -m pytest -q -m docker`.
-Observe (ran, in a checkout without the git-ignored `data/natural/`, with the Docker daemon down):
-* with the base snapshots built (E5): 1,345 passed in about 4 minutes, and the 9 tests that need the natural data skip,
-  each naming what is missing;
-* without the snapshots: 1,331 passed, and 14 more tests skip, each naming the snapshot to build;
-* with the daemon down, pytest also skips the Docker probe module at collection, so both summaries count one more skip
-  and 1 deselected test instead of 20;
-* with this round's 90 new tests (D82: 17 in `tests/test_review_packet_strata.py`, 73 in
-  `tests/test_build_training_selection.py`), in a clone with the snapshots built, without the natural data and with
-  the Docker daemon up: 1,435 passed and 9 skipped (ran on 2026-11-24).
+Observe (ran on 2026-11-24 with this round's 90 new tests, D82: 17 in `tests/test_review_packet_strata.py` and 73 in
+`tests/test_build_training_selection.py`; in a checkout without the git-ignored `data/natural/`, with the Docker daemon
+up):
+* with the base snapshots built (E5): 1,435 passed and 9 skipped, each naming the natural data it needs;
+* without them: 1,421 passed and 23 skipped (14 name the snapshot to build);
+* with the daemon down, pytest skips the Docker probe module at collection, which adds one skip and leaves 1 deselected
+  test instead of 20.
+
+At `2daa725` (1,354 offline tests), with the daemon down, the same commands gave 1,345 passed with the snapshots, in
+about 4 minutes, and 1,331 without them.
 
 The Docker suite's 20 tests passed on 2026-11-24 in the build checkout with this round's changes (D82), as they did on
 2026-11-23 at `2daa725` and at `a0542bb` (D52). In the build checkout, which holds the natural data, all 1,444
@@ -609,9 +648,10 @@ Next, run `.venv/bin/python paper/make_tables.py --fresh results/runs/fresh-v1 -
 results/runs/pilot-v0.3.5-regrade --natural` and `cd paper && latexmk -pdf main.tex`. Observe "wrote 17 files to
 paper/generated/fresh" (1,358 ledger
 entries) and "wrote 4 files to paper/generated/natural" (217). The generator rewrites tracked files with identical
-bytes, and the build's outputs are git-ignored, so `git status` stays empty. The build (run here in the scratch copy)
-gives a 76-page PDF in about 11 s: Section 10 is on page 22, the references start on page 23 and App. A on page 26; the
-log has no overfull box and no LaTeX warning, and the PDF's text has one TODO, the author line.
+bytes, and the build's outputs are git-ignored, so `git status` stays empty. The build (run in a scratch copy on
+2026-11-24, after the corrections that followed the reviews of `f3ae845`) gives a 77-page PDF in about 10 s: Section
+10 begins on page 23, where the references start, and App. A on page 27; the log has no overfull box and no LaTeX
+warning, and the PDF's text has one TODO, the author line.
 
 **E3. Re-derive the lead analysis from the recorded results, without grading.**
 `cp -r results/runs/fresh-v1 <scratch>/fresh-v1`, then

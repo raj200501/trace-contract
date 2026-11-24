@@ -5,15 +5,17 @@ Updated 2026-11-24 (UTC). The check of 2026-11-23 ran at commit `2daa725`, after
 rewrite and the new threat on optimisation pressure, and the documents brought up to date. Nothing has been uploaded
 or submitted, and no endorser or anyone else has been contacted: each of these needs the repository owner's explicit
 instruction. All labels in the study are model proposals; no human label exists. Numbers below come from the records
-cited or from the commands of the two checks, whose results are in the checklist.
+cited or from the commands of the checks, whose results are in the checklist and in the tables of results below it.
 
 ## Status: ready for the human authors' review, not for submission
 
 * **The manuscript** (`paper/main.tex`) is a complete draft, and every number in it is a generated macro with an
-  evidence-ledger entry. Built from a clean copy of the tracked files (TeX Live 2023, `latexmk -pdf`), it has 76
-  pages: the main text on pages 1 to 22, the references from page 23, and Appendices A to I from page 26. The log has
-  no overfull box, no LaTeX warning and no undefined reference or citation, and Biber reports no warning. The PDF
-  text has one TODO, the author line, and no `UNFILLED` marker. D80 records the same counts.
+  evidence-ledger entry. Built from a clean copy of the tracked files (TeX Live 2023, `latexmk -pdf`), it has 77
+  pages: the main text on pages 1 to 23 (Section 10 begins and ends on page 23, where the references begin), and
+  Appendices A to I from page 27. The log has no overfull box, no LaTeX warning and no undefined reference or
+  citation, and Biber reports no warning. The PDF text has one TODO, the author line, and no `UNFILLED` marker. D82
+  recorded 76 pages, with the references from page 23, before the corrections that followed the reviews of
+  `f3ae845`.
 * **What the last independent review judged (D80).** A fresh verification of the D79 manuscript had two lenses.
   * The accuracy reviewer traced more than 40 numbers to their records and found none wrong.
   * The venue reviewer judged the paper honest and traceable, but not yet a credible preprint: no human author had
@@ -22,8 +24,9 @@ cited or from the commands of the two checks, whose results are in the checklist
     literatures; and the main text read as a lab notebook.
   * A fix round followed, and a reviewer checked it; a second round fixed ten of that reviewer's eleven findings, and
     the eleventh is the owner's. That reviewer judged the paper "close to a credible preprint as a methods or
-    negative-results note, fit for a workshop or an arXiv note but not a main track"; for a workshop, the 22-page main
-    text would have to be cut to the venue's page limit.
+    negative-results note, fit for a workshop or an arXiv note but not a main track"; for a workshop, the main text (22
+    pages at D80,
+    about 23 now) would have to be cut to the venue's page limit.
   * Like every review so far, these were reviews by model agents (the paper's Section 9: models alone wrote the
     internal reviews). No human has reviewed the paper.
 * **Why it is not ready for submission.** No human author has reviewed it, and its author line is a TODO. No human
@@ -65,13 +68,16 @@ cited or from the commands of the two checks, whose results are in the checklist
    * *To close it:* a controlled expansion with more families, drawn by a fixed procedure, with a primary endpoint
      fixed in advance; the paper's discussion names the reference-gated C1–C3 difference in false acceptance. For the
      natural arm, runs with 10 or more accepted tasks.
-3. **One model family.** By the study's procedure, every model-written artifact comes from one model family of one
-   provider, and configurations A and B are two tiers of it (paper §2.1, App. F). The fresh attempts' context also
-   held the build session's task-list reminders and an environment block naming the study repository (protocol
-   §18.2).
+3. **One model family; scenarios by the study's agent.** By the study's procedure, every model-written artifact comes
+   from one model family of one provider, and configurations A and B are two tiers of it (paper §2.1, App. F). The
+   fresh attempts' context also held the build session's task-list reminders and an environment block naming the study
+   repository (protocol §18.2). The controlled sessions' user turns, the corrections included, were scripted by the
+   study's agent, and each session was designed to contain a correction, so the feedback is synthetic and its frequency
+   and content are not natural (paper §2.1; §8, item 7).
    * *To close it:* a second model family, at least for the verifier generators and the labeler (any spending needs
-     the owner's approval), and fresh attempts with a restricted tool set and no harness task lists (protocol §18.3).
-     Until then the limitation stays stated, as the paper states it (Sections 1, 2, 8 and 9; D80).
+     the owner's approval), fresh attempts with a restricted tool set and no harness task lists (protocol §18.3),
+     and, for the scripted corrections, natural corrections at scale (gap 4). Until then the limitation stays stated,
+     as the paper states it (Sections 1, 2, 8 and 9; D80).
 4. **The natural arm's limits.**
    * The screening was judged by models: 31 of 150 and 91 of 534 sampled comments qualify at S9 (D63, D66). No human
      has coded them.
@@ -101,7 +107,7 @@ cited or from the commands of the two checks, whose results are in the checklist
 
 ## Decisions only the owner can make
 
-From D79, D80, D81 and STATUS.md ("Owner decisions pending" and "Blocked"), unless marked as found in the check of
+From D79 to D83 and STATUS.md ("Owner decisions pending" and "Blocked"), unless marked as found in the check of
 2026-11-23. The records show none of them as taken; where the build applied a default, it is named as one.
 
 **The paper**
@@ -109,8 +115,15 @@ From D79, D80, D81 and STATUS.md ("Owner decisions pending" and "Blocked"), unle
   AI-assistance and competing-interests statements (D80; STATUS.md). The AI-assistance statement in Section 9 must
   say what the human authors actually did.
 * Whether to name the models (D79, D80). The paper names none; arXiv's policy on AI use is in the arXiv check below.
-* The model identifier in the committed controlled transcripts, which 450 assistant messages carry in their `model`
-  field: keep it as the raw session record, or redact it in a new sanitiser version with the hashes renewed (D79).
+  The decision covers every place where the repository names a model family or the agent tool; `paper/README.md`
+  names the main ones, among them the decision log (the model family in D14 and D47), STATUS.md, the data card,
+  `data/controlled/README.md`, `data/manifests/provenance_index.json` and the commit messages' co-author and session
+  lines; the generator and mapper ids under `tasks/*/`, the runs' `analysis.json` files and some scripts, modules and
+  tests also name the agent tool.
+* The model identifier in the committed controlled transcripts, which 439 assistant entries carry in their `model`
+  field (CS-01 114, CS-02 162, CS-03 62, CS-04 101; counted in `data/controlled/transcripts/*.jsonl`; D79 gives 450,
+  D83): keep it as the raw session record, or redact it in a new
+  sanitiser version with the hashes renewed (D79).
 * D79's defaults: the title; the AI-assistance statement's "an AI coding agent", with no model named; D72 and D75
   reported by role and kind, without counts; costs per family only; future work without sizes; builder decisions
   disclosed as such; and the author line as a TODO and the working-draft subtitle until posting.
@@ -123,7 +136,7 @@ From D79, D80, D81 and STATUS.md ("Owner decisions pending" and "Blocked"), unle
   restructure's names, or keep them as App. F explains (D79).
 * The claim's wording (D34), and whether pull-request review comments count as user corrections (D47).
 * The venue and the length. D80's reviewer placed the paper as a methods or negative-results note for a workshop or
-  arXiv, not a main track; a workshop needs the 22-page main text cut to its page limit. For arXiv, the primary
+  arXiv, not a main track; a workshop needs the main text, about 23 pages, cut to its page limit. For arXiv, the primary
   category, which decides the endorsement domain.
 
 **The repository and the data**
@@ -221,6 +234,20 @@ no natural data, with the Docker daemon up:
 | ruff 0.16.9 | no new finding in the changed Python files |
 | Pre-push scan | 0 findings, exit code 0, in the working tree before the commit (private markers, the AIDev logins and the natural texts given); run again on the commit before the push |
 
+Final checks before the commit of D83 (2026-11-24), with the corrections that followed the reviews of `f3ae845`
+applied, in the build checkout and in a clone with the base snapshots copied in and no natural data, with the Docker
+daemon up:
+
+| Step | Result |
+| --- | --- |
+| Tests | 1,464 collected (1,444 offline, 20 Docker). Build checkout: all 1,444 offline and 20 Docker tests passed. Clone: 1,435 passed, and 9 skipped for want of the natural data |
+| Generators | every `make_tables.py` mode and `make_figures.py` rewrote their outputs byte for byte (`git status` unchanged); `build_training_selection.py --check` regenerates its two files byte for byte |
+| `verify_frozen_inputs.py` | OK: 0 frozen files changed; 130 of 135 input hashes, the other 5 being exempt analysis code; 4 of 4 snapshots; protocol and decision log append-only |
+| `check_abstract.py`, `check_numbers.py` | 1,897 of 1,900 characters; 22 files, 0 findings |
+| Build (TeX Live 2023, Biber 2.19) | 77 pages: Section 10 and the references from page 23, Appendix A from page 27; no overfull box, no LaTeX or Biber warning, nothing undefined; one TODO, the author line; no model, provider or agent-product name in the PDF text |
+| ruff 0.16.9 | no new finding in the changed Python files |
+| Pre-push scan | 0 findings, exit code 0, in the working tree before the commit (private markers, the AIDev logins and the natural texts given); run again on the commit before the push |
+
 **The arXiv source package** (only on the owner's instruction; the arXiv check below gives each rule)
 - [ ] The author line filled by the human authors, with every author's consent to the submission.
 - [ ] The working-draft subtitle removed, since arXiv expects complete final drafts; its disclosure is also in the
@@ -313,7 +340,8 @@ Each rule, with at most one quoted sentence, and where the draft stands:
   neutral in tone, and may be declined for lacking originality, novelty or significance. "Submissions in need of
   significant review and revision may also be declined." (moderation page). Authors whose work was declined before
   face closer scrutiny. The rate-limit announcement reports a marked increase in dense, AI-written papers. *Draft:*
-  not yet reviewed by its human authors; a 22-page main text.
+  not yet reviewed by its human authors; a 22-page main text at this check (about 23 pages since the corrections
+  that followed the reviews of `f3ae845`, D83).
 * **Content type.** Research articles are the primary content type, and "Articles should be complete final drafts."
   (content-types page). Proposals for future research, course projects and very short work are typically not
   accepted. Since 31 October 2025, review and position papers in CS need prior acceptance after peer review; the

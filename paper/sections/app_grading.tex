@@ -93,5 +93,9 @@ only for non-adversarial candidates, such as the held-out candidates here, and i
 adversarial policies; the process-separated verifiers do not have this exposure, and they resist the tampering probes
 above.
 
-\paragraph{Harbor export.} The tasks' Harbor export uses a per-run sandbox user ID (D35); it can be re-validated from a
+\paragraph{Harbor export.} Harbor makes the separate verifier's reward directory world-writable before the test
+runs, so under the earlier exporter a candidate whose code wrote its own reward file on a grader timeout or a collection
+error received full reward; since exporter 0.2.0 the grade script locks that directory before candidate code runs and
+removes every reward file it did not write, and a recorded control run with the earlier exporter reproduces the defect
+(D51, D52). The tasks' Harbor export uses a per-run sandbox user ID (D35); it can be re-validated from a
 clone with \texttt{scripts/harbor\_validate.sh}, which records its outputs in \texttt{results/harbor\_validation/}.

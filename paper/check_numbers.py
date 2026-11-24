@@ -8,8 +8,8 @@ record and list it in their ledgers. Reported, one line each (``file:line: kind:
 
 * a digit outside a number macro (``\\fv``, ``\\nat``, ``\\nrv``, ``\\plv``, ``\\dv``) and outside the exemptions below;
   dates and times in prose are not exempt;
-* a count written as a word (zero to twenty, thirty to ninety by tens, hundred, half, dozen; single, once, twice and
-  thrice; "a pair of", across line breaks too) outside the allowlist (:data:`ALLOWED_PHRASES`);
+* a count written as a word (zero to twenty, thirty to ninety by tens, hundred, half, dozen; zeros and zeroes; single,
+  once, twice and thrice; "a pair of", across line breaks too) outside the allowlist (:data:`ALLOWED_PHRASES`);
 * a number macro whose key no generated ``numbers.tex`` defines (it would print UNFILLED).
 
 Exempt, and nothing else (the plan's narrow list): identifiers (task families CS-0n, NP-nn, FX-nn; conditions C1-C4 and
@@ -40,8 +40,8 @@ NAMESPACES = {"fv": "fresh", "nat": "natural", "nrv": "natural_run", "plv": "pil
 COUNT_WORDS = ("zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve",
                "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen", "twenty", "thirty",
                "forty", "fifty", "sixty", "seventy", "eighty", "ninety", "hundred", "half", "dozen",
-               # counts written as other words: "its single revision", "counted twice"
-               "single", "once", "twice", "thrice")
+               # counts written as other words: "its single revision", "counted twice", "the zeros of C3 and C4"
+               "zeros", "zeroes", "single", "once", "twice", "thrice")
 # Counts written as phrases, matched across line breaks: "a pair of reviewers" (or "a frozen pair of verifiers") is two.
 COUNT_PHRASES = (r"\ba\s+(?:[A-Za-z-]+\s+)?pair\s+of\b",)
 # Phrases whose count words are names, not counts: the configurations' model statement (protocol §15.4), the sides of a

@@ -1021,13 +1021,37 @@ def fresh_behaviours(F: dict, led: SectionLedger, nums: Numbers, out: Path, *, u
     spec = "l" + "".join(f">{{\\raggedright\\arraybackslash}}p{{{w}\\linewidth}}" for w in widths)
     # The header; the ledger names each column as written in the code.
     head = "Family & " + " & ".join(tex(col).replace("u1", "\\texttt{u1}") for col in columns)
+    # One authored sentence of the caption, checked here against the records (decision-log entry D83): in CS-01 a
+    # requirement of the first request is broken through the correction's interface, since its reference statement, like
+    # a correction requirement's, calls the correction's keyword.
+    note = ""
+    if "CS-01" in fams and viol["CS-01"]:
+        req, kw = "R-keep-meaningful", "strip_trailing_zero"
+        ir, ssrc = scenario_requirements("CS-01")
+        refp = ROOT / "tasks" / "CS-01" / "contracts" / "reference.json"
+        stmt = {r["req_id"]: r["statement"] for r in json.loads(refp.read_text())["requirements"]}
+        turn = {r["id"]: (r["turn"], r["final_status"]) for r in ir}
+        rc, _ = _spec("CS-01", "reference_check")
+        on_req = {ch["check_id"] for ch in rc["checks"] if req in ch["requirement_ids"]}
+        failing = [[ch for ch in by_row[("CS-01", "reference_check", cid)]["checks"]
+                    if ch["check_id"] in on_req and ch["status"] != "passed"] for cid in viol["CS-01"]]
+        if (turn.get(req, ("", ""))[0] != "U1" or turn[req][1] == "superseded" or kw not in stmt.get(req, "")
+                or not any(kw in stmt.get(r["id"], "") for r in ir if r["turn"] != "U1")
+                or any(req not in violated[cid] for cid in viol["CS-01"])
+                or any(not bad or any(kw not in (ch.get("message") or "") for ch in bad) for bad in failing)):
+            raise ValueError(f"{ssrc}, {rel(refp)}: the caption says that every CS-01 violator breaks {req}, a requirement of "
+                             f"the first request whose statement, like a correction requirement's, calls {kw}, and whose reference "
+                             "checks fail on every violator through that keyword")
+        note = (f"In CS-01, {req}, introduced in the first request, is broken through the correction's interface: its "
+                f"reference statement and its checks call the correction's keyword \\texttt{{{tex(kw)}}}. ")
     (out / "fresh_behaviours.tex").write_text(table(
         f"What the invalid first-request (\\texttt{{u1}}) attempts of run \\texttt{{{tex(F['run_id'])}}} did, by family, a post hoc "
         "reading under rule D19's labels: what the correction changed (the scenario files), which requirements the invalid "
         "attempts break (with counts), whether C1 passes the family's reference, how many of C1's checks map to the retracted "
         "requirement or to those every violator breaks (both model mappers), how many correction violators C1 and C3 accept "
         "(--: the family has none), how many invalid attempts the base-commit tests alone accept, and the invalid attempts "
-        "whose only violated requirement is the regression norm (Regression only). " + marker(name), "tab:fresh-behaviours",
+        "whose only violated requirement is the regression norm (Regression only). " + note + marker(name),
+        "tab:fresh-behaviours",
         spec, head, rows,
         size="\\scriptsize\\setlength{\\tabcolsep}{2pt}"))
 

@@ -1,4 +1,5 @@
-# Exact versions of the developer environment (Python 3.13.18; packages installed on 2026-11-13 and unchanged since)
+# Exact versions of the developer environment (Python 3.13.18; packages installed on 2026-11-13, pip on 2026-11-18,
+# and unchanged since)
 # in which the offline suite, the byte-for-byte regenerations and the paper's generators were checked.
 # The sandbox images grade with their own pinned wheels, not these. pyproject.toml keeps the ranges a library needs.
 # Install: uv pip install --python .venv/bin/python -c constraints.txt -e ".[dev,data]"

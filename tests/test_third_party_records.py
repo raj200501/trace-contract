@@ -4,9 +4,10 @@ docs/data_card.md, data/manifests/third_party_downloads.json).
 The helpers are tested on synthetic rows first. The committed files are then checked with them: the S10 records
 are consistent, keep the file's format, add no URL and name no natural repository (every repository that the S9
 and S9x fetch records list by URL, whether or not it became a task); the README carries the AIDev v5 attribution;
-the data card's status, counts and statements match the committed records and index. Where the git-ignored S10 data
-exists (the fetch log, the families' s10.json and the wheelhouses) and the private records outside the repository
-that the S10 record cites, the records are also checked against them, read only.
+the data card's status, counts and statements match the committed records, the index and the natural run's published
+analysis, and the paper's ethics section says, as the data card does, how git links tasks to repositories. Where the
+git-ignored S10 data exists (the fetch log, the families' s10.json and the wheelhouses) and the private records outside
+the repository that the S10 record cites, the records are also checked against them, read only.
 
 A failure names locations, ids, counts and the module's own phrases, never the checked text, a repository, a URL or
 a wheel name: each value is computed before its ``assert``, because pytest prints the operands and call arguments
@@ -28,6 +29,8 @@ INDEX = R / "data" / "manifests" / "natural_tasks_index.json"
 S9X_MANIFEST = R / "data" / "manifests" / "screening_natural_aidev_s9x.json"
 README = R / "THIRD_PARTY_LICENSES" / "README.md"
 CARD = R / "docs" / "data_card.md"
+ETHICS = R / "paper" / "sections" / "ethics.tex"
+NATURAL_RUN = R / "results" / "runs" / "natural-pr-v1" / "analysis.json"
 FETCH_LOG = R / "data" / "natural" / "s10_fetch_log.jsonl"
 NATURAL_TASKS = R / "data" / "natural" / "tasks"
 FETCH_ID, WHEELS_ID = "aidev-v5-s10-repo-fetches", "pypi-natural-s10-wheelhouses"
@@ -376,10 +379,12 @@ def test_data_card_status_counts_the_accepted_tasks_of_both_samples() -> None:
                     f"{first.count('passed')} passed, {first.count('rejected')} rejected, "
                     f"{first.count('not built')} not built)")
     assert accepted and missing == []
-    case_study = ("With fewer than 10 accepted tasks over both samples, the built tasks are reported as per-family "
-                  "exploratory case studies (§19.6)")
+    # Each run is reported on its own (protocol v0.12, §20.3): the size rule counts the run's own accepted tasks.
+    in_run = json.loads(NATURAL_RUN.read_text(encoding="utf-8"))["meta"]["case_study"]["accepted_in_run"]
+    case_study = (f"`natural-pr-v1` grades {in_run} accepted tasks of its own, fewer than 10, so its families are "
+                  "per-family exploratory case studies (§19.6, §20.3)")
     says_case_study = case_study in row
-    assert says_case_study == (len(accepted) < 10)
+    assert says_case_study == (in_run < 10)
 
 
 def test_data_card_counts_the_s9_repository_urls() -> None:
@@ -413,21 +418,25 @@ def test_data_card_says_which_urls_the_index_holds() -> None:
 
 def test_data_card_and_s10_record_say_how_git_links_tasks_to_repositories() -> None:
     """The download records carry no task id, but the index's repo_id joins every task to a URL row: both texts
-    say so, and neither claims that nothing in git links a repository to a task."""
+    say so, as the paper's ethics section does, and none of the three claims that nothing in git links a repository
+    to a task."""
     recs, idx = records(), index()
     listed = {r["aidev_repo_id"] for r in natural_repository_rows(recs)}
     joined = sum(t["repo_id"] in listed for t in idx["tasks"])
     assert joined == len(idx["tasks"]) > 0
     personal = flat(section(CARD.read_text(encoding="utf-8"), "## Personal information"))
     note = flat(recs[FETCH_ID]["contents_note"])
-    missing = lacks(personal, "The download records themselves name no task, comment or person (D63)",
+    missing = lacks(personal, "The S9 and S9x download records themselves hold no task id or comment (D63)",
                     "Git does link tasks and comments to repositories through ids: `natural_tasks_index.json` gives "
                     "every task's `repo_id` and the S9 and S9x screening manifests every screened comment's")
     missing += lacks(note, "This record carries no task id and no time per repository",
                      "data/manifests/natural_tasks_index.json does, through each task's repo_id")
+    ethics = flat(ETHICS.read_text(encoding="utf-8"))
+    missing += lacks(ethics, "the release links each natural task and screened comment to its repository")
     assert missing == []
-    stale = ("link no repository to a task", "No record here links a repository to a task")
-    claims = sum(s in personal or s in note for s in stale)
+    stale = ("link no repository to a task", "No record here links a repository to a task",
+             "no record links a repository to a task", "download records themselves name no task, comment or person")
+    claims = sum(s in personal or s in note or s in ethics for s in stale)
     assert claims == 0
 
 

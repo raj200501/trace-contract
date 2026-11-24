@@ -26,9 +26,11 @@ change its behaviour on held-out task families whose sessions contain correction
 
 **Why it could.** In `fresh-v1`, the attempts that saw only the first request and violate the later correction are
 honest attempts at that request: they miss what the correction added or changed. C1 accepts 24 of the 27 such attempts
-and C3 none (D61). A training set filtered by C1 therefore reinforces the behaviour the user later corrected. The two
-filters do not differ in the first-request attempts that met the correction: in `fresh-v1` both keep the same 11, and
-C1 adds the violators, so the contrast is subtractive (§9). If the violated corrections share patterns across
+and C3 none (D61); gated C1, the naive-data filter of §3, still admits 14 of the 17 in the three families whose
+reference it passes (§9). A training set filtered by C1 therefore reinforces the behaviour the user later corrected.
+The two filters keep the same valid first-request attempts: in `fresh-v1` both keep the same 11, and C1 adds the
+violators, so the contrast is subtractive, apart from two regression-only CS-02 attempts that C3 admits and C1 rejects
+(§9). If the violated corrections share patterns across
 repositories, training without the violators could make a model meet held-out corrections more often without being told
 them. It could equally teach the model to ignore what a first request explicitly asks, or to fail in some other way,
 which is why there are guardrails.
@@ -68,8 +70,13 @@ request alone as the instruction (the `u1` variant of protocol §15.4). It works
 0, which the study does not have yet, inside the study's per-attempt workspaces and sandbox wrappers
 (`scripts/make_agent_workspace.py`). The pool is sampled once, before any filter is applied, and is shared by both
 trained conditions, so they differ only in the filter. Each attempt is captured with the patch policy and audited for
-reads outside its workspace, as the fresh attempts were (protocol §15.4, §16.2). The pool is graded like `fresh-v1`
-(every condition, the reference checks and the independent labeler, each pair three times), and every condition also
+reads outside its workspace, as the fresh attempts were (protocol §15.4, §16.2), and the audit checks that each
+training example holds nothing beyond the instruction, the scaffold's fixed prompt, the model's messages and tool calls
+and the tool results. The scaffold meets protocol §18.3 (a restricted tool set and no harness task lists): no task list
+or other material of a build session reaches an
+attempt's context, and whatever the scaffold adds besides the instruction and the tool results is fixed in the stage
+configuration. The pool is graded like `fresh-v1` (every condition, the reference checks and the independent labeler,
+each pair three times), and every condition also
 grades each task's reference solution and its no-op, which `fresh-v1` did not do for the no-op. Then the data step runs:
 `scripts/build_training_selection.py` with a new configuration for the pool's run, whose standing is `pre-specified`,
 whose cell gate requires a graded no-op (`noop_required`), and whose sha256 is logged in the decision log before the pool
@@ -80,8 +87,9 @@ the yields.
 
 **Stage 1: RFT.**
 
-* **Training example:** an admitted attempt's whole trajectory in the scaffold: the instruction, the model's messages and
-  tool calls, and the tool results. The loss is taken on the model's own tokens only.
+* **Training example:** an admitted attempt's whole trajectory in the scaffold: the scaffold's fixed prompt, the
+  instruction, the model's messages and tool calls, and the tool results. The loss is taken on the model's own tokens
+  only.
 * **Admission:** the run's own acceptance rule, which the configuration states and the script checks: a condition admits
   an attempt when the run recorded `pass` for the pair, which with repeats means that every repeat passed; every other
   outcome is a rejection (protocol §6, §15.3). The script refuses a pool with an unresolved pair, an infrastructure
@@ -131,7 +139,9 @@ are left out: the audit changed no C1 outcome on the fresh attempts and added si
 adversarial candidate can forge its result (D42; paper, Section 9). Ungated C1 is not an arm: its admitted set is
 reported as a description of the verifier (§9). Two extra arms are not in the minimum design and are left to the owner:
 SFT on the unfiltered pool, which separates training on these tasks at all from the filter's effect, and RL from the
-base model without stage 1.
+base model without stage 1. B2, the session-LLM baseline, is not an arm: in `fresh-v1` it matched C3 and C4 on false
+acceptance (D61), so a positive H1 would speak to whole-session against first-request verifiers, not to the contract
+that C3 adds over a transcript-only generator.
 
 ## 4. Fixed recipe and matched budgets
 
@@ -162,13 +172,22 @@ stage 0.
   trajectories are taken in that order while the running total stays at or below T. A trajectory that would pass T is
   skipped, and the draw goes on to the next. No trajectory is cut, and a condition ends short of T by less than its
   shortest skipped trajectory. The smaller set, when T is its token count, is taken whole. The order, the trajectories
-  taken and each condition's tokens are recorded and reported.
+  taken and each condition's tokens are recorded and reported. Where, as in `fresh-v1` (§9), the naive gated set holds
+  the correction-aware set's valid `u1` attempts and adds violators, and T is the smaller set's token count, the naive
+  condition's subsample can hold only part of the
+  trajectories that both filters admit, besides violators, so the trained conditions also differ in how many shared
+  trajectories they see. Each condition's count of shared trajectories is recorded and reported.
 * **Composition:** budgets are not matched per family, since that would undo the filter, which decides which families
   supply data (in `fresh-v1`, C3 admits no `u1` attempt in CS-01 or CS-04, and gated C1 none in CS-01, §9). Each
   condition's composition by family and configuration is recorded and reported.
-* **Stage 2:** both conditions get the same number of RL updates and of rollouts per update. Rollout tokens cannot be
-  matched exactly, since a rollout's length depends on the model. Every rollout is capped at the same number of tokens
-  (an owner field), and the rollout tokens each condition used are recorded and reported.
+* **Stage 2:** both conditions get the same number of RL updates and of rollouts per update. Under the default
+  group-relative method, a task whose rollouts in one update all get the same reward has zero advantage and adds no
+  policy-gradient signal beyond the KL term, so equal updates need not give the two conditions equal signal. How such
+  groups are handled (kept or resampled) is fixed in the stage-2 configuration, and their share per condition and task
+  is recorded with the stage-2 logs (§8) and reported. On the §9 pool, C3's `u1` outcomes are all rejections in CS-01
+  and CS-04 and all passes in CS-02, and gated C1's are all passes in CS-04. Rollout tokens cannot be matched
+  exactly, since a rollout's length depends on the model. Every rollout is capped at the same number of tokens (an
+  owner field), and the rollout tokens each condition used are recorded and reported.
 * **Evaluation:** every model, the base included, gets the same k, sampling parameters, scaffold and limits.
 * **Compute:** GPU hours per stage and condition are recorded. A condition that needs more compute for the same
   budget is reported, not given more budget.
@@ -220,7 +239,8 @@ NP-19 and NP-20.
 
 **Scale.** The precision plan finds, for the reward-fidelity endpoint, that about 60 eligible families with one natural
 negative each are needed for power 0.80 at a difference of 0.20. Thirty families give power 0.45 at 0.20 and 0.87 at
-0.35 (§7), and the inverted sign-flip interval needs at least 8 families to cover (§6). The downstream endpoint is a
+0.35 (precision plan §7), and the inverted sign-flip interval needs at least 8 families to cover (precision plan §6).
+The downstream endpoint is a
 different estimand: more attempts per family, but variation between trained models and seeds that the fidelity endpoint
 lacks, and its unit is the repository (§6). Its number of held-out repositories and families must come from its own
 simulation, written before stage 0 (open item O1). Until then the precision plan's figures give the order of magnitude:
@@ -259,8 +279,9 @@ rates are counted under protocol §15.4):
 * **E1, for H1 and H2:** the share of m's `u1` attempts whose label is invalid with a violated correction requirement
   (negative type `correction_violating`).
 * **E2, for G1:** the share of m's `final` attempts labelled valid.
-* **E3, for G2:** the share of m's `u1` attempts that violate a requirement of the first request itself (negative type
-  `initial_violating`).
+* **E3, for G2:** the share of m's `u1` attempts whose violated reference requirements are all first-request
+  requirements (negative type `initial_violating`); an attempt that also breaks a correction requirement counts in E1
+  only.
 * **E4, for G3:** the share of m's `u1` attempts labelled valid; an attempt that is invalid of any type, or ambiguous,
   is not valid.
 * **Descriptive:** the regression-only, other invalid and ambiguous shares; each condition's verifier outcomes on the
@@ -291,10 +312,16 @@ the direction the same for each training seed. Anything else is reported as what
   with an oracle (reward 1.0), a wrong candidate (0.0), the no-op (0.0) and two probes whose candidate code writes its
   own reward file, neither of which received a reward (D52). It is re-validated before any RL run uses it.
 * **Monitoring.** At fixed intervals, a fixed sample of rollouts is graded with the training families' reference checks
-  and independent labeler, which are not rewards. Stop rule: if the reward rises while the reference checks' pass rate
-  on the same rollouts falls, by a margin fixed before stage 2, the stage stops, the checkpoint is kept, and the stop is
-  reported. Rollouts that write to protected test paths are counted. The patch policy removes those changes before
-  grading.
+  and independent labeler, which are not rewards. The stop rule reads, for each condition, only the reference checks
+  of requirements that both of the study's model mappers map to the condition's own contract and neither marks as
+  contradicted (`map` and `contradicts` in `tasks/*/contracts/mapping_*.json` and `mapping2_*.json` for the controlled
+  tasks, with the reference checks' `spec.json`): if the reward rises while their pass rate on the same rollouts falls,
+  by a margin fixed before
+  stage 2, stage 2 stops for both conditions at the same update, the checkpoints are kept, and the stop is reported.
+  The pass rate on the requirements a condition's contract does not cover (for C1, those the correction introduced) is
+  a stage-2 outcome, reported and never a stop; so is the pass rate on requirements that only one mapper maps or that
+  a mapper marks as contradicted. Rollouts that write to protected test paths are counted. The patch
+  policy removes those changes before grading.
 
 ## 8. Records to save
 
@@ -306,6 +333,7 @@ Every record is kept as the run records of the study are: hashed, with its code 
     the gate drops and why, counts, the rules, and the hashes of every input and of the code.
   * The seeded subsample of each condition's budget.
   * The SFT example files with their hashes.
+  * The per-attempt audit's records, its check of each training example's content among them.
   * The held-out split, its seed and the map from family to repository.
 * **Model revisions:** the base model's identifier and revision, the tokenizer's hash, and every checkpoint's hash.
 * **Hyperparameters:** each stage's configuration, hashed before the stage.
@@ -315,7 +343,8 @@ Every record is kept as the run records of the study are: hashed, with its code 
   * every graded pair of every model on every held-out task, with the harness version and three repeats;
   * the D19 labels, the second labeling and the human labels;
   * the review packet's key, kept by its coordinator.
-* **Logs:** losses, rewards, KL, the stage-2 monitoring sample and every stop.
+* **Logs:** losses, rewards, KL, the share of groups whose rollouts all got the same reward, the stage-2 monitoring
+  sample and every stop.
 * **Accounting:** GPU hours per stage and condition, tokens sampled and trained, and money spent.
 * **Decision log:** entries before (plan adopted, split, configurations, margins) and after (results, every deviation).
 
@@ -379,11 +408,15 @@ ones, which are D62's gated FA of 14/19 and FR of 3/40.
   in CS-03. C3 admits no `u1` attempt that C1 rejects except CS-02-fresh-A-u1-4 and -u1-5, the two regression-only
   attempts, which the second labeler calls valid. C1 adds the violators: 14 gated, 24 ungated. So "a set filtered by
   C3 reinforces attempts that met the correction" is as true of C1's set; the filters differ only in whether the
-  violators are in. CS-02 has no correction violator, and its initial-only contract already covers everything its
-  correction adds (paper, Section 3; D62, item 2). C3 admits no `u1` attempt in CS-01 or CS-04, whose corrections
-  include keeping a default unchanged, so no admitted attempt here shows that behaviour. The 3 CS-03 attempts meet a
-  correction that keeps all-caps input and two other functions as they were at the base commit
+  violators are in; under §4's matched budget the trained conditions would also differ in how many of the 11 shared
+  attempts fit C1's subsample. CS-02 has no correction violator, and its initial-only contract already covers
+  everything its correction adds (paper, Section 3; D62, item 2). C3 admits no `u1` attempt in CS-01 or CS-04, whose
+  corrections include keeping a default unchanged, so no admitted attempt here shows that behaviour. The 3 CS-03
+  attempts meet a correction that keeps all-caps input and two other functions as they were at the base commit
   (`tasks/CS-03/contracts/reference.json`).
+* **B2 admits what C3 admits.** On this pool B2 admits the same 13 `u1` attempts as C3 (`selection_manifest.json`;
+  the full admitted sets differ only in CS-03-fresh-B-final-1 and -final-4, which C3 admits and B2 does not), so the
+  illustration cannot separate the contract from whole-session generation.
 * **The invalid share follows the study's design.** Half the attempts withheld the correction by design: 40 of the 80
   saw only the first request (protocol §15.4), and every invalid attempt is among them. The C1 against C3 contrast is
   largely fixed by construction: each violator breaks a requirement that only the correction states, which C1's contract
@@ -429,8 +462,8 @@ estimate says what it rests on.
 | Item | Basis in the records | Estimate | Owner field |
 | --- | --- | --- | --- |
 | Base model, licence, storage of checkpoints | none | none | owner |
-| Building a family (contracts, verifiers, reference checks, labeler) | `natural-pr-v1`, `analysis.md`, "Cost and time per accepted task". Included, per accepted task: 947.7 agent turns, 1,178.0 tool calls and 32,404.9 s of agent wall time from the generation records of the contracts, the verifiers other than B1 (the reference checks and the labeler among them) and the constructed held-out pool (two valid alternatives and three near misses), which this plan does not need and which that table does not separate. Recorded apart: S10, 1,239.5 s per accepted task (every family S10 processed, both samples), and the run's grading, 2,598.9 s. Not recorded: tokens, stages S1 to S9, S10 re-runs, image builds, the host's own steps and agent runs without a generation record (the mappers among them) | Estimate: about 32,400 s of agent wall time per family as the natural arm built them, the constructed pool included, plus about 1,240 s of S10 and the unrecorded parts | owner |
-| Sampling the pool (k attempts per task) | The 80 `fresh-v1` attempt records report 183,712,045 tokens in all, as the agent tool reports them (what the count includes is not checked), and medians of 24 to 24.5 turns (configuration A) and 11 to 13 (configuration B) per attempt | None for a base model of the owner's choice: these attempts used other models | owner |
+| Building a family (contracts, verifiers, reference checks, labeler) | `natural-pr-v1`, `analysis.md`, "Cost and time per accepted task". Included, per accepted task: 947.7 agent turns, 1,178.0 tool calls and 32,404.9 s of agent wall time from each family's 26 generation records: its 3 contracts; its 8 verifiers other than B1 (C1 to C4, B2, B3, the reference checks and the labeler; the records of C2 and C4 combine their generators and revisers, D64); and its 15 constructed candidates, namely the 10 development candidates of the C2 and C4 audits (four attacks and one valid alternative per variant, D64) and the constructed held-out pool (two valid alternatives and three near misses), which this plan does not need. That table does not separate them. Recorded apart: S10, 1,239.5 s per accepted task (every family S10 processed, both samples), and the run's grading, 2,598.9 s. Not recorded: tokens, stages S1 to S9, S10 re-runs, image builds, the host's own steps and agent runs without a generation record (the mappers among them) | Estimate: about 32,400 s of agent wall time per family as the natural arm built them, the development candidates and the constructed held-out pool included, plus about 1,240 s of S10 and the unrecorded parts | owner |
+| Sampling the pool (k attempts per task) | The 80 `fresh-v1` attempt records report 183,712,045 tokens in all, the sum, over each attempt's assistant responses, of the recorded usage: input, cache-creation input, cache-read input and output tokens, as the attempt records define it (`definitions.tokens`), so cache reads are included; and medians of 24 to 24.5 turns (configuration A) and 11 to 13 (configuration B) per attempt | None for a base model of the owner's choice: these attempts used other models | owner |
 | Grading the pool and the evaluations | `fresh-v1`: 672 pairs, each three times, in 9,141 s from start to end; the pairs' wall times sum to 9,134.2 s (so the pairs were graded one at a time), a median of 8.98 s per pair, at most 174.1 s (a B1 pair). `natural-pr-v1` (`analysis.md`, "Cost and time per accepted task" and "Build and replay reliability"): 432 pairs, 72 per family, whose wall times sum to 15,593.4 s, from 421.5 s (NP-04) to 6,146.5 s (NP-19) per family | Estimate, on two bases, one pair at a time on this host: about 13.6 s per pair on `fresh-v1`'s controlled families, so about 109 s for an attempt's eight pairs (six conditions, the reference checks and the labeler); about 36.1 s per pair on `natural-pr-v1`'s families, from about 5.9 s (NP-04) to about 85.4 s (NP-19) by family, so about 289 s for eight pairs | owner |
 | SFT and RL compute (GPU hours) | none: no training has run | none | owner |
 | Human labels of the evaluation | Precision plan §9 (assumed times, not measurements): setup 10 / 15 / 30 minutes per task; reading the user turns at 200 / 150 / 100 words per minute and the contract at 150 / 100 / 70; contract review 2 / 3 / 5 minutes per requirement decision; per item 6 / 10 / 20 minutes, plus 2 / 5 / 10 in the sandbox and 0.1 / 0.2 / 0.4 per changed line; two reviewers per task; adjudication of 10 / 20 / 35% of items at 10 / 15 / 25 minutes each | Items per held-out task: at most (1 + 2S) × 2 × k, for the base model and S seeds of each trained condition, two variants and k attempts each (attempts that share a graded patch are one item), at those assumptions | owner |

@@ -529,7 +529,7 @@ Quote (App. C): "Only Multi-Capability GRPO (40.9%) marginally outperforms the b
 | `extend` | a later request that changed a Python project and ended with passing checks | "The task starts from the files at the end of request k (dependencies installed) and gives the agent request k+1." The instruction lists "Earlier requests (already implemented)" plus the next request | fraction of new tests; 0 if any existing test fails |
 | `qa` | a fact the agent computed from HF data | — | exact or numeric match |
 
-**Tests are LLM-written.** Quote: "The LLM (`claude-opus-5-5`, override with `TRAJ2ENVS_MODEL`) only proposes questions, contracts and tests."
+**Tests are LLM-written.** Quote: "The LLM ([model identifier elided], override with `TRAJ2ENVS_MODEL`) only proposes questions, contracts and tests."
 
 **Verifier validation (a predefined audit, but with trivial negatives):**
 - **Trial matrix.** Run in the task's own image, offline. The listed trials must score full reward or 0 exactly:

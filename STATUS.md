@@ -4,7 +4,8 @@ Last updated: 2026-11-24 (UTC), after the run `natural-pr-v1` (decision log D76 
 (D79), a final fix round after a fresh verification (D80), the scanner's idiom rule for screened texts (D81) and a
 round before human review (D82), with no new result: the review packet takes the fresh attempts, the abstract and
 the stated scope of the evidence were revised, a downstream-training plan was written (not run), and the README and
-the stale passages below were brought up to date from the records.
+the stale passages below were brought up to date from the records; then corrected after read-only reviews of commit
+`f3ae845` by model agents (D83), again with no new result.
 Nothing here is peer reviewed, and no human labels exist.
 
 ## Where the study stands
@@ -12,10 +13,16 @@ Nothing here is peer reviewed, and no human labels exist.
 * **Lead result: fresh-agent attempts (`fresh-v1`, D61, D62).** 80 new agent attempts on the four controlled tasks,
   79 distinct graded patches, harness 0.3.5 with 3 repeats. Of the 40 attempts that saw only the first request, 27
   violate the correction. The initial-only verifiers (C1, C2) accept 24 of them; C3, C4, B2 and B1 accept none.
+  This contrast is largely fixed by the design (D80): each violator breaks a requirement that only the correction
+  states, which C1's contract lacks and C3's covers. By the study's procedure every model-written artifact, the labels
+  included, comes from one model family of one provider; the corrections were scripted by the study's agent; and no
+  candidate was optimised against a verifier, so these rates say nothing about a verifier used as a reward under
+  optimisation (paper §8, items 3, 7 and 8).
   * The audit removed no false acceptance and added 6 false rejections (C4, CS-03).
   * B2 matches C3 and C4 on false acceptance.
   * All 34 of B1's false rejections come from tests the session agent added.
-  * Labels are model proposals: the independent labeler agrees with D19 on 77 of 79 units. The study has four
+  * Labels are model proposals: the independent labeler, a model labeler of the same model family written from the
+    same reference contract, agrees with D19 on 77 of 79 units. The study has four
     families, so no two-sided p below 0.125 is possible, and the result is descriptive.
 * **Construction pilot (`pilot-v0.3.3`).** A development study since protocol v0.7. Its re-grade under harness 0.3.5
   gives the same outcome on all 240 pairs (D54).
@@ -38,10 +45,13 @@ Nothing here is peer reviewed, and no human labels exist.
   cells into the template fixed before its analysis (D77; D79 records the integration), then revised after a fresh
   verification (D80): the lead contrast stated as largely fixed by construction, the shared source of the labels and
   the correction-aware verifiers stated, the natural case studies read family by family with the reference gate, the
-  natural per-family detail moved unchanged to App. G, and four verified references on patch overfitting, test
-  oracles and requirements change. It compiles to 76 pages (main text 22) with no `UNFILLED` marker, and every number
-  in it is a generated macro with a ledger entry. A model reviewer, the one that checked D80's round, judged it close
-  to a credible preprint as a methods or negative-results note (a workshop or an arXiv note, not a main track).
+  natural per-family detail moved unchanged to App. G, and four references on patch overfitting, test oracles and
+  requirements change, each checked by model agents against its DOI's Crossref record (D80). Before the human review
+  (D82) the abstract was rewritten around the planned measure, with the violators as denominator, and §8 gained the
+  threat "No optimisation pressure". It compiles to 77 pages (the main text ends on page 23, where the references
+  begin) with no `UNFILLED` marker, and every number in it is a generated macro with a ledger entry. A model reviewer,
+  the one that checked D80's round, judged it close to a credible preprint as a methods or negative-results note (a
+  workshop or an arXiv note, not a main track).
   Authors are a TODO for the human authors, who must review it before any submission.
 
 ## Where round 5 stopped, and how to resume
@@ -49,17 +59,14 @@ Nothing here is peer reviewed, and no human labels exist.
 * **Usage cap.** After the reset of 2026-11-22, the owner asked the build session to keep going while using at most half
   of the plan's total usage. Round 5 used about 37M reported agent tokens against a plan of about 40M, and stops at the
   end of P4 for all six families (D68, D70).
-* **To resume the natural arm,** in this order (steps 1 and 3 are done for the first sample's six families: D72, D75 to
-  D78; step 2 and the extension's own run, `natural-pr-v2`, remain):
-  1. For each family, run D64's phases P5 to P7: reference checks and labeler, held-out pool, mappers and audits. Use
-     `experiments/natural_workflow/natural_phase.js` with args `{task, phase, transcripts, config_b_model}`. After
-     each phase, run `scripts/record_phase_end.py` and commit the log alone. The P5 line must be pushed before P6 starts
-     (F7).
-  2. Redo the extension's S10 (19 families, D66). §19 bars grading held-out candidates before building stops, and the
-     extension's S10 is part of building. Build the newly accepted families through P1 to P7.
-  3. Propose the D19 labels, run the pre-flight and the run `natural-pr-v1`, then analyse it (WP-G) and publish it
-     (WP-H1).
-  4. Before the first natural results, read D70's observations: the natural reference often fails its own contract.
+* **To resume the natural arm** (round 5's plan, phases P5 to P7 and the run `natural-pr-v1`, is done for the first
+  sample: D72, D75 to D78; protocol v0.12 §20.2, D71, gave each sample its own run; what remains is the extension's):
+  1. Redo the extension's S10 (19 families, D66) and build its newly accepted families through D64's phases P1 to P7
+     with `experiments/natural_workflow/natural_phase.js` (args `{task, phase, transcripts, config_b_model}`), running
+     `scripts/record_phase_end.py` and committing the log alone after each phase (the P5 line pushed before P6, F7).
+  2. Propose D19's labels, run the pre-flight and the run `natural-pr-v2`, which grades the extension's families on its
+     own (§20.2, §20.3), then analyse and publish it.
+  3. Before reading its results, read D70's observations: the natural reference often fails its own contract.
 * **Done in round 5:** the natural analysis and the privacy tools (D69); the recipe's citations of D64; P1 to P4 for the
   six families (D70); a phase-end log with each line committed and pushed (D65).
 * **Owner decisions pending.**
@@ -75,6 +82,13 @@ Nothing here is peer reviewed, and no human labels exist.
   * The author line and the human authors' review of the paper before any submission; whether to name the models;
     and whether the committed controlled transcripts keep the model identifier in their raw records (D79, D80).
   * The human labels, and SWE-chat's access terms (below).
+  * Whether to run the downstream-training plan at all, and its open decisions O1 to O8
+    (`experiments/downstream_plan_v0.1-draft.md`, section 11; D82).
+  * Whether standard-library import lines count as idioms in the scan's optional screening-texts mode, where one
+    finding remains outside the push gate (D81).
+  * Whether, where and when the repository is made public; the paper links none (paper §10).
+  * The venue and the length: D80's reviewer placed the paper as a methods or negative-results note for a workshop or
+    arXiv, not a main track; for arXiv, the primary category (`docs/submission_readiness.md`).
 
 ## Completed
 
@@ -139,7 +153,9 @@ Nothing here is peer reviewed, and no human labels exist.
     push, run with a private-marker file kept outside the repository; it is not a
     git hook (D44). With `--aidev-logins` it also checks for the 119 logins and names
     tied to the sampled AIDev pull requests, loaded in memory from the AIDev files,
-    and for @handles in files under `tasks/` and `data/` (D48, D52);
+    and for @handles in files under `tasks/` and `data/` (D48, D52); since D69 it also runs with
+    `--natural-texts data/natural/tasks`, which checks for the natural tasks' texts, code lines and repository
+    names;
   * fresh-agent tooling (protocol §15.4, §16.2; D52), used for the 80 attempts of `fresh-v1` (D56, D57, D61):
     `scripts/make_agent_workspace.py --role fresh --variant u1|final` builds an
     isolated workspace whose instruction is U1, or U1 and U2, with each path of the old
@@ -179,11 +195,11 @@ Nothing here is peer reviewed, and no human labels exist.
   * review queue: `labels/review_queue.json`, with no verifier outcomes, which
     reviewers open only after their labels are merged;
   * two model requirement mappings.
-* **Protocol** v0.1 → v0.2 → v0.3 → v0.4 → v0.5 → v0.6 → v0.7 → v0.8
+* **Protocol** v0.1 → v0.2 → … → v0.8 → v0.9 → v0.10 → v0.11 → v0.12
   (`experiments/protocol.md`). Each version was hashed and logged locally before the
-  runs it governs (D15, D22, D32, D39, D40, D44, D48, D51); v0.7 and v0.8 govern only
-  later runs and re-analyses and change nothing in the pilot. This is not a formal
-  preregistration.
+  runs it governs (D15, D22, D32, D39, D40, D44, D48, D51, D53, D57, D60, D71); v0.7
+  onwards govern only later runs, re-analyses and the natural arm, and change nothing
+  in the pilot. This is not a formal preregistration.
 * **Final pilot run** `results/runs/pilot-v0.3.3`:
   * 240 pairs, harness 0.3.3, one code revision, no infrastructure outcomes;
   * labels re-proposed under 0.3.3 first, identical to the earlier proposals (D45);
@@ -194,8 +210,8 @@ Nothing here is peer reviewed, and no human labels exist.
 * **Research brief** adversarially verified by model agents (close reading, a fresh
   search, citation verification and a fact check; `docs/research/review_*.md`); not
   yet reviewed by a human. Related work rewritten from the verified findings;
-  bibliography verified on 2026-11-18. The claim is narrowed to a conjunction (D34),
-  pending owner confirmation.
+  bibliography checked by model agents on 2026-11-18. The claim is narrowed to a
+  conjunction (D34), pending owner confirmation.
 * **Manuscript draft** (`paper/`):
   * all sections drafted;
   * every table generated from records (`paper/make_tables.py`, which checks its
@@ -205,10 +221,12 @@ Nothing here is peer reviewed, and no human labels exist.
   * an evidence ledger listing every table number with its source file, and, since the restructure (D79), every
     number in the text a generated macro with a ledger entry, which `paper/check_numbers.py` checks (22 files, no
     number outside a macro, 2026-11-23);
-  * compiles to 76 pages (main text 22), with no overfull box, no undefined reference or citation and no LaTeX
-    warning (D80; rebuilt on 2026-11-23 with the same result). The 29 pages of 2026-11-21 were the draft before the
-    rebuild around `fresh-v1` (D66) and the restructure (D79).
-* **Reviews by model agents** (Claude, the same model family; not human review):
+  * compiles to 77 pages (the main text ends on page 23, where the references begin), with no overfull box, no
+    undefined reference or citation and no LaTeX warning (rebuilt on 2026-11-24 after the corrections that followed
+    the reviews of `f3ae845`; D80 and D82 recorded 76 pages, D82 with the references from page 23). The 29 pages of
+    2026-11-21 were the draft before the rebuild around `fresh-v1` (D66) and the restructure (D79).
+* **Reviews by model agents** (of the build session's model family, one model family of one provider; not human
+  review):
   * an internal review with six lenses, whose skeptic agents checked findings until
     that stage was stopped for the final run;
   * a review of how each of its findings was resolved;
@@ -219,13 +237,17 @@ Nothing here is peer reviewed, and no human labels exist.
     disclosed (D46);
   * a re-audit of the repository against the original specification (D47);
   * a read-only verification of round 4 through four lenses (D51), whose findings
-    were fixed (D52) or are tracked for later phases.
+    were fixed (D52) or are tracked for later phases;
+  * the two-lens reviews of D74 and D77; the three-lens reviews of D79; the accuracy and venue reviews of D80 and the
+    check of its fix round; the reviewer of D81; D82's two reviewers (the round's parts, and the downstream plan); and
+    the four-lens read-only review of `f3ae845` and the check of its fix round (D83).
 
-  Findings, verdicts and dispositions are in `docs/internal_review.md`.
+  Findings, verdicts and dispositions of the reviews through D46 are in `docs/internal_review.md`; those of D47 and
+  later are in their decision-log entries.
 * **Other documents:** annotation guide v0.4 (blinded review packet, D43, D44; its
   description of the acceptance gate corrected on 2026-11-21, and its section on candidate strata in the packet
   added on 2026-11-24, D82), data card, decision log
-  D1–D82 (round 4: D47 to D52; the later rounds: D53 onwards), the downstream-training plan
+  D1–D83 (round 4: D47 to D52; the later rounds: D53 onwards), the downstream-training plan
   (`experiments/downstream_plan_v0.1-draft.md`: a draft, not run and not adopted; D82),
   submission-readiness notes (arXiv pages re-checked 2026-11-23), the
   ownership/defense notes, workflow and agent prompts (`experiments/prompts/`), and

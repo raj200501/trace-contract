@@ -1,8 +1,9 @@
 # Internal review
 
 Three adversarial reviews of the repository and the manuscript, and two verifications of the
-fixes that followed them, all run on 2026-11-18 by model agents (Claude, the same model family
-that built the study). They are not peer review, and no human has reviewed their findings yet.
+fixes that followed them, all run on 2026-11-18 by model agents (of the model family that built
+the study, one model family of one provider). They are not peer review, and no human has
+reviewed their findings yet.
 
 ## Method
 

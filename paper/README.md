@@ -41,14 +41,20 @@ Rules for this directory:
   an evidence ledger lists with the file and field it comes from; dates and times in prose too. Every number in
   `generated/*.tex` and its subdirectories is produced by `make_tables.py` or `make_figures.py` from recorded files.
   `check_numbers.py` reports any number outside a macro (below).
-* `references.bib` contains only entries verified against primary sources (date of check in the file header). The
-  literature that no verified entry covers yet is named as a gap in the threats to validity, without a citation.
+* `references.bib` contains only entries checked by model agents against primary sources, with no human check yet
+  (date of check in the file header). The literature that no checked entry covers yet is named as a gap in the threats
+  to validity, without a citation.
 * The posted PDF holds no `UNFILLED` marker, no undefined reference and no `TODO` but the author line, which stays a TODO
   for the human authors, as the working-draft subtitle stays until posting (the owner's defaults).
 * No model identifier, agent-tool name or product name. The paper says what the records name and no more anonymity than
   they keep: the protocol and the decision log name the agent tool and define configuration A as the build session's
   default model and B as the smallest model tier the tool offers, of one model family of one provider; the commit
-  messages' co-author lines and the committed controlled-session transcripts carry model names; the paper names none
+  messages' co-author lines and the committed controlled-session transcripts carry model names; the decision log also
+  names the model family (D14, D47); the agent tool, its session directories or the commit messages' session trailer
+  are named, among other places, in `STATUS.md`, `docs/data_card.md`, `docs/internal_review.md`,
+  `docs/research_brief.md`, `data/controlled/README.md`, `data/manifests/provenance_index.json`, the screening and audit
+  records under `data/`, the exported prompts under `experiments/prompts/` and the ingestion module's name
+  (`src/tracecontract/ingest/`); whether these stay is the owner's decision on naming the models. The paper names none
   (Section 2.1; the AI-assistance statement says "an AI coding agent"). The natural template keeps its stricter rule:
   no tier wording (`tests/test_natural_template.py`).
 
@@ -60,7 +66,8 @@ Tables and figures of the later runs (decision log D66):
   `.venv/bin/python paper/make_tables.py --fresh results/runs/fresh-v1 --regrade results/runs/pilot-v0.3.5-regrade --natural`
   writes `generated/fresh/` with `evidence_ledger_fresh.md` (fresh-v1 and the 0.3.5 re-grade) and `generated/natural/`
   with `evidence_ledger_natural.md` (the natural arm's funnel, S10 and the Trace Commons screen). The extension's S10
-  was not run (D66, D75), and the funnel and S10 tables say so instead of printing a pending marker
+  was stopped at a usage limit and has no outcome in the committed index (D66, D75), and the funnel and S10 tables say
+  so instead of printing a pending marker
   (`tests/test_make_tables_natural.py`).
 * `.venv/bin/python paper/make_figures.py results/runs/fresh-v1` draws the figures with TikZ (no matplotlib) into
   `generated/figures/`, each with its source `.tikz`, a `.json` of every plotted value or stated number and its source,
@@ -100,7 +107,7 @@ Tables and figures of the later runs (decision log D66):
   `NAMED_IN_MESSAGE`).
 * `main.tex` defines `\fv`, `\nat`, `\nrv`, `\plv` and `\dv` alike and inputs each namespace's `numbers.tex` where it
   exists. `check_numbers.py` reports every digit and every count written as a word (zero to twenty, thirty to ninety,
-  hundred, half, dozen; single, once, twice, thrice and "a pair of") outside a number macro in `main.tex`'s title and body and the sections it inputs, and every macro
+  hundred, half, dozen; zeros and zeroes; single, once, twice, thrice and "a pair of") outside a number macro in `main.tex`'s title and body and the sections it inputs, and every macro
   whose key no generated `numbers.tex` defines. Exempt: identifiers (families, conditions, turns and variants, stages,
   phases, decision-log entries, requirement ids, candidate, run and template ids), protocol sections and version names,
   the arguments of `\ref`, `\label`, `\cite` and `\input`, LaTeX lengths and column specifications, file names, paths and

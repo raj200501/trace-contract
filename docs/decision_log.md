@@ -3473,3 +3473,93 @@ Times are UTC, 2026-11-24. No run, recorded label, result, task record, frozen f
     the PDF text;
   * ruff: no new finding in the changed Python files;
   * the pre-push scan: 0 findings, exit code 0, in the working tree before the commit, with the private markers, the AIDev logins and the natural texts given; it is run again on the commit before the push.
+
+### D83. A final review of `f3ae845` before the human review, and its corrections
+Times are UTC, 2026-11-24. No run, recorded label, result, task record, frozen file or protocol line changed, and no
+number in the paper changed; one generated table caption gained a sentence.
+* **The review.** Four read-only model reviewers read `f3ae845`, each through one lens: the records (every statement
+  that D82's commits changed, against the run records), consistency between the documents, the rules and privacy, and a
+  skeptical practitioner who builds training environments from agent traces. For each lens, an adversarial verifier
+  tried to refute every finding. Of 71 findings, 59 were confirmed, some with a corrected fix or severity, and 12 were
+  refuted; several confirmed findings are one issue seen through two lenses. No number in the paper or in D82 was found
+  wrong against the records. A fix agent applied the confirmed findings in a worktree. Two further read-only
+  checkers then read its diff against the records, one for the paper, the generator and the tests, one for the
+  documents. They found its changes correct and raised one medium, thirteen low and five trivial findings, all
+  applied before this entry by the build session: among them the data card's sentence below, the ethics sentence
+  scoped to the S9 and S9x download records (two S10 records hold task ids), a stricter check of Table 4's new
+  caption sentence, tests that pin the new count words, the page lengths still given as 22, and the downstream
+  plan's stop rule when the two mappers disagree.
+* **The paper's privacy paragraph was false, and so was the sentence of D63 it came from.** It said that no record
+  links a repository to a task, comment or person. The committed index and screening manifests give every natural
+  task's and screened comment's AIDev repository id, which the download records map to the repository's URL, so the
+  release links each natural task and screened comment to its repository and, on GitHub, to its pull request and its
+  participants; the `{owner}` mask does not prevent that. The paragraph now says so, and whether the URLs stay before
+  publication remains the owner's decision (D50, D63). `tests/test_third_party_records.py` now reads the ethics section
+  as well: it forbids the old phrase and requires the new one. The data card said the same of the download records
+  ("name no task, comment or person"); it now says that the S9 and S9x download records hold no task id or comment,
+  and that an unmasked owner in a URL names an account that may be a person's, and the test pins the new sentence and
+  forbids the old one.
+* **Naming the model family and the agent product.** `STATUS.md` and `docs/internal_review.md` named the study's model
+  family, and `docs/data_card.md` the agent product. They now use the paper's wording, one model family of one
+  provider. One quotation in `docs/research/notes/training_and_datasets.md` carried a model identifier and now reads
+  "[model identifier elided]". `paper/README.md` lists where the agent tool, its session directories or the commit
+  messages' session trailer are still named (among them `data/controlled/README.md`, `data/manifests/`, the exported
+  prompts and the ingestion module's name), and D14 and D47 name the model family. All of these fall under the owner's
+  open decision on naming the models (D79, D80).
+* **"The zeros of C3, C4 and B2."** Their false acceptance is 2/29 each, CS-02's two regression-only attempts, so the
+  phrase misdescribed the rates it qualified. The sentences now speak of C3's, C4's and B2's acceptance of no violator,
+  with its macros (`cv.c3`, `cv.c4`, `cv.b2`), and `paper/check_numbers.py` counts "zeros" and "zeroes" as count words.
+* **Other corrections to the paper**, each in its section's header comment:
+  * the repository tests' sentence (abstract, introduction, §3.3): both base-commit results follow from the label rule,
+    whose regression norm the base tests are, and what the run measures is the added checks;
+  * "structured contracts" became the correction-aware contracts (C3, C4), since C1 and C2 are contract conditions too;
+  * the silent loss and the inversion follow largely from what each correction does, and C1's generator not testing
+    the correction is what its template asks;
+  * §2.3 and §8's labels item say that both label sources were validated on the reference;
+  * App. C describes the earlier Harbor exporter's reward-directory defect (D51, D52);
+  * Table 4's caption gained a sentence on how CS-01's violators break R-keep-meaningful through the correction's
+    interface; `paper/make_tables.py` writes it only after checking it against the scenario, the reference contract,
+    the reference checks' mapping and every violator's failing reference checks.
+
+  The abstract has 1,897 of the 1,900 characters allowed. The PDF has 77 pages: Section 10 and the references from page
+  23, Appendix A from page 27.
+* **The documents.**
+  * `README.md`: the claim as the paper now states it (D34's conjunction awaits the owner's confirmation); C1 is not a
+    pipeline in use, and the baselines tied to practice were not built; the fresh attempts' context held harness
+    material; the pre-push command with `-I` and `--natural-texts`; what the natural arm's screening records hold beyond
+    identifiers (the commented files' paths, 120 checked model-written paraphrases, the URLs of 63 repositories with the
+    refs fetched there); the test skip counts; the Layout block.
+  * `STATUS.md`: the lead result with its scope; the protocol history to v0.12; the resume plan; four more owner
+    decisions (the downstream plan, D81's idiom question, publishing the repository, the venue); the model reviews.
+  * `docs/ownership_and_defense.md`, `docs/submission_readiness.md`, `docs/data_card.md`, `results/runs/README.md` and
+    `constraints.txt`: the annotation-hours figure from the precision plan §9, the downstream plan as an owner item,
+    stale statements, E1's counts, pip's install date, and smaller corrections.
+  * `experiments/downstream_plan_v0.1-draft.md`: a stop rule that would have halted the naive arm on the very effect
+    the plan studies; the learning signal of group-relative RL, which a group with one reward lacks; B2 as an
+    alternative filter; the subtractive contrast's exception; E3's definition; the motivation's gated count; the
+    scaffold's context (protocol §18.3); and two cost rows (26 generation records per natural family; tokens that
+    include cache reads).
+* **Corrections to earlier entries,** recorded here since the log is append-only:
+  * D79's "450 assistant messages" that carry the model identifier: the committed controlled transcripts hold 439
+    (CS-01 114, CS-02 162, CS-03 62, CS-04 101), and no committed version held 450.
+  * D82's "both filters keep the same 11 valid ones, and C1 adds the violators": apart from CS-02-fresh-A-u1-4 and
+    -u1-5, the two regression-only attempts, which C3 admits and C1 rejects (the plan's §9).
+  * D63's sentence on the download records, which the paper and the data card repeated: as above.
+  * D82 quotes "the zeros" wording, which this entry replaced.
+* **Left as it is:** `data/controlled/README.md` still names the agent product (outside the fix's scope; the owner's
+  naming decision).
+* **Verification** (the build session, 2026-11-24, with every correction applied, the Docker daemon up):
+  * the tests: 1,464 collected. In the build checkout all 1,444 offline tests and the 20 Docker tests passed; in a
+    clone with the base snapshots copied in and no natural data, 1,435 passed and 9 skipped for want of the natural
+    data;
+  * every mode of `paper/make_tables.py` and `paper/make_figures.py` rewrote its outputs byte for byte, the new caption
+    check included, and `scripts/build_training_selection.py --check` regenerates its two files byte for byte;
+  * `scripts/verify_frozen_inputs.py`: OK, with 0 frozen files changed, 130 of 135 input hashes matching (the other 5
+    are exempt analysis code), 4 of 4 snapshots, and the protocol and decision log append-only;
+  * `scripts/check_abstract.py`: 1,897 of 1,900 characters; `paper/check_numbers.py`: 22 files, 0 findings;
+  * a build from a clean copy of the tracked paper files: 77 pages, Section 10 and the references from page 23,
+    Appendix A from page 27, no overfull box, LaTeX or Biber warning or undefined reference, one TODO (the author
+    line), and no model, provider or agent-product name in the PDF text;
+  * ruff: no new finding in the changed Python files;
+  * the pre-push scan: 0 findings, exit code 0, in the working tree before the commit, with the private markers, the
+    AIDev logins and the natural texts given; it is run again on the commit before the push.

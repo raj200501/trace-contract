@@ -89,6 +89,7 @@ def test_numbers_near_the_exemptions_are_still_reported():
     assert kinds("Its single revision there; a single run") == [("count word", "single"), ("count word", "single")]
     assert kinds("counted twice, run thrice, graded once more") == [("count word", "twice"), ("count word", "thrice"),
                                                                      ("count word", "once")]
+    assert kinds("the zeros of C3 and C4; Zeroes") == [("count word", "zeros"), ("count word", "Zeroes")]
     assert kinds("by a pair of model mappers, a frozen pair\nof verifiers") == [("count word", "a pair of"),
                                                                               ("count word", "a frozen pair of")]
     assert [f.line for f in cn.findings("x\nby a pair\nof reviewers", "x.tex")] == [2]  # the line a phrase starts on
