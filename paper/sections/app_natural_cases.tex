@@ -1,17 +1,25 @@
 % Appendix G's part of the natural case studies (Section sec:natural-cases): detail of the template of
-% paper/sections/natural.tex, moved here unchanged after the analysis (D80), so
+% paper/sections/natural.tex, moved here unchanged after the analysis (D80; D82 for the run's dates and invocations), so
 % that the main-text section stays short. It is part of the template: every rule of natural.tex's
 % header holds for it, and tests/test_natural_template.py reads it with natural.tex.
 % * Moved unchanged: the caveats on the build's process (from the list of caveats), the sentence that names the parts of
 %   a family paragraph (from the paragraph on reading the tables), Table tab:nr-caveats, the six family paragraphs and
-%   the cost per family (from the closing paragraph).
+%   the cost per family (from the closing paragraph); in a later round (D82), the sentence on the run's start and end
+%   times, invocations and code revision (from the Status paragraph), re-wrapped (line breaks only).
 % * Written after the analysis (D80): the subsection's heading and first paragraph, and the titles of the paragraphs of
-%   the caveats, of the parts and of the cost.
+%   the caveats, of the parts and of the cost; in the later round (D82), the title of the paragraph of the run's dates
+%   and invocations, and the first paragraph's mention of it, with its citations.
 \subsection{The case studies in detail}
 \label{app:natural-cases}
 This subsection holds the parts of Section~\ref{sec:natural-cases} that were moved here unchanged after the
-analysis: its caveats on the build's process, its table of per-family caveats, its family paragraphs and the cost per
-family. The caveats of Section~\ref{sec:natural-cases} hold for all of it.
+analysis (D80, D82): the run's dates and invocations from its status paragraph, its caveats on the build's process,
+its table of per-family caveats, its family paragraphs and the cost per family. The caveats of
+Section~\ref{sec:natural-cases} hold for all of it.
+
+\paragraph{The run's dates and invocations.}
+Its manifest records its start on \nrv{run.date} at \nrv{run.started} UTC, its end at \nrv{run.finished} UTC, and
+\nrv{run.invocations} invocations at code revision \texttt{\nrv{run.revision}}; D76 records why the first invocation was
+stopped, within seconds and before any pair was graded, and that the run was then started again.
 
 \paragraph{Caveats on the build's process.}
 \begin{itemize}

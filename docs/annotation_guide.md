@@ -14,6 +14,13 @@ commit `738493a`, reading only the latest human review of each requirement and c
 re-review or an adjudicated contract review (decision log D51, D52). The procedure for
 reviewers is unchanged.
 
+Addition (2026-11-24): section 2 now describes `review-packet --strata`, which puts the
+held-out candidates of a candidate stratum, such as the fresh attempts of `fresh-v1`
+(protocol §15.4), into the packet among each task's own, blinded as they are, and how
+`merge-reviews` records their labels where the analysis reads them (decision log D82).
+The packet's README, the form of its template and the procedure for reviewers are
+unchanged.
+
 This guide is for human reviewers of TraceContract tasks. It covers two jobs:
 reviewing **contracts** (what the user actually required) and labeling
 **candidates** (whether a patch is an acceptable solution). Model or rule outputs
@@ -99,6 +106,37 @@ the reviewers' instructions. The packet holds no candidate id, origin, descripti
 proposal, check or verifier outcome. The key, which maps the random ids to candidates,
 stays with the coordinator and must be written outside the packet; `review-packet`
 refuses to write it inside the packet or over an existing file.
+
+**Fresh attempts and other candidate strata.** The fresh attempts of `fresh-v1`
+(protocol §15.4) are not in `task.json`: they are the candidates of each task's stratum
+`fresh-v1` (`tasks/<id>/strata/fresh-v1.json`). `--strata <name>`, given after the
+tasks, adds the held-out candidates of the stratum `<name>` of every task to the packet:
+
+```
+tracecontract review-packet tasks/CS-01 tasks/CS-02 tasks/CS-03 tasks/CS-04 --strata fresh-v1 --out <packet> --key <key file> --seed <number>
+```
+
+* **Which.** The stratum's held-out candidates (evaluation split, no no-op), and of its
+  fresh attempts only those that the analysis keeps. A fresh attempt that every
+  analysis excludes (no attempt record, no audit verdict, or an audit that found a read
+  of forbidden material) is left out; the key lists it with the reason, and the
+  command prints, per stratum, how many candidates it added and how many it left out.
+* **Blinded as the task's own.** The stratum's candidates are put among the task's own
+  held-out candidates, which are always in the packet with them: one `candidates/`
+  folder, one pool of random ids, one shuffled order and one template per task. A
+  stratum candidate whose diff is identical to another candidate's, the task's own
+  included, shares its id. Nothing in the packet comes from their records: no candidate
+  or attempt id, configuration, instruction variant, stratum name or description,
+  attempt record, proposal or audit verdict. The `README.md` is the one a packet
+  without `--strata` has, and the template has the same form, so no file of the packet
+  marks which of its candidates are stratum candidates. It does not hide that it may
+  hold some: this section says so, and a task's folder holds more items with them.
+* **Refusals.** `review-packet` refuses, and writes nothing, when a task has no such
+  stratum, when a stratum breaks its rules (a symbolic link in it, or a candidate id of
+  the task's own), or when a task has no held-out candidate of its own, whose folder
+  would then show its stratum candidates alone.
+* **The key** also records each stratum candidate's stratum, file and patch sha256, so
+  that `merge-reviews` can find the file and check it (below).
 
 The packet hides the origin field but not the origin. A candidate's origin can still be
 inferred from its content: near misses resemble each other and the reference, and the
@@ -195,6 +233,30 @@ Until then, a candidate whose reviewers gave different values has no final label
 (`Candidate.final_label()` returns `None`), and the review queue lists it as needing
 adjudication. The merge does not resolve contract disagreements either.
 
+**Stratum candidates in the merge.** The key says which of the packet's candidates are
+stratum candidates and where their files are; the command is the same.
+* The merge appends a stratum candidate's reviews to its file in the stratum
+  (`tasks/<id>/strata/<name>/candidates/<candidate id>.json`, where an adjudicated label
+  goes too). Only the file's `labels` change, and `task.json` and the stratum manifest
+  are never written.
+* It refuses, before writing anything, if the stratum no longer lists that file, if the
+  file holds another patch than the packet showed, or if the stratum breaks its rules.
+* A run graded with `tracecontract evaluate --strata` records each stratum candidate's
+  file, and `tracecontract analyze` reads the candidate's labels from it; without
+  `--allow-proposed-labels` it uses human labels only. `analyze` writes into the run
+  directory it is given, so a recorded run such as `results/runs/fresh-v1` is analysed
+  in a copy of its `manifest.json` and `results.jsonl`, never in place. Where such an
+  analysis is kept is for the repository owner to decide. The recorded analysis of
+  `fresh-v1` hashed the stratum's candidate files among its inputs (`meta.inputs`), so
+  after a merge they no longer match it.
+* No origin guess names a stratum candidate's origin, so the merge does not score the
+  guesses on stratum candidates; the right, wrong and unsure counts above are for the
+  task's own. It counts each reviewer's guesses on a stratum's candidates by the
+  attempt's configuration and instruction variant (`stratum_origin_guesses`, for
+  example `config-A/u1`). The counts show whether the guesses differ between the
+  attempts that were given the user's correction (`final`) and those that were not
+  (`u1`).
+
 **How the acceptance gate reads contract reviews** (`src/tracecontract/contract.py`;
 the rules await the owner's confirmation, decision log D51). Only human reviews count;
 model and rule reviews are proposals. For each requirement the gate takes each human
@@ -267,6 +329,12 @@ it disagrees with your label. Do not use the run analysis
   `tracecontract sandbox-python` runs code in it. Do not take the agent's word for it.
 * **The generator's description** of what it built is in the candidate's
   `description`.
+* **A fresh attempt** (a stratum candidate) has its file in the stratum
+  (`tasks/<id>/strata/fresh-v1/candidates/<candidate id>.json`), with its D19 proposal
+  and its attempt record (configuration, instruction variant, audit verdict). It has no
+  construction check or description, the queue file lists the task's own candidates
+  only, and `materialize` reads only those. To run code in an attempt's state, use its
+  folder in the packet; the coordinator, who holds the key, can say which one it is.
 
 Do not change a merged label. If the evidence changes your mind, tell the coordinator:
 the change goes through adjudication, and the adjudicated label's note records that the

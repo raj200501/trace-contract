@@ -27,7 +27,7 @@ The restructure plan (parts 2 and 3) set the order: the main text, then the appe
 | D Construction details | `sections/app_construction.tex` | `tab:conditions`; the pilot's verifier, task, coverage and scenario tables |
 | E Fresh-agent stratum: detail tables | `sections/app_fresh.tex` | the fresh-v1 tables the main text does not hold |
 | F The construction pilot | `sections/app_pilot.tex` | the pilot's tables, its re-grade and D49's exploratory tables |
-| G Natural arm: screening, replay and construction | `sections/app_natural.tex`, `sections/app_natural_cases.tex` | `tab:natural-vs-controlled`; the funnel, S10, Trace Commons and the run's construction, second-labeling, sanity and coverage tables; then the template's part moved from Section 5 (D80): its caveats on the build's process, `tab:nr-caveats`, the family paragraphs and the cost per family |
+| G Natural arm: screening, replay and construction | `sections/app_natural.tex`, `sections/app_natural_cases.tex` | `tab:natural-vs-controlled`; the funnel, S10, Trace Commons and the run's construction, second-labeling, sanity and coverage tables; then the template's part moved from Section 5 (D80): its caveats on the build's process, `tab:nr-caveats`, the family paragraphs and the cost per family; in a later round, the run's dates and invocations (D82) |
 | H Annotation guide and review packet | `sections/app_annotation.tex` | |
 | I Provenance | `sections/app_provenance.tex` | `tab:provenance`; the index of the evidence ledgers |
 
@@ -154,7 +154,8 @@ Tables and figures of the later runs (decision log D66):
   value in it is a `\nrv` or `\nat` macro, and it prints `UNFILLED` until `--natural-run` has run. `main.tex` inputs it as
   the natural section. After the analysis its per-family detail was moved unchanged to Appendix G
   (`sections/app_natural_cases.tex`, which `app_natural.tex` inputs; D80): the caveats on the
-  build's process, the table of per-family caveats (`tab:nr-caveats`), the family paragraphs and the cost per family.
+  build's process, the table of per-family caveats (`tab:nr-caveats`), the family paragraphs and the cost per family;
+  in a later round, the status paragraph's sentence on the run's dates and invocations (D82).
   Both files are the template: every rule of its header holds for both, and `tests/test_natural_template.py` reads both.
   Outside them and the generated tables the template points only to the two places D77 left open until the restructure
   gave them their content, Appendix A's `tab:amendments` (its v0.12 row) and Appendix G's `tab:natural-vs-controlled`,
@@ -172,6 +173,6 @@ Tables and figures of the later runs (decision log D66):
   paragraph that reads the families with the reference gate was written after the analysis too (D80), outside the
   pre-commitment; `test_the_reading_with_the_gate_states_the_run_s_own_cells` checks each family statement it makes on the
   run's numbers and its published analysis (`READING_CELLS`, `READING_ORDER` and the coverage cells it names). The
-  template's header lists what changed after the analysis, in D79's round and in D80's.
+  template's header lists what changed after the analysis, in D79's round, in D80's and in D82's.
 * All labels behind these numbers are model proposals; no human labels exist. The natural run `natural-pr-v1` is
   published (`results/runs/natural-pr-v1`), and its tables and `\nrv` numbers are generated.

@@ -19,9 +19,13 @@ No human label exists: the procedure below has not been used yet. The guide for 
 \end{itemize}
 Per task, the packet holds the user turns of the session, the reference contract, and each held-out candidate's change
 and file state under an unguessable random id, in shuffled order. Candidates with identical diffs share an id. The
-packet names no candidate id, origin, description, proposal or verifier outcome, and the key that maps ids to
-candidates stays with a coordinator (D43). It hides the origin field but not the origin, which a reviewer can still
-infer from the content: the user's corrections describe the agent's first attempt, near misses resemble each other and
-the reference, and in \texttt{tinydb} the diff structure differs by origin. The merge reports the share of origin
-guesses that are right, as a measure of how blind the labels are; the guesses are never used as labels. Every analysed fresh
-attempt is queued for the packet (protocol~\S15.4); for the natural arm no packet has been prepared (D64, decision~8).
+packet names no candidate id, origin, description, proposal or verifier outcome, nor a fresh attempt's configuration or
+variant, and the key that maps ids to candidates stays with a coordinator (D43). No file of the packet marks which
+candidates are fresh attempts, but the guide, which the reviewers read, says that a packet may hold them among a task's
+own. The packet hides the origin field but not the origin, which a reviewer can still infer from the content: the user's
+corrections describe the agent's first attempt, near misses resemble each other and the reference, and in
+\texttt{tinydb} the diff structure differs by origin. The
+merge reports the share of origin guesses that are right, as a measure of how blind the labels are; no guess names a
+fresh attempt's origin, so for the fresh attempts it counts the guesses by configuration and variant instead. The guesses
+are never used as labels. Every analysed fresh attempt is queued for the packet (protocol~\S15.4); for the natural arm no
+packet has been prepared (D64, decision~8).

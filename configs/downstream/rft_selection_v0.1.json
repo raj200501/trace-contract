@@ -1,0 +1,46 @@
+{
+  "schema": "tracecontract/downstream-selection-config/0.1",
+  "experiment": "downstream-rft-v0.1",
+  "standing": "post hoc",
+  "status": "A configuration of the planned data step (experiments/downstream_plan_v0.1-draft.md, section 2), applied post hoc to the recorded run fresh-v1 for the plan's illustration (section 9). The experiment has not run, and fresh-v1's attempts are not its training data; its stage 0 needs a new configuration that names the pool's run. Applying this one trains nothing, and its output is not a result of training.",
+  "run": {
+    "run_id": "fresh-v1",
+    "dir": "results/runs/fresh-v1",
+    "repeats": 3
+  },
+  "tasks_root": "tasks",
+  "out": "results/analyses/fresh-v1-training-selection",
+  "candidates": "fresh_attempt",
+  "acceptance_rule": {
+    "admit_on": "pass",
+    "repeats": "every",
+    "other_outcomes": "rejected"
+  },
+  "refused_outcomes": [
+    "environment_failure",
+    "timeout",
+    "unresolved",
+    "verifier_error"
+  ],
+  "cell_gate": {
+    "reference": "pass",
+    "noop": "task_failure",
+    "noop_required": false
+  },
+  "label_source": {
+    "policy": "pilot",
+    "labeler": "builder:refcheck+regression+construction:v1"
+  },
+  "conditions": [
+    "initial_plain",
+    "initial_audited",
+    "full_plain",
+    "full_audited",
+    "llm_freeform",
+    "repo_tests"
+  ],
+  "data_filters": {
+    "naive_control": "initial_plain",
+    "correction_aware": "full_plain"
+  }
+}

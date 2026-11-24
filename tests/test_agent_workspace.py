@@ -934,11 +934,15 @@ def test_natural_workspace_roots_are_refused_in_the_repository_third_party_data_
     assert not (tmp_path / "scratchpad").exists()
 
 
-def test_roots_around_claude_session_directories_are_refused(tmp_path):
+def test_roots_around_claude_session_directories_are_refused(tmp_path, monkeypatch):
     """Not only inside: neither /tmp nor / (around /tmp/claude-*), nor the home directory (around ~/.claude), nor a
     directory holding a .claude directory, nor one around a configured session directory is a root."""
     E = MAW.WorkspaceError
     study = Path("/srv/no-such-study-fixture")  # the pure check compares paths: the study need not exist, nor lie under /tmp
+    # The check also refuses every root around the checkout the script runs from (MAW.REPO). In a checkout under /tmp,
+    # that rule would refuse /tmp first, so the checkout is put beside the study here: the refusals below are then the
+    # session-directory rule's alone, wherever the checkout lies.
+    monkeypatch.setattr(MAW, "REPO", study)
     for root in (Path("/tmp"), Path("/"), Path.home(), Path("/tmp/claude-fixture"), Path("/tmp/claude-fixture-x/deeper")):
         with pytest.raises(E, match="Claude session directory|the repository"):  # / is also around the repository
             _location(root, repo_root=study)

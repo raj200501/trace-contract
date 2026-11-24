@@ -1,7 +1,10 @@
 # Status
 
-Last updated: 2026-11-23 (UTC), after the run `natural-pr-v1` (decision log D76 to D78), the manuscript's restructure
-(D79) and a final fix round after a fresh verification (D80).
+Last updated: 2026-11-24 (UTC), after the run `natural-pr-v1` (decision log D76 to D78), the manuscript's restructure
+(D79), a final fix round after a fresh verification (D80), the scanner's idiom rule for screened texts (D81) and a
+round before human review (D82), with no new result: the review packet takes the fresh attempts, the abstract and
+the stated scope of the evidence were revised, a downstream-training plan was written (not run), and the README and
+the stale passages below were brought up to date from the records.
 Nothing here is peer reviewed, and no human labels exist.
 
 ## Where the study stands
@@ -37,9 +40,9 @@ Nothing here is peer reviewed, and no human labels exist.
   the correction-aware verifiers stated, the natural case studies read family by family with the reference gate, the
   natural per-family detail moved unchanged to App. G, and four verified references on patch overfitting, test
   oracles and requirements change. It compiles to 76 pages (main text 22) with no `UNFILLED` marker, and every number
-  in it is a generated macro with a ledger entry. The reviewer of the last round judged it close to a credible
-  preprint as a methods or negative-results note (a workshop or an arXiv note, not a main track). Authors are a TODO
-  for the human authors, who must review it before any submission.
+  in it is a generated macro with a ledger entry. A model reviewer, the one that checked D80's round, judged it close
+  to a credible preprint as a methods or negative-results note (a workshop or an arXiv note, not a main track).
+  Authors are a TODO for the human authors, who must review it before any submission.
 
 ## Where round 5 stopped, and how to resume
 
@@ -137,7 +140,7 @@ Nothing here is peer reviewed, and no human labels exist.
     git hook (D44). With `--aidev-logins` it also checks for the 119 logins and names
     tied to the sampled AIDev pull requests, loaded in memory from the AIDev files,
     and for @handles in files under `tasks/` and `data/` (D48, D52);
-  * fresh-agent tooling (protocol §15.4, §16.2; D52), not used yet:
+  * fresh-agent tooling (protocol §15.4, §16.2; D52), used for the 80 attempts of `fresh-v1` (D56, D57, D61):
     `scripts/make_agent_workspace.py --role fresh --variant u1|final` builds an
     isolated workspace whose instruction is U1, or U1 and U2, with each path of the old
     workspace replaced by the new workspace's, recorded in its manifest with the
@@ -199,10 +202,12 @@ Nothing here is peer reviewed, and no human labels exist.
     arguments first and replaces the tables only after every one has been written;
     regenerating from `pilot-v0.3.3` with the documented command gives the tracked
     tables and ledger byte for byte);
-  * an evidence ledger listing every table number with its source file;
-  * compiles to 29 pages (2026-11-21, after the text updates for D47 to D52), with no
-    LaTeX or biber warning and the four box warnings it had before; the full
-    manuscript rebuild of round 4 is still to come.
+  * an evidence ledger listing every table number with its source file, and, since the restructure (D79), every
+    number in the text a generated macro with a ledger entry, which `paper/check_numbers.py` checks (22 files, no
+    number outside a macro, 2026-11-23);
+  * compiles to 76 pages (main text 22), with no overfull box, no undefined reference or citation and no LaTeX
+    warning (D80; rebuilt on 2026-11-23 with the same result). The 29 pages of 2026-11-21 were the draft before the
+    rebuild around `fresh-v1` (D66) and the restructure (D79).
 * **Reviews by model agents** (Claude, the same model family; not human review):
   * an internal review with six lenses, whose skeptic agents checked findings until
     that stage was stopped for the final run;
@@ -218,12 +223,14 @@ Nothing here is peer reviewed, and no human labels exist.
 
   Findings, verdicts and dispositions are in `docs/internal_review.md`.
 * **Other documents:** annotation guide v0.4 (blinded review packet, D43, D44; its
-  description of the acceptance gate corrected on 2026-11-21), data card, decision log
-  D1–D52 (round 4: D47 onwards),
-  submission-readiness notes (arXiv pages re-checked 2026-11-18), the
+  description of the acceptance gate corrected on 2026-11-21, and its section on candidate strata in the packet
+  added on 2026-11-24, D82), data card, decision log
+  D1–D82 (round 4: D47 to D52; the later rounds: D53 onwards), the downstream-training plan
+  (`experiments/downstream_plan_v0.1-draft.md`: a draft, not run and not adopted; D82),
+  submission-readiness notes (arXiv pages re-checked 2026-11-23), the
   ownership/defense notes, workflow and agent prompts (`experiments/prompts/`), and
   third-party licence notices (`THIRD_PARTY_LICENSES/`).
-* **Round 4 (2026-11-21, in progress; D47 onwards):**
+* **Round 4 (2026-11-21; D47 to D52, with the re-grade of D54):**
   * a re-audit against the specification by model agents (D47), protocol v0.7 (D48),
     a verification of round 4 by model agents and protocol v0.8 (D51), and the fixes
     from that verification (D52);
@@ -241,7 +248,8 @@ Nothing here is peer reviewed, and no human labels exist.
     because their repositories could not be fetched here, and the judges disagreed on
     2, which are excluded. These are model proposals, not human coding; the 117
     failures are rows of `data/manifests/rejection_ledger.json`. Stage S10
-    (replayability) is under way and has no recorded result yet;
+    (replayability) later accepted 6 of the first sample's 22 families (D59), which `natural-pr-v1` graded (D76 to
+    D78);
   * harness `tc-harness/0.3.5` for new runs (above), and Harbor exporter
     `tc-harbor-export/0.3.0` (see Tested);
   * a frozen-input check, `scripts/verify_frozen_inputs.py`, which `pilot-v0.3.3`
@@ -252,16 +260,24 @@ Nothing here is peer reviewed, and no human labels exist.
   * an exploratory re-analysis of `pilot-v0.3.3` and a draft precision plan, which is
     not adopted (D49);
   * the reliability re-grade of `pilot-v0.3.3` under harness 0.3.5 with three repeats
-    (protocol §15.3, §16.1) started at 2026-11-21T07:22Z as run
-    `pilot-v0.3.5-regrade`. It is in progress, and no result of it is reported here.
+    (protocol §15.3, §16.1), run `pilot-v0.3.5-regrade` (2026-11-21, 07:21:53 to 08:18:38 UTC). It agrees with
+    `pilot-v0.3.3` on all 240 pairs, in reward and in exact outcome, with no unresolved outcome (D54).
 
 ## Tested
 
-* **373 tests at `a0542bb`**, 353 offline and 20 Docker (`pytest --collect-only -q`;
-  no Docker run is needed to count them), all passing on 2026-11-21 (D52). The
-  table-generator tests added since (`tests/test_make_tables.py`, 5 offline tests)
-  bring the total to 378, and the 358 offline tests pass with them (2026-11-21). On
-  2026-11-18, after the final run, there were 80 (63 offline, 17 Docker).
+* **1,464 tests** (D82), 1,444 offline and 20 Docker (`.venv/bin/python -m pytest --collect-only -q`). Counting them
+  needs a reachable Docker daemon: without one, `tests/test_sandbox_isolation.py` is skipped whole at collection, and
+  the command lists 1,445. This round added 90 offline tests: 17 for the review packet's strata
+  (`tests/test_review_packet_strata.py`) and 73 for the downstream plan's data step
+  (`tests/test_build_training_selection.py`). On 2026-11-24 the build checkout, which holds the natural data, passed
+  all 1,444 offline tests and the 20 Docker tests. A clone with the base snapshots built and without the git-ignored
+  `data/natural/` passed 1,435 offline tests, and 9 skipped, all for want of the natural data; before the snapshots
+  are built, 14 more skip. At `2daa725` there were 1,374 (1,354 offline; D81). In a checkout under `/tmp`, one
+  location test of `tests/test_agent_workspace.py` failed, because the rule that refuses roots around the checkout
+  itself refused `/tmp` before the session-directory rule the test expects; the test now puts the checkout beside
+  its fixture study for that check (2026-11-23). Earlier counts: 373 at `a0542bb` (353 offline, 20 Docker), all
+  passing on 2026-11-21 (D52), and 378 with the first table-generator tests; on 2026-11-18, after the final pilot
+  run, 80 (63 offline, 17 Docker).
 * **Offline tests:**
   * schemas, ingestion and evidence alignment;
   * supersession, contract validation and the acceptance gate;
@@ -273,7 +289,8 @@ Nothing here is peer reviewed, and no human labels exist.
   * same-code duplicate detection and the Harbor export layout;
   * audit hold-out guard;
   * the blinded review packet and its merge (type checks, all-or-nothing writes,
-    disagreement on violated requirements), and the strict re-audit (26 shell forms,
+    disagreement on violated requirements; with candidate strata, their blinding, the refusals before anything is
+    written and the merge into the stratum files, D82), and the strict re-audit (26 shell forms,
     attribution of scratch-directory reads);
   * round 4: the gate's review rules (each reviewer's latest decision, adjudication,
     re-review after `edit`) and its enforcement in `accept-task`, `evaluate` and the
@@ -353,15 +370,22 @@ Nothing here is peer reviewed, and no human labels exist.
 
 ## Blocked (needs the repository owner)
 
-* **Human annotation.** Contracts and the 32 held-out candidates need review by two
+* **Human annotation.** Contracts, the 32 held-out candidates and the 79 analysed fresh attempts need review by two
   qualified human reviewers per task. A coordinator builds the blinded review packet
   (`tracecontract review-packet`) and keeps its key. The reviewers work from the
   packet only, following `docs/annotation_guide.md`, and `tracecontract
   merge-reviews` merges their labels once every task has two complete reviews. The
   queue (`tasks/*/labels/review_queue.json`) is opened only after the merge. The
-  paper's central claim needs these labels. Human review alone cannot open the
-  acceptance gate, because the documented procedure does not provide two of the
-  things it requires (D51):
+  paper's central claim needs these labels. The analysis of `fresh-v1` queues all 79 analysed attempts for human
+  review (`labels.<task>.strata.fresh-v1.review_queue` in its `analysis.json`), as the paper's App. H says. The
+  attempts are stratum candidates (`tasks/*/strata/fresh-v1/`, 20 per task), and
+  `tracecontract review-packet ... --strata fresh-v1` puts these 79 among each task's own held-out candidates (8 per
+  task, 32 in all), blinded as they are, and leaves out the excluded CS-02-fresh-A-final-1 (annotation guide,
+  section 2; D82). On the recorded tasks such a packet holds 110 items for 111 candidates (28, 27, 28 and 27 items
+  per task), because two CS-04 pilot candidates have the same diff and share an id. `merge-reviews` appends the
+  attempts' labels to their files in the stratum (owner decisions, below). No human label exists yet. Human review
+  alone cannot open the acceptance gate, because the documented procedure does not provide two of the things it
+  requires (D51):
   * an `eligible` provenance record: no command sets it, and every record is
     `pending_review`;
   * initial-only and full-session contracts without unresolved or unreviewed inferred
@@ -374,7 +398,8 @@ Nothing here is peer reviewed, and no human labels exist.
   the owner, and the saved token fails authentication (`/api/whoami-v2` → 401). The
   two ungated, openly licensed sources need neither and were taken up for screening:
   all 30 Trace Commons sessions were rejected, and AIDev v5 pull-request review threads
-  are in stage S10 (Completed, round 4). Whether pull-request review comments count as
+  gave six families, built and graded in `natural-pr-v1` as exploratory case studies (D75 to D78); the extension's
+  S10 is to be redone, for `natural-pr-v2`. Whether pull-request review comments count as
   user corrections for the claim is an owner decision (D47).
 * **Harbor `no-network` on this host.** Harbor rejected `no-network` on this host
   (the rejection was observed; its cause was not probed). Exported tasks declare
@@ -391,8 +416,11 @@ Nothing here is peer reviewed, and no human labels exist.
     `tracecontract merge-reviews` does so today: it appends labels to
     `tasks/<id>/candidates/*.json` and contract reviews to
     `tasks/<id>/contracts/reference.json`, which D47 freezes and the frozen-input check
-    would report as modified. The alternative is sidecar files that the gate and the
-    final-label rule read;
+    would report as modified. It also appends the fresh attempts' labels to their files in the stratum,
+    `tasks/<id>/strata/fresh-v1/candidates/*.json`, whose sha256 hashes the analysis of `fresh-v1` records among its
+    inputs (`meta.inputs.files_sha256` in its `analysis.json`, all 80 attempt files), so after a merge they no longer
+    match the recorded analysis; the frozen-input check does not read the strata. The alternative is sidecar files
+    that the gate and the final-label rule read;
   * where the provenance review that sets a task's eligibility is recorded:
     `provenance.json` is frozen under D47, so a sidecar is the natural place;
   * the repository licence;
@@ -430,7 +458,12 @@ Nothing here is peer reviewed, and no human labels exist.
 
 ## Not run
 
-* Any natural-data task, any second-annotator agreement, any second model family,
-  and any downstream training experiment (no GPU and no approved spending).
-* Any fresh-agent attempt or independent labeler (protocol §15.4, §15.5). Both are
-  planned with subagents of the build session, which needs no spending.
+* Any human label, and so any agreement between human annotators.
+* Any second model family, for the agents, the generators or the labelers.
+* Any downstream training experiment (no GPU and no approved spending). A plan for one, not run and not adopted, is
+  in `experiments/downstream_plan_v0.1-draft.md`, with its tested data step (`scripts/build_training_selection.py`;
+  D82).
+* The extension's S10 replay, its families and their run, `natural-pr-v2` (protocol §20).
+
+The fresh-agent attempts and the independent labeler, listed here before, have run: `fresh-v1` (D61, D62) and the
+labelers of protocol §15.5 (D55, D58). So have natural-data tasks: the six families of `natural-pr-v1` (D75 to D78).

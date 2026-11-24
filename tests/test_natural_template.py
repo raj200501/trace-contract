@@ -25,7 +25,8 @@
   published analysis.
 * The template's part in Appendix G (paper/sections/app_natural_cases.tex, :data:`MOVED`): its caveats on the build's
   process, its table of per-family caveats, its family paragraphs and the cost per family, moved there unchanged after
-  the analysis (D80). Every check here reads both files as the template.
+  the analysis (D80), and the status paragraph's sentence on the run's dates and invocations, moved there unchanged in
+  a later round (decision-log entry D82). Every check here reads both files as the template.
 * (c) The template holds none of the words that the plan bans (part 2; "how often" only to say that the case studies
   cannot show it), no model identifier, agent-tool name or tier wording, no digit outside a macro or an identifier, no
   count written as a word, and no option written so that it prints as an en dash.
@@ -60,7 +61,7 @@ from tracecontract.store import dump, load, write_json
 ROOT = Path(__file__).resolve().parents[1]
 PAPER = ROOT / "paper"
 TEMPLATE = PAPER / "sections" / "natural.tex"
-# The template's part in Appendix G: what was moved there unchanged after the analysis (D80).
+# The template's part in Appendix G: what was moved there unchanged after the analysis (D80, D82).
 MOVED = PAPER / "sections" / "app_natural_cases.tex"
 RUN = ROOT / "results" / "runs" / "natural-pr-v1"  # the published run, once it exists
 REAL_NUMBERS = PAPER / "generated" / "natural_run" / "numbers.tex"  # the run's own numbers, once it is published
@@ -147,7 +148,8 @@ AUDITS = {"NP-03": ((2, True, []), (3, False, ["reference_not_passing"])),
 # records before anything else is written, never that a cell is changed.
 PREMISES: tuple[tuple[str, str, str], ...] = (
     ("run.families", ", ".join(FAMILIES), "protocol §20.2, D76: the first sample's families, each with its paragraph"),
-    ("run.invocations", "2", "D76: the status paragraph explains why the first of the run's invocations was stopped"),
+    ("run.invocations", "2", ("D76: the paragraph on the run's dates and invocations explains why the first of the "
+                              "run's invocations was stopped")),
     ("run.pilot", "set", "D75, D76: the status paragraph calls the run an automated pilot"),
     *((f"sample.{_fk(f)}", "first", "protocol §20.2: the accepted families of the first sample") for f in FAMILIES),
     *((f"b1.{_fk(f)}.norm", v, "D64, decision 3: the list of differences, and (c)") for f, v in B1_NORM.items()),
@@ -201,13 +203,14 @@ def template_problems(numbers: dict[str, str]) -> list[str]:
     """What keeps the template's text from standing on a natural run's numbers (``numbers``: the macros of its
     generated/natural_run/numbers.tex): a key the template uses that is not generated (it would print UNFILLED), a premise
     (:data:`PREMISES`) that the numbers do not bear out, and invocations that name other than one code revision (the
-    status paragraph names one)."""
+    paragraph on the run's dates and invocations names one)."""
     out = [f"{k}: not generated, so it prints UNFILLED" for k in sorted(keys(template(), "nrv") - numbers.keys())]
     out += [f"{k}: the template states {v!r} ({why}); the numbers hold {numbers.get(k, 'nothing')!r}"
             for k, v, why in PREMISES if numbers.get(k) != v]
     rev = numbers.get("run.revision", "")
     if "," in rev or rev in ("", mt.NOT_RECORDED):
-        out.append(f"run.revision: the status paragraph names one code revision; the numbers hold {rev!r}")
+        out.append(f"run.revision: the paragraph on the run's dates and invocations names one code revision; the numbers "
+                   f"hold {rev!r}")
     return out
 
 
@@ -282,7 +285,7 @@ def world(run, tmp_path_factory) -> Path:
 def test_every_number_key_of_the_template_is_generated(world):
     nrv, generated = keys(template(), "nrv"), macros(world / "numbers.tex", "nrv")
     assert nrv and not nrv - generated.keys(), sorted(nrv - generated.keys())
-    assert RUN_KEYS <= nrv  # the status paragraph's run facts
+    assert RUN_KEYS <= nrv  # the run's facts: the status paragraph and the paragraph on its dates and invocations
     fks = [_fk(f) for f in FAMILIES]
     assert {f"d19.{fk}.{k}" for fk in fks for k in D19_KEYS} <= nrv  # each family's D19 labels and their reasons
     assert {f"cost.{fk}.{k}" for fk in fks for k in COST_KEYS} <= nrv  # each family's cost, its S10 build time included
@@ -335,7 +338,8 @@ def test_numbers_that_do_not_bear_out_a_premise_are_reported(world):
                                                    "run.revision"]
     assert "the template states 'no' (D64, decision 3" in problems[2]
     assert template_problems({**numbers, "run.revision": mt.NOT_RECORDED}) == [
-        "run.revision: the status paragraph names one code revision; the numbers hold 'not recorded'"]
+        ("run.revision: the paragraph on the run's dates and invocations names one code revision; the numbers hold "
+         "'not recorded'")]
 
 
 @pytest.mark.skipif(not REAL_NUMBERS.is_file(), reason="natural-pr-v1 is not published yet (restructure plan, order of work 4)")
@@ -752,7 +756,8 @@ def paragraphs(*texts: str) -> dict[str, str]:
 DISCLOSURES = {
     "Status.": (
         "accepted families of the first sample (\\nrv{run.families})",  # the run's own, not both samples' (D76)
-        "D76 records why the first invocation was stopped",  # whatever the manifest's count of invocations
+        # the pointer to the run's dates and invocations, moved to Appendix G (D82)
+        "as its manifest records them, are in Appendix~\\ref{app:natural-cases} (D82).",
         "Protocol v0.12 (protocol~\\S20) gave each sample a run of its own",
         ("When this run started, the extension's run, \\texttt{natural-pr-v2}, had not been made: the extension's S10 "
          "step was stopped at a usage limit, and the task directories it left are to be built again from the start "
@@ -772,6 +777,10 @@ DISCLOSURES = {
          "Appendix~\\ref{app:natural-cases}"),  # the pointer to those moved to Appendix G (D80)
         ("with no pooled rate, interval or p-value (protocol~\\S19.6, \\S20.3). Nor do we give a total over the "
          "families, or pool anything with the controlled arm (protocol~\\S2)."),
+    ),
+    # Moved unchanged from the status paragraph to the template's part in Appendix G (D82).
+    "The run's dates and invocations.": (
+        "D76 records why the first invocation was stopped",  # whatever the manifest's count of invocations
     ),
     # Moved unchanged from the list of caveats to the template's part in Appendix G (D80).
     "Caveats on the build's process.": (
@@ -847,8 +856,9 @@ def test_the_template_carries_the_disclosures_its_records_require():
     pars = paragraphs(*template_parts())
     assert list(pars) == ["Status.", "What was built.", "Caveats.", "Reading the tables and the family paragraphs.",
                           "The families read with the reference gate.", "What the case studies can and cannot show.",
-                          # the template's part in Appendix G (D80)
-                          "Caveats on the build's process.", "The parts of a family paragraph.",
+                          # the template's part in Appendix G (D80, D82)
+                          "The run's dates and invocations.", "Caveats on the build's process.",
+                          "The parts of a family paragraph.",
                           *(f"{f}." for f in FAMILIES), "Cost per family."]
     for title, said in DISCLOSURES.items():
         for text in said:

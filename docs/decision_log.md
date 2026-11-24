@@ -3351,3 +3351,125 @@ Times are UTC, 2026-11-23.
     * the full offline suite passes (1,354 passed; Docker's tests are left out);
     * ruff reports no finding in the changed files;
     * the gate scan and the screening-texts scan give the counts above.
+
+### D82. Before the human review: the review packet takes the fresh attempts, the abstract and the stated scope revised, the records brought up to date, and a downstream-training plan written (not run)
+Times are UTC, 2026-11-24. No run, recorded label, result, task record, frozen file or protocol line changed.
+* **Why.** After D81, model agents read the repository as a newcomer and a technical reader would: a clean-setup run
+  from a fresh clone, an expert reading of the paper, an arXiv-readiness check and a review of the README. They found
+  no wrong number. They found:
+  * App. H and protocol §15.4 queue every analysed fresh attempt for the review packet, which could not take them, so
+    the lead result had no path to human labels;
+  * the README, STATUS, the data card, `results/runs/README.md` and the ownership notes described earlier states: no
+    fresh attempt, no natural run, old test counts;
+  * the abstract read as a list of hedges, the paper did not say that no candidate was optimised against a verifier,
+    and Section 5 carried run bookkeeping;
+  * the arXiv pages fetched on 2026-11-23 had no download record, and no file pinned the package versions;
+  * the brief's fallback when no training is run, a tested configuration and a plan, was missing.
+* **The review packet** (`src/tracecontract/review.py`, `src/tracecontract/cli.py`, 17 tests in
+  `tests/test_review_packet_strata.py`, `docs/annotation_guide.md` section 2, App. H). `review-packet --strata NAME`
+  puts each task's stratum candidates among the task's own held-out candidates: the same folder, id pool, shuffled
+  order and template. `merge-reviews` appends their labels to their files in the stratum. The choices:
+  * the attempts left out are those that `analysis.attempt_exclusion` excludes (for `fresh-v1`, CS-02-fresh-A-final-1,
+    by its audit), and the key lists each with its reason;
+  * stratum candidates always sit among the task's own: there is no option to export them alone, and a task with no
+    held-out candidate of its own is refused, since its folder would show their origin;
+  * no file of the packet marks which candidates are stratum candidates, but the guide tells reviewers that a packet
+    may hold fresh attempts;
+  * no origin-guess option names a fresh attempt, so the guesses on them are counted by configuration and variant
+    (`stratum_origin_guesses`), not scored; the guide stays at v0.4, since the reviewers' options and the template are
+    unchanged;
+  * before writing anything, the merge refuses a stratum that no longer lists the file, a file that holds another
+    patch, a stratum that breaks its rules, and a second merge of the same packet. It writes only `labels`, never
+    `task.json` or a stratum manifest.
+
+  On the recorded tasks a packet built with `--strata fresh-v1` holds 110 items for 111 candidates (32 of the tasks'
+  own and the 79 analysed attempts; two CS-04 pilot candidates share a diff and an id): 28, 27, 28 and 27 per task.
+  No candidate id, configuration, variant or proposal text appears in it. The packet was built only in scratch space,
+  for the checks, and given to no one; no human label exists. The owner decision on merges into frozen files now also
+  covers the 80 stratum files whose hashes `fresh-v1`'s `analysis.json` records among its inputs.
+* **The paper.** No number was added; every value is still a generated macro.
+  * The abstract was rewritten in this order: the problem; what was built and run; the planned measure, with its
+    denominators and the note that the design largely fixes it; what the experiment adds; the label and power caveats;
+    the natural case studies. The label caveat comes right after the setup sentence. It has 1,893 of the 1,900
+    characters allowed, and uses the macros `cv.c1` and `cv.c3` where it used `cv.c1.accepted` and `cv.c3.accepted`.
+  * §8 has a new threat, "No optimisation pressure": no policy was optimised against any of the study's verifiers, so
+    the false-acceptance rates, the zeros of C3, C4 and B2 included, say nothing about a verifier used as a reward
+    under optimisation. The introduction's "How far the evidence goes", the ethics section's Misuse paragraph and the
+    README say the same.
+  * Section 5's sentence on the run's start and end times, invocations and code revision, with D76's account of the
+    stopped first invocation, moved unchanged to App. G.1 as "The run's dates and invocations", with a pointer in its
+    place. `tests/test_natural_template.py` follows the move. This entry is the one that the template's header cited
+    as pending.
+  * App. H describes the packet's strata. Commit `a8ec542` set the PDF's title field.
+* **Documents and records,** brought up to date from the records, with no new result:
+  * `README.md`, rewritten for a newcomer: a first screen with the question and the status, "In short", "What is in the
+    repository", a quick start, and "Lessons for building verifiers from traces", each lesson with its evidence and
+    caveat. Its status box calls the second labeler a model labeler of the same model family, written from the same
+    reference contract.
+  * `STATUS.md`, `docs/data_card.md` and `results/runs/README.md`: the runs `fresh-v1`, `natural-pr-v1` and
+    `pilot-v0.3.5-regrade`, the counts, and what has and has not run.
+  * `docs/submission_readiness.md`: ready for the human authors' review, not for submission; the arXiv pages
+    re-checked on 2026-11-23; the endorsement policy; Biber's bbl format, which arXiv's TeX Live 2025 reads at 3.3 while
+    the local build writes 3.2; the paper links no repository; and the evidence gap of training.
+  * `docs/ownership_and_defense.md`, finished: what is defended, borrowed components and their licences, what AI
+    produced, the owner-only decisions, ten questions with pointers into the paper, and twelve exercises.
+  * `data/manifests/third_party_downloads.json`: two records, the 39 copies of arXiv help pages fetched on 2026-11-23
+    and the arXiv check's sparse clone of arXiv's public documentation source (149,221,837 bytes, licence not
+    determined). Both are kept outside the repository; whether to keep them is the owner's.
+  * `tests/test_agent_workspace.py`: in a checkout under `/tmp`, one location test failed, because the rule that
+    refuses roots around the checkout refused `/tmp` before the session-directory rule that the test expects. The test
+    now sets the checkout's location itself (`MAW.REPO`).
+  * In `a8ec542`: `constraints.txt` pins the developer environment's package versions, and an install with it
+    reproduces them; `scripts/compare_runs.py` prints its usage on `--help` instead of a traceback.
+* **A downstream-training plan, not run, and its data step on the recorded fresh attempts** (new files only):
+  * `experiments/downstream_plan_v0.1-draft.md` plans the experiment that the brief asks for when no training is run:
+    rejection-sampling fine-tuning on the attempts a verifier admits (stage 1), then RL with the same verifier as reward
+    (stage 2); the conditions base, naive-data control (C1) and correction-aware data (C3); one fixed recipe with
+    matched token budgets; held-out families split by repository; human labels as the confirmatory judge, and the
+    selecting verifier never the only one; hypotheses H1 and H2 with guardrails G1 to G3; safeguards, records, run limits
+    and costs, each cost an owner field. It says why the study's present families cannot serve. It is a draft: not hashed,
+    not adopted and not in force; a later protocol version must adopt it before any part runs. This entry records that it
+    was written, not that it was adopted.
+  * `configs/downstream/rft_selection_v0.1.json` and `scripts/build_training_selection.py` (73 tests in
+    `tests/test_build_training_selection.py`) list, for each condition, the kept fresh attempts its verifier admits,
+    by the run's own acceptance rule (a recorded `pass`, so on every repeat), with a cell gate and without it, and count
+    them by D19's labels and the kind of invalid attempt. The gate keeps a condition's data from a task only when its
+    verifier passes the task's reference and, where the no-op was graded, fails on it: the reference part is the
+    analysis' oracle-gated view (protocol §15.7); the no-op part is the plan's own addition. The script refuses, writing
+    nothing, a run without labels, an unresolved or infrastructure pair, a config that states another rule, and an
+    `analysis.json` that disagrees with the records it reads. It trains, samples and downloads nothing; its output is a
+    function of the inputs' bytes and regenerates byte for byte.
+  * Its output on `fresh-v1` (`results/analyses/fresh-v1-training-selection/`) is post hoc and exploratory, and
+    measures no training value. Of the 79 kept attempts, gated C1 admits 51, 14 of them correction violators, and C3
+    admits 52, 2 of them regression-only; ungated C1 admits 61, 24 of them violators. Among the first-request attempts
+    the contrast is subtractive: both filters keep the same 11 valid ones, and C1 adds the violators.
+  * A model reviewer checked the first version against the records and ran 30 mutations of the script; 15 survived.
+    Its 16 findings were fixed before the commit: the test gaps (66 of 66 mutations are now caught), the missing cell
+    gate, a split by repository rather than family, a guardrail on the share of valid attempts, the subtractive
+    contrast, three missing caveats, the hard-coded standing, the unhashed `session.json` of natural tasks, and the
+    plan's token budget and cost rows.
+* **Reviews before the commit.** A model reviewer read the six parts other than the plan together, against the
+  records. It traced every number and date it could and found none wrong. Its 15 findings were:
+  * inconsistencies between the parts: five documents still said that the packet could not take the fresh attempts;
+  * stale counts and dates;
+  * a citation by item number that the new threat shifted;
+  * two wordings that claimed more than the records ("realistic negatives", a "verified" bibliography);
+  * the abstract's late label caveat;
+  * a missing test of the merge's file-path check.
+
+  Fourteen were fixed before this entry, and part of the fifteenth; its remaining part, logging this entry and
+  removing the template's pending line, is done here. The plan's reviewer is above.
+* **Verification** (the build session, 2026-11-24, with every part applied; the Docker daemon was restarted for it):
+  * the tests: 1,464 collected, 1,444 offline and 20 Docker. In the build checkout, which holds the natural data, all
+    1,444 offline tests and the 20 Docker tests passed; in a clone with the base snapshots copied in and no natural
+    data, 1,435 passed and 9 skipped for want of the natural data;
+  * every mode of `paper/make_tables.py` and `paper/make_figures.py` rewrote its outputs byte for byte, and
+    `scripts/build_training_selection.py --check` regenerates its two files byte for byte;
+  * `scripts/verify_frozen_inputs.py`: OK, with 0 frozen files changed, 130 of 135 input hashes matching (the other 5
+    are exempt analysis code), 4 of 4 snapshots, and the protocol and decision log append-only;
+  * `scripts/check_abstract.py`: 1,893 of 1,900 characters; `paper/check_numbers.py`: 22 files, 0 findings;
+  * a build from a clean copy of the tracked paper files: 76 pages, the references from page 23, no overfull box,
+    LaTeX warning or undefined reference, one TODO (the author line), and no model, provider or agent-product name in
+    the PDF text;
+  * ruff: no new finding in the changed Python files;
+  * the pre-push scan: 0 findings, exit code 0, in the working tree before the commit, with the private markers, the AIDev logins and the natural texts given; it is run again on the commit before the push.

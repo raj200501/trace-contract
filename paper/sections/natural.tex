@@ -35,6 +35,10 @@
 %   paragraph's "no statement here counts families", which its own screening count of S10 contradicts, now reads "by
 %   their outcomes in the run"; and an added sentence after the caveat on the generators' training data, which the
 %   paper cannot check.
+% * What changed in a later round (D82): (9) moved unchanged to App. G (app_natural_cases.tex), so that the main text
+%   carries no run bookkeeping: the Status paragraph's sentence on the run's start and end times, invocations and code
+%   revision, with D76's account of the stopped first invocation, now the paragraph "The run's dates and invocations."
+%   there; a new sentence in its place points to it, and App. G's first paragraph names it.
 \providecommand{\nrcaveat}[1]{\raggedright\hspace{0pt}#1}
 
 \section{Natural case studies}
@@ -43,10 +47,9 @@
 \paragraph{Status.}
 The run \texttt{\NATURALRUN} graded the \nrv{families} accepted families of the first sample (\nrv{run.families}) under
 harness \nrv{run.harness}: each family's frozen verifiers (C1 to C4, B1, B2, B3 and the reference checks) and its
-independent labeler on every held-out candidate, each pair \nrv{run.repeats} times (protocol~\S20.2; D76). Its manifest
-records its start on \nrv{run.date} at \nrv{run.started} UTC, its end at \nrv{run.finished} UTC, and
-\nrv{run.invocations} invocations at code revision \texttt{\nrv{run.revision}}; D76 records why the first invocation was
-stopped, within seconds and before any pair was graded, and that the run was then started again. It is an automated
+independent labeler on every held-out candidate, each pair \nrv{run.repeats} times (protocol~\S20.2; D76). Its start
+and end times, invocations and code revision, as its manifest records them, are in Appendix~\ref{app:natural-cases}
+(D82). It is an automated
 pilot: provenance eligibility needs a human reviewer and stays pending, so each family's acceptance gate is pending, and
 the manifest's pilot flag is \nrv{run.pilot} (D64, decision~9; D75; D76). Protocol v0.12 (protocol~\S20) gave each
 sample a run of its own after phases P1 to P4 of the first sample's families had run and before any natural held-out

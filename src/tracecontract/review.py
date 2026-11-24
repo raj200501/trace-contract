@@ -20,6 +20,21 @@ what the code itself shows: near misses are small edits of the agent's final cod
 the alternatives are independent implementations, so a reviewer may still infer
 origin. The origin guesses measure how often that happens.
 
+With ``strata`` (``review-packet --strata NAME``), the held-out candidates of those
+candidate strata of each task (:mod:`tracecontract.strata`; for ``fresh-v1``, the fresh
+attempts of protocol §15.4) join the task's own, every one that the analysis keeps
+(:func:`stratum_held_out`). They are blinded as the task's own are: ids from the same
+random pool, folders and template entries among the others', one id shared with any
+candidate whose graded diff is the same, and nothing from their records, so no candidate
+or attempt id, configuration, instruction variant, stratum name or description, attempt
+record, proposal or audit verdict. The README is the one a packet without strata has,
+and the template has the same form, so no file of the packet marks which candidates are
+stratum candidates. The packet does not hide that it may hold some: the annotation guide,
+which reviewers read, says so, and a task's folder holds more items with them than
+without. The task's own held-out candidates are always in it with them, so it never
+holds stratum candidates alone. The key records each stratum candidate's stratum, file
+and patch sha256, and the fresh attempts left out, with why.
+
 The packet is written outside the repository: it holds the session's turns and the
 candidates' code (for a natural PR-review task, pseudonymised third-party text and
 upstream code, protocol §17.4), and reviewers are told not to open the repository until
@@ -35,9 +50,13 @@ The mapping from random ids to candidates (the *key*) is written to a separate f
 that the coordinator keeps; reviewers must not see it. ``merge_labels`` reads the
 reviewers' files with the key, refuses to merge until every task has the required
 number of complete reviews, and then appends the labels to the candidate records and
-the contract reviews to the reference contract, as human decisions. Disagreements are
-listed for adjudication; nothing is adjudicated here, and an unresolved disagreement
-leaves the candidate without a final label (``Candidate.final_label``).
+the contract reviews to the reference contract, as human decisions. A stratum
+candidate's labels go to its file in the stratum, the file that a run graded with
+``--strata`` records and the analysis reads (``strata.run_stratum_candidates``); the
+merge refuses, before anything is written, unless the stratum still lists that file and
+it holds the patch the packet showed. Disagreements are listed for adjudication; nothing
+is adjudicated here, and an unresolved disagreement leaves the candidate without a final
+label (``Candidate.final_label``).
 """
 
 from __future__ import annotations
@@ -49,12 +68,14 @@ import random
 import re
 import secrets
 import shutil
+from collections.abc import Sequence
 from datetime import datetime, timezone
 from pathlib import Path
 
 from . import roots
 from .schemas import Candidate, CandidateOrigin, Label, LabelerKind, Review, ReviewerKind, TaskContract, TaskManifest
 from .store import dump, load
+from .strata import StratumError, load_strata, load_stratum
 
 VALUES = ("valid", "invalid", "ambiguous")
 DECISIONS = ("accept", "reject", "edit", "needs_discussion")
@@ -101,6 +122,35 @@ def held_out(task_dir: Path) -> list[Candidate]:
     return [c for c in cands if c.split.value == "eval" and c.origin not in (CandidateOrigin.noop, CandidateOrigin.reference)]
 
 
+def stratum_held_out(task_dir: Path, names: Sequence[str]) -> tuple[list[tuple[str, str, Candidate]], dict[str, dict]]:
+    """The held-out candidates of the task's candidate strata ``names`` that a packet holds, and those it leaves out.
+
+    Held out as the task's own are (:func:`held_out`: evaluation split, no no-op, no reference), each as ``(stratum, file
+    relative to the task directory, candidate)``, in the order of ``names`` and of each stratum manifest. Left out, by
+    candidate id with its stratum and the reason: a fresh attempt that every analysis excludes
+    (``analysis.attempt_exclusion``: no attempt record, no audit verdict, or an audit that found a read of forbidden
+    material), since the analysed attempts are the ones queued for review (protocol §15.4). The strata are read with
+    their rules (``strata.load_strata``: no symbolic link, ids unique across the task's own candidates and the strata);
+    a broken rule raises ``StratumError``.
+    """
+    from .analysis import attempt_exclusion
+
+    m = load(task_dir / "task.json", TaskManifest)
+    own = {load(task_dir / p, Candidate).candidate_id for p in m.candidates}
+    kept: list[tuple[str, str, Candidate]] = []
+    left_out: dict[str, dict] = {}
+    for name, stratum in load_strata(task_dir, list(names), m.task_id, own).items():
+        for rel, c in stratum.candidates:
+            if c.split.value != "eval" or c.origin in (CandidateOrigin.noop, CandidateOrigin.reference):
+                continue
+            why = attempt_exclusion(c)
+            if why is None:
+                kept.append((name, rel, c))
+            else:
+                left_out[c.candidate_id] = {"stratum": name, "reason": why}
+    return kept, left_out
+
+
 def _user_turns(task_dir: Path, repo_root: Path) -> str:
     from .tasks import session_for_task
 
@@ -141,9 +191,16 @@ def _key_tag(key_path: Path) -> str:
 
 
 def export_packet(task_dirs: list[Path], out: Path, key_path: Path, *, snapshot_root: Path, repo_root: Path,
-                  seed: int) -> dict:
+                  seed: int, strata: Sequence[str] = ()) -> dict:
     """Write the blinded packet to ``out`` (outside the repository: :func:`packet_location_problem`) and the key to
-    ``key_path`` (outside ``out``; never overwritten)."""
+    ``key_path`` (outside ``out``; never overwritten).
+
+    ``strata``: candidate strata whose held-out candidates join each task's own (:func:`stratum_held_out`). Every task
+    must have each of them, and a task whose strata add candidates must have held-out candidates of its own
+    (``StratumError`` otherwise, raised with the other refusals before anything is written). The key then also records
+    ``strata``, each stratum candidate's stratum, file and patch sha256 (``stratum_candidates``) and the fresh attempts
+    left out (``left_out``); the packet's files are made as without strata.
+    """
     from .analysis import _norm_patch
     from .sandbox.docker_runner import prepare_workspace
     from .tasks import verify_snapshot
@@ -158,7 +215,8 @@ def export_packet(task_dirs: list[Path], out: Path, key_path: Path, *, snapshot_
         raise ValueError(f"{out} exists; choose a new directory")
     if key_path.exists():
         raise ValueError(f"{key_path} exists; it may be the only record of an earlier packet's mapping")
-    tasks: list[tuple[Path, TaskManifest, TaskContract]] = []
+    names = list(dict.fromkeys(strata))
+    tasks: list[tuple[Path, TaskManifest, TaskContract, list[tuple[str, str, Candidate]], dict[str, dict]]] = []
     for td in task_dirs:  # every task is checked before anything is written
         m = load(td / "task.json", TaskManifest)
         if not verify_snapshot(td, snapshot_root):
@@ -167,17 +225,24 @@ def export_packet(task_dirs: list[Path], out: Path, key_path: Path, *, snapshot_
             raise ValueError(f"{m.task_id}: base snapshot missing or modified ({hint})")
         if "reference" not in m.contracts:
             raise ValueError(f"{m.task_id}: no reference contract; the reviewers judge the candidates against it")
-        tasks.append((td, m, load(td / m.contracts["reference"], TaskContract)))
+        extra, left_out = stratum_held_out(td, names) if names else ([], {})
+        if extra and not held_out(td):
+            raise StratumError(f"{m.task_id} has no held-out candidate of its own, so its folder would hold stratum candidates "
+                               "alone and show their origin; stratum candidates are put only among the task's own")
+        tasks.append((td, m, load(td / m.contracts["reference"], TaskContract), extra, left_out))
     rng = random.Random(seed)  # recorded in the key; the ids, and the order of folders and entries, come from secrets
     key: dict = {"seed": seed, "created_at": _now(), "tasks": {}}
+    if names:  # only then, so a packet without strata keeps the key it had
+        key.update(strata=names, stratum_candidates={}, left_out={})
     used: set[str] = set()
-    for td, m, ref in tasks:
+    for td, m, ref, extra, left_out in tasks:
         tout = out / m.task_id
         (tout / "candidates").mkdir(parents=True)
         (tout / "session.txt").write_text(_user_turns(td, repo_root), encoding="utf-8")
         (tout / "reference_contract.md").write_text(_contract_text(ref), encoding="utf-8")
         groups: dict[str, list[Candidate]] = {}
-        for c in sorted(held_out(td), key=lambda c: c.candidate_id):
+        # The stratum candidates are pooled with the task's own: one shuffle, one id pool, one id per graded diff.
+        for c in sorted(held_out(td) + [c for _, _, c in extra], key=lambda c: c.candidate_id):
             groups.setdefault(_norm_patch(c.patch), []).append(c)
         items = list(groups.items())
         rng.shuffle(items)
@@ -203,12 +268,16 @@ def export_packet(task_dirs: list[Path], out: Path, key_path: Path, *, snapshot_
             _readable(cdir / "state")
             tkey[oid] = [c.candidate_id for c in cands]
         key["tasks"][m.task_id] = tkey
+        if names:  # where merge_labels finds each stratum candidate, and what the packet showed of it
+            key["stratum_candidates"][m.task_id] = {c.candidate_id: {"stratum": name, "file": rel, "patch_sha256": c.patch_sha256}
+                                                    for name, rel, c in extra}
+            key["left_out"][m.task_id] = dict(sorted(left_out.items()))
         template = {"task_id": m.task_id, "reviewer": "",
                     "contract_reviews": {r.req_id: {"decision": None, "note": ""} for r in ref.requirements},
                     "labels": {oid: {"value": None, "violated_requirements": [], "origin_guess": None, "note": ""}
                                for oid in tkey}}
         (tout / TEMPLATE).write_text(json.dumps(template, indent=2) + "\n", encoding="utf-8")
-    natural = any(m.population.value == roots.NATURAL_PR for _, m, _ in tasks)
+    natural = any(m.population.value == roots.NATURAL_PR for _, m, *_ in tasks)
     (out / "README.md").write_text(PACKET_README + (NATURAL_PACKET_README if natural else ""), encoding="utf-8")
     key["packet_files_sha256"] = {str(p.relative_to(out)): hashlib.sha256(p.read_bytes()).hexdigest()
                                   for p in sorted(out.rglob("*")) if p.is_file() and "/state/" not in str(p.relative_to(out))}
@@ -216,8 +285,13 @@ def export_packet(task_dirs: list[Path], out: Path, key_path: Path, *, snapshot_
     fd = os.open(key_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)  # only the coordinator may read it
     with os.fdopen(fd, "w", encoding="utf-8") as fh:
         fh.write(json.dumps(key, indent=2) + "\n")
-    return {"packet": str(out), "key": str(key_path), "items": sum(len(v) for v in key["tasks"].values()),
-            "candidates": sum(len(c) for v in key["tasks"].values() for c in v.values())}
+    res = {"packet": str(out), "key": str(key_path), "items": sum(len(v) for v in key["tasks"].values()),
+           "candidates": sum(len(c) for v in key["tasks"].values() for c in v.values())}
+    if names:  # counts only: the ids stay in the key
+        res["strata"] = {name: {"candidates": sum(r["stratum"] == name for v in key["stratum_candidates"].values() for r in v.values()),
+                                "left_out": sum(r["stratum"] == name for v in key["left_out"].values() for r in v.values())}
+                         for name in names}
+    return res
 
 
 PACKET_README = """# Blinded review packet
@@ -284,9 +358,41 @@ def merge_labels(label_files: list[Path], key_path: Path, tasks_root: Path, *, m
     Labels go to the candidate records, contract reviews to the reference contract. Nothing
     is merged unless every task in the key has ``min_reviewers`` complete reviews, and a
     packet's reviews cannot be merged twice.
+
+    A stratum candidate's record is its file in the stratum, as the key records it (:func:`export_packet`); nothing is
+    merged unless the stratum, read with its rules (``strata.load_stratum``), still lists that file and the file holds
+    the patch the packet showed. The origin guesses on the task's own candidates are scored as right, wrong or unsure
+    (``origin_guesses``); no guess names a stratum candidate's origin, so the guesses on those are counted instead, per
+    stratum and reviewer, by the attempt's configuration and instruction variant (``config-A/u1``; the origin for a
+    candidate without an attempt record) under ``stratum_origin_guesses``, a key that only a packet with strata has.
     """
     key = json.loads(key_path.read_text(encoding="utf-8"))
     tag = f"[blinded packet {_key_tag(key_path)}]"
+    in_strata: dict[str, dict[str, dict]] = key.get("stratum_candidates", {})  # {task: {candidate id: stratum, file, sha}}
+    listed: dict[tuple[str, str], dict[str, tuple[str, Candidate]]] = {}  # (task, stratum): {candidate id: (file, candidate)}
+
+    def locate(t: str, cid: str) -> tuple[Path, str | None]:
+        """The record of the packet's candidate ``cid`` of task ``t``, and its stratum (``None``: one of the task's own)."""
+        rec = in_strata.get(t, {}).get(cid)
+        if rec is None:
+            return tasks_root / t / "candidates" / f"{cid}.json", None
+        name = rec["stratum"]
+        if (t, name) not in listed:
+            try:
+                stratum = load_stratum(tasks_root / t, name, t)
+            except StratumError as exc:
+                raise ValueError(f"not merging: {exc}") from None
+            listed[(t, name)] = {c.candidate_id: (rel, c) for rel, c in stratum.candidates}
+        found = listed[(t, name)].get(cid)
+        if found is None or found[0] != rec["file"]:
+            raise ValueError(f"not merging: stratum {name!r} of {t} no longer lists {rec['file']}, the record of {cid} when the "
+                             "packet was made")
+        rel, c = found
+        if c.patch_sha256 != rec["patch_sha256"]:
+            raise ValueError(f"not merging: {t}/{rel} holds another patch than the packet showed for {cid} (patch sha256 "
+                             f"{rec['patch_sha256'][:12]})")
+        return tasks_root / t / rel, name
+
     by_task: dict[str, dict[str, dict]] = {}
     for f in label_files:
         if f.name == TEMPLATE:
@@ -335,14 +441,18 @@ def merge_labels(label_files: list[Path], key_path: Path, tasks_root: Path, *, m
     short = {t: len(by_task.get(t, {})) for t in key["tasks"] if len(by_task.get(t, {})) < min_reviewers}
     if short:
         raise ValueError(f"not merging: tasks with fewer than {min_reviewers} complete reviews: {short}")
+    records: dict[tuple[str, str], tuple[Path, str | None]] = {}  # (task, candidate id): (record, stratum or None)
     for t, revs in by_task.items():
         for cids in key["tasks"][t].values():
             for cid in cids:
-                c = load(tasks_root / t / "candidates" / f"{cid}.json", Candidate)
+                records[(t, cid)] = locate(t, cid)
+                c = load(records[(t, cid)][0], Candidate)
                 if any(lb.labeler_kind == LabelerKind.human and tag in lb.note for lb in c.labels):
                     raise ValueError(f"{t}/{cid}: labels from this packet were merged already")
     report: dict = {"merged_labels": 0, "merged_contract_reviews": 0, "disagreements": {}, "contract_disagreements": {},
                     "origin_guesses": {}}
+    if "strata" in key:
+        report["stratum_origin_guesses"] = {}
     updates: dict[Path, object] = {}  # every record to write, built in memory before anything is written
     for t, revs in by_task.items():
         for oid, cids in key["tasks"][t].items():
@@ -351,12 +461,17 @@ def merge_labels(label_files: list[Path], key_path: Path, tasks_root: Path, *, m
                 report["disagreements"].setdefault(t, []).append(
                     {"candidates": cids, "labels": {r: [v["value"], v.get("violated_requirements") or []] for r, v in values.items()}})
             for cid in cids:
-                path = tasks_root / t / "candidates" / f"{cid}.json"
+                path, stratum = records[(t, cid)]
                 c = load(path, Candidate)
                 truth = origin_class(c.origin)
+                group = f"{c.attempt.configuration}/{c.attempt.variant}" if c.attempt is not None else c.origin.value
                 for rev, v in sorted(values.items()):
-                    g = report["origin_guesses"].setdefault(rev, {"correct": 0, "wrong": 0, "unsure": 0})
-                    g["unsure" if v["origin_guess"] == "unsure" else "correct" if v["origin_guess"] == truth else "wrong"] += 1
+                    if stratum is None:
+                        g = report["origin_guesses"].setdefault(rev, {"correct": 0, "wrong": 0, "unsure": 0})
+                        g["unsure" if v["origin_guess"] == "unsure" else "correct" if v["origin_guess"] == truth else "wrong"] += 1
+                    else:  # counted, never scored: no guess names the origin of a stratum candidate
+                        g = report["stratum_origin_guesses"].setdefault(stratum, {}).setdefault(rev, {})
+                        g.setdefault(group, dict.fromkeys(ORIGIN_GUESSES, 0))[v["origin_guess"]] += 1
                     c.labels.append(Label(value=v["value"], violated_requirements=list(v.get("violated_requirements") or []),
                                           labeler=f"human:{rev}", labeler_kind=LabelerKind.human, adjudicated=False,
                                           timestamp=_now(), note=f"{(v.get('note') or '')[:2000]} "

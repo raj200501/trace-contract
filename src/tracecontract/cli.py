@@ -838,10 +838,14 @@ def cmd_export_gen_workspace(a) -> None:
 def cmd_review_packet(a) -> None:
     """Blinded review packet for human labeling (annotation guide v0.4).
 
+    ``--strata NAME ...`` puts the held-out candidates of those candidate strata of every task (for ``fresh-v1``, each
+    fresh attempt the analysis keeps) into the packet among the task's own, blinded as they are (``review.export_packet``).
     The ``--out`` guard of ``export-gen-workspace`` applies, and every task must keep its base snapshot under the same
-    root (``snapshots/``, or ``data/natural/snapshots`` for natural PR-review tasks); nothing is written otherwise."""
+    root (``snapshots/``, or ``data/natural/snapshots`` for natural PR-review tasks); nothing is written otherwise, nor
+    when a task lacks a stratum or breaks a stratum rule."""
     from .evaluate import private_location_problem
     from .review import export_packet
+    from .strata import StratumError
 
     def refuse(why: str) -> SystemExit:
         return SystemExit(f"review-packet refused, nothing written: {why}")
@@ -854,7 +858,12 @@ def cmd_review_packet(a) -> None:
     if len(found) != 1:
         raise refuse(f"the tasks keep their base snapshots under {len(found)} roots ({', '.join(map(str, found))}); "
                      "write one packet per root")
-    _out(export_packet(tdirs, Path(a.out), Path(a.key), snapshot_root=found[0], repo_root=REPO, seed=a.seed))
+    try:
+        res = export_packet(tdirs, Path(a.out), Path(a.key), snapshot_root=found[0], repo_root=REPO, seed=a.seed,
+                            strata=a.strata or ())
+    except StratumError as exc:  # raised while every task is checked, before anything is written
+        raise refuse(str(exc)) from None
+    _out(res)
 
 
 def _tasks_root(a) -> Path:
@@ -863,7 +872,8 @@ def _tasks_root(a) -> Path:
 
 
 def cmd_merge_reviews(a) -> None:
-    """Merge reviewers' label files from a blinded packet into the candidate records."""
+    """Merge reviewers' label files from a blinded packet into the candidate records (a stratum candidate's record: its
+    file in the stratum, as the packet's key records it; ``review.merge_labels``)."""
     from .review import merge_labels
 
     _out(merge_labels([Path(f) for f in a.label_files], Path(a.key), _tasks_root(a), min_reviewers=a.min_reviewers,
@@ -1137,8 +1147,13 @@ def main(argv: list[str] | None = None) -> None:
 
     p = sub.add_parser("review-packet", help="blinded packet of held-out candidates for human reviewers (opaque ids; key kept apart)")
     p.add_argument("tasks", nargs="+"); p.add_argument("--out", required=True); p.add_argument("--key", required=True)
-    p.add_argument("--seed", type=int, required=True); p.set_defaults(fn=cmd_review_packet)
-    p = sub.add_parser("merge-reviews", help="append reviewers' blinded labels to the candidate records as human labels")
+    p.add_argument("--seed", type=int, required=True)
+    p.add_argument("--strata", nargs="+", metavar="NAME", help="also put the held-out candidates of these candidate strata "
+                   "(tasks/<id>/strata/<name>.json; for fresh-v1, every fresh attempt the analysis keeps) into the packet, "
+                   "among the task's own and blinded as they are; the key records their files for merge-reviews")
+    p.set_defaults(fn=cmd_review_packet)
+    p = sub.add_parser("merge-reviews", help="append reviewers' blinded labels to the candidate records (a stratum "
+                       "candidate's in its stratum) as human labels")
     p.add_argument("label_files", nargs="+"); p.add_argument("--key", required=True)
     p.add_argument("--min-reviewers", type=int, default=2); p.add_argument("--dry-run", action="store_true")
     p.add_argument("--tasks-root", help="the directory holding the task directories (default: tasks/; data/natural/tasks "

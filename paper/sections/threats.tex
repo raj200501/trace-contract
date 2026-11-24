@@ -1,6 +1,9 @@
 % Section 8, threats to validity (restructure plan, part 2): ordered by their effect on the lead result, each tagged by
 % the runs it concerns. Every number is a macro (\fv, \plv, \dv; their ledgers). The pilot detail of the reference-check
-% review and of contract recovery stays with the construction pilot's material.
+% review and of contract recovery stays with the construction pilot's material. The item on optimisation pressure was
+% added in a later round (decision-log entry D82), after a critical read; the fresh attempts' inputs are as
+% Section sec:design-tasks gives them (protocol §15.4), the held-out discipline's exceptions are App. B's
+% (app:deviations), and a clause of the misuse paragraph of Section sec:ethics points here.
 \section{Threats to validity}
 \label{sec:threats}
 \begin{enumerate}
@@ -11,6 +14,7 @@
 \item \textbf{The fresh stratum is not a new sample of tasks} [\texttt{\FRESHRUN}]. It reuses the pilot's tasks and frozen verifiers and was designed after the pilot's results were known; $k=\dv{design.k}$ attempts per configuration and variant say little about variance, and no further run repeats them. The attempts' context held harness material (\S\ref{sec:design-tasks}), and an attempt may infer that it is part of a study.
 \item \textbf{The information lost depends on the contract proposer} [pilot, \texttt{\FRESHRUN}]. For CS-02 the initial-only contract already holds, as inferred requirements, requirements covering everything the correction later stated (Table~\ref{tab:coverage}), as the initial-only contracts of NP-05 and NP-18 cover their correction requirements (Table~\ref{tab:nr-coverage}). The initial-only arm measures what the study's proposer recovers from the first request, not a fixed property of the session.
 \item \textbf{Controlled population} [\texttt{\FRESHRUN}, pilot]. The study wrote the user turns and designed each session to contain a correction, which reached the session agent with a short harness frame; this feedback is synthetic.
+\item \textbf{No optimisation pressure} [all]. No policy was optimised against any of the study's verifiers: every candidate that the rates count is an honest attempt at the task (a fresh attempt, which receives no verifier, \S\ref{sec:design-tasks}; a session's pre-correction state; a pull request's pre-review state) or a constructed alternative or near miss, built under the held-out discipline whose exceptions Appendix~\ref{app:deviations} lists. The false-acceptance rates, the zeros of C3, C4 and B2 included, therefore say nothing about a verifier used as a reward under optimisation, where a policy can search out what the verifier does not check.
 \item \textbf{Natural arm} [natural]. S9's verdicts are model-judged screening yields, not prevalence; a reviewer's comment on a pull request is not an in-session correction from the requester; the reference is not an oracle; the run is below the size rule, an automated pilot, reported as case studies (\S\ref{sec:natural-cases}). Some of the natural arm's builder decisions await the owner's review, and the others took effect with no recorded review by a person; Appendix~\ref{app:deviations} lists them.
 \item \textbf{B1's exploit surface} [all]. B1 imports candidate code into the reporting process, so a deliberately adversarial candidate can forge its report; B1 is meaningful only for non-adversarial candidates (\S\ref{sec:repro}).
 \item \textbf{Contamination} [all]. The source repositories and the released tasks are public and may enter training data, and public merged fixes may be memorised. Protocol~\S15.6 states that the natural arm's pull requests and their repositories predate the generators' training data; with no model named, the paper cannot check this.
