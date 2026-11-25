@@ -4,7 +4,9 @@ Updated at commit `2daa725` (decision log through D81). The commands it reports 
 and 2026-11-24 (UTC). Its passages on the review packet's candidate strata (§4 items 1 and 2, Q2, E1 and E11), on
 `constraints.txt` (§2.3) and on the threat 'No optimisation pressure' (Q8) describe the changes that D82 records; their
 commands ran on 2026-11-24 with those changes applied. Some passages were corrected afterwards, after read-only reviews
-of commit `f3ae845` by model agents (D83); each cites the record it rests on. The previous
+of commit `f3ae845` by model agents (D83); each cites the record it rests on. §2.3 and §4 also record the decisions
+that the build session took on the owner's instruction of 2026-11-25 (D84), and §1 and E2 the manuscript after D84
+set its author line. The previous
 version (last committed in `4aecca0` on 2026-11-21; its licences read on 2026-11-18) predates the fresh-agent run, the
 natural arm's construction and run, the manuscript's restructure and D79 to D81.
 
@@ -13,8 +15,8 @@ natural arm's construction and run, the manuscript's restructure and D79 to D81.
 > reviewers not to open the repository's `docs/` folder, the annotation guide excepted (`src/tracecontract/review.py`;
 > `docs/annotation_guide.md` v0.4).
 
-This document separates what the repository borrows, what was produced with AI assistance, and what only the human
-author(s) can decide or review. It then asks ten hard questions about the current results and system, with short
+This document separates what the repository borrows, what was produced with AI assistance, what the owner decided
+(D84), and what only the author can review. It then asks ten hard questions about the current results and system, with short
 answers and pointers to the files, tests, decision-log entries and paper sections that bear on each, and gives
 exercises for understanding and changing the core system. It claims no personal contribution for anyone.
 
@@ -61,9 +63,9 @@ view) keeps a verifier only where it passes its own reference.
 * **Natural case studies `natural-pr-v1`** (D76 to D78, D80): six pull-request review families, reported per family
   only. Read with the reference gate they say little about corrections (D80): C1 fails its own reference in five
   families and C3 in four (ran, E8).
-* **Manuscript** (`paper/main.tex`): 77 pages, the main text ending on page 23, where the references start; no
-  overfull box and no LaTeX warning in the log; one TODO, the author line (ran, E2). `paper/check_numbers.py` finds no
-  number outside a macro in its 22 files (ran, E2).
+* **Manuscript** (`paper/main.tex`): 77 pages, the main text ending on page 23, where the references start; no overfull
+  box and no LaTeX warning in the log; no TODO since D84 set the author line (ran, E2). `paper/check_numbers.py` finds
+  no number outside a macro in its 22 files (ran, E2).
 * **No human label exists.** Every label is a model proposal, and every review so far is by model agents
   (`STATUS.md`; paper §9).
 
@@ -91,7 +93,8 @@ hashes are committed (protocol §17.4; D64, decision 2; `THIRD_PARTY_LICENSES/RE
 ### 2.3 Python packages
 
 `pyproject.toml` requires `pydantic>=2.7,<3` and offers two extras, `data` (`pyarrow>=16`, `duckdb>=1.0`) and `dev`
-(`pytest>=8`, `pip>=24`), with the build backend `hatchling>=1.24`, so another install can resolve other versions.
+(`pytest>=8`, `pip>=24`), with the build backend `hatchling>=1.27` (since D84, for the PEP 639 licence fields), so another install can resolve
+other versions.
 Since D82, `constraints.txt` pins the versions below, and an install with `-c constraints.txt` reproduces them. The table gives every distribution installed in the build environment's `.venv` and the licence
 each declares in its metadata (`License-Expression`, else the `License` field and licence classifiers; ran).
 
@@ -107,7 +110,7 @@ each declares in its metadata (`License-Expression`, else the `License` field an
 | pip | 26.3 | MIT | `dev` extra: image builds download wheels with `python -m pip` |
 | hatchling | 1.33.0, the version that built the installed package (`Generator` in `.venv`'s `tracecontract-0.1.0.dist-info/WHEEL`) | MIT (License-Expression of its wheel) | build backend, used only at install time; not installed in `.venv` |
 
-The package itself, `tracecontract` 0.1.0, declares no licence: `pyproject.toml` has no licence field (§4, item 19).
+The package itself, `tracecontract` 0.1.0, declares the MIT licence (`pyproject.toml`, `LICENSE`; §4, item 19; D84).
 
 ### 2.4 Grading images
 
@@ -151,16 +154,16 @@ stay local, nothing of them is committed, and their wheels' licences are not inv
   FAIL_TO_PASS and PASS_TO_PASS selection (the SWE-bench family), and a separate verifier with artifact transfer
   (Harbor). They shaped audit:v1 and B1, and `docs/research_brief.md` and `paper/sections/related.tex` cite them.
 * Each component of the design has at least a partial precedent, notably SessionFarmer, SWE-Together and Trace2Eval
-  (paper §6, "Positioning"). The claim is limited to their conjunction (D34, awaiting the owner's confirmation). D80
-  added four references on overfitting in program repair, the test oracle problem and requirements change, each
-  checked against the Crossref record of its DOI.
+  (paper §6, "Positioning"). The claim was limited to their conjunction (D34); D84 takes the paper's present statement
+  of contribution, with D80's statement, as the claim (§4, item 9). D80 added four references on overfitting in program
+  repair, the test oracle problem and requirements change, each checked against the Crossref record of its DOI.
 
 ## 3. What was produced with AI assistance
 
 Everything below was produced by an AI coding agent, the build session, and the subagents it launched. So far it has
 been reviewed only by model agents (`STATUS.md`; D79, D80). The records name two agent configurations: A, the build
 session's default model, and B, the smallest model tier the agent tool offers, two tiers of one model family of one
-provider (D56, D80). This document names no model, as the paper names none; whether to name them is an owner decision
+provider (D56, D80). This document names no model, as the paper names none; D84 keeps them unnamed
 (§4, item 6).
 
 * **Code.** The package, CLI, tests, scripts, report and Harbor exporter. Through D82 that includes:
@@ -176,7 +179,7 @@ provider (D56, D80). This document names no model, as the paper names none; whet
     plan's data step (`scripts/build_training_selection.py`, `configs/downstream/rft_selection_v0.1.json`, output in
     `results/analyses/fresh-v1-training-selection/`) (D82).
 * **Protocol and records.** Protocol v0.1 and its amendments v0.2 to v0.12, each hashed before the runs it governs (D15
-  to D71); the decision log D1 to D83; the draft downstream-training plan (`experiments/downstream_plan_v0.1-draft.md`;
+  to D71); the decision log D1 to D84; the draft downstream-training plan (`experiments/downstream_plan_v0.1-draft.md`;
   not run, not adopted; D82); the annotation guide, data card, status and readiness documents, and this document.
 * **Controlled sessions.** The study's agent, the same model as the session agent, wrote the scenarios, including the
   scripted user turns, the corrections and the intended requirements that define the labels, and their reference
@@ -213,11 +216,14 @@ Where the decision log records an instruction or decision of the owner, this doc
 the approval to use SWE-chat (D4), the request for the re-audit (D47), and the reply that the build session took as
 approval of per-sample natural runs (D71). The records cited here attribute none of the work above to a person.
 
-## 4. Decisions and reviews only the human author(s) can make
+## 4. Decisions of the owner, and reviews only people can make
 
-From `STATUS.md` ("Owner decisions pending" and "Blocked") and D79 to D83, with items 1, 4, 5 and 20 completed from
-the checks behind this update. The records show none of them as taken; where the build applied a default, it is named
-as one.
+From `STATUS.md` and D79 to D84. On 2026-11-25 the owner asked the build session to settle the open decisions, said
+that the work is the owner's alone and gave the owner's Cornell address; D84 records each decision, and where the
+author's name comes from, and each item below ends with its outcome. None of these decisions is a
+review of the work by a person, and none claims a contribution of the author's that the records do not show. Items 1,
+2 (the reviews themselves), 3, 4 (the author's own review), 13, 21 and 23 stay open: they need people, money or the
+owner's own act.
 
 **Labels, the gate and the lead result**
 
@@ -238,6 +244,7 @@ as one.
      holds the decision this needs.
    * The workload is the 79 fresh-attempt patches, the pilot's 32 candidates and the contract reviews. The natural arm
      has no packet (D64, decision 8); D19 queues four ambiguous natural candidates (D76).
+   * *Open:* the labels need two people per task; no decision replaces them (D84).
 2. **The acceptance gate.** Reviews alone cannot open it (`STATUS.md`, "Blocked"; D51).
    * No command sets a provenance record to `eligible`. Decide where the provenance review is recorded: a sidecar, since
      `provenance.json` is frozen (D47).
@@ -248,20 +255,28 @@ as one.
      may, or whether it writes sidecars instead.
    * Confirm the gate's review rules: each reviewer's latest decision counts, and `edit` and `needs_discussion` block
      until a re-review accepts (DOCU-23; D51).
-3. **A labeler and generators from a second model family**, and the budget for them (paper §7).
+   * *Decided (D84):* the provenance review goes in a sidecar beside `provenance.json`; the gate keeps checking the
+     condition contracts; `merge-reviews` may write into the frozen candidate, contract and stratum files, and the
+     decision-log entry that records a merge gives the new hashes; the review rules stand. The reviews need people.
+3. **A labeler and generators from a second model family**, and the budget for them (paper §7). *Open:* no spending
+   is approved (D84).
 
 **The manuscript**
 
-4. **The author line, and a full review of the text by its human authors** before any submission (D80), with the
-   statements only they can make: authorship, AI use and competing interests. Section 9 says the work was "produced
-   with an AI coding agent under instructions from the human authors"; only they can say what they instructed, wrote
-   or checked. Every check of the bibliography so far is by model agents (D80; `STATUS.md`), so the authors' review
+4. **The author line, and a full review of the text by its author** before any submission (D80), with the
+   statements only they can make: authorship, AI use and competing interests. *Decided (D84):* the author line is Raj
+   Kashikar, Cornell University (rsk239@cornell.edu); Section 9 now says the work was "produced with an AI coding agent
+   under the author's instructions" and that the author is responsible for the content; no competing-interests
+   statement is added, and the author adds one if any applies. *Open:* the author's own review, which only the author
+   can do: only the author can say what they instructed, wrote or checked. Every check of the bibliography so far is by
+   model agents (D80; `STATUS.md`), so the author's review
    includes opening each reference and confirming each sentence that cites it.
 5. **The venue and the length.** The model reviewer that checked D80's round judged the paper close to a credible
    preprint as a methods or negative-results note, fit for a workshop or an arXiv note but not a main track; for a
    workshop the main text (22 pages at D80, about 23 now) would have to be cut to its page limit (D80, D83). For arXiv,
    the primary category, which
-   decides the endorsement route (`docs/submission_readiness.md`).
+   decides the endorsement route (`docs/submission_readiness.md`). *Decided (D84):* an arXiv preprint, primary
+   category cs.SE, cross-listed to cs.LG, at its present length.
 6. **Naming the models.** Also the model identifier in the committed controlled transcripts, which 439 assistant
    entries carry in their `model` field (CS-01 114, CS-02 162, CS-03 62, CS-04 101; counted in
    `data/controlled/transcripts/*.jsonl`; D79 gives 450, D83): keep it as the raw session
@@ -270,13 +285,17 @@ as one.
    decision log (the model family in D14 and D47), `STATUS.md`, `docs/data_card.md`, `data/controlled/README.md`,
    `data/manifests/provenance_index.json` and the commit messages' co-author and session lines; the generator and mapper
    ids under `tasks/*/`, the runs' `analysis.json` files and some scripts, modules and tests also name the agent tool.
+   *Decided (D84):* no model is named; the transcripts' `model` field stays as the raw record, since redacting it would
+   change frozen inputs, and the other mentions stay as they are.
 7. **D79's defaults**: the title; the AI-assistance statement's "an AI coding agent", with no model named; D72 and D75
    reported by role and kind, without counts; costs per family only; future work without sizes; builder decisions
-   disclosed as such; and the author line as a TODO and the working-draft subtitle until posting.
+   disclosed as such; and the author line as a TODO and the working-draft subtitle until posting. *Decided (D84):*
+   adopted, with the author line set, the working-draft subtitle removed and the date fixed.
 8. **The frozen pilot tables.** Whether they are re-frozen with the restructure's captions; until then they keep
-   'reward fidelity', 'pre-specified' and 'full', which App. F explains (D79).
+   'reward fidelity', 'pre-specified' and 'full', which App. F explains (D79). *Decided (D84):* they keep them.
 9. **The claim's wording.** D34 narrowed the claim to a conjunction, and D80 states the lead contrast as largely fixed
-   by construction. Confirm or revise both, in a new decision-log entry (the log is append-only).
+   by construction. Confirm or revise both, in a new decision-log entry (the log is append-only). *Decided (D84):* the
+   paper's present statement of contribution, with D80's statement.
 
 **Builder decisions awaiting review**
 
@@ -286,37 +305,49 @@ as one.
     regenerated. D73's reading of when D19 runs. D77: the harness relayed a message of the owner into all 28 natural
     agent runs of P5, and nothing was regenerated. D80's four: the move of the natural detail to App. G, the model
     statement's wording, two template sentences changed where the records contradict them, and counting natural
-    correction violators as the controlled tasks do.
+    correction violators as the controlled tasks do. *Decided (D84):* adopted as recorded, without a review.
 11. **What S10 admits.** Seven rejections follow from path requirements outside the workspace, generated version modules
-    and submodules, and three depend on pip's resolver and a 30-minute limit (D59).
+    and submodules, and three depend on pip's resolver and a 30-minute limit (D59). *Decided (D84):* they stand.
 12. **Whether pull-request review comments count as user corrections** for the claim (D47). D64, decision 1, reports
-    them as a construct difference.
+    them as a construct difference. *Decided (D84):* they do not count; the natural arm stays case studies.
 
 **Data, privacy and publication**
 
-13. **SWE-chat.** Accept its terms and supply a working token; the saved one fails authentication (D4).
+13. **SWE-chat.** Accept its terms and supply a working token; the saved one fails authentication (D4). *Open,* if it
+    is to be used (D84).
 14. **Whether the screening download records keep the fetched repositories' URLs** before publication (D50, D63).
+    *Decided (D84):* they keep them; the paper's ethics paragraph and the data card say what they link (D83).
 15. **The scan's open rules.** How it treats organisation accounts, before `--aidev-logins` loads both S9 samples (D66);
-    and whether standard-library import lines count as idioms in its optional screening-texts mode (D81).
+    and whether standard-library import lines count as idioms in its optional screening-texts mode (D81). *Decided
+    (D84):* the present scope stays, and standard-library import lines are not idioms.
 16. **Whether to delete the third-party session data and downloads** kept outside the repository
-    (`data/manifests/third_party_downloads.json`).
+    (`data/manifests/third_party_downloads.json`). *Decided (D84):* kept; a re-run needs them.
 17. **Git history.** Pushed commits still hold material that was later removed from the working tree, among it the
     exported research prompt, redaction rules and the build session's id; `STATUS.md` lists the commits
     (`docs/internal_review.md`, P1, P7, P9). A rewrite needs a force-push and cannot recall copies already fetched.
-18. **The commit trailers.** Whether to keep the co-author and session lines that end every commit message.
-19. **The licence of the repository and of released task data.** There is no `LICENSE` file, `pyproject.toml` declares
-    none, and `README.md` says the owner has not chosen one (`THIRD_PARTY_LICENSES/README.md`).
-20. **Whether, where and when the repository is made public.** The paper's §10 names no repository URL, commit or
-    licence (`paper/sections/reproducibility.tex`).
+    *Decided (D84):* not rewritten. The history is the study's provenance: the frozen-input check compares with
+    `c5ede4c`, `--design` reads the protocol's early versions, and the records cite commit hashes.
+18. **The commit trailers.** Whether to keep the co-author and session lines that end every commit message. *Decided
+    (D84):* kept.
+19. **The licence of the repository and of released task data.** *Decided (D84):* the code under the MIT licence
+    (`LICENSE`, declared in `pyproject.toml`), and the study's data, documentation and text under CC BY 4.0
+    (`LICENSE-DATA`); third-party material keeps its own (`THIRD_PARTY_LICENSES/README.md`); `CITATION.cff` gives the
+    citation, and the arXiv version is to carry CC BY 4.0.
+20. **Whether, where and when the repository is made public.** *Decided (D84):* it is public already, with
+    `claude/new-session-2khocq` as its default branch, and the paper's §10 gives its address and licences
+    (`paper/sections/reproducibility.tex`).
 
 **Spending and next steps**
 
 21. **Any paid model, compute or annotation budget** (default zero). Uses: a second model family; human reviewers;
     `natural-pr-v2`, for which the extension's S10 is to be redone (D66, D71); and a controlled expansion (§7). A
-    confirmatory run also needs the draft precision plan adopted by a later protocol version (D49).
+    confirmatory run also needs the draft precision plan adopted by a later protocol version (D49). *Open:* none is
+    approved (D84).
 22. **The downstream-training plan.** Whether to run it at all, and its open decisions O1 to O8 (plan section 11;
-    D82); a later protocol version must adopt it before any part runs.
-23. **Whether and when to submit anything** (`docs/submission_readiness.md`).
+    D82); a later protocol version must adopt it before any part runs. *Decided (D84):* not run; the plan stays a
+    draft.
+23. **Whether and when to submit anything** (`docs/submission_readiness.md`). *Open:* nothing is uploaded or
+    submitted, and no endorser contacted, without the owner's explicit instruction (D84).
 
 ## 5. Ten hard questions a skeptical expert would ask
 
@@ -619,7 +650,8 @@ repository. Every command below was run for this update, except where an exercis
 Observe (ran on 2026-11-24 with this round's 90 new tests, D82: 17 in `tests/test_review_packet_strata.py` and 73 in
 `tests/test_build_training_selection.py`; in a checkout without the git-ignored `data/natural/`, with the Docker daemon
 up):
-* with the base snapshots built (E5): 1,435 passed and 9 skipped, each naming the natural data it needs;
+* with the base snapshots built (E5): 1,435 passed and 9 skipped, each naming the natural data it needs (1,436 on
+  2026-11-25, with D84's scanner test);
 * without them: 1,421 passed and 23 skipped (14 name the snapshot to build);
 * with the daemon down, pytest skips the Docker probe module at collection, which adds one skip and leaves 1 deselected
   test instead of 20.
@@ -629,7 +661,8 @@ about 4 minutes, and 1,331 without them.
 
 The Docker suite's 20 tests passed on 2026-11-24 in the build checkout with this round's changes (D82), as they did on
 2026-11-23 at `2daa725` and at `a0542bb` (D52). In the build checkout, which holds the natural data, all 1,444
-offline tests passed (D82).
+offline tests passed (D82), and all 1,445 with D84's
+scanner test, as did the 20 Docker tests (2026-11-25).
 Then read `tests/test_sandbox_isolation.py`. Most probes try to break the grading boundary, and each regression probe
 names in its docstring the decision-log entry of the defect it guards (D29, D30, D36, D40, D44, D46, D51).
 
@@ -651,7 +684,7 @@ entries) and "wrote 4 files to paper/generated/natural" (217). The generator rew
 bytes, and the build's outputs are git-ignored, so `git status` stays empty. The build (run in a scratch copy on
 2026-11-24, after the corrections that followed the reviews of `f3ae845`) gives a 77-page PDF in about 10 s: Section
 10 begins on page 23, where the references start, and App. A on page 27; the log has no overfull box and no LaTeX
-warning, and the PDF's text has one TODO, the author line.
+warning, and the PDF's text has no TODO (D84 set the author line; rebuilt on 2026-11-25).
 
 **E3. Re-derive the lead analysis from the recorded results, without grading.**
 `cp -r results/runs/fresh-v1 <scratch>/fresh-v1`, then

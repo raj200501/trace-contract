@@ -1,0 +1,27 @@
+Data, documentation and manuscript licence
+
+Copyright (c) 2026 Raj Kashikar
+
+The data, documentation and manuscript text that this study created are licensed under
+the Creative Commons Attribution 4.0 International licence (CC BY 4.0):
+https://creativecommons.org/licenses/by/4.0/
+
+This covers, for example, the task records, contracts and labels under tasks/, the
+records under data/ and results/, the documents under docs/ and experiments/, and the
+LaTeX sources, figures and tables under paper/, except for the material listed below.
+
+Not covered by this licence:
+
+* Code. The source code that the study wrote (src/, scripts/, tests/, the generators
+  under paper/, the workflow scripts under experiments/, and the study's own verifier
+  tests under tasks/) is under the MIT licence in LICENSE. Upstream code under tasks/
+  (the upstream test files in tasks/*/verifiers/repo_tests/overlay/ and
+  tasks/*/labels/base_tests_overlay/, and the upstream code that some verifier tests
+  copy) keeps its own licence (next item).
+* Third-party material, which keeps its own licence: upstream code and the upstream
+  lines in candidate patches and transcripts (each source repository's licence), and
+  the records extracted from AIDev v5 (its CC BY 4.0 compilation licence, with the
+  attribution it requires), and quotations from other works in the documents (for
+  example the arXiv pages quoted in docs/submission_readiness.md and the sources quoted
+  in docs/research/). THIRD_PARTY_LICENSES/README.md lists where the upstream code and
+  the AIDev records are.

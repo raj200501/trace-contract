@@ -1,0 +1,29 @@
+cff-version: 1.2.0
+message: >-
+  If you use this software or its data, please cite it as below. The code is under the
+  MIT licence (LICENSE); the data, documentation and text that the study created are
+  under CC BY 4.0 (LICENSE-DATA); third-party material keeps its own licence
+  (THIRD_PARTY_LICENSES/README.md).
+title: "TraceContract: verifiers of session-derived coding tasks and the corrections they miss"
+abstract: >-
+  Correction-aware task contracts and reward-fidelity auditing for coding tasks rebuilt
+  from agent sessions: a pipeline, frozen verifiers, sandboxed grading, the recorded runs
+  and the manuscript "When the First Request Is Not the Task: Verifiers of
+  Session-Derived Coding Tasks and the Corrections They Miss". An automated study:
+  all labels are model proposals, and no human labels exist.
+type: software
+authors:
+  - family-names: Kashikar
+    given-names: Raj
+    affiliation: Cornell University
+    email: rsk239@cornell.edu
+version: 0.1.0
+date-released: 2026-11-25
+license: MIT
+repository-code: "https://github.com/raj200501/trace-contract"
+keywords:
+  - agent sessions
+  - coding tasks
+  - verifiers
+  - reward fidelity
+  - benchmarks

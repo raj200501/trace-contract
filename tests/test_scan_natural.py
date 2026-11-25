@@ -428,6 +428,20 @@ def test_a_bare_name_counts_in_the_natural_arms_own_files_only(natural):
     assert not hasattr(scan, "NAME_ALLOW")  # no list of reviewed words: the scope rule decides
 
 
+def test_only_the_authors_published_address_is_allowed():
+    """D84: the owner gave the author's Cornell address for publication. That address alone is allowed (in any case);
+    another address at the same domain, or one that only starts with it, is still reported."""
+    def found(line: str) -> int:
+        with contextlib.redirect_stdout(io.StringIO()):
+            return scan.scan_text(line, "README.md", [])
+    assert found("Author: Raj Kashikar, Cornell University (rsk239@cornell.edu)\n") == 0
+    assert found("Author: RSK239@Cornell.EDU\n") == 0
+    at = "@"  # built at run time, as in the e-mail tests below, so that the scan of this file reports no address
+    assert found(f"Contact: fx-person{at}cornell.edu\n") == 1
+    assert found(f"Contact: rsk239x{at}cornell.edu\n") == 1
+    assert found(f"Contact: rsk239{at}cornell.edu.mail-fixture.io\n") == 1
+
+
 def test_every_exemption_states_its_reason():
     for path, (key, reason) in scan.NATURAL_RECORDS.items():
         assert path.startswith("data/") and re.fullmatch(r"[a-z_]+", key) and isinstance(reason, str) and len(reason) > 40
@@ -874,7 +888,7 @@ def test_screening_texts_on_the_command_line(tasks_root, screening, tmp_path):
 
 def test_aidev_logins_are_those_of_the_first_sample_only(tmp_path):
     """--aidev-logins loads the logins connected to the PRs of the first S9 sample only, as before the natural package:
-    the extension's (S9x, protocol §19.2) await the owner's decision on organisation accounts (decision log D66). Every
+    the extension's (S9x, protocol §19.2) are not loaded until the extension's S10 is redone (decision log D66, D84). Every
     account of the first sample's PRs is kept, an owner that acts as an account included: no list leaves one out. The
     screening texts, by contrast, must cover the comments of both samples."""
     pa = pytest.importorskip("pyarrow")

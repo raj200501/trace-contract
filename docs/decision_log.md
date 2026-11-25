@@ -3563,3 +3563,127 @@ number in the paper changed; one generated table caption gained a sentence.
   * ruff: no new finding in the changed Python files;
   * the pre-push scan: 0 findings, exit code 0, in the working tree before the commit, with the private markers, the
     AIDev logins and the natural texts given; it is run again on the commit before the push.
+
+### D84. The owner's instruction to finalize: the author line, the licences, and the open owner decisions settled
+Times are UTC, 2026-11-25. No run, recorded label, result, task record, frozen file or protocol line changed, and no
+number in the paper changed.
+* **The instruction.** The owner asked the build session to finalize the repository and to "infer all things", that
+  is, to settle the open owner decisions itself, and said who the author is: the owner alone, with the address
+  rsk239@cornell.edu given as the affiliation. The name in the author line, Raj Kashikar, is the one under which every
+  commit of this repository is authored (the commits' author field), and Cornell University is the institution of the
+  address's domain, cornell.edu. Each decision below was taken by the build session on that instruction. None is a
+  review of the work by a person, and none claims a personal contribution that the records do not show.
+* **The author and the paper.**
+  * The author line is Raj Kashikar, Cornell University, rsk239@cornell.edu, in the paper, in `pyproject.toml` and in
+    the new `CITATION.cff`. The PDF's author field is set.
+  * The working-draft subtitle is removed: arXiv expects complete drafts, and the disclosure stays in the title note
+    and the abstract. The date is fixed (November 25, 2026).
+  * The AI-assistance paragraph (§9) names one author: the work was produced with an AI coding agent under the
+    author's instructions, and the author is responsible for the content. Its list of what agents produced now also
+    names the protocol and its amendments, the decision log, and this text in its drafts and revisions. The rest is
+    unchanged: the model family stated without a name, and that no human wrote, reviewed or adjudicated the
+    scenarios, the reference contracts, the labels or the internal reviews. No competing-interests statement is added;
+    if one applies, the author adds it.
+  * Section 10 gives the repository's address and its licences. The repository is public already, and its default
+    branch is `claude/new-session-2khocq`: a query of GitHub's repository search on 2026-11-25 returned it with
+    visibility `public` and that default branch.
+  * §9's privacy paragraph says that the download records' URLs stay (below), and App. G's first paragraph says that
+    the caveats on the build's process keep the wording of the analysis.
+  * D79's defaults are adopted: the title; "an AI coding agent", with no model named; D72 and D75 reported by role and
+    kind, without counts; costs per family only; future work without sizes; builder decisions disclosed as such.
+  * The claim's wording is the paper's present statement of contribution (§1 Contributions, §6 Positioning), and D80's
+    statement that the lead contrast is largely fixed by construction stands. D34's conjunction needed human labels.
+  * The venue: an arXiv preprint, primary category cs.SE, cross-listed to cs.LG, at its present length. Endorsement
+    for that category is checked at upload.
+  * For arXiv, `references.bib` is uploaded with the source, and `main.bbl` left out, so that arXiv runs Biber: the local `main.bbl` is in
+    format 3.2, which arXiv's default TeX Live 2025 does not read (`docs/submission_readiness.md`). The arXiv licence
+    is CC BY 4.0.
+  * The frozen pilot tables keep their recorded captions, as App. F explains: re-freezing them would change frozen
+    files.
+* **Licences.** The code is under the MIT licence (`LICENSE`). The data, documentation and manuscript text that the
+  study created are under CC BY 4.0 (`LICENSE-DATA`). Third-party material keeps its own licence
+  (`THIRD_PARTY_LICENSES/README.md`): the upstream code and the upstream lines in candidate patches and transcripts,
+  and the records extracted from AIDev v5, under its CC BY 4.0 compilation licence with its attribution.
+  `pyproject.toml` declares `license = "MIT"` and the author, and requires hatchling 1.27 or later for these fields; an
+  install from a scratch copy with `-c constraints.txt` reproduced the pinned versions and the new metadata.
+  `THIRD_PARTY_LICENSES/README.md` now also lists the fresh attempts' patches (`tasks/*/strata/fresh-v1/candidates/`)
+  among the paths that hold upstream code. `CITATION.cff` declares MIT for the software and states the split in its
+  message, since a list of licences there would mean alternatives. `LICENSE-DATA` leaves out upstream code and
+  quotations from other works, and the package's sdist holds the package only.
+* **The scan.** `scripts/scan_tracked_files.py` reports every e-mail address that is not on its allowlist, so it
+  reported the author's address in each file that now gives it. The address is added to the allowlist, with its
+  reason, as the scanner's other public addresses are. A new test in `tests/test_scan_natural.py` shows that it alone
+  is allowed, in any case, and that another address at the same domain, or one that only starts with it, is still
+  reported; with the entry removed, the test fails. The scan is otherwise unchanged.
+* **Models and records.**
+  * The models stay unnamed in the paper and in the documents, as the owner's rule of no model identifiers in
+    repository files asks.
+  * The committed controlled transcripts keep their `model` field as the raw session record: redacting it would change
+    frozen inputs whose hashes the runs record.
+  * The commit messages' co-author and session lines stay; they are in pushed history.
+  * The git history is not rewritten. It is the study's provenance: the frozen-input check compares with `c5ede4c`,
+    `paper/make_tables.py --design` reads the protocol's early versions, and the records cite commit hashes, all of
+    which a rewrite would change. A rewrite would also need a force-push and could not recall copies already fetched
+    from the public repository. The pushed history therefore keeps the material that `STATUS.md` lists, the owner's
+    context among it.
+  * The third-party data and downloads kept outside the repository are kept; a re-run needs them.
+* **Builder decisions and rules.**
+  * The builder decisions that awaited review are adopted as recorded, without a review: D63's defaults, D64's
+    (deviation (i) and decision 17 among them), D69's privacy-tool defaults, D72, D73's reading of when D19 runs,
+    D77's on the harness relay, and D80's four. The paper still marks those of the natural arm and the privacy tools as
+    builder decisions that no person reviewed (§2.1, §8, §9, App. A, App. B, App. G), and says that the build session
+    adopted them on the owner's instruction; D80's four concern the paper's own text and are not marked in it.
+  * S10's rejections stand as D59 records them.
+  * Pull-request review comments do not count as in-session user corrections for the claim. The natural arm stays a
+    set of exploratory case studies, reported per family (D64, decision 1).
+  * The screening download records keep the fetched repositories' URLs: they are public and needed for provenance and
+    for AIDev's attribution. The paper's ethics paragraph and the data card say what they link (D83).
+  * The scan keeps its present scope: `--aidev-logins` loads the first sample's logins and names, and the extension's
+    are loaded when its S10 is redone. Standard-library import lines are not idioms, so D81's remaining finding stays a
+    finding of the optional mode.
+  * The acceptance gate keeps its review rules (DOCU-23, D51) and keeps checking the condition contracts. A provenance
+    review is to be recorded in a sidecar beside `provenance.json`, which D47 froze. `merge-reviews` may append human
+    labels to the frozen candidate files, the reference contracts and the fresh attempts' stratum files; the
+    decision-log entry that records a merge will give the new hashes.
+* **Not run and not spent.** No spending was approved, so none is made: no second model family, no human reviewers,
+  no `natural-pr-v2`, no controlled expansion and no downstream training. The plan stays a draft, not adopted. SWE-chat
+  stays unused, its terms not accepted (D4).
+* **What a decision cannot settle.** These need people, money or the owner's own act:
+  * human labels, two reviewers per task;
+  * the provenance reviews that set eligibility, and human coding of the S9 screening;
+  * the author's own reading of the paper and of each reference before upload: the brief requires that the human
+    authors review and take responsibility for the work, and every check so far is by model agents;
+  * any upload, submission or contact with an endorser, which needs the owner's explicit instruction (the brief).
+* **Documents brought into line:** `README.md` (the status box, the licence, the citation, and the passages that called
+  these decisions open), `STATUS.md` (the settled decisions under their own heading), `docs/submission_readiness.md`
+  (the status, the decisions and the checklists), `docs/ownership_and_defense.md` (§2.3 and §4), `docs/data_card.md`,
+  `docs/annotation_guide.md`, `THIRD_PARTY_LICENSES/README.md`, `paper/README.md`, the docstrings of the scanner and
+  of `paper/check_numbers.py`, and the paper's sentences on builder decisions that awaited the owner's review (§2,
+  §8, §9, App. A, App. G's first paragraph, App. I). App. G's caveats keep their wording, which records the state when
+  the run was analysed.
+* **The final review.** Before the commit, three read-only model reviewers read the working tree, one each for the
+  paper, the documents and the rules, and an adversarial verifier checked each lens's findings. Of 53 findings, 50
+  were confirmed and 3 refuted; several confirmed ones are one issue seen through two lenses, and all were applied
+  before the commit. The most important: the scanner's new test wrote three addresses that the scan would report;
+  §2 and App. A credited the owner with adopting decisions that the build session took; `THIRD_PARTY_LICENSES/`
+  still called the licence undecided; §9 still called the URLs' fate open; and the data card still said that the
+  owner's identity appears only as the commit author.
+* **Verification** (the build session, 2026-11-25, on the final working tree; the Docker daemon was restarted for it):
+  * the tests: 1,465 collected, 1,445 offline and 20 Docker. In the build checkout all 1,445 offline tests and the 20
+    Docker tests passed; in a fresh clone with the base snapshots copied in and no natural data, 1,436 passed and 9
+    skipped for want of the natural data. The new scanner test fails with the allowlist entry removed;
+  * every mode of `paper/make_tables.py` and `paper/make_figures.py` rewrote its outputs byte for byte, and
+    `scripts/build_training_selection.py --check` regenerates its two files byte for byte;
+  * `scripts/verify_frozen_inputs.py`: OK, with 0 frozen files changed, 130 of 135 input hashes matching (the other 5
+    are exempt analysis code), 4 of 4 snapshots, and the protocol and decision log append-only;
+  * `scripts/check_abstract.py`: 1,897 of 1,900 characters; `paper/check_numbers.py`: 22 files, 0 findings;
+  * a build from a clean copy of the tracked paper files: 77 pages, Section 9 on page 22, Section 10 and the
+    references from page 23, Appendix A from page 27; no overfull box, LaTeX or Biber warning or undefined
+    reference; no TODO and no `UNFILLED` marker; the PDF's title and author fields set; no model, provider or
+    agent-product name in the PDF text;
+  * the package's metadata, from an install of a scratch copy with `-c constraints.txt`: `License-Expression: MIT`,
+    the licence file, the author with the address and the repository URL; the pinned versions reproduced;
+  * ruff: no new finding in the changed Python files;
+  * the scan: the generic rules give 0 findings in the working tree; the pre-push scan, with the private markers, the
+    AIDev logins and the natural texts given, gives 0 findings and exit code 0 before the commit, and is run again
+    on the commit before the push.

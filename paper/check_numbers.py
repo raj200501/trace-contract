@@ -2,7 +2,8 @@
 
 Usage: python paper/check_numbers.py [FILE.tex ...] [--generated DIR]
 
-Default: main.tex's title and body and every section file that main.tex inputs (``\\input{sections/...}``); the
+Default: main.tex's title, author line and body (not its ``\\date`` line, the fixed date that decision-log entry D84
+sets) and every section file that main.tex inputs (``\\input{sections/...}``); the
 generated tables and figures are not read, since make_tables.py and make_figures.py write every number in them from a
 record and list it in their ledgers. Reported, one line each (``file:line: kind: token``):
 

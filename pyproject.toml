@@ -4,6 +4,9 @@ version = "0.1.0"
 description = "Correction-aware task contracts and reward-fidelity auditing for trace-derived coding tasks"
 readme = "README.md"
 requires-python = ">=3.12"
+license = "MIT"  # the package is code; the data and text licence is in LICENSE-DATA
+license-files = ["LICENSE"]
+authors = [{ name = "Raj Kashikar", email = "rsk239@cornell.edu" }]
 dependencies = [
   "pydantic>=2.7,<3",
 ]
@@ -18,15 +21,21 @@ dev = [
   "pip>=24",  # image builds download pinned wheels with `python -m pip` (sys.executable)
 ]
 
+[project.urls]
+Repository = "https://github.com/raj200501/trace-contract"
+
 [project.scripts]
 tracecontract = "tracecontract.cli:main"
 
 [build-system]
-requires = ["hatchling>=1.24"]
+requires = ["hatchling>=1.27"]  # PEP 639 licence fields
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/tracecontract"]
+
+[tool.hatch.build.targets.sdist]
+only-include = ["src/tracecontract"]  # the package only, as the MIT licence declared above covers
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

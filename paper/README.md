@@ -1,6 +1,7 @@
-# Manuscript draft
+# Manuscript
 
-`main.tex` is a working draft. Build it from this directory with `latexmk -pdf main.tex` (needs `biber`); send the
+`main.tex` is the manuscript, prepared as an arXiv preprint (D84); it is not peer reviewed and awaits
+the author's review before upload. Build it from this directory with `latexmk -pdf main.tex` (needs `biber`); send the
 console output to a file of another name than `main.out`, which hyperref writes. Regenerate the tables, numbers and
 figures first (the commands below and the top-level README).
 
@@ -38,14 +39,15 @@ its destination, with its decision-log entries, protocol sections, names, number
 Rules for this directory:
 
 * Every number in the text is a macro of a generated `numbers.tex` (`\fv`, `\nat`, `\nrv`, `\plv`, `\dv`), whose value
-  an evidence ledger lists with the file and field it comes from; dates and times in prose too. Every number in
+  an evidence ledger lists with the file and field it comes from; dates and times in prose too. The title page's
+  fixed date (D84) is not a macro: `check_numbers.py` does not read main.tex's `\date` line. Every number in
   `generated/*.tex` and its subdirectories is produced by `make_tables.py` or `make_figures.py` from recorded files.
   `check_numbers.py` reports any number outside a macro (below).
 * `references.bib` contains only entries checked by model agents against primary sources, with no human check yet
   (date of check in the file header). The literature that no checked entry covers yet is named as a gap in the threats
   to validity, without a citation.
-* The posted PDF holds no `UNFILLED` marker, no undefined reference and no `TODO` but the author line, which stays a TODO
-  for the human authors, as the working-draft subtitle stays until posting (the owner's defaults).
+* The posted PDF holds no `UNFILLED` marker, no undefined reference and no `TODO`. The author line, the fixed date
+  and the removal of the working-draft subtitle are decision-log entry D84's.
 * No model identifier, agent-tool name or product name. The paper says what the records name and no more anonymity than
   they keep: the protocol and the decision log name the agent tool and define configuration A as the build session's
   default model and B as the smallest model tier the tool offers, of one model family of one provider; the commit
@@ -54,7 +56,7 @@ Rules for this directory:
   are named, among other places, in `STATUS.md`, `docs/data_card.md`, `docs/internal_review.md`,
   `docs/research_brief.md`, `data/controlled/README.md`, `data/manifests/provenance_index.json`, the screening and audit
   records under `data/`, the exported prompts under `experiments/prompts/` and the ingestion module's name
-  (`src/tracecontract/ingest/`); whether these stay is the owner's decision on naming the models. The paper names none
+  (`src/tracecontract/ingest/`); these stay, as D84 decided. The paper names none
   (Section 2.1; the AI-assistance statement says "an AI coding agent"). The natural template keeps its stricter rule:
   no tier wording (`tests/test_natural_template.py`).
 

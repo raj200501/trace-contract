@@ -11,9 +11,9 @@
 \usepackage{longtable}
 \usepackage{array}
 \usepackage[hidelinks]{hyperref}
-% The PDF's title field; its author field stays empty until the human authors are decided.
+% The PDF's title and author fields (the author line of decision-log entry D84).
 \hypersetup{pdftitle={When the First Request Is Not the Task: Verifiers of Session-Derived Coding Tasks and the
-  Corrections They Miss}}
+  Corrections They Miss}, pdfauthor={Raj Kashikar}}
 \usepackage[style=numeric,sorting=none,maxbibnames=6]{biblatex}
 \addbibresource{references.bib}
 
@@ -38,15 +38,16 @@
 \IfFileExists{generated/pilot/numbers.tex}{\input{generated/pilot/numbers.tex}}{}
 \IfFileExists{generated/design/numbers.tex}{\input{generated/design/numbers.tex}}{}
 
-\title{When the First Request Is Not the Task:\\Verifiers of Session-Derived Coding Tasks\\and the Corrections They Miss\thanks{Automated pilot: all labels are model proposals; no human labels exist.}\\[4pt]\large Working draft --- not peer reviewed; automated study with model-proposed labels, no human labels}
-\author{\todo{authors and affiliations to be decided by the human authors}}
-\date{\today}
+\title{When the First Request Is Not the Task:\\Verifiers of Session-Derived Coding Tasks\\and the Corrections They Miss\thanks{Automated pilot: all labels are model proposals; no human labels exist.}}
+\author{Raj Kashikar\\Cornell University\\\texttt{rsk239@cornell.edu}}
+\date{November 25, 2026}
 
 \begin{document}
 \maketitle
 
 % The main text in the order of the restructure plan (part 2): the owner's defaults settle its open questions (the
-% title is the plan's option 2; the author line and the working-draft subtitle stay until posting).
+% title is the plan's option 2). The author line, the fixed date and the removal of the working-draft subtitle are
+% decision-log entry D84's.
 \input{sections/abstract}
 \input{sections/introduction}
 \input{sections/design}

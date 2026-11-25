@@ -28,6 +28,7 @@ tinydb, `CS-03` inflection, `CS-04` more-itertools).
 | `tasks/*/labels/base_tests_overlay/` | The upstream test files at the pinned commit, unchanged (byte-identical). |
 | `tasks/*/verifiers/repo_tests/overlay/` | The same upstream test files. In one file per task the study added the tests of the reference solution (CS-01 `tests/test_filesize.py`, CS-02 `tests/test_storages.py`, CS-03 `test_inflection.py`, CS-04 `tests/test_more.py`); the upstream lines are unchanged. |
 | `tasks/*/candidates/*.json` | Candidate patches as unified diffs against the upstream source. Their context and removed lines are upstream code. |
+| `tasks/*/strata/fresh-v1/candidates/*.json` | The fresh attempts' patches, as unified diffs against the upstream source. Their context and removed lines are upstream code. |
 | Verifier tests copied from upstream | `tasks/CS-02/verifiers/initial_plain/tests/test_existing_suite.py` and `tasks/CS-02/verifiers/initial_audited/tests/test_existing_suite.py` are mostly upstream tinydb tests. `tasks/CS-03/verifiers/initial_{plain,audited}/tests/test_preserved_behaviour.py` embed inflection's `inflection/__init__.py` at the pinned commit (docstrings removed) and reuse upstream test lines. `tasks/CS-01/verifiers/{full_plain,full_audited,llm_freeform}/tests/test_naturalsize_strip_trailing_zero.py` copy humanize's `naturalsize` as a helper or oracle, and `tasks/CS-01/verifiers/reference_check/tests/test_reference_check.py` re-implements it as `_base_naturalsize`. `tasks/CS-03/verifiers/full_{plain,audited}/tests/test_titleize_acronyms.py` copy about 15 lines of inflection's `underscore`, `humanize` and `titleize` as `_base_*` helpers, and `tasks/CS-03/verifiers/reference_check/tests/test_{underscore_unchanged,humanize_unchanged,titleize_all_caps}.py` copy inflection's `underscore`, `humanize` and `titleize`. `tasks/CS-04/verifiers/initial_{plain,audited}/tests/test_consecutive_groups_step.py` reuse the three `ConsecutiveGroupsTest` cases of more-itertools' `tests/test_more.py` and the three `consecutive_groups` docstring examples of `more_itertools/more.py` at the pinned commit. |
 | `results/runs/*/report.html` | The candidate patches, embedded as unified diffs (upstream context and removed lines). The reports now also embed the licence notices of this folder (decision log D43); the older reports of `pilot-v0.3` and `pilot-v0.3.1` do not. |
 | `data/controlled/transcripts/*.jsonl` | Excerpts of upstream files in the agent's tool results. |
@@ -42,8 +43,9 @@ is kept because the licence requires the notice to be reproduced as published.
 
 These licences cover only the upstream code. Study-authored files (contracts,
 generated verifier tests, labels, transcripts as a whole, scripts and the package)
-are not covered by them. The repository's own licence is still to be decided (see
-`STATUS.md`).
+are not covered by them. They are under the repository's own licences: the code under
+the MIT licence (`LICENSE`), and the data, documentation and manuscript text under
+CC BY 4.0 (`LICENSE-DATA`; decision log D84).
 
 ## Dataset of the natural PR-review arm
 

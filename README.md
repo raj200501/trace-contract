@@ -19,8 +19,8 @@ and grades them in a sandbox on held-out agent patches, against labels from a pr
 >   the corrections included, the study scripted. They are not natural user traffic.
 > * **Natural case studies.** Six pull-request-review families from AIDev v5 were built and graded (run
 >   `natural-pr-v1`) and are reported as exploratory case studies, family by family.
-> * **Manuscript.** [`paper/`](paper/README.md) builds a 77-page working draft (main text about 23 pages), which
->   awaits review by its human authors. Current state and open decisions: [STATUS.md](STATUS.md).
+> * **Manuscript.** [`paper/`](paper/README.md) builds a 77-page preprint (main text about 23 pages) by Raj Kashikar
+>   (Cornell University), not peer reviewed. Current state and decisions: [STATUS.md](STATUS.md).
 
 ## In short
 
@@ -112,11 +112,11 @@ paper Sections 3 and 5.
   it. Its tested data step (`scripts/build_training_selection.py`, `configs/downstream/`) lists what each verifier
   would admit from the recorded fresh attempts (`results/analyses/fresh-v1-training-selection/`): a post hoc
   illustration that measures no training value.
-* **Tests:** 1,464 (1,444 offline, 20 Docker). On 2026-11-24 all of them passed in the build checkout; in a clone
+* **Tests:** 1,465 (1,445 offline, 20 Docker). On 2026-11-25 all of them passed in the build checkout; in a clone
   with the base snapshots built, 9 offline tests skip, since they need the unpublished natural data; in a fresh clone,
   before the snapshots are built, 14 more skip.
 * **Records:** a protocol hashed and logged locally before each run it governs (`experiments/protocol.md`; not a
-  formal preregistration), a decision log (D1 to D83), run manifests with code revisions, image identifiers and
+  formal preregistration), a decision log (D1 to D84), run manifests with code revisions, image identifiers and
   hashes, and the prompts that produced the model-written artifacts (`experiments/prompts/`).
 
 ## Quick start
@@ -223,8 +223,8 @@ Each item names its evidence and its caveat; section, table and figure numbers r
     from the requester, and the reference is the addressing commit, not an oracle. The extension's replay (S10) was
     stopped at a usage limit and is to be redone, with its own run, `natural-pr-v2` (protocol §20).
   * The committed scan's `--aidev-logins` mode loads the logins connected to the first S9 sample only. A one-off scan
-    with both samples found no person's login (D66); extending the committed scan needs the owner's decision on
-    organisation accounts.
+    with both samples found no person's login (D66); the scan keeps that scope until the extension's S10 is redone,
+    and loading the extension's logins then needs a rule for organisation accounts (D66, D84).
 * **No task passes the acceptance gate** (`tracecontract accept-task tasks/<id> --dry-run`), so every run is an
   automated pilot (`--pilot`).
 * **The held-out discipline is imperfect,** and each departure is disclosed in decision log D31, D37, D40, D41 and D44:
@@ -441,7 +441,7 @@ How to read this:
   * Each requirement carries a status (explicit, inferred, superseded or unresolved) and the turn that introduced it;
     explicit requirements carry exact quotes from the session.
   * Superseded requirements are never scored.
-  * **Acceptance gate** (`src/tracecontract/contract.py`; its rules await the owner's confirmation, D51). A task passes
+  * **Acceptance gate** (`src/tracecontract/contract.py`; its rules stand, D51, D84). A task passes
     only if its provenance record is `eligible`, its reconstruction record passed and was made from the current files,
     and every contract it lists is valid, has no unresolved requirement and has each scored inferred requirement (in
     the reference contract, each scored requirement) accepted by human review. Each human reviewer's latest decision
@@ -500,7 +500,8 @@ How to read this:
     attempt. Each reviewer therefore records an origin guess per candidate, and the merge reports how often the guesses
     on the tasks' own candidates are right. The key stays with a coordinator, and `tracecontract merge-reviews` needs
     two complete reviews per task (`docs/annotation_guide.md`, decision log D43, D44). It writes the reviews into the
-    candidate files and the reference contract, which D47 freezes; whether it may is an owner decision (STATUS.md).
+    candidate files and the reference contract, which D47 freezes; it may, and the decision-log entry that records a
+    merge gives the new hashes (D84).
     The packet takes the candidates that `task.json` lists and, with `--strata fresh-v1`, the fresh attempts that the
     analysis queues for review, which are stratum candidates. Their labels go to their files in the stratum, whose
     hashes `fresh-v1`'s `analysis.json` records among its inputs; since no guess option names a fresh attempt's
@@ -523,8 +524,9 @@ SessionFarmer, SWE-Together and Trace2Eval. What the paper adds is narrow (paper
 correction-aware verifiers from the same frozen procedure, scored on attempts by agents that did or did not see the
 correction, with their own violations as negatives; and natural case studies. The claim that decision log D34 records
 is a conjunction that also needs a held-out pool anchored on the sessions' own pre-correction states (the construction
-pilot's) and independent human labels, which do not exist yet; that wording awaits the owner's confirmation
-(`docs/ownership_and_defense.md`, §4 item 9), and paper §7 describes the design to aim for once human labels exist.
+pilot's) and independent human labels, which do not exist yet; the claim is the paper's present statement of
+contribution (D84; `docs/ownership_and_defense.md`, §4 item 9), and paper §7 describes the design to aim for once
+human labels exist.
 The pool's departures from blindness are listed under Limitations.
 
 ## Reproduce in full
@@ -559,11 +561,11 @@ uv venv --python 3.13 .venv && uv pip install --python .venv/bin/python -c const
 ```
 
 `.venv/bin/python -m pytest --collect-only -q` lists the tests, all of them only with a reachable Docker daemon: without
-one, `tests/test_sandbox_isolation.py` is skipped whole at collection, and 19 fewer are listed. It lists 1,464: 1,444
+one, `tests/test_sandbox_isolation.py` is skipped whole at collection, and 19 fewer are listed. It lists 1,465: 1,445
 offline and 20 Docker. In a fresh clone 23 offline tests skip: 14 until the base snapshots are built (next block),
-and 9 that need the git-ignored natural data (`data/natural/`), which is not published. On 2026-11-24, in a clone with
-the snapshots built, 1,435 offline tests passed and 9 skipped; in the build checkout, which holds the natural data,
-all 1,444 offline tests and the 20 Docker tests passed (D82).
+and 9 that need the git-ignored natural data (`data/natural/`), which is not published. On 2026-11-25, in a clone with
+the snapshots built, 1,436 offline tests passed and 9 skipped; in the build checkout, which holds the natural data,
+all 1,445 offline tests and the 20 Docker tests passed (D84).
 
 ### Tasks, grading and runs
 
@@ -719,8 +721,8 @@ threads, stay in the git-ignored `data/natural/`, and its raw results are git-ig
 re-graded nor re-analysed from the release. Its tables regenerate from the published `analysis.json`. The natural
 arm's screening and download records (`data/manifests/`) also hold the commented files' paths, 120 checked
 model-written paraphrases of qualifying review comments, and the URLs of the 63 repositories of stage S9 with the
-pull-request refs fetched there (owners that act in AIDev masked as `{owner}`); whether the URLs stay before
-publication is the owner's decision (`docs/data_card.md`, Personal information; STATUS.md). Every number in the
+pull-request refs fetched there (owners that act in AIDev masked as `{owner}`); the URLs stay, as public provenance
+(D84; `docs/data_card.md`, Personal information). Every number in the
 paper's generated tables and macros has an entry in an evidence ledger (`paper/evidence_ledger*.md`) with its source
 file.
 
@@ -759,8 +761,18 @@ scripts/             label proposals, construction checks, review queues, duplic
                      publication, agent workspaces, abstract check, training selection
 docs/                research brief, decision log, data card, annotation guide, internal review, status docs
 THIRD_PARTY_LICENSES/ licence notices of the redistributed upstream code
-paper/               LaTeX draft, bibliography checked by model agents, table and figure generators, number checker,
-                     evidence ledgers
+paper/               LaTeX manuscript, bibliography checked by model agents, table and figure generators, number
+                     checker, evidence ledgers
+LICENSE              MIT licence of the code
+LICENSE-DATA         CC BY 4.0 licence of the study's data, documentation and text
+CITATION.cff         citation metadata
 ```
 
-Licence: not yet chosen by the repository owner.
+## Licence and citation
+
+The code is under the MIT licence ([`LICENSE`](LICENSE)). The data, documentation and manuscript text that the study
+created are under CC BY 4.0 ([`LICENSE-DATA`](LICENSE-DATA)). Third-party material keeps its own licence: the
+upstream code and the upstream lines in candidate patches and transcripts, the records extracted from AIDev v5
+([`THIRD_PARTY_LICENSES/`](THIRD_PARTY_LICENSES/README.md)), and quotations from other works in the documents. To cite this work, use [`CITATION.cff`](CITATION.cff).
+
+Author: Raj Kashikar, Cornell University (rsk239@cornell.edu).

@@ -1,12 +1,13 @@
 # Status
 
-Last updated: 2026-11-24 (UTC), after the run `natural-pr-v1` (decision log D76 to D78), the manuscript's restructure
-(D79), a final fix round after a fresh verification (D80), the scanner's idiom rule for screened texts (D81) and a
-round before human review (D82), with no new result: the review packet takes the fresh attempts, the abstract and
-the stated scope of the evidence were revised, a downstream-training plan was written (not run), and the README and
-the stale passages below were brought up to date from the records; then corrected after read-only reviews of commit
-`f3ae845` by model agents (D83), again with no new result.
-Nothing here is peer reviewed, and no human labels exist.
+Last updated: 2026-11-25 (UTC), after the run `natural-pr-v1` (decision log D76 to D78), the manuscript's restructure
+(D79), a final fix round after a fresh verification (D80), the scanner's idiom rule for screened texts (D81), a round
+before human review (D82), the corrections that followed a final review of `f3ae845` by model agents (D83) and the
+open owner decisions that the build session settled on the owner's instruction of 2026-11-25 (D84), all with no new
+result. D82 let the review packet take the fresh attempts,
+revised the abstract and the stated scope of the evidence, added a downstream-training plan (not run) and brought the
+README and the stale passages below up to date from the records; D84 set the author line, the licences and the
+other open owner decisions. Nothing here is peer reviewed, and no human labels exist.
 
 ## Where the study stands
 
@@ -52,7 +53,7 @@ Nothing here is peer reviewed, and no human labels exist.
   begin) with no `UNFILLED` marker, and every number in it is a generated macro with a ledger entry. A model reviewer,
   the one that checked D80's round, judged it close to a credible preprint as a methods or negative-results note (a
   workshop or an arXiv note, not a main track).
-  Authors are a TODO for the human authors, who must review it before any submission.
+  Its author is Raj Kashikar, Cornell University (D84); the author's own review before any upload remains.
 
 ## Where round 5 stopped, and how to resume
 
@@ -69,26 +70,14 @@ Nothing here is peer reviewed, and no human labels exist.
   3. Before reading its results, read D70's observations: the natural reference often fails its own contract.
 * **Done in round 5:** the natural analysis and the privacy tools (D69); the recipe's citations of D64; P1 to P4 for the
   six families (D70); a phase-end log with each line committed and pushed (D65).
-* **Owner decisions pending.**
-  * Deviation (i) and the other builder decisions of D64; D63's builder defaults; D69's privacy-tool defaults; D72;
-    D73's reading of when D19 runs; D77's decision on the harness relay.
-  * Whether the screening download records keep the fetched repositories' URLs before publication (D50, D63).
-  * How the scan treats organisation accounts, before its `--aidev-logins` mode loads both S9 samples (D66).
-  * Whether the pilot's frozen tables (`paper/generated/*.tex`, `evidence_ledger.md`) are re-frozen with the
-    restructure's captions and names; until then they keep theirs, which the paper's Appendix F explains.
-  * The builder decisions of D80: the move of the natural section's per-family detail, unchanged, to App. G; the
-    model statement's wording; two template sentences changed where the records contradict them; and counting
-    natural correction violators as the controlled tasks do.
-  * The author line and the human authors' review of the paper before any submission; whether to name the models;
-    and whether the committed controlled transcripts keep the model identifier in their raw records (D79, D80).
-  * The human labels, and SWE-chat's access terms (below).
-  * Whether to run the downstream-training plan at all, and its open decisions O1 to O8
-    (`experiments/downstream_plan_v0.1-draft.md`, section 11; D82).
-  * Whether standard-library import lines count as idioms in the scan's optional screening-texts mode, where one
-    finding remains outside the push gate (D81).
-  * Whether, where and when the repository is made public; the paper links none (paper §10).
-  * The venue and the length: D80's reviewer placed the paper as a methods or negative-results note for a workshop or
-    arXiv, not a main track; for arXiv, the primary category (`docs/submission_readiness.md`).
+* **Owner decisions.** Settled on 2026-11-25 on the owner's instruction to settle them (D84), none by a review of the
+  work: the author line; the licences (MIT for code, CC BY 4.0 for data, documentation and text); the venue (arXiv,
+  cs.SE); no model named, with the transcripts' `model` field and the commit trailers kept; D79's defaults; the
+  pending builder decisions adopted as recorded; pull-request review comments not counted as user corrections for
+  the claim; the download records' URLs kept; the scan's present scope; no git-history rewrite; the downstream plan
+  not run. What needs people or money stays open: human labels, the provenance reviews, human coding of the S9
+  screening, the author's own review before upload, any spending (a second model family, `natural-pr-v2`, the
+  downstream plan), SWE-chat's terms, and any upload or submission.
 
 ## Completed
 
@@ -101,7 +90,7 @@ Nothing here is peer reviewed, and no human labels exist.
     who disagree need an adjudicated review, and `edit` or `needs_discussion` blocks
     the requirement until a re-review accepts it. It also requires an `eligible`
     provenance record and a passed reconstruction record made from the current files
-    (D51, D52; the rules await the owner's confirmation, DOCU-23);
+    (D51, D52; the rules stand, DOCU-23, D84);
   * snapshots and the patch policy. The leakage check recorded in each
     `snapshot.json` was vacuous as called: it compared the base with itself, so it
     could flag only a `.git` directory (D47). New builds record none. Each base is
@@ -210,9 +199,9 @@ Nothing here is peer reviewed, and no human labels exist.
 * **Research brief** adversarially verified by model agents (close reading, a fresh
   search, citation verification and a fact check; `docs/research/review_*.md`); not
   yet reviewed by a human. Related work rewritten from the verified findings;
-  bibliography checked by model agents on 2026-11-18. The claim is narrowed to a
-  conjunction (D34), pending owner confirmation.
-* **Manuscript draft** (`paper/`):
+  bibliography checked by model agents on 2026-11-18. The claim was narrowed to a
+  conjunction (D34); D84 took the paper's present statement of contribution as the claim.
+* **Manuscript** (`paper/`):
   * all sections drafted;
   * every table generated from records (`paper/make_tables.py`, which checks its
     arguments first and replaces the tables only after every one has been written;
@@ -247,7 +236,7 @@ Nothing here is peer reviewed, and no human labels exist.
 * **Other documents:** annotation guide v0.4 (blinded review packet, D43, D44; its
   description of the acceptance gate corrected on 2026-11-21, and its section on candidate strata in the packet
   added on 2026-11-24, D82), data card, decision log
-  D1–D83 (round 4: D47 to D52; the later rounds: D53 onwards), the downstream-training plan
+  D1–D84 (round 4: D47 to D52; the later rounds: D53 onwards), the downstream-training plan
   (`experiments/downstream_plan_v0.1-draft.md`: a draft, not run and not adopted; D82),
   submission-readiness notes (arXiv pages re-checked 2026-11-23), the
   ownership/defense notes, workflow and agent prompts (`experiments/prompts/`), and
@@ -287,19 +276,19 @@ Nothing here is peer reviewed, and no human labels exist.
 
 ## Tested
 
-* **1,464 tests** (D82), 1,444 offline and 20 Docker (`.venv/bin/python -m pytest --collect-only -q`). Counting them
+* **1,465 tests** (D84), 1,445 offline and 20 Docker (`.venv/bin/python -m pytest --collect-only -q`). Counting them
   needs a reachable Docker daemon: without one, `tests/test_sandbox_isolation.py` is skipped whole at collection, and
-  the command lists 1,445. This round added 90 offline tests: 17 for the review packet's strata
+  the command lists 1,446. D82 added 90 offline tests: 17 for the review packet's strata
   (`tests/test_review_packet_strata.py`) and 73 for the downstream plan's data step
-  (`tests/test_build_training_selection.py`). On 2026-11-24 the build checkout, which holds the natural data, passed
-  all 1,444 offline tests and the 20 Docker tests. A clone with the base snapshots built and without the git-ignored
-  `data/natural/` passed 1,435 offline tests, and 9 skipped, all for want of the natural data; before the snapshots
-  are built, 14 more skip. At `2daa725` there were 1,374 (1,354 offline; D81). In a checkout under `/tmp`, one
-  location test of `tests/test_agent_workspace.py` failed, because the rule that refuses roots around the checkout
-  itself refused `/tmp` before the session-directory rule the test expects; the test now puts the checkout beside
-  its fixture study for that check (2026-11-23). Earlier counts: 373 at `a0542bb` (353 offline, 20 Docker), all
-  passing on 2026-11-21 (D52), and 378 with the first table-generator tests; on 2026-11-18, after the final pilot
-  run, 80 (63 offline, 17 Docker).
+  (`tests/test_build_training_selection.py`); D84 added one, for the scanner's allowlist. On 2026-11-25 the build
+  checkout, which holds the natural data, passed all 1,445 offline tests and the 20 Docker tests. A clone with the base
+  snapshots built and without the git-ignored `data/natural/` passed 1,436 offline tests, and 9 skipped, all for want of
+  the natural data; before the snapshots are built, 14 more skip. At `2daa725` there were 1,374 (1,354 offline; D81). In
+  a checkout under `/tmp`, one location test of `tests/test_agent_workspace.py` failed, because the rule that refuses
+  roots around the checkout itself refused `/tmp` before the session-directory rule the test expects; the test now puts
+  the checkout beside its fixture study for that check (2026-11-23). Earlier counts: 373 at `a0542bb` (353 offline, 20
+  Docker), all passing on 2026-11-21 (D52), and 378 with the first table-generator tests; on 2026-11-18, after the final
+  pilot run, 80 (63 offline, 17 Docker).
 * **Offline tests:**
   * schemas, ingestion and evidence alignment;
   * supersession, contract validation and the acceptance gate;
@@ -390,7 +379,7 @@ Nothing here is peer reviewed, and no human labels exist.
   have the same rate or difference; they are marked, and exact binomial intervals
   are reported next to them.
 
-## Blocked (needs the repository owner)
+## Blocked (needs people, money or the owner's own act)
 
 * **Human annotation.** Contracts, the 32 held-out candidates and the 79 analysed fresh attempts need review by two
   qualified human reviewers per task. A coordinator builds the blinded review packet
@@ -405,7 +394,7 @@ Nothing here is peer reviewed, and no human labels exist.
   task, 32 in all), blinded as they are, and leaves out the excluded CS-02-fresh-A-final-1 (annotation guide,
   section 2; D82). On the recorded tasks such a packet holds 110 items for 111 candidates (28, 27, 28 and 27 items
   per task), because two CS-04 pilot candidates have the same diff and share an id. `merge-reviews` appends the
-  attempts' labels to their files in the stratum (owner decisions, below). No human label exists yet. Human review
+  attempts' labels to their files in the stratum (D84; owner decisions, below). No human label exists yet. Human review
   alone cannot open the acceptance gate, because the documented procedure does not provide two of the things it
   requires (D51):
   * an `eligible` provenance record: no command sets it, and every record is
@@ -421,37 +410,24 @@ Nothing here is peer reviewed, and no human labels exist.
   two ungated, openly licensed sources need neither and were taken up for screening:
   all 30 Trace Commons sessions were rejected, and AIDev v5 pull-request review threads
   gave six families, built and graded in `natural-pr-v1` as exploratory case studies (D75 to D78); the extension's
-  S10 is to be redone, for `natural-pr-v2`. Whether pull-request review comments count as
-  user corrections for the claim is an owner decision (D47).
+  S10 is to be redone, for `natural-pr-v2`. Pull-request review comments do not count as
+  user corrections for the claim (D47; D84).
 * **Harbor `no-network` on this host.** Harbor rejected `no-network` on this host
   (the rejection was observed; its cause was not probed). Exported tasks declare
   `no-network`, and a `local-validation` variant is used only for oracle/no-op
   checks.
-* **Owner decisions:**
-  * the claim wording (D34);
-  * confirmation of the acceptance-gate rules: each reviewer's latest decision counts,
-    disagreements need an adjudicated review, and `edit` and `needs_discussion` block
-    until a re-review accepts (DOCU-23; D51);
-  * whether the gate should check review status on the condition contracts
-    (initial-only and full-session), as it does now, or on the reference contract only;
-  * whether review merges may write into the frozen candidate and contract files.
-    `tracecontract merge-reviews` does so today: it appends labels to
-    `tasks/<id>/candidates/*.json` and contract reviews to
-    `tasks/<id>/contracts/reference.json`, which D47 freezes and the frozen-input check
-    would report as modified. It also appends the fresh attempts' labels to their files in the stratum,
-    `tasks/<id>/strata/fresh-v1/candidates/*.json`, whose sha256 hashes the analysis of `fresh-v1` records among its
-    inputs (`meta.inputs.files_sha256` in its `analysis.json`, all 80 attempt files), so after a merge they no longer
-    match the recorded analysis; the frozen-input check does not read the strata. The alternative is sidecar files
-    that the gate and the final-label rule read;
-  * where the provenance review that sets a task's eligibility is recorded:
-    `provenance.json` is frozen under D47, so a sidecar is the natural place;
-  * the repository licence;
-  * any spending;
-  * authorship, the AI-use disclosure and any competing-interests statement;
-  * whether and when to submit;
-  * whether to delete the third-party session data and other downloads kept outside
-    the repository (`data/manifests/third_party_downloads.json`);
-  * whether to rewrite the branch's git history. Earlier commits, already pushed,
+
+## Owner decisions (settled, D84)
+
+* **Owner decisions:** settled by D84, in brief: the claim is the paper's present statement (D34, D80); the gate's
+  rules stand and it keeps checking the condition contracts (DOCU-23, D51); provenance reviews go in a sidecar
+  beside `provenance.json`, which D47 froze; `merge-reviews` may write into the frozen candidate, contract and
+  stratum files, and the decision-log entry of a merge gives the new hashes; the repository licence is MIT for code
+  and CC BY 4.0 for data, documentation and text; no spending; the author line is Raj Kashikar, Cornell University,
+  and Section 9 states the AI use; submission stays the owner's act; the third-party data outside the repository is
+  kept; and:
+  * the branch's git history is not rewritten (D84): it is the study's provenance (the frozen-input check against
+    `c5ede4c`, `--design`, the records' commit hashes). Earlier commits, already pushed and public,
     still contain material that has since been removed from the working tree
     (`docs/internal_review.md`, P1, P7, P9; D44 to D46):
     * the earlier research notes;
@@ -475,8 +451,7 @@ Nothing here is peer reviewed, and no human labels exist.
 
     A rewrite needs a force-push and cannot recall copies already fetched. No
     history has been rewritten.
-  * whether to keep the co-author and `Claude-Session` lines that end every commit
-    message (the session's attribution rules add them).
+  * the co-author and `Claude-Session` lines that end every commit message stay (D84).
 
 ## Not run
 

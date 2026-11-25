@@ -258,7 +258,7 @@ stratum candidates and where their files are; the command is the same.
   (`u1`).
 
 **How the acceptance gate reads contract reviews** (`src/tracecontract/contract.py`;
-the rules await the owner's confirmation, decision log D51). Only human reviews count;
+the rules stand, decision log D51 and D84). Only human reviews count;
 model and rule reviews are proposals. For each requirement the gate takes each human
 reviewer's latest decision and accepts the requirement only if all of them are
 `accept`:

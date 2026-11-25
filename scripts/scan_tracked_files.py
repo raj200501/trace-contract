@@ -35,8 +35,8 @@ reports @handle patterns in files under ``tasks/`` and ``data/``, except code (a
 docstring tag, ``@name(``, ``@name.attr``, ``@name_x``, a template ``@NAME@``, a decorator line
 in a Python file; :func:`tracecontract.ingest.pseudonymize_pr.is_code_at`), an npm package scope
 in a registry URL, and the code words of ``HANDLE_ALLOW`` in the files it names. The logins of the
-S9 extension's sample (protocol §19.2) are not loaded: that awaits the owner's decision on
-organisation accounts (decision log D66).
+S9 extension's sample (protocol §19.2) are not loaded: decision log D84 keeps this scope until the
+extension's S10 is redone, and loading them then needs a rule for organisation accounts (D66).
 
 ``--natural-texts <dir>`` (``data/natural/tasks``) adds the checks for the natural arm's material
 (protocol §17.4, decision log D47; build plan WP-H), with the matchers of
@@ -143,6 +143,9 @@ ALLOW = {
     "jane.doe@example.com": "synthetic address in a redaction test",
     "git@github.com": "SSH host name in a repository URL",
     "noreply@anthropic.com": "co-author trailer that the session's attribution rules add to every commit message",
+    "rsk239@cornell.edu": "the author's published contact address, given by the owner for publication (decision "
+                          "log D84): the author lines of the paper and README.md, CITATION.cff, pyproject.toml, "
+                          "the records of that decision and the scan's test",
 }
 # Allowed by domain: the git author's GitHub no-reply address in commit metadata.
 ALLOW_DOMAINS = ("users.noreply.github.com",)
